@@ -4,7 +4,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Medal, Home, RotateCcw } from "lucide-react";
+import { Trophy, Home, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 
@@ -14,19 +14,17 @@ export function MatchResultScreen() {
 
   const isWin = userScore > opponentScore;
   const isDraw = userScore === opponentScore;
-  const result = isWin ? "Victory!" : isDraw ? "Draw!" : "Defeat";
+  const result = isWin ? "Victory" : isDraw ? "Draw" : "Defeat";
 
   useEffect(() => {
-    // Celebrate victory with confetti
     if (isWin) {
       confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.7 },
       });
     }
 
-    // Update user stats if logged in
     if (user && profile) {
       const updateStats = async () => {
         await updateProfile({
@@ -39,7 +37,6 @@ export function MatchResultScreen() {
             : profile.best_streak,
         });
 
-        // Save game session
         await supabase.from("game_sessions").insert({
           user_id: user.id,
           opponent_name: opponent?.name || "Unknown",
@@ -57,109 +54,102 @@ export function MatchResultScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background via-background to-primary/10">
-      {/* Result Icon */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+      {/* Trophy */}
       <motion.div
-        initial={{ scale: 0, y: -50 }}
+        initial={{ scale: 0, y: -30 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200 }}
         className={cn(
-          "w-28 h-28 rounded-full flex items-center justify-center mb-6",
-          isWin 
-            ? "bg-gradient-to-br from-yellow-400 to-yellow-600" 
-            : isDraw
-              ? "bg-gradient-to-br from-gray-400 to-gray-600"
-              : "bg-gradient-to-br from-gray-500 to-gray-700"
+          "w-24 h-24 rounded-full flex items-center justify-center mb-6",
+          isWin ? "bg-primary" : "bg-secondary"
         )}
       >
-        {isWin ? (
-          <Trophy className="w-14 h-14 text-white" />
-        ) : (
-          <Medal className="w-14 h-14 text-white" />
-        )}
+        <Trophy className={cn(
+          "w-12 h-12",
+          isWin ? "text-primary-foreground" : "text-muted-foreground"
+        )} />
       </motion.div>
 
-      {/* Result Text */}
+      {/* Result */}
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
         className={cn(
-          "text-4xl font-bold mb-2",
-          isWin ? "text-yellow-500" : isDraw ? "text-muted-foreground" : "text-muted-foreground"
+          "text-3xl font-bold mb-2",
+          isWin ? "text-foreground" : "text-muted-foreground"
         )}
       >
         {result}
       </motion.h1>
 
-      {/* Final Score Card */}
+      {/* Score Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3 }}
-        className="w-full max-w-sm bg-card rounded-3xl p-6 mb-6 shadow-lg border border-border"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="w-full max-w-sm glass rounded-3xl p-6 my-8"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           {/* Player */}
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center text-2xl mx-auto mb-2">
+          <div className="text-center flex-1">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl mx-auto mb-3">
               {profile?.avatar_url || "😊"}
             </div>
-            <p className="font-semibold text-foreground text-sm">
+            <p className="font-medium text-foreground text-sm mb-1">
               {profile?.nickname || "You"}
             </p>
             <motion.p
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.5, type: "spring" }}
-              className="text-3xl font-bold text-primary mt-1"
+              transition={{ delay: 0.4, type: "spring" }}
+              className="text-3xl font-bold text-foreground"
             >
               {userScore}
             </motion.p>
           </div>
 
-          {/* VS */}
-          <div className="text-2xl font-bold text-muted-foreground">VS</div>
+          <div className="text-lg font-medium text-muted-foreground">vs</div>
 
           {/* Opponent */}
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-2xl bg-destructive/20 flex items-center justify-center text-2xl mx-auto mb-2">
+          <div className="text-center flex-1">
+            <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center text-2xl mx-auto mb-3">
               {opponent?.avatarEmoji}
             </div>
-            <p className="font-semibold text-foreground text-sm">
+            <p className="font-medium text-foreground text-sm mb-1">
               {opponent?.name}
             </p>
             <motion.p
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.6, type: "spring" }}
-              className="text-3xl font-bold text-destructive mt-1"
+              transition={{ delay: 0.5, type: "spring" }}
+              className="text-3xl font-bold text-muted-foreground"
             >
               {opponentScore}
             </motion.p>
           </div>
         </div>
 
-        {/* Points earned */}
         {userScore > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="text-center pt-4 border-t border-border"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-center pt-5 mt-5 border-t border-border"
           >
             <p className="text-muted-foreground text-sm">Points Earned</p>
-            <p className="text-2xl font-bold text-primary">+{userScore}</p>
+            <p className="text-xl font-bold text-primary">+{userScore}</p>
           </motion.div>
         )}
       </motion.div>
 
-      {/* Action Buttons */}
+      {/* Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="flex flex-col gap-3 w-full max-w-sm"
+        transition={{ delay: 0.7 }}
+        className="flex flex-col gap-3 w-full max-w-xs"
       >
         <ChunkyButton
           variant="primary"

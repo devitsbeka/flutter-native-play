@@ -14,18 +14,18 @@ interface ChunkyButtonProps {
 }
 
 const variantStyles = {
-  primary: "bg-primary text-primary-foreground shadow-lg hover:shadow-xl",
-  secondary: "bg-secondary text-secondary-foreground shadow-lg hover:shadow-xl",
-  success: "bg-emerald-500 text-white shadow-lg hover:shadow-xl",
-  danger: "bg-destructive text-destructive-foreground shadow-lg hover:shadow-xl",
-  ghost: "bg-card/50 text-foreground border-2 border-border hover:bg-card",
+  primary: "bg-primary text-primary-foreground",
+  secondary: "bg-secondary text-secondary-foreground",
+  success: "bg-success text-success-foreground",
+  danger: "bg-destructive text-destructive-foreground",
+  ghost: "bg-secondary/50 text-foreground",
 };
 
 const sizeStyles = {
-  sm: "px-4 py-2 text-sm rounded-xl",
-  md: "px-6 py-3 text-base rounded-2xl",
-  lg: "px-8 py-4 text-lg rounded-2xl",
-  xl: "px-10 py-6 text-xl font-bold rounded-3xl",
+  sm: "px-5 py-2.5 text-sm rounded-full",
+  md: "px-6 py-3 text-base rounded-full",
+  lg: "px-8 py-4 text-lg rounded-full",
+  xl: "px-10 py-5 text-lg font-semibold rounded-full",
 };
 
 export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProps>(
@@ -35,20 +35,20 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
         ref={ref}
         type={type}
         className={cn(
-          "relative inline-flex items-center justify-center gap-3 font-semibold transition-all duration-200",
-          "active:scale-95 disabled:opacity-50 disabled:pointer-events-none",
-          "focus:outline-none focus:ring-4 focus:ring-ring/30",
+          "relative inline-flex items-center justify-center gap-2.5 font-medium transition-all",
+          "active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           variantStyles[variant],
           sizeStyles[size],
           className
         )}
-        whileHover={{ scale: disabled ? 1 : 1.02, y: disabled ? 0 : -2 }}
-        whileTap={{ scale: disabled ? 1 : 0.95, y: disabled ? 0 : 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        whileHover={{ scale: disabled ? 1 : 1.02 }}
+        whileTap={{ scale: disabled ? 1 : 0.98 }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
         disabled={disabled}
         onClick={onClick}
       >
-        {icon && <span className="text-2xl">{icon}</span>}
+        {icon && <span className="text-xl">{icon}</span>}
         {children}
       </motion.button>
     );

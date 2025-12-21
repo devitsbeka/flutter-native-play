@@ -1,4 +1,14 @@
 project_id = "sqwpzezkhpqkdyltvsim"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
 [functions.generate-question-image]
+verify_jwt = false
+
+[functions.search-question-image]
 verify_jwt = false

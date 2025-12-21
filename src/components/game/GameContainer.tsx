@@ -21,7 +21,7 @@ export function GameContainer() {
         className="w-full"
       >
         {phase === "home" && <HomeScreen />}
-        {phase === "matchmaking" && <MatchmakingScreen />}
+        {(phase === "matchmaking" || phase === "preparing") && <MatchmakingScreen />}
         {phase === "vs-screen" && <VSScreen />}
         {phase === "playing" && <QuestionScreen />}
         {phase === "question-result" && <QuestionResultScreen />}

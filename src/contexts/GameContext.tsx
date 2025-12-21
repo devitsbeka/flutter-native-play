@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 
-export type GamePhase = "home" | "matchmaking" | "vs-screen" | "playing" | "question-result" | "match-result";
+export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
 
 export interface AnswerHistory {
   correct: boolean;
@@ -20,12 +20,12 @@ interface GameState {
   lastAnswerCorrect: boolean | null;
   lastPointsEarned: number;
   timePerQuestion: number;
-  // Progress tracking for board game map
   userProgress: number;
   opponentProgress: number;
   userAnswerHistory: AnswerHistory[];
   opponentAnswerHistory: AnswerHistory[];
   lastOpponentCorrect: boolean | null;
+  preparationProgress: number;
 }
 
 interface GameContextType extends GameState {
@@ -49,42 +49,55 @@ const initialState: GameState = {
   lastAnswerCorrect: null,
   lastPointsEarned: 0,
   timePerQuestion: 15,
-  // Progress tracking
   userProgress: 0,
   opponentProgress: 0,
   userAnswerHistory: [],
   opponentAnswerHistory: [],
   lastOpponentCorrect: null,
+  preparationProgress: 0,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
-  const { fetchQuestions, loading } = useTrivia();
+  const { fetchQuestions, loading, preparationProgress } = useTrivia();
 
   const startMatchmaking = useCallback(async () => {
     setState(prev => ({ ...prev, phase: "matchmaking" }));
     
-    // Fetch questions while "searching"
-    const questions = await fetchQuestions(5);
+    // Generate opponent while starting to fetch questions
     const opponent = generateFakeOpponent();
     
-    // Simulate search time (2-4 seconds)
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+    // Short delay for matchmaking feel
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setState(prev => ({ 
+      ...prev, 
+      phase: "preparing",
+      opponent,
+    }));
+    
+    // Fetch questions and preload images
+    const questions = await fetchQuestions(5);
     
     setState(prev => ({
       ...prev,
       phase: "vs-screen",
-      opponent,
       questions,
-      // Reset progress for new match
       userProgress: 0,
       opponentProgress: 0,
       userAnswerHistory: [],
       opponentAnswerHistory: [],
     }));
   }, [fetchQuestions]);
+
+  // Sync preparation progress
+  React.useEffect(() => {
+    if (state.phase === "preparing") {
+      setState(prev => ({ ...prev, preparationProgress }));
+    }
+  }, [preparationProgress, state.phase]);
 
   const startMatch = useCallback(() => {
     setState(prev => ({
@@ -115,7 +128,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         prev.streak
       );
 
-      // Simulate opponent answer (60-80% accuracy)
       const opponentCorrect = Math.random() < 0.7;
       const opponentTime = prev.timePerQuestion * (0.3 + Math.random() * 0.5);
       const opponentPoints = calculateScore(
@@ -126,11 +138,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         0
       );
 
-      // Update answer histories
       const newUserAnswerHistory = [...prev.userAnswerHistory, { correct: isCorrect, points }];
       const newOpponentAnswerHistory = [...prev.opponentAnswerHistory, { correct: opponentCorrect, points: opponentPoints }];
 
-      // Progress increases when answer is correct
       const newUserProgress = isCorrect ? prev.userProgress + 1 : prev.userProgress;
       const newOpponentProgress = opponentCorrect ? prev.opponentProgress + 1 : prev.opponentProgress;
 
