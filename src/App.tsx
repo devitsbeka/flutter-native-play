@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leaderboards from "./pages/Leaderboards";
 import Team from "./pages/Team";
+import Profile from "./pages/Profile";
+import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/leaderboards" element={<Leaderboards />} />
           <Route path="/team" element={<Team />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/discover" element={<Discover />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

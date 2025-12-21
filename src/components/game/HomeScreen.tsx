@@ -1,160 +1,188 @@
 import { motion } from "framer-motion";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
-import { User, Users, Trophy, LogIn, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getRankFromPoints } from "@/data/opponents";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Avatar } from "@/components/shared/Avatar";
+import { QuizCard } from "@/components/shared/QuizCard";
+import { Users, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function HomeScreen() {
   const { startMatchmaking } = useGame();
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleSolo = () => {
-    startMatchmaking();
-  };
-
-  const handleTeam = () => {
-    navigate("/team");
-  };
-
-  const handleLeaderboards = () => {
-    navigate("/leaderboards");
-  };
-
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
-      {/* User Card - Top Right */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="absolute top-6 right-6"
-      >
-        {user && profile ? (
-          <div className="flex items-center gap-3 glass rounded-full pl-5 pr-2 py-2">
-            <div className="text-right">
-              <p className="font-semibold text-foreground text-sm">{profile.nickname}</p>
-              <p className="text-xs text-muted-foreground">
-                {rank?.name} · {profile.total_points.toLocaleString()}
-              </p>
-            </div>
-            <button
-              onClick={() => signOut()}
-              className="p-2.5 rounded-full bg-secondary hover:bg-muted transition-colors"
-            >
-              <LogOut className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </div>
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  const headerContent = (
+    <div className="pt-12 pb-20 px-6">
+      {/* Top Row */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <p className="text-primary-foreground/70 text-sm font-medium mb-1">
+            {getGreeting()} ☀️
+          </p>
+          <h1 className="text-2xl font-bold text-primary-foreground">
+            {profile?.nickname || "Quiz Master"}
+          </h1>
+        </div>
+        {user ? (
+          <button onClick={() => navigate("/profile")}>
+            <Avatar
+              emoji="😎"
+              countryCode={profile?.country_code || "US"}
+              size="md"
+              showRing
+              ringColor="ring-primary-foreground/30"
+            />
+          </button>
         ) : (
-          <ChunkyButton
-            variant="ghost"
-            size="sm"
+          <button
             onClick={() => navigate("/auth")}
-            icon={<LogIn className="w-4 h-4" />}
+            className="px-4 py-2 bg-primary-foreground/10 text-primary-foreground rounded-full text-sm font-semibold"
           >
             Sign In
-          </ChunkyButton>
+          </button>
         )}
-      </motion.div>
+      </div>
 
-      {/* Logo */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-        className="mb-16 text-center"
-      >
-        <h1 className="text-5xl md:text-6xl font-bold text-foreground tracking-tight">
-          Quiz Battle
-        </h1>
-        <p className="text-muted-foreground mt-3 text-lg">
-          Challenge your knowledge
-        </p>
-      </motion.div>
-
-      {/* Main Menu Buttons */}
-      <motion.div
-        className="flex flex-col gap-4 w-full max-w-xs"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      {/* Recent Quiz Card */}
+      {profile && profile.games_played > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          className="bg-quiz-pink rounded-2xl p-4 mb-4"
         >
-          <ChunkyButton
-            variant="primary"
-            size="xl"
-            className="w-full"
-            onClick={handleSolo}
-            icon={<User className="w-5 h-5" />}
-          >
-            Play Solo
-          </ChunkyButton>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <ChunkyButton
-            variant="secondary"
-            size="xl"
-            className="w-full"
-            onClick={handleTeam}
-            icon={<Users className="w-5 h-5" />}
-          >
-            Team Mode
-          </ChunkyButton>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <ChunkyButton
-            variant="ghost"
-            size="xl"
-            className="w-full"
-            onClick={handleLeaderboards}
-            icon={<Trophy className="w-5 h-5" />}
-          >
-            Leaderboards
-          </ChunkyButton>
-        </motion.div>
-      </motion.div>
-
-      {/* Stats */}
-      {profile && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-12 flex items-center gap-8"
-        >
-          <div className="text-center">
-            <p className="text-2xl font-bold text-foreground">{profile.games_played}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Games</p>
+          <div className="flex justify-between items-start mb-3">
+            <span className="text-xs font-semibold text-foreground/70 uppercase">
+              Recent Quiz
+            </span>
+            <span className="text-lg font-bold text-foreground">
+              {profile.games_won > 0 ? Math.round((profile.games_won / profile.games_played) * 100) : 0}%
+            </span>
           </div>
-          <div className="w-px h-8 bg-border" />
-          <div className="text-center">
-            <p className="text-2xl font-bold text-foreground">{profile.games_won}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Wins</p>
-          </div>
-          <div className="w-px h-8 bg-border" />
-          <div className="text-center">
-            <p className="text-2xl font-bold text-foreground">{profile.best_streak}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide">Streak</p>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🎯</span>
+            <div className="flex-1">
+              <p className="font-bold text-foreground">Trivia Challenge</p>
+              <div className="flex gap-1 mt-1">
+                {[1, 2, 3, 4].map((dot) => (
+                  <div
+                    key={dot}
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      dot <= 3 ? "bg-foreground" : "bg-foreground/30"
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
       )}
+
+      {/* Featured Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-primary-foreground/10 backdrop-blur rounded-2xl p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-primary-foreground/20 rounded-xl flex items-center justify-center">
+            <Users className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-primary-foreground">Challenge Friends!</p>
+            <p className="text-sm text-primary-foreground/70">
+              Invite friends to compete
+            </p>
+          </div>
+          <button className="px-4 py-2 bg-primary-foreground text-primary rounded-full text-sm font-semibold">
+            Find
+          </button>
+        </div>
+      </motion.div>
     </div>
+  );
+
+  return (
+    <AppLayout 
+      headerContent={headerContent} 
+      headerClassName="pb-8"
+      onPlayClick={startMatchmaking}
+    >
+      <div className="px-6 pt-6">
+        {/* Stats Row */}
+        {profile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="grid grid-cols-3 gap-3 mb-8"
+          >
+            <div className="bg-secondary rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{profile.games_played}</p>
+              <p className="text-xs text-muted-foreground uppercase">Games</p>
+            </div>
+            <div className="bg-secondary rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{profile.games_won}</p>
+              <p className="text-xs text-muted-foreground uppercase">Wins</p>
+            </div>
+            <div className="bg-secondary rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{profile.best_streak}</p>
+              <p className="text-xs text-muted-foreground uppercase">Streak</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Live Quizzes */}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-bold text-foreground">Live Quizzes</h2>
+          <button 
+            onClick={() => navigate("/discover")}
+            className="text-primary text-sm font-medium flex items-center"
+          >
+            See all <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="space-y-3"
+        >
+          <QuizCard
+            icon="📊"
+            title="Statistics Quiz"
+            subtitle="Math · 12 Quizzes"
+            onClick={startMatchmaking}
+          />
+          <QuizCard
+            icon="🌍"
+            title="World Geography"
+            subtitle="Geography · 8 Quizzes"
+            onClick={startMatchmaking}
+          />
+          <QuizCard
+            icon="🧬"
+            title="Science Trivia"
+            subtitle="Science · 15 Quizzes"
+            onClick={startMatchmaking}
+          />
+        </motion.div>
+      </div>
+    </AppLayout>
   );
 }

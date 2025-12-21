@@ -60,6 +60,16 @@ export default {
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
+        },
+        quiz: {
+          purple: 'hsl(var(--quiz-purple))',
+          'purple-light': 'hsl(var(--quiz-purple-light))',
+          'purple-dark': 'hsl(var(--quiz-purple-dark))',
+          coral: 'hsl(var(--quiz-coral))',
+          pink: 'hsl(var(--quiz-pink))',
+          mint: 'hsl(var(--quiz-mint))',
+          yellow: 'hsl(var(--quiz-yellow))',
+          orange: 'hsl(var(--quiz-orange))'
         }
       },
       borderRadius: {
@@ -67,6 +77,7 @@ export default {
         '2xl': '1.25rem',
         '3xl': '1.5rem',
         '4xl': '2rem',
+        '5xl': '2.5rem',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
@@ -87,17 +98,27 @@ export default {
         'shimmer': {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' }
+        },
+        'bounce-subtle': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' }
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' }
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
-        'shimmer': 'shimmer 2s infinite'
+        'shimmer': 'shimmer 2s infinite',
+        'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite'
       },
       fontFamily: {
         sans: [
-          'SF Pro Display',
+          'Nunito',
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',

@@ -1,33 +1,36 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* iOS 26-Style Design System */
+/* Purple Quiz-Style Design System */
 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    --foreground: 250 20% 20%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 250 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 250 20% 20%;
 
-    --primary: 211 100% 50%;
+    /* Purple primary */
+    --primary: 255 70% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    /* Lighter purple for secondary */
+    --secondary: 255 60% 95%;
+    --secondary-foreground: 255 70% 50%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 250 20% 96%;
+    --muted-foreground: 250 10% 50%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
+    /* Coral accent */
+    --accent: 30 95% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -35,65 +38,75 @@
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 211 100% 50%;
+    --border: 250 20% 92%;
+    --input: 250 20% 92%;
+    --ring: 255 70% 60%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
+
+    /* Quiz-specific colors */
+    --quiz-purple: 255 70% 60%;
+    --quiz-purple-light: 255 80% 75%;
+    --quiz-purple-dark: 255 65% 45%;
+    --quiz-coral: 30 95% 55%;
+    --quiz-pink: 340 80% 90%;
+    --quiz-mint: 160 60% 90%;
+    --quiz-yellow: 45 95% 88%;
+    --quiz-orange: 25 95% 60%;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 211 100% 50%;
+    --sidebar-foreground: 250 20% 20%;
+    --sidebar-primary: 255 70% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-accent: 255 60% 95%;
+    --sidebar-accent-foreground: 255 70% 50%;
+    --sidebar-border: 250 20% 92%;
+    --sidebar-ring: 255 70% 60%;
 
-    --chart-1: 211 100% 50%;
-    --chart-2: 211 80% 60%;
-    --chart-3: 0 0% 65%;
-    --chart-4: 0 0% 45%;
-    --chart-5: 0 0% 25%;
+    --chart-1: 255 70% 60%;
+    --chart-2: 255 60% 70%;
+    --chart-3: 30 95% 55%;
+    --chart-4: 160 60% 50%;
+    --chart-5: 45 95% 55%;
 
     --sidebar: 0 0% 98%;
 
-    --font-sans: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'Nunito', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-    --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
-    --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.04);
-    --shadow-sm: 0 2px 8px -2px hsl(0 0% 0% / 0.08);
-    --shadow: 0 4px 16px -4px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 8px 24px -6px hsl(0 0% 0% / 0.12);
-    --shadow-lg: 0 12px 32px -8px hsl(0 0% 0% / 0.15);
-    --shadow-xl: 0 20px 48px -12px hsl(0 0% 0% / 0.2);
-    --shadow-2xl: 0 32px 64px -16px hsl(0 0% 0% / 0.25);
+    --shadow-2xs: 0 1px 2px 0 hsl(255 30% 20% / 0.03);
+    --shadow-xs: 0 1px 3px 0 hsl(255 30% 20% / 0.04);
+    --shadow-sm: 0 2px 8px -2px hsl(255 30% 20% / 0.08);
+    --shadow: 0 4px 16px -4px hsl(255 30% 20% / 0.1);
+    --shadow-md: 0 8px 24px -6px hsl(255 30% 20% / 0.12);
+    --shadow-lg: 0 12px 32px -8px hsl(255 30% 20% / 0.15);
+    --shadow-xl: 0 20px 48px -12px hsl(255 30% 20% / 0.2);
+    --shadow-2xl: 0 32px 64px -16px hsl(255 30% 20% / 0.25);
 
     --tracking-normal: -0.01em;
     --spacing: 0.25rem;
   }
 
   .dark {
-    --background: 0 0% 0%;
+    --background: 250 25% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 7%;
+    --card: 250 25% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 7%;
+    --popover: 250 25% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 211 100% 50%;
+    --primary: 255 70% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 255 40% 20%;
+    --secondary-foreground: 255 70% 80%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 250 20% 18%;
+    --muted-foreground: 250 10% 60%;
 
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 30 95% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -101,26 +114,35 @@
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 211 100% 50%;
+    --border: 250 20% 20%;
+    --input: 250 20% 20%;
+    --ring: 255 70% 65%;
 
-    --sidebar-background: 0 0% 5%;
+    --quiz-purple: 255 70% 65%;
+    --quiz-purple-light: 255 80% 80%;
+    --quiz-purple-dark: 255 65% 50%;
+    --quiz-coral: 30 95% 60%;
+    --quiz-pink: 340 60% 30%;
+    --quiz-mint: 160 40% 25%;
+    --quiz-yellow: 45 70% 30%;
+    --quiz-orange: 25 95% 55%;
+
+    --sidebar-background: 250 25% 10%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 211 100% 50%;
+    --sidebar-primary: 255 70% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 211 100% 50%;
+    --sidebar-accent: 255 40% 20%;
+    --sidebar-accent-foreground: 255 70% 80%;
+    --sidebar-border: 250 20% 20%;
+    --sidebar-ring: 255 70% 65%;
 
-    --chart-1: 211 100% 60%;
-    --chart-2: 211 80% 70%;
-    --chart-3: 0 0% 55%;
-    --chart-4: 0 0% 45%;
-    --chart-5: 0 0% 35%;
+    --chart-1: 255 70% 65%;
+    --chart-2: 255 60% 75%;
+    --chart-3: 30 95% 60%;
+    --chart-4: 160 60% 55%;
+    --chart-5: 45 95% 60%;
 
-    --sidebar: 0 0% 7%;
+    --sidebar: 250 25% 12%;
 
     --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.1);
     --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.15);
@@ -156,5 +178,45 @@
   
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70;
+  }
+
+  .gradient-purple {
+    background: linear-gradient(135deg, hsl(var(--quiz-purple)) 0%, hsl(var(--quiz-purple-dark)) 100%);
+  }
+
+  .gradient-purple-light {
+    background: linear-gradient(180deg, hsl(var(--quiz-purple)) 0%, hsl(var(--quiz-purple-light)) 100%);
+  }
+
+  .card-white {
+    @apply bg-card rounded-t-[2rem] shadow-lg;
+  }
+
+  .quiz-card {
+    @apply bg-card rounded-2xl shadow-md border border-border/50;
+  }
+
+  .fab {
+    @apply rounded-full shadow-xl bg-primary text-primary-foreground;
+  }
+
+  .avatar-ring {
+    @apply rounded-full ring-4 ring-primary/30;
+  }
+
+  .stat-card {
+    @apply bg-primary/10 rounded-2xl p-4 text-center;
+  }
+
+  .podium-gold {
+    background: linear-gradient(180deg, hsl(45 95% 55%) 0%, hsl(35 90% 45%) 100%);
+  }
+
+  .podium-silver {
+    background: linear-gradient(180deg, hsl(0 0% 75%) 0%, hsl(0 0% 60%) 100%);
+  }
+
+  .podium-bronze {
+    background: linear-gradient(180deg, hsl(25 70% 50%) 0%, hsl(20 60% 40%) 100%);
   }
 }
