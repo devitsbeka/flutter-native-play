@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Clock } from "lucide-react";
-import { getCountryFlag, getRankFromPoints } from "@/data/opponents";
+import { getRankFromPoints } from "@/data/opponents";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PodiumDisplay } from "@/components/shared/PodiumDisplay";
 import { Avatar } from "@/components/shared/Avatar";
-import { useGame } from "@/contexts/GameContext";
 
 interface LeaderboardEntry {
   id: string;
@@ -38,7 +37,6 @@ export default function Leaderboards() {
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<"weekly" | "all">("weekly");
   const navigate = useNavigate();
-  const { startMatchmaking } = useGame();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -151,7 +149,7 @@ export default function Leaderboards() {
     <AppLayout 
       headerContent={headerContent} 
       headerClassName="pb-8"
-      onPlayClick={startMatchmaking}
+      onPlayClick={() => navigate("/")}
     >
       <div className="px-6 pt-6">
         {loading ? (
