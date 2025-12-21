@@ -3,7 +3,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { getCountryFlag, getRankFromPoints } from "@/data/opponents";
-import { Avatar } from "@/components/shared/Avatar";
+import { AnimatedGlobe } from "@/components/shared/AnimatedGlobe";
 import { cn } from "@/lib/utils";
 
 export function VSScreen() {
@@ -16,74 +16,92 @@ export function VSScreen() {
   const opponentRank = getRankFromPoints(opponent.points);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 gradient-sky relative overflow-hidden">
+      {/* Animated Globe Background */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <AnimatedGlobe className="w-[500px] h-[500px] text-primary/10" />
+      </div>
+
       {/* Main Container */}
-      <div className="w-full max-w-sm space-y-8">
+      <div className="w-full max-w-sm space-y-6 relative z-10">
         
-        {/* Player Card - Top Left aligned */}
+        {/* Player Card */}
         <motion.div
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
-          className="flex items-center gap-4"
+          className="player-card flex items-center gap-4"
         >
           {/* Avatar */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", delay: 0.2 }}
-            className="w-20 h-20 rounded-3xl bg-secondary flex items-center justify-center"
+            className="w-16 h-16 rounded-2xl bg-quiz-mint flex items-center justify-center flex-shrink-0"
           >
-            <span className="text-4xl">{profile?.avatar_url || "😊"}</span>
+            <span className="text-3xl">{profile?.avatar_url || "😊"}</span>
           </motion.div>
 
           {/* Info */}
-          <div className="flex-1">
-            <p className="font-bold text-xl text-foreground">You</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-lg text-foreground truncate">You</p>
             <p className={cn("text-sm font-medium", playerRank.color)}>
               {playerRank.name} · {getCountryFlag(profile?.country_code || "US")}
             </p>
           </div>
 
           {/* Points */}
-          <div className="text-right">
-            <p className="text-2xl font-bold text-foreground">
+          <div className="text-right flex-shrink-0">
+            <p className="text-xl font-bold text-foreground">
               {profile?.total_points?.toLocaleString() || 0}
             </p>
             <p className="text-xs text-muted-foreground">points</p>
           </div>
         </motion.div>
 
-        {/* VS Badge - Center with opponent info */}
+        {/* VS Badge */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, delay: 0.4 }}
-          className="flex items-center justify-center gap-4"
+          transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+          className="flex items-center justify-center"
         >
-          <div className="flex-1" />
-          
-          <div className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center shadow-lg">
-            <span className="text-background font-bold text-lg">VS</span>
+          <div className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center shadow-lg">
+            <span className="text-background font-bold text-xl">VS</span>
+          </div>
+        </motion.div>
+
+        {/* Opponent Card */}
+        <motion.div
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 100, delay: 0.4 }}
+          className="player-card flex items-center gap-4"
+        >
+          {/* Avatar */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.5 }}
+            className="w-16 h-16 rounded-2xl bg-quiz-pink flex items-center justify-center flex-shrink-0"
+          >
+            <span className="text-3xl">{opponent.avatarEmoji}</span>
+          </motion.div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-lg text-foreground truncate">{opponent.name}</p>
+            <p className={cn("text-sm font-medium", opponentRank.color)}>
+              {opponentRank.name} · {getCountryFlag(opponent.countryCode)}
+            </p>
           </div>
 
-          <div className="flex-1 flex items-center gap-3">
-            <div>
-              <p className="font-bold text-lg text-foreground">{opponent.name}</p>
-              <p className={cn("text-sm font-medium", opponentRank.color)}>
-                {opponentRank.name} · {getCountryFlag(opponent.countryCode)}
-              </p>
-            </div>
-            
-            {/* Opponent Avatar */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.5 }}
-              className="w-16 h-16 rounded-3xl bg-quiz-pink flex items-center justify-center"
-            >
-              <span className="text-3xl">{opponent.avatarEmoji}</span>
-            </motion.div>
+          {/* Points */}
+          <div className="text-right flex-shrink-0">
+            <p className="text-xl font-bold text-foreground">
+              {opponent.points.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground">points</p>
           </div>
         </motion.div>
       </div>
@@ -93,7 +111,7 @@ export function VSScreen() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-16 text-muted-foreground text-sm"
+        className="mt-10 text-muted-foreground text-sm relative z-10"
       >
         Best of 5 · Answer fast for bonus points
       </motion.p>
@@ -103,7 +121,7 @@ export function VSScreen() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, type: "spring" }}
-        className="mt-8"
+        className="mt-8 relative z-10"
       >
         <ChunkyButton
           variant="primary"

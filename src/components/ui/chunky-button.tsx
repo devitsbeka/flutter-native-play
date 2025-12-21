@@ -14,39 +14,75 @@ interface ChunkyButtonProps {
 }
 
 const variantStyles = {
-  primary: "bg-primary text-primary-foreground",
-  secondary: "bg-secondary text-secondary-foreground",
-  success: "bg-success text-success-foreground",
-  danger: "bg-destructive text-destructive-foreground",
-  ghost: "bg-secondary/50 text-foreground",
+  primary: {
+    face: "bg-primary text-primary-foreground",
+    depth: "bg-primary/70",
+    shadow: "shadow-[0_6px_0_0_hsl(var(--primary)/0.5)]",
+    pressed: "shadow-[0_2px_0_0_hsl(var(--primary)/0.5)]",
+  },
+  secondary: {
+    face: "bg-secondary text-secondary-foreground",
+    depth: "bg-secondary/70",
+    shadow: "shadow-[0_6px_0_0_hsl(var(--secondary)/0.8)]",
+    pressed: "shadow-[0_2px_0_0_hsl(var(--secondary)/0.8)]",
+  },
+  success: {
+    face: "bg-success text-success-foreground",
+    depth: "bg-success/70",
+    shadow: "shadow-[0_6px_0_0_hsl(var(--success)/0.5)]",
+    pressed: "shadow-[0_2px_0_0_hsl(var(--success)/0.5)]",
+  },
+  danger: {
+    face: "bg-destructive text-destructive-foreground",
+    depth: "bg-destructive/70",
+    shadow: "shadow-[0_6px_0_0_hsl(var(--destructive)/0.5)]",
+    pressed: "shadow-[0_2px_0_0_hsl(var(--destructive)/0.5)]",
+  },
+  ghost: {
+    face: "bg-card text-foreground border-2 border-border",
+    depth: "bg-muted",
+    shadow: "shadow-[0_6px_0_0_hsl(var(--border))]",
+    pressed: "shadow-[0_2px_0_0_hsl(var(--border))]",
+  },
 };
 
 const sizeStyles = {
-  sm: "px-5 py-2.5 text-sm rounded-full",
-  md: "px-6 py-3 text-base rounded-full",
-  lg: "px-8 py-4 text-lg rounded-full",
-  xl: "px-10 py-5 text-lg font-semibold rounded-full",
+  sm: "px-5 py-2.5 text-sm rounded-xl",
+  md: "px-6 py-3 text-base rounded-xl",
+  lg: "px-8 py-4 text-lg rounded-2xl",
+  xl: "px-10 py-5 text-lg font-bold rounded-2xl",
 };
 
 export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProps>(
   ({ className, variant = "primary", size = "md", children, icon, disabled, type = "button", onClick }, ref) => {
+    const [isPressed, setIsPressed] = React.useState(false);
+    const styles = variantStyles[variant];
+
     return (
       <motion.button
         ref={ref}
         type={type}
         className={cn(
-          "relative inline-flex items-center justify-center gap-2.5 font-medium transition-all",
-          "active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none",
+          "relative inline-flex items-center justify-center gap-2.5 font-semibold transition-all",
+          "disabled:opacity-50 disabled:pointer-events-none",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          variantStyles[variant],
+          styles.face,
+          isPressed ? styles.pressed : styles.shadow,
           sizeStyles[size],
           className
         )}
+        style={{
+          transform: isPressed ? "translateY(4px)" : "translateY(0px)",
+        }}
         whileHover={{ scale: disabled ? 1 : 1.02 }}
-        whileTap={{ scale: disabled ? 1 : 0.98 }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
         disabled={disabled}
         onClick={onClick}
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => setIsPressed(false)}
+        onTouchStart={() => setIsPressed(true)}
+        onTouchEnd={() => setIsPressed(false)}
       >
         {icon && <span className="text-xl">{icon}</span>}
         {children}

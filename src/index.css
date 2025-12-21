@@ -53,6 +53,10 @@
     --quiz-mint: 160 60% 90%;
     --quiz-yellow: 45 95% 88%;
     --quiz-orange: 25 95% 60%;
+    
+    /* Light blue for VS screen */
+    --quiz-sky: 200 80% 94%;
+    --quiz-sky-dark: 200 70% 88%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 250 20% 20%;
@@ -126,6 +130,10 @@
     --quiz-mint: 160 40% 25%;
     --quiz-yellow: 45 70% 30%;
     --quiz-orange: 25 95% 55%;
+    
+    /* Light blue for VS screen (dark mode) */
+    --quiz-sky: 200 50% 20%;
+    --quiz-sky-dark: 200 40% 15%;
 
     --sidebar-background: 250 25% 10%;
     --sidebar-foreground: 0 0% 98%;
@@ -218,5 +226,13 @@
 
   .podium-bronze {
     background: linear-gradient(180deg, hsl(25 70% 50%) 0%, hsl(20 60% 40%) 100%);
+  }
+
+  .gradient-sky {
+    background: linear-gradient(180deg, hsl(var(--quiz-sky)) 0%, hsl(var(--quiz-sky-dark)) 100%);
+  }
+
+  .player-card {
+    @apply bg-card rounded-3xl p-4 shadow-md;
   }
 }
