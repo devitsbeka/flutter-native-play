@@ -66,7 +66,24 @@ export default function CountryQuizPage() {
           },
         });
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          // Check for rate limit or payment errors in the response
+          if (fetchError.message?.includes("429") || fetchError.message?.includes("Rate limit")) {
+            throw new Error("Too many requests. Please wait a moment and try again.");
+          }
+          if (fetchError.message?.includes("402") || fetchError.message?.includes("Payment")) {
+            throw new Error("Service temporarily unavailable. Please try again later.");
+          }
+          throw fetchError;
+        }
+
+        // Handle error responses from edge function
+        if (data?.error) {
+          if (data.error.includes("Rate limit")) {
+            throw new Error("Too many requests. Please wait a moment and try again.");
+          }
+          throw new Error(data.error);
+        }
 
         if (data?.questions) {
           // Shuffle answers for each question
@@ -78,9 +95,9 @@ export default function CountryQuizPage() {
         } else {
           throw new Error("No questions returned");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching questions:", err);
-        setError("Failed to load questions. Please try again.");
+        setError(err?.message || "Failed to load questions. Please try again.");
       } finally {
         setLoading(false);
       }
