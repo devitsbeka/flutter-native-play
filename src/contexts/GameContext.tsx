@@ -4,6 +4,11 @@ import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 
 export type GamePhase = "home" | "matchmaking" | "vs-screen" | "playing" | "question-result" | "match-result";
 
+export interface AnswerHistory {
+  correct: boolean;
+  points: number;
+}
+
 interface GameState {
   phase: GamePhase;
   opponent: FakeOpponent | null;
@@ -15,6 +20,12 @@ interface GameState {
   lastAnswerCorrect: boolean | null;
   lastPointsEarned: number;
   timePerQuestion: number;
+  // Progress tracking for board game map
+  userProgress: number;
+  opponentProgress: number;
+  userAnswerHistory: AnswerHistory[];
+  opponentAnswerHistory: AnswerHistory[];
+  lastOpponentCorrect: boolean | null;
 }
 
 interface GameContextType extends GameState {
@@ -38,6 +49,12 @@ const initialState: GameState = {
   lastAnswerCorrect: null,
   lastPointsEarned: 0,
   timePerQuestion: 15,
+  // Progress tracking
+  userProgress: 0,
+  opponentProgress: 0,
+  userAnswerHistory: [],
+  opponentAnswerHistory: [],
+  lastOpponentCorrect: null,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -61,6 +78,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       phase: "vs-screen",
       opponent,
       questions,
+      // Reset progress for new match
+      userProgress: 0,
+      opponentProgress: 0,
+      userAnswerHistory: [],
+      opponentAnswerHistory: [],
     }));
   }, [fetchQuestions]);
 
@@ -72,6 +94,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       userScore: 0,
       opponentScore: 0,
       streak: 0,
+      userProgress: 0,
+      opponentProgress: 0,
+      userAnswerHistory: [],
+      opponentAnswerHistory: [],
     }));
   }, []);
 
@@ -100,6 +126,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         0
       );
 
+      // Update answer histories
+      const newUserAnswerHistory = [...prev.userAnswerHistory, { correct: isCorrect, points }];
+      const newOpponentAnswerHistory = [...prev.opponentAnswerHistory, { correct: opponentCorrect, points: opponentPoints }];
+
+      // Progress increases when answer is correct
+      const newUserProgress = isCorrect ? prev.userProgress + 1 : prev.userProgress;
+      const newOpponentProgress = opponentCorrect ? prev.opponentProgress + 1 : prev.opponentProgress;
+
       return {
         ...prev,
         phase: "question-result",
@@ -108,6 +142,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         streak: isCorrect ? prev.streak + 1 : 0,
         lastAnswerCorrect: isCorrect,
         lastPointsEarned: points,
+        lastOpponentCorrect: opponentCorrect,
+        userProgress: newUserProgress,
+        opponentProgress: newOpponentProgress,
+        userAnswerHistory: newUserAnswerHistory,
+        opponentAnswerHistory: newOpponentAnswerHistory,
       };
     });
   }, []);
@@ -126,6 +165,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         currentQuestionIndex: nextIndex,
         lastAnswerCorrect: null,
         lastPointsEarned: 0,
+        lastOpponentCorrect: null,
       };
     });
   }, []);

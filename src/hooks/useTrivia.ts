@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface TriviaQuestion {
   id: string;
@@ -8,6 +9,7 @@ export interface TriviaQuestion {
   correctAnswer: string;
   incorrectAnswers: string[];
   allAnswers: string[];
+  imageUrl?: string;
 }
 
 interface OpenTDBResponse {
@@ -65,6 +67,24 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+async function generateQuestionImage(question: string, category: string): Promise<string | undefined> {
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-question-image', {
+      body: { question, category }
+    });
+    
+    if (error) {
+      console.error('Error generating image:', error);
+      return undefined;
+    }
+    
+    return data?.imageUrl;
+  } catch (err) {
+    console.error('Failed to generate image:', err);
+    return undefined;
+  }
+}
+
 export function useTrivia() {
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,6 +130,19 @@ export function useTrivia() {
       });
 
       setQuestions(formattedQuestions);
+      
+      // Generate images for all questions in parallel (don't block the game)
+      Promise.all(
+        formattedQuestions.map(async (q, index) => {
+          const imageUrl = await generateQuestionImage(q.question, q.category);
+          if (imageUrl) {
+            setQuestions(prev => prev.map((prevQ, i) => 
+              i === index ? { ...prevQ, imageUrl } : prevQ
+            ));
+          }
+        })
+      ).catch(console.error);
+
       return formattedQuestions;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
