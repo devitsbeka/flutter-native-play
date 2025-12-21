@@ -120,7 +120,6 @@ export function HomeScreen() {
     <AppLayout 
       headerContent={headerContent} 
       headerClassName="pb-8"
-      onPlayClick={startMatchmaking}
     >
       <div className="px-6 pt-6">
         {/* Stats Row */}

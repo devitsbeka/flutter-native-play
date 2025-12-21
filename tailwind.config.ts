@@ -72,7 +72,13 @@ export default {
           orange: 'hsl(var(--quiz-orange))',
           sky: 'hsl(var(--quiz-sky))',
           'sky-dark': 'hsl(var(--quiz-sky-dark))'
-        }
+        },
+        trivia: {
+          teal: 'hsl(var(--trivia-teal))',
+          'teal-light': 'hsl(var(--trivia-teal-light))',
+          'teal-foreground': 'hsl(var(--trivia-teal-foreground))'
+        },
+        'content-bg': 'hsl(var(--content-bg))'
       },
       borderRadius: {
         'xl': '1rem',

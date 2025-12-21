@@ -149,7 +149,6 @@ export default function Leaderboards() {
     <AppLayout 
       headerContent={headerContent} 
       headerClassName="pb-8"
-      onPlayClick={() => navigate("/")}
     >
       <div className="px-6 pt-6">
         {loading ? (
