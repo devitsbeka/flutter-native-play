@@ -69,7 +69,9 @@ export default {
           pink: 'hsl(var(--quiz-pink))',
           mint: 'hsl(var(--quiz-mint))',
           yellow: 'hsl(var(--quiz-yellow))',
-          orange: 'hsl(var(--quiz-orange))'
+          orange: 'hsl(var(--quiz-orange))',
+          sky: 'hsl(var(--quiz-sky))',
+          'sky-dark': 'hsl(var(--quiz-sky-dark))'
         }
       },
       borderRadius: {
