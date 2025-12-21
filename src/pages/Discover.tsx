@@ -53,7 +53,6 @@ export default function Discover() {
     <AppLayout 
       headerContent={headerContent} 
       headerClassName="pb-8"
-      onPlayClick={startMatchmaking}
     >
       <div className="px-6 -mt-4">
         {/* Tabs */}
