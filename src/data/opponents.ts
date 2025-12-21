@@ -1,0 +1,101 @@
+// Fake opponent data for simulated matchmaking
+
+export interface FakeOpponent {
+  name: string;
+  countryCode: string;
+  countryName: string;
+  points: number;
+  rank: string;
+  avatarEmoji: string;
+}
+
+const firstNames = [
+  "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery",
+  "Skyler", "Dakota", "Jamie", "Reese", "Phoenix", "Sage", "Rowan", "Blake",
+  "Cameron", "Drew", "Finley", "Harper", "Kai", "Logan", "Parker", "Peyton",
+  "Yuki", "Hiroshi", "Sakura", "Chen", "Wei", "Ming", "Raj", "Priya", "Amit",
+  "Sofia", "Lucas", "Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan", "Isabella",
+  "Marco", "Lucia", "Hans", "Greta", "Pierre", "Marie", "Carlos", "Elena",
+  "Ivan", "Natasha", "Ahmed", "Fatima", "Jin", "Hana", "Leo", "Mia"
+];
+
+const lastNames = [
+  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+  "Rodriguez", "Martinez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore",
+  "Tanaka", "Yamamoto", "Suzuki", "Wang", "Zhang", "Li", "Kim", "Park", "Lee",
+  "Patel", "Singh", "Kumar", "Silva", "Santos", "Oliveira", "Mueller", "Schmidt",
+  "Dubois", "Bernard", "Rossi", "Ferrari", "Ivanov", "Petrov", "Hassan", "Ali"
+];
+
+export const countries = [
+  { code: "US", name: "United States", flag: "🇺🇸" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "CA", name: "Canada", flag: "🇨🇦" },
+  { code: "AU", name: "Australia", flag: "🇦🇺" },
+  { code: "DE", name: "Germany", flag: "🇩🇪" },
+  { code: "FR", name: "France", flag: "🇫🇷" },
+  { code: "IT", name: "Italy", flag: "🇮🇹" },
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "JP", name: "Japan", flag: "🇯🇵" },
+  { code: "KR", name: "South Korea", flag: "🇰🇷" },
+  { code: "CN", name: "China", flag: "🇨🇳" },
+  { code: "IN", name: "India", flag: "🇮🇳" },
+  { code: "BR", name: "Brazil", flag: "🇧🇷" },
+  { code: "MX", name: "Mexico", flag: "🇲🇽" },
+  { code: "AR", name: "Argentina", flag: "🇦🇷" },
+  { code: "RU", name: "Russia", flag: "🇷🇺" },
+  { code: "PL", name: "Poland", flag: "🇵🇱" },
+  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
+  { code: "SE", name: "Sweden", flag: "🇸🇪" },
+  { code: "NO", name: "Norway", flag: "🇳🇴" },
+  { code: "DK", name: "Denmark", flag: "🇩🇰" },
+  { code: "FI", name: "Finland", flag: "🇫🇮" },
+  { code: "PT", name: "Portugal", flag: "🇵🇹" },
+  { code: "IE", name: "Ireland", flag: "🇮🇪" },
+  { code: "NZ", name: "New Zealand", flag: "🇳🇿" },
+  { code: "SG", name: "Singapore", flag: "🇸🇬" },
+  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
+  { code: "TH", name: "Thailand", flag: "🇹🇭" },
+  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
+  { code: "PH", name: "Philippines", flag: "🇵🇭" },
+];
+
+const avatarEmojis = ["😎", "🤓", "🧐", "😏", "🤔", "😊", "🙂", "🤠", "👻", "🦊", "🐱", "🐶", "🦁", "🐯", "🐼", "🐨", "🦄", "🐲", "👾", "🤖"];
+
+export const ranks = [
+  { name: "Bronze", minPoints: 0, maxPoints: 999, color: "text-amber-600" },
+  { name: "Silver", minPoints: 1000, maxPoints: 2499, color: "text-gray-400" },
+  { name: "Gold", minPoints: 2500, maxPoints: 4999, color: "text-yellow-500" },
+  { name: "Platinum", minPoints: 5000, maxPoints: 9999, color: "text-cyan-400" },
+  { name: "Diamond", minPoints: 10000, maxPoints: 24999, color: "text-blue-400" },
+  { name: "Master", minPoints: 25000, maxPoints: 49999, color: "text-purple-500" },
+  { name: "Grandmaster", minPoints: 50000, maxPoints: Infinity, color: "text-red-500" },
+];
+
+export function getRankFromPoints(points: number): { name: string; color: string } {
+  const rank = ranks.find(r => points >= r.minPoints && points <= r.maxPoints);
+  return rank || ranks[0];
+}
+
+export function generateFakeOpponent(): FakeOpponent {
+  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+  const country = countries[Math.floor(Math.random() * countries.length)];
+  const points = Math.floor(Math.random() * 15000) + 500;
+  const rankInfo = getRankFromPoints(points);
+  const avatarEmoji = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
+
+  return {
+    name: `${firstName}${lastName.charAt(0)}`,
+    countryCode: country.code,
+    countryName: country.name,
+    points,
+    rank: rankInfo.name,
+    avatarEmoji,
+  };
+}
+
+export function getCountryFlag(code: string): string {
+  const country = countries.find(c => c.code === code);
+  return country?.flag || "🏳️";
+}
