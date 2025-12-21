@@ -74,12 +74,12 @@ export function PodiumDisplay({ players, className }: PodiumDisplayProps) {
             </div>
 
             {/* Name */}
-            <p className="text-sm font-bold text-foreground truncate max-w-20 text-center">
+            <p className="text-sm font-bold text-primary-foreground truncate max-w-20 text-center">
               {player.nickname}
             </p>
 
             {/* Points */}
-            <p className="text-xs text-muted-foreground mb-2">
+            <p className="text-xs text-primary-foreground/70 mb-2">
               {player.points.toLocaleString()} pts
             </p>
 

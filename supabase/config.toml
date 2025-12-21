@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.search-question-image]
 verify_jwt = false
+
+[functions.generate-country-trivia]
+verify_jwt = false
