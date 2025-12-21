@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Clock, Check, X } from "lucide-react";
@@ -33,6 +33,9 @@ export default function CountryQuizPage() {
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(15);
   const [showResults, setShowResults] = useState(false);
+  
+  // Prevent duplicate fetches
+  const hasFetched = useRef(false);
 
   const countryData = getCountryByCode(countryCode || "");
   const category = getCategoryById(categoryId || "");
@@ -47,21 +50,27 @@ export default function CountryQuizPage() {
     return shuffled;
   };
 
-  // Fetch questions
+  // Fetch questions - only run once
   useEffect(() => {
+    if (hasFetched.current) return;
+    if (!countryCode || !categoryId) return;
+    
+    const countryInfo = getCountryByCode(countryCode);
+    const categoryInfo = getCategoryById(categoryId);
+    if (!countryInfo || !categoryInfo) return;
+
+    hasFetched.current = true;
+    setLoading(true);
+    setError(null);
+
     const fetchQuestions = async () => {
-      if (!countryData || !category) return;
-
-      setLoading(true);
-      setError(null);
-
       try {
         const { data, error: fetchError } = await supabase.functions.invoke("generate-country-trivia", {
           body: {
-            countryName: countryData.country.name,
+            countryName: countryInfo.country.name,
             countryCode: countryCode,
             category: categoryId,
-            categoryName: category.name,
+            categoryName: categoryInfo.name,
             count: 5,
           },
         });
@@ -104,7 +113,7 @@ export default function CountryQuizPage() {
     };
 
     fetchQuestions();
-  }, [countryCode, categoryId, countryData, category]);
+  }, [countryCode, categoryId]);
 
   // Timer
   useEffect(() => {
