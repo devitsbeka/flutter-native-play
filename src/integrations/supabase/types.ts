@@ -131,6 +131,84 @@ export type Database = {
         }
         Relationships: []
       }
+      user_category_progress: {
+        Row: {
+          category_id: string
+          completed: boolean | null
+          completed_at: string | null
+          country_code: string
+          created_at: string
+          id: string
+          questions_answered: number | null
+          questions_correct: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          country_code: string
+          created_at?: string
+          id?: string
+          questions_answered?: number | null
+          questions_correct?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          questions_answered?: number | null
+          questions_correct?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_country_progress: {
+        Row: {
+          categories_completed: number | null
+          continent_id: string
+          country_code: string
+          created_at: string
+          id: string
+          total_categories: number | null
+          unlocked: boolean | null
+          unlocked_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categories_completed?: number | null
+          continent_id: string
+          country_code: string
+          created_at?: string
+          id?: string
+          total_categories?: number | null
+          unlocked?: boolean | null
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categories_completed?: number | null
+          continent_id?: string
+          country_code?: string
+          created_at?: string
+          id?: string
+          total_categories?: number | null
+          unlocked?: boolean | null
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
