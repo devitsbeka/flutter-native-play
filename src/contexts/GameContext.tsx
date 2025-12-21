@@ -25,6 +25,8 @@ interface GameState {
   userAnswerHistory: AnswerHistory[];
   opponentAnswerHistory: AnswerHistory[];
   lastOpponentCorrect: boolean | null;
+  lastOpponentAnswer: string | null;
+  lastUserAnswer: string | null;
   preparationProgress: number;
 }
 
@@ -54,6 +56,8 @@ const initialState: GameState = {
   userAnswerHistory: [],
   opponentAnswerHistory: [],
   lastOpponentCorrect: null,
+  lastOpponentAnswer: null,
+  lastUserAnswer: null,
   preparationProgress: 0,
 };
 
@@ -138,6 +142,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         0
       );
 
+      // Determine opponent's answer
+      let opponentAnswer: string;
+      if (opponentCorrect) {
+        opponentAnswer = currentQuestion.correctAnswer;
+      } else {
+        // Pick a random wrong answer
+        const wrongAnswers = currentQuestion.allAnswers.filter(a => a !== currentQuestion.correctAnswer);
+        opponentAnswer = wrongAnswers[Math.floor(Math.random() * wrongAnswers.length)];
+      }
+
       const newUserAnswerHistory = [...prev.userAnswerHistory, { correct: isCorrect, points }];
       const newOpponentAnswerHistory = [...prev.opponentAnswerHistory, { correct: opponentCorrect, points: opponentPoints }];
 
@@ -153,6 +167,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastAnswerCorrect: isCorrect,
         lastPointsEarned: points,
         lastOpponentCorrect: opponentCorrect,
+        lastOpponentAnswer: opponentAnswer,
+        lastUserAnswer: answer,
         userProgress: newUserProgress,
         opponentProgress: newOpponentProgress,
         userAnswerHistory: newUserAnswerHistory,
@@ -176,6 +192,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastAnswerCorrect: null,
         lastPointsEarned: 0,
         lastOpponentCorrect: null,
+        lastOpponentAnswer: null,
+        lastUserAnswer: null,
       };
     });
   }, []);
