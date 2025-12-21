@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { cn } from "@/lib/utils";
 import { ProgressDots } from "./ProgressDots";
+import { Avatar } from "@/components/shared/Avatar";
 
 export function QuestionScreen() {
   const { 
@@ -56,94 +57,94 @@ export function QuestionScreen() {
   if (!currentQuestion) return null;
 
   const timerPercentage = (timeRemaining / timePerQuestion) * 100;
+  const category = currentQuestion.category.split(":").pop()?.trim() || currentQuestion.category;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Image Header */}
-      <div className="relative w-full aspect-[16/9] max-h-[35vh] overflow-hidden bg-muted">
-        {currentQuestion.imageUrl && (
-          <motion.img
-            src={currentQuestion.imageUrl}
-            alt=""
-            className={cn(
-              "w-full h-full object-cover transition-opacity duration-500",
-              imageLoaded ? "opacity-100" : "opacity-0"
-            )}
-            onLoad={() => setImageLoaded(true)}
-          />
-        )}
-        
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-        
-        {/* Category pill */}
-        <div className="absolute bottom-4 left-4">
-          <span className="glass-strong px-4 py-1.5 rounded-full text-sm font-medium text-foreground">
-            {currentQuestion.category.split(":").pop()?.trim()}
+    <div className="min-h-screen flex flex-col">
+      {/* Purple Header with Image */}
+      <div className="relative gradient-purple pt-6 pb-32">
+        {/* Top bar - Timer & Category */}
+        <div className="flex items-center justify-between px-6 mb-4">
+          <span className="bg-primary-foreground/20 px-4 py-1.5 rounded-full text-sm font-medium text-primary-foreground">
+            {category}
           </span>
-        </div>
-
-        {/* Timer */}
-        <div className="absolute bottom-4 right-4">
-          <div className="glass-strong px-4 py-1.5 rounded-full">
+          <div className="bg-primary-foreground/20 px-4 py-1.5 rounded-full">
             <span className={cn(
               "text-sm font-bold tabular-nums",
-              timerPercentage > 50 ? "text-foreground" : 
-              timerPercentage > 25 ? "text-primary" : "text-destructive"
+              timerPercentage > 25 ? "text-primary-foreground" : "text-quiz-coral"
             )}>
               {Math.ceil(timeRemaining)}s
             </span>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col p-5">
-        {/* Progress & Scores */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{userScore}</p>
-            <p className="text-xs text-muted-foreground">You</p>
+        {/* Score Display */}
+        <div className="flex items-center justify-center gap-6 mb-6">
+          <div className="flex items-center gap-2">
+            <Avatar emoji="😊" size="sm" />
+            <div className="text-center">
+              <p className="text-xl font-bold text-primary-foreground">{userScore}</p>
+            </div>
           </div>
           
+          <div className="text-primary-foreground/50 font-bold">VS</div>
+          
+          <div className="flex items-center gap-2">
+            <div className="text-center">
+              <p className="text-xl font-bold text-primary-foreground">{opponentScore}</p>
+            </div>
+            <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="sm" />
+          </div>
+        </div>
+
+        {/* Progress Dots */}
+        <div className="flex justify-center">
           <ProgressDots
             total={questions.length}
             current={currentQuestionIndex}
             userProgress={userProgress}
             opponentProgress={opponentProgress}
           />
-          
-          <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{opponentScore}</p>
-            <p className="text-xs text-muted-foreground">{opponent?.name}</p>
-          </div>
         </div>
 
         {/* Timer bar */}
-        <div className="w-full h-1 bg-secondary rounded-full mb-5 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-foreground/20">
           <motion.div
             className={cn(
-              "h-full rounded-full",
-              timerPercentage > 50 ? "bg-primary" : 
-              timerPercentage > 25 ? "bg-primary" : "bg-destructive"
+              "h-full",
+              timerPercentage > 50 ? "bg-primary-foreground" : 
+              timerPercentage > 25 ? "bg-quiz-yellow" : "bg-quiz-coral"
             )}
             animate={{ width: `${timerPercentage}%` }}
             transition={{ duration: 0.1 }}
           />
         </div>
+      </div>
 
-        {/* Question */}
+      {/* White Content Area */}
+      <div className="flex-1 bg-background rounded-t-[2rem] -mt-6 relative z-10 p-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex-1 flex flex-col"
+            className="flex flex-col h-full"
           >
-            <p className="text-xl font-semibold text-foreground text-center mb-6 leading-relaxed">
-              {currentQuestion.question}
-            </p>
+            {/* Question */}
+            <div className="mb-6">
+              <span className={cn(
+                "inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide mb-3",
+                currentQuestion.difficulty === "easy" && "bg-success/10 text-success",
+                currentQuestion.difficulty === "medium" && "bg-primary/10 text-primary",
+                currentQuestion.difficulty === "hard" && "bg-destructive/10 text-destructive"
+              )}>
+                {currentQuestion.difficulty}
+              </span>
+              <p className="text-xl font-bold text-foreground leading-relaxed">
+                {currentQuestion.question}
+              </p>
+            </div>
 
             {/* Answers */}
             <div className="flex-1 flex flex-col gap-3">
@@ -154,45 +155,33 @@ export function QuestionScreen() {
                 return (
                   <motion.button
                     key={answer}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.08 }}
                     onClick={() => handleAnswer(answer)}
                     disabled={!!selectedAnswer}
                     className={cn(
-                      "flex items-center gap-4 p-4 rounded-2xl text-left transition-all",
+                      "flex items-center gap-4 p-4 rounded-2xl text-left transition-all border-2",
                       "disabled:cursor-not-allowed",
                       isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary hover:bg-muted"
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-card border-border hover:border-primary/50"
                     )}
                   >
                     <span
                       className={cn(
-                        "w-8 h-8 rounded-xl flex items-center justify-center font-semibold text-sm",
+                        "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm",
                         isSelected
                           ? "bg-primary-foreground/20 text-primary-foreground"
-                          : "bg-background text-foreground"
+                          : "bg-secondary text-foreground"
                       )}
                     >
                       {letters[index]}
                     </span>
-                    <span className="flex-1 font-medium">{answer}</span>
+                    <span className="flex-1 font-semibold">{answer}</span>
                   </motion.button>
                 );
               })}
-            </div>
-
-            {/* Difficulty */}
-            <div className="flex justify-center mt-4">
-              <span className={cn(
-                "px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide",
-                currentQuestion.difficulty === "easy" && "bg-success/10 text-success",
-                currentQuestion.difficulty === "medium" && "bg-primary/10 text-primary",
-                currentQuestion.difficulty === "hard" && "bg-destructive/10 text-destructive"
-              )}>
-                {currentQuestion.difficulty}
-              </span>
             </div>
           </motion.div>
         </AnimatePresence>

@@ -19,6 +19,20 @@ interface LeaderboardEntry {
   games_played: number;
 }
 
+// Mock data for when database is empty
+const mockLeaderboardData: LeaderboardEntry[] = [
+  { id: "1", nickname: "QuizMaster", country_code: "US", total_points: 15420, games_won: 89, games_played: 120 },
+  { id: "2", nickname: "BrainStorm", country_code: "GB", total_points: 12850, games_won: 76, games_played: 98 },
+  { id: "3", nickname: "TriviaKing", country_code: "CA", total_points: 11200, games_won: 65, games_played: 85 },
+  { id: "4", nickname: "KnowledgeNinja", country_code: "AU", total_points: 9870, games_won: 58, games_played: 75 },
+  { id: "5", nickname: "WisdomWolf", country_code: "DE", total_points: 8540, games_won: 52, games_played: 70 },
+  { id: "6", nickname: "MindMaven", country_code: "FR", total_points: 7650, games_won: 45, games_played: 62 },
+  { id: "7", nickname: "GeniusGamer", country_code: "JP", total_points: 6890, games_won: 41, games_played: 58 },
+  { id: "8", nickname: "SmartStar", country_code: "BR", total_points: 5420, games_won: 35, games_played: 50 },
+  { id: "9", nickname: "QuickThinker", country_code: "MX", total_points: 4560, games_won: 28, games_played: 42 },
+  { id: "10", nickname: "LogicLion", country_code: "IN", total_points: 3890, games_won: 24, games_played: 38 },
+];
+
 export default function Leaderboards() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +49,11 @@ export default function Leaderboards() {
         .order("total_points", { ascending: false })
         .limit(100);
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setEntries(data);
+      } else {
+        // Use mock data when no real data exists
+        setEntries(mockLeaderboardData);
       }
       setLoading(false);
     };
@@ -140,10 +157,6 @@ export default function Leaderboards() {
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">
             Loading leaderboard...
-          </div>
-        ) : remainingEntries.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No more players</p>
           </div>
         ) : (
           <div className="space-y-3">
