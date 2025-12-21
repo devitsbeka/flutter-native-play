@@ -2,11 +2,26 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { cn } from "@/lib/utils";
+import { BoardGameMap } from "./BoardGameMap";
+import { ImageIcon } from "lucide-react";
 
 export function QuestionScreen() {
-  const { questions, currentQuestionIndex, answerQuestion, timePerQuestion, userScore, opponentScore, opponent } = useGame();
+  const { 
+    questions, 
+    currentQuestionIndex, 
+    answerQuestion, 
+    timePerQuestion, 
+    userScore, 
+    opponentScore, 
+    opponent,
+    userProgress,
+    opponentProgress,
+    userAnswerHistory,
+    opponentAnswerHistory,
+  } = useGame();
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -23,6 +38,7 @@ export function QuestionScreen() {
   useEffect(() => {
     setTimeRemaining(timePerQuestion);
     setSelectedAnswer(null);
+    setImageLoaded(false);
   }, [currentQuestionIndex, timePerQuestion]);
 
   useEffect(() => {
@@ -52,6 +68,18 @@ export function QuestionScreen() {
 
   return (
     <div className="min-h-screen flex flex-col p-4 bg-gradient-to-b from-background via-background to-primary/10">
+      {/* Board Game Map - Compact */}
+      <div className="mb-4">
+        <BoardGameMap
+          totalTiles={questions.length}
+          userProgress={userProgress}
+          opponentProgress={opponentProgress}
+          userAnswerHistory={userAnswerHistory}
+          opponentAnswerHistory={opponentAnswerHistory}
+          compact
+        />
+      </div>
+
       {/* Header with scores */}
       <div className="flex justify-between items-center mb-4">
         <div className="text-center">
@@ -72,7 +100,7 @@ export function QuestionScreen() {
       </div>
 
       {/* Timer Bar */}
-      <div className="w-full h-3 bg-muted rounded-full mb-6 overflow-hidden">
+      <div className="w-full h-3 bg-muted rounded-full mb-4 overflow-hidden">
         <motion.div
           className={cn("h-full rounded-full transition-colors", timerColor)}
           initial={{ width: "100%" }}
@@ -85,7 +113,7 @@ export function QuestionScreen() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex justify-center mb-4"
+        className="flex justify-center mb-3"
       >
         <span className="bg-primary/20 text-primary px-4 py-1.5 rounded-full text-sm font-medium">
           {currentQuestion.category}
@@ -101,14 +129,52 @@ export function QuestionScreen() {
           exit={{ opacity: 0, x: -50 }}
           className="flex-1 flex flex-col"
         >
-          <div className="bg-card rounded-3xl p-6 mb-6 shadow-lg border border-border">
-            <p className="text-xl font-semibold text-foreground text-center leading-relaxed">
+          {/* Question Image */}
+          <div className="relative w-full aspect-video rounded-2xl mb-4 overflow-hidden bg-muted">
+            {currentQuestion.imageUrl ? (
+              <>
+                <motion.img
+                  src={currentQuestion.imageUrl}
+                  alt="Question illustration"
+                  className={cn(
+                    "w-full h-full object-cover transition-opacity duration-300",
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  )}
+                  onLoad={() => setImageLoaded(true)}
+                />
+                {!imageLoaded && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-pulse flex flex-col items-center gap-2">
+                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Loading image...</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                <div className="flex flex-col items-center gap-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <ImageIcon className="w-8 h-8 text-primary/50" />
+                  </motion.div>
+                  <span className="text-xs text-muted-foreground">Generating image...</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Question Text */}
+          <div className="bg-card rounded-2xl p-4 mb-4 shadow-lg border border-border">
+            <p className="text-lg font-semibold text-foreground text-center leading-relaxed">
               {currentQuestion.question}
             </p>
           </div>
 
           {/* Answer Options */}
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-2">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isSelected = selectedAnswer === answer;
               const letters = ["A", "B", "C", "D"];
@@ -118,11 +184,11 @@ export function QuestionScreen() {
                   key={answer}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                   onClick={() => handleAnswer(answer)}
                   disabled={!!selectedAnswer}
                   className={cn(
-                    "relative flex items-center gap-4 p-4 rounded-2xl text-left transition-all duration-200",
+                    "relative flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200",
                     "border-2 shadow-md hover:shadow-lg",
                     "disabled:cursor-not-allowed",
                     isSelected
@@ -132,7 +198,7 @@ export function QuestionScreen() {
                 >
                   <span
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg",
+                      "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm",
                       isSelected
                         ? "bg-primary-foreground/20 text-primary-foreground"
                         : "bg-primary/10 text-primary"
@@ -140,7 +206,7 @@ export function QuestionScreen() {
                   >
                     {letters[index]}
                   </span>
-                  <span className="flex-1 font-medium">{answer}</span>
+                  <span className="flex-1 font-medium text-sm">{answer}</span>
                 </motion.button>
               );
             })}
@@ -149,7 +215,7 @@ export function QuestionScreen() {
       </AnimatePresence>
 
       {/* Difficulty indicator */}
-      <div className="mt-4 flex justify-center">
+      <div className="mt-3 flex justify-center">
         <span className={cn(
           "px-3 py-1 rounded-full text-xs font-medium",
           currentQuestion.difficulty === "easy" && "bg-emerald-500/20 text-emerald-600",
