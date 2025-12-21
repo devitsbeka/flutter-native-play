@@ -102,15 +102,22 @@ Return ONLY a valid JSON array with this exact structure (no markdown, no explan
     // Parse the JSON from the response
     let questions: TriviaQuestion[];
     try {
-      // Try to extract JSON from the response (handle markdown code blocks)
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      // Clean the response - remove markdown code blocks if present
+      let cleanedContent = content.trim();
+      
+      // Remove ```json ... ``` or ``` ... ``` wrappers
+      cleanedContent = cleanedContent.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      
+      // Try to extract JSON array from the response
+      const jsonMatch = cleanedContent.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         questions = JSON.parse(jsonMatch[0]);
       } else {
-        questions = JSON.parse(content);
+        questions = JSON.parse(cleanedContent);
       }
     } catch (parseError) {
-      console.error("Failed to parse AI response:", content);
+      console.error("Failed to parse AI response. Raw content:", content);
+      console.error("Parse error:", parseError);
       throw new Error("Failed to parse trivia questions");
     }
 
