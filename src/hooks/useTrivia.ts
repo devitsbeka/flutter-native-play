@@ -67,32 +67,46 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-async function generateQuestionImage(question: string, category: string): Promise<string | undefined> {
+async function searchQuestionImage(question: string, category: string): Promise<string | undefined> {
   try {
-    const { data, error } = await supabase.functions.invoke('generate-question-image', {
+    const { data, error } = await supabase.functions.invoke('search-question-image', {
       body: { question, category }
     });
     
     if (error) {
-      console.error('Error generating image:', error);
+      console.error('Error searching image:', error);
       return undefined;
     }
     
     return data?.imageUrl;
   } catch (err) {
-    console.error('Failed to generate image:', err);
+    console.error('Failed to search image:', err);
     return undefined;
   }
+}
+
+// Preload image into browser cache
+function preloadImage(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
 }
 
 export function useTrivia() {
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preparationProgress, setPreparationProgress] = useState(0);
+  const [imagesReady, setImagesReady] = useState(false);
 
   const fetchQuestions = useCallback(async (amount: number = 5) => {
     setLoading(true);
     setError(null);
+    setPreparationProgress(0);
+    setImagesReady(false);
 
     try {
       // Get random category or mixed
@@ -113,6 +127,8 @@ export function useTrivia() {
         throw new Error("No questions available");
       }
 
+      setPreparationProgress(20);
+
       const formattedQuestions: TriviaQuestion[] = data.results.map((q, index) => {
         const correctAnswer = decodeHTML(q.correct_answer);
         const incorrectAnswers = q.incorrect_answers.map(decodeHTML);
@@ -129,21 +145,38 @@ export function useTrivia() {
         };
       });
 
-      setQuestions(formattedQuestions);
-      
-      // Generate images for all questions in parallel (don't block the game)
-      Promise.all(
+      // Fetch images for all questions in parallel
+      const questionsWithImages = await Promise.all(
         formattedQuestions.map(async (q, index) => {
-          const imageUrl = await generateQuestionImage(q.question, q.category);
-          if (imageUrl) {
-            setQuestions(prev => prev.map((prevQ, i) => 
-              i === index ? { ...prevQ, imageUrl } : prevQ
-            ));
-          }
+          const imageUrl = await searchQuestionImage(q.question, q.category);
+          setPreparationProgress(20 + Math.floor(((index + 1) / formattedQuestions.length) * 50));
+          return { ...q, imageUrl };
         })
-      ).catch(console.error);
+      );
 
-      return formattedQuestions;
+      setPreparationProgress(70);
+
+      // Preload all images into browser cache
+      await Promise.all(
+        questionsWithImages
+          .filter(q => q.imageUrl)
+          .map(async (q, index) => {
+            if (q.imageUrl) {
+              try {
+                await preloadImage(q.imageUrl);
+              } catch (e) {
+                console.warn(`Failed to preload image for question ${index}`, e);
+              }
+              setPreparationProgress(70 + Math.floor(((index + 1) / questionsWithImages.length) * 30));
+            }
+          })
+      );
+
+      setQuestions(questionsWithImages);
+      setPreparationProgress(100);
+      setImagesReady(true);
+      
+      return questionsWithImages;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -158,6 +191,8 @@ export function useTrivia() {
     loading,
     error,
     fetchQuestions,
+    preparationProgress,
+    imagesReady,
   };
 }
 
