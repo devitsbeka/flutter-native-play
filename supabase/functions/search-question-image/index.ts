@@ -6,19 +6,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Extract key terms from a question for image search
-function extractSearchTerms(question: string, category: string): string {
-  // Remove common question words and punctuation
-  const cleanQuestion = question
-    .replace(/what|which|who|where|when|how|is|are|was|were|the|a|an|of|in|for|to|and|or|\?|'|"|`/gi, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+// Category-based image keywords for better relevance
+const categoryImageMap: Record<string, string[]> = {
+  'science': ['laboratory', 'science experiment', 'molecules', 'research lab'],
+  'geography': ['world map', 'globe', 'landscape', 'travel destination'],
+  'history': ['ancient history', 'historical monument', 'museum artifact'],
+  'sports': ['stadium', 'sports competition', 'athletics'],
+  'entertainment': ['movie theater', 'stage performance', 'concert'],
+  'art': ['art gallery', 'painting', 'sculpture', 'museum'],
+  'music': ['musical instruments', 'concert hall', 'orchestra'],
+  'literature': ['library books', 'old books', 'bookshelf'],
+  'mathematics': ['mathematics equations', 'geometry', 'numbers'],
+  'nature': ['wildlife', 'nature landscape', 'forest'],
+  'animals': ['wildlife animals', 'animal photography'],
+  'food': ['gourmet food', 'cooking', 'restaurant'],
+  'technology': ['technology devices', 'computer', 'innovation'],
+  'politics': ['government building', 'capitol', 'politics'],
+  'film': ['cinema', 'movie set', 'film production'],
+  'television': ['tv studio', 'broadcasting'],
+  'general': ['education', 'knowledge', 'learning'],
+};
+
+function getCategorySearchTerm(category: string): string {
+  const lowerCategory = category.toLowerCase();
   
-  // Get first 3-4 meaningful words plus category
-  const words = cleanQuestion.split(' ').filter(w => w.length > 2).slice(0, 4);
-  const searchQuery = [...words, category.split(':').pop()?.trim() || category].join(' ');
+  // Find matching category
+  for (const [key, values] of Object.entries(categoryImageMap)) {
+    if (lowerCategory.includes(key)) {
+      // Return a random term from the category
+      return values[Math.floor(Math.random() * values.length)];
+    }
+  }
   
-  return searchQuery;
+  // Default fallback
+  return categoryImageMap['general'][0];
 }
 
 serve(async (req) => {
@@ -30,23 +51,23 @@ serve(async (req) => {
   try {
     const { question, category } = await req.json();
     
-    if (!question) {
+    if (!category) {
       return new Response(
-        JSON.stringify({ error: 'Question is required' }),
+        JSON.stringify({ error: 'Category is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const searchTerms = extractSearchTerms(question, category);
-    console.log('Searching for:', searchTerms);
+    // Use category-based search for more relevant images
+    const searchTerms = getCategorySearchTerm(category);
+    console.log('Category:', category, '-> Searching for:', searchTerms);
     
     // Use Unsplash API for high-quality, free images
     const unsplashAccessKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
     
     if (unsplashAccessKey) {
-      // If we have Unsplash API key, use it for better results
       const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchTerms)}&per_page=1&orientation=landscape`,
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchTerms)}&per_page=5&orientation=landscape`,
         {
           headers: {
             'Authorization': `Client-ID ${unsplashAccessKey}`,
@@ -57,7 +78,9 @@ serve(async (req) => {
       if (response.ok) {
         const data = await response.json();
         if (data.results && data.results.length > 0) {
-          const imageUrl = data.results[0].urls.regular;
+          // Pick a random image from results for variety
+          const randomIndex = Math.floor(Math.random() * data.results.length);
+          const imageUrl = data.results[randomIndex].urls.regular;
           return new Response(
             JSON.stringify({ imageUrl }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -71,7 +94,7 @@ serve(async (req) => {
     
     if (pexelsApiKey) {
       const response = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchTerms)}&per_page=1&orientation=landscape`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(searchTerms)}&per_page=5&orientation=landscape`,
         {
           headers: {
             'Authorization': pexelsApiKey,
@@ -82,7 +105,8 @@ serve(async (req) => {
       if (response.ok) {
         const data = await response.json();
         if (data.photos && data.photos.length > 0) {
-          const imageUrl = data.photos[0].src.large;
+          const randomIndex = Math.floor(Math.random() * data.photos.length);
+          const imageUrl = data.photos[randomIndex].src.large;
           return new Response(
             JSON.stringify({ imageUrl }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -91,8 +115,7 @@ serve(async (req) => {
       }
     }
     
-    // Ultimate fallback: Use Lorem Picsum with a seed based on question
-    // This gives us a consistent random image per question
+    // Ultimate fallback: Use Lorem Picsum with category-based seed
     const seed = searchTerms.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const fallbackUrl = `https://picsum.photos/seed/${seed}/800/450`;
     
