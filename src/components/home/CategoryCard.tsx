@@ -5,7 +5,7 @@ interface CategoryCardProps {
   name: string;
   icon: string;
   description: string;
-  color: string;
+  color?: string;
   progress: number;
   totalLevels: number;
   isLocked?: boolean;
@@ -16,7 +16,6 @@ export function CategoryCard({
   name,
   icon,
   description,
-  color,
   progress,
   totalLevels,
   isLocked = false,
@@ -30,26 +29,16 @@ export function CategoryCard({
       onClick={isLocked ? undefined : onClick}
       whileHover={isLocked ? undefined : { scale: 1.02, y: -2 }}
       whileTap={isLocked ? undefined : { scale: 0.98 }}
-      className={`relative w-full overflow-hidden rounded-2xl bg-card p-4 text-left transition-all ${
+      className={`liquid-glass relative w-full overflow-hidden rounded-2xl p-4 text-left transition-all ${
         isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
       }`}
-      style={{
-        boxShadow: isLocked 
-          ? "0 4px 0 0 hsl(var(--border))" 
-          : "0 6px 0 0 hsl(var(--border)), 0 8px 16px -4px hsl(0 0% 0% / 0.1)",
-      }}
     >
       {/* Content */}
       <div className="flex items-center gap-3">
-        {/* Icon with gradient background */}
-        <div 
-          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${color} text-2xl`}
-          style={{
-            boxShadow: "inset 0 -3px 0 0 hsl(0 0% 0% / 0.15)",
-          }}
-        >
+        {/* Icon */}
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-foreground/10 text-2xl">
           {isLocked ? (
-            <Lock className="h-6 w-6 text-white/80" />
+            <Lock className="h-5 w-5 text-muted-foreground" />
           ) : (
             icon
           )}
@@ -58,7 +47,7 @@ export function CategoryCard({
         {/* Text content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-foreground truncate">{name}</h3>
+            <h3 className="font-display uppercase font-bold text-foreground truncate">{name}</h3>
             {isCompleted && (
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-success">
                 <Check className="h-3 w-3 text-success-foreground" />
@@ -70,12 +59,12 @@ export function CategoryCard({
           {/* Progress bar */}
           {!isLocked && (
             <div className="mt-2 flex items-center gap-2">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-foreground/10">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progressPercent}%` }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
-                  className={`h-full rounded-full bg-gradient-to-r ${color}`}
+                  className="h-full rounded-full bg-foreground/40"
                 />
               </div>
               <span className="text-xs font-medium text-muted-foreground">
@@ -87,15 +76,15 @@ export function CategoryCard({
 
         {/* Arrow */}
         {!isLocked && (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground/10">
+            <ChevronRight className="h-4 w-4 text-foreground" />
           </div>
         )}
       </div>
 
       {/* Lock overlay */}
       {isLocked && (
-        <div className="absolute inset-0 bg-muted/20" />
+        <div className="absolute inset-0 bg-background/20" />
       )}
     </motion.button>
   );
