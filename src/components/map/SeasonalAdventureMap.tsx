@@ -7,6 +7,7 @@ import { MapPath } from "./MapPath";
 import { LevelNode } from "./LevelNode";
 import { DailyChallengeNode } from "./DailyChallengeNode";
 import { TreasureChestNode } from "./TreasureChestNode";
+import { YouAreHereIndicator } from "./YouAreHereIndicator";
 import { SpringBackground } from "./seasons/SpringBackground";
 import { SummerBackground } from "./seasons/SummerBackground";
 import { AutumnBackground } from "./seasons/AutumnBackground";
@@ -60,7 +61,7 @@ const getChestPositions = (levels: Level[]) => {
     if (level) {
       chests.push({
         position: i,
-        x: level.x + (i % 10 === 0 ? -15 : 15), // Alternate sides
+        x: level.x + (i % 10 === 0 ? -15 : 15),
         y: level.y + 2,
       });
     }
@@ -84,12 +85,31 @@ export function SeasonalAdventureMap() {
     return saved ? JSON.parse(saved) : [];
   });
   
-  const { playTap, playTransition, playVictory, playChestOpen, playAmbientMusic, stopAmbientMusic } = useMapSounds(soundEnabled);
-  const { progress, loading, getTotalProgress } = useCategoryProgress();
+  const { playTap, playTransition, playChestOpen, playAmbientMusic, stopAmbientMusic } = useMapSounds(soundEnabled);
+  const { getTotalProgress } = useCategoryProgress();
   
   const levels = generateLevels();
   const chestPositions = getChestPositions(levels);
   const totalCompleted = getTotalProgress();
+  
+  // Current level is the next uncompleted level
+  const currentLevelId = totalCompleted + 1;
+  const currentLevel = levels.find(l => l.id === currentLevelId) || levels[0];
+
+  // Auto-scroll to current level on mount
+  useEffect(() => {
+    if (scrollRef.current && currentLevel) {
+      // Calculate scroll position to center the current level
+      const targetY = (currentLevel.y / 100) * scrollRef.current.scrollHeight;
+      const viewportHeight = window.innerHeight;
+      const scrollTo = Math.max(0, targetY - viewportHeight / 2);
+      
+      // Delay to ensure DOM is ready
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ top: scrollTo, behavior: "smooth" });
+      }, 300);
+    }
+  }, []);
   
   // Scroll to season when selected
   const scrollToSeason = (season: Season) => {
@@ -139,10 +159,8 @@ export function SeasonalAdventureMap() {
   const handleDailyChallengeClick = () => {
     if (!dailyCompleted) {
       playTap();
-      // Mark as completed and save date
       localStorage.setItem("dailyChallengeDate", new Date().toDateString());
       setDailyCompleted(true);
-      // Navigate to daily challenge
       navigate("/category/general?daily=true");
     }
   };
@@ -160,7 +178,6 @@ export function SeasonalAdventureMap() {
     const isUnlocked = level.id <= totalCompleted + 1;
     if (isUnlocked) {
       playTap();
-      // Navigate to the game for this level
       navigate(`/category/general?level=${level.id}`);
     }
   };
@@ -240,13 +257,21 @@ export function SeasonalAdventureMap() {
           {/* Map Path SVG */}
           <MapPath levels={levels} completedLevels={totalCompleted} />
 
+          {/* "You Are Here" Indicator - Only on the actual current level */}
+          {currentLevel && (
+            <YouAreHereIndicator 
+              x={currentLevel.x} 
+              y={currentLevel.y - 8} 
+            />
+          )}
+
           {/* Level Nodes */}
           {levels.map((level) => (
             <LevelNode
               key={level.id}
               level={level}
               isCompleted={level.id <= totalCompleted}
-              isCurrent={level.id === totalCompleted + 1}
+              isCurrent={level.id === currentLevelId}
               isUnlocked={level.id <= totalCompleted + 1}
               stars={level.id <= totalCompleted ? Math.min(3, Math.floor(Math.random() * 3) + 1) : 0}
               onClick={() => handleLevelClick(level)}

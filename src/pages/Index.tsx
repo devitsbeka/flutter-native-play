@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Trophy, User, ChevronDown, Map } from "lucide-react";
+import { Users, Trophy, ChevronDown, Map, Play } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
@@ -53,47 +53,59 @@ export default function Index() {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Action Buttons - Centered at bottom */}
-        <div className="px-4 pb-8 flex flex-col items-center space-y-3">
+        {/* Action Buttons - New Layout */}
+        <div className="px-4 pb-8 flex flex-col items-center space-y-4">
+          {/* Big Quick Play Button - Chunky 3D Style */}
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/game")}
-            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+            className="relative w-4/5 group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98, y: 4 }}
           >
-            <User className="h-5 w-5 text-foreground" />
-            <span className="font-display text-foreground font-bold tracking-wide">Solo</span>
+            {/* Shadow/Depth layer */}
+            <div 
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: "linear-gradient(180deg, hsl(174 60% 35%) 0%, hsl(174 60% 25%) 100%)",
+                transform: "translateY(6px)",
+              }}
+            />
+            {/* Main button face */}
+            <div 
+              className="relative rounded-2xl px-8 py-5 flex items-center justify-center gap-3 transition-transform group-active:translate-y-1"
+              style={{
+                background: "linear-gradient(180deg, hsl(174 60% 50%) 0%, hsl(180 50% 45%) 100%)",
+                boxShadow: "inset 0 2px 0 0 hsl(174 60% 60%), inset 0 -2px 0 0 hsl(174 60% 35%)",
+              }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Play className="h-6 w-6 text-white fill-white" />
+              </div>
+              <span className="font-display text-white text-xl font-bold tracking-wide">Quick Play</span>
+            </div>
           </motion.button>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/team")}
-            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
-          >
-            <Users className="h-5 w-5 text-foreground" />
-            <span className="font-display text-foreground font-bold tracking-wide">Team</span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/leaderboards")}
-            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
-          >
-            <Trophy className="h-5 w-5 text-foreground" />
-            <span className="font-display text-foreground font-bold tracking-wide">Leaderboard</span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/adventure-map")}
-            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
-          >
-            <Map className="h-5 w-5 text-foreground" />
-            <span className="font-display text-foreground font-bold tracking-wide">Adventure Map</span>
-          </motion.button>
+          {/* Three Icon Buttons Row */}
+          <div className="w-4/5 flex gap-3">
+            <IconButton 
+              icon={<Users className="h-5 w-5" />} 
+              label="Team" 
+              onClick={() => navigate("/team")}
+              color="hsl(280 60% 50%)"
+            />
+            <IconButton 
+              icon={<Trophy className="h-5 w-5" />} 
+              label="Rankings" 
+              onClick={() => navigate("/leaderboards")}
+              color="hsl(45 90% 50%)"
+            />
+            <IconButton 
+              icon={<Map className="h-5 w-5" />} 
+              label="Map" 
+              onClick={() => navigate("/adventure-map")}
+              color="hsl(140 50% 45%)"
+            />
+          </div>
 
           {/* Scroll indicator */}
           <motion.div 
@@ -197,6 +209,38 @@ export default function Index() {
       {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
+  );
+}
+
+function IconButton({ 
+  icon, 
+  label, 
+  onClick, 
+  color 
+}: { 
+  icon: React.ReactNode; 
+  label: string; 
+  onClick: () => void;
+  color: string;
+}) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      className="flex-1 flex flex-col items-center gap-2 rounded-2xl px-4 py-4 bg-background/60 backdrop-blur-xl border border-border/30 shadow-sm"
+    >
+      <div 
+        className="w-10 h-10 rounded-xl flex items-center justify-center"
+        style={{ 
+          background: `linear-gradient(135deg, ${color} 0%, ${color.replace('50%)', '40%)')} 100%)`,
+          boxShadow: `0 4px 12px ${color.replace(')', ' / 0.3)')}`,
+        }}
+      >
+        <span className="text-white">{icon}</span>
+      </div>
+      <span className="font-display text-xs font-semibold text-foreground">{label}</span>
+    </motion.button>
   );
 }
 
