@@ -27,7 +27,7 @@ function GameContent() {
       />
       
       {/* Game Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-8">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6">
         <GameContainer />
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useGame } from "@/contexts/GameContext";
@@ -12,10 +13,16 @@ import confetti from "canvas-confetti";
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
   const { user, profile, updateProfile } = useAuth();
+  const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
   const isDraw = userScore === opponentScore;
   const result = isWin ? "Victory!" : isDraw ? "Draw" : "Defeat";
+
+  const handleBackToHome = () => {
+    resetGame();
+    navigate("/");
+  };
 
   useEffect(() => {
     if (isWin) {
@@ -75,151 +82,139 @@ export function MatchResultScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Purple Header */}
-      <div className={cn(
-        "pt-12 pb-32 px-6 text-center",
-        isWin ? "gradient-purple" : "bg-muted"
-      )}>
-        {/* Trophy */}
+    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+      {/* Result Header */}
+      <motion.div
+        initial={{ scale: 0, y: -30 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 200 }}
+        className={cn(
+          "w-24 h-24 rounded-full flex items-center justify-center mb-4",
+          isWin ? "bg-quiz-yellow" : "bg-secondary"
+        )}
+      >
+        {isWin ? (
+          <Trophy className="w-12 h-12 text-quiz-orange" />
+        ) : (
+          <Trophy className="w-12 h-12 text-muted-foreground" />
+        )}
+      </motion.div>
+
+      {/* Result Text */}
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="text-4xl font-bold text-foreground mb-2"
+      >
+        {result}
+      </motion.h1>
+
+      {/* Stars for win */}
+      {isWin && (
         <motion.div
-          initial={{ scale: 0, y: -30 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 200 }}
-          className={cn(
-            "w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-4",
-            isWin ? "bg-quiz-yellow" : "bg-secondary"
-          )}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex justify-center gap-2 mb-6"
         >
-          {isWin ? (
-            <Trophy className="w-12 h-12 text-quiz-orange" />
-          ) : (
-            <Trophy className="w-12 h-12 text-muted-foreground" />
-          )}
+          {[1, 2, 3].map((star) => (
+            <motion.div
+              key={star}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.3 + star * 0.1, type: "spring" }}
+            >
+              <Star className="w-8 h-8 text-quiz-yellow fill-quiz-yellow" />
+            </motion.div>
+          ))}
         </motion.div>
+      )}
 
-        {/* Result */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className={cn(
-            "text-4xl font-bold mb-2",
-            isWin ? "text-primary-foreground" : "text-foreground"
-          )}
-        >
-          {result}
-        </motion.h1>
+      {/* Score Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="w-full bg-background/95 backdrop-blur-lg rounded-3xl p-6 mb-6 shadow-xl"
+      >
+        <div className="flex items-center justify-between">
+          {/* You */}
+          <div className="text-center flex-1">
+            <Avatar emoji={profile?.avatar_url || "😊"} size="lg" className="mx-auto mb-2" />
+            <p className="font-bold text-foreground text-sm mb-1">
+              {profile?.nickname || "You"}
+            </p>
+            <motion.p
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+              className="text-4xl font-bold text-primary"
+            >
+              {userScore}
+            </motion.p>
+          </div>
 
-        {/* Stars for win */}
-        {isWin && (
+          <div className="text-2xl font-bold text-muted-foreground">vs</div>
+
+          {/* Opponent */}
+          <div className="text-center flex-1">
+            <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="lg" className="mx-auto mb-2" />
+            <p className="font-bold text-foreground text-sm mb-1">
+              {opponent?.name}
+            </p>
+            <motion.p
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: "spring" }}
+              className="text-4xl font-bold text-muted-foreground"
+            >
+              {opponentScore}
+            </motion.p>
+          </div>
+        </div>
+
+        {/* Points Earned */}
+        {userScore > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex justify-center gap-2"
+            transition={{ delay: 0.6 }}
+            className="text-center pt-5 mt-5 border-t border-border"
           >
-            {[1, 2, 3].map((star) => (
-              <motion.div
-                key={star}
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.3 + star * 0.1, type: "spring" }}
-              >
-                <Star className="w-8 h-8 text-quiz-yellow fill-quiz-yellow" />
-              </motion.div>
-            ))}
+            <p className="text-muted-foreground text-sm">Points Earned</p>
+            <p className="text-2xl font-bold text-primary">+{userScore}</p>
           </motion.div>
         )}
-      </div>
+      </motion.div>
 
-      {/* White Content Area */}
-      <div className="flex-1 bg-background rounded-t-[2rem] -mt-6 relative z-10 p-6">
-        {/* Score Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-card rounded-3xl p-6 mb-6 shadow-lg -mt-16"
+      {/* Buttons */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="w-full flex flex-col gap-3"
+      >
+        <ChunkyButton
+          variant="primary"
+          size="xl"
+          className="w-full"
+          onClick={() => startMatchmaking()}
+          icon={<RotateCcw className="w-5 h-5" />}
         >
-          <div className="flex items-center justify-between">
-            {/* You */}
-            <div className="text-center flex-1">
-              <Avatar emoji={profile?.avatar_url || "😊"} size="lg" className="mx-auto mb-2" />
-              <p className="font-bold text-foreground text-sm mb-1">
-                {profile?.nickname || "You"}
-              </p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.4, type: "spring" }}
-                className="text-4xl font-bold text-primary"
-              >
-                {userScore}
-              </motion.p>
-            </div>
+          Play Again
+        </ChunkyButton>
 
-            <div className="text-2xl font-bold text-muted-foreground">vs</div>
-
-            {/* Opponent */}
-            <div className="text-center flex-1">
-              <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="lg" className="mx-auto mb-2" />
-              <p className="font-bold text-foreground text-sm mb-1">
-                {opponent?.name}
-              </p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-                className="text-4xl font-bold text-muted-foreground"
-              >
-                {opponentScore}
-              </motion.p>
-            </div>
-          </div>
-
-          {/* Points Earned */}
-          {userScore > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-center pt-5 mt-5 border-t border-border"
-            >
-              <p className="text-muted-foreground text-sm">Points Earned</p>
-              <p className="text-2xl font-bold text-primary">+{userScore}</p>
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="flex flex-col gap-3"
+        <ChunkyButton
+          variant="secondary"
+          size="xl"
+          className="w-full"
+          onClick={handleBackToHome}
+          icon={<Home className="w-5 h-5" />}
         >
-          <ChunkyButton
-            variant="primary"
-            size="xl"
-            className="w-full"
-            onClick={() => startMatchmaking()}
-            icon={<RotateCcw className="w-5 h-5" />}
-          >
-            Play Again
-          </ChunkyButton>
-
-          <ChunkyButton
-            variant="secondary"
-            size="xl"
-            className="w-full"
-            onClick={resetGame}
-            icon={<Home className="w-5 h-5" />}
-          >
-            Back to Home
-          </ChunkyButton>
-        </motion.div>
-      </div>
+          Back to Home
+        </ChunkyButton>
+      </motion.div>
     </div>
   );
 }
