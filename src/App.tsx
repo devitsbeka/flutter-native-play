@@ -9,6 +9,7 @@ import CategoryQuizPage from "./pages/CategoryQuizPage";
 import Auth from "./pages/Auth";
 import Leaderboards from "./pages/Leaderboards";
 import Profile from "./pages/Profile";
+import WorldHome from "./pages/WorldHome";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/leaderboards" element={<Leaderboards />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/world" element={<WorldHome />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
