@@ -184,7 +184,7 @@ export function QuestionScreen() {
                 disabled={!!selectedAnswer || showResult}
                 className={cn(
                   "flex items-center gap-3 p-4 rounded-2xl text-left border-2 relative flex-shrink-0",
-                  "disabled:cursor-not-allowed min-h-[56px] transition-all duration-200",
+                  "disabled:cursor-not-allowed min-h-[56px]",
                   // Base styles
                   !showResult && !isSelected && "bg-card border-border hover:border-primary/50 active:scale-[0.98]",
                   // Selected but not showing result yet
@@ -201,7 +201,7 @@ export function QuestionScreen() {
               >
                 <span
                   className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0 transition-all duration-200",
+                    "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0",
                     !showResult && !isSelected && "bg-secondary text-foreground",
                     !showResult && isSelected && "bg-primary-foreground/20 text-primary-foreground",
                     showResult && isCorrect && "bg-success text-success-foreground",
@@ -218,7 +218,7 @@ export function QuestionScreen() {
                   )}
                 </span>
                 <span className={cn(
-                  "flex-1 font-semibold transition-colors duration-200",
+                  "flex-1 font-semibold",
                   !showResult && isSelected && "text-primary-foreground",
                   showResult && isCorrect && "text-success",
                   showResult && isSelected && !isCorrect && "text-destructive"
@@ -228,7 +228,7 @@ export function QuestionScreen() {
 
                 {isOpponentAnswer && (
                   <div className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center text-sm border transition-all duration-200",
+                    "w-7 h-7 rounded-full flex items-center justify-center text-sm border",
                     lastOpponentCorrect 
                       ? "bg-success/20 border-success" 
                       : "bg-destructive/20 border-destructive"
