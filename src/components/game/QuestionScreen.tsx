@@ -172,7 +172,8 @@ export function QuestionScreen() {
         {/* Answers */}
         <div className="flex-1 flex flex-col gap-2.5 min-h-0">
           {currentQuestion.allAnswers.map((answer, index) => {
-            const isSelected = selectedAnswer === answer || lastUserAnswer === answer;
+            // Use selectedAnswer as the single source of truth for user selection
+            const isSelected = selectedAnswer === answer;
             const isCorrect = answer === currentQuestion.correctAnswer;
             const isOpponentAnswer = showResult && lastOpponentAnswer === answer;
             const letters = ["A", "B", "C", "D"];
