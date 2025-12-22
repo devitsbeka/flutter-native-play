@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Flower2, Sun, Leaf, Snowflake } from "lucide-react";
+import { Flower2, Sun, Leaf, Snowflake, Check } from "lucide-react";
 import { Season } from "./SeasonalAdventureMap";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,6 @@ const seasons = [
 export function SeasonSelector({ currentSeason, onSeasonSelect, completedLevels }: SeasonSelectorProps) {
   const getSeasonProgress = (seasonIndex: number) => {
     const seasonStart = seasonIndex * LEVELS_PER_SEASON;
-    const seasonEnd = seasonStart + LEVELS_PER_SEASON;
     const completed = Math.max(0, Math.min(LEVELS_PER_SEASON, completedLevels - seasonStart));
     return completed;
   };
@@ -59,14 +58,14 @@ export function SeasonSelector({ currentSeason, onSeasonSelect, completedLevels 
               </div>
             )}
             
-            {/* Complete checkmark */}
+            {/* Complete checkmark - SVG icon instead of emoji */}
             {isComplete && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center"
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center shadow-md"
               >
-                <span className="text-[10px] text-white">✓</span>
+                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
               </motion.div>
             )}
           </motion.button>
