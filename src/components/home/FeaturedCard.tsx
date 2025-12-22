@@ -23,7 +23,7 @@ export function FeaturedCard({ title, subtitle, icon, onClick }: FeaturedCardPro
       
       {/* Content */}
       <div className="mt-auto pt-3">
-        <h3 className="text-sm font-display uppercase font-bold text-foreground leading-tight">{title}</h3>
+        <h3 className="text-sm font-display font-bold text-foreground leading-tight">{title}</h3>
         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{subtitle}</p>
       </div>
     </motion.button>
