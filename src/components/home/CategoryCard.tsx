@@ -47,7 +47,7 @@ export function CategoryCard({
         {/* Text content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-display uppercase font-bold text-foreground truncate">{name}</h3>
+            <h3 className="font-display font-bold text-foreground truncate">{name}</h3>
             {isCompleted && (
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-success">
                 <Check className="h-3 w-3 text-success-foreground" />

@@ -35,7 +35,7 @@ export function BottomNavigation() {
                 )}
               >
                 <item.icon className={cn("w-6 h-6", isActive && "stroke-[2.5]")} />
-                <span className="text-xs mt-1 font-display uppercase tracking-wide">{item.label}</span>
+                <span className="text-xs mt-1 font-display tracking-wide">{item.label}</span>
               </button>
             );
           })}

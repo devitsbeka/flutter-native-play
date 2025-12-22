@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Globe } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
@@ -21,10 +20,6 @@ export default function Index() {
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/category/${categoryId}`);
-  };
-
-  const handleMapClick = () => {
-    navigate("/world");
   };
 
   return (
@@ -47,18 +42,8 @@ export default function Index() {
           <FloatingUserStats profile={profile} />
         </header>
 
-        {/* World Map Button - Centered */}
-        <div className="flex-1 flex items-center justify-center">
-          <motion.button
-            onClick={handleMapClick}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="liquid-glass flex items-center gap-3 rounded-2xl px-6 py-3"
-          >
-            <Globe className="h-5 w-5 text-foreground" />
-            <span className="font-display uppercase text-foreground font-bold tracking-wide">World Map</span>
-          </motion.button>
-        </div>
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Bottom Content */}
         <div className="px-4 pb-24 space-y-4">
@@ -68,12 +53,12 @@ export default function Index() {
               <TabButton
                 isActive={activeTab === "featured"}
                 onClick={() => setActiveTab("featured")}
-                label="FEATURED"
+                label="Featured"
               />
               <TabButton
                 isActive={activeTab === "trivia"}
                 onClick={() => setActiveTab("trivia")}
-                label="CLASSIC TRIVIA"
+                label="Classic Trivia"
               />
             </div>
           </div>
@@ -154,7 +139,7 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl px-5 py-2.5 text-sm font-display uppercase tracking-wide transition-all ${
+      className={`relative rounded-xl px-5 py-2.5 text-sm font-display tracking-wide transition-all ${
         isActive
           ? "text-foreground"
           : "text-muted-foreground hover:text-foreground"
