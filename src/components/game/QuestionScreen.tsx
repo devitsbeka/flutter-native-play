@@ -76,14 +76,28 @@ export function QuestionScreen() {
 
   return (
     <div className="w-full max-w-md mx-auto h-full flex flex-col py-2">
-      {/* Header Section - Compact */}
-      <div className="bg-primary/80 backdrop-blur-lg rounded-2xl p-4 mb-3 flex-shrink-0">
-        {/* Top bar - Timer & Category */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="bg-primary-foreground/20 px-3 py-1 rounded-full text-xs font-medium text-primary-foreground">
+      {/* Header Section - Ultra Compact */}
+      <div className="bg-primary/80 backdrop-blur-lg rounded-2xl px-3 py-2 mb-2 flex-shrink-0">
+        {/* Single row: Category - Scores - Timer */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs font-medium text-primary-foreground">
             {category}
           </span>
-          <div className="bg-primary-foreground/20 px-3 py-1 rounded-full">
+          
+          {/* Score Display - Inline */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="text-lg">😊</span>
+              <p className="text-base font-bold text-primary-foreground">{userScore}</p>
+            </div>
+            <div className="text-primary-foreground/50 font-bold text-xs">VS</div>
+            <div className="flex items-center gap-1">
+              <p className="text-base font-bold text-primary-foreground">{opponentScore}</p>
+              <span className="text-lg">{opponent?.avatarEmoji || "🤖"}</span>
+            </div>
+          </div>
+
+          <div className="bg-primary-foreground/20 px-2 py-0.5 rounded-full">
             <span className={cn(
               "text-xs font-bold tabular-nums",
               showResult ? "text-primary-foreground" : timerPercentage > 25 ? "text-primary-foreground" : "text-quiz-coral"
@@ -93,43 +107,26 @@ export function QuestionScreen() {
           </div>
         </div>
 
-        {/* Score Display */}
-        <div className="flex items-center justify-center gap-4 mb-3">
-          <div className="flex items-center gap-2">
-            <Avatar emoji="😊" size="sm" />
-            <p className="text-lg font-bold text-primary-foreground">{userScore}</p>
-          </div>
-          
-          <div className="text-primary-foreground/50 font-bold text-sm">VS</div>
-          
-          <div className="flex items-center gap-2">
-            <p className="text-lg font-bold text-primary-foreground">{opponentScore}</p>
-            <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="sm" />
-          </div>
-        </div>
-
-        {/* Progress Dots */}
-        <div className="flex justify-center mb-3">
+        {/* Progress Dots + Timer bar in one row */}
+        <div className="flex items-center gap-3">
           <ProgressDots
             total={questions.length}
             current={currentQuestionIndex}
             userProgress={userProgress}
             opponentProgress={opponentProgress}
           />
-        </div>
-
-        {/* Timer bar */}
-        <div className="h-1 bg-primary-foreground/20 rounded-full overflow-hidden">
-          <motion.div
-            className={cn(
-              "h-full rounded-full",
-              showResult ? "bg-primary-foreground" :
-              timerPercentage > 50 ? "bg-primary-foreground" : 
-              timerPercentage > 25 ? "bg-quiz-yellow" : "bg-quiz-coral"
-            )}
-            animate={{ width: showResult ? "100%" : `${timerPercentage}%` }}
-            transition={{ duration: 0.1 }}
-          />
+          <div className="flex-1 h-1 bg-primary-foreground/20 rounded-full overflow-hidden">
+            <motion.div
+              className={cn(
+                "h-full rounded-full",
+                showResult ? "bg-primary-foreground" :
+                timerPercentage > 50 ? "bg-primary-foreground" : 
+                timerPercentage > 25 ? "bg-quiz-yellow" : "bg-quiz-coral"
+              )}
+              animate={{ width: showResult ? "100%" : `${timerPercentage}%` }}
+              transition={{ duration: 0.1 }}
+            />
+          </div>
         </div>
       </div>
 
@@ -169,8 +166,8 @@ export function QuestionScreen() {
               </motion.div>
             )}
 
-            {/* Question - Compact */}
-            <div className="mb-3 flex-shrink-0">
+            {/* Question */}
+            <div className="mb-4 flex-shrink-0">
               <span className={cn(
                 "inline-block px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide mb-2",
                 currentQuestion.difficulty === "easy" && "bg-success/10 text-success",
@@ -179,7 +176,7 @@ export function QuestionScreen() {
               )}>
                 {currentQuestion.difficulty}
               </span>
-              <p className="text-base font-bold text-foreground leading-snug">
+              <p className="text-xl font-bold text-foreground leading-snug">
                 {currentQuestion.question}
               </p>
             </div>
