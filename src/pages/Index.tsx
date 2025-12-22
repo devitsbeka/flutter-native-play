@@ -36,7 +36,7 @@ export default function Index() {
       <div 
         className="fixed inset-0 z-[1] pointer-events-none"
         style={{
-          background: "radial-gradient(circle at center, transparent 0%, transparent 30%, hsl(0 0% 100% / 0.6) 70%, hsl(0 0% 100% / 0.9) 100%)",
+          background: "radial-gradient(circle at center, transparent 0%, transparent 20%, hsl(0 0% 100% / 0.85) 50%, hsl(0 0% 100% / 1) 70%, hsl(0 0% 100%) 100%)",
         }}
       />
       
