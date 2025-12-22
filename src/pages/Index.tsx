@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Users, Trophy, User } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
@@ -8,7 +9,6 @@ import { FloatingUserStats } from "@/components/home/FloatingUserStats";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
-import { BottomNavigation } from "@/components/layout/BottomNavigation";
 
 type ContentTab = "featured" | "trivia";
 
@@ -31,7 +31,7 @@ export default function Index() {
       <div 
         className="fixed inset-0 z-[1] pointer-events-none"
         style={{
-          background: "radial-gradient(circle at center, transparent 0%, transparent 20%, hsl(0 0% 100% / 0.85) 50%, hsl(0 0% 100% / 1) 70%, hsl(0 0% 100%) 100%)",
+          background: "radial-gradient(circle at center, transparent 0%, transparent 10%, hsl(0 0% 100% / 0.9) 35%, hsl(0 0% 100% / 1) 50%, hsl(0 0% 100%) 100%)",
         }}
       />
       
@@ -42,13 +42,53 @@ export default function Index() {
           <FloatingUserStats profile={profile} />
         </header>
 
+        {/* Welcome Section */}
+        <div className="px-4 pt-6 space-y-4">
+          <h1 className="text-4xl font-display font-bold text-foreground">
+            Welcome back, {profile?.nickname || "Guest"}
+          </h1>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/game")}
+              className="liquid-glass w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+            >
+              <User className="h-5 w-5 text-foreground" />
+              <span className="font-display text-foreground font-bold tracking-wide">Solo</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/team")}
+              className="liquid-glass w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+            >
+              <Users className="h-5 w-5 text-foreground" />
+              <span className="font-display text-foreground font-bold tracking-wide">Team</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/leaderboards")}
+              className="liquid-glass w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+            >
+              <Trophy className="h-5 w-5 text-foreground" />
+              <span className="font-display text-foreground font-bold tracking-wide">Leaderboard</span>
+            </motion.button>
+          </div>
+        </div>
+
         {/* Spacer */}
         <div className="flex-1" />
 
         {/* Bottom Content */}
-        <div className="px-4 pb-24 space-y-4">
-          {/* Tabs */}
-          <div className="flex justify-center">
+        <div className="px-4 pb-8 space-y-4">
+          {/* Tabs - Left aligned */}
+          <div className="flex justify-start">
             <div className="liquid-glass inline-flex rounded-2xl p-1.5">
               <TabButton
                 isActive={activeTab === "featured"}
@@ -121,8 +161,6 @@ export default function Index() {
           )}
         </div>
       </div>
-
-      <BottomNavigation />
     </div>
   );
 }
