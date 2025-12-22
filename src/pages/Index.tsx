@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Trophy, ChevronDown, Map, Play } from "lucide-react";
+import { Users, Trophy, ChevronDown, Map, Play, Gift, Star, Target, Award, Sparkles } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
-import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { FloatingUserStats } from "@/components/home/FloatingUserStats";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
+import crownMascot from "@/assets/crown-mascot.png";
 
 type ContentTab = "featured" | "trivia";
 
@@ -24,16 +24,29 @@ export default function Index() {
 
   return (
     <div className="relative min-h-[200vh] overflow-x-hidden">
-      {/* Spline Background - Fixed full screen */}
-      <SplineGlobe />
-      
-      {/* White radial mask - fades to transparent in center */}
+      {/* Sky Background */}
       <div 
-        className="fixed inset-0 z-[1] pointer-events-none"
+        className="fixed inset-0 z-0"
         style={{
-          background: "radial-gradient(circle at center, transparent 0%, transparent 15%, hsl(0 0% 100% / 0.75) 40%, hsl(0 0% 100% / 0.9) 60%, hsl(0 0% 100% / 0.95) 100%)",
+          background: "linear-gradient(180deg, hsl(195 85% 70%) 0%, hsl(195 80% 85%) 50%, hsl(45 40% 88%) 100%)"
         }}
       />
+      
+      {/* Clouds decoration */}
+      <div className="fixed inset-0 z-[1] pointer-events-none overflow-hidden">
+        <motion.div
+          className="absolute top-20 -left-20 w-64 h-32 rounded-full opacity-80"
+          style={{ background: "hsl(0 0% 100% / 0.8)", filter: "blur(30px)" }}
+          animate={{ x: [0, 30, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-40 -right-10 w-48 h-24 rounded-full opacity-60"
+          style={{ background: "hsl(0 0% 100% / 0.7)", filter: "blur(25px)" }}
+          animate={{ x: [0, -20, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
       
       {/* First Screen - Full viewport height */}
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -42,19 +55,121 @@ export default function Index() {
           <FloatingUserStats profile={profile} />
         </header>
 
-        {/* Welcome Section */}
-        <div className="px-4 pt-6">
-          <h1 className="text-4xl font-display font-bold text-foreground">
-            Welcome back, {profile?.nickname || "Guest"}
-          </h1>
+        {/* Feature Buttons Row - Lucky Spin & VIP style */}
+        <div className="px-4 pt-4 flex gap-2">
+          <FeatureButton
+            icon={<Gift className="w-6 h-6" />}
+            label="Lucky spin"
+            color="hsl(280 60% 55%)"
+            onClick={() => {}}
+          />
+          <FeatureButton
+            icon={<Star className="w-6 h-6" />}
+            label="VIP"
+            color="hsl(45 90% 50%)"
+            variant="gold"
+            onClick={() => {}}
+          />
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Central Level Badge with Mascot */}
+        <div className="flex-1 flex items-center justify-center relative px-4">
+          {/* Side Feature Icons */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+            <SideFeatureIcon icon={<Gift className="w-6 h-6" />} label="Pick-A-Prize" />
+            <SideFeatureIcon icon={<Target className="w-6 h-6" />} label="Missions" />
+          </div>
+          
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+            <SideFeatureIcon icon={<Sparkles className="w-6 h-6" />} label="Events" />
+            <SideFeatureIcon icon={<Award className="w-6 h-6" />} label="Trivia Pass" />
+            <SideFeatureIcon icon={<Trophy className="w-6 h-6" />} label="Ranking" onClick={() => navigate("/leaderboards")} />
+          </div>
 
-        {/* Action Buttons - New Layout */}
+          {/* Center Level Badge */}
+          <motion.div
+            className="relative"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", duration: 0.8 }}
+          >
+            {/* Glow effect */}
+            <div 
+              className="absolute inset-0 rounded-full blur-3xl opacity-50"
+              style={{ background: "radial-gradient(circle, hsl(190 80% 70%) 0%, transparent 70%)" }}
+            />
+            
+            {/* Star-shaped level badge */}
+            <div 
+              className="relative w-36 h-36 flex flex-col items-center justify-center"
+              style={{
+                background: "radial-gradient(circle, hsl(190 90% 85%) 0%, hsl(190 80% 70%) 100%)",
+                clipPath: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
+                filter: "drop-shadow(0 4px 8px hsl(190 70% 40% / 0.4))"
+              }}
+            >
+              <span className="text-sm font-semibold text-primary-foreground" style={{ textShadow: "0 1px 2px hsl(0 0% 0% / 0.2)" }}>Level</span>
+              <span className="text-5xl font-display font-bold text-white" style={{ textShadow: "0 2px 4px hsl(0 0% 0% / 0.3)" }}>1</span>
+            </div>
+
+            {/* Sparkle particles */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 rounded-full bg-white"
+                style={{
+                  top: `${20 + Math.random() * 60}%`,
+                  left: `${10 + Math.random() * 80}%`,
+                }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.3,
+                }}
+              />
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Crown mascot character silhouette area */}
+        <div className="relative h-40 flex items-end justify-center">
+          <motion.img
+            src={crownMascot}
+            alt="Mascot"
+            className="w-20 h-20 object-contain opacity-50"
+            style={{ filter: "drop-shadow(0 4px 8px hsl(0 0% 0% / 0.2))" }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
+        {/* Special Chest Progress */}
+        <div className="px-4 pb-4">
+          <div 
+            className="rounded-2xl px-4 py-3 flex items-center justify-between"
+            style={{
+              background: "linear-gradient(180deg, hsl(220 20% 20%) 0%, hsl(220 25% 15%) 100%)",
+              boxShadow: "0 4px 0 hsl(220 20% 10%)"
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="text-2xl">👑</div>
+            </div>
+            <div className="flex-1 text-center">
+              <span className="font-display text-white italic">Special Chest</span>
+              <span className="text-white/70 text-sm ml-2">0/3</span>
+            </div>
+            <div className="text-2xl">🎁</div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
         <div className="px-4 pb-8 flex flex-col items-center space-y-4">
-          {/* Big Quick Play Button - Chunky 3D Style */}
+          {/* Big PLAY NOW Button - Orange Chunky 3D Style */}
           <motion.button
             onClick={() => navigate("/game")}
             className="relative w-[90%] group"
@@ -65,7 +180,7 @@ export default function Index() {
             <div 
               className="absolute inset-0 rounded-2xl"
               style={{
-                background: "linear-gradient(180deg, hsl(174 60% 35%) 0%, hsl(174 60% 25%) 100%)",
+                background: "linear-gradient(180deg, hsl(25 85% 40%) 0%, hsl(25 80% 30%) 100%)",
                 transform: "translateY(6px)",
               }}
             />
@@ -73,14 +188,13 @@ export default function Index() {
             <div 
               className="relative rounded-2xl px-8 py-5 flex items-center justify-center gap-3 transition-transform group-active:translate-y-1"
               style={{
-                background: "linear-gradient(180deg, hsl(174 60% 50%) 0%, hsl(180 50% 45%) 100%)",
-                boxShadow: "inset 0 2px 0 0 hsl(174 60% 60%), inset 0 -2px 0 0 hsl(174 60% 35%)",
+                background: "linear-gradient(180deg, hsl(30 95% 55%) 0%, hsl(25 90% 50%) 100%)",
+                boxShadow: "inset 0 2px 0 0 hsl(30 95% 70%), inset 0 -2px 0 0 hsl(25 85% 40%)",
               }}
             >
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Play className="h-6 w-6 text-white fill-white" />
-              </div>
-              <span className="font-display text-white text-xl font-bold tracking-wide">Quick Play</span>
+              <span className="font-display text-white text-2xl font-bold tracking-wide uppercase" style={{ textShadow: "0 2px 4px hsl(0 0% 0% / 0.3)" }}>
+                Play Now!
+              </span>
             </div>
           </motion.button>
 
@@ -110,7 +224,7 @@ export default function Index() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <span className="text-xs text-muted-foreground">Explore more</span>
+            <span className="text-xs text-foreground/60">Explore more</span>
             <motion.div
               animate={{ y: [0, 6, 0] }}
               transition={{ 
@@ -119,14 +233,14 @@ export default function Index() {
                 ease: "easeInOut" 
               }}
             >
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              <ChevronDown className="h-5 w-5 text-foreground/60" />
             </motion.div>
           </motion.div>
         </div>
       </div>
 
       {/* Second Screen - Below the fold */}
-      <div className="relative z-10 min-h-screen bg-background/80 backdrop-blur-sm">
+      <div className="relative z-10 min-h-screen bg-background/95 backdrop-blur-sm rounded-t-3xl -mt-4">
         <div className="px-4 py-8 space-y-4">
           {/* Tabs - Left aligned */}
           <div className="flex justify-start">
@@ -202,6 +316,79 @@ export default function Index() {
         </div>
       </div>
     </div>
+  );
+}
+
+function FeatureButton({ 
+  icon, 
+  label, 
+  color,
+  variant = "default",
+  onClick 
+}: { 
+  icon: React.ReactNode; 
+  label: string;
+  color: string;
+  variant?: "default" | "gold";
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="flex-1 relative group"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98, y: 2 }}
+    >
+      <div 
+        className="absolute inset-0 rounded-2xl"
+        style={{
+          background: `linear-gradient(180deg, ${color}99 0%, ${color}66 100%)`,
+          transform: "translateY(4px)",
+        }}
+      />
+      <div 
+        className="relative rounded-2xl px-4 py-3 flex items-center justify-center gap-2 transition-transform group-active:translate-y-1"
+        style={{
+          background: `linear-gradient(180deg, ${color} 0%, ${color}dd 100%)`,
+          boxShadow: `inset 0 2px 0 hsl(0 0% 100% / 0.3), inset 0 -2px 0 hsl(0 0% 0% / 0.2)`,
+          border: variant === "gold" ? "2px solid hsl(45 80% 40%)" : "none"
+        }}
+      >
+        <span className="text-white">{icon}</span>
+        <span className="font-display text-white text-sm font-bold">{label}</span>
+        {variant === "gold" && <Star className="w-4 h-4 text-white fill-white" />}
+      </div>
+    </motion.button>
+  );
+}
+
+function SideFeatureIcon({ 
+  icon, 
+  label,
+  onClick 
+}: { 
+  icon: React.ReactNode; 
+  label: string;
+  onClick?: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <div 
+        className="w-12 h-12 rounded-xl flex items-center justify-center"
+        style={{
+          background: "linear-gradient(180deg, hsl(45 90% 55%) 0%, hsl(40 85% 45%) 100%)",
+          boxShadow: "0 3px 0 hsl(35 80% 35%), inset 0 1px 0 hsl(0 0% 100% / 0.3)"
+        }}
+      >
+        <span className="text-white">{icon}</span>
+      </div>
+      <span className="text-xs font-semibold text-foreground/80">{label}</span>
+    </motion.button>
   );
 }
 
