@@ -17,7 +17,7 @@ function GameContent() {
   }, [phase, startMatchmaking]);
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="h-screen flex flex-col relative overflow-hidden">
       {/* Spline Background */}
       <SplineGlobe />
       
@@ -37,8 +37,8 @@ function GameContent() {
         <ArrowLeft className="w-5 h-5 text-foreground" />
       </button>
       
-      {/* Game Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-6">
+      {/* Game Content - Full height minus safe areas */}
+      <div className="relative z-10 flex-1 flex flex-col px-4 pt-14 pb-4 h-full overflow-hidden">
         <GameContainer />
       </div>
     </div>

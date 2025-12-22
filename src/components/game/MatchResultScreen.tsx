@@ -26,7 +26,6 @@ export function MatchResultScreen() {
 
   useEffect(() => {
     if (isWin) {
-      // Multiple confetti bursts
       const duration = 2000;
       const end = Date.now() + duration;
 
@@ -82,30 +81,30 @@ export function MatchResultScreen() {
   }, []);
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center">
+    <div className="h-full flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full">
       {/* Result Header */}
       <motion.div
-        initial={{ scale: 0, y: -30 }}
+        initial={{ scale: 0, y: -20 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 200 }}
         className={cn(
-          "w-24 h-24 rounded-full flex items-center justify-center mb-4",
+          "w-20 h-20 rounded-full flex items-center justify-center mb-3",
           isWin ? "bg-quiz-yellow" : "bg-secondary"
         )}
       >
         {isWin ? (
-          <Trophy className="w-12 h-12 text-quiz-orange" />
+          <Trophy className="w-10 h-10 text-quiz-orange" />
         ) : (
-          <Trophy className="w-12 h-12 text-muted-foreground" />
+          <Trophy className="w-10 h-10 text-muted-foreground" />
         )}
       </motion.div>
 
       {/* Result Text */}
       <motion.h1
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="text-4xl font-bold text-foreground mb-2"
+        className="text-3xl font-bold text-foreground mb-1"
       >
         {result}
       </motion.h1>
@@ -116,7 +115,7 @@ export function MatchResultScreen() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="flex justify-center gap-2 mb-6"
+          className="flex justify-center gap-1 mb-4"
         >
           {[1, 2, 3].map((star) => (
             <motion.div
@@ -125,7 +124,7 @@ export function MatchResultScreen() {
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.3 + star * 0.1, type: "spring" }}
             >
-              <Star className="w-8 h-8 text-quiz-yellow fill-quiz-yellow" />
+              <Star className="w-6 h-6 text-quiz-yellow fill-quiz-yellow" />
             </motion.div>
           ))}
         </motion.div>
@@ -136,38 +135,38 @@ export function MatchResultScreen() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="w-full bg-background/95 backdrop-blur-lg rounded-3xl p-6 mb-6 shadow-xl"
+        className="w-full bg-background/95 backdrop-blur-lg rounded-2xl p-4 mb-4 shadow-xl"
       >
         <div className="flex items-center justify-between">
           {/* You */}
           <div className="text-center flex-1">
-            <Avatar emoji={profile?.avatar_url || "😊"} size="lg" className="mx-auto mb-2" />
-            <p className="font-bold text-foreground text-sm mb-1">
+            <Avatar emoji={profile?.avatar_url || "😊"} size="md" className="mx-auto mb-1" />
+            <p className="font-bold text-foreground text-xs mb-1">
               {profile?.nickname || "You"}
             </p>
             <motion.p
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4, type: "spring" }}
-              className="text-4xl font-bold text-primary"
+              className="text-3xl font-bold text-primary"
             >
               {userScore}
             </motion.p>
           </div>
 
-          <div className="text-2xl font-bold text-muted-foreground">vs</div>
+          <div className="text-xl font-bold text-muted-foreground">vs</div>
 
           {/* Opponent */}
           <div className="text-center flex-1">
-            <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="lg" className="mx-auto mb-2" />
-            <p className="font-bold text-foreground text-sm mb-1">
+            <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="md" className="mx-auto mb-1" />
+            <p className="font-bold text-foreground text-xs mb-1">
               {opponent?.name}
             </p>
             <motion.p
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, type: "spring" }}
-              className="text-4xl font-bold text-muted-foreground"
+              className="text-3xl font-bold text-muted-foreground"
             >
               {opponentScore}
             </motion.p>
@@ -180,10 +179,10 @@ export function MatchResultScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-center pt-5 mt-5 border-t border-border"
+            className="text-center pt-3 mt-3 border-t border-border"
           >
-            <p className="text-muted-foreground text-sm">Points Earned</p>
-            <p className="text-2xl font-bold text-primary">+{userScore}</p>
+            <p className="text-muted-foreground text-xs">Points Earned</p>
+            <p className="text-xl font-bold text-primary">+{userScore}</p>
           </motion.div>
         )}
       </motion.div>
@@ -193,24 +192,24 @@ export function MatchResultScreen() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="w-full flex flex-col gap-3"
+        className="w-full flex flex-col gap-2"
       >
         <ChunkyButton
           variant="primary"
-          size="xl"
+          size="lg"
           className="w-full"
           onClick={() => startMatchmaking()}
-          icon={<RotateCcw className="w-5 h-5" />}
+          icon={<RotateCcw className="w-4 h-4" />}
         >
           Play Again
         </ChunkyButton>
 
         <ChunkyButton
           variant="secondary"
-          size="xl"
+          size="lg"
           className="w-full"
           onClick={handleBackToHome}
-          icon={<Home className="w-5 h-5" />}
+          icon={<Home className="w-4 h-4" />}
         >
           Back to Home
         </ChunkyButton>
