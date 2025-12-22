@@ -31,7 +31,7 @@ export default function Index() {
       <div 
         className="fixed inset-0 z-[1] pointer-events-none"
         style={{
-          background: "radial-gradient(circle at center, transparent 0%, transparent 10%, hsl(0 0% 100% / 0.9) 35%, hsl(0 0% 100% / 1) 50%, hsl(0 0% 100%) 100%)",
+          background: "radial-gradient(circle at center, transparent 0%, transparent 20%, hsl(0 0% 100% / 0.6) 45%, hsl(0 0% 100% / 0.8) 70%, hsl(0 0% 100% / 0.9) 100%)",
         }}
       />
       
@@ -126,15 +126,14 @@ export default function Index() {
           </div>
 
           {/* Tab Content */}
-          {activeTab === "featured" ? (
+{activeTab === "featured" ? (
             <motion.section
               key="featured"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="-mx-4"
             >
-              <div className="flex gap-3 overflow-x-auto px-4 scrollbar-hide">
+              <div className="grid grid-cols-2 gap-3">
                 {featuredItems.map((item, index) => (
                   <motion.div
                     key={item.id}
