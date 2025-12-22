@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, Users } from "lucide-react";
 import { getRankFromPoints } from "@/data/opponents";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PodiumDisplay } from "@/components/shared/PodiumDisplay";
 import { Avatar } from "@/components/shared/Avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LeaderboardEntry {
   id: string;
@@ -16,48 +17,44 @@ interface LeaderboardEntry {
   total_points: number;
   games_won: number;
   games_played: number;
+  user_id: string;
 }
-
-// Mock data for when database is empty
-const mockLeaderboardData: LeaderboardEntry[] = [
-  { id: "1", nickname: "QuizMaster", country_code: "US", total_points: 15420, games_won: 89, games_played: 120 },
-  { id: "2", nickname: "BrainStorm", country_code: "GB", total_points: 12850, games_won: 76, games_played: 98 },
-  { id: "3", nickname: "TriviaKing", country_code: "CA", total_points: 11200, games_won: 65, games_played: 85 },
-  { id: "4", nickname: "KnowledgeNinja", country_code: "AU", total_points: 9870, games_won: 58, games_played: 75 },
-  { id: "5", nickname: "WisdomWolf", country_code: "DE", total_points: 8540, games_won: 52, games_played: 70 },
-  { id: "6", nickname: "MindMaven", country_code: "FR", total_points: 7650, games_won: 45, games_played: 62 },
-  { id: "7", nickname: "GeniusGamer", country_code: "JP", total_points: 6890, games_won: 41, games_played: 58 },
-  { id: "8", nickname: "SmartStar", country_code: "BR", total_points: 5420, games_won: 35, games_played: 50 },
-  { id: "9", nickname: "QuickThinker", country_code: "MX", total_points: 4560, games_won: 28, games_played: 42 },
-  { id: "10", nickname: "LogicLion", country_code: "IN", total_points: 3890, games_won: 24, games_played: 38 },
-];
 
 export default function Leaderboards() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<"weekly" | "all">("weekly");
+  const [userRank, setUserRank] = useState<number | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       setLoading(true);
+      
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, nickname, country_code, total_points, games_won, games_played")
+        .select("id, user_id, nickname, country_code, total_points, games_won, games_played")
         .order("total_points", { ascending: false })
         .limit(100);
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         setEntries(data);
-      } else {
-        // Use mock data when no real data exists
-        setEntries(mockLeaderboardData);
+        
+        // Find current user's rank
+        if (user) {
+          const userIndex = data.findIndex((entry) => entry.user_id === user.id);
+          if (userIndex !== -1) {
+            setUserRank(userIndex + 1);
+          }
+        }
       }
+      
       setLoading(false);
     };
 
     fetchLeaderboard();
-  }, [timeFilter]);
+  }, [timeFilter, user]);
 
   // Calculate time until reset (Sunday midnight)
   const getTimeUntilReset = () => {
@@ -69,6 +66,13 @@ export default function Leaderboards() {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     return `${days}d ${hours}h`;
+  };
+
+  // Calculate percentile
+  const getPercentile = () => {
+    if (!userRank || entries.length === 0) return null;
+    const percentile = Math.round(((entries.length - userRank) / entries.length) * 100);
+    return Math.max(1, percentile);
   };
 
   // Get top 3 for podium
@@ -83,6 +87,7 @@ export default function Leaderboards() {
 
   // Remaining entries
   const remainingEntries = entries.slice(3);
+  const percentile = getPercentile();
 
   const headerContent = (
     <div className="pt-12 pb-24 px-6">
@@ -125,13 +130,22 @@ export default function Leaderboards() {
         </button>
       </div>
 
-      {/* Better Than Banner */}
+      {/* Status Banner */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-accent text-accent-foreground rounded-2xl px-4 py-3 mb-6 flex items-center justify-between"
       >
-        <span className="font-bold">🔥 You're doing better than 60%!</span>
+        {percentile ? (
+          <span className="font-bold">🔥 You're doing better than {percentile}%!</span>
+        ) : entries.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            <span className="font-bold">{entries.length} players competing</span>
+          </div>
+        ) : (
+          <span className="font-bold">Be the first to play!</span>
+        )}
         <div className="flex items-center gap-1 text-sm">
           <Clock className="w-4 h-4" />
           <span>{getTimeUntilReset()}</span>
@@ -155,11 +169,20 @@ export default function Leaderboards() {
           <div className="text-center py-12 text-muted-foreground">
             Loading leaderboard...
           </div>
+        ) : entries.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🏆</div>
+            <h3 className="text-lg font-bold text-foreground mb-2">No players yet!</h3>
+            <p className="text-muted-foreground">
+              Complete quizzes to appear on the leaderboard
+            </p>
+          </div>
         ) : (
           <div className="space-y-3">
             {remainingEntries.map((entry, index) => {
               const rank = getRankFromPoints(entry.total_points);
               const position = index + 4; // Start from 4th position
+              const isCurrentUser = user && entry.user_id === user.id;
 
               return (
                 <motion.div
@@ -167,11 +190,19 @@ export default function Leaderboards() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03 }}
-                  className="flex items-center gap-4 p-4 bg-card rounded-2xl border border-border"
+                  className={cn(
+                    "flex items-center gap-4 p-4 rounded-2xl border",
+                    isCurrentUser 
+                      ? "bg-primary/10 border-primary" 
+                      : "bg-card border-border"
+                  )}
                 >
                   {/* Position */}
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                    <span className="font-bold text-sm text-foreground">{position}</span>
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center",
+                    isCurrentUser ? "bg-primary text-primary-foreground" : "bg-secondary"
+                  )}>
+                    <span className="font-bold text-sm">{position}</span>
                   </div>
 
                   {/* Avatar */}
@@ -183,8 +214,12 @@ export default function Leaderboards() {
 
                   {/* Name & Rank */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground truncate">
+                    <p className={cn(
+                      "font-bold truncate",
+                      isCurrentUser ? "text-primary" : "text-foreground"
+                    )}>
                       {entry.nickname}
+                      {isCurrentUser && " (You)"}
                     </p>
                     <p className={cn("text-xs font-medium", rank.color)}>
                       {rank.name}
