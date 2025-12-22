@@ -13,6 +13,7 @@ import WorldHome from "./pages/WorldHome";
 import NotFound from "./pages/NotFound";
 import Game from "./pages/Game";
 import Team from "./pages/Team";
+import AdventureMap from "./pages/AdventureMap";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/adventure-map" element={<AdventureMap />} />
           <Route path="/category/:categoryId" element={<CategoryPage />} />
           <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
           <Route path="/auth" element={<Auth />} />

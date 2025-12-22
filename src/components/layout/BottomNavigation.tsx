@@ -1,4 +1,4 @@
-import { Home, Trophy, User, Globe } from "lucide-react";
+import { Home, Trophy, User, Globe, Map } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: "Home", path: "/" },
+  { icon: Map, label: "Map", path: "/adventure-map" },
   { icon: Globe, label: "Explore", path: "/discover" },
   { icon: Trophy, label: "Rankings", path: "/leaderboards" },
   { icon: User, label: "Profile", path: "/profile" },
