@@ -131,25 +131,27 @@ export function QuestionScreen() {
 
       {/* Question Content */}
       <div className="bg-background/95 backdrop-blur-lg rounded-2xl p-4 flex-1 flex flex-col shadow-xl overflow-hidden">
-        {/* Result Banner - Always reserve space to prevent layout shift */}
-        <div className={cn(
-          "mb-3 py-2 rounded-xl flex items-center justify-center gap-2 flex-shrink-0 transition-all duration-200",
-          showResult 
-            ? lastAnswerCorrect ? "bg-success/10 opacity-100" : "bg-destructive/10 opacity-100"
-            : "opacity-0 h-0 mb-0 py-0 overflow-hidden"
-        )}>
+        {/* Result Banner - Fixed height to prevent layout shift */}
+        <div className="h-10 mb-3 flex-shrink-0">
           <div className={cn(
-            "w-5 h-5 rounded-full flex items-center justify-center",
-            lastAnswerCorrect ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"
+            "h-full rounded-xl flex items-center justify-center gap-2 transition-opacity duration-200",
+            showResult 
+              ? lastAnswerCorrect ? "bg-success/10 opacity-100" : "bg-destructive/10 opacity-100"
+              : "opacity-0 pointer-events-none"
           )}>
-            {lastAnswerCorrect ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            <div className={cn(
+              "w-5 h-5 rounded-full flex items-center justify-center",
+              lastAnswerCorrect ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"
+            )}>
+              {lastAnswerCorrect ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+            </div>
+            <span className={cn(
+              "font-bold text-sm",
+              lastAnswerCorrect ? "text-success" : "text-destructive"
+            )}>
+              {lastAnswerCorrect ? `+${lastPointsEarned} points!` : "Wrong!"}
+            </span>
           </div>
-          <span className={cn(
-            "font-bold text-sm",
-            lastAnswerCorrect ? "text-success" : "text-destructive"
-          )}>
-            {lastAnswerCorrect ? `+${lastPointsEarned} points!` : "Wrong!"}
-          </span>
         </div>
 
         {/* Question */}
@@ -239,19 +241,21 @@ export function QuestionScreen() {
           })}
         </div>
 
-        {/* Next Button - Always reserve space */}
-        <div className={cn(
-          "mt-3 flex-shrink-0 transition-all duration-200",
-          showResult ? "opacity-100" : "opacity-0 h-0 mt-0 overflow-hidden pointer-events-none"
-        )}>
-          <ChunkyButton
-            variant="primary"
-            size="lg"
-            onClick={handleNext}
-            className="w-full"
-          >
-            {currentQuestionIndex < questions.length - 1 ? "Next Question" : "See Results"}
-          </ChunkyButton>
+        {/* Next Button - Fixed height to prevent layout shift */}
+        <div className="h-14 mt-3 flex-shrink-0">
+          <div className={cn(
+            "h-full transition-opacity duration-200",
+            showResult ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            <ChunkyButton
+              variant="primary"
+              size="lg"
+              onClick={handleNext}
+              className="w-full h-full"
+            >
+              {currentQuestionIndex < questions.length - 1 ? "Next Question" : "See Results"}
+            </ChunkyButton>
+          </div>
         </div>
       </div>
     </div>
