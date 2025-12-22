@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
+import { Globe, Sparkles } from "lucide-react";
 
 export function MatchmakingScreen() {
   const { phase, preparationProgress } = useGame();
@@ -7,104 +8,94 @@ export function MatchmakingScreen() {
 
   return (
     <div className="h-full flex flex-col items-center justify-center p-6">
-      {/* Animated circles */}
+      {/* Glass Card Container */}
       <motion.div
-        className="relative w-28 h-28 mb-8"
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 200 }}
+        className="bg-card/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-border/50 max-w-sm w-full"
       >
-        {/* Multiple pulsing rings */}
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="absolute inset-0 rounded-full border-2 border-primary/30"
-            animate={{
-              scale: [1, 1.5 + i * 0.2, 1],
-              opacity: [0.6, 0, 0.6],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.3,
-            }}
-          />
-        ))}
+        {/* Animated Icon */}
+        <div className="relative w-24 h-24 mx-auto mb-6">
+          {/* Pulsing rings */}
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="absolute inset-0 rounded-full border-2 border-primary/40"
+              animate={{
+                scale: [1, 1.4 + i * 0.15],
+                opacity: [0.6, 0],
+              }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeOut",
+                delay: i * 0.4,
+              }}
+            />
+          ))}
 
-        {/* Center circle */}
-        <div className="absolute inset-4 flex items-center justify-center bg-primary/20 rounded-full backdrop-blur">
-          <motion.span 
-            className="text-4xl"
-            animate={{ 
-              scale: [1, 1.1, 1],
-              rotate: [0, 5, -5, 0]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
+          {/* Center icon */}
+          <motion.div 
+            className="absolute inset-0 flex items-center justify-center bg-primary/20 rounded-full"
+            animate={{ rotate: isPreparing ? 0 : 360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           >
-            {isPreparing ? "📚" : "🔍"}
-          </motion.span>
+            {isPreparing ? (
+              <Sparkles className="w-10 h-10 text-primary" />
+            ) : (
+              <Globe className="w-10 h-10 text-primary" />
+            )}
+          </motion.div>
         </div>
-      </motion.div>
 
-      {/* Text */}
-      <motion.div
-        className="text-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <h2 className="text-xl font-bold text-foreground mb-2">
+        {/* Heading */}
+        <h2 className="font-display text-2xl font-bold text-foreground text-center mb-2">
           {isPreparing ? "Loading Quiz" : "Finding Opponent"}
         </h2>
-        <motion.p
-          className="text-muted-foreground text-sm"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
+        
+        {/* Subtitle */}
+        <p className="text-muted-foreground text-center text-sm mb-6">
           {isPreparing ? "Preparing your questions..." : "Matching you with a player..."}
-        </motion.p>
-      </motion.div>
+        </p>
 
-      {/* Progress bar during preparation */}
-      {isPreparing && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-xs mt-8"
-        >
-          <div className="h-2 bg-primary/20 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-primary rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${preparationProgress}%` }}
-              transition={{ duration: 0.3 }}
-            />
+        {/* Progress bar during preparation */}
+        {isPreparing && (
+          <div className="space-y-2">
+            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${preparationProgress}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              />
+            </div>
+            <p className="text-center text-sm text-muted-foreground font-medium">
+              {preparationProgress}% complete
+            </p>
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-2">
-            {preparationProgress}% complete
-          </p>
-        </motion.div>
-      )}
+        )}
 
-      {/* Bouncing dots */}
-      <div className="flex items-center gap-2 mt-8">
-        {[0, 1, 2].map((index) => (
-          <motion.div
-            key={index}
-            className="w-2.5 h-2.5 bg-primary/50 rounded-full"
-            animate={{
-              y: [0, -8, 0],
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 0.8,
-              repeat: Infinity,
-              delay: index * 0.15,
-            }}
-          />
-        ))}
-      </div>
+        {/* Bouncing dots for matchmaking */}
+        {!isPreparing && (
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {[0, 1, 2].map((index) => (
+              <motion.div
+                key={index}
+                className="w-2.5 h-2.5 bg-primary rounded-full"
+                animate={{
+                  y: [0, -8, 0],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 0.8,
+                  repeat: Infinity,
+                  delay: index * 0.15,
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 }
