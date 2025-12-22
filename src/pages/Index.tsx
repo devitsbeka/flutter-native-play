@@ -229,22 +229,16 @@ function ChunkyIconButton({
           transform: "translateY(4px)",
         }}
       />
-      {/* Main button face */}
+      {/* Main button face - pure white */}
       <div 
-        className="relative rounded-2xl p-4 flex items-center justify-center transition-transform group-active:translate-y-1"
+        className="relative rounded-2xl py-5 flex items-center justify-center transition-transform group-active:translate-y-1"
         style={{
-          background: "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 96%) 100%)",
-          boxShadow: "inset 0 2px 0 0 hsl(0 0% 100%), inset 0 -1px 0 0 hsl(0 0% 90%)",
+          background: "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 97%) 100%)",
+          boxShadow: "inset 0 2px 0 0 hsl(0 0% 100%), inset 0 -1px 0 0 hsl(0 0% 92%)",
         }}
       >
-        <div 
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ 
-            background: `linear-gradient(135deg, ${iconColor} 0%, ${iconColor.replace(')', ' / 0.8)')} 100%)`,
-          }}
-        >
-          <span className="text-white">{icon}</span>
-        </div>
+        {/* Colored icon directly on white surface */}
+        <span style={{ color: iconColor }}>{icon}</span>
       </div>
     </motion.button>
   );
