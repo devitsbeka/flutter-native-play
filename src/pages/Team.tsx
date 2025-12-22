@@ -2,18 +2,29 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft, Users, Bell, Sparkles } from "lucide-react";
+import { SplineGlobe } from "@/components/home/SplineGlobe";
 
 export default function Team() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background via-background to-primary/10">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Spline Background */}
+      <SplineGlobe />
+      
+      {/* White Radial Mask */}
+      <div 
+        className="fixed inset-0 z-[1] pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at center, transparent 0%, transparent 15%, hsl(0 0% 100% / 0.75) 40%, hsl(0 0% 100% / 0.9) 60%, hsl(0 0% 100% / 0.95) 100%)",
+        }}
+      />
       {/* Back Button */}
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         onClick={() => navigate("/")}
-        className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-4 left-4 z-10 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
         <span>Back</span>
@@ -24,7 +35,7 @@ export default function Team() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 200 }}
-        className="w-32 h-32 rounded-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center mb-8 shadow-xl"
+        className="relative z-10 w-32 h-32 rounded-full bg-gradient-to-br from-secondary to-secondary/80 flex items-center justify-center mb-8 shadow-xl"
       >
         <Users className="w-16 h-16 text-secondary-foreground" />
       </motion.div>
@@ -34,7 +45,7 @@ export default function Team() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="text-center mb-8"
+        className="relative z-10 text-center mb-8"
       >
         <div className="flex items-center justify-center gap-2 mb-4">
           <Sparkles className="w-5 h-5 text-primary" />
@@ -57,7 +68,7 @@ export default function Team() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="w-full max-w-sm space-y-3 mb-8"
+        className="relative z-10 w-full max-w-sm space-y-3 mb-8"
       >
         {[
           "Create or join teams with friends",
@@ -83,7 +94,7 @@ export default function Team() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="w-full max-w-sm"
+        className="relative z-10 w-full max-w-sm"
       >
         <ChunkyButton
           variant="secondary"
