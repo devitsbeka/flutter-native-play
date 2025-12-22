@@ -28,30 +28,35 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Globe Hero Section */}
-      <div className="relative">
-        <FloatingUserStats profile={profile} />
+    <div className="relative min-h-screen bg-background overflow-hidden">
+      {/* Globe Canvas - Full Background */}
+      <SplineGlobe />
+      
+      {/* Floating UI Elements */}
+      <div className="relative z-10 flex flex-col min-h-screen pointer-events-none">
+        {/* Top Stats */}
+        <div className="pointer-events-auto">
+          <FloatingUserStats profile={profile} />
+        </div>
         
-        {/* Map Button on Canvas */}
-        <motion.button
-          onClick={handleMapClick}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="absolute bottom-8 right-4 z-10 flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-primary-foreground font-semibold shadow-lg"
-          style={{
-            boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5), 0 8px 16px -4px hsl(0 0% 0% / 0.2)",
-          }}
-        >
-          <Map className="h-4 w-4" />
-          <span>World Map</span>
-        </motion.button>
+        {/* Map Button - Floating on canvas */}
+        <div className="flex-1 flex items-center justify-end px-4">
+          <motion.button
+            onClick={handleMapClick}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-primary-foreground font-semibold shadow-lg"
+            style={{
+              boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5), 0 8px 16px -4px hsl(0 0% 0% / 0.2)",
+            }}
+          >
+            <Map className="h-4 w-4" />
+            <span>World Map</span>
+          </motion.button>
+        </div>
 
-        <SplineGlobe />
-      </div>
-
-      {/* Content Section */}
-      <div className="relative px-5 -mt-4">
+        {/* Bottom Content Section */}
+        <div className="pointer-events-auto px-5 pb-24 pt-4 bg-gradient-to-t from-background via-background to-transparent">
         {/* Tabs */}
         <div className="mb-6 flex justify-center">
           <div 
@@ -130,6 +135,7 @@ export default function Index() {
             </div>
           </motion.section>
         )}
+        </div>
       </div>
 
       <BottomNavigation />

@@ -33,7 +33,7 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
   }, []);
 
   return (
-    <div className={`relative w-full h-[300px] md:h-[340px] mt-12 ${className}`} style={{ transform: "scale(0.8)", transformOrigin: "center top" }}>
+    <div className={`absolute inset-0 ${className}`}>
       {/* Loading fallback */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -61,11 +61,8 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
         </div>
       )}
 
-      {/* Spline container */}
+      {/* Spline container - full canvas */}
       <div ref={containerRef} className="w-full h-full" />
-
-      {/* Bottom gradient overlay for smooth transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </div>
   );
 }
