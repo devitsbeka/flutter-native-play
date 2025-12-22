@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { cn } from "@/lib/utils";
 import { ProgressDots } from "./ProgressDots";
-import { Avatar } from "@/components/shared/Avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Check, X } from "lucide-react";
 
@@ -28,6 +27,7 @@ export function QuestionScreen() {
   } = useGame();
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [animateUserScore, setAnimateUserScore] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
   const showResult = phase === "question-result";
@@ -53,6 +53,15 @@ export function QuestionScreen() {
     }
   }, [currentQuestionIndex, timePerQuestion, phase]);
 
+  // Trigger bounce animation when score increases
+  useEffect(() => {
+    if (showResult && lastAnswerCorrect) {
+      setAnimateUserScore(true);
+      const timer = setTimeout(() => setAnimateUserScore(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showResult, lastAnswerCorrect]);
+
   useEffect(() => {
     if (selectedAnswer || showResult) return;
 
@@ -76,61 +85,53 @@ export function QuestionScreen() {
 
   return (
     <div className="w-full max-w-md mx-auto h-full flex flex-col py-2">
-      {/* Header Section - Ultra Compact */}
-      <div className="bg-primary/80 backdrop-blur-lg rounded-2xl px-3 py-2 mb-2 flex-shrink-0">
-        {/* Single row: Category - Scores - Timer */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="bg-primary-foreground/20 px-2 py-0.5 rounded-full text-xs font-medium text-primary-foreground">
-            {category}
-          </span>
-          
-          {/* Score Display - Inline */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span className="text-lg">😊</span>
-              <p className="text-base font-bold text-primary-foreground">{userScore}</p>
-            </div>
-            <div className="text-primary-foreground/50 font-bold text-xs">VS</div>
-            <div className="flex items-center gap-1">
-              <p className="text-base font-bold text-primary-foreground">{opponentScore}</p>
-              <span className="text-lg">{opponent?.avatarEmoji || "🤖"}</span>
-            </div>
-          </div>
-
-          <div className="bg-primary-foreground/20 px-2 py-0.5 rounded-full">
-            <span className={cn(
-              "text-xs font-bold tabular-nums",
-              showResult ? "text-primary-foreground" : timerPercentage > 25 ? "text-primary-foreground" : "text-quiz-coral"
-            )}>
-              {showResult ? "✓" : `${Math.ceil(timeRemaining)}s`}
-            </span>
+      {/* Header - Minimal single line */}
+      <div className="flex items-center justify-between px-1 mb-2 flex-shrink-0">
+        <span className="bg-primary/20 px-2 py-0.5 rounded-full text-xs font-medium text-primary">
+          {category}
+        </span>
+        
+        {/* Score Display - Compact with bounce */}
+        <div className="flex items-center gap-2">
+          <motion.div 
+            className="flex items-center gap-1"
+            animate={animateUserScore ? { scale: [1, 1.3, 1] } : {}}
+            transition={{ duration: 0.3 }}
+          >
+            <span className="text-base">😊</span>
+            <span className="text-sm font-bold text-foreground">{userScore}</span>
+          </motion.div>
+          <span className="text-muted-foreground text-xs">-</span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-bold text-foreground">{opponentScore}</span>
+            <span className="text-base">{opponent?.avatarEmoji || "🤖"}</span>
           </div>
         </div>
 
-        {/* Progress Dots + Timer bar in one row */}
-        <div className="flex items-center gap-3">
-          <ProgressDots
-            total={questions.length}
-            current={currentQuestionIndex}
-            userProgress={userProgress}
-            opponentProgress={opponentProgress}
-          />
-          <div className="flex-1 h-1 bg-primary-foreground/20 rounded-full overflow-hidden">
-            <motion.div
-              className={cn(
-                "h-full rounded-full",
-                showResult ? "bg-primary-foreground" :
-                timerPercentage > 50 ? "bg-primary-foreground" : 
-                timerPercentage > 25 ? "bg-quiz-yellow" : "bg-quiz-coral"
-              )}
-              animate={{ width: showResult ? "100%" : `${timerPercentage}%` }}
-              transition={{ duration: 0.1 }}
-            />
-          </div>
+        <div className={cn(
+          "px-2 py-0.5 rounded-full text-xs font-bold tabular-nums",
+          showResult ? "bg-success/20 text-success" : 
+          timerPercentage > 25 ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive"
+        )}>
+          {showResult ? "✓" : `${Math.ceil(timeRemaining)}s`}
         </div>
       </div>
 
-      {/* Question Content - Flex to fill remaining space */}
+      {/* Progress bar - Full width thin */}
+      <div className="h-1 bg-muted rounded-full overflow-hidden mb-3 flex-shrink-0">
+        <motion.div
+          className={cn(
+            "h-full rounded-full",
+            showResult ? "bg-success" :
+            timerPercentage > 50 ? "bg-primary" : 
+            timerPercentage > 25 ? "bg-quiz-yellow" : "bg-destructive"
+          )}
+          animate={{ width: showResult ? "100%" : `${timerPercentage}%` }}
+          transition={{ duration: 0.1 }}
+        />
+      </div>
+
+      {/* Question Content */}
       <div className="bg-background/95 backdrop-blur-lg rounded-2xl p-4 flex-1 flex flex-col shadow-xl overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
@@ -141,24 +142,24 @@ export function QuestionScreen() {
             transition={{ duration: 0.15 }}
             className="flex flex-col h-full"
           >
-            {/* Result Banner - Compact */}
+            {/* Result Banner */}
             {showResult && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={cn(
-                  "mb-3 p-2 rounded-xl flex items-center justify-center gap-2 flex-shrink-0",
+                  "mb-3 py-2 rounded-xl flex items-center justify-center gap-2 flex-shrink-0",
                   lastAnswerCorrect ? "bg-success/10" : "bg-destructive/10"
                 )}
               >
                 <div className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center",
+                  "w-5 h-5 rounded-full flex items-center justify-center",
                   lastAnswerCorrect ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"
                 )}>
-                  {lastAnswerCorrect ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                  {lastAnswerCorrect ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                 </div>
                 <span className={cn(
-                  "font-bold",
+                  "font-bold text-sm",
                   lastAnswerCorrect ? "text-success" : "text-destructive"
                 )}>
                   {lastAnswerCorrect ? `+${lastPointsEarned} points!` : "Wrong!"}
@@ -181,15 +182,15 @@ export function QuestionScreen() {
               </p>
             </div>
 
-            {/* Answers - Fill remaining space */}
-            <div className="flex-1 flex flex-col gap-2 min-h-0">
+            {/* Answers - Larger touch targets */}
+            <div className="flex-1 flex flex-col gap-2.5 min-h-0">
               {currentQuestion.allAnswers.map((answer, index) => {
                 const isSelected = selectedAnswer === answer || lastUserAnswer === answer;
                 const isCorrect = answer === currentQuestion.correctAnswer;
                 const isOpponentAnswer = showResult && lastOpponentAnswer === answer;
                 const letters = ["A", "B", "C", "D"];
 
-                let buttonStyle = "bg-card border-border hover:border-primary/50";
+                let buttonStyle = "bg-card border-border hover:border-primary/50 active:scale-[0.98]";
                 let letterStyle = "bg-secondary text-foreground";
                 
                 if (showResult) {
@@ -216,27 +217,27 @@ export function QuestionScreen() {
                     onClick={() => handleAnswer(answer)}
                     disabled={!!selectedAnswer || showResult}
                     className={cn(
-                      "flex items-center gap-3 p-3 rounded-xl text-left transition-all border-2 relative flex-shrink-0",
-                      "disabled:cursor-not-allowed",
+                      "flex items-center gap-3 p-4 rounded-2xl text-left transition-all border-2 relative flex-shrink-0",
+                      "disabled:cursor-not-allowed min-h-[56px]",
                       buttonStyle
                     )}
                   >
                     <span
                       className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0",
+                        "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0",
                         letterStyle
                       )}
                     >
                       {showResult && isCorrect ? (
-                        <Check className="w-4 h-4" />
+                        <Check className="w-5 h-5" />
                       ) : showResult && isSelected && !isCorrect ? (
-                        <X className="w-4 h-4" />
+                        <X className="w-5 h-5" />
                       ) : (
                         letters[index]
                       )}
                     </span>
                     <span className={cn(
-                      "flex-1 font-medium text-sm",
+                      "flex-1 font-semibold",
                       showResult && isCorrect && "text-success",
                       showResult && isSelected && !isCorrect && "text-destructive"
                     )}>
@@ -248,10 +249,9 @@ export function QuestionScreen() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.2, type: "spring" }}
-                        className="flex items-center gap-1"
                       >
                         <div className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center text-sm border",
+                          "w-7 h-7 rounded-full flex items-center justify-center text-sm border",
                           lastOpponentCorrect 
                             ? "bg-success/20 border-success" 
                             : "bg-destructive/20 border-destructive"
@@ -265,7 +265,7 @@ export function QuestionScreen() {
               })}
             </div>
 
-            {/* Next Button - Fixed at bottom */}
+            {/* Next Button */}
             {showResult && (
               <motion.div
                 initial={{ opacity: 0 }}
