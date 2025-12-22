@@ -5,7 +5,7 @@ import { Flame, Crown } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { ViewTabs } from "@/components/home/ViewTabs";
-import { ProgressionMap } from "@/components/home/ProgressionMap";
+import { GameLevelMap } from "@/components/home/GameLevelMap";
 import { categories, featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -105,9 +105,7 @@ export default function Index() {
             ))}
           </>
         ) : (
-          <div className="flex justify-center">
-            <ProgressionMap levels={getMapLevels()} onLevelClick={handleLevelClick} />
-          </div>
+          <GameLevelMap levels={getMapLevels()} onLevelClick={handleLevelClick} />
         )}
       </div>
 
