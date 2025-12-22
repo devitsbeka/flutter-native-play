@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Trophy, User } from "lucide-react";
+import { Users, Trophy, User, ChevronDown } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
@@ -23,7 +23,7 @@ export default function Index() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-[200vh] overflow-x-hidden">
       {/* Spline Background - Fixed full screen */}
       <SplineGlobe />
       
@@ -35,7 +35,7 @@ export default function Index() {
         }}
       />
       
-      {/* UI Layer - On top of background */}
+      {/* First Screen - Full viewport height */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
         <header className="px-4 pt-4 safe-top">
@@ -43,50 +43,72 @@ export default function Index() {
         </header>
 
         {/* Welcome Section */}
-        <div className="px-4 pt-6 space-y-4">
+        <div className="px-4 pt-6">
           <h1 className="text-4xl font-display font-bold text-foreground">
             Welcome back, {profile?.nickname || "Guest"}
           </h1>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/game")}
-              className="liquid-glass w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
-            >
-              <User className="h-5 w-5 text-foreground" />
-              <span className="font-display text-foreground font-bold tracking-wide">Solo</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/team")}
-              className="liquid-glass w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
-            >
-              <Users className="h-5 w-5 text-foreground" />
-              <span className="font-display text-foreground font-bold tracking-wide">Team</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/leaderboards")}
-              className="liquid-glass w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
-            >
-              <Trophy className="h-5 w-5 text-foreground" />
-              <span className="font-display text-foreground font-bold tracking-wide">Leaderboard</span>
-            </motion.button>
-          </div>
         </div>
 
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Bottom Content */}
-        <div className="px-4 pb-8 space-y-4">
+        {/* Action Buttons - Centered at bottom */}
+        <div className="px-4 pb-8 flex flex-col items-center space-y-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/game")}
+            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+          >
+            <User className="h-5 w-5 text-foreground" />
+            <span className="font-display text-foreground font-bold tracking-wide">Solo</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/team")}
+            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+          >
+            <Users className="h-5 w-5 text-foreground" />
+            <span className="font-display text-foreground font-bold tracking-wide">Team</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/leaderboards")}
+            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+          >
+            <Trophy className="h-5 w-5 text-foreground" />
+            <span className="font-display text-foreground font-bold tracking-wide">Leaderboard</span>
+          </motion.button>
+
+          {/* Scroll indicator */}
+          <motion.div 
+            className="pt-6 flex flex-col items-center gap-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <span className="text-xs text-muted-foreground">Explore more</span>
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            >
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Second Screen - Below the fold */}
+      <div className="relative z-10 min-h-screen bg-background/80 backdrop-blur-sm">
+        <div className="px-4 py-8 space-y-4">
           {/* Tabs - Left aligned */}
           <div className="flex justify-start">
             <div className="liquid-glass inline-flex rounded-2xl p-1.5">
