@@ -75,17 +75,17 @@ export function QuestionScreen() {
   const category = currentQuestion.category.split(":").pop()?.trim() || currentQuestion.category;
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col">
-      {/* Header Section - Glassmorphism style */}
-      <div className="bg-primary/80 backdrop-blur-lg rounded-3xl p-6 mb-4">
+    <div className="w-full max-w-md mx-auto h-full flex flex-col py-2">
+      {/* Header Section - Compact */}
+      <div className="bg-primary/80 backdrop-blur-lg rounded-2xl p-4 mb-3 flex-shrink-0">
         {/* Top bar - Timer & Category */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="bg-primary-foreground/20 px-4 py-1.5 rounded-full text-sm font-medium text-primary-foreground">
+        <div className="flex items-center justify-between mb-3">
+          <span className="bg-primary-foreground/20 px-3 py-1 rounded-full text-xs font-medium text-primary-foreground">
             {category}
           </span>
-          <div className="bg-primary-foreground/20 px-4 py-1.5 rounded-full">
+          <div className="bg-primary-foreground/20 px-3 py-1 rounded-full">
             <span className={cn(
-              "text-sm font-bold tabular-nums",
+              "text-xs font-bold tabular-nums",
               showResult ? "text-primary-foreground" : timerPercentage > 25 ? "text-primary-foreground" : "text-quiz-coral"
             )}>
               {showResult ? "✓" : `${Math.ceil(timeRemaining)}s`}
@@ -94,26 +94,22 @@ export function QuestionScreen() {
         </div>
 
         {/* Score Display */}
-        <div className="flex items-center justify-center gap-6 mb-4">
+        <div className="flex items-center justify-center gap-4 mb-3">
           <div className="flex items-center gap-2">
             <Avatar emoji="😊" size="sm" />
-            <div className="text-center">
-              <p className="text-xl font-bold text-primary-foreground">{userScore}</p>
-            </div>
+            <p className="text-lg font-bold text-primary-foreground">{userScore}</p>
           </div>
           
-          <div className="text-primary-foreground/50 font-bold">VS</div>
+          <div className="text-primary-foreground/50 font-bold text-sm">VS</div>
           
           <div className="flex items-center gap-2">
-            <div className="text-center">
-              <p className="text-xl font-bold text-primary-foreground">{opponentScore}</p>
-            </div>
+            <p className="text-lg font-bold text-primary-foreground">{opponentScore}</p>
             <Avatar emoji={opponent?.avatarEmoji || "🤖"} size="sm" />
           </div>
         </div>
 
         {/* Progress Dots */}
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-3">
           <ProgressDots
             total={questions.length}
             current={currentQuestionIndex}
@@ -137,65 +133,65 @@ export function QuestionScreen() {
         </div>
       </div>
 
-      {/* Question Content - Card style */}
-      <div className="bg-background/95 backdrop-blur-lg rounded-3xl p-6 flex-1 flex flex-col shadow-xl">
+      {/* Question Content - Flex to fill remaining space */}
+      <div className="bg-background/95 backdrop-blur-lg rounded-2xl p-4 flex-1 flex flex-col shadow-xl overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col flex-1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex flex-col h-full"
           >
-            {/* Result Banner */}
+            {/* Result Banner - Compact */}
             {showResult && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={cn(
-                  "mb-4 p-3 rounded-2xl flex items-center justify-center gap-3",
+                  "mb-3 p-2 rounded-xl flex items-center justify-center gap-2 flex-shrink-0",
                   lastAnswerCorrect ? "bg-success/10" : "bg-destructive/10"
                 )}
               >
                 <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center",
+                  "w-6 h-6 rounded-full flex items-center justify-center",
                   lastAnswerCorrect ? "bg-success text-success-foreground" : "bg-destructive text-destructive-foreground"
                 )}>
-                  {lastAnswerCorrect ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />}
+                  {lastAnswerCorrect ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                 </div>
                 <span className={cn(
-                  "font-bold text-lg",
+                  "font-bold",
                   lastAnswerCorrect ? "text-success" : "text-destructive"
                 )}>
-                  {lastAnswerCorrect ? `+${lastPointsEarned} points!` : "Wrong answer!"}
+                  {lastAnswerCorrect ? `+${lastPointsEarned} points!` : "Wrong!"}
                 </span>
               </motion.div>
             )}
 
-            {/* Question */}
-            <div className="mb-6">
+            {/* Question - Compact */}
+            <div className="mb-3 flex-shrink-0">
               <span className={cn(
-                "inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wide mb-3",
+                "inline-block px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide mb-2",
                 currentQuestion.difficulty === "easy" && "bg-success/10 text-success",
                 currentQuestion.difficulty === "medium" && "bg-primary/10 text-primary",
                 currentQuestion.difficulty === "hard" && "bg-destructive/10 text-destructive"
               )}>
                 {currentQuestion.difficulty}
               </span>
-              <p className="text-xl font-bold text-foreground leading-relaxed">
+              <p className="text-base font-bold text-foreground leading-snug">
                 {currentQuestion.question}
               </p>
             </div>
 
-            {/* Answers */}
-            <div className="flex-1 flex flex-col gap-3">
+            {/* Answers - Fill remaining space */}
+            <div className="flex-1 flex flex-col gap-2 min-h-0">
               {currentQuestion.allAnswers.map((answer, index) => {
                 const isSelected = selectedAnswer === answer || lastUserAnswer === answer;
                 const isCorrect = answer === currentQuestion.correctAnswer;
                 const isOpponentAnswer = showResult && lastOpponentAnswer === answer;
                 const letters = ["A", "B", "C", "D"];
 
-                // Determine styling based on state
                 let buttonStyle = "bg-card border-border hover:border-primary/50";
                 let letterStyle = "bg-secondary text-foreground";
                 
@@ -217,66 +213,53 @@ export function QuestionScreen() {
                 return (
                   <motion.button
                     key={answer}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.08 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
                     onClick={() => handleAnswer(answer)}
                     disabled={!!selectedAnswer || showResult}
                     className={cn(
-                      "flex items-center gap-4 p-4 rounded-2xl text-left transition-all border-2 relative",
+                      "flex items-center gap-3 p-3 rounded-xl text-left transition-all border-2 relative flex-shrink-0",
                       "disabled:cursor-not-allowed",
                       buttonStyle
                     )}
                   >
                     <span
                       className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm",
+                        "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0",
                         letterStyle
                       )}
                     >
                       {showResult && isCorrect ? (
-                        <Check className="w-5 h-5" />
+                        <Check className="w-4 h-4" />
                       ) : showResult && isSelected && !isCorrect ? (
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                       ) : (
                         letters[index]
                       )}
                     </span>
                     <span className={cn(
-                      "flex-1 font-semibold",
+                      "flex-1 font-medium text-sm",
                       showResult && isCorrect && "text-success",
                       showResult && isSelected && !isCorrect && "text-destructive"
                     )}>
                       {answer}
                     </span>
 
-                    {/* Opponent Avatar on their answer */}
                     {isOpponentAnswer && (
                       <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.3, type: "spring" }}
-                        className="flex items-center gap-2"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        className="flex items-center gap-1"
                       >
                         <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-lg border-2",
+                          "w-6 h-6 rounded-full flex items-center justify-center text-sm border",
                           lastOpponentCorrect 
                             ? "bg-success/20 border-success" 
                             : "bg-destructive/20 border-destructive"
                         )}>
                           {opponent?.avatarEmoji || "🤖"}
-                        </div>
-                        <div className={cn(
-                          "w-5 h-5 rounded-full flex items-center justify-center",
-                          lastOpponentCorrect 
-                            ? "bg-success text-success-foreground" 
-                            : "bg-destructive text-destructive-foreground"
-                        )}>
-                          {lastOpponentCorrect ? (
-                            <Check className="w-3 h-3" />
-                          ) : (
-                            <X className="w-3 h-3" />
-                          )}
                         </div>
                       </motion.div>
                     )}
@@ -285,13 +268,13 @@ export function QuestionScreen() {
               })}
             </div>
 
-            {/* Next Button */}
+            {/* Next Button - Fixed at bottom */}
             {showResult && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mt-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-3 flex-shrink-0"
               >
                 <ChunkyButton
                   variant="primary"

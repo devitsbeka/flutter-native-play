@@ -16,8 +16,8 @@ export function GameContainer() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="w-full"
+        transition={{ duration: 0.15 }}
+        className="w-full h-full"
       >
         {phase === "home" && <HomeScreen />}
         {(phase === "matchmaking" || phase === "preparing") && <MatchmakingScreen />}
