@@ -57,7 +57,7 @@ export default function Index() {
           {/* Big Quick Play Button - Chunky 3D Style */}
           <motion.button
             onClick={() => navigate("/game")}
-            className="relative w-4/5 group"
+            className="relative w-[90%] group"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98, y: 4 }}
           >
@@ -85,7 +85,7 @@ export default function Index() {
           </motion.button>
 
           {/* Three Icon Buttons Row - Chunky 3D White Style */}
-          <div className="w-4/5 flex gap-3">
+          <div className="w-[90%] flex gap-3">
             <ChunkyIconButton 
               icon={<Users className="h-6 w-6" />} 
               onClick={() => navigate("/team")}
