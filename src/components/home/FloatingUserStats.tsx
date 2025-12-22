@@ -8,33 +8,25 @@ interface FloatingUserStatsProps {
 
 export function FloatingUserStats({ profile }: FloatingUserStatsProps) {
   return (
-    <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
-      {/* User info */}
-      <div className="flex items-center gap-3 rounded-2xl bg-background/60 backdrop-blur-md px-3 py-2 border border-border/30">
+    <div className="flex items-center justify-between gap-3">
+      {/* User Avatar */}
+      <button className="liquid-glass h-12 w-12 rounded-2xl flex items-center justify-center">
         <Avatar
           imageUrl={profile?.avatar_url || undefined}
           emoji={profile?.nickname?.charAt(0) || "👤"}
           size="sm"
-          showRing
-          ringColor="ring-primary/30"
         />
-        <div className="hidden sm:block">
-          <p className="text-xs text-muted-foreground">Welcome back!</p>
-          <p className="text-sm font-semibold text-foreground">
-            {profile?.nickname || "Trivia Master"}
-          </p>
-        </div>
-      </div>
+      </button>
 
-      {/* Stats */}
+      {/* Stats - same height as avatar button */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 rounded-full bg-background/60 backdrop-blur-md px-3 py-1.5 border border-border/30">
-          <Flame className="h-4 w-4 text-orange-500" />
-          <span className="font-bold text-sm text-foreground">{profile?.current_streak || 0}</span>
+        <div className="liquid-glass h-12 rounded-2xl px-4 flex items-center gap-2">
+          <Flame className="h-5 w-5 text-orange-400" />
+          <span className="font-bold text-foreground">{profile?.current_streak || 0}</span>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-background/60 backdrop-blur-md px-3 py-1.5 border border-border/30">
-          <Crown className="h-4 w-4 text-amber-500" />
-          <span className="font-bold text-sm text-foreground">{profile?.total_points || 0}</span>
+        <div className="liquid-glass h-12 rounded-2xl px-4 flex items-center gap-2">
+          <Crown className="h-5 w-5 text-amber-400" />
+          <span className="font-bold text-foreground">{profile?.total_points || 0}</span>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Map } from "lucide-react";
+import { Globe } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
@@ -28,110 +28,104 @@ export default function Index() {
   };
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden">
-      {/* Globe Canvas - Full Background */}
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Spline Background - Fixed full screen */}
       <SplineGlobe />
       
-      {/* Floating UI Elements */}
-      <div className="relative z-10 flex flex-col min-h-screen pointer-events-none">
-        {/* Top Stats */}
-        <div className="pointer-events-auto">
+      {/* UI Layer - On top of background */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="px-4 pt-4 safe-top">
           <FloatingUserStats profile={profile} />
-        </div>
-        
-        {/* Map Button - Floating on canvas */}
-        <div className="absolute top-1/3 right-4 -translate-y-1/2">
+        </header>
+
+        {/* World Map Button - Centered */}
+        <div className="flex-1 flex items-center justify-center">
           <motion.button
             onClick={handleMapClick}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="pointer-events-auto flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-primary-foreground font-semibold shadow-lg"
-            style={{
-              boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5), 0 8px 16px -4px hsl(0 0% 0% / 0.2)",
-            }}
+            className="liquid-glass flex items-center gap-3 rounded-2xl px-6 py-3"
           >
-            <Map className="h-4 w-4" />
-            <span>World Map</span>
+            <Globe className="h-5 w-5 text-foreground" />
+            <span className="font-display uppercase text-foreground font-bold tracking-wide">World Map</span>
           </motion.button>
         </div>
 
-        {/* Bottom Content Section */}
-        <div className="pointer-events-auto mt-auto px-5 pb-24 pt-4">
-        {/* Tabs */}
-        <div className="mb-6 flex justify-center">
-          <div 
-            className="inline-flex rounded-2xl p-1.5 backdrop-blur-md bg-background/20"
-          >
-            <TabButton
-              isActive={activeTab === "featured"}
-              onClick={() => setActiveTab("featured")}
-              label="FEATURED"
-            />
-            <TabButton
-              isActive={activeTab === "trivia"}
-              onClick={() => setActiveTab("trivia")}
-              label="CLASSIC TRIVIA"
-            />
+        {/* Bottom Content */}
+        <div className="px-4 pb-24 space-y-4">
+          {/* Tabs */}
+          <div className="flex justify-center">
+            <div className="liquid-glass inline-flex rounded-2xl p-1.5">
+              <TabButton
+                isActive={activeTab === "featured"}
+                onClick={() => setActiveTab("featured")}
+                label="FEATURED"
+              />
+              <TabButton
+                isActive={activeTab === "trivia"}
+                onClick={() => setActiveTab("trivia")}
+                label="CLASSIC TRIVIA"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Tab Content */}
-        {activeTab === "featured" ? (
-          <motion.section
-            key="featured"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="-mx-5"
-          >
-            <div className="flex gap-3 overflow-x-auto px-5 pb-2 scrollbar-hide">
-              {featuredItems.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <FeaturedCard
-                    title={item.title}
-                    subtitle={item.subtitle}
-                    icon={item.icon}
-                    bgGradient={item.bgGradient}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        ) : (
-          <motion.section
-            key="trivia"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="space-y-3">
-              {getCategoriesByType("classic").map((cat, i) => (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <CategoryCard
-                    name={cat.name}
-                    icon={cat.icon}
-                    description={cat.description}
-                    color={cat.color}
-                    progress={getCategoryProgress(cat.id)}
-                    totalLevels={cat.totalLevels}
-                    isLocked={!isCategoryUnlocked(cat.id)}
-                    onClick={() => handleCategoryClick(cat.id)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
+          {/* Tab Content */}
+          {activeTab === "featured" ? (
+            <motion.section
+              key="featured"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="-mx-4"
+            >
+              <div className="flex gap-3 overflow-x-auto px-4 scrollbar-hide">
+                {featuredItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <FeaturedCard
+                      title={item.title}
+                      subtitle={item.subtitle}
+                      icon={item.icon}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          ) : (
+            <motion.section
+              key="trivia"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="space-y-3">
+                {getCategoriesByType("classic").map((cat, i) => (
+                  <motion.div
+                    key={cat.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <CategoryCard
+                      name={cat.name}
+                      icon={cat.icon}
+                      description={cat.description}
+                      color={cat.color}
+                      progress={getCategoryProgress(cat.id)}
+                      totalLevels={cat.totalLevels}
+                      isLocked={!isCategoryUnlocked(cat.id)}
+                      onClick={() => handleCategoryClick(cat.id)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
         </div>
       </div>
 
@@ -152,19 +146,16 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl px-5 py-2.5 text-sm font-display uppercase tracking-wide transition-colors ${
+      className={`relative rounded-xl px-5 py-2.5 text-sm font-display uppercase tracking-wide transition-all ${
         isActive
-          ? "text-primary-foreground"
-          : "text-foreground/70 hover:text-foreground"
+          ? "text-foreground"
+          : "text-muted-foreground hover:text-foreground"
       }`}
     >
       {isActive && (
         <motion.div
           layoutId="contentTab"
-          className="absolute inset-0 rounded-xl bg-primary"
-          style={{
-            boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5)",
-          }}
+          className="absolute inset-0 rounded-xl bg-foreground/10 backdrop-blur-sm"
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
       )}
