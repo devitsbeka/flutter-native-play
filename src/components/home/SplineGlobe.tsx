@@ -1,7 +1,5 @@
-import { Suspense, lazy, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-
-const Spline = lazy(() => import("@splinetool/react-spline"));
 
 interface SplineGlobeProps {
   className?: string;
@@ -9,6 +7,30 @@ interface SplineGlobeProps {
 
 export function SplineGlobe({ className }: SplineGlobeProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Load Spline viewer script
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = "https://unpkg.com/@splinetool/viewer@1.12.27/build/spline-viewer.js";
+    script.onload = () => {
+      // Create spline-viewer element after script loads
+      if (containerRef.current) {
+        const viewer = document.createElement("spline-viewer");
+        viewer.setAttribute("url", "https://prod.spline.design/Goo2QUw1KNNhKIrp/scene.splinecode");
+        viewer.style.width = "100%";
+        viewer.style.height = "100%";
+        viewer.addEventListener("load", () => setIsLoaded(true));
+        containerRef.current.appendChild(viewer);
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, []);
 
   return (
     <div className={`relative w-full h-[350px] md:h-[400px] ${className}`}>
@@ -39,14 +61,8 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
         </div>
       )}
 
-      {/* Spline 3D Globe */}
-      <Suspense fallback={null}>
-        <Spline
-          scene="https://prod.spline.design/Goo2QUw1KNNhKIrp/scene.splinecode"
-          onLoad={() => setIsLoaded(true)}
-          className="w-full h-full"
-        />
-      </Suspense>
+      {/* Spline container */}
+      <div ref={containerRef} className="w-full h-full" />
 
       {/* Bottom gradient overlay for smooth transition */}
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
