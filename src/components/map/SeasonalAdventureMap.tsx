@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { SeasonSelector } from "./SeasonSelector";
 import { MapPath } from "./MapPath";
 import { LevelNode } from "./LevelNode";
+import { DailyChallengeNode } from "./DailyChallengeNode";
+import { TreasureChestNode } from "./TreasureChestNode";
 import { SpringBackground } from "./seasons/SpringBackground";
 import { SummerBackground } from "./seasons/SummerBackground";
 import { AutumnBackground } from "./seasons/AutumnBackground";
@@ -23,6 +25,7 @@ interface Level {
 }
 
 const LEVELS_PER_SEASON = 10;
+const CHEST_INTERVAL = 5;
 
 // Generate winding path positions for each level
 const generateLevels = (): Level[] => {
@@ -32,7 +35,6 @@ const generateLevels = (): Level[] => {
   seasons.forEach((season, seasonIndex) => {
     for (let i = 0; i < LEVELS_PER_SEASON; i++) {
       const levelNum = seasonIndex * LEVELS_PER_SEASON + i + 1;
-      // Create a winding path effect
       const xOffset = Math.sin((i / LEVELS_PER_SEASON) * Math.PI * 2) * 30;
       const baseX = 50 + xOffset;
       
@@ -49,15 +51,44 @@ const generateLevels = (): Level[] => {
   return levels;
 };
 
+// Get chest positions (after every 5 levels)
+const getChestPositions = (levels: Level[]) => {
+  const chests: { position: number; x: number; y: number }[] = [];
+  
+  for (let i = CHEST_INTERVAL; i <= levels.length; i += CHEST_INTERVAL) {
+    const level = levels[i - 1];
+    if (level) {
+      chests.push({
+        position: i,
+        x: level.x + (i % 10 === 0 ? -15 : 15), // Alternate sides
+        y: level.y + 2,
+      });
+    }
+  }
+  
+  return chests;
+};
+
 export function SeasonalAdventureMap() {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentSeason, setCurrentSeason] = useState<Season>("spring");
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const { playTap, playTransition, playVictory } = useMapSounds(soundEnabled);
+  const [dailyCompleted, setDailyCompleted] = useState(() => {
+    const today = new Date().toDateString();
+    const saved = localStorage.getItem("dailyChallengeDate");
+    return saved === today;
+  });
+  const [openedChests, setOpenedChests] = useState<number[]>(() => {
+    const saved = localStorage.getItem("openedChests");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const { playTap, playTransition, playVictory, playChestOpen, playAmbientMusic, stopAmbientMusic } = useMapSounds(soundEnabled);
   const { progress, loading, getTotalProgress } = useCategoryProgress();
   
   const levels = generateLevels();
+  const chestPositions = getChestPositions(levels);
   const totalCompleted = getTotalProgress();
   
   // Scroll to season when selected
@@ -71,7 +102,7 @@ export function SeasonalAdventureMap() {
     setCurrentSeason(season);
   };
 
-  // Detect current season based on scroll
+  // Detect current season based on scroll and play ambient music
   useEffect(() => {
     const handleScroll = () => {
       if (scrollRef.current) {
@@ -90,6 +121,40 @@ export function SeasonalAdventureMap() {
     ref?.addEventListener("scroll", handleScroll);
     return () => ref?.removeEventListener("scroll", handleScroll);
   }, [currentSeason]);
+
+  // Play ambient music when season changes
+  useEffect(() => {
+    if (soundEnabled) {
+      playAmbientMusic(currentSeason);
+    }
+  }, [currentSeason, soundEnabled, playAmbientMusic]);
+
+  // Cleanup ambient music on unmount
+  useEffect(() => {
+    return () => {
+      stopAmbientMusic();
+    };
+  }, [stopAmbientMusic]);
+
+  const handleDailyChallengeClick = () => {
+    if (!dailyCompleted) {
+      playTap();
+      // Mark as completed and save date
+      localStorage.setItem("dailyChallengeDate", new Date().toDateString());
+      setDailyCompleted(true);
+      // Navigate to daily challenge
+      navigate("/category/general?daily=true");
+    }
+  };
+
+  const handleChestOpen = (position: number) => {
+    if (!openedChests.includes(position)) {
+      playChestOpen();
+      const newOpenedChests = [...openedChests, position];
+      setOpenedChests(newOpenedChests);
+      localStorage.setItem("openedChests", JSON.stringify(newOpenedChests));
+    }
+  };
 
   const handleLevelClick = (level: Level) => {
     const isUnlocked = level.id <= totalCompleted + 1;
@@ -165,6 +230,13 @@ export function SeasonalAdventureMap() {
         style={{ scrollSnapType: "y proximity" }}
       >
         <div className="relative" style={{ height: `${4 * 100}vh` }}>
+          {/* Daily Challenge Node at the top */}
+          <DailyChallengeNode
+            isCompleted={dailyCompleted}
+            bonusXP={500}
+            onClick={handleDailyChallengeClick}
+          />
+
           {/* Map Path SVG */}
           <MapPath levels={levels} completedLevels={totalCompleted} />
 
@@ -178,6 +250,19 @@ export function SeasonalAdventureMap() {
               isUnlocked={level.id <= totalCompleted + 1}
               stars={level.id <= totalCompleted ? Math.min(3, Math.floor(Math.random() * 3) + 1) : 0}
               onClick={() => handleLevelClick(level)}
+            />
+          ))}
+
+          {/* Treasure Chests */}
+          {chestPositions.map((chest) => (
+            <TreasureChestNode
+              key={chest.position}
+              levelPosition={chest.position}
+              x={chest.x}
+              y={chest.y}
+              isUnlocked={totalCompleted >= chest.position}
+              isOpened={openedChests.includes(chest.position)}
+              onOpen={() => handleChestOpen(chest.position)}
             />
           ))}
         </div>
