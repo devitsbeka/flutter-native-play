@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Trophy, User, ChevronDown } from "lucide-react";
+import { Users, Trophy, User, ChevronDown, Map } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { FloatingUserStats } from "@/components/home/FloatingUserStats";
+import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -82,6 +83,16 @@ export default function Index() {
           >
             <Trophy className="h-5 w-5 text-foreground" />
             <span className="font-display text-foreground font-bold tracking-wide">Leaderboard</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/adventure-map")}
+            className="liquid-glass w-4/5 flex items-center justify-center gap-3 rounded-2xl px-6 py-4"
+          >
+            <Map className="h-5 w-5 text-foreground" />
+            <span className="font-display text-foreground font-bold tracking-wide">Adventure Map</span>
           </motion.button>
 
           {/* Scroll indicator */}
@@ -182,6 +193,9 @@ export default function Index() {
           )}
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation />
     </div>
   );
 }
