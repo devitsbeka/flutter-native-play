@@ -135,6 +135,11 @@ export default {
           'Helvetica Neue',
           'Arial',
           'sans-serif'
+        ],
+        display: [
+          'TASolivare',
+          'Nunito',
+          'sans-serif'
         ]
       },
       boxShadow: {
