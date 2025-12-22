@@ -6,6 +6,9 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import { useAuth } from "@/hooks/useAuth";
+import confetti from "canvas-confetti";
 
 interface TriviaQuestion {
   question: string;
@@ -18,6 +21,8 @@ interface TriviaQuestion {
 export default function CategoryQuizPage() {
   const { categoryId, levelId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { updateLevelProgress } = useCategoryProgress();
   
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -28,8 +33,12 @@ export default function CategoryQuizPage() {
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(15);
   const [showResults, setShowResults] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedStars, setSavedStars] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState(0);
   
   const hasFetched = useRef(false);
+  const hasSaved = useRef(false);
 
   const category = getCategoryById(categoryId || "");
 
@@ -115,6 +124,44 @@ export default function CategoryQuizPage() {
     return () => clearInterval(timer);
   }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length]);
 
+  // Save results when quiz ends
+  useEffect(() => {
+    if (showResults && !hasSaved.current && questions.length > 0) {
+      hasSaved.current = true;
+      saveResults();
+    }
+  }, [showResults]);
+
+  const saveResults = async () => {
+    if (!categoryId || !levelId) return;
+
+    setIsSaving(true);
+    const levelNumber = parseInt(levelId);
+    
+    const result = await updateLevelProgress(categoryId, levelNumber, score, questions.length);
+    
+    if (result.success) {
+      setSavedStars(result.stars);
+      const earned = score * 10 + result.stars * 20;
+      setPointsEarned(earned);
+      
+      // Trigger confetti for good performance
+      if (result.stars >= 2) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      }
+      
+      toast.success(`+${earned} points earned!`);
+    } else if (user) {
+      toast.error("Failed to save progress. Please try again.");
+    }
+    
+    setIsSaving(false);
+  };
+
   const handleTimeUp = useCallback(() => {
     if (!isAnswered) {
       setIsAnswered(true);
@@ -179,6 +226,8 @@ export default function CategoryQuizPage() {
   }
 
   if (showResults) {
+    const displayStars = isSaving ? stars : savedStars || stars;
+    
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <motion.div
@@ -192,9 +241,20 @@ export default function CategoryQuizPage() {
           <h2 className="text-2xl font-bold text-foreground mb-2">
             {score === questions.length ? "Perfect!" : score >= questions.length / 2 ? "Great job!" : "Keep practicing!"}
           </h2>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-2">
             You got {score} out of {questions.length} correct
           </p>
+          
+          {/* Points earned */}
+          {pointsEarned > 0 && (
+            <motion.p 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="text-lg font-bold text-primary mb-4"
+            >
+              +{pointsEarned} points!
+            </motion.p>
+          )}
           
           {/* Stars */}
           <div className="flex justify-center gap-2 mb-6">
@@ -204,26 +264,37 @@ export default function CategoryQuizPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: i * 0.2 }}
-                className={`text-4xl ${i < stars ? "" : "opacity-30"}`}
+                className={`text-4xl ${i < displayStars ? "" : "opacity-30"}`}
               >
                 ⭐
               </motion.span>
             ))}
           </div>
 
+          {isSaving && (
+            <p className="text-sm text-muted-foreground mb-4">Saving progress...</p>
+          )}
+
           <div className="space-y-3">
-            <ChunkyButton onClick={() => navigate(`/category/${categoryId}`)}>
+            <ChunkyButton 
+              onClick={() => navigate(`/category/${categoryId}`)}
+              disabled={isSaving}
+            >
               Continue
             </ChunkyButton>
             <ChunkyButton 
               variant="ghost" 
+              disabled={isSaving}
               onClick={() => {
                 hasFetched.current = false;
+                hasSaved.current = false;
                 setQuestions([]);
                 setCurrentQuestionIndex(0);
                 setScore(0);
                 setShowResults(false);
                 setLoading(true);
+                setSavedStars(0);
+                setPointsEarned(0);
               }}
             >
               Play Again

@@ -209,6 +209,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_level_progress: {
+        Row: {
+          category_id: string
+          completed_at: string
+          created_at: string
+          id: string
+          level_number: number
+          score: number
+          stars_earned: number
+          total_questions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          level_number: number
+          score?: number
+          stars_earned?: number
+          total_questions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          level_number?: number
+          score?: number
+          stars_earned?: number
+          total_questions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
