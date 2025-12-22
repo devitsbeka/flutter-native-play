@@ -145,18 +145,45 @@ export default function CategoryQuizPage() {
       const earned = score * 10 + result.stars * 20;
       setPointsEarned(earned);
       
-      // Trigger confetti for good performance
-      if (result.stars >= 2) {
+      // Big confetti burst for passing (unlocks next level)
+      if (result.stars >= 1) {
+        // First burst
         confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.5, x: 0.5 },
         });
+        
+        // Second delayed burst for extra celebration
+        setTimeout(() => {
+          confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.6, x: 0.3 },
+          });
+          confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.6, x: 0.7 },
+          });
+        }, 250);
+        
+        toast.success("🎉 Level Complete! Next level unlocked!", {
+          description: `+${earned} points earned!`,
+        });
+      } else {
+        toast.info("Keep trying to unlock the next level!");
       }
-      
-      toast.success(`+${earned} points earned!`);
     } else if (user) {
       toast.error("Failed to save progress. Please try again.");
+    } else {
+      // Not logged in - remind them
+      toast.info("Sign in to save your progress!", {
+        action: {
+          label: "Sign In",
+          onClick: () => navigate("/auth"),
+        },
+      });
     }
     
     setIsSaving(false);
@@ -227,6 +254,7 @@ export default function CategoryQuizPage() {
 
   if (showResults) {
     const displayStars = isSaving ? stars : savedStars || stars;
+    const passed = displayStars >= 1;
     
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -250,10 +278,24 @@ export default function CategoryQuizPage() {
             <motion.p 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="text-lg font-bold text-primary mb-4"
+              className="text-lg font-bold text-primary mb-2"
             >
               +{pointsEarned} points!
             </motion.p>
+          )}
+          
+          {/* Level unlocked message */}
+          {passed && !isSaving && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mb-4"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-success/20 text-success px-4 py-2 font-semibold">
+                🔓 Next Level Unlocked!
+              </span>
+            </motion.div>
           )}
           
           {/* Stars */}

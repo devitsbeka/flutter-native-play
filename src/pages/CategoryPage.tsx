@@ -1,17 +1,21 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Lock, Play } from "lucide-react";
+import { ArrowLeft, Star, Lock, Play, LogIn } from "lucide-react";
 import { getCategoryById } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import { useAuth } from "@/hooks/useAuth";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const { getCategoryProgress } = useCategoryProgress();
+  const { user } = useAuth();
+  const { getCategoryProgress, getLevelStars, isLevelCompleted, loading } = useCategoryProgress();
 
   const category = getCategoryById(categoryId || "");
-  const currentLevel = getCategoryProgress(categoryId || "");
+  const currentLevel = getCategoryProgress(categoryId || "") || 1;
 
   if (!category) {
     return (
@@ -26,14 +30,29 @@ export default function CategoryPage() {
     );
   }
 
+  const handleLevelClick = (level: number, isUnlocked: boolean) => {
+    if (!isUnlocked) return;
+    
+    if (!user) {
+      toast.info("Sign in to save your progress!", {
+        description: "Your quiz results will be saved when you're logged in.",
+        action: {
+          label: "Sign In",
+          onClick: () => navigate("/auth"),
+        },
+      });
+    }
+    navigate(`/play/${categoryId}/${level}`);
+  };
+
   const levels = Array.from({ length: category.totalLevels }, (_, i) => {
     const level = i + 1;
-    const isCompleted = level < currentLevel;
-    const isUnlocked = level <= currentLevel || level === 1;
-    const isCurrent = level === currentLevel || (currentLevel === 0 && level === 1);
-    const stars = isCompleted ? Math.floor(Math.random() * 3) + 1 : 0;
+    const completed = isLevelCompleted(categoryId || "", level);
+    const isUnlocked = level <= currentLevel;
+    const isCurrent = level === currentLevel;
+    const stars = getLevelStars(categoryId || "", level);
     
-    return { level, isCompleted, isUnlocked, isCurrent, stars };
+    return { level, isCompleted: completed, isUnlocked, isCurrent, stars };
   });
 
   return (
@@ -65,69 +84,88 @@ export default function CategoryPage() {
 
       {/* Content */}
       <div className="relative -mt-4 rounded-t-3xl bg-background px-5 pt-6 pb-8">
-        <h2 className="text-lg font-bold text-foreground mb-4">
-          Choose a Level
-        </h2>
-
-        <div className="grid grid-cols-4 gap-3">
-          {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => (
-            <motion.button
-              key={level}
-              onClick={() => isUnlocked && navigate(`/play/${categoryId}/${level}`)}
-              disabled={!isUnlocked}
-              whileHover={isUnlocked ? { scale: 1.05 } : undefined}
-              whileTap={isUnlocked ? { scale: 0.95 } : undefined}
-              className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
-                isCurrent 
-                  ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
-                  : ""
-              } ${
-                !isUnlocked
-                  ? "bg-muted opacity-50 cursor-not-allowed"
-                  : isCompleted
-                  ? "bg-success"
-                  : `bg-gradient-to-br ${category.color}`
-              }`}
-              style={{
-                boxShadow: isUnlocked 
-                  ? "0 4px 0 0 hsl(0 0% 0% / 0.15)"
-                  : "0 2px 0 0 hsl(var(--border))",
-              }}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground">
+            Choose a Level
+          </h2>
+          {!user && (
+            <button
+              onClick={() => navigate("/auth")}
+              className="flex items-center gap-1.5 text-sm text-primary font-medium"
             >
-              {!isUnlocked ? (
-                <Lock className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <>
-                  <span className="font-bold text-white text-lg">{level}</span>
-                  {isCompleted && (
-                    <div className="flex gap-0.5 mt-1">
-                      {[...Array(3)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${
-                            i < stars
-                              ? "fill-amber-300 text-amber-300"
-                              : "fill-white/30 text-white/30"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {isCurrent && isUnlocked && (
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
-                >
-                  <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
-                </motion.div>
-              )}
-            </motion.button>
-          ))}
+              <LogIn className="h-4 w-4" />
+              Sign in to save
+            </button>
+          )}
         </div>
+
+        {loading ? (
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-square rounded-2xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 gap-3">
+            {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => (
+              <motion.button
+                key={level}
+                onClick={() => handleLevelClick(level, isUnlocked)}
+                disabled={!isUnlocked}
+                whileHover={isUnlocked ? { scale: 1.05 } : undefined}
+                whileTap={isUnlocked ? { scale: 0.95 } : undefined}
+                className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
+                  isCurrent 
+                    ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
+                    : ""
+                } ${
+                  !isUnlocked
+                    ? "bg-muted opacity-50 cursor-not-allowed"
+                    : isCompleted
+                    ? "bg-success"
+                    : `bg-gradient-to-br ${category.color}`
+                }`}
+                style={{
+                  boxShadow: isUnlocked 
+                    ? "0 4px 0 0 hsl(0 0% 0% / 0.15)"
+                    : "0 2px 0 0 hsl(var(--border))",
+                }}
+              >
+                {!isUnlocked ? (
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <>
+                    <span className="font-bold text-white text-lg">{level}</span>
+                    {isCompleted && (
+                      <div className="flex gap-0.5 mt-1">
+                        {[...Array(3)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3 w-3 ${
+                              i < stars
+                                ? "fill-amber-300 text-amber-300"
+                                : "fill-white/30 text-white/30"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {isCurrent && isUnlocked && (
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
+                  >
+                    <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
+                  </motion.div>
+                )}
+              </motion.button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
