@@ -1,5 +1,13 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap");
+
+@font-face {
+  font-family: 'TASolivare';
+  src: url('/fonts/TASolivare-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -82,6 +90,7 @@
     --sidebar: 0 0% 98%;
 
     --font-sans: 'Nunito', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-display: 'TASolivare', 'Nunito', sans-serif;
 
     --shadow-2xs: 0 1px 2px 0 hsl(255 30% 20% / 0.03);
     --shadow-xs: 0 1px 3px 0 hsl(255 30% 20% / 0.04);
@@ -254,5 +263,18 @@
 
   .content-area {
     background: hsl(var(--content-bg));
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
   }
 }

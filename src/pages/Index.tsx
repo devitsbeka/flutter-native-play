@@ -40,7 +40,7 @@ export default function Index() {
         </div>
         
         {/* Map Button - Floating on canvas */}
-        <div className="flex-1 flex items-center justify-end px-4">
+        <div className="absolute top-1/3 right-4 -translate-y-1/2">
           <motion.button
             onClick={handleMapClick}
             whileHover={{ scale: 1.05 }}
@@ -56,24 +56,21 @@ export default function Index() {
         </div>
 
         {/* Bottom Content Section */}
-        <div className="pointer-events-auto px-5 pb-24 pt-4 bg-gradient-to-t from-background via-background to-transparent">
+        <div className="pointer-events-auto mt-auto px-5 pb-24 pt-4">
         {/* Tabs */}
         <div className="mb-6 flex justify-center">
           <div 
-            className="inline-flex rounded-2xl bg-muted p-1.5"
-            style={{
-              boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
-            }}
+            className="inline-flex rounded-2xl p-1.5 backdrop-blur-md bg-background/20"
           >
             <TabButton
               isActive={activeTab === "featured"}
               onClick={() => setActiveTab("featured")}
-              label="Featured"
+              label="FEATURED"
             />
             <TabButton
               isActive={activeTab === "trivia"}
               onClick={() => setActiveTab("trivia")}
-              label="Classic Trivia"
+              label="CLASSIC TRIVIA"
             />
           </div>
         </div>
@@ -155,10 +152,10 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
+      className={`relative rounded-xl px-5 py-2.5 text-sm font-display uppercase tracking-wide transition-colors ${
         isActive
           ? "text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground"
+          : "text-foreground/70 hover:text-foreground"
       }`}
     >
       {isActive && (
