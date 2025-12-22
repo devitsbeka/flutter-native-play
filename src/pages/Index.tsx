@@ -1,90 +1,170 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Map } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
-import { ViewTabs } from "@/components/home/ViewTabs";
-import { GameLevelMap } from "@/components/home/GameLevelMap";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { FloatingUserStats } from "@/components/home/FloatingUserStats";
-import { categories, featuredItems, getCategoriesByType } from "@/data/categories";
+import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
 
+type ContentTab = "featured" | "trivia";
+
 export default function Index() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { getCategoryProgress, isCategoryUnlocked, getMapLevels } = useCategoryProgress();
-  const [activeView, setActiveView] = useState<"list" | "map">("list");
+  const { getCategoryProgress, isCategoryUnlocked } = useCategoryProgress();
+  const [activeTab, setActiveTab] = useState<ContentTab>("featured");
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/category/${categoryId}`);
   };
 
-  const handleLevelClick = (level: { id: number; categoryId: string; isUnlocked: boolean }) => {
-    if (level.isUnlocked) {
-      navigate(`/play/${level.categoryId}/${level.id}`);
-    }
+  const handleMapClick = () => {
+    navigate("/world");
   };
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Hero Section with Spline Globe */}
+      {/* Globe Hero Section */}
       <div className="relative">
         <FloatingUserStats profile={profile} />
+        
+        {/* Map Button on Canvas */}
+        <motion.button
+          onClick={handleMapClick}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="absolute bottom-8 right-4 z-10 flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-primary-foreground font-semibold shadow-lg"
+          style={{
+            boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5), 0 8px 16px -4px hsl(0 0% 0% / 0.2)",
+          }}
+        >
+          <Map className="h-4 w-4" />
+          <span>World Map</span>
+        </motion.button>
+
         <SplineGlobe />
       </div>
 
-      {/* Content */}
-      <div className="relative px-5 pt-2">
+      {/* Content Section */}
+      <div className="relative px-5 -mt-4">
+        {/* Tabs */}
         <div className="mb-6 flex justify-center">
-          <ViewTabs activeView={activeView} onViewChange={setActiveView} />
+          <div 
+            className="inline-flex rounded-2xl bg-muted p-1.5"
+            style={{
+              boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
+            }}
+          >
+            <TabButton
+              isActive={activeTab === "featured"}
+              onClick={() => setActiveTab("featured")}
+              label="Featured"
+            />
+            <TabButton
+              isActive={activeTab === "trivia"}
+              onClick={() => setActiveTab("trivia")}
+              label="Classic Trivia"
+            />
+          </div>
         </div>
 
-        {activeView === "list" ? (
-          <>
-            <section className="mb-8">
-              <h2 className="mb-4 text-lg font-bold text-foreground">Featured</h2>
-              <div className="space-y-3">
-                {featuredItems.map((item, index) => (
-                  <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
-                    <FeaturedCard title={item.title} subtitle={item.subtitle} icon={item.icon} bgGradient={item.bgGradient} />
-                  </motion.div>
-                ))}
-              </div>
-            </section>
-
-            {["classic", "fun", "educational"].map((type) => (
-              <section key={type} className="mb-8">
-                <h2 className="mb-4 text-lg font-bold text-foreground capitalize">
-                  {type === "classic" ? "Classic Trivia" : type === "fun" ? "Fun & Casual" : "Educational"}
-                </h2>
-                <div className="space-y-3">
-                  {getCategoriesByType(type as "classic" | "fun" | "educational").map((cat, i) => (
-                    <motion.div key={cat.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-                      <CategoryCard
-                        name={cat.name}
-                        icon={cat.icon}
-                        description={cat.description}
-                        color={cat.color}
-                        progress={getCategoryProgress(cat.id)}
-                        totalLevels={cat.totalLevels}
-                        isLocked={!isCategoryUnlocked(cat.id)}
-                        onClick={() => handleCategoryClick(cat.id)}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </>
+        {/* Tab Content */}
+        {activeTab === "featured" ? (
+          <motion.section
+            key="featured"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-3">
+              {featuredItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <FeaturedCard
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    icon={item.icon}
+                    bgGradient={item.bgGradient}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
         ) : (
-          <GameLevelMap levels={getMapLevels()} onLevelClick={handleLevelClick} />
+          <motion.section
+            key="trivia"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-3">
+              {getCategoriesByType("classic").map((cat, i) => (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <CategoryCard
+                    name={cat.name}
+                    icon={cat.icon}
+                    description={cat.description}
+                    color={cat.color}
+                    progress={getCategoryProgress(cat.id)}
+                    totalLevels={cat.totalLevels}
+                    isLocked={!isCategoryUnlocked(cat.id)}
+                    onClick={() => handleCategoryClick(cat.id)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
         )}
       </div>
 
       <BottomNavigation />
     </div>
+  );
+}
+
+function TabButton({
+  isActive,
+  onClick,
+  label,
+}: {
+  isActive: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
+        isActive
+          ? "text-primary-foreground"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {isActive && (
+        <motion.div
+          layoutId="contentTab"
+          className="absolute inset-0 rounded-xl bg-primary"
+          style={{
+            boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5)",
+          }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        />
+      )}
+      <span className="relative z-10">{label}</span>
+    </button>
   );
 }
