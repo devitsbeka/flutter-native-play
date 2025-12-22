@@ -6,7 +6,6 @@ import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { FloatingUserStats } from "@/components/home/FloatingUserStats";
-import { BottomNavigation } from "@/components/layout/BottomNavigation";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -85,25 +84,22 @@ export default function Index() {
             </div>
           </motion.button>
 
-          {/* Three Icon Buttons Row */}
+          {/* Three Icon Buttons Row - Chunky 3D White Style */}
           <div className="w-4/5 flex gap-3">
-            <IconButton 
-              icon={<Users className="h-5 w-5" />} 
-              label="Team" 
+            <ChunkyIconButton 
+              icon={<Users className="h-6 w-6" />} 
               onClick={() => navigate("/team")}
-              color="hsl(280 60% 50%)"
+              iconColor="hsl(280 60% 50%)"
             />
-            <IconButton 
-              icon={<Trophy className="h-5 w-5" />} 
-              label="Rankings" 
+            <ChunkyIconButton 
+              icon={<Trophy className="h-6 w-6" />} 
               onClick={() => navigate("/leaderboards")}
-              color="hsl(45 90% 50%)"
+              iconColor="hsl(45 90% 45%)"
             />
-            <IconButton 
-              icon={<Map className="h-5 w-5" />} 
-              label="Map" 
+            <ChunkyIconButton 
+              icon={<Map className="h-6 w-6" />} 
               onClick={() => navigate("/adventure-map")}
-              color="hsl(140 50% 45%)"
+              iconColor="hsl(140 50% 40%)"
             />
           </div>
 
@@ -149,7 +145,7 @@ export default function Index() {
           </div>
 
           {/* Tab Content */}
-{activeTab === "featured" ? (
+          {activeTab === "featured" ? (
             <motion.section
               key="featured"
               initial={{ opacity: 0, y: 10 }}
@@ -205,41 +201,51 @@ export default function Index() {
           )}
         </div>
       </div>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation />
     </div>
   );
 }
 
-function IconButton({ 
+function ChunkyIconButton({ 
   icon, 
-  label, 
   onClick, 
-  color 
+  iconColor 
 }: { 
   icon: React.ReactNode; 
-  label: string; 
   onClick: () => void;
-  color: string;
+  iconColor: string;
 }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="flex-1 flex flex-col items-center gap-2 rounded-2xl px-4 py-4 bg-background/60 backdrop-blur-xl border border-border/30 shadow-sm"
+      className="flex-1 relative group"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95, y: 3 }}
     >
+      {/* Shadow/Depth layer */}
       <div 
-        className="w-10 h-10 rounded-xl flex items-center justify-center"
-        style={{ 
-          background: `linear-gradient(135deg, ${color} 0%, ${color.replace('50%)', '40%)')} 100%)`,
-          boxShadow: `0 4px 12px ${color.replace(')', ' / 0.3)')}`,
+        className="absolute inset-0 rounded-2xl"
+        style={{
+          background: "linear-gradient(180deg, hsl(0 0% 85%) 0%, hsl(0 0% 75%) 100%)",
+          transform: "translateY(4px)",
+        }}
+      />
+      {/* Main button face */}
+      <div 
+        className="relative rounded-2xl p-4 flex items-center justify-center transition-transform group-active:translate-y-1"
+        style={{
+          background: "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 96%) 100%)",
+          boxShadow: "inset 0 2px 0 0 hsl(0 0% 100%), inset 0 -1px 0 0 hsl(0 0% 90%)",
         }}
       >
-        <span className="text-white">{icon}</span>
+        <div 
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{ 
+            background: `linear-gradient(135deg, ${iconColor} 0%, ${iconColor.replace(')', ' / 0.8)')} 100%)`,
+          }}
+        >
+          <span className="text-white">{icon}</span>
+        </div>
       </div>
-      <span className="font-display text-xs font-semibold text-foreground">{label}</span>
     </motion.button>
   );
 }
