@@ -80,13 +80,14 @@ export default function Index() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
+            className="-mx-5"
           >
-            <div className="space-y-3">
+            <div className="flex gap-3 overflow-x-auto px-5 pb-2 scrollbar-hide">
               {featuredItems.map((item, index) => (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
                 >
                   <FeaturedCard

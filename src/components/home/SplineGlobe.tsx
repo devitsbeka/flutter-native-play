@@ -33,7 +33,7 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
   }, []);
 
   return (
-    <div className={`relative w-full h-[350px] md:h-[400px] ${className}`}>
+    <div className={`relative w-full h-[300px] md:h-[340px] mt-12 ${className}`} style={{ transform: "scale(0.8)", transformOrigin: "center top" }}>
       {/* Loading fallback */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center">
