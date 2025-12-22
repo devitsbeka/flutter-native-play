@@ -32,6 +32,14 @@ export default function Index() {
       {/* Spline Background - Fixed full screen */}
       <SplineGlobe />
       
+      {/* White radial mask - fades to transparent in center */}
+      <div 
+        className="fixed inset-0 z-[1] pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at center, transparent 0%, transparent 30%, hsl(0 0% 100% / 0.6) 70%, hsl(0 0% 100% / 0.9) 100%)",
+        }}
+      />
+      
       {/* UI Layer - On top of background */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
