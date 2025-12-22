@@ -49,14 +49,14 @@ export default function Index() {
       </div>
       
       {/* First Screen - Full viewport height */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="relative z-10 flex flex-col min-h-screen pointer-events-auto">
         {/* Header */}
         <header className="px-4 pt-4 safe-top">
           <FloatingUserStats profile={profile} />
         </header>
 
         {/* Feature Buttons Row - Lucky Spin & VIP style */}
-        <div className="px-4 pt-4 flex gap-2">
+        <div className="px-4 pt-4 flex gap-2 relative z-20">
           <FeatureButton
             icon={<Gift className="w-6 h-6" />}
             label="Lucky spin"
@@ -73,16 +73,16 @@ export default function Index() {
         </div>
 
         {/* Central Level Badge with Mascot */}
-        <div className="flex-1 flex items-center justify-center relative px-4">
+        <div className="flex-1 flex items-center justify-center relative px-4 pointer-events-none">
           {/* Side Feature Icons */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-            <SideFeatureIcon icon={<Gift className="w-6 h-6" />} label="Pick-A-Prize" />
-            <SideFeatureIcon icon={<Target className="w-6 h-6" />} label="Missions" />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-auto">
+            <SideFeatureIcon icon={<Gift className="w-6 h-6" />} label="Pick-A-Prize" onClick={() => console.log("Pick-A-Prize")} />
+            <SideFeatureIcon icon={<Target className="w-6 h-6" />} label="Missions" onClick={() => console.log("Missions")} />
           </div>
           
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-            <SideFeatureIcon icon={<Sparkles className="w-6 h-6" />} label="Events" />
-            <SideFeatureIcon icon={<Award className="w-6 h-6" />} label="Trivia Pass" />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-auto">
+            <SideFeatureIcon icon={<Sparkles className="w-6 h-6" />} label="Events" onClick={() => console.log("Events")} />
+            <SideFeatureIcon icon={<Award className="w-6 h-6" />} label="Trivia Pass" onClick={() => console.log("Trivia Pass")} />
             <SideFeatureIcon icon={<Trophy className="w-6 h-6" />} label="Ranking" onClick={() => navigate("/leaderboards")} />
           </div>
 
@@ -168,7 +168,7 @@ export default function Index() {
         </div>
 
         {/* Action Buttons */}
-        <div className="px-4 pb-8 flex flex-col items-center space-y-4">
+        <div className="px-4 pb-8 flex flex-col items-center space-y-4 relative z-20">
           {/* Big PLAY NOW Button - Orange Chunky 3D Style */}
           <motion.button
             onClick={() => navigate("/game")}
