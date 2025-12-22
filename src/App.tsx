@@ -11,6 +11,8 @@ import Leaderboards from "./pages/Leaderboards";
 import Profile from "./pages/Profile";
 import WorldHome from "./pages/WorldHome";
 import NotFound from "./pages/NotFound";
+import Game from "./pages/Game";
+import Team from "./pages/Team";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/leaderboards" element={<Leaderboards />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/world" element={<WorldHome />} />
+          <Route path="/game" element={<Game />} />
+          <Route path="/team" element={<Team />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
