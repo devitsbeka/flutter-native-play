@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Trophy, ChevronDown, Map, Play, Gift, Star, Target, Award, Sparkles } from "lucide-react";
+import { Users, Trophy, ChevronDown, Map, Gift, Star, Target, Award, Sparkles } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { FloatingUserStats } from "@/components/home/FloatingUserStats";
+import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,12 +18,15 @@ export default function Index() {
   const { profile } = useAuth();
   const { getCategoryProgress, isCategoryUnlocked } = useCategoryProgress();
   const [activeTab, setActiveTab] = useState<ContentTab>("featured");
+  const [isSpinModalOpen, setIsSpinModalOpen] = useState(false);
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/category/${categoryId}`);
   };
 
   return (
+    <>
+    <LuckySpinModal isOpen={isSpinModalOpen} onClose={() => setIsSpinModalOpen(false)} />
     <div className="relative min-h-[200vh] overflow-x-hidden">
       {/* Sky Background */}
       <div 
@@ -61,7 +65,7 @@ export default function Index() {
             icon={<Gift className="w-6 h-6" />}
             label="Lucky spin"
             color="hsl(280 60% 55%)"
-            onClick={() => {}}
+            onClick={() => setIsSpinModalOpen(true)}
           />
           <FeatureButton
             icon={<Star className="w-6 h-6" />}
@@ -316,6 +320,7 @@ export default function Index() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
