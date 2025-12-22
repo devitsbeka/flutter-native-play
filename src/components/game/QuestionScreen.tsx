@@ -75,11 +75,11 @@ export function QuestionScreen() {
   const category = currentQuestion.category.split(":").pop()?.trim() || currentQuestion.category;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Purple Header with Image */}
-      <div className="relative gradient-purple pt-6 pb-32">
+    <div className="w-full max-w-md mx-auto flex flex-col">
+      {/* Header Section - Glassmorphism style */}
+      <div className="bg-primary/80 backdrop-blur-lg rounded-3xl p-6 mb-4">
         {/* Top bar - Timer & Category */}
-        <div className="flex items-center justify-between px-6 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <span className="bg-primary-foreground/20 px-4 py-1.5 rounded-full text-sm font-medium text-primary-foreground">
             {category}
           </span>
@@ -94,7 +94,7 @@ export function QuestionScreen() {
         </div>
 
         {/* Score Display */}
-        <div className="flex items-center justify-center gap-6 mb-6">
+        <div className="flex items-center justify-center gap-6 mb-4">
           <div className="flex items-center gap-2">
             <Avatar emoji="😊" size="sm" />
             <div className="text-center">
@@ -113,7 +113,7 @@ export function QuestionScreen() {
         </div>
 
         {/* Progress Dots */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-4">
           <ProgressDots
             total={questions.length}
             current={currentQuestionIndex}
@@ -123,10 +123,10 @@ export function QuestionScreen() {
         </div>
 
         {/* Timer bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-foreground/20">
+        <div className="h-1 bg-primary-foreground/20 rounded-full overflow-hidden">
           <motion.div
             className={cn(
-              "h-full",
+              "h-full rounded-full",
               showResult ? "bg-primary-foreground" :
               timerPercentage > 50 ? "bg-primary-foreground" : 
               timerPercentage > 25 ? "bg-quiz-yellow" : "bg-quiz-coral"
@@ -137,8 +137,8 @@ export function QuestionScreen() {
         </div>
       </div>
 
-      {/* White Content Area */}
-      <div className="flex-1 bg-background rounded-t-[2rem] -mt-6 relative z-10 p-6 flex flex-col">
+      {/* Question Content - Card style */}
+      <div className="bg-background/95 backdrop-blur-lg rounded-3xl p-6 flex-1 flex flex-col shadow-xl">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}

@@ -16,7 +16,7 @@ export function VSScreen() {
   const opponentRank = getRankFromPoints(opponent.points);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 gradient-sky relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Animated Globe Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <AnimatedGlobe className="w-[500px] h-[500px] text-primary/10" />

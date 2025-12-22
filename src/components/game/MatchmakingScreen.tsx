@@ -6,7 +6,7 @@ export function MatchmakingScreen() {
   const isPreparing = phase === "preparing";
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 gradient-purple">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
       {/* Animated circles */}
       <motion.div
         className="relative w-32 h-32 mb-10"
@@ -18,7 +18,7 @@ export function MatchmakingScreen() {
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="absolute inset-0 rounded-full border-2 border-primary-foreground/30"
+            className="absolute inset-0 rounded-full border-2 border-primary/30"
             animate={{
               scale: [1, 1.5 + i * 0.2, 1],
               opacity: [0.6, 0, 0.6],
@@ -33,7 +33,7 @@ export function MatchmakingScreen() {
         ))}
 
         {/* Center circle */}
-        <div className="absolute inset-4 flex items-center justify-center bg-primary-foreground/20 rounded-full backdrop-blur">
+        <div className="absolute inset-4 flex items-center justify-center bg-primary/20 rounded-full backdrop-blur">
           <motion.span 
             className="text-5xl"
             animate={{ 
@@ -54,11 +54,11 @@ export function MatchmakingScreen() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h2 className="text-2xl font-bold text-primary-foreground mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           {isPreparing ? "Loading Quiz" : "Finding Opponent"}
         </h2>
         <motion.p
-          className="text-primary-foreground/70"
+          className="text-muted-foreground"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
@@ -73,15 +73,15 @@ export function MatchmakingScreen() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-xs mt-10"
         >
-          <div className="h-2 bg-primary-foreground/20 rounded-full overflow-hidden">
+          <div className="h-2 bg-primary/20 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-primary-foreground rounded-full"
+              className="h-full bg-primary rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${preparationProgress}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>
-          <p className="text-center text-sm text-primary-foreground/70 mt-3">
+          <p className="text-center text-sm text-muted-foreground mt-3">
             {preparationProgress}% complete
           </p>
         </motion.div>
@@ -92,7 +92,7 @@ export function MatchmakingScreen() {
         {[0, 1, 2].map((index) => (
           <motion.div
             key={index}
-            className="w-3 h-3 bg-primary-foreground/50 rounded-full"
+            className="w-3 h-3 bg-primary/50 rounded-full"
             animate={{
               y: [0, -10, 0],
               opacity: [0.5, 1, 0.5],
