@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Flame, Crown } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { ViewTabs } from "@/components/home/ViewTabs";
 import { GameLevelMap } from "@/components/home/GameLevelMap";
+import { SplineGlobe } from "@/components/home/SplineGlobe";
+import { FloatingUserStats } from "@/components/home/FloatingUserStats";
 import { categories, featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
-import { Avatar } from "@/components/shared/Avatar";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -30,39 +30,14 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="gradient-purple px-5 pb-8 pt-12">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar
-              imageUrl={profile?.avatar_url || undefined}
-              emoji={profile?.nickname?.charAt(0) || "👤"}
-              size="md"
-              showRing
-              ringColor="ring-white/30"
-            />
-            <div>
-              <p className="text-sm text-primary-foreground/80">Welcome back!</p>
-              <h1 className="font-bold text-primary-foreground">
-                {profile?.nickname || "Trivia Master"}
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5">
-              <Flame className="h-5 w-5 text-orange-300" />
-              <span className="font-bold text-primary-foreground">{profile?.current_streak || 0}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5">
-              <Crown className="h-5 w-5 text-amber-300" />
-              <span className="font-bold text-primary-foreground">{profile?.total_points || 0}</span>
-            </div>
-          </div>
-        </div>
+      {/* Hero Section with Spline Globe */}
+      <div className="relative">
+        <FloatingUserStats profile={profile} />
+        <SplineGlobe />
       </div>
 
       {/* Content */}
-      <div className="relative -mt-4 rounded-t-3xl bg-background px-5 pt-6">
+      <div className="relative px-5 pt-2">
         <div className="mb-6 flex justify-center">
           <ViewTabs activeView={activeView} onViewChange={setActiveView} />
         </div>
