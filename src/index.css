@@ -13,115 +13,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Untitled UI Design System Colors */
+/* Design System Colors */
 @layer base {
   :root {
-    /* Untitled UI Brand Colors - Purple Theme */
-    --color-brand-25: 252 250 255;
-    --color-brand-50: 249 245 255;
-    --color-brand-100: 244 235 255;
-    --color-brand-200: 233 215 254;
-    --color-brand-300: 214 187 251;
-    --color-brand-400: 182 146 246;
-    --color-brand-500: 158 119 237;
-    --color-brand-600: 127 86 217;
-    --color-brand-700: 105 65 198;
-    --color-brand-800: 83 56 158;
-    --color-brand-900: 66 48 125;
-    --color-brand-950: 44 28 95;
-
-    /* Untitled UI Gray Colors */
-    --color-gray-25: 253 253 253;
-    --color-gray-50: 250 250 250;
-    --color-gray-100: 245 245 245;
-    --color-gray-200: 233 234 235;
-    --color-gray-300: 213 215 218;
-    --color-gray-400: 164 167 174;
-    --color-gray-500: 113 118 128;
-    --color-gray-600: 83 88 98;
-    --color-gray-700: 65 70 81;
-    --color-gray-800: 37 43 55;
-    --color-gray-900: 24 29 39;
-    --color-gray-950: 10 13 18;
-
-    /* Untitled UI Error Colors */
-    --color-error-25: 255 251 250;
-    --color-error-50: 254 243 242;
-    --color-error-100: 254 228 226;
-    --color-error-200: 254 205 202;
-    --color-error-300: 253 162 155;
-    --color-error-400: 249 112 102;
-    --color-error-500: 240 68 56;
-    --color-error-600: 217 45 32;
-    --color-error-700: 180 35 24;
-
-    /* Untitled UI Warning Colors */
-    --color-warning-25: 255 252 245;
-    --color-warning-50: 255 250 235;
-    --color-warning-100: 254 240 199;
-    --color-warning-200: 254 223 137;
-    --color-warning-300: 254 200 75;
-    --color-warning-400: 253 176 34;
-    --color-warning-500: 247 144 9;
-    --color-warning-600: 220 104 3;
-    --color-warning-700: 181 71 8;
-
-    /* Untitled UI Success Colors */
-    --color-success-25: 246 254 249;
-    --color-success-50: 236 253 243;
-    --color-success-100: 220 250 230;
-    --color-success-200: 171 239 198;
-    --color-success-300: 117 224 167;
-    --color-success-400: 71 205 137;
-    --color-success-500: 23 178 106;
-    --color-success-600: 7 148 85;
-    --color-success-700: 6 118 71;
-
-    /* Untitled UI Semantic Colors - Light Mode */
-    --color-bg-primary: 255 255 255;
-    --color-bg-secondary: 250 250 250;
-    --color-bg-tertiary: 245 245 245;
-    --color-bg-brand-primary: 249 245 255;
-    --color-bg-brand-solid: 127 86 217;
-    --color-bg-brand-solid-hover: 105 65 198;
-    
-    --color-text-primary: 24 29 39;
-    --color-text-secondary: 65 70 81;
-    --color-text-tertiary: 83 88 98;
-    --color-text-quaternary: 113 118 128;
-    --color-text-disabled: 164 167 174;
-    --color-text-brand-primary: 66 48 125;
-    --color-text-brand-secondary: 105 65 198;
-
-    --color-border-primary: 213 215 218;
-    --color-border-secondary: 233 234 235;
-    --color-border-tertiary: 245 245 245;
-    --color-border-brand: 158 119 237;
-
-    --color-fg-brand-primary: 127 86 217;
-    --color-fg-brand-secondary: 158 119 237;
-
-    /* Legacy Shadcn Compatibility */
+    /* Legacy Shadcn Compatibility - HSL format */
     --background: 0 0% 100%;
-    --foreground: 250 20% 12%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 250 20% 12%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 250 20% 12%;
+    --popover-foreground: 222 47% 11%;
     --primary: 263 60% 59%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 263 60% 97%;
-    --secondary-foreground: 263 51% 52%;
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 47%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
     --accent: 30 95% 63%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 4 84% 53%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 69% 39%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    --border: 240 6% 92%;
-    --input: 240 6% 92%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 263 60% 59%;
     --radius: 0.75rem;
 
@@ -141,21 +56,21 @@
     --trivia-teal: 168 41% 20%;
     --trivia-teal-light: 168 35% 33%;
     --trivia-teal-foreground: 0 0% 100%;
-    --content-bg: 240 5% 96%;
+    --content-bg: 220 14% 96%;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 250 20% 12%;
+    --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 263 60% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 263 60% 97%;
     --sidebar-accent-foreground: 263 51% 52%;
-    --sidebar-border: 240 6% 92%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 263 60% 59%;
 
     --chart-1: 263 60% 59%;
     --chart-2: 263 60% 70%;
     --chart-3: 30 95% 63%;
-    --chart-4: 152 69% 39%;
+    --chart-4: 142 71% 45%;
     --chart-5: 45 95% 53%;
 
     --sidebar: 0 0% 98%;
@@ -176,51 +91,26 @@
   }
 
   .dark {
-    /* Untitled UI Semantic Colors - Dark Mode */
-    --color-bg-primary: 12 14 18;
-    --color-bg-secondary: 19 22 27;
-    --color-bg-tertiary: 34 38 47;
-    --color-bg-brand-primary: 44 28 95;
-    --color-bg-brand-solid: 127 86 217;
-    --color-bg-brand-solid-hover: 158 119 237;
-
-    --color-text-primary: 250 250 250;
-    --color-text-secondary: 206 207 210;
-    --color-text-tertiary: 148 151 156;
-    --color-text-quaternary: 133 136 142;
-    --color-text-disabled: 97 101 108;
-    --color-text-brand-primary: 250 250 250;
-    --color-text-brand-secondary: 206 207 210;
-
-    --color-border-primary: 55 58 65;
-    --color-border-secondary: 34 38 47;
-    --color-border-tertiary: 34 38 47;
-    --color-border-brand: 182 146 246;
-
-    --color-fg-brand-primary: 158 119 237;
-    --color-fg-brand-secondary: 182 146 246;
-
-    /* Legacy Shadcn Compatibility - Dark */
-    --background: 240 14% 5%;
-    --foreground: 0 0% 98%;
-    --card: 240 14% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 14% 7%;
-    --popover-foreground: 0 0% 98%;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
     --primary: 263 60% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 263 40% 18%;
-    --secondary-foreground: 263 70% 80%;
-    --muted: 240 10% 15%;
-    --muted-foreground: 240 5% 55%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
     --accent: 30 95% 58%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 4 84% 53%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 69% 45%;
+    --success: 142 71% 50%;
     --success-foreground: 0 0% 100%;
-    --border: 240 10% 15%;
-    --input: 240 10% 15%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
     --ring: 263 60% 65%;
 
     --quiz-purple: 263 60% 65%;
@@ -236,24 +126,24 @@
 
     --trivia-teal: 168 40% 15%;
     --trivia-teal-light: 168 30% 25%;
-    --content-bg: 240 14% 7%;
+    --content-bg: 222 47% 8%;
 
-    --sidebar-background: 240 14% 6%;
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 263 60% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 40% 18%;
+    --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 263 70% 80%;
-    --sidebar-border: 240 10% 15%;
+    --sidebar-border: 217 33% 17%;
     --sidebar-ring: 263 60% 65%;
 
     --chart-1: 263 60% 65%;
     --chart-2: 263 60% 75%;
     --chart-3: 30 95% 62%;
-    --chart-4: 152 69% 50%;
+    --chart-4: 142 71% 50%;
     --chart-5: 45 95% 60%;
 
-    --sidebar: 240 14% 7%;
+    --sidebar: 222 47% 8%;
 
     --shadow-xs: 0px 1px 2px rgba(0, 0, 0, 0.2);
     --shadow-sm: 0px 1px 3px rgba(0, 0, 0, 0.3), 0px 1px 2px -1px rgba(0, 0, 0, 0.2);
