@@ -269,18 +269,27 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="grid grid-cols-2 gap-3">
+                {/* Bento Grid Layout */}
+                <div className="grid grid-cols-2 auto-rows-[120px] gap-3">
                   {featuredItems.map((item, index) => (
                     <motion.div
                       key={item.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={
+                        item.size === "large" 
+                          ? "col-span-2 row-span-1" 
+                          : item.size === "medium" 
+                            ? "col-span-1 row-span-2" 
+                            : "col-span-1 row-span-1"
+                      }
                     >
                       <FeaturedCard
                         title={item.title}
                         subtitle={item.subtitle}
                         icon={item.icon}
+                        size={item.size}
                       />
                     </motion.div>
                   ))}

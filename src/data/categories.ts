@@ -439,15 +439,22 @@ export const categories: Category[] = [
   },
 ];
 
-export const featuredItems: FeaturedItem[] = [
+export interface FeaturedItemExtended extends FeaturedItem {
+  size: "small" | "medium" | "large";
+}
+
+export const featuredItems: FeaturedItemExtended[] = [
+  // Large hero card
   {
     id: "new_year_2025",
     title: "საახალწლო გამოწვევა",
-    subtitle: "დღესასწაულის ტრივია!",
+    subtitle: "დღესასწაულის სპეციალური ტრივია! 🎉",
     icon: "🎄",
     type: "seasonal",
-    bgGradient: "from-red-500 via-green-500 to-red-500",
+    bgGradient: "from-red-500 via-green-600 to-red-500",
+    size: "large",
   },
+  // Medium cards
   {
     id: "daily_challenge",
     title: "დღის გამოწვევა",
@@ -455,6 +462,7 @@ export const featuredItems: FeaturedItem[] = [
     icon: "⚡",
     type: "daily",
     bgGradient: "from-amber-400 to-orange-500",
+    size: "medium",
   },
   {
     id: "trending_georgia",
@@ -463,6 +471,73 @@ export const featuredItems: FeaturedItem[] = [
     icon: "🇬🇪",
     type: "trending",
     bgGradient: "from-purple-500 to-pink-500",
+    size: "medium",
+  },
+  // Small cards
+  {
+    id: "speed_round",
+    title: "სწრაფი რაუნდი",
+    subtitle: "30 წამი თითო კითხვაზე!",
+    icon: "⏱️",
+    type: "daily",
+    bgGradient: "from-cyan-400 to-blue-500",
+    size: "small",
+  },
+  {
+    id: "world_capitals",
+    title: "დედაქალაქები",
+    subtitle: "გეოგრაფიის ჩემპიონი!",
+    icon: "🌍",
+    type: "trending",
+    bgGradient: "from-emerald-400 to-teal-500",
+    size: "small",
+  },
+  {
+    id: "movie_night",
+    title: "კინოღამე",
+    subtitle: "ფილმების ფანი ხარ?",
+    icon: "🎬",
+    type: "trending",
+    bgGradient: "from-rose-400 to-pink-500",
+    size: "small",
+  },
+  {
+    id: "science_lab",
+    title: "მეცნიერების ლაბი",
+    subtitle: "ექსპერიმენტების დრო!",
+    icon: "🧪",
+    type: "trending",
+    bgGradient: "from-lime-400 to-green-500",
+    size: "small",
+  },
+  // Another medium card
+  {
+    id: "weekly_champion",
+    title: "კვირის ჩემპიონი",
+    subtitle: "მოიგე სპეციალური ჯილდო!",
+    icon: "🏆",
+    type: "seasonal",
+    bgGradient: "from-yellow-400 to-amber-500",
+    size: "medium",
+  },
+  // More small cards
+  {
+    id: "music_quiz",
+    title: "მუსიკალური ვიქტორინა",
+    subtitle: "მელომანის ტესტი!",
+    icon: "🎵",
+    type: "trending",
+    bgGradient: "from-fuchsia-400 to-purple-500",
+    size: "small",
+  },
+  {
+    id: "food_lover",
+    title: "გურმანის გამოწვევა",
+    subtitle: "კულინარიული ცოდნა!",
+    icon: "🍽️",
+    type: "trending",
+    bgGradient: "from-orange-400 to-red-500",
+    size: "small",
   },
 ];
 
