@@ -260,13 +260,12 @@ export function IslandAdventureMap() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Map content - full width, scrollable height with extra padding */}
+        {/* Map content - full width, scrollable height with extra padding for bottom nav */}
         <div 
-          className="relative w-full"
+          className="relative w-full pb-48"
           style={{
             // Height based on aspect ratio (922:1894) scaled by zoom + extra padding for scroll
-            height: `calc(${(1894 / 922) * 100 * zoom}vw + 120px)`,
-            paddingBottom: '120px',
+            minHeight: `calc(${(1894 / 922) * 100 * zoom}vw + 200px)`,
           }}
         >
           {/* Island background - integral part, no shadow */}
