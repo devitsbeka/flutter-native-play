@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route } from "react-router-dom";
+import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import CategoryQuizPage from "./pages/CategoryQuizPage";
@@ -16,24 +17,26 @@ import AdventureMap from "./pages/AdventureMap";
 import VIP from "./pages/VIP";
 
 const App = () => (
-  <TooltipProvider>
-    <Toaster />
-    <Sonner />
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/adventure-map" element={<AdventureMap />} />
-      <Route path="/category/:categoryId" element={<CategoryPage />} />
-      <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/leaderboards" element={<Leaderboards />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/world" element={<WorldHome />} />
-      <Route path="/game" element={<Game />} />
-      <Route path="/team" element={<Team />} />
-      <Route path="/vip" element={<VIP />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </TooltipProvider>
+  <SplashScreen>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/adventure-map" element={<AdventureMap />} />
+        <Route path="/category/:categoryId" element={<CategoryPage />} />
+        <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/leaderboards" element={<Leaderboards />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/world" element={<WorldHome />} />
+        <Route path="/game" element={<Game />} />
+        <Route path="/team" element={<Team />} />
+        <Route path="/vip" element={<VIP />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </TooltipProvider>
+  </SplashScreen>
 );
 
 export default App;
