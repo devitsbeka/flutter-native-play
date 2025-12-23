@@ -20,6 +20,15 @@ interface IslandLevelNodeProps {
   index: number;
 }
 
+// Different SVG types have different dimensions and anchor points
+// Locked/Current: ~128x115 (button centered)
+// Star SVGs: ~128x200-205 (button at bottom, stars on top)
+const NODE_CONFIG = {
+  locked: { width: 48, height: 43, offsetY: 50 },    // Center anchor
+  current: { width: 48, height: 43, offsetY: 50 },   // Center anchor  
+  stars: { width: 56, height: 90, offsetY: 75 },     // Bottom anchor (button sits on road)
+};
+
 export function IslandLevelNode({ level, position, onClick, index }: IslandLevelNodeProps) {
   const getSvgSource = () => {
     if (level.isLocked) return levelLocked;
@@ -27,12 +36,18 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
     if (level.stars === 3) return level3Stars;
     if (level.stars === 2) return level2Stars;
     if (level.stars >= 1) return level1Star;
-    return levelCurrent;
+    return levelCurrent; // Fallback for completed with 0 stars
+  };
+
+  const getNodeConfig = () => {
+    if (level.isLocked) return NODE_CONFIG.locked;
+    if (level.isCurrent) return NODE_CONFIG.current;
+    if (level.stars > 0) return NODE_CONFIG.stars;
+    return NODE_CONFIG.current;
   };
 
   const handleClick = () => {
     if (!level.isLocked) {
-      // Haptic feedback
       if (navigator.vibrate) {
         navigator.vibrate(10);
       }
@@ -40,14 +55,18 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
     }
   };
 
+  const config = getNodeConfig();
+  const isStarLevel = !level.isLocked && !level.isCurrent && level.stars > 0;
+
   return (
     <motion.button
-      className="absolute -translate-x-1/2 -translate-y-1/2 focus:outline-none touch-manipulation"
+      className="absolute focus:outline-none touch-manipulation"
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
-        width: "64px",
-        height: "80px",
+        width: `${config.width}px`,
+        height: `${config.height}px`,
+        transform: `translate(-50%, -${config.offsetY}%)`,
       }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -64,7 +83,7 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
       {/* Pulse animation for current level */}
       {level.isCurrent && (
         <motion.div
-          className="absolute inset-0 rounded-full bg-amber-400/30"
+          className="absolute rounded-full bg-amber-400/30"
           animate={{
             scale: [1, 1.4, 1],
             opacity: [0.5, 0, 0.5],
@@ -76,7 +95,7 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
           }}
           style={{
             left: "50%",
-            top: "40%",
+            top: "50%",
             transform: "translate(-50%, -50%)",
             width: "50px",
             height: "50px",
@@ -92,13 +111,13 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
         draggable={false}
       />
       
-      {/* Level number overlay for current/playable levels */}
-      {!level.isLocked && level.isCurrent && (
+      {/* Level number overlay for current level only */}
+      {level.isCurrent && (
         <div 
-          className="absolute font-bold text-white text-lg"
+          className="absolute font-bold text-white text-base"
           style={{
             left: "50%",
-            top: "35%",
+            top: "50%",
             transform: "translate(-50%, -50%)",
             textShadow: "0 1px 2px rgba(0,0,0,0.3)",
           }}
