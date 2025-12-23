@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Star, CheckCircle, X, Target, Zap } from "lucide-react";
+import { Star, CheckCircle, X, Target, Zap, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 
 interface CompletedLevelModalProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ export function CompletedLevelModal({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-green-700">
                       <Target className="w-5 h-5" />
-                      <span className="text-sm">Questions</span>
+                      <span className="text-sm">Best Score</span>
                     </div>
                     <span className="font-bold text-green-800">
                       {stats.correctAnswers}/{stats.questionsAnswered}
@@ -117,6 +118,18 @@ export function CompletedLevelModal({
                     </div>
                     <span className="font-bold text-green-800">{stats.pointsEarned}</span>
                   </div>
+                  
+                  {stats.completedAt && (
+                    <div className="flex items-center justify-between pt-2 border-t border-green-200">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <Calendar className="w-5 h-5" />
+                        <span className="text-sm">Completed</span>
+                      </div>
+                      <span className="font-bold text-green-800 text-sm">
+                        {format(new Date(stats.completedAt), "MMM d, yyyy 'at' h:mm a")}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Action buttons */}

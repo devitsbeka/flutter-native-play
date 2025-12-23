@@ -24,7 +24,7 @@ export function IslandAdventureMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
   const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
-  const { progress, loading: progressLoading } = useCategoryProgress();
+  const { progress, loading: progressLoading, getLevelStats } = useCategoryProgress();
   const { positions: levelPositions, loading: positionsLoading } = useLevelPositions();
   
   const loading = progressLoading || positionsLoading;
@@ -174,6 +174,7 @@ export function IslandAdventureMap() {
     correctAnswers: number;
     pointsEarned: number;
     starsEarned: number;
+    completedAt?: string;
   }>({
     questionsAnswered: 0,
     correctAnswers: 0,
@@ -186,14 +187,14 @@ export function IslandAdventureMap() {
     const level = levels.find(l => l.id === levelId);
     
     if (level && !level.isLocked && !level.isCurrent) {
-      // Completed level - show stats modal
-      // Calculate stats from progress data
+      // Completed level - get actual stats using getLevelStats
       const categories = Object.keys(progress);
       let stats: {
         questionsAnswered: number;
         correctAnswers: number;
         pointsEarned: number;
         starsEarned: number;
+        completedAt?: string;
       } = {
         questionsAnswered: 5,
         correctAnswers: 3,
@@ -204,20 +205,17 @@ export function IslandAdventureMap() {
       if (categories.length > 0) {
         const categoryIndex = (levelId - 1) % categories.length;
         const categoryId = categories[categoryIndex];
-        const catProgress = progress[categoryId];
+        const categoryLevelNumber = Math.floor((levelId - 1) / categories.length) + 1;
+        const levelData = getLevelStats(categoryId, categoryLevelNumber);
         
-        if (catProgress) {
-          const levelData = catProgress.completedLevels.find(
-            (l) => l.level_number === Math.floor((levelId - 1) / categories.length) + 1
-          );
-          if (levelData) {
-            stats = {
-              questionsAnswered: levelData.total_questions || 5,
-              correctAnswers: levelData.score || 3,
-              pointsEarned: levelData.score * 20,
-              starsEarned: Math.min(3, Math.max(1, levelData.stars_earned || 1)),
-            };
-          }
+        if (levelData) {
+          stats = {
+            questionsAnswered: levelData.total_questions || 5,
+            correctAnswers: levelData.score || 3,
+            pointsEarned: levelData.score * 20,
+            starsEarned: Math.min(3, Math.max(1, levelData.stars_earned || 1)),
+            completedAt: levelData.completed_at,
+          };
         }
       }
 
