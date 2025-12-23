@@ -294,7 +294,7 @@ export function IslandAdventureMap() {
           </div>
           
           {/* Extra scroll space at bottom */}
-          <div className="h-48 w-full" />
+          <div className="w-full" style={{ height: '300px' }} />
         </div>
       </div>
 
