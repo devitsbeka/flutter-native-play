@@ -7,7 +7,6 @@ import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import BIRDS from "vanta/dist/vanta.birds.min";
-import CLOUDS2 from "vanta/dist/vanta.clouds2.min";
 import * as THREE from "three";
 
 import islandBackground from "@/assets/map/island-background.svg";
@@ -38,9 +37,7 @@ export function IslandAdventureMap() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
-  const cloudsRef = useRef<HTMLDivElement>(null);
   const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
-  const cloudsEffect = useRef<ReturnType<typeof CLOUDS2> | null>(null);
   const { progress, loading } = useCategoryProgress();
   
   // Zoom state
@@ -74,34 +71,6 @@ export function IslandAdventureMap() {
       if (vantaEffect.current) {
         vantaEffect.current.destroy();
         vantaEffect.current = null;
-      }
-    };
-  }, []);
-
-  // Initialize Vanta Clouds2 effect for bottom section
-  useEffect(() => {
-    if (!cloudsEffect.current && cloudsRef.current) {
-      cloudsEffect.current = CLOUDS2({
-        el: cloudsRef.current,
-        THREE: THREE,
-        mouseControls: false,
-        touchControls: false,
-        gyroControls: false,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        scale: 1.00,
-        backgroundColor: 0x000000,
-        backgroundAlpha: 0,
-        skyColor: 0x5ca6ca,
-        cloudColor: 0x334d80,
-        lightColor: 0xffffff,
-        speed: 1,
-      });
-    }
-    return () => {
-      if (cloudsEffect.current) {
-        cloudsEffect.current.destroy();
-        cloudsEffect.current = null;
       }
     };
   }, []);
@@ -229,12 +198,44 @@ export function IslandAdventureMap() {
         className="absolute inset-0 z-20 pointer-events-none"
       />
 
-      {/* Vanta Clouds2 overlay - bottom 20% */}
-      <div 
-        ref={cloudsRef} 
-        className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none"
-        style={{ height: '20%' }}
-      />
+      {/* CSS Animated Clouds - bottom 20% */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none overflow-hidden" style={{ height: '20%' }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-white/40 to-transparent" />
+        {/* Animated cloud shapes */}
+        <motion.div
+          className="absolute bottom-0 left-0 w-48 h-24"
+          animate={{ x: ['-100%', '100vw'] }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+        >
+          <svg viewBox="0 0 100 50" className="w-full h-full opacity-90">
+            <ellipse cx="30" cy="35" rx="25" ry="15" fill="white" />
+            <ellipse cx="55" cy="30" rx="30" ry="18" fill="white" />
+            <ellipse cx="75" cy="35" rx="20" ry="12" fill="white" />
+          </svg>
+        </motion.div>
+        <motion.div
+          className="absolute bottom-4 left-0 w-36 h-20"
+          animate={{ x: ['-50%', '100vw'] }}
+          transition={{ duration: 25, repeat: Infinity, ease: 'linear', delay: 5 }}
+        >
+          <svg viewBox="0 0 100 50" className="w-full h-full opacity-80">
+            <ellipse cx="30" cy="35" rx="22" ry="14" fill="white" />
+            <ellipse cx="50" cy="28" rx="28" ry="16" fill="white" />
+            <ellipse cx="70" cy="35" rx="18" ry="11" fill="white" />
+          </svg>
+        </motion.div>
+        <motion.div
+          className="absolute bottom-2 right-0 w-40 h-22"
+          animate={{ x: ['100vw', '-100%'] }}
+          transition={{ duration: 35, repeat: Infinity, ease: 'linear', delay: 10 }}
+        >
+          <svg viewBox="0 0 100 50" className="w-full h-full opacity-85">
+            <ellipse cx="25" cy="35" rx="20" ry="13" fill="white" />
+            <ellipse cx="50" cy="30" rx="25" ry="15" fill="white" />
+            <ellipse cx="75" cy="35" rx="22" ry="14" fill="white" />
+          </svg>
+        </motion.div>
+      </div>
 
       {/* Back button */}
       <div className="absolute top-4 left-4 z-50">
