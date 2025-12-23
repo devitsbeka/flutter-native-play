@@ -225,9 +225,9 @@ export function IslandAdventureMap() {
         <div 
           className="relative mx-auto"
           style={{
-            // Height based on aspect ratio (922:1894) scaled by zoom, width at 90%
-            width: "90%",
-            height: `${(1894 / 922) * 90 * zoom}vw`,
+            // Height based on aspect ratio (922:1894) scaled by zoom, width at 80%
+            width: "80%",
+            height: `${(1894 / 922) * 80 * zoom}vw`,
           }}
         >
           {/* Island background - integral part, no shadow */}
