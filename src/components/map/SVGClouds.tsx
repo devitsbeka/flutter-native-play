@@ -18,47 +18,83 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
     gsap.defaults({ ease: "none" });
 
     const SPEED = {
-      fast: 15,
-      medium: 20,
-      slow: 25,
+      fast: 18,
+      medium: 25,
+      slow: 32,
     };
 
-    // Top clouds
+    // Top clouds - more clouds with staggered positions for constant coverage
     gsap.set('#cloud-top-1', { x: -400 });
     const topCloud1 = gsap.to('#cloud-top-1', {
       duration: SPEED.medium,
       x: 1400,
       repeat: -1,
-      onRepeat: () => gsap.set('#cloud-top-1', { y: random(0, 60) })
+      onRepeat: () => gsap.set('#cloud-top-1', { y: random(0, 80) })
     });
-    topCloud1.progress(0.3);
+    topCloud1.progress(0.1);
 
     gsap.set('#cloud-top-2', { x: -300 });
     const topCloud2 = gsap.to('#cloud-top-2', {
       duration: SPEED.fast,
       x: 1300,
       repeat: -1,
-      onRepeat: () => gsap.set('#cloud-top-2', { y: random(20, 80) })
+      onRepeat: () => gsap.set('#cloud-top-2', { y: random(20, 100) })
     });
-    topCloud2.progress(0.7);
+    topCloud2.progress(0.35);
 
     gsap.set('#cloud-top-3', { x: -200 });
     const topCloud3 = gsap.to('#cloud-top-3', {
       duration: SPEED.slow,
       x: 1200,
       repeat: -1,
-      onRepeat: () => gsap.set('#cloud-top-3', { y: random(10, 50) })
+      onRepeat: () => gsap.set('#cloud-top-3', { y: random(10, 70) })
     });
-    topCloud3.progress(0.5);
+    topCloud3.progress(0.55);
 
     gsap.set('#cloud-top-4', { x: -250 });
     const topCloud4 = gsap.to('#cloud-top-4', {
-      duration: SPEED.medium + 3,
+      duration: SPEED.medium + 5,
       x: 1250,
       repeat: -1,
-      onRepeat: () => gsap.set('#cloud-top-4', { y: random(30, 90) })
+      onRepeat: () => gsap.set('#cloud-top-4', { y: random(40, 120) })
     });
-    topCloud4.progress(0.1);
+    topCloud4.progress(0.75);
+
+    gsap.set('#cloud-top-5', { x: -320 });
+    const topCloud5 = gsap.to('#cloud-top-5', {
+      duration: SPEED.fast + 3,
+      x: 1320,
+      repeat: -1,
+      onRepeat: () => gsap.set('#cloud-top-5', { y: random(5, 60) })
+    });
+    topCloud5.progress(0.2);
+
+    gsap.set('#cloud-top-6', { x: -280 });
+    const topCloud6 = gsap.to('#cloud-top-6', {
+      duration: SPEED.slow - 5,
+      x: 1280,
+      repeat: -1,
+      onRepeat: () => gsap.set('#cloud-top-6', { y: random(30, 90) })
+    });
+    topCloud6.progress(0.45);
+
+    gsap.set('#cloud-top-7', { x: -350 });
+    const topCloud7 = gsap.to('#cloud-top-7', {
+      duration: SPEED.medium - 3,
+      x: 1350,
+      repeat: -1,
+      onRepeat: () => gsap.set('#cloud-top-7', { y: random(15, 75) })
+    });
+    topCloud7.progress(0.65);
+
+    gsap.set('#cloud-top-8', { x: -220 });
+    const topCloud8 = gsap.to('#cloud-top-8', {
+      duration: SPEED.fast + 5,
+      x: 1220,
+      repeat: -1,
+      onRepeat: () => gsap.set('#cloud-top-8', { y: random(50, 110) })
+    });
+    topCloud8.progress(0.88);
 
     // Bottom clouds
     gsap.set('#cloud-bottom-1', { x: -350 });
@@ -68,7 +104,7 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
       repeat: -1,
       onRepeat: () => gsap.set('#cloud-bottom-1', { y: random(0, 40) })
     });
-    bottomCloud1.progress(0.4);
+    bottomCloud1.progress(0.25);
 
     gsap.set('#cloud-bottom-2', { x: -280 });
     const bottomCloud2 = gsap.to('#cloud-bottom-2', {
@@ -77,18 +113,21 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
       repeat: -1,
       onRepeat: () => gsap.set('#cloud-bottom-2', { y: random(10, 50) })
     });
-    bottomCloud2.progress(0.8);
+    bottomCloud2.progress(0.6);
 
     gsap.set('#cloud-bottom-3', { x: -180 });
     const bottomCloud3 = gsap.to('#cloud-bottom-3', {
-      duration: SPEED.slow - 3,
+      duration: SPEED.slow - 5,
       x: 1180,
       repeat: -1,
       onRepeat: () => gsap.set('#cloud-bottom-3', { y: random(5, 35) })
     });
-    bottomCloud3.progress(0.2);
+    bottomCloud3.progress(0.9);
 
-    animationsRef.current = [topCloud1, topCloud2, topCloud3, topCloud4, bottomCloud1, bottomCloud2, bottomCloud3];
+    animationsRef.current = [
+      topCloud1, topCloud2, topCloud3, topCloud4, topCloud5, topCloud6, topCloud7, topCloud8,
+      bottomCloud1, bottomCloud2, bottomCloud3
+    ];
 
     return () => {
       animationsRef.current.forEach(anim => anim.kill());
@@ -97,14 +136,14 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
 
   return (
     <>
-      {/* Top clouds - 25% of screen */}
+      {/* Top clouds - 30% of screen, fixed position */}
       <div 
-        className={`absolute top-0 left-0 right-0 overflow-hidden pointer-events-none ${className}`} 
-        style={{ height: '25%', filter: 'blur(5px)' }}
+        className={`fixed top-0 left-0 right-0 overflow-hidden pointer-events-none ${className}`} 
+        style={{ height: '30%', filter: 'blur(5px)' }}
       >
         <svg 
           ref={topSvgRef}
-          viewBox="0 0 1000 150" 
+          viewBox="0 0 1000 200" 
           className="w-full h-full"
           preserveAspectRatio="xMidYMid slice"
         >
@@ -132,16 +171,21 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
             </symbol>
           </defs>
 
-          <use id="cloud-top-1" href="#cloud-large" y={10} width={280} height={100} />
-          <use id="cloud-top-2" href="#cloud-medium" y={40} width={200} height={80} />
-          <use id="cloud-top-3" href="#cloud-small" y={20} width={140} height={60} />
-          <use id="cloud-top-4" href="#cloud-medium" y={60} width={180} height={70} />
+          {/* 8 clouds with staggered positions for continuous coverage */}
+          <use id="cloud-top-1" href="#cloud-large" y={10} width={320} height={110} />
+          <use id="cloud-top-2" href="#cloud-medium" y={50} width={240} height={90} />
+          <use id="cloud-top-3" href="#cloud-small" y={25} width={180} height={70} />
+          <use id="cloud-top-4" href="#cloud-medium" y={80} width={220} height={85} />
+          <use id="cloud-top-5" href="#cloud-large" y={5} width={300} height={105} />
+          <use id="cloud-top-6" href="#cloud-small" y={60} width={160} height={65} />
+          <use id="cloud-top-7" href="#cloud-medium" y={35} width={200} height={80} />
+          <use id="cloud-top-8" href="#cloud-small" y={100} width={170} height={68} />
         </svg>
       </div>
 
-      {/* Bottom clouds - 15% of screen */}
+      {/* Bottom clouds - 15% of screen, fixed position */}
       <div 
-        className={`absolute bottom-0 left-0 right-0 overflow-hidden pointer-events-none ${className}`} 
+        className={`fixed bottom-0 left-0 right-0 overflow-hidden pointer-events-none ${className}`} 
         style={{ height: '15%', filter: 'blur(6px)' }}
       >
         <svg 
