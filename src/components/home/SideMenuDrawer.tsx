@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, 
@@ -14,6 +15,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
+import { MissionsModal } from "./MissionsModal";
+import { calculateLevel } from "@/utils/levelCalculation";
 
 interface SideMenuDrawerProps {
   isOpen: boolean;
@@ -36,10 +39,16 @@ const bottomItems = [
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const [isMissionsOpen, setIsMissionsOpen] = useState(false);
+
+  const levelInfo = calculateLevel(profile?.total_points || 0);
 
   const handleItemClick = (action: string) => {
+    if (action === "missions") {
+      setIsMissionsOpen(true);
+      return;
+    }
     console.log("Menu action:", action);
-    // For now, just close the drawer
     // These features can be implemented later
     onClose();
   };
@@ -51,7 +60,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   };
 
   return (
-    <AnimatePresence>
+    <>
+      <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
+      <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -98,7 +109,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       {profile?.nickname || "მოთამაშე"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      დონე 1 • {profile?.total_points || 0} ქულა
+                      დონე {levelInfo.level} • {profile?.total_points || 0} ქულა
                     </p>
                   </div>
                 </div>
@@ -166,6 +177,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 }

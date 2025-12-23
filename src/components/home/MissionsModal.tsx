@@ -1,25 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Target, CheckCircle2, Clock } from "lucide-react";
-
-interface Mission {
-  id: string;
-  mission_id: string;
-  mission_title: string;
-  mission_description: string | null;
-  target_value: number;
-  current_progress: number;
-  reward_xp: number;
-  completed: boolean;
-}
+import { useMissions } from "@/hooks/useMissions";
 
 interface MissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  missions: Mission[];
-  loading: boolean;
 }
 
-export function MissionsModal({ isOpen, onClose, missions, loading }: MissionsModalProps) {
+export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
+  const { missions, loading } = useMissions();
+  
   const completedCount = missions.filter((m) => m.completed).length;
   const totalXP = missions
     .filter((m) => m.completed)
