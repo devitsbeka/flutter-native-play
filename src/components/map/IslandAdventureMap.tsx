@@ -193,10 +193,10 @@ export function IslandAdventureMap() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-sky-400">
-      {/* SVG Clouds overlay */}
-      <SVGClouds className="z-15" />
+      {/* SVG Clouds overlay - between sky and map */}
+      <SVGClouds className="z-[15]" />
 
-      {/* Vanta Birds overlay - on top of map */}
+      {/* Vanta Birds overlay - on top of everything */}
       <div 
         ref={vantaRef} 
         className="absolute inset-0 z-20 pointer-events-none"
