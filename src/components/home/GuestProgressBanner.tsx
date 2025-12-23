@@ -32,43 +32,58 @@ export function GuestProgressBanner() {
     >
       <button
         onClick={() => navigate("/auth")}
-        className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg"
+        className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg overflow-hidden"
         style={{ boxShadow: "0 4px 0 0 hsl(25 80% 35%)" }}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
+          {/* Icon */}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
             <AlertTriangle className="h-5 w-5 text-white" />
           </div>
           
-          <div className="flex-1 text-left">
-            <p className="font-bold text-white text-sm mb-1">
+          {/* Content */}
+          <div className="flex-1 min-w-0 text-left">
+            <p className="font-bold text-white text-sm leading-tight mb-0.5">
               შენი პროგრესი არ არის შენახული!
             </p>
-            <p className="text-white/80 text-xs mb-2">
-              დარეგისტრირდი რომ არ დაკარგო შენი მიღწევები
+            <p className="text-white/80 text-xs mb-2 truncate">
+              დარეგისტრირდი რომ არ დაკარგო მიღწევები
             </p>
             
             {/* Stats */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <Trophy className="h-4 w-4 text-white/90" />
-                <span className="text-white font-semibold text-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <Trophy className="h-3.5 w-3.5 text-white/90" />
+                <span className="text-white font-semibold text-xs">
                   {totalLevels} დონე
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Star className="h-4 w-4 text-white/90 fill-white/90" />
-                <span className="text-white font-semibold text-sm">
+              <div className="flex items-center gap-1">
+                <Star className="h-3.5 w-3.5 text-white/90 fill-white/90" />
+                <span className="text-white font-semibold text-xs">
                   {totalStars} ვარსკვლავი
                 </span>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1.5">
-            <LogIn className="h-4 w-4 text-white" />
-            <span className="text-white font-semibold text-xs">შენახვა</span>
-          </div>
+          {/* Gamified Save Button */}
+          <motion.div 
+            className="shrink-0 relative"
+            whileTap={{ scale: 0.95, y: 2 }}
+          >
+            <div 
+              className="absolute inset-0 rounded-xl"
+              style={{ background: "hsl(142 70% 30%)", transform: "translateY(3px)" }}
+            />
+            <div 
+              className="relative rounded-xl px-3 py-2 flex items-center gap-1.5"
+              style={{ background: "linear-gradient(180deg, hsl(142 70% 50%) 0%, hsl(142 65% 42%) 100%)" }}
+            >
+              <LogIn className="h-4 w-4 text-white" />
+              <span className="text-white font-bold text-xs whitespace-nowrap">შენახვა</span>
+            </div>
+          </motion.div>
         </div>
       </button>
     </motion.div>
