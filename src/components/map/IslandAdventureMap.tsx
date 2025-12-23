@@ -241,59 +241,64 @@ export function IslandAdventureMap() {
       </div>
 
       {/* Scrollable map container - MATCHING ADMIN STRUCTURE EXACTLY */}
-      <div className="absolute inset-0 pt-16 pb-32 overflow-auto z-10">
+      <div className="absolute inset-0 pt-16 overflow-auto z-10">
         <div 
           ref={containerRef}
           className="relative w-full"
-          style={{ minHeight: "100%", paddingBottom: "120px" }}
+          style={{ minHeight: "100%" }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <img
-            src={islandBackground}
-            alt="Island Map"
-            className="w-full h-auto block"
-            draggable={false}
-          />
-          
-          {/* Level nodes positioned over the image - SAME as admin */}
-          <div className="absolute inset-0">
-            {levels.map((level, index) => {
-              const position = levelPositions.find(p => p.id === level.id);
-              if (!position) return null;
-              
-              return (
-                <IslandLevelNode
-                  key={level.id}
-                  level={level}
-                  position={{ x: position.x, y: position.y }}
-                  onClick={handleLevelClick}
-                  onLockedClick={handleLockedLevelClick}
-                  index={index}
-                />
-              );
-            })}
+          {/* Map image container for position calculation - SAME as admin */}
+          <div className="relative">
+            <img
+              src={islandBackground}
+              alt="Island Map"
+              className="w-full h-auto block"
+              draggable={false}
+            />
             
-            {/* Trophy at the end */}
-            {levelPositions.length > 0 && (
-              <motion.div
-                className="absolute z-20 pointer-events-none"
-                style={{
-                  left: `${levelPositions[levelPositions.length - 1].x + 8}%`,
-                  top: `${levelPositions[levelPositions.length - 1].y - 2}%`,
-                  transform: "translate(-50%, -50%)",
-                }}
-                initial={{ scale: 0, rotate: -20 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-              >
-                <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-3 rounded-full shadow-lg shadow-amber-500/30">
-                  <Trophy className="h-8 w-8 text-white drop-shadow-md" />
-                </div>
-              </motion.div>
-            )}
+            {/* Level nodes positioned over the image - SAME as admin */}
+            <div className="absolute inset-0">
+              {levels.map((level, index) => {
+                const position = levelPositions.find(p => p.id === level.id);
+                if (!position) return null;
+                
+                return (
+                  <IslandLevelNode
+                    key={level.id}
+                    level={level}
+                    position={{ x: position.x, y: position.y }}
+                    onClick={handleLevelClick}
+                    onLockedClick={handleLockedLevelClick}
+                    index={index}
+                  />
+                );
+              })}
+              
+              {/* Trophy at the end */}
+              {levelPositions.length > 0 && (
+                <motion.div
+                  className="absolute z-20 pointer-events-none"
+                  style={{
+                    left: `${levelPositions[levelPositions.length - 1].x + 8}%`,
+                    top: `${levelPositions[levelPositions.length - 1].y - 2}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                >
+                  <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-3 rounded-full shadow-lg shadow-amber-500/30">
+                    <Trophy className="h-8 w-8 text-white drop-shadow-md" />
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
+          {/* Bottom spacing for nav bar */}
+          <div style={{ height: "120px" }} />
         </div>
       </div>
 
