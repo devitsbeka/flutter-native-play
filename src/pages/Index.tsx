@@ -220,7 +220,7 @@ export default function Index() {
                     >
                       🎁
                     </motion.span>
-                    <span className="text-sm font-bold text-white drop-shadow-sm">სპეციალური სკივრი</span>
+                    <span className="text-sm font-display font-bold text-white drop-shadow-sm uppercase">სპეციალური სკივრი</span>
                   </div>
                   <div 
                     className="px-2.5 py-1 rounded-lg text-xs font-bold text-white"
@@ -311,17 +311,16 @@ export default function Index() {
             
             {/* Scroll indicator */}
             <motion.div 
-              className="pt-6 flex flex-col items-center gap-1"
+              className="pt-6 flex flex-col items-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <span className="text-xs text-slate-600">კატეგორიები</span>
               <motion.div
                 animate={{ y: [0, 4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <ChevronDown className="h-5 w-5 text-slate-500" />
               </motion.div>
             </motion.div>
           </div>
@@ -446,7 +445,7 @@ function QuickButton({
       whileTap={{ scale: 0.95 }}
     >
       <img src={iconSrc} alt={label} className="h-14 w-14 object-contain" />
-      <span className="text-xs font-medium text-slate-700">{label}</span>
+      <span className="text-sm font-medium text-slate-700">{label}</span>
     </motion.button>
   );
 }
