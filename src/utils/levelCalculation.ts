@@ -86,13 +86,25 @@ export function getStreakMilestones(): { days: number; bonus: number; reward: st
   ];
 }
 
-export function getLevelRewards(level: number): string[] {
-  const rewards: string[] = [];
+export interface LevelRewards {
+  xpBonus: number;
+  powerUps: number;
+  spinTickets: number;
+  specialRewards: string[];
+}
+
+export function getLevelRewards(level: number): LevelRewards {
+  const specialRewards: string[] = [];
   
-  if (level >= 5) rewards.push("ახალი ავატარები");
-  if (level >= 10) rewards.push("ექსკლუზიური ბეჯები");
-  if (level >= 15) rewards.push("VIP უფასო დღე");
-  if (level >= 20) rewards.push("ლეგენდარული სტატუსი");
+  if (level >= 5) specialRewards.push("ახალი ავატარები");
+  if (level >= 10) specialRewards.push("ექსკლუზიური ბეჯები");
+  if (level >= 15) specialRewards.push("VIP უფასო დღე");
+  if (level >= 20) specialRewards.push("ლეგენდარული სტატუსი");
   
-  return rewards;
+  return {
+    xpBonus: level * 25,
+    powerUps: level >= 3 ? Math.floor(level / 3) : 0,
+    spinTickets: level >= 5 ? Math.floor(level / 5) : 0,
+    specialRewards,
+  };
 }
