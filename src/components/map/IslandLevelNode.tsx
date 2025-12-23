@@ -114,12 +114,11 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
       {/* Level number overlay for current level only */}
       {level.isCurrent && (
         <div 
-          className="absolute font-bold text-white text-base"
+          className="absolute font-bold text-amber-900 text-base"
           style={{
             left: "50%",
-            top: "50%",
+            top: "42%",
             transform: "translate(-50%, -50%)",
-            textShadow: "0 1px 2px rgba(0,0,0,0.3)",
           }}
         >
           {level.id}
