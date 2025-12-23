@@ -38,7 +38,7 @@ export function GuestProgressBanner() {
         <div className="flex items-center gap-3">
           {/* Content */}
           <div className="flex-1 min-w-0 text-left">
-            <p className="font-bold text-white text-sm leading-tight mb-0.5">
+            <p className="font-display font-bold text-white text-sm leading-tight mb-0.5">
               შენი პროგრესი არ არის შენახული!
             </p>
             <p className="text-white/80 text-xs mb-2 truncate">
