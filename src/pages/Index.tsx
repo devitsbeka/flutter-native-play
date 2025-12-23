@@ -10,6 +10,7 @@ import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { LevelBadge } from "@/components/home/LevelBadge";
 import { StreakModal } from "@/components/home/StreakModal";
 import { PointsModal } from "@/components/home/PointsModal";
+import { GuestProgressBanner } from "@/components/home/GuestProgressBanner";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -133,6 +134,9 @@ export default function Index() {
               </div>
             </div>
           </header>
+
+          {/* Guest Progress Warning Banner */}
+          <GuestProgressBanner />
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">

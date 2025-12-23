@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
+import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
+import { getGuestProgress } from "@/hooks/useGuestProgress";
 import confetti from "canvas-confetti";
 
 interface TriviaQuestion {
@@ -36,6 +38,7 @@ export default function CategoryQuizPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedStars, setSavedStars] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
@@ -185,6 +188,28 @@ export default function CategoryQuizPage() {
       } else {
         toast.info("სცადე თავიდან შემდეგი დონის გასახსნელად!");
       }
+      
+      // Show registration prompt for guests after completing a few levels
+      if (!user && result.stars >= 1) {
+        const guestProgress = getGuestProgress();
+        const totalLevels = Object.values(guestProgress).reduce(
+          (sum, cat) => sum + cat.completedLevels.length,
+          0
+        );
+        
+        // Show prompt after 2, 5, and 10 levels
+        const promptThresholds = [2, 5, 10];
+        const lastPromptShown = parseInt(localStorage.getItem("last_register_prompt") || "0");
+        
+        for (const threshold of promptThresholds) {
+          if (totalLevels >= threshold && lastPromptShown < threshold) {
+            localStorage.setItem("last_register_prompt", threshold.toString());
+            // Delay to let confetti play first
+            setTimeout(() => setShowRegisterPrompt(true), 1500);
+            break;
+          }
+        }
+      }
     } else if (user) {
       toast.error("პროგრესის შენახვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.");
     }
@@ -260,7 +285,16 @@ export default function CategoryQuizPage() {
     const passed = displayStars >= 1;
     
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <>
+        <RegisterPromptModal
+          isOpen={showRegisterPrompt}
+          onClose={() => setShowRegisterPrompt(false)}
+          onRegister={() => {
+            setShowRegisterPrompt(false);
+            navigate("/auth");
+          }}
+        />
+        <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -347,6 +381,7 @@ export default function CategoryQuizPage() {
           </div>
         </motion.div>
       </div>
+      </>
     );
   }
 
