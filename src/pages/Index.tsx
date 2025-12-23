@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Trophy, ChevronDown, Map, Gift, Star, Menu } from "lucide-react";
+import { Users, ChevronDown, Map, Menu } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { LuckySpinModal } from "@/components/game/LuckySpinModal";
@@ -17,6 +17,9 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { toast } from "sonner";
+import iconWheel from "@/assets/icon-wheel.png";
+import iconVip from "@/assets/icon-vip.png";
+import iconLeaderboard from "@/assets/icon-leaderboard.png";
 
 
 type ContentTab = "featured" | "classic" | "fun" | "educational";
@@ -225,20 +228,19 @@ export default function Index() {
             </motion.button>
 
             {/* Quick Action Row */}
-            <div className="flex gap-3 w-full max-w-xs">
+            <div className="flex gap-4 w-full max-w-xs justify-center">
               <QuickButton 
-                icon={<Gift className="h-5 w-5" />}
+                iconSrc={iconWheel}
                 label="ბორბალი"
                 onClick={() => setIsSpinModalOpen(true)}
               />
               <QuickButton 
-                icon={<Star className="h-5 w-5 fill-amber-400 text-amber-400" />}
+                iconSrc={iconVip}
                 label="VIP"
                 onClick={() => navigate("/vip")}
-                highlight
               />
               <QuickButton 
-                icon={<Trophy className="h-5 w-5" />}
+                iconSrc={iconLeaderboard}
                 label="რეიტინგი"
                 onClick={() => navigate("/leaderboards")}
               />
@@ -374,27 +376,21 @@ export default function Index() {
 }
 
 function QuickButton({ 
-  icon, 
+  iconSrc, 
   label,
   onClick,
-  highlight
 }: { 
-  icon: React.ReactNode; 
+  iconSrc: string; 
   label: string;
   onClick?: () => void;
-  highlight?: boolean;
 }) {
   return (
     <motion.button
       onClick={onClick}
-      className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-xl ${
-        highlight 
-          ? "bg-amber-100/80 border border-amber-300/50" 
-          : "bg-white/60 backdrop-blur-sm"
-      }`}
+      className="flex flex-col items-center gap-1"
       whileTap={{ scale: 0.95 }}
     >
-      <span className="text-slate-700">{icon}</span>
+      <img src={iconSrc} alt={label} className="h-14 w-14 object-contain" />
       <span className="text-xs font-medium text-slate-700">{label}</span>
     </motion.button>
   );
