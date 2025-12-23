@@ -23,7 +23,7 @@ interface TriviaQuestion {
 export default function CategoryQuizPage() {
   const { categoryId, levelId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { updateLevelProgress } = useCategoryProgress();
   
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
@@ -385,85 +385,138 @@ export default function CategoryQuizPage() {
     );
   }
 
+  // Answer letter labels
+  const answerLabels = ["A", "B", "C", "D"];
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"
-        >
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{category?.icon}</span>
-          <span className="font-semibold text-foreground">{category?.name}</span>
+    <div 
+      className="min-h-screen flex flex-col"
+      style={{
+        background: "linear-gradient(180deg, hsl(168 45% 55%) 0%, hsl(168 40% 45%) 100%)"
+      }}
+    >
+      {/* Header with Players */}
+      <div className="px-5 pt-8 pb-4">
+        <div className="flex items-center justify-center gap-6">
+          {/* Player (You) */}
+          <div className="text-center">
+            <div 
+              className="w-20 h-20 rounded-full border-4 border-sky-400 overflow-hidden bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center text-3xl"
+              style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}
+            >
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="You" className="w-full h-full object-cover" />
+              ) : (
+                "👤"
+              )}
+            </div>
+            <p className="mt-2 font-bold text-white text-sm drop-shadow-md">
+              {profile?.nickname || "მოთამაშე"}
+            </p>
+          </div>
+
+          {/* VS */}
+          <span className="text-white/80 font-semibold text-lg">vs</span>
+
+          {/* Opponent (AI) */}
+          <div className="text-center">
+            <div 
+              className="w-20 h-20 rounded-full border-4 border-sky-400 overflow-hidden bg-gradient-to-br from-pink-200 to-rose-300 flex items-center justify-center text-3xl"
+              style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}
+            >
+              🤖
+            </div>
+            <p className="mt-2 font-bold text-white text-sm drop-shadow-md">
+              AI ოპონენტი
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className={`font-bold ${timeRemaining <= 5 ? "text-destructive" : "text-foreground"}`}>
+        {/* Timer badge - small, positioned below */}
+        <div className="flex justify-center mt-3">
+          <div 
+            className={`rounded-full px-4 py-1 text-sm font-bold ${
+              timeRemaining <= 5 
+                ? "bg-red-500 text-white animate-pulse" 
+                : "bg-white/20 text-white"
+            }`}
+          >
             {timeRemaining}წმ
-          </span>
+          </div>
         </div>
       </div>
 
-      {/* Progress */}
-      <div className="px-5 mb-6">
-        <div className="flex gap-1.5">
-          {questions.map((_, index) => (
-            <div
-              key={index}
-              className={`h-2 flex-1 rounded-full transition-colors ${
-                index < currentQuestionIndex
-                  ? "bg-success"
-                  : index === currentQuestionIndex
-                  ? "bg-primary"
-                  : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
-          კითხვა {currentQuestionIndex + 1} / {questions.length}
-        </p>
-      </div>
-
-      {/* Question */}
-      <div className="px-5">
+      {/* Question Card */}
+      <div className="flex-1 px-5 pb-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestionIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="h-full flex flex-col"
           >
-            <div 
-              className="rounded-3xl bg-card p-6 mb-6"
-              style={{ boxShadow: "0 6px 0 0 hsl(var(--border))" }}
-            >
-              <h2 className="text-xl font-bold text-foreground text-center">
-                {currentQuestion?.question}
-              </h2>
+            {/* Question Number Badge + Card */}
+            <div className="relative mb-6">
+              {/* Question Number */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div 
+                  className="w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-lg text-teal-600 border-4 border-teal-300"
+                  style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+                >
+                  {currentQuestionIndex + 1}
+                </div>
+              </div>
+
+              {/* Question Card */}
+              <div 
+                className="rounded-3xl bg-white/95 p-6 pt-8 border-4 border-teal-300/50"
+                style={{ boxShadow: "0 8px 0 0 hsl(168 40% 35%)" }}
+              >
+                <h2 className="text-lg font-bold text-teal-700 text-center leading-relaxed">
+                  {currentQuestion?.question}
+                </h2>
+              </div>
             </div>
 
-            {/* Answers */}
-            <div className="space-y-3">
+            {/* Progress dots */}
+            <div className="flex justify-center gap-2 mb-6">
+              {questions.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    index < currentQuestionIndex
+                      ? "bg-white"
+                      : index === currentQuestionIndex
+                      ? "bg-white scale-125"
+                      : "bg-white/40"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Answer Buttons */}
+            <div className="space-y-3 flex-1">
               {currentQuestion?.allAnswers?.map((answer, index) => {
                 const isCorrect = answer === currentQuestion.correct_answer;
                 const isSelected = answer === selectedAnswer;
                 
-                let buttonStyle = "bg-card";
-                let shadow = "0 4px 0 0 hsl(var(--border))";
+                let bgColor = "bg-white";
+                let borderColor = "border-sky-400";
+                let textColor = "text-sky-600";
+                let shadowColor = "hsl(200 80% 50%)";
                 
                 if (isAnswered) {
                   if (isCorrect) {
-                    buttonStyle = "bg-success text-success-foreground";
-                    shadow = "0 4px 0 0 hsl(142 60% 35%)";
+                    bgColor = "bg-emerald-100";
+                    borderColor = "border-emerald-500";
+                    textColor = "text-emerald-700";
+                    shadowColor = "hsl(152 70% 35%)";
                   } else if (isSelected) {
-                    buttonStyle = "bg-destructive text-destructive-foreground";
-                    shadow = "0 4px 0 0 hsl(0 70% 45%)";
+                    bgColor = "bg-red-100";
+                    borderColor = "border-red-500";
+                    textColor = "text-red-700";
+                    shadowColor = "hsl(0 70% 45%)";
                   }
                 }
 
@@ -472,44 +525,44 @@ export default function CategoryQuizPage() {
                     key={index}
                     onClick={() => handleAnswerSelect(answer)}
                     disabled={isAnswered}
-                    className={`w-full rounded-2xl p-4 text-left font-medium transition-all ${buttonStyle}`}
-                    style={{ boxShadow: shadow }}
-                    whileHover={!isAnswered ? { scale: 1.02 } : undefined}
-                    whileTap={!isAnswered ? { scale: 0.98 } : undefined}
+                    className={`w-full rounded-full py-4 px-5 text-left font-semibold transition-all ${bgColor} border-4 ${borderColor}`}
+                    style={{ boxShadow: `0 4px 0 0 ${shadowColor}` }}
+                    whileHover={!isAnswered ? { scale: 1.02, y: -2 } : undefined}
+                    whileTap={!isAnswered ? { scale: 0.98, y: 2 } : undefined}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{answer}</span>
-                      {isAnswered && (
-                        isCorrect ? (
-                          <Check className="h-5 w-5" />
-                        ) : isSelected ? (
-                          <X className="h-5 w-5" />
-                        ) : null
+                    <div className="flex items-center gap-3">
+                      <span className={`font-bold ${textColor}`}>
+                        {answerLabels[index]}:
+                      </span>
+                      <span className={textColor}>{answer}</span>
+                      {isAnswered && isCorrect && (
+                        <Check className="h-5 w-5 ml-auto text-emerald-600" />
+                      )}
+                      {isAnswered && isSelected && !isCorrect && (
+                        <X className="h-5 w-5 ml-auto text-red-600" />
                       )}
                     </div>
                   </motion.button>
                 );
               })}
             </div>
+
+            {/* Next Button */}
+            {isAnswered && (
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={handleNextQuestion}
+                className="mt-6 w-full rounded-full py-4 px-6 bg-white border-4 border-sky-400 font-bold text-sky-600 text-lg uppercase tracking-wide"
+                style={{ boxShadow: "0 4px 0 0 hsl(200 80% 50%)" }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98, y: 2 }}
+              >
+                {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგები"}
+              </motion.button>
+            )}
           </motion.div>
         </AnimatePresence>
-
-        {/* Continue Button */}
-        {isAnswered && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6"
-          >
-            <ChunkyButton
-              size="lg"
-              className="w-full"
-              onClick={handleNextQuestion}
-            >
-              {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგების ნახვა"}
-            </ChunkyButton>
-          </motion.div>
-        )}
       </div>
     </div>
   );
