@@ -249,11 +249,30 @@ export default function Index() {
         </div>
 
         {/* Second Screen - Categories */}
-        <div className="relative z-10 min-h-screen bg-background/95 backdrop-blur-sm rounded-t-3xl -mt-4">
-          <div className="px-4 py-6 space-y-4">
+        <div 
+          className="relative z-10 min-h-screen rounded-t-3xl -mt-4"
+          style={{
+            background: "linear-gradient(180deg, hsl(25 40% 20%) 0%, hsl(20 35% 15%) 100%)"
+          }}
+        >
+          {/* Wood texture overlay */}
+          <div 
+            className="absolute inset-0 opacity-20 rounded-t-3xl"
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.1) 2px,
+                rgba(0,0,0,0.1) 4px
+              )`
+            }}
+          />
+
+          <div className="relative z-10 px-4 py-6 space-y-5">
             {/* Tabs */}
             <div className="overflow-x-auto pb-2 -mx-4 px-4">
-              <div className="inline-flex rounded-2xl p-1 bg-muted/50">
+              <div className="inline-flex rounded-2xl p-1 bg-amber-900/40 backdrop-blur-sm">
                 <TabButton isActive={activeTab === "featured"} onClick={() => setActiveTab("featured")} label="გამორჩეული" />
                 <TabButton isActive={activeTab === "classic"} onClick={() => setActiveTab("classic")} label="კლასიკური" />
                 <TabButton isActive={activeTab === "fun"} onClick={() => setActiveTab("fun")} label="გართობა" />
@@ -269,109 +288,25 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Bento Grid Layout - Fixed sizing */}
-                <div className="space-y-3">
-                  {/* Hero Card - Full Width */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0 }}
-                    className="h-[140px]"
-                  >
-                    <FeaturedCard
-                      title={featuredItems[0].title}
-                      subtitle={featuredItems[0].subtitle}
-                      icon={featuredItems[0].icon}
-                      size="large"
-                    />
-                  </motion.div>
-
-                  {/* Two Medium Cards Side by Side */}
-                  <div className="grid grid-cols-2 gap-3">
+                {/* 3-Column Polaroid Grid */}
+                <div className="grid grid-cols-3 gap-4">
+                  {featuredItems.map((item, index) => (
                     <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 }}
-                      className="h-[200px]"
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20, rotate: -5 }}
+                      animate={{ opacity: 1, y: 0, rotate: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="aspect-[3/4]"
                     >
                       <FeaturedCard
-                        title={featuredItems[1].title}
-                        subtitle={featuredItems[1].subtitle}
-                        icon={featuredItems[1].icon}
-                        size="medium"
+                        title={item.title}
+                        subtitle={item.subtitle}
+                        icon={item.icon}
+                        size="small"
+                        progress={{ current: Math.floor(Math.random() * 10), total: 10 }}
                       />
                     </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="h-[200px]"
-                    >
-                      <FeaturedCard
-                        title={featuredItems[2].title}
-                        subtitle={featuredItems[2].subtitle}
-                        icon={featuredItems[2].icon}
-                        size="medium"
-                      />
-                    </motion.div>
-                  </div>
-
-                  {/* Four Small Cards - 2x2 Grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {featuredItems.slice(3, 7).map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 + index * 0.05 }}
-                        className="h-[130px]"
-                      >
-                        <FeaturedCard
-                          title={item.title}
-                          subtitle={item.subtitle}
-                          icon={item.icon}
-                          size="small"
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Another Medium Card - Full Width */}
-                  {featuredItems[7] && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.35 }}
-                      className="h-[140px]"
-                    >
-                      <FeaturedCard
-                        title={featuredItems[7].title}
-                        subtitle={featuredItems[7].subtitle}
-                        icon={featuredItems[7].icon}
-                        size="large"
-                      />
-                    </motion.div>
-                  )}
-
-                  {/* Last Two Small Cards */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {featuredItems.slice(8, 10).map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 + index * 0.05 }}
-                        className="h-[130px]"
-                      >
-                        <FeaturedCard
-                          title={item.title}
-                          subtitle={item.subtitle}
-                          icon={item.icon}
-                          size="small"
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </motion.section>
             ) : (
@@ -381,13 +316,15 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="grid grid-cols-2 gap-3">
+                {/* 3-Column Polaroid Grid */}
+                <div className="grid grid-cols-3 gap-4">
                   {getCategoriesByType(activeTab).map((cat, i) => (
                     <motion.div
                       key={cat.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0, y: 20, rotate: -5 }}
+                      animate={{ opacity: 1, y: 0, rotate: 0 }}
                       transition={{ delay: i * 0.03 }}
+                      className="aspect-[3/4]"
                     >
                       <CategoryCard
                         name={cat.name}
@@ -398,6 +335,7 @@ export default function Index() {
                         totalLevels={cat.totalLevels}
                         isLocked={!isCategoryUnlocked(cat.id)}
                         onClick={() => handleCategoryClick(cat.id)}
+                        index={i}
                       />
                     </motion.div>
                   ))}
@@ -468,14 +406,14 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
-        isActive ? "text-foreground" : "text-muted-foreground"
+      className={`relative rounded-xl px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
+        isActive ? "text-amber-900" : "text-amber-200/70"
       }`}
     >
       {isActive && (
         <motion.div
           layoutId="contentTab"
-          className="absolute inset-0 rounded-xl bg-background shadow-sm"
+          className="absolute inset-0 rounded-xl bg-amber-100 shadow-md"
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
         />
       )}
