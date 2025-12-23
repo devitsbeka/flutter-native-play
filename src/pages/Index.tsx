@@ -58,6 +58,20 @@ export default function Index() {
     }
   }, [canClaimChest]);
 
+  // Notify when close to unlocking chest (2/3 wins)
+  useEffect(() => {
+    if (chestProgress === 2) {
+      const notifiedKey = `chest_milestone_${currentChestTier}_notified`;
+      const alreadyNotified = localStorage.getItem(notifiedKey);
+      if (!alreadyNotified) {
+        localStorage.setItem(notifiedKey, "true");
+        toast("🎁 კიდევ 1 მოგება სკივრამდე!", {
+          description: "მოიგე კიდევ ერთი თამაში და მიიღე ჯილდო!",
+        });
+      }
+    }
+  }, [chestProgress, currentChestTier]);
+
   const handleClaimChest = (newPoints?: number) => {
     // Mark this chest tier as claimed
     localStorage.setItem("last_claimed_chest_tier", currentChestTier.toString());
