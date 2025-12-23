@@ -24,10 +24,11 @@ interface IslandLevelNodeProps {
 // Different SVG types have different dimensions and anchor points
 // Locked/Current: ~128x115 (button centered)
 // Star SVGs: ~128x200-205 (button at bottom, stars on top)
+// Sizes increased by 50%
 const NODE_CONFIG = {
-  locked: { width: 48, height: 43, offsetY: 50 },    // Center anchor
-  current: { width: 48, height: 43, offsetY: 50 },   // Center anchor  
-  stars: { width: 56, height: 90, offsetY: 75 },     // Bottom anchor (button sits on road)
+  locked: { width: 72, height: 65, offsetY: 50 },    // Center anchor (was 48x43)
+  current: { width: 72, height: 65, offsetY: 50 },   // Center anchor  
+  stars: { width: 84, height: 135, offsetY: 75 },    // Bottom anchor (was 56x90)
 };
 
 export function IslandLevelNode({ level, position, onClick, onLockedClick, index }: IslandLevelNodeProps) {

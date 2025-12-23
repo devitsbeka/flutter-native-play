@@ -1,7 +1,7 @@
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
@@ -27,14 +27,23 @@ const LEVEL_POSITIONS = [
   { id: 13, x: 35, y: 4 },   // Near top
 ];
 
+const MIN_ZOOM = 0.7;
+const MAX_ZOOM = 1.5;
+const DEFAULT_ZOOM = 1;
+
 export function IslandAdventureMap() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
   const { progress, loading } = useCategoryProgress();
+  
+  // Zoom state
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const [isDragging, setIsDragging] = useState(false);
+  const lastTouchDistance = useRef<number | null>(null);
 
   // Calculate levels from progress data (memoized to prevent infinite loops)
   const levels = useMemo<LevelState[]>(() => {
-    // Count total completed levels across all categories
     let totalCompleted = 0;
     Object.values(progress).forEach((catProgress) => {
       totalCompleted += catProgress.completedLevels.length;
@@ -47,11 +56,8 @@ export function IslandAdventureMap() {
       const isCurrent = pos.id === currentLevelNum;
       const isLocked = pos.id > currentLevelNum;
       
-      // Find the stars for this level by looking through progress
-      // Each level maps to a category based on its ID
       let stars: 0 | 1 | 2 | 3 = 0;
       if (isCompleted) {
-        // Map level ID to category and category-level-number
         const categories = Object.keys(progress);
         if (categories.length > 0) {
           const categoryIndex = (pos.id - 1) % categories.length;
@@ -69,7 +75,6 @@ export function IslandAdventureMap() {
           }
         }
         
-        // Default to at least 1 star if completed but no star data found
         if (stars === 0 && isCompleted) {
           stars = 1;
         }
@@ -84,37 +89,99 @@ export function IslandAdventureMap() {
     });
   }, [progress]);
 
-  // Find the current level for auto-scroll
   const currentLevelId = useMemo(() => {
     const current = levels.find((l) => l.isCurrent);
     return current?.id || 1;
   }, [levels]);
 
-  // Auto-scroll to current level on mount
-  useEffect(() => {
-    if (containerRef.current && levels.length > 0 && !loading) {
-      const currentPos = LEVEL_POSITIONS.find(p => p.id === currentLevelId);
-      
-      if (currentPos) {
+  // Snap back to center after scroll ends
+  const snapBackTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  const handleScroll = useCallback(() => {
+    if (snapBackTimeout.current) {
+      clearTimeout(snapBackTimeout.current);
+    }
+    
+    snapBackTimeout.current = setTimeout(() => {
+      if (containerRef.current) {
         const container = containerRef.current;
-        const scrollY = (currentPos.y / 100) * container.scrollHeight - container.clientHeight / 2;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+        const currentScroll = container.scrollTop;
+        const centerScroll = (scrollHeight - clientHeight) / 2;
         
-        setTimeout(() => {
+        // If scrolled too far from center, snap back
+        const scrollDiff = Math.abs(currentScroll - centerScroll);
+        if (scrollDiff > clientHeight * 0.4) {
           container.scrollTo({
-            top: Math.max(0, scrollY),
+            top: centerScroll,
             behavior: "smooth",
           });
-        }, 300);
+        }
       }
+    }, 1500);
+  }, []);
+
+  // Pinch to zoom handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      lastTouchDistance.current = distance;
     }
-  }, [levels, currentLevelId, loading]);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = distance - lastTouchDistance.current;
+      const zoomDelta = delta * 0.005;
+      
+      setZoom(prev => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + zoomDelta)));
+      lastTouchDistance.current = distance;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    lastTouchDistance.current = null;
+  }, []);
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(MAX_ZOOM, prev + 0.2));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(MIN_ZOOM, prev - 0.2));
+  };
+
+  // Center view on mount
+  useEffect(() => {
+    if (containerRef.current && !loading) {
+      const container = containerRef.current;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      const centerScroll = (scrollHeight - clientHeight) / 2;
+      
+      setTimeout(() => {
+        container.scrollTo({
+          top: centerScroll,
+          behavior: "smooth",
+        });
+      }, 300);
+    }
+  }, [loading, zoom]);
 
   // State for locked level modal
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
   const [selectedLockedLevel, setSelectedLockedLevel] = useState<number | null>(null);
 
   const handleLevelClick = (levelId: number) => {
-    // Navigate to game with the selected level
     navigate(`/game?level=${levelId}`);
   };
 
@@ -128,7 +195,7 @@ export function IslandAdventureMap() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-sky-400">
+    <div className="fixed inset-0 overflow-hidden bg-[#7BC043]">
       {/* Back button */}
       <div className="absolute top-4 left-4 z-50">
         <Button
@@ -141,51 +208,82 @@ export function IslandAdventureMap() {
         </Button>
       </div>
 
+      {/* Zoom controls */}
+      <div className="absolute top-4 right-4 z-50 flex flex-col gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleZoomIn}
+          disabled={zoom >= MAX_ZOOM}
+          className="bg-background/80 backdrop-blur-sm rounded-full shadow-lg"
+        >
+          <ZoomIn className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleZoomOut}
+          disabled={zoom <= MIN_ZOOM}
+          className="bg-background/80 backdrop-blur-sm rounded-full shadow-lg"
+        >
+          <ZoomOut className="h-5 w-5" />
+        </Button>
+      </div>
+
       {/* Scrollable map container */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide"
+        className="h-full w-full overflow-auto scrollbar-hide"
         style={{
           scrollBehavior: "smooth",
           WebkitOverflowScrolling: "touch",
         }}
+        onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {/* Map content wrapper - maintains aspect ratio */}
-        <div 
-          className="relative w-full"
-          style={{
-            minHeight: "150vh",
-            maxWidth: "500px",
-            margin: "0 auto",
-          }}
-        >
-          {/* Island background */}
-          <motion.img
-            src={islandBackground}
-            alt="Island Map"
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            draggable={false}
-          />
+        {/* Centering wrapper */}
+        <div className="flex items-center justify-center" style={{ minHeight: "150vh", padding: "10vh 0" }}>
+          {/* Map content wrapper - 70% size (30% smaller) */}
+          <div 
+            ref={mapRef}
+            className="relative"
+            style={{
+              width: `${70 * zoom}%`,
+              maxWidth: `${350 * zoom}px`,
+              aspectRatio: "922 / 1894",
+              transition: "width 0.2s ease-out, max-width 0.2s ease-out",
+            }}
+          >
+            {/* Island background */}
+            <motion.img
+              src={islandBackground}
+              alt="Island Map"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none rounded-3xl shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              draggable={false}
+            />
 
-          {/* Level nodes */}
-          {levels.map((level, index) => {
-            const position = LEVEL_POSITIONS.find(p => p.id === level.id);
-            if (!position) return null;
-            
-            return (
-              <IslandLevelNode
-                key={level.id}
-                level={level}
-                position={{ x: position.x, y: position.y }}
-                onClick={handleLevelClick}
-                onLockedClick={handleLockedLevelClick}
-                index={index}
-              />
-            );
-          })}
+            {/* Level nodes */}
+            {levels.map((level, index) => {
+              const position = LEVEL_POSITIONS.find(p => p.id === level.id);
+              if (!position) return null;
+              
+              return (
+                <IslandLevelNode
+                  key={level.id}
+                  level={level}
+                  position={{ x: position.x, y: position.y }}
+                  onClick={handleLevelClick}
+                  onLockedClick={handleLockedLevelClick}
+                  index={index}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
