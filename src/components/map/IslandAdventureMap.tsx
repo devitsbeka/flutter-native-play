@@ -8,22 +8,22 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 
 import islandBackground from "@/assets/map/island-background.svg";
 
-// Pre-defined level positions matching the winding path on the island
+// Pre-defined level positions matching the winding S-curve path on the island
 // Positions are percentages (x: left-to-right, y: top-to-bottom)
 const LEVEL_POSITIONS = [
-  { id: 1, x: 18, y: 82 },   // Bottom left - START
-  { id: 2, x: 38, y: 78 },
-  { id: 3, x: 58, y: 74 },
-  { id: 4, x: 75, y: 68 },
-  { id: 5, x: 68, y: 58 },
-  { id: 6, x: 48, y: 52 },
-  { id: 7, x: 28, y: 48 },
-  { id: 8, x: 22, y: 38 },
-  { id: 9, x: 42, y: 32 },
-  { id: 10, x: 62, y: 28 },
-  { id: 11, x: 72, y: 20 },
-  { id: 12, x: 52, y: 14 },
-  { id: 13, x: 32, y: 10 },  // Near top
+  { id: 1, x: 15, y: 88 },   // Bottom left - START
+  { id: 2, x: 35, y: 84 },
+  { id: 3, x: 55, y: 78 },
+  { id: 4, x: 75, y: 70 },
+  { id: 5, x: 72, y: 58 },
+  { id: 6, x: 50, y: 50 },
+  { id: 7, x: 28, y: 44 },
+  { id: 8, x: 25, y: 32 },
+  { id: 9, x: 45, y: 26 },
+  { id: 10, x: 65, y: 22 },
+  { id: 11, x: 75, y: 14 },
+  { id: 12, x: 55, y: 8 },
+  { id: 13, x: 35, y: 4 },   // Near top
 ];
 
 export function IslandAdventureMap() {
