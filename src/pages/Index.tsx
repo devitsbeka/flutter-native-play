@@ -293,13 +293,13 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {getCategoriesByType(activeTab).map((cat, i) => (
                     <motion.div
                       key={cat.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.03 }}
                     >
                       <CategoryCard
                         name={cat.name}
