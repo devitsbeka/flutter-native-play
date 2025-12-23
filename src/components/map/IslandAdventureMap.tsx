@@ -191,10 +191,10 @@ export function IslandAdventureMap() {
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* Vanta Birds background */}
+      {/* Vanta Birds overlay - on top of map */}
       <div 
         ref={vantaRef} 
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-20 pointer-events-none"
       />
 
       {/* Back button */}
