@@ -223,11 +223,10 @@ export function IslandAdventureMap() {
       >
         {/* Map content - full width, scrollable height */}
         <div 
-          className="relative mx-auto"
+          className="relative w-full"
           style={{
-            // Height based on aspect ratio (922:1894) scaled by zoom, width at 70%
-            width: "70%",
-            height: `${(1894 / 922) * 70 * zoom}vw`,
+            // Height based on aspect ratio (922:1894) scaled by zoom
+            height: `${(1894 / 922) * 100 * zoom}vw`,
           }}
         >
           {/* Island background - integral part, no shadow */}
