@@ -15,28 +15,37 @@ Deno.serve(async (req) => {
 
     if (!category || !categoryId) {
       return new Response(
-        JSON.stringify({ error: "Missing category information" }),
+        JSON.stringify({ error: "კატეგორიის ინფორმაცია აკლია" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Generating ${count} trivia questions for category: ${category}, level: ${level}`);
+    console.log(`Generating ${count} Georgian trivia questions for category: ${category}, level: ${level}`);
 
-    const difficulty = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
+    const difficulty = level <= 5 ? "მარტივი" : level <= 15 ? "საშუალო" : "რთული";
+    const difficultyEn = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
 
-    const prompt = `Generate ${count} trivia questions about ${category}. 
-    Difficulty: ${difficulty}
-    Level: ${level}
-    
-    Return ONLY a JSON array with this exact structure, no other text:
-    [
-      {
-        "question": "Question text here?",
-        "correct_answer": "Correct answer",
-        "incorrect_answers": ["Wrong 1", "Wrong 2", "Wrong 3"],
-        "difficulty": "${difficulty}"
-      }
-    ]`;
+    const prompt = `შექმენი ${count} ტრივია კითხვა თემაზე: "${category}" ქართულ ენაზე.
+
+სირთულე: ${difficulty}
+დონე: ${level}
+
+მნიშვნელოვანი ინსტრუქციები:
+1. ყველა კითხვა და პასუხი უნდა იყოს ქართულ ენაზე
+2. გრამატიკულად სწორი ქართული ენა გამოიყენე
+3. კითხვები უნდა იყოს ფაქტობრივად ზუსტი და სანდო
+4. არასწორი პასუხები უნდა იყოს დამაჯერებელი, მაგრამ აშკარად არასწორი
+5. თავიდან აიცილე გაუგებარი ან ორაზროვანი კითხვები
+
+დააბრუნე მხოლოდ JSON მასივი ზუსტად ამ სტრუქტურით, სხვა ტექსტი არ დაურთო:
+[
+  {
+    "question": "კითხვა ქართულად?",
+    "correct_answer": "სწორი პასუხი",
+    "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
+    "difficulty": "${difficultyEn}"
+  }
+]`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -52,7 +61,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.8,
+        temperature: 0.7,
       }),
     });
 
@@ -61,8 +70,14 @@ Deno.serve(async (req) => {
       console.error("AI API error:", errorText);
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
+          JSON.stringify({ error: "ძალიან ბევრი მოთხოვნა, გთხოვთ მოიცადოთ." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "სერვისი დროებით მიუწვდომელია." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       throw new Error(`AI API error: ${response.status}`);
@@ -75,19 +90,19 @@ Deno.serve(async (req) => {
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       console.error("No JSON array found in response:", content);
-      throw new Error("Failed to parse trivia questions");
+      throw new Error("კითხვების გენერირება ვერ მოხერხდა");
     }
 
     const questions = JSON.parse(jsonMatch[0]);
 
-    console.log(`Successfully generated ${questions.length} questions`);
+    console.log(`Successfully generated ${questions.length} Georgian questions`);
 
     return new Response(
       JSON.stringify({ questions }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "An error occurred";
+    const errorMessage = error instanceof Error ? error.message : "შეცდომა მოხდა";
     console.error("Error:", errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),

@@ -21,9 +21,9 @@ export default function CategoryPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">Category not found</p>
+          <p className="text-muted-foreground">კატეგორია ვერ მოიძებნა</p>
           <ChunkyButton onClick={() => navigate("/")} className="mt-4">
-            Go Home
+            მთავარი
           </ChunkyButton>
         </div>
       </div>
@@ -34,10 +34,10 @@ export default function CategoryPage() {
     if (!isUnlocked) return;
     
     if (!user) {
-      toast.info("Sign in to save your progress!", {
-        description: "Your quiz results will be saved when you're logged in.",
+      toast.info("შედით სისტემაში პროგრესის შესანახად!", {
+        description: "თქვენი შედეგები შეინახება სისტემაში შესვლის შემდეგ.",
         action: {
-          label: "Sign In",
+          label: "შესვლა",
           onClick: () => navigate("/auth"),
         },
       });
@@ -86,7 +86,7 @@ export default function CategoryPage() {
       <div className="relative -mt-4 rounded-t-3xl bg-background px-5 pt-6 pb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground">
-            Choose a Level
+            აირჩიე დონე
           </h2>
           {!user && (
             <button
@@ -94,7 +94,7 @@ export default function CategoryPage() {
               className="flex items-center gap-1.5 text-sm text-primary font-medium"
             >
               <LogIn className="h-4 w-4" />
-              Sign in to save
+              შესვლა
             </button>
           )}
         </div>

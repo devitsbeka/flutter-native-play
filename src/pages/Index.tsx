@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import crownMascot from "@/assets/crown-mascot.png";
 
-type ContentTab = "featured" | "trivia";
+type ContentTab = "featured" | "classic" | "fun" | "educational";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ export default function Index() {
               whileTap={{ scale: 0.98 }}
             >
               <Gift className="w-5 h-5 text-foreground/70" />
-              <span className="font-semibold text-foreground/80">Lucky spin</span>
+              <span className="font-semibold text-foreground/80">იღბლიანი ბორბალი</span>
             </motion.button>
             
             <motion.button
@@ -115,15 +115,15 @@ export default function Index() {
           <div className="flex-1 flex items-center justify-center relative px-4">
             {/* Left Side Feature Icons */}
             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-              <SideFeatureIcon icon={<Gift className="w-5 h-5" />} label="Pick-A-Prize" onClick={() => console.log("Pick-A-Prize")} />
-              <SideFeatureIcon icon={<Target className="w-5 h-5" />} label="Missions" onClick={() => console.log("Missions")} />
+              <SideFeatureIcon icon={<Gift className="w-5 h-5" />} label="პრიზი" onClick={() => console.log("Pick-A-Prize")} />
+              <SideFeatureIcon icon={<Target className="w-5 h-5" />} label="მისიები" onClick={() => console.log("Missions")} />
             </div>
             
             {/* Right Side Feature Icons */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-              <SideFeatureIcon icon={<Sparkles className="w-5 h-5" />} label="Events" onClick={() => console.log("Events")} />
-              <SideFeatureIcon icon={<Award className="w-5 h-5" />} label="Trivia Pass" onClick={() => console.log("Trivia Pass")} />
-              <SideFeatureIcon icon={<Trophy className="w-5 h-5" />} label="Ranking" onClick={() => navigate("/leaderboards")} />
+              <SideFeatureIcon icon={<Sparkles className="w-5 h-5" />} label="ივენთები" onClick={() => console.log("Events")} />
+              <SideFeatureIcon icon={<Award className="w-5 h-5" />} label="პასი" onClick={() => console.log("Trivia Pass")} />
+              <SideFeatureIcon icon={<Trophy className="w-5 h-5" />} label="რეიტინგი" onClick={() => navigate("/leaderboards")} />
             </div>
 
             {/* Center Level Badge */}
@@ -148,7 +148,7 @@ export default function Index() {
                   filter: "drop-shadow(0 4px 8px hsl(195 70% 40% / 0.3))"
                 }}
               >
-                <span className="text-sm font-semibold text-foreground/70">Level</span>
+                <span className="text-sm font-semibold text-foreground/70">დონე</span>
                 <span className="text-5xl font-display font-bold text-foreground">1</span>
               </div>
 
@@ -179,7 +179,7 @@ export default function Index() {
           <div className="relative h-32 flex items-end justify-center">
             <motion.img
               src={crownMascot}
-              alt="Mascot"
+              alt="მასკოტი"
               className="w-24 h-24 object-contain"
               style={{ filter: "drop-shadow(0 4px 8px hsl(0 0% 0% / 0.15))" }}
               animate={{ y: [0, -5, 0] }}
@@ -198,7 +198,7 @@ export default function Index() {
             >
               <span className="text-xl">👑</span>
               <div className="flex-1 text-center">
-                <span className="font-display text-white text-lg italic">Special Chest</span>
+                <span className="font-display text-white text-lg italic">სპეციალური სკივრი</span>
                 <span className="text-white/60 text-sm ml-2">0/3</span>
               </div>
               <span className="text-xl">🎁</span>
@@ -229,7 +229,7 @@ export default function Index() {
                 }}
               >
                 <span className="font-display text-white text-2xl font-bold tracking-wide uppercase">
-                  Play Now!
+                  თამაშის დაწყება!
                 </span>
               </div>
             </motion.button>
@@ -257,7 +257,7 @@ export default function Index() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <span className="text-sm text-foreground/60">Explore more</span>
+              <span className="text-sm text-foreground/60">გადაახვიე კატეგორიებისთვის</span>
               <motion.div
                 animate={{ y: [0, 5, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -268,21 +268,31 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Second Screen - Below the fold */}
+        {/* Second Screen - Categories */}
         <div className="relative z-10 min-h-screen bg-background/95 backdrop-blur-sm rounded-t-3xl -mt-4">
           <div className="px-4 py-8 space-y-4">
             {/* Tabs */}
-            <div className="flex justify-start">
+            <div className="flex justify-start overflow-x-auto pb-2">
               <div className="inline-flex rounded-2xl p-1.5 bg-muted/50 backdrop-blur-sm">
                 <TabButton
                   isActive={activeTab === "featured"}
                   onClick={() => setActiveTab("featured")}
-                  label="Featured"
+                  label="გამორჩეული"
                 />
                 <TabButton
-                  isActive={activeTab === "trivia"}
-                  onClick={() => setActiveTab("trivia")}
-                  label="Classic Trivia"
+                  isActive={activeTab === "classic"}
+                  onClick={() => setActiveTab("classic")}
+                  label="კლასიკური"
+                />
+                <TabButton
+                  isActive={activeTab === "fun"}
+                  onClick={() => setActiveTab("fun")}
+                  label="გართობა"
+                />
+                <TabButton
+                  isActive={activeTab === "educational"}
+                  onClick={() => setActiveTab("educational")}
+                  label="სასწავლო"
                 />
               </div>
             </div>
@@ -314,13 +324,13 @@ export default function Index() {
               </motion.section>
             ) : (
               <motion.section
-                key="trivia"
+                key={activeTab}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="space-y-3">
-                  {getCategoriesByType("classic").map((cat, i) => (
+                  {getCategoriesByType(activeTab).map((cat, i) => (
                     <motion.div
                       key={cat.id}
                       initial={{ opacity: 0, x: -20 }}
@@ -425,7 +435,7 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-xl px-5 py-2.5 text-sm font-display tracking-wide transition-all ${
+      className={`relative rounded-xl px-4 py-2.5 text-sm font-display tracking-wide transition-all whitespace-nowrap ${
         isActive
           ? "text-foreground"
           : "text-muted-foreground hover:text-foreground"
