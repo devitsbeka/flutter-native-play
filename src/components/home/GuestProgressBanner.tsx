@@ -32,16 +32,19 @@ export function GuestProgressBanner() {
     >
       <button
         onClick={() => navigate("/auth")}
-        className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg overflow-hidden"
-        style={{ boxShadow: "0 4px 0 0 hsl(25 80% 35%)" }}
+        className="w-full rounded-2xl p-4 shadow-lg overflow-hidden"
+        style={{ 
+          background: "linear-gradient(135deg, hsl(220 50% 25%) 0%, hsl(220 60% 18%) 100%)",
+          boxShadow: "0 4px 0 0 hsl(220 60% 12%)" 
+        }}
       >
         <div className="flex items-center gap-3">
           {/* Content */}
           <div className="flex-1 min-w-0 text-left">
-            <p className="font-display font-bold text-white text-sm leading-tight mb-0.5">
+            <p className="font-display font-bold text-white text-sm leading-tight mb-1.5">
               შენი პროგრესი არ არის შენახული!
             </p>
-            <p className="text-white/80 text-xs mb-2 truncate">
+            <p className="text-white/70 text-xs mb-2 truncate">
               დარეგისტრირდი რომ არ დაკარგო მიღწევები
             </p>
             
