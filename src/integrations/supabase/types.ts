@@ -86,6 +86,33 @@ export type Database = {
         }
         Relationships: []
       }
+      level_positions: {
+        Row: {
+          created_at: string
+          id: string
+          level_id: number
+          updated_at: string
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level_id: number
+          updated_at?: string
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level_id?: number
+          updated_at?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

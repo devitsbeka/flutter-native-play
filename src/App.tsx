@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import Game from "./pages/Game";
 import Team from "./pages/Team";
 import AdventureMap from "./pages/AdventureMap";
+import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
 
 const App = () => (
@@ -24,6 +25,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/adventure-map" element={<AdventureMap />} />
+        <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
         <Route path="/category/:categoryId" element={<CategoryPage />} />
         <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
         <Route path="/auth" element={<Auth />} />

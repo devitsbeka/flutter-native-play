@@ -6,28 +6,12 @@ import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import { useLevelPositions } from "@/hooks/useLevelPositions";
 import SVGClouds from "./SVGClouds";
 import BIRDS from "vanta/dist/vanta.birds.min";
 import * as THREE from "three";
 
 import islandBackground from "@/assets/map/island-background.svg";
-
-// Pre-defined level positions matching the winding S-curve path on the island (more curved)
-const LEVEL_POSITIONS = [
-  { id: 1, x: 22, y: 90 },
-  { id: 2, x: 45, y: 86 },
-  { id: 3, x: 68, y: 80 },
-  { id: 4, x: 78, y: 70 },
-  { id: 5, x: 65, y: 60 },
-  { id: 6, x: 42, y: 54 },
-  { id: 7, x: 22, y: 48 },
-  { id: 8, x: 28, y: 38 },
-  { id: 9, x: 50, y: 32 },
-  { id: 10, x: 72, y: 26 },
-  { id: 11, x: 75, y: 16 },
-  { id: 12, x: 55, y: 10 },
-  { id: 13, x: 35, y: 5 },
-];
 
 // Zoom limits based on screenshots
 const MIN_ZOOM = 1;    // Screenshot 3 - zoomed out
@@ -39,7 +23,10 @@ export function IslandAdventureMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
   const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
-  const { progress, loading } = useCategoryProgress();
+  const { progress, loading: progressLoading } = useCategoryProgress();
+  const { positions: levelPositions, loading: positionsLoading } = useLevelPositions();
+  
+  const loading = progressLoading || positionsLoading;
   
   // Zoom state
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
@@ -85,7 +72,7 @@ export function IslandAdventureMap() {
     
     const currentLevelNum = totalCompleted + 1;
     
-    return LEVEL_POSITIONS.map((pos) => {
+    return levelPositions.map((pos) => {
       const isCompleted = pos.id < currentLevelNum;
       const isCurrent = pos.id === currentLevelNum;
       const isLocked = pos.id > currentLevelNum;
@@ -121,7 +108,7 @@ export function IslandAdventureMap() {
         stars,
       };
     });
-  }, [progress]);
+  }, [progress, levelPositions]);
 
   const currentLevelId = useMemo(() => {
     const current = levels.find((l) => l.isCurrent);
@@ -160,7 +147,7 @@ export function IslandAdventureMap() {
   // Scroll to current level on mount
   useEffect(() => {
     if (containerRef.current && !loading) {
-      const currentPos = LEVEL_POSITIONS.find(p => p.id === currentLevelId);
+      const currentPos = levelPositions.find(p => p.id === currentLevelId);
       if (currentPos) {
         const container = containerRef.current;
         setTimeout(() => {
@@ -172,7 +159,7 @@ export function IslandAdventureMap() {
         }, 300);
       }
     }
-  }, [loading, currentLevelId]);
+  }, [loading, currentLevelId, levelPositions]);
 
   // State for locked level modal
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
@@ -282,7 +269,7 @@ export function IslandAdventureMap() {
             {/* Level nodes positioned over the image */}
             <div className="absolute inset-0">
               {levels.map((level, index) => {
-                const position = LEVEL_POSITIONS.find(p => p.id === level.id);
+                const position = levelPositions.find(p => p.id === level.id);
                 if (!position) return null;
                 
                 return (
