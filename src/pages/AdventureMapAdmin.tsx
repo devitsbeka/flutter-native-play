@@ -234,11 +234,6 @@ export default function AdventureMapAdmin() {
                     className="w-full h-full object-contain pointer-events-none"
                     draggable={false}
                   />
-                  
-                  {/* Position indicator */}
-                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-foreground/80 text-background text-xs px-2 py-0.5 rounded">
-                    {pos.x.toFixed(1)}%, {pos.y.toFixed(1)}%
-                  </div>
                 </motion.div>
               ))}
               
