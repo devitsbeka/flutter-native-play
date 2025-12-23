@@ -57,8 +57,8 @@ export function IslandAdventureMap() {
         minWidth: 200.00,
         scale: 1.00,
         scaleMobile: 1.00,
-        color1: 0x6d67de,
-        color2: 0x37e8bd,
+        color1: 0xffffff,
+        color2: 0x000000,
         colorMode: "lerp",
         backgroundColor: 0x000000,
         backgroundAlpha: 0, // Transparent background
