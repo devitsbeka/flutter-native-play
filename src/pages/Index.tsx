@@ -304,7 +304,7 @@ export default function Index() {
                         coinCost={10 + index * 5}
                         questionCount={10}
                         progress={{ current: Math.floor(Math.random() * 10), total: 10 }}
-                        onClick={() => navigate("/game")}
+                        onClick={() => navigate(`/play/${item.categoryId}/1`)}
                       />
                     </motion.div>
                   ))}
@@ -334,7 +334,7 @@ export default function Index() {
                         progress={getCategoryProgress(cat.id)}
                         totalLevels={cat.totalLevels}
                         isLocked={!isCategoryUnlocked(cat.id)}
-                        onClick={() => handleCategoryClick(cat.id)}
+                        onClick={() => navigate(`/play/${cat.id}/1`)}
                         index={i}
                         coinCost={10 + i * 5}
                         questionCount={cat.totalLevels}
