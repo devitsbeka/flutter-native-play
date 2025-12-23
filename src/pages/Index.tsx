@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Users, Trophy, ChevronDown, Map, Gift, Star, Menu } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { LuckySpinModal } from "@/components/game/LuckySpinModal";
+import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
+import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
+import { toast } from "sonner";
 import crownMascot from "@/assets/crown-mascot.png";
 
 type ContentTab = "featured" | "classic" | "fun" | "educational";
@@ -19,6 +22,32 @@ export default function Index() {
   const { getCategoryProgress, isCategoryUnlocked } = useCategoryProgress();
   const [activeTab, setActiveTab] = useState<ContentTab>("featured");
   const [isSpinModalOpen, setIsSpinModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isChestModalOpen, setIsChestModalOpen] = useState(false);
+
+  // Calculate chest progress from games won (cycles every 3 wins)
+  const gamesWon = profile?.games_won || 0;
+  const chestProgress = gamesWon % 3;
+  const chestProgressPercent = (chestProgress / 3) * 100;
+  const canClaimChest = chestProgress === 0 && gamesWon > 0;
+
+  // Check if chest is ready to claim
+  useEffect(() => {
+    if (canClaimChest && gamesWon > 0) {
+      // Show chest modal when 3 wins are achieved
+      const hasClaimedThisChest = localStorage.getItem(`chest_claimed_${Math.floor(gamesWon / 3)}`);
+      if (!hasClaimedThisChest) {
+        setIsChestModalOpen(true);
+      }
+    }
+  }, [canClaimChest, gamesWon]);
+
+  const handleClaimChest = () => {
+    // Mark this chest as claimed
+    localStorage.setItem(`chest_claimed_${Math.floor(gamesWon / 3)}`, "true");
+    setIsChestModalOpen(false);
+    toast.success("ჯილდოები მიღებულია! 🎉");
+  };
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/category/${categoryId}`);
@@ -27,6 +56,13 @@ export default function Index() {
   return (
     <>
       <LuckySpinModal isOpen={isSpinModalOpen} onClose={() => setIsSpinModalOpen(false)} />
+      <SideMenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      <ChestRewardModal 
+        isOpen={isChestModalOpen} 
+        onClose={() => setIsChestModalOpen(false)}
+        onClaim={handleClaimChest}
+      />
+      
       <div className="relative min-h-[200vh] overflow-x-hidden">
         {/* Sky Background */}
         <div 
@@ -42,10 +78,16 @@ export default function Index() {
           <header className="px-4 pt-4 safe-top">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <button className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm">
+                <button 
+                  onClick={() => setIsMenuOpen(true)}
+                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+                >
                   <Menu className="h-5 w-5 text-foreground/70" />
                 </button>
-                <button className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm overflow-hidden">
+                <button 
+                  onClick={() => navigate("/profile")}
+                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm overflow-hidden"
+                >
                   <Avatar
                     imageUrl={profile?.avatar_url || undefined}
                     emoji={profile?.nickname?.charAt(0) || "👤"}
@@ -119,24 +161,45 @@ export default function Index() {
             </motion.button>
 
             {/* Special Chest Progress */}
-            <div className="w-full max-w-xs mb-5">
+            <motion.button
+              onClick={() => canClaimChest && setIsChestModalOpen(true)}
+              className="w-full max-w-xs mb-5"
+              whileTap={canClaimChest ? { scale: 0.98 } : undefined}
+            >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm">🎁</span>
+                  <motion.span 
+                    className="text-sm"
+                    animate={canClaimChest ? { scale: [1, 1.2, 1] } : undefined}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    🎁
+                  </motion.span>
                   <span className="text-xs font-medium text-foreground/60">სპეციალური სკივრი</span>
                 </div>
-                <span className="text-xs font-bold text-foreground/70">0/3</span>
+                <span className="text-xs font-bold text-foreground/70">
+                  {canClaimChest ? "მზადაა!" : `${chestProgress}/3`}
+                </span>
               </div>
               <div className="h-2 bg-white/50 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full transition-all"
+                <motion.div 
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: canClaimChest ? "100%" : `${chestProgressPercent}%` }}
+                  transition={{ duration: 0.5 }}
                   style={{ 
-                    width: "0%",
-                    background: "linear-gradient(90deg, hsl(45 90% 50%) 0%, hsl(35 90% 55%) 100%)"
+                    background: canClaimChest 
+                      ? "linear-gradient(90deg, hsl(142 70% 45%) 0%, hsl(142 70% 50%) 100%)"
+                      : "linear-gradient(90deg, hsl(45 90% 50%) 0%, hsl(35 90% 55%) 100%)"
                   }}
                 />
               </div>
-            </div>
+              {canClaimChest && (
+                <p className="text-xs text-success font-medium mt-1 text-center">
+                  შეეხე სკივრის გასახსნელად!
+                </p>
+              )}
+            </motion.button>
 
             {/* Quick Action Row */}
             <div className="flex gap-3 w-full max-w-xs">
