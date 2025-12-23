@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Users, Trophy, Medal } from "lucide-react";
+import { ArrowLeft, Clock, Users } from "lucide-react";
 import { getRankFromPoints } from "@/data/opponents";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { QuickActionsBar } from "@/components/home/QuickActionsBar";
 
 interface LeaderboardEntry {
   id: string;
@@ -277,7 +278,9 @@ export default function Leaderboards() {
         )}
 
         {/* List Section */}
-        <div className="flex-1 bg-background/95 backdrop-blur-sm rounded-t-3xl px-4 pt-5 pb-24">
+        <div className="flex-1 bg-background/95 backdrop-blur-sm rounded-t-3xl px-4 pt-5 pb-6">
+          {/* Quick Actions Bar */}
+          <QuickActionsBar className="mb-4 -mx-2" />
           {loading ? (
             <div className="text-center py-12 text-muted-foreground">
               იტვირთება...
