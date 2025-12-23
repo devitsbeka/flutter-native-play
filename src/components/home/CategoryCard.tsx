@@ -11,32 +11,28 @@ interface CategoryCardProps {
   isLocked?: boolean;
   onClick?: () => void;
   index?: number;
+  coinCost?: number;
+  questionCount?: number;
 }
-
-// Random subtle rotation for playful polaroid effect
-const getRandomRotation = (index: number) => {
-  const rotations = [-2, 1.5, -1, 2, -1.5, 1, -2.5, 2.5, -1, 1.5];
-  return rotations[index % rotations.length];
-};
 
 // Different gradient backgrounds for variety based on index
 const getGradient = (index: number) => {
   const gradients = [
-    "from-indigo-500 to-purple-600",
-    "from-pink-400 to-rose-500", 
-    "from-cyan-400 to-blue-500",
-    "from-amber-400 to-orange-500",
-    "from-emerald-400 to-teal-500",
-    "from-violet-400 to-purple-500",
-    "from-lime-400 to-green-500",
+    "from-teal-300 to-cyan-400",
+    "from-violet-400 to-purple-500", 
+    "from-rose-400 to-pink-500",
+    "from-amber-300 to-orange-400",
+    "from-emerald-300 to-teal-400",
     "from-fuchsia-400 to-pink-500",
-    "from-sky-400 to-blue-500",
-    "from-red-400 to-rose-500",
-    "from-teal-400 to-cyan-500",
-    "from-yellow-400 to-amber-500",
-    "from-purple-400 to-indigo-500",
-    "from-green-400 to-emerald-500",
-    "from-orange-400 to-red-500",
+    "from-lime-300 to-green-400",
+    "from-sky-300 to-blue-400",
+    "from-orange-300 to-red-400",
+    "from-indigo-400 to-violet-500",
+    "from-cyan-300 to-teal-400",
+    "from-yellow-300 to-amber-400",
+    "from-pink-300 to-rose-400",
+    "from-green-300 to-emerald-400",
+    "from-blue-300 to-indigo-400",
   ];
   return gradients[index % gradients.length];
 };
@@ -49,64 +45,81 @@ export function CategoryCard({
   isLocked = false,
   onClick,
   index = 0,
+  coinCost = 10,
+  questionCount = 10,
 }: CategoryCardProps) {
   const isCompleted = progress >= totalLevels;
 
   return (
     <motion.button
       onClick={isLocked ? undefined : onClick}
-      whileHover={isLocked ? undefined : { scale: 1.03, rotate: 0, y: -8 }}
-      whileTap={isLocked ? undefined : { scale: 0.97 }}
-      className={`relative w-full h-full ${isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
-      style={{ 
-        transform: `rotate(${getRandomRotation(index)}deg)`,
-      }}
+      whileHover={isLocked ? undefined : { scale: 1.02, y: -4 }}
+      whileTap={isLocked ? undefined : { scale: 0.98 }}
+      className={`relative w-full ${isLocked ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
     >
       {/* Paper/Polaroid Frame */}
-      <div className="relative w-full h-full bg-gradient-to-b from-amber-50 to-amber-100 rounded-lg shadow-xl shadow-black/30 p-2 pb-3">
+      <div className="relative w-full bg-gradient-to-b from-amber-50 to-amber-100 rounded-2xl shadow-xl shadow-black/25 p-3">
         {/* Inner colored area with icon */}
-        <div className={`relative w-full aspect-square rounded-md bg-gradient-to-br ${getGradient(index)} flex items-center justify-center overflow-hidden`}>
-          {/* Decorative circles for depth */}
-          <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/20 rounded-full blur-xl" />
-          <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-white/15 rounded-full blur-lg" />
+        <div className={`relative w-full aspect-square rounded-xl bg-gradient-to-br ${getGradient(index)} flex items-center justify-center overflow-hidden`}>
+          {/* Decorative elements */}
+          <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/25 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/20 rounded-full blur-xl" />
           
           {/* Large Icon or Lock */}
           {isLocked ? (
-            <Lock className="h-12 w-12 text-white/70 drop-shadow-lg" />
+            <Lock className="h-16 w-16 text-white/80 drop-shadow-lg" />
           ) : (
-            <span className="relative z-10 text-5xl drop-shadow-lg">
+            <span className="relative z-10 text-7xl drop-shadow-lg filter">
               {icon}
             </span>
           )}
 
           {/* Completed badge */}
           {isCompleted && !isLocked && (
-            <div className="absolute top-2 right-2 bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+            <div className="absolute top-2 right-2 bg-amber-400 text-amber-900 text-xs font-bold w-7 h-7 rounded-full shadow-md flex items-center justify-center">
               ✓
             </div>
           )}
         </div>
 
-        {/* Bottom text area */}
-        <div className="flex items-end justify-between mt-2 px-1">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display font-bold text-amber-900 text-sm leading-tight truncate">
-              {name}
-            </h3>
+        {/* Bottom info area */}
+        <div className="mt-3 space-y-2">
+          {/* Category name */}
+          <h3 className="font-display font-bold text-amber-900 text-base leading-tight text-center truncate px-1">
+            {name}
+          </h3>
+
+          {/* Stats row */}
+          <div className="flex items-center justify-between px-1">
+            {/* Coin cost */}
+            <div className="flex items-center gap-1">
+              <span className="text-lg">🪙</span>
+              <span className="font-bold text-amber-700 text-sm">{coinCost}</span>
+            </div>
+
+            {/* Question count */}
+            <div className="flex items-center gap-1">
+              <span className="text-lg">❓</span>
+              <span className="font-bold text-amber-700 text-sm">{questionCount}</span>
+            </div>
+
+            {/* Progress */}
+            {!isLocked && (
+              <div className="flex items-center">
+                <span className={`font-bold text-base ${isCompleted ? "text-emerald-600" : "text-amber-600"}`}>
+                  {progress}
+                </span>
+                <span className="text-amber-400 font-bold text-base">/</span>
+                <span className="font-bold text-amber-800 text-base">{totalLevels}</span>
+              </div>
+            )}
           </div>
-          {!isLocked && (
-            <span className="text-sm font-bold ml-2 whitespace-nowrap">
-              <span className={isCompleted ? "text-emerald-500" : "text-amber-500"}>{progress}</span>
-              <span className="text-amber-400">/</span>
-              <span className="text-amber-700">{totalLevels}</span>
-            </span>
-          )}
         </div>
       </div>
 
-      {/* "NEW LEVELS" badge for variety - show on some cards */}
+      {/* "NEW" badge */}
       {index === 2 && !isLocked && (
-        <div className="absolute -bottom-1 -left-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[8px] font-bold px-2 py-1 rounded shadow-lg transform -rotate-12">
+        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg transform rotate-12">
           ახალი!
         </div>
       )}

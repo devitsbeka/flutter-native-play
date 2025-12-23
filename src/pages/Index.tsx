@@ -288,21 +288,21 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* 3-Column Polaroid Grid */}
-                <div className="grid grid-cols-3 gap-4">
+                {/* 2-Column Grid */}
+                <div className="grid grid-cols-2 gap-4">
                   {featuredItems.map((item, index) => (
                     <motion.div
                       key={item.id}
-                      initial={{ opacity: 0, y: 20, rotate: -5 }}
-                      animate={{ opacity: 1, y: 0, rotate: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="aspect-[3/4]"
                     >
                       <FeaturedCard
                         title={item.title}
-                        subtitle={item.subtitle}
                         icon={item.icon}
-                        size="small"
+                        index={index}
+                        coinCost={10 + index * 5}
+                        questionCount={10}
                         progress={{ current: Math.floor(Math.random() * 10), total: 10 }}
                       />
                     </motion.div>
@@ -316,15 +316,14 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* 3-Column Polaroid Grid */}
-                <div className="grid grid-cols-3 gap-4">
+                {/* 2-Column Grid */}
+                <div className="grid grid-cols-2 gap-4">
                   {getCategoriesByType(activeTab).map((cat, i) => (
                     <motion.div
                       key={cat.id}
-                      initial={{ opacity: 0, y: 20, rotate: -5 }}
-                      animate={{ opacity: 1, y: 0, rotate: 0 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.03 }}
-                      className="aspect-[3/4]"
                     >
                       <CategoryCard
                         name={cat.name}
@@ -336,6 +335,8 @@ export default function Index() {
                         isLocked={!isCategoryUnlocked(cat.id)}
                         onClick={() => handleCategoryClick(cat.id)}
                         index={i}
+                        coinCost={10 + i * 5}
+                        questionCount={cat.totalLevels}
                       />
                     </motion.div>
                   ))}
