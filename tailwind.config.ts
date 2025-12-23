@@ -126,6 +126,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          'Google Sans Flex',
           'Nunito',
           'Inter',
           '-apple-system',
