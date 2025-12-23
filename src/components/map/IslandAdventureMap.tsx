@@ -261,7 +261,7 @@ export function IslandAdventureMap() {
         onTouchEnd={handleTouchEnd}
       >
         {/* Map wrapper with spacing */}
-        <div className="relative" style={{ padding: '300px 150px' }}>
+        <div className="relative w-full" style={{ paddingTop: '300px', paddingBottom: '300px' }}>
           {/* Island background - maintains aspect ratio */}
           <div className="relative">
             <img
