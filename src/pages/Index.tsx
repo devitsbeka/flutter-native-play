@@ -12,7 +12,7 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { toast } from "sonner";
-import crownMascot from "@/assets/crown-mascot.png";
+
 
 type ContentTab = "featured" | "classic" | "fun" | "educational";
 
@@ -82,7 +82,7 @@ export default function Index() {
                   onClick={() => setIsMenuOpen(true)}
                   className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
                 >
-                  <Menu className="h-5 w-5 text-foreground/70" />
+                  <Menu className="h-5 w-5 text-slate-600" />
                 </button>
                 <button 
                   onClick={() => navigate("/profile")}
@@ -99,11 +99,11 @@ export default function Index() {
               <div className="flex items-center gap-2">
                 <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
                   <span className="text-orange-400">🔥</span>
-                  <span className="font-bold text-foreground text-sm">{profile?.current_streak || 0}</span>
+                  <span className="font-bold text-slate-700 text-sm">{profile?.current_streak || 0}</span>
                 </div>
                 <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
                   <span className="text-amber-400">👑</span>
-                  <span className="font-bold text-foreground text-sm">{profile?.total_points || 0}</span>
+                  <span className="font-bold text-slate-700 text-sm">{profile?.total_points || 0}</span>
                 </div>
               </div>
             </div>
@@ -129,16 +129,6 @@ export default function Index() {
                 <span className="text-4xl font-display font-bold text-slate-800">1</span>
               </div>
             </motion.div>
-
-            {/* Mascot */}
-            <motion.img
-              src={crownMascot}
-              alt="მასკოტი"
-              className="w-20 h-20 object-contain mb-6"
-              style={{ filter: "drop-shadow(0 4px 8px hsl(0 0% 0% / 0.1))" }}
-              animate={{ y: [0, -4, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            />
 
             {/* Play Button */}
             <motion.button
