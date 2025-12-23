@@ -52,14 +52,14 @@ export function GuestProgressBanner() {
             
             {/* Stats */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <Trophy className="h-3.5 w-3.5 text-white/90" />
+              <div className="flex items-center gap-1 whitespace-nowrap">
+                <Trophy className="h-3.5 w-3.5 text-white/90 shrink-0" />
                 <span className="text-white font-semibold text-xs">
                   {totalLevels} დონე
                 </span>
               </div>
-              <div className="flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 text-white/90 fill-white/90" />
+              <div className="flex items-center gap-1 whitespace-nowrap">
+                <Star className="h-3.5 w-3.5 text-white/90 fill-white/90 shrink-0" />
                 <span className="text-white font-semibold text-xs">
                   {totalStars} ვარსკვლავი
                 </span>
