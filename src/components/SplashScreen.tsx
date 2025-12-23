@@ -10,10 +10,32 @@ interface SplashScreenProps {
 export function SplashScreen({ children }: SplashScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
+  // Preload images before starting the loading animation
   useEffect(() => {
-    // Simulate loading progress
-    const duration = 2500; // 2.5 seconds total
+    const bgImage = new Image();
+    const logoImg = new Image();
+    let loadedCount = 0;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === 2) {
+        setImagesLoaded(true);
+      }
+    };
+
+    bgImage.onload = onLoad;
+    logoImg.onload = onLoad;
+    bgImage.src = splashBackground;
+    logoImg.src = logoImage;
+  }, []);
+
+  // Start progress animation only after images are loaded
+  useEffect(() => {
+    if (!imagesLoaded) return;
+
+    const duration = 4500; // 4.5 seconds total loading time
     const interval = 50; // Update every 50ms
     const increment = (100 / duration) * interval;
     
@@ -23,7 +45,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
         if (next >= 100) {
           clearInterval(timer);
           // Add small delay before hiding splash
-          setTimeout(() => setIsLoading(false), 300);
+          setTimeout(() => setIsLoading(false), 400);
           return 100;
         }
         return next;
@@ -31,7 +53,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
     }, interval);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [imagesLoaded]);
 
   return (
     <>
