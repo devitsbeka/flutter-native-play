@@ -39,24 +39,29 @@ export default function Index() {
 
   // Calculate chest progress from games won (cycles every 3 wins)
   const gamesWon = profile?.games_won || 0;
+  const currentChestTier = Math.floor(gamesWon / 3);
+  const [claimedChestTier, setClaimedChestTier] = useState<number>(() => {
+    const stored = localStorage.getItem("last_claimed_chest_tier");
+    return stored ? parseInt(stored, 10) : 0;
+  });
+  
+  // Progress is games toward the next chest (0, 1, or 2)
   const chestProgress = gamesWon % 3;
   const chestProgressPercent = (chestProgress / 3) * 100;
-  const canClaimChest = chestProgress === 0 && gamesWon > 0;
+  // Can claim if we have a new tier available that hasn't been claimed
+  const canClaimChest = currentChestTier > claimedChestTier;
 
-  // Check if chest is ready to claim
+  // Check if chest is ready to claim on load
   useEffect(() => {
-    if (canClaimChest && gamesWon > 0) {
-      // Show chest modal when 3 wins are achieved
-      const hasClaimedThisChest = localStorage.getItem(`chest_claimed_${Math.floor(gamesWon / 3)}`);
-      if (!hasClaimedThisChest) {
-        setIsChestModalOpen(true);
-      }
+    if (canClaimChest) {
+      setIsChestModalOpen(true);
     }
-  }, [canClaimChest, gamesWon]);
+  }, [canClaimChest]);
 
   const handleClaimChest = (newPoints?: number) => {
-    // Mark this chest as claimed
-    localStorage.setItem(`chest_claimed_${Math.floor(gamesWon / 3)}`, "true");
+    // Mark this chest tier as claimed
+    localStorage.setItem("last_claimed_chest_tier", currentChestTier.toString());
+    setClaimedChestTier(currentChestTier);
     setIsChestModalOpen(false);
     
     // Animate the points update
@@ -68,8 +73,13 @@ export default function Index() {
     if (user) {
       fetchProfile(user.id);
     }
-    
-    toast.success("ჯილდოები მიღებულია! 🎉");
+  };
+
+  // When closing without claiming, still mark as claimed to prevent infinite loop
+  const handleCloseChestModal = () => {
+    localStorage.setItem("last_claimed_chest_tier", currentChestTier.toString());
+    setClaimedChestTier(currentChestTier);
+    setIsChestModalOpen(false);
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -81,7 +91,7 @@ export default function Index() {
       <SideMenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       <ChestRewardModal 
         isOpen={isChestModalOpen} 
-        onClose={() => setIsChestModalOpen(false)}
+        onClose={handleCloseChestModal}
         onClaim={handleClaimChest}
       />
       <StreakModal 
