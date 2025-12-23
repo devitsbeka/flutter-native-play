@@ -86,25 +86,23 @@ export function IslandLevelNode({ level, position, onClick, onLockedClick, index
     >
       {/* Pulse animation for current level */}
       {level.isCurrent && (
-        <motion.div
-          className="absolute rounded-full bg-amber-400/30"
-          animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0.5, 0, 0.5],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          style={{
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "50px",
-            height: "50px",
-          }}
-        />
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <motion.div
+            className="rounded-full bg-amber-400/30"
+            style={{ width: 50, height: 50 }}
+            animate={{
+              scale: [1, 1.4, 1],
+              opacity: [0.5, 0, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        </div>
       )}
       
       {/* Level SVG */}
