@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
@@ -29,38 +29,70 @@ const LEVEL_POSITIONS = [
 export function IslandAdventureMap() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
-  const { getTotalProgress, getMapLevels } = useCategoryProgress();
-  const [levels, setLevels] = useState<LevelState[]>([]);
+  const { progress, loading } = useCategoryProgress();
 
-  // Initialize level states based on progress
-  useEffect(() => {
-    const mapLevels = getMapLevels();
-    const totalCompleted = getTotalProgress();
+  // Calculate levels from progress data (memoized to prevent infinite loops)
+  const levels = useMemo<LevelState[]>(() => {
+    // Count total completed levels across all categories
+    let totalCompleted = 0;
+    Object.values(progress).forEach((catProgress) => {
+      totalCompleted += catProgress.completedLevels.length;
+    });
+    
     const currentLevelNum = totalCompleted + 1;
     
-    const levelStates: LevelState[] = LEVEL_POSITIONS.map((pos) => {
-      const levelData = mapLevels.find(l => l.id === pos.id);
-      const isCompleted = levelData?.isCompleted || false;
+    return LEVEL_POSITIONS.map((pos) => {
+      const isCompleted = pos.id < currentLevelNum;
       const isCurrent = pos.id === currentLevelNum;
       const isLocked = pos.id > currentLevelNum;
+      
+      // Find the stars for this level by looking through progress
+      // Each level maps to a category based on its ID
+      let stars: 0 | 1 | 2 | 3 = 0;
+      if (isCompleted) {
+        // Map level ID to category and category-level-number
+        const categories = Object.keys(progress);
+        if (categories.length > 0) {
+          const categoryIndex = (pos.id - 1) % categories.length;
+          const categoryLevelNumber = Math.floor((pos.id - 1) / categories.length) + 1;
+          const categoryId = categories[categoryIndex];
+          const catProgress = progress[categoryId];
+          
+          if (catProgress) {
+            const levelData = catProgress.completedLevels.find(
+              (l) => l.level_number === categoryLevelNumber
+            );
+            if (levelData) {
+              stars = Math.min(3, Math.max(0, levelData.stars_earned)) as 0 | 1 | 2 | 3;
+            }
+          }
+        }
+        
+        // Default to at least 1 star if completed but no star data found
+        if (stars === 0 && isCompleted) {
+          stars = 1;
+        }
+      }
       
       return {
         id: pos.id,
         isLocked,
         isCurrent,
-        stars: (levelData?.stars || 0) as 0 | 1 | 2 | 3,
+        stars,
       };
     });
-    
-    setLevels(levelStates);
-  }, [getTotalProgress, getMapLevels]);
+  }, [progress]);
+
+  // Find the current level for auto-scroll
+  const currentLevelId = useMemo(() => {
+    const current = levels.find((l) => l.isCurrent);
+    return current?.id || 1;
+  }, [levels]);
 
   // Auto-scroll to current level on mount
   useEffect(() => {
-    if (containerRef.current && levels.length > 0) {
-      const totalCompleted = getTotalProgress();
-      const currentLevelNum = totalCompleted + 1;
-      const currentPos = LEVEL_POSITIONS.find(p => p.id === currentLevelNum);
+    if (containerRef.current && levels.length > 0 && !loading) {
+      const currentPos = LEVEL_POSITIONS.find(p => p.id === currentLevelId);
       
       if (currentPos) {
         const container = containerRef.current;
@@ -74,7 +106,7 @@ export function IslandAdventureMap() {
         }, 300);
       }
     }
-  }, [levels, getTotalProgress]);
+  }, [levels, currentLevelId, loading]);
 
   const handleLevelClick = (levelId: number) => {
     // Navigate to game with the selected level
