@@ -13,10 +13,10 @@ import * as THREE from "three";
 
 import islandBackground from "@/assets/map/island-background.svg";
 
-// Zoom limits based on screenshots
-const MIN_ZOOM = 1;    // Screenshot 3 - zoomed out
-const MAX_ZOOM = 1.3;  // Screenshot 2 - zoomed in
-const DEFAULT_ZOOM = 1.15;
+// Zoom limits - matching admin page scale
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 1.3;
+const DEFAULT_ZOOM = 1;
 
 export function IslandAdventureMap() {
   const navigate = useNavigate();
@@ -252,17 +252,13 @@ export function IslandAdventureMap() {
         onTouchEnd={handleTouchEnd}
       >
         {/* Map wrapper with spacing */}
-        <div className="relative w-full" style={{ paddingTop: '150px', paddingBottom: '300px' }}>
+        <div className="relative w-full" style={{ paddingTop: '100px', paddingBottom: '200px' }}>
           {/* Island background - maintains aspect ratio */}
           <div className="relative">
             <img
               src={islandBackground}
               alt="Island Map"
               className="w-full h-auto block"
-              style={{
-                transform: `scale(${zoom})`,
-                transformOrigin: 'top center',
-              }}
               draggable={false}
             />
             
