@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import BIRDS from "vanta/dist/vanta.birds.min";
+import * as THREE from "three";
 
 import islandBackground from "@/assets/map/island-background.svg";
 
@@ -31,53 +33,46 @@ const MIN_ZOOM = 1;    // Screenshot 3 - zoomed out
 const MAX_ZOOM = 1.3;  // Screenshot 2 - zoomed in
 const DEFAULT_ZOOM = 1.15;
 
-// Cloud component for realistic moving clouds
-function FloatingCloud({ delay, duration, startX, size, top }: { 
-  delay: number; 
-  duration: number; 
-  startX: number;
-  size: number;
-  top: number;
-}) {
-  return (
-    <motion.div
-      className="absolute pointer-events-none"
-      style={{
-        top: `${top}%`,
-        width: `${size}px`,
-        height: `${size * 0.6}px`,
-      }}
-      initial={{ x: startX, opacity: 0 }}
-      animate={{ 
-        x: [startX, startX + 400],
-        opacity: [0, 0.8, 0.8, 0],
-      }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: "linear",
-      }}
-    >
-      <svg viewBox="0 0 100 60" className="w-full h-full">
-        <ellipse cx="30" cy="40" rx="25" ry="18" fill="white" fillOpacity="0.7" />
-        <ellipse cx="50" cy="35" rx="30" ry="22" fill="white" fillOpacity="0.8" />
-        <ellipse cx="75" cy="40" rx="22" ry="16" fill="white" fillOpacity="0.7" />
-        <ellipse cx="45" cy="28" rx="20" ry="15" fill="white" fillOpacity="0.9" />
-        <ellipse cx="65" cy="30" rx="18" ry="14" fill="white" fillOpacity="0.75" />
-      </svg>
-    </motion.div>
-  );
-}
-
 export function IslandAdventureMap() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
   const { progress, loading } = useCategoryProgress();
   
   // Zoom state
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const lastTouchDistance = useRef<number | null>(null);
+
+  // Initialize Vanta Birds effect
+  useEffect(() => {
+    if (!vantaEffect.current && vantaRef.current) {
+      vantaEffect.current = BIRDS({
+        el: vantaRef.current,
+        THREE: THREE,
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        scaleMobile: 1.00,
+        color1: 0x6d67de,
+        color2: 0x37e8bd,
+        colorMode: "lerp",
+        backgroundColor: 0x38bdf8, // sky-400 color
+        separation: 84.00,
+        alignment: 59.00,
+        quantity: 3.00,
+      });
+    }
+    return () => {
+      if (vantaEffect.current) {
+        vantaEffect.current.destroy();
+        vantaEffect.current = null;
+      }
+    };
+  }, []);
 
   // Calculate levels from progress data
   const levels = useMemo<LevelState[]>(() => {
@@ -195,15 +190,12 @@ export function IslandAdventureMap() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-sky-400">
-      {/* Floating clouds */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-10">
-        <FloatingCloud delay={0} duration={25} startX={-150} size={120} top={5} />
-        <FloatingCloud delay={8} duration={30} startX={-100} size={90} top={15} />
-        <FloatingCloud delay={4} duration={22} startX={-180} size={100} top={25} />
-        <FloatingCloud delay={12} duration={28} startX={-120} size={80} top={8} />
-        <FloatingCloud delay={18} duration={26} startX={-140} size={110} top={18} />
-      </div>
+    <div className="fixed inset-0 overflow-hidden">
+      {/* Vanta Birds background */}
+      <div 
+        ref={vantaRef} 
+        className="absolute inset-0 z-0"
+      />
 
       {/* Back button */}
       <div className="absolute top-4 left-4 z-50">
@@ -220,7 +212,7 @@ export function IslandAdventureMap() {
       {/* Scrollable map container */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide"
+        className="h-full w-full overflow-y-auto overflow-x-hidden scrollbar-hide relative z-10"
         style={{
           WebkitOverflowScrolling: "touch",
         }}
