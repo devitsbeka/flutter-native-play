@@ -74,9 +74,9 @@ export default function CategoryQuizPage() {
         if (fetchError) {
           const errorMessage = fetchError.message || "";
           if (errorMessage.includes("429") || errorMessage.includes("Rate limit")) {
-            setError("Too many requests. Please wait a moment and try again.");
+            setError("ძალიან ბევრი მოთხოვნა. გთხოვთ მოიცადოთ და სცადოთ თავიდან.");
           } else {
-            setError("Failed to load questions. Please try again.");
+            setError("კითხვების ჩატვირთვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.");
           }
           return;
         }
@@ -87,7 +87,7 @@ export default function CategoryQuizPage() {
         }
 
         if (!data?.questions || !Array.isArray(data.questions)) {
-          setError("No questions received. Please try again.");
+          setError("კითხვები ვერ მიიღო. გთხოვთ სცადოთ თავიდან.");
           return;
         }
 
@@ -98,7 +98,7 @@ export default function CategoryQuizPage() {
 
         setQuestions(processedQuestions);
       } catch (err) {
-        setError("An unexpected error occurred. Please try again.");
+        setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");
       } finally {
         setLoading(false);
       }
@@ -168,19 +168,19 @@ export default function CategoryQuizPage() {
           });
         }, 250);
         
-        toast.success("🎉 Level Complete! Next level unlocked!", {
-          description: `+${earned} points earned!`,
+        toast.success("🎉 დონე გავლილია! შემდეგი დონე გახსნილია!", {
+          description: `+${earned} ქულა მიღებულია!`,
         });
       } else {
-        toast.info("Keep trying to unlock the next level!");
+        toast.info("სცადე თავიდან შემდეგი დონის გასახსნელად!");
       }
     } else if (user) {
-      toast.error("Failed to save progress. Please try again.");
+      toast.error("პროგრესის შენახვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.");
     } else {
       // Not logged in - remind them
-      toast.info("Sign in to save your progress!", {
+      toast.info("შედით სისტემაში პროგრესის შესანახად!", {
         action: {
-          label: "Sign In",
+          label: "შესვლა",
           onClick: () => navigate("/auth"),
         },
       });
@@ -233,7 +233,7 @@ export default function CategoryQuizPage() {
           >
             {category?.icon || "🎯"}
           </motion.div>
-          <p className="text-muted-foreground">Generating questions...</p>
+          <p className="text-muted-foreground">კითხვების გენერირება...</p>
         </div>
       </div>
     );
@@ -244,9 +244,9 @@ export default function CategoryQuizPage() {
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <div className="text-6xl mb-4">😕</div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Oops!</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">უპს!</h2>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <ChunkyButton onClick={() => navigate(-1)}>Go Back</ChunkyButton>
+          <ChunkyButton onClick={() => navigate(-1)}>უკან დაბრუნება</ChunkyButton>
         </div>
       </div>
     );
@@ -267,10 +267,10 @@ export default function CategoryQuizPage() {
             {score === questions.length ? "🏆" : score >= questions.length / 2 ? "🎉" : "💪"}
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            {score === questions.length ? "Perfect!" : score >= questions.length / 2 ? "Great job!" : "Keep practicing!"}
+            {score === questions.length ? "იდეალური!" : score >= questions.length / 2 ? "შესანიშნავია!" : "გააგრძელე ვარჯიში!"}
           </h2>
           <p className="text-muted-foreground mb-2">
-            You got {score} out of {questions.length} correct
+            სწორი პასუხი: {score} / {questions.length}
           </p>
           
           {/* Points earned */}
@@ -280,7 +280,7 @@ export default function CategoryQuizPage() {
               animate={{ scale: 1 }}
               className="text-lg font-bold text-primary mb-2"
             >
-              +{pointsEarned} points!
+              +{pointsEarned} ქულა!
             </motion.p>
           )}
           
@@ -293,7 +293,7 @@ export default function CategoryQuizPage() {
               className="mb-4"
             >
               <span className="inline-flex items-center gap-2 rounded-full bg-success/20 text-success px-4 py-2 font-semibold">
-                🔓 Next Level Unlocked!
+                🔓 შემდეგი დონე გახსნილია!
               </span>
             </motion.div>
           )}
@@ -314,7 +314,7 @@ export default function CategoryQuizPage() {
           </div>
 
           {isSaving && (
-            <p className="text-sm text-muted-foreground mb-4">Saving progress...</p>
+            <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
           )}
 
           <div className="space-y-3">
@@ -322,7 +322,7 @@ export default function CategoryQuizPage() {
               onClick={() => navigate(`/category/${categoryId}`)}
               disabled={isSaving}
             >
-              Continue
+              გაგრძელება
             </ChunkyButton>
             <ChunkyButton 
               variant="ghost" 
@@ -339,7 +339,7 @@ export default function CategoryQuizPage() {
                 setPointsEarned(0);
               }}
             >
-              Play Again
+              თავიდან თამაში
             </ChunkyButton>
           </div>
         </motion.div>
@@ -366,7 +366,7 @@ export default function CategoryQuizPage() {
         <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <span className={`font-bold ${timeRemaining <= 5 ? "text-destructive" : "text-foreground"}`}>
-            {timeRemaining}s
+            {timeRemaining}წმ
           </span>
         </div>
       </div>
@@ -388,7 +388,7 @@ export default function CategoryQuizPage() {
           ))}
         </div>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Question {currentQuestionIndex + 1} of {questions.length}
+          კითხვა {currentQuestionIndex + 1} / {questions.length}
         </p>
       </div>
 
@@ -468,7 +468,7 @@ export default function CategoryQuizPage() {
               className="w-full"
               onClick={handleNextQuestion}
             >
-              {currentQuestionIndex < questions.length - 1 ? "Continue" : "See Results"}
+              {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგების ნახვა"}
             </ChunkyButton>
           </motion.div>
         )}
