@@ -7,6 +7,7 @@ import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import BIRDS from "vanta/dist/vanta.birds.min";
+import CLOUDS2 from "vanta/dist/vanta.clouds2.min";
 import * as THREE from "three";
 
 import islandBackground from "@/assets/map/island-background.svg";
@@ -37,7 +38,9 @@ export function IslandAdventureMap() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const vantaRef = useRef<HTMLDivElement>(null);
+  const cloudsRef = useRef<HTMLDivElement>(null);
   const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
+  const cloudsEffect = useRef<ReturnType<typeof CLOUDS2> | null>(null);
   const { progress, loading } = useCategoryProgress();
   
   // Zoom state
@@ -71,6 +74,34 @@ export function IslandAdventureMap() {
       if (vantaEffect.current) {
         vantaEffect.current.destroy();
         vantaEffect.current = null;
+      }
+    };
+  }, []);
+
+  // Initialize Vanta Clouds2 effect for bottom section
+  useEffect(() => {
+    if (!cloudsEffect.current && cloudsRef.current) {
+      cloudsEffect.current = CLOUDS2({
+        el: cloudsRef.current,
+        THREE: THREE,
+        mouseControls: false,
+        touchControls: false,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        backgroundColor: 0x000000,
+        backgroundAlpha: 0,
+        skyColor: 0x5ca6ca,
+        cloudColor: 0x334d80,
+        lightColor: 0xffffff,
+        speed: 1,
+      });
+    }
+    return () => {
+      if (cloudsEffect.current) {
+        cloudsEffect.current.destroy();
+        cloudsEffect.current = null;
       }
     };
   }, []);
@@ -196,6 +227,13 @@ export function IslandAdventureMap() {
       <div 
         ref={vantaRef} 
         className="absolute inset-0 z-20 pointer-events-none"
+      />
+
+      {/* Vanta Clouds2 overlay - bottom 20% */}
+      <div 
+        ref={cloudsRef} 
+        className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none"
+        style={{ height: '20%' }}
       />
 
       {/* Back button */}
