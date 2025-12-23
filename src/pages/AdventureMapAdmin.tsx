@@ -194,11 +194,12 @@ export default function AdventureMapAdmin() {
                 onMouseDown={(e) => handleMouseDown(e, pos.id)}
                 onTouchStart={(e) => handleTouchStart(e, pos.id)}
               >
-                {/* Node image */}
+                {/* Node image - matching IslandLevelNode sizes (72x65) */}
                 <img 
                   src={pos.id === 1 ? levelCurrent : levelLocked}
                   alt={`Level ${pos.id}`}
-                  className="w-12 h-12 pointer-events-none"
+                  style={{ width: 72, height: 65 }}
+                  className="pointer-events-none object-contain"
                   draggable={false}
                 />
                 
