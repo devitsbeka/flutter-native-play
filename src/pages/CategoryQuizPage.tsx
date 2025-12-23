@@ -145,6 +145,17 @@ export default function CategoryQuizPage() {
       const earned = score * 10 + result.stars * 20;
       setPointsEarned(earned);
       
+      // Store unlock info for animation on category page
+      if (result.unlockedLevel) {
+        sessionStorage.setItem(
+          `level_unlocked_${categoryId}`,
+          JSON.stringify({
+            unlockedLevel: result.unlockedLevel,
+            timestamp: Date.now(),
+          })
+        );
+      }
+      
       // Big confetti burst for passing (unlocks next level)
       if (result.stars >= 1) {
         // First burst
@@ -176,14 +187,6 @@ export default function CategoryQuizPage() {
       }
     } else if (user) {
       toast.error("პროგრესის შენახვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.");
-    } else {
-      // Not logged in - remind them
-      toast.info("შედით სისტემაში პროგრესის შესანახად!", {
-        action: {
-          label: "შესვლა",
-          onClick: () => navigate("/auth"),
-        },
-      });
     }
     
     setIsSaving(false);
