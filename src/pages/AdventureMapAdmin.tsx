@@ -1,16 +1,19 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, RotateCcw, Move, Trophy } from "lucide-react";
+import { ArrowLeft, Save, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useLevelPositions, saveLevelPositions, LevelPosition } from "@/hooks/useLevelPositions";
+import SVGClouds from "@/components/map/SVGClouds";
+
 import islandBackground from "@/assets/map/island-background.svg";
 import levelLocked from "@/assets/map/level-locked.svg";
 import levelCurrent from "@/assets/map/level-current.svg";
 
 export default function AdventureMapAdmin() {
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const { positions: savedPositions, loading, defaultPositions } = useLevelPositions();
   
@@ -19,16 +22,11 @@ export default function AdventureMapAdmin() {
   const [saving, setSaving] = useState(false);
 
   // Initialize positions when loaded
-  useState(() => {
-    if (!loading && positions.length === 0) {
+  useEffect(() => {
+    if (!loading && savedPositions.length > 0 && positions.length === 0) {
       setPositions(savedPositions);
     }
-  });
-
-  // Update positions when saved positions load
-  if (!loading && positions.length === 0 && savedPositions.length > 0) {
-    setPositions(savedPositions);
-  }
+  }, [loading, savedPositions, positions.length]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent, levelId: number) => {
     e.preventDefault();
@@ -42,7 +40,6 @@ export default function AdventureMapAdmin() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // Clamp values between 0 and 100
     const clampedX = Math.max(0, Math.min(100, x));
     const clampedY = Math.max(0, Math.min(100, y));
 
@@ -92,17 +89,16 @@ export default function AdventureMapAdmin() {
     setSaving(true);
     try {
       await saveLevelPositions(positions);
-      toast.success("Level positions saved successfully!");
+      toast.success("Positions saved!");
     } catch (error) {
-      toast.error("Failed to save positions");
+      toast.error("Failed to save");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleReset = () => {
-    setPositions(defaultPositions);
-    toast.info("Positions reset to defaults");
+  const handleBack = () => {
+    navigate(-1);
   };
 
   if (loading) {
@@ -115,126 +111,156 @@ export default function AdventureMapAdmin() {
 
   return (
     <div 
-      className="fixed inset-0 bg-sky-400 select-none"
+      className="fixed inset-0 overflow-hidden bg-sky-400 select-none"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-background/90 backdrop-blur-sm">
+      {/* SVG Clouds overlay - same as adventure map */}
+      <SVGClouds className="z-[15]" />
+
+      {/* CSS Animated Clouds - bottom 20% - same as adventure map */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none overflow-hidden" style={{ height: '20%' }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-white/40 to-transparent" />
+        <motion.div
+          className="absolute bottom-0 left-0 w-48 h-24"
+          animate={{ x: ['-100%', '100vw'] }}
+          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+        >
+          <svg viewBox="0 0 100 50" className="w-full h-full opacity-90">
+            <ellipse cx="30" cy="35" rx="25" ry="15" fill="white" />
+            <ellipse cx="55" cy="30" rx="30" ry="18" fill="white" />
+            <ellipse cx="75" cy="35" rx="20" ry="12" fill="white" />
+          </svg>
+        </motion.div>
+        <motion.div
+          className="absolute bottom-4 left-0 w-36 h-20"
+          animate={{ x: ['-50%', '100vw'] }}
+          transition={{ duration: 25, repeat: Infinity, ease: 'linear', delay: 5 }}
+        >
+          <svg viewBox="0 0 100 50" className="w-full h-full opacity-80">
+            <ellipse cx="30" cy="35" rx="22" ry="14" fill="white" />
+            <ellipse cx="50" cy="28" rx="28" ry="16" fill="white" />
+            <ellipse cx="70" cy="35" rx="18" ry="11" fill="white" />
+          </svg>
+        </motion.div>
+        <motion.div
+          className="absolute bottom-2 right-0 w-40 h-22"
+          animate={{ x: ['100vw', '-100%'] }}
+          transition={{ duration: 35, repeat: Infinity, ease: 'linear', delay: 10 }}
+        >
+          <svg viewBox="0 0 100 50" className="w-full h-full opacity-85">
+            <ellipse cx="25" cy="35" rx="20" ry="13" fill="white" />
+            <ellipse cx="50" cy="30" rx="25" ry="15" fill="white" />
+            <ellipse cx="75" cy="35" rx="22" ry="14" fill="white" />
+          </svg>
+        </motion.div>
+      </div>
+
+      {/* Back button - same position as adventure map */}
+      <div className="absolute top-4 left-4 z-50">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(-1)}
-          className="rounded-full"
+          onClick={handleBack}
+          className="bg-background/80 backdrop-blur-sm rounded-full shadow-lg"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        
-        <h1 className="text-lg font-bold text-foreground">Level Position Editor</h1>
-        
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            className="gap-1"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={saving}
-            className="gap-1"
-          >
-            <Save className="h-4 w-4" />
-            {saving ? "Saving..." : "Save"}
-          </Button>
-        </div>
       </div>
 
-      {/* Instructions */}
-      <div className="absolute top-16 left-4 right-4 z-40 text-center py-2 px-4 bg-amber-500/90 rounded-lg text-white text-sm">
-        <Move className="inline h-4 w-4 mr-2" />
-        Drag level nodes to reposition them. Changes apply to all users.
+      {/* Floating Save button */}
+      <div className="absolute top-4 right-4 z-50">
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="bg-primary text-primary-foreground shadow-lg gap-2"
+        >
+          <Save className="h-4 w-4" />
+          {saving ? "Saving..." : "Save"}
+        </Button>
       </div>
 
-      {/* Map container */}
-      <div className="absolute inset-0 pt-28 overflow-auto">
+      {/* Scrollable map container - EXACTLY same as adventure map */}
+      <div className="absolute inset-0 pt-16 overflow-auto z-10">
         <div 
-          ref={mapRef}
+          ref={containerRef}
           className="relative w-full"
           style={{ minHeight: "100%" }}
         >
-          <img
-            src={islandBackground}
-            alt="Island Map"
-            className="w-full h-auto block"
-            draggable={false}
-          />
-          
-          {/* Draggable level nodes */}
-          <div className="absolute inset-0">
-            {positions.map((pos) => (
-              <motion.div
-                key={pos.id}
-                className={`absolute cursor-grab active:cursor-grabbing ${
-                  draggingId === pos.id ? "z-50" : "z-10"
-                }`}
-                style={{
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`,
-                  transform: "translate(-50%, -50%)",
-                }}
-                whileTap={{ scale: 1.1 }}
-                onMouseDown={(e) => handleMouseDown(e, pos.id)}
-                onTouchStart={(e) => handleTouchStart(e, pos.id)}
-              >
-                {/* Node image - matching IslandLevelNode sizes (72x65) */}
-                <img 
-                  src={pos.id === 1 ? levelCurrent : levelLocked}
-                  alt={`Level ${pos.id}`}
-                  style={{ width: 72, height: 65 }}
-                  className="pointer-events-none object-contain"
-                  draggable={false}
-                />
-                
-                {/* Level number */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-xs font-bold text-amber-900 -mt-1">
-                    {pos.id}
-                  </span>
-                </div>
-                
-                {/* Position indicator */}
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-foreground/80 text-background text-xs px-2 py-0.5 rounded">
-                  {pos.x.toFixed(1)}%, {pos.y.toFixed(1)}%
-                </div>
-              </motion.div>
-            ))}
+          {/* Map image container for position calculation */}
+          <div ref={mapRef} className="relative">
+            <img
+              src={islandBackground}
+              alt="Island Map"
+              className="w-full h-auto block"
+              draggable={false}
+            />
             
-            {/* Trophy at the end */}
-            {positions.length > 0 && (
-              <motion.div
-                className="absolute z-20 pointer-events-none"
-                style={{
-                  left: `${positions[positions.length - 1].x + 8}%`,
-                  top: `${positions[positions.length - 1].y - 2}%`,
-                  transform: "translate(-50%, -50%)",
-                }}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-              >
-                <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-3 rounded-full shadow-lg">
-                  <Trophy className="h-8 w-8 text-white" />
-                </div>
-              </motion.div>
-            )}
+            {/* Draggable level nodes - same container structure */}
+            <div 
+              className="absolute inset-0"
+              onTouchMove={handleTouchMove}
+            >
+              {positions.map((pos) => (
+                <motion.div
+                  key={pos.id}
+                  className={`absolute cursor-grab active:cursor-grabbing focus:outline-none touch-manipulation ${
+                    draggingId === pos.id ? "z-50" : "z-10"
+                  }`}
+                  style={{
+                    left: `${pos.x}%`,
+                    top: `${pos.y}%`,
+                    width: 72,
+                    height: 65,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{
+                    delay: pos.id * 0.05,
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 20,
+                  }}
+                  whileTap={{ scale: 1.1 }}
+                  onMouseDown={(e) => handleMouseDown(e, pos.id)}
+                  onTouchStart={(e) => handleTouchStart(e, pos.id)}
+                >
+                  <img 
+                    src={pos.id === 1 ? levelCurrent : levelLocked}
+                    alt={`Level ${pos.id}`}
+                    className="w-full h-full object-contain pointer-events-none"
+                    draggable={false}
+                  />
+                  
+                  {/* Position indicator */}
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-foreground/80 text-background text-xs px-2 py-0.5 rounded">
+                    {pos.x.toFixed(1)}%, {pos.y.toFixed(1)}%
+                  </div>
+                </motion.div>
+              ))}
+              
+              {/* Trophy at the end - same as adventure map */}
+              {positions.length > 0 && (
+                <motion.div
+                  className="absolute z-20 pointer-events-none"
+                  style={{
+                    left: `${positions[positions.length - 1].x + 8}%`,
+                    top: `${positions[positions.length - 1].y - 2}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                >
+                  <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-3 rounded-full shadow-lg shadow-amber-500/30">
+                    <Trophy className="h-8 w-8 text-white drop-shadow-md" />
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </div>
