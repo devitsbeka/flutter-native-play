@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Clock, Users, Diamond } from "lucide-react";
-import { getRankFromPoints } from "@/data/opponents";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,9 +22,9 @@ interface LeaderboardEntry {
 // Laurel Wreath SVG Component
 function LaurelWreath({ rank, size = "md" }: { rank: 1 | 2 | 3; size?: "sm" | "md" | "lg" }) {
   const colors = {
-    1: { wreath: "#FFD700", text: "text-amber-400" }, // Gold
-    2: { wreath: "#C0C0C0", text: "text-slate-300" }, // Silver
-    3: { wreath: "#CD7F32", text: "text-orange-400" }, // Bronze
+    1: { wreath: "#D4A500", text: "text-amber-600" }, // Gold
+    2: { wreath: "#8B8B8B", text: "text-slate-500" }, // Silver
+    3: { wreath: "#B87333", text: "text-orange-600" }, // Bronze
   };
 
   const sizes = {
@@ -76,9 +75,9 @@ function LaurelWreath({ rank, size = "md" }: { rank: 1 | 2 | 3; size?: "sm" | "m
 function SmallLaurel({ rank }: { rank: number }) {
   const getColor = () => {
     if (rank <= 3) {
-      return rank === 1 ? "#FFD700" : rank === 2 ? "#C0C0C0" : "#CD7F32";
+      return rank === 1 ? "#D4A500" : rank === 2 ? "#8B8B8B" : "#B87333";
     }
-    return "#8B7355";
+    return "#7C6B5A";
   };
 
   return (
@@ -156,271 +155,283 @@ export default function Leaderboards() {
   const remainingEntries = entries.slice(3);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="px-4 pt-4 pb-3 safe-top">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/")}
-            className="h-11 w-11 rounded-2xl flex items-center justify-center bg-muted/50 backdrop-blur-sm"
-          >
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <h1 className="text-xl font-display font-bold text-foreground">
-            რეიტინგი
-          </h1>
-        </div>
-      </header>
+    <div className="min-h-screen relative overflow-hidden pb-28">
+      {/* Sky Background - matching Index page */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 50%, hsl(45 40% 90%) 100%)"
+        }}
+      />
 
-      {/* Filter Tabs */}
-      <div className="px-4 py-3">
-        <div className="flex gap-1 p-1 rounded-2xl bg-muted/50">
-          <button
-            onClick={() => setTimeFilter("weekly")}
-            className={cn(
-              "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
-              timeFilter === "weekly"
-                ? "bg-primary text-primary-foreground shadow-lg"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            ყოველკვირეული
-          </button>
-          <button
-            onClick={() => setTimeFilter("all")}
-            className={cn(
-              "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
-              timeFilter === "all"
-                ? "bg-primary text-primary-foreground shadow-lg"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            სულ
-          </button>
-        </div>
-      </div>
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="px-4 pt-4 pb-3 safe-top">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/")}
+              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+            >
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </button>
+            <h1 className="text-xl font-display font-bold text-slate-800">
+              რეიტინგი
+            </h1>
+          </div>
+        </header>
 
-      {/* Status Banner */}
-      <div className="px-4 pb-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl px-4 py-3 flex items-center justify-between bg-primary/10 border border-primary/20"
-        >
-          {entries.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span className="font-medium text-foreground text-sm">{entries.length} მოთამაშე</span>
+        {/* Filter Tabs */}
+        <div className="px-4 py-3">
+          <div className="flex gap-1 p-1 rounded-2xl bg-white/50 backdrop-blur-sm">
+            <button
+              onClick={() => setTimeFilter("weekly")}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
+                timeFilter === "weekly"
+                  ? "bg-purple-500 text-white shadow-lg"
+                  : "text-slate-600 hover:bg-white/50"
+              )}
+            >
+              ყოველკვირეული
+            </button>
+            <button
+              onClick={() => setTimeFilter("all")}
+              className={cn(
+                "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
+                timeFilter === "all"
+                  ? "bg-purple-500 text-white shadow-lg"
+                  : "text-slate-600 hover:bg-white/50"
+              )}
+            >
+              სულ
+            </button>
+          </div>
+        </div>
+
+        {/* Status Banner */}
+        <div className="px-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl px-4 py-3 flex items-center justify-between"
+            style={{ background: "linear-gradient(90deg, hsl(30 90% 55%) 0%, hsl(35 90% 50%) 100%)" }}
+          >
+            {entries.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-white" />
+                <span className="font-bold text-white text-sm">{entries.length} მოთამაშე</span>
+              </div>
+            ) : (
+              <span className="font-bold text-white text-sm">იყავი პირველი!</span>
+            )}
+            <div className="flex items-center gap-1.5 text-white/90">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">{getTimeUntilReset()}</span>
             </div>
-          ) : (
-            <span className="font-medium text-foreground text-sm">იყავი პირველი!</span>
-          )}
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm font-medium">{getTimeUntilReset()}</span>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Top 3 Podium */}
-      {!loading && topThree.length > 0 && (
-        <div className="px-4 pb-6">
-          <div className="flex items-start justify-center gap-4">
-            {/* 2nd Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-col items-center pt-8"
-            >
-              <div className="relative mb-2">
-                <LaurelWreath rank={2} size="md" />
-              </div>
-              <div className="relative mb-2">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 p-0.5">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                    {topThree[1] ? (
-                      <Avatar
-                        imageUrl={topThree[1].avatar_url || undefined}
-                        emoji={topThree[1].nickname?.charAt(0) || "👤"}
-                        size="md"
-                      />
-                    ) : (
-                      <span className="text-2xl text-muted-foreground">👤</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <span className="text-sm font-semibold text-foreground mb-0.5 truncate max-w-[80px] text-center">
-                {topThree[1]?.nickname || "---"}
-              </span>
-              <div className="flex items-center gap-1 text-emerald-500">
-                <Diamond className="w-3 h-3 fill-current" />
-                <span className="text-sm font-bold">{(topThree[1]?.total_points || 0).toLocaleString()}</span>
-              </div>
-            </motion.div>
-
-            {/* 1st Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex flex-col items-center"
-            >
-              <div className="relative mb-2">
-                <LaurelWreath rank={1} size="lg" />
-              </div>
-              <div className="relative mb-2">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-lg shadow-amber-500/30">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                    {topThree[0] ? (
-                      <Avatar
-                        imageUrl={topThree[0].avatar_url || undefined}
-                        emoji={topThree[0].nickname?.charAt(0) || "👤"}
-                        size="lg"
-                      />
-                    ) : (
-                      <span className="text-3xl">👤</span>
-                    )}
-                  </div>
-                </div>
-                {topThree[0]?.country_code && (
-                  <div className="absolute -bottom-1 -right-1 text-lg">
-                    {getCountryFlag(topThree[0].country_code)}
-                  </div>
-                )}
-              </div>
-              <span className="text-base font-bold text-foreground mb-0.5 truncate max-w-[90px] text-center">
-                {topThree[0]?.nickname || "---"}
-              </span>
-              <div className="flex items-center gap-1 text-emerald-500">
-                <Diamond className="w-3.5 h-3.5 fill-current" />
-                <span className="text-base font-bold">{(topThree[0]?.total_points || 0).toLocaleString()}</span>
-              </div>
-            </motion.div>
-
-            {/* 3rd Place */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-col items-center pt-12"
-            >
-              <div className="relative mb-2">
-                <LaurelWreath rank={3} size="sm" />
-              </div>
-              <div className="relative mb-2">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 p-0.5">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                    {topThree[2] ? (
-                      <Avatar
-                        imageUrl={topThree[2].avatar_url || undefined}
-                        emoji={topThree[2].nickname?.charAt(0) || "👤"}
-                        size="sm"
-                      />
-                    ) : (
-                      <span className="text-xl text-muted-foreground">👤</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-foreground mb-0.5 truncate max-w-[70px] text-center">
-                {topThree[2]?.nickname || "---"}
-              </span>
-              <div className="flex items-center gap-1 text-emerald-500">
-                <Diamond className="w-3 h-3 fill-current" />
-                <span className="text-xs font-bold">{(topThree[2]?.total_points || 0).toLocaleString()}</span>
-              </div>
-            </motion.div>
-          </div>
+          </motion.div>
         </div>
-      )}
 
-      {/* Divider with "Top Ranking" label */}
-      <div className="px-4 pb-3">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-          <span className="text-xs font-semibold text-primary flex items-center gap-1">
-            ◆ ტოპ რეიტინგი ◆
-          </span>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        </div>
-      </div>
-
-      {/* List Section */}
-      <div className="px-4 pb-6">
-        {/* Quick Actions Bar */}
-        <QuickActionsBar className="mb-4" />
-        
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">
-            იტვირთება...
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🏆</div>
-            <h3 className="text-lg font-bold text-foreground mb-2">ჯერ მოთამაშეები არ არიან!</h3>
-            <p className="text-muted-foreground">
-              ითამაშე რომ გამოჩნდე რეიტინგში
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {entries.map((entry, index) => {
-              const position = index + 1;
-              const isCurrentUser = user && entry.user_id === user.id;
-              const isTopThree = position <= 3;
-
-              return (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.02 }}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-2xl",
-                    isCurrentUser 
-                      ? "bg-primary/15 border border-primary/30" 
-                      : "bg-muted/30"
-                  )}
-                >
-                  {/* Avatar */}
-                  <div className="relative">
-                    <Avatar
-                      imageUrl={entry.avatar_url || undefined}
-                      emoji={entry.nickname?.charAt(0) || "👤"}
-                      countryCode={entry.country_code}
-                      size="sm"
-                    />
-                  </div>
-
-                  {/* Name & Points */}
-                  <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      "font-semibold text-sm truncate",
-                      isCurrentUser ? "text-primary" : "text-foreground"
-                    )}>
-                      {entry.nickname}
-                      {isCurrentUser && " (შენ)"}
-                    </p>
-                    <div className="flex items-center gap-1 text-emerald-500">
-                      <Diamond className="w-3 h-3 fill-current" />
-                      <span className="text-sm font-bold">{entry.total_points.toLocaleString()}</span>
+        {/* Top 3 Podium */}
+        {!loading && topThree.length > 0 && (
+          <div className="px-4 pb-6">
+            <div className="flex items-start justify-center gap-4">
+              {/* 2nd Place */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center pt-8"
+              >
+                <div className="relative mb-2">
+                  <LaurelWreath rank={2} size="md" />
+                </div>
+                <div className="relative mb-2">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 p-0.5 shadow-lg">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white/80 flex items-center justify-center">
+                      {topThree[1] ? (
+                        <Avatar
+                          imageUrl={topThree[1].avatar_url || undefined}
+                          emoji={topThree[1].nickname?.charAt(0) || "👤"}
+                          size="md"
+                        />
+                      ) : (
+                        <span className="text-2xl text-slate-400">👤</span>
+                      )}
                     </div>
                   </div>
+                </div>
+                <span className="text-sm font-semibold text-slate-700 mb-0.5 truncate max-w-[80px] text-center">
+                  {topThree[1]?.nickname || "---"}
+                </span>
+                <div className="flex items-center gap-1 text-emerald-600">
+                  <Diamond className="w-3 h-3 fill-current" />
+                  <span className="text-sm font-bold">{(topThree[1]?.total_points || 0).toLocaleString()}</span>
+                </div>
+              </motion.div>
 
-                  {/* Rank Badge with Laurel */}
-                  {isTopThree ? (
-                    <LaurelWreath rank={position as 1 | 2 | 3} size="sm" />
-                  ) : (
-                    <SmallLaurel rank={position} />
+              {/* 1st Place */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex flex-col items-center"
+              >
+                <div className="relative mb-2">
+                  <LaurelWreath rank={1} size="lg" />
+                </div>
+                <div className="relative mb-2">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-xl shadow-amber-400/30">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white/80 flex items-center justify-center">
+                      {topThree[0] ? (
+                        <Avatar
+                          imageUrl={topThree[0].avatar_url || undefined}
+                          emoji={topThree[0].nickname?.charAt(0) || "👤"}
+                          size="lg"
+                        />
+                      ) : (
+                        <span className="text-3xl">👤</span>
+                      )}
+                    </div>
+                  </div>
+                  {topThree[0]?.country_code && (
+                    <div className="absolute -bottom-1 -right-1 text-lg">
+                      {getCountryFlag(topThree[0].country_code)}
+                    </div>
                   )}
-                </motion.div>
-              );
-            })}
+                </div>
+                <span className="text-base font-bold text-slate-800 mb-0.5 truncate max-w-[90px] text-center">
+                  {topThree[0]?.nickname || "---"}
+                </span>
+                <div className="flex items-center gap-1 text-emerald-600">
+                  <Diamond className="w-3.5 h-3.5 fill-current" />
+                  <span className="text-base font-bold">{(topThree[0]?.total_points || 0).toLocaleString()}</span>
+                </div>
+              </motion.div>
+
+              {/* 3rd Place */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-col items-center pt-12"
+              >
+                <div className="relative mb-2">
+                  <LaurelWreath rank={3} size="sm" />
+                </div>
+                <div className="relative mb-2">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 p-0.5 shadow-lg">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white/80 flex items-center justify-center">
+                      {topThree[2] ? (
+                        <Avatar
+                          imageUrl={topThree[2].avatar_url || undefined}
+                          emoji={topThree[2].nickname?.charAt(0) || "👤"}
+                          size="sm"
+                        />
+                      ) : (
+                        <span className="text-xl text-slate-400">👤</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-slate-700 mb-0.5 truncate max-w-[70px] text-center">
+                  {topThree[2]?.nickname || "---"}
+                </span>
+                <div className="flex items-center gap-1 text-emerald-600">
+                  <Diamond className="w-3 h-3 fill-current" />
+                  <span className="text-xs font-bold">{(topThree[2]?.total_points || 0).toLocaleString()}</span>
+                </div>
+              </motion.div>
+            </div>
           </div>
         )}
+
+        {/* Divider with "Top Ranking" label */}
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-400/50 to-transparent" />
+            <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">
+              ◆ ტოპ რეიტინგი ◆
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-400/50 to-transparent" />
+          </div>
+        </div>
+
+        {/* List Section */}
+        <div className="px-4">
+          {loading ? (
+            <div className="text-center py-12 text-slate-500">
+              იტვირთება...
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">ჯერ მოთამაშეები არ არიან!</h3>
+              <p className="text-slate-500">
+                ითამაშე რომ გამოჩნდე რეიტინგში
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {entries.map((entry, index) => {
+                const position = index + 1;
+                const isCurrentUser = user && entry.user_id === user.id;
+                const isTopThree = position <= 3;
+
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.02 }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl",
+                      isCurrentUser 
+                        ? "bg-purple-100/80 border border-purple-300" 
+                        : "bg-white/60 backdrop-blur-sm"
+                    )}
+                  >
+                    {/* Avatar */}
+                    <div className="relative">
+                      <Avatar
+                        imageUrl={entry.avatar_url || undefined}
+                        emoji={entry.nickname?.charAt(0) || "👤"}
+                        countryCode={entry.country_code}
+                        size="sm"
+                      />
+                    </div>
+
+                    {/* Name & Points */}
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        "font-semibold text-sm truncate",
+                        isCurrentUser ? "text-purple-700" : "text-slate-700"
+                      )}>
+                        {entry.nickname}
+                        {isCurrentUser && " (შენ)"}
+                      </p>
+                      <div className="flex items-center gap-1 text-emerald-600">
+                        <Diamond className="w-3 h-3 fill-current" />
+                        <span className="text-sm font-bold">{entry.total_points.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Rank Badge with Laurel */}
+                    {isTopThree ? (
+                      <LaurelWreath rank={position as 1 | 2 | 3} size="sm" />
+                    ) : (
+                      <SmallLaurel rank={position} />
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Fixed Quick Actions Bar at bottom */}
+      <QuickActionsBar />
     </div>
   );
 }

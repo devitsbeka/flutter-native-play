@@ -99,7 +99,7 @@ export default function Index() {
         currentStreak={profile?.current_streak || 0}
       />
       
-      <div className="relative min-h-[200vh] overflow-x-hidden">
+      <div className="relative min-h-[200vh] overflow-x-hidden pb-28">
         {/* Sky Background */}
         <div 
           className="fixed inset-0 z-0"
