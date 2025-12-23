@@ -6,70 +6,82 @@ interface FeaturedCardProps {
   icon: string;
   bgGradient?: string;
   size?: "small" | "medium" | "large";
+  progress?: { current: number; total: number };
   onClick?: () => void;
 }
+
+// Random subtle rotation for playful polaroid effect
+const getRandomRotation = (index: number) => {
+  const rotations = [-2, 1.5, -1, 2, -1.5, 1, -2.5, 2.5, -1, 1.5];
+  return rotations[index % rotations.length];
+};
 
 export function FeaturedCard({ 
   title, 
   subtitle, 
   icon, 
   size = "small",
+  progress,
   onClick 
 }: FeaturedCardProps) {
+  // Different gradient backgrounds for variety
+  const gradients = [
+    "from-indigo-500 to-purple-600",
+    "from-pink-400 to-rose-500", 
+    "from-cyan-400 to-blue-500",
+    "from-amber-400 to-orange-500",
+    "from-emerald-400 to-teal-500",
+    "from-violet-400 to-purple-500",
+    "from-lime-400 to-green-500",
+    "from-fuchsia-400 to-pink-500",
+  ];
+  
+  const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.02, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      className="relative overflow-hidden rounded-3xl p-5 text-left w-full h-full flex flex-col bg-slate-800/80 backdrop-blur-sm border border-slate-700/50 shadow-lg shadow-black/20"
+      whileHover={{ scale: 1.03, rotate: 0, y: -8 }}
+      whileTap={{ scale: 0.97 }}
+      className="relative w-full h-full"
+      style={{ 
+        transform: `rotate(${getRandomRotation(title.length)}deg)`,
+      }}
     >
-      {/* Decorative gradient orb */}
-      <div 
-        className="absolute -top-16 -right-16 w-40 h-40 rounded-full opacity-30 blur-3xl"
-        style={{ 
-          background: size === "large" 
-            ? "radial-gradient(circle, hsl(142 70% 45%) 0%, transparent 70%)" 
-            : size === "medium"
-              ? "radial-gradient(circle, hsl(35 90% 55%) 0%, transparent 70%)"
-              : "radial-gradient(circle, hsl(220 70% 55%) 0%, transparent 70%)"
-        }}
-      />
+      {/* Paper/Polaroid Frame */}
+      <div className="relative w-full h-full bg-gradient-to-b from-amber-50 to-amber-100 rounded-lg shadow-xl shadow-black/30 p-2 pb-3">
+        {/* Inner colored area with icon */}
+        <div className={`relative w-full h-[70%] rounded-md bg-gradient-to-br ${randomGradient} flex items-center justify-center overflow-hidden`}>
+          {/* Decorative circles */}
+          <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/20 rounded-full blur-xl" />
+          <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-white/15 rounded-full blur-lg" />
+          
+          {/* Large Icon */}
+          <span className={`relative z-10 drop-shadow-lg ${
+            size === "large" ? "text-6xl" : size === "medium" ? "text-5xl" : "text-4xl"
+          }`}>
+            {icon}
+          </span>
+        </div>
 
-      {/* Icon container */}
-      <div className={`flex items-center justify-center rounded-2xl bg-slate-700/60 backdrop-blur-sm mb-auto ${
-        size === "large" ? "h-14 w-14 text-3xl" : size === "medium" ? "h-12 w-12 text-2xl" : "h-11 w-11 text-xl"
-      }`}>
-        {icon}
+        {/* Bottom text area */}
+        <div className="flex items-end justify-between mt-2 px-1">
+          <div className="flex-1 min-w-0">
+            <h3 className={`font-display font-bold text-amber-900 leading-tight truncate ${
+              size === "large" ? "text-base" : "text-sm"
+            }`}>
+              {title}
+            </h3>
+          </div>
+          {progress && (
+            <span className="text-sm font-bold text-amber-700 ml-2">
+              <span className="text-amber-500">{progress.current}</span>
+              <span className="text-amber-400">/</span>
+              <span>{progress.total}</span>
+            </span>
+          )}
+        </div>
       </div>
-      
-      {/* Content at bottom */}
-      <div className="mt-auto pt-4">
-        <h3 className={`font-display font-black text-white leading-tight tracking-tight ${
-          size === "large" ? "text-2xl" : size === "medium" ? "text-xl" : "text-lg"
-        }`}>
-          {title}
-        </h3>
-        <p className={`text-slate-400 mt-1.5 font-medium ${
-          size === "large" ? "text-base" : "text-sm"
-        }`}>
-          {subtitle}
-        </p>
-      </div>
-
-      {/* Subtle inner glow */}
-      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/5 pointer-events-none rounded-3xl" />
-      
-      {/* Bottom accent line */}
-      <div 
-        className="absolute bottom-0 left-4 right-4 h-1 rounded-full opacity-50"
-        style={{ 
-          background: size === "large" 
-            ? "linear-gradient(90deg, hsl(142 70% 45%), hsl(142 70% 60%))" 
-            : size === "medium"
-              ? "linear-gradient(90deg, hsl(35 90% 50%), hsl(45 90% 60%))"
-              : "linear-gradient(90deg, hsl(220 70% 50%), hsl(240 70% 60%))"
-        }}
-      />
     </motion.button>
   );
 }
