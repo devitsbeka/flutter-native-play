@@ -309,25 +309,38 @@ export function useCategoryProgress() {
     }
 
     try {
-      // Upsert the level progress
-      const { error } = await supabase.from("user_level_progress").upsert(
-        {
-          user_id: user.id,
-          category_id: categoryId,
-          level_number: levelNumber,
-          stars_earned: stars,
-          score: score,
-          total_questions: totalQuestions,
-          completed_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id,category_id,level_number",
-        }
-      );
+      // Check if level was previously completed with a better score
+      const { data: existingProgress } = await supabase
+        .from("user_level_progress")
+        .select("stars_earned, score")
+        .eq("user_id", user.id)
+        .eq("category_id", categoryId)
+        .eq("level_number", levelNumber)
+        .maybeSingle();
 
-      if (error) {
-        console.error("Error saving level progress:", error);
-        return { success: false, stars: 0 };
+      // Only update if this is a new record or we have a better score
+      const shouldUpdate = !existingProgress || score > existingProgress.score;
+      
+      if (shouldUpdate) {
+        const { error } = await supabase.from("user_level_progress").upsert(
+          {
+            user_id: user.id,
+            category_id: categoryId,
+            level_number: levelNumber,
+            stars_earned: Math.max(stars, existingProgress?.stars_earned || 0),
+            score: Math.max(score, existingProgress?.score || 0),
+            total_questions: totalQuestions,
+            completed_at: existingProgress ? existingProgress.score < score ? new Date().toISOString() : undefined : new Date().toISOString(),
+          },
+          {
+            onConflict: "user_id,category_id,level_number",
+          }
+        );
+
+        if (error) {
+          console.error("Error saving level progress:", error);
+          return { success: false, stars: 0 };
+        }
       }
 
       // Update profile stats
@@ -434,11 +447,18 @@ export function useCategoryProgress() {
     });
   };
 
+  const getLevelStats = (categoryId: string, levelNumber: number): LevelProgress | null => {
+    const catProgress = progress[categoryId];
+    if (!catProgress) return null;
+    return catProgress.completedLevels.find((l) => l.level_number === levelNumber) || null;
+  };
+
   return {
     progress,
     loading,
     getCategoryProgress,
     getLevelStars,
+    getLevelStats,
     isLevelCompleted,
     isCategoryUnlocked,
     getTotalProgress,
