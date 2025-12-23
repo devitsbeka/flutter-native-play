@@ -101,7 +101,7 @@ export default function Index() {
             {/* Play Button */}
             <motion.button
               onClick={() => navigate("/game")}
-              className="relative w-full max-w-xs mb-6"
+              className="relative w-full max-w-xs mb-4"
               whileTap={{ scale: 0.98, y: 3 }}
             >
               <div 
@@ -117,6 +117,26 @@ export default function Index() {
                 </span>
               </div>
             </motion.button>
+
+            {/* Special Chest Progress */}
+            <div className="w-full max-w-xs mb-5">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🎁</span>
+                  <span className="text-xs font-medium text-foreground/60">სპეციალური სკივრი</span>
+                </div>
+                <span className="text-xs font-bold text-foreground/70">0/3</span>
+              </div>
+              <div className="h-2 bg-white/50 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full transition-all"
+                  style={{ 
+                    width: "0%",
+                    background: "linear-gradient(90deg, hsl(45 90% 50%) 0%, hsl(35 90% 55%) 100%)"
+                  }}
+                />
+              </div>
+            </div>
 
             {/* Quick Action Row */}
             <div className="flex gap-3 w-full max-w-xs">
