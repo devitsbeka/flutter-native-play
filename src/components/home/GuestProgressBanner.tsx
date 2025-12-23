@@ -53,7 +53,7 @@ export function GuestProgressBanner() {
             duration: 0.4, 
             ease: [0.4, 0, 0.2, 1],
           }}
-          className="mx-4 mb-4"
+          className="mx-4 mt-1.5 mb-4"
         >
           <motion.button
             onClick={handleBannerClick}
