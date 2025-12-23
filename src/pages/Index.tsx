@@ -286,22 +286,25 @@ export default function Index() {
 
           {/* Quick Action Row - Moved to bottom */}
           <div className="px-6 pb-6">
-            <div className="flex gap-4 max-w-xs mx-auto justify-between">
+            <div className="flex max-w-xs mx-auto justify-between items-start">
               <QuickButton 
                 iconSrc={iconWheel}
                 label="ბორბალი"
                 onClick={() => setIsSpinModalOpen(true)}
               />
+              <div className="w-px h-16 bg-slate-300/30 self-center" />
               <QuickButton 
                 iconSrc={iconVip}
                 label="VIP"
                 onClick={() => navigate("/vip")}
               />
+              <div className="w-px h-16 bg-slate-300/30 self-center" />
               <QuickButton 
                 iconSrc={iconLeaderboard}
                 label="რეიტინგი"
                 onClick={() => navigate("/leaderboards")}
               />
+              <div className="w-px h-16 bg-slate-300/30 self-center" />
               <QuickButton 
                 iconSrc={iconMap}
                 label="რუქა"
@@ -441,11 +444,15 @@ function QuickButton({
   return (
     <motion.button
       onClick={onClick}
-      className="flex flex-col items-center gap-1"
+      className="flex flex-col items-center gap-1.5"
       whileTap={{ scale: 0.95 }}
     >
       <img src={iconSrc} alt={label} className="h-14 w-14 object-contain" />
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span 
+        className="text-sm font-medium text-slate-700 px-2.5 py-0.5 rounded-xl border border-slate-300/40"
+      >
+        {label}
+      </span>
     </motion.button>
   );
 }
