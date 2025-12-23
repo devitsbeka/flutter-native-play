@@ -35,7 +35,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
   useEffect(() => {
     if (!imagesLoaded) return;
 
-    const duration = 4500; // 4.5 seconds total loading time
+    const duration = 3000; // 3 seconds total loading time
     const interval = 50; // Update every 50ms
     const increment = (100 / duration) * interval;
     
