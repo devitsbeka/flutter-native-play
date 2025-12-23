@@ -72,7 +72,7 @@ export function useRewards() {
       await supabase.from("user_rewards").insert([{
         user_id: user.id,
         reward_type: "spin",
-        reward_value: result as unknown as Record<string, unknown>,
+        reward_value: { label: result.label, value: result.value, type: result.type },
       }]);
 
       // Update or create daily spin record
@@ -121,7 +121,7 @@ export function useRewards() {
       await supabase.from("user_rewards").insert([{
         user_id: user.id,
         reward_type: "chest",
-        reward_value: { rewards } as unknown as Record<string, unknown>,
+        reward_value: { rewards: rewards.map(r => ({ type: r.type, value: r.value, label: r.label })) },
       }]);
 
       // Calculate total XP from rewards

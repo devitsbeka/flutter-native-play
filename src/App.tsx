@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import Game from "./pages/Game";
 import Team from "./pages/Team";
 import AdventureMap from "./pages/AdventureMap";
+import VIP from "./pages/VIP";
 
 const App = () => (
   <TooltipProvider>
@@ -29,6 +30,7 @@ const App = () => (
       <Route path="/world" element={<WorldHome />} />
       <Route path="/game" element={<Game />} />
       <Route path="/team" element={<Team />} />
+      <Route path="/vip" element={<VIP />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </TooltipProvider>
