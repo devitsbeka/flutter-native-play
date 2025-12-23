@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 
-import level1Star from "@/assets/map/level-1-star.svg";
-import level2Stars from "@/assets/map/level-2-stars.svg";
-import level3Stars from "@/assets/map/level-3-stars.svg";
+import levelCompleted from "@/assets/map/level-completed.svg";
 import levelLocked from "@/assets/map/level-locked.svg";
 import levelCurrent from "@/assets/map/level-current.svg";
 
@@ -21,32 +19,18 @@ interface IslandLevelNodeProps {
   index: number;
 }
 
-// Different SVG types have different dimensions and anchor points
-// Locked/Current: ~128x115 (button centered)
-// Star SVGs: ~128x200-205 (button at bottom, stars on top)
-// Sizes increased by 50%
-const NODE_CONFIG = {
-  locked: { width: 72, height: 65, offsetY: 50 },    // Center anchor (was 48x43)
-  current: { width: 72, height: 65, offsetY: 50 },   // Center anchor  
-  stars: { width: 84, height: 135, offsetY: 75 },    // Bottom anchor (was 56x90)
-};
+// All nodes now use the same size (128x115 aspect ratio)
+const NODE_SIZE = { width: 72, height: 65 };
 
 export function IslandLevelNode({ level, position, onClick, onLockedClick, index }: IslandLevelNodeProps) {
   const getSvgSource = () => {
     if (level.isLocked) return levelLocked;
     if (level.isCurrent) return levelCurrent;
-    if (level.stars === 3) return level3Stars;
-    if (level.stars === 2) return level2Stars;
-    if (level.stars >= 1) return level1Star;
-    return levelCurrent; // Fallback for completed with 0 stars
+    // All completed levels use the green checkmark
+    return levelCompleted;
   };
 
-  const getNodeConfig = () => {
-    if (level.isLocked) return NODE_CONFIG.locked;
-    if (level.isCurrent) return NODE_CONFIG.current;
-    if (level.stars > 0) return NODE_CONFIG.stars;
-    return NODE_CONFIG.current;
-  };
+  const isCompleted = !level.isLocked && !level.isCurrent;
 
   const handleClick = () => {
     if (navigator.vibrate) {
@@ -60,18 +44,15 @@ export function IslandLevelNode({ level, position, onClick, onLockedClick, index
     }
   };
 
-  const config = getNodeConfig();
-  const isStarLevel = !level.isLocked && !level.isCurrent && level.stars > 0;
-
   return (
     <motion.button
       className="absolute focus:outline-none touch-manipulation"
       style={{
         left: `${position.x}%`,
         top: `${position.y}%`,
-        width: `${config.width}px`,
-        height: `${config.height}px`,
-        transform: `translate(-50%, -${config.offsetY}%)`,
+        width: `${NODE_SIZE.width}px`,
+        height: `${NODE_SIZE.height}px`,
+        transform: "translate(-50%, -50%)",
       }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
