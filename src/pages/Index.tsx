@@ -7,6 +7,9 @@ import { CategoryCard } from "@/components/home/CategoryCard";
 import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
+import { LevelBadge } from "@/components/home/LevelBadge";
+import { StreakModal } from "@/components/home/StreakModal";
+import { PointsModal } from "@/components/home/PointsModal";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +27,8 @@ export default function Index() {
   const [isSpinModalOpen, setIsSpinModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
+  const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
+  const [isPointsModalOpen, setIsPointsModalOpen] = useState(false);
 
   // Calculate chest progress from games won (cycles every 3 wins)
   const gamesWon = profile?.games_won || 0;
@@ -62,6 +67,20 @@ export default function Index() {
         onClose={() => setIsChestModalOpen(false)}
         onClaim={handleClaimChest}
       />
+      <StreakModal 
+        isOpen={isStreakModalOpen} 
+        onClose={() => setIsStreakModalOpen(false)} 
+        currentStreak={profile?.current_streak || 0}
+        bestStreak={profile?.best_streak || 0}
+      />
+      <PointsModal 
+        isOpen={isPointsModalOpen} 
+        onClose={() => setIsPointsModalOpen(false)} 
+        totalPoints={profile?.total_points || 0}
+        gamesPlayed={profile?.games_played || 0}
+        gamesWon={profile?.games_won || 0}
+        currentStreak={profile?.current_streak || 0}
+      />
       
       <div className="relative min-h-[200vh] overflow-x-hidden">
         {/* Sky Background */}
@@ -97,14 +116,20 @@ export default function Index() {
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
+                <button 
+                  onClick={() => setIsStreakModalOpen(true)}
+                  className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors"
+                >
                   <span className="text-orange-400">🔥</span>
                   <span className="font-bold text-slate-700 text-sm">{profile?.current_streak || 0}</span>
-                </div>
-                <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
+                </button>
+                <button 
+                  onClick={() => setIsPointsModalOpen(true)}
+                  className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors"
+                >
                   <span className="text-amber-400">👑</span>
                   <span className="font-bold text-slate-700 text-sm">{profile?.total_points || 0}</span>
-                </div>
+                </button>
               </div>
             </div>
           </header>
@@ -112,23 +137,9 @@ export default function Index() {
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
             {/* Level Badge */}
-            <motion.div
-              className="relative mb-6"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", duration: 0.8 }}
-            >
-              <div 
-                className="relative w-28 h-28 flex flex-col items-center justify-center rounded-full"
-                style={{
-                  background: "radial-gradient(circle, hsl(195 80% 85%) 0%, hsl(195 70% 70%) 100%)",
-                  boxShadow: "0 8px 24px hsl(195 70% 40% / 0.25)"
-                }}
-              >
-                <span className="text-xs font-semibold text-slate-600">დონე</span>
-                <span className="text-4xl font-display font-bold text-slate-800">1</span>
-              </div>
-            </motion.div>
+            <div className="mb-6">
+              <LevelBadge totalPoints={profile?.total_points || 0} />
+            </div>
 
             {/* Play Button */}
             <motion.button
@@ -201,7 +212,7 @@ export default function Index() {
               <QuickButton 
                 icon={<Star className="h-5 w-5 fill-amber-400 text-amber-400" />}
                 label="VIP"
-                onClick={() => console.log("VIP")}
+                onClick={() => navigate("/vip")}
                 highlight
               />
               <QuickButton 
