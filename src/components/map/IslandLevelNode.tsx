@@ -17,6 +17,7 @@ interface IslandLevelNodeProps {
   level: LevelState;
   position: { x: number; y: number };
   onClick: (levelId: number) => void;
+  onLockedClick: (levelId: number) => void;
   index: number;
 }
 
@@ -29,7 +30,7 @@ const NODE_CONFIG = {
   stars: { width: 56, height: 90, offsetY: 75 },     // Bottom anchor (button sits on road)
 };
 
-export function IslandLevelNode({ level, position, onClick, index }: IslandLevelNodeProps) {
+export function IslandLevelNode({ level, position, onClick, onLockedClick, index }: IslandLevelNodeProps) {
   const getSvgSource = () => {
     if (level.isLocked) return levelLocked;
     if (level.isCurrent) return levelCurrent;
@@ -47,10 +48,13 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
   };
 
   const handleClick = () => {
-    if (!level.isLocked) {
-      if (navigator.vibrate) {
-        navigator.vibrate(10);
-      }
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+    
+    if (level.isLocked) {
+      onLockedClick(level.id);
+    } else {
       onClick(level.id);
     }
   };
@@ -76,9 +80,8 @@ export function IslandLevelNode({ level, position, onClick, index }: IslandLevel
         stiffness: 400,
         damping: 20,
       }}
-      whileTap={!level.isLocked ? { scale: 0.9 } : undefined}
+      whileTap={{ scale: 0.9 }}
       onClick={handleClick}
-      disabled={level.isLocked}
     >
       {/* Pulse animation for current level */}
       {level.isCurrent && (
