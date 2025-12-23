@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, RotateCcw, Move } from "lucide-react";
+import { ArrowLeft, Save, RotateCcw, Move, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useLevelPositions, saveLevelPositions, LevelPosition } from "@/hooks/useLevelPositions";
@@ -215,6 +215,25 @@ export default function AdventureMapAdmin() {
                 </div>
               </motion.div>
             ))}
+            
+            {/* Trophy at the end */}
+            {positions.length > 0 && (
+              <motion.div
+                className="absolute z-20 pointer-events-none"
+                style={{
+                  left: `${positions[positions.length - 1].x + 8}%`,
+                  top: `${positions[positions.length - 1].y - 2}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring" }}
+              >
+                <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-3 rounded-full shadow-lg">
+                  <Trophy className="h-8 w-8 text-white" />
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
@@ -283,6 +283,25 @@ export function IslandAdventureMap() {
                   />
                 );
               })}
+              
+              {/* Trophy at the end */}
+              {levelPositions.length > 0 && (
+                <motion.div
+                  className="absolute z-20 pointer-events-none"
+                  style={{
+                    left: `${levelPositions[levelPositions.length - 1].x + 8}%`,
+                    top: `${levelPositions[levelPositions.length - 1].y - 2}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                >
+                  <div className="bg-gradient-to-br from-yellow-400 to-amber-500 p-3 rounded-full shadow-lg shadow-amber-500/30">
+                    <Trophy className="h-8 w-8 text-white drop-shadow-md" />
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
