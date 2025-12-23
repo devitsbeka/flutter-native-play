@@ -304,6 +304,7 @@ export default function Index() {
                         coinCost={10 + index * 5}
                         questionCount={10}
                         progress={{ current: Math.floor(Math.random() * 10), total: 10 }}
+                        onClick={() => navigate("/game")}
                       />
                     </motion.div>
                   ))}

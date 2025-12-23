@@ -150,12 +150,8 @@ export function useCategoryProgress() {
   };
 
   const isCategoryUnlocked = (categoryId: string): boolean => {
-    // First 3 categories always unlocked
-    const unlockedByDefault = ["science", "history", "geography"];
-    if (unlockedByDefault.includes(categoryId)) return true;
-
-    // Others need at least one completed level
-    return (progress[categoryId]?.completedLevels.length || 0) > 0;
+    // All categories are unlocked by default - users can play any category
+    return true;
   };
 
   const getTotalProgress = (): number => {
