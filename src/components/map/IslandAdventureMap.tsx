@@ -260,41 +260,40 @@ export function IslandAdventureMap() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Map wrapper with explicit height for scrolling */}
-        <div className="relative w-full">
+        {/* Map wrapper with spacing */}
+        <div className="relative" style={{ padding: '300px 150px' }}>
           {/* Island background - maintains aspect ratio */}
-          <img
-            src={islandBackground}
-            alt="Island Map"
-            className="w-full h-auto block"
-            style={{
-              transform: `scale(${zoom})`,
-              transformOrigin: 'top center',
-            }}
-            draggable={false}
-          />
-          
-          {/* Level nodes positioned over the image */}
-          <div className="absolute inset-0">
-            {levels.map((level, index) => {
-              const position = LEVEL_POSITIONS.find(p => p.id === level.id);
-              if (!position) return null;
-              
-              return (
-                <IslandLevelNode
-                  key={level.id}
-                  level={level}
-                  position={{ x: position.x, y: position.y }}
-                  onClick={handleLevelClick}
-                  onLockedClick={handleLockedLevelClick}
-                  index={index}
-                />
-              );
-            })}
+          <div className="relative">
+            <img
+              src={islandBackground}
+              alt="Island Map"
+              className="w-full h-auto block"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top center',
+              }}
+              draggable={false}
+            />
+            
+            {/* Level nodes positioned over the image */}
+            <div className="absolute inset-0">
+              {levels.map((level, index) => {
+                const position = LEVEL_POSITIONS.find(p => p.id === level.id);
+                if (!position) return null;
+                
+                return (
+                  <IslandLevelNode
+                    key={level.id}
+                    level={level}
+                    position={{ x: position.x, y: position.y }}
+                    onClick={handleLevelClick}
+                    onLockedClick={handleLockedLevelClick}
+                    index={index}
+                  />
+                );
+              })}
+            </div>
           </div>
-          
-          {/* Extra scroll space at bottom */}
-          <div className="w-full" style={{ height: '300px' }} />
         </div>
       </div>
 
