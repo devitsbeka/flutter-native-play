@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, ChevronDown, Map, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { CategoryCard } from "@/components/home/CategoryCard";
 import { LuckySpinModal } from "@/components/game/LuckySpinModal";
@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import iconWheel from "@/assets/icon-wheel.png";
 import iconVip from "@/assets/icon-vip.png";
 import iconLeaderboard from "@/assets/icon-leaderboard.png";
+import iconMap from "@/assets/icon-map.png";
 
 
 type ContentTab = "featured" | "classic" | "fun" | "educational";
@@ -186,49 +187,106 @@ export default function Index() {
               </div>
             </motion.button>
 
-            {/* Special Chest Progress */}
+            {/* Special Chest Progress - Gamified 3D Style */}
             <motion.button
               onClick={() => canClaimChest && setIsChestModalOpen(true)}
-              className="w-full max-w-xs mb-5"
-              whileTap={canClaimChest ? { scale: 0.98 } : undefined}
+              className="w-full max-w-xs mb-6 relative"
+              whileTap={canClaimChest ? { scale: 0.98, y: 2 } : undefined}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <motion.span 
-                    className="text-sm"
-                    animate={canClaimChest ? { scale: [1, 1.2, 1] } : undefined}
-                    transition={{ duration: 1, repeat: Infinity }}
+              {/* 3D Shadow Layer */}
+              <div 
+                className="absolute inset-0 rounded-2xl"
+                style={{ 
+                  background: canClaimChest ? "hsl(142 60% 25%)" : "hsl(30 50% 30%)",
+                  transform: "translateY(4px)" 
+                }}
+              />
+              
+              {/* Main Container */}
+              <div 
+                className="relative rounded-2xl p-3"
+                style={{ 
+                  background: canClaimChest 
+                    ? "linear-gradient(180deg, hsl(142 50% 45%) 0%, hsl(142 55% 38%) 100%)"
+                    : "linear-gradient(180deg, hsl(35 45% 45%) 0%, hsl(30 50% 38%) 100%)"
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <motion.span 
+                      className="text-xl"
+                      animate={canClaimChest ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : undefined}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      🎁
+                    </motion.span>
+                    <span className="text-sm font-bold text-white drop-shadow-sm">სპეციალური სკივრი</span>
+                  </div>
+                  <div 
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold text-white"
+                    style={{ background: "rgba(0,0,0,0.2)" }}
                   >
-                    🎁
-                  </motion.span>
-                  <span className="text-xs font-medium text-slate-600">სპეციალური სკივრი</span>
+                    {canClaimChest ? "მზადაა!" : `${chestProgress}/3`}
+                  </div>
                 </div>
-                <span className="text-xs font-bold text-slate-700">
-                  {canClaimChest ? "მზადაა!" : `${chestProgress}/3`}
-                </span>
-              </div>
-              <div className="h-2 bg-white/50 rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: canClaimChest ? "100%" : `${chestProgressPercent}%` }}
-                  transition={{ duration: 0.5 }}
+                
+                {/* 3D Progress Bar */}
+                <div 
+                  className="h-4 rounded-lg overflow-hidden relative"
                   style={{ 
-                    background: canClaimChest 
-                      ? "linear-gradient(90deg, hsl(142 70% 45%) 0%, hsl(142 70% 50%) 100%)"
-                      : "linear-gradient(90deg, hsl(45 90% 50%) 0%, hsl(35 90% 55%) 100%)"
+                    background: "rgba(0,0,0,0.25)",
+                    boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)"
                   }}
-                />
+                >
+                  <motion.div 
+                    className="h-full rounded-lg relative overflow-hidden"
+                    initial={{ width: 0 }}
+                    animate={{ width: canClaimChest ? "100%" : `${chestProgressPercent}%` }}
+                    transition={{ duration: 0.5 }}
+                    style={{ 
+                      background: canClaimChest 
+                        ? "linear-gradient(180deg, hsl(50 95% 60%) 0%, hsl(45 90% 50%) 50%, hsl(40 85% 45%) 100%)"
+                        : "linear-gradient(180deg, hsl(45 95% 65%) 0%, hsl(40 90% 55%) 50%, hsl(35 85% 48%) 100%)"
+                    }}
+                  >
+                    {/* Shine effect */}
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+                      }}
+                    />
+                  </motion.div>
+                  
+                  {/* Progress markers */}
+                  <div className="absolute inset-0 flex justify-around items-center px-1">
+                    {[1, 2, 3].map((i) => (
+                      <div 
+                        key={i}
+                        className={`w-1 h-2/3 rounded-full ${chestProgress >= i || canClaimChest ? 'opacity-0' : 'opacity-30'}`}
+                        style={{ background: "rgba(255,255,255,0.5)" }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {canClaimChest && (
+                  <motion.p 
+                    className="text-xs font-bold text-white/90 mt-2 text-center"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    შეეხე სკივრის გასახსნელად!
+                  </motion.p>
+                )}
               </div>
-              {canClaimChest && (
-                <p className="text-xs text-success font-medium mt-1 text-center">
-                  შეეხე სკივრის გასახსნელად!
-                </p>
-              )}
             </motion.button>
 
-            {/* Quick Action Row */}
-            <div className="flex gap-4 w-full max-w-xs justify-center">
+          </div>
+
+          {/* Quick Action Row - Moved to bottom */}
+          <div className="px-6 pb-6">
+            <div className="flex gap-4 max-w-xs mx-auto justify-between">
               <QuickButton 
                 iconSrc={iconWheel}
                 label="ბორბალი"
@@ -244,14 +302,11 @@ export default function Index() {
                 label="რეიტინგი"
                 onClick={() => navigate("/leaderboards")}
               />
-            </div>
-          </div>
-
-          {/* Bottom Navigation Row */}
-          <div className="px-6 pb-6">
-            <div className="flex gap-3 max-w-xs mx-auto">
-              <NavButton icon={<Users className="h-5 w-5" />} onClick={() => navigate("/team")} />
-              <NavButton icon={<Map className="h-5 w-5" />} onClick={() => navigate("/adventure-map")} />
+              <QuickButton 
+                iconSrc={iconMap}
+                label="რუქა"
+                onClick={() => navigate("/adventure-map")}
+              />
             </div>
             
             {/* Scroll indicator */}
@@ -392,24 +447,6 @@ function QuickButton({
     >
       <img src={iconSrc} alt={label} className="h-14 w-14 object-contain" />
       <span className="text-xs font-medium text-slate-700">{label}</span>
-    </motion.button>
-  );
-}
-
-function NavButton({ 
-  icon, 
-  onClick
-}: { 
-  icon: React.ReactNode; 
-  onClick: () => void;
-}) {
-  return (
-    <motion.button
-      onClick={onClick}
-      className="flex-1 py-4 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center"
-      whileTap={{ scale: 0.95 }}
-    >
-      <span className="text-slate-600">{icon}</span>
     </motion.button>
   );
 }
