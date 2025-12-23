@@ -269,30 +269,109 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Bento Grid Layout */}
-                <div className="grid grid-cols-2 auto-rows-[120px] gap-3">
-                  {featuredItems.map((item, index) => (
+                {/* Bento Grid Layout - Fixed sizing */}
+                <div className="space-y-3">
+                  {/* Hero Card - Full Width */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0 }}
+                    className="h-[140px]"
+                  >
+                    <FeaturedCard
+                      title={featuredItems[0].title}
+                      subtitle={featuredItems[0].subtitle}
+                      icon={featuredItems[0].icon}
+                      size="large"
+                    />
+                  </motion.div>
+
+                  {/* Two Medium Cards Side by Side */}
+                  <div className="grid grid-cols-2 gap-3">
                     <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className={
-                        item.size === "large" 
-                          ? "col-span-2 row-span-1" 
-                          : item.size === "medium" 
-                            ? "col-span-1 row-span-2" 
-                            : "col-span-1 row-span-1"
-                      }
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 }}
+                      className="h-[200px]"
                     >
                       <FeaturedCard
-                        title={item.title}
-                        subtitle={item.subtitle}
-                        icon={item.icon}
-                        size={item.size}
+                        title={featuredItems[1].title}
+                        subtitle={featuredItems[1].subtitle}
+                        icon={featuredItems[1].icon}
+                        size="medium"
                       />
                     </motion.div>
-                  ))}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="h-[200px]"
+                    >
+                      <FeaturedCard
+                        title={featuredItems[2].title}
+                        subtitle={featuredItems[2].subtitle}
+                        icon={featuredItems[2].icon}
+                        size="medium"
+                      />
+                    </motion.div>
+                  </div>
+
+                  {/* Four Small Cards - 2x2 Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {featuredItems.slice(3, 7).map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 + index * 0.05 }}
+                        className="h-[130px]"
+                      >
+                        <FeaturedCard
+                          title={item.title}
+                          subtitle={item.subtitle}
+                          icon={item.icon}
+                          size="small"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Another Medium Card - Full Width */}
+                  {featuredItems[7] && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 }}
+                      className="h-[140px]"
+                    >
+                      <FeaturedCard
+                        title={featuredItems[7].title}
+                        subtitle={featuredItems[7].subtitle}
+                        icon={featuredItems[7].icon}
+                        size="large"
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Last Two Small Cards */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {featuredItems.slice(8, 10).map((item, index) => (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 + index * 0.05 }}
+                        className="h-[130px]"
+                      >
+                        <FeaturedCard
+                          title={item.title}
+                          subtitle={item.subtitle}
+                          icon={item.icon}
+                          size="small"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </motion.section>
             ) : (
