@@ -39,26 +39,27 @@ const CSS3DClouds: React.FC<CSS3DCloudsProps> = ({ className = '' }) => {
     const generatedClouds: Cloud[] = [];
     const allLayers: CloudLayer[] = [];
 
-    // Create 6 cloud clusters
-    for (let i = 0; i < 6; i++) {
-      const cloudX = 256 - Math.random() * 512;
-      const cloudY = 256 - Math.random() * 512;
-      const cloudZ = 256 - Math.random() * 512;
+    // Create 8 cloud clusters spread across the viewport
+    for (let i = 0; i < 8; i++) {
+      // Spread clouds across the full viewport
+      const cloudX = (Math.random() - 0.5) * window.innerWidth * 1.5;
+      const cloudY = (Math.random() - 0.5) * window.innerHeight * 0.8 - 100; // Bias toward top
+      const cloudZ = -200 + Math.random() * 400;
 
       const layers: CloudLayer[] = [];
-      const layerCount = 5 + Math.round(Math.random() * 5);
+      const layerCount = 4 + Math.round(Math.random() * 4);
 
       for (let j = 0; j < layerCount; j++) {
         const layer: CloudLayer = {
           id: i * 100 + j,
-          x: (256 - Math.random() * 512) * 0.2,
-          y: (256 - Math.random() * 512) * 0.2,
-          z: 100 - Math.random() * 200,
+          x: (Math.random() - 0.5) * 100,
+          y: (Math.random() - 0.5) * 100,
+          z: (Math.random() - 0.5) * 150,
           rotation: Math.random() * 360,
-          scale: 0.25 + Math.random(),
-          speed: 0.05 + Math.random() * 0.1,
+          scale: 0.5 + Math.random() * 1,
+          speed: 0.02 + Math.random() * 0.05,
           texture: textures[Math.floor(Math.random() * textures.length)],
-          opacity: 0.6 + Math.random() * 0.3,
+          opacity: 0.4 + Math.random() * 0.4,
         };
         layers.push(layer);
         allLayers.push(layer);
@@ -85,17 +86,17 @@ const CSS3DClouds: React.FC<CSS3DCloudsProps> = ({ className = '' }) => {
     let worldRotation = 0;
 
     const animate = () => {
-      worldRotation += 0.02;
+      worldRotation += 0.005;
 
       // Update layer rotations
       layersRef.current.forEach((layer) => {
         layer.rotation += layer.speed;
       });
 
-      // Apply gentle world rotation
+      // Apply very gentle world rotation
       if (worldRef.current) {
-        const worldXAngle = Math.sin(worldRotation * 0.5) * 3;
-        const worldYAngle = Math.cos(worldRotation * 0.3) * 5;
+        const worldXAngle = Math.sin(worldRotation * 0.3) * 2;
+        const worldYAngle = Math.cos(worldRotation * 0.2) * 3;
         worldRef.current.style.transform = `translateZ(0px) rotateX(${worldXAngle}deg) rotateY(${worldYAngle}deg)`;
       }
 
@@ -118,10 +119,10 @@ const CSS3DClouds: React.FC<CSS3DCloudsProps> = ({ className = '' }) => {
     <div
       className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
       style={{
-        perspective: '1000px',
+        perspective: '800px',
         perspectiveOrigin: '50% 50%',
         opacity: isLoaded ? 1 : 0,
-        transition: 'opacity 1s ease-out',
+        transition: 'opacity 1.5s ease-out',
       }}
     >
       <div
@@ -129,11 +130,11 @@ const CSS3DClouds: React.FC<CSS3DCloudsProps> = ({ className = '' }) => {
         className="absolute"
         style={{
           left: '50%',
-          top: '50%',
-          width: '512px',
-          height: '512px',
-          marginLeft: '-256px',
-          marginTop: '-256px',
+          top: '40%',
+          width: '100%',
+          height: '100%',
+          marginLeft: '-50%',
+          marginTop: '-40%',
           transformStyle: 'preserve-3d',
         }}
       >
@@ -142,12 +143,8 @@ const CSS3DClouds: React.FC<CSS3DCloudsProps> = ({ className = '' }) => {
             key={cloud.id}
             className="absolute"
             style={{
-              left: '256px',
-              top: '256px',
-              width: '20px',
-              height: '20px',
-              marginLeft: '-10px',
-              marginTop: '-10px',
+              left: '50%',
+              top: '50%',
               transformStyle: 'preserve-3d',
               transform: `translateX(${cloud.x}px) translateY(${cloud.y}px) translateZ(${cloud.z}px)`,
             }}
@@ -159,15 +156,14 @@ const CSS3DClouds: React.FC<CSS3DCloudsProps> = ({ className = '' }) => {
                 alt=""
                 className="absolute"
                 style={{
-                  left: '50%',
-                  top: '50%',
-                  width: '256px',
-                  height: '256px',
-                  marginLeft: '-128px',
-                  marginTop: '-128px',
+                  width: '300px',
+                  height: '300px',
+                  marginLeft: '-150px',
+                  marginTop: '-150px',
                   opacity: layer.opacity,
+                  mixBlendMode: 'screen',
+                  filter: 'blur(1px)',
                   transform: `translateX(${layer.x}px) translateY(${layer.y}px) translateZ(${layer.z}px) rotateZ(${layer.rotation}deg) scale(${layer.scale})`,
-                  transition: 'opacity 0.5s ease-out',
                   willChange: 'transform',
                 }}
               />
