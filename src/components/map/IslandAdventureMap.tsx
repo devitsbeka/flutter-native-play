@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
-import CSS3DClouds from "./CSS3DClouds";
+import SVGClouds from "./SVGClouds";
 import BIRDS from "vanta/dist/vanta.birds.min";
 import * as THREE from "three";
 
@@ -193,8 +193,8 @@ export function IslandAdventureMap() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-sky-400">
-      {/* CSS3D Volumetric Clouds overlay */}
-      <CSS3DClouds className="z-15" />
+      {/* SVG Clouds overlay */}
+      <SVGClouds className="z-15" />
 
       {/* Vanta Birds overlay - on top of map */}
       <div 
