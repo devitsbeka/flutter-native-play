@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -9,6 +9,8 @@ import { Trophy, Home, RotateCcw, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import confetti from "canvas-confetti";
+import { calculateLevel } from "@/utils/levelCalculation";
+import { LevelUpModal } from "@/components/home/LevelUpModal";
 
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
@@ -18,6 +20,12 @@ export function MatchResultScreen() {
   const isWin = userScore > opponentScore;
   const isDraw = userScore === opponentScore;
   const result = isWin ? "Victory!" : isDraw ? "Draw" : "Defeat";
+
+  // Level up detection
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(0);
+  const [previousLevel, setPreviousLevel] = useState(0);
+  const hasCheckedLevelUp = useRef(false);
 
   const handleBackToHome = () => {
     resetGame();
@@ -52,15 +60,23 @@ export function MatchResultScreen() {
       frame();
     }
 
-    if (user && profile) {
+    if (user && profile && !hasCheckedLevelUp.current) {
+      hasCheckedLevelUp.current = true;
+      
       const updateStats = async () => {
+        // Calculate level before and after
+        const oldPoints = profile.total_points || 0;
+        const newPoints = oldPoints + userScore;
+        const oldLevelInfo = calculateLevel(oldPoints);
+        const newLevelInfo = calculateLevel(newPoints);
+
         await updateProfile({
-          total_points: profile.total_points + userScore,
-          games_played: profile.games_played + 1,
-          games_won: isWin ? profile.games_won + 1 : profile.games_won,
-          current_streak: isWin ? profile.current_streak + 1 : 0,
+          total_points: newPoints,
+          games_played: (profile.games_played || 0) + 1,
+          games_won: isWin ? (profile.games_won || 0) + 1 : profile.games_won,
+          current_streak: isWin ? (profile.current_streak || 0) + 1 : 0,
           best_streak: isWin 
-            ? Math.max(profile.best_streak, profile.current_streak + 1)
+            ? Math.max(profile.best_streak || 0, (profile.current_streak || 0) + 1)
             : profile.best_streak,
         });
 
@@ -74,14 +90,30 @@ export function MatchResultScreen() {
           status: isWin ? "won" : isDraw ? "draw" : "lost",
           completed_at: new Date().toISOString(),
         });
+
+        // Check for level up after a short delay to let victory confetti finish
+        if (newLevelInfo.level > oldLevelInfo.level) {
+          setPreviousLevel(oldLevelInfo.level);
+          setNewLevel(newLevelInfo.level);
+          setTimeout(() => {
+            setShowLevelUp(true);
+          }, isWin ? 2500 : 500);
+        }
       };
 
       updateStats();
     }
-  }, []);
+  }, [user, profile, userScore, opponentScore, isWin, isDraw, opponent, updateProfile]);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full">
+    <>
+      <LevelUpModal
+        isOpen={showLevelUp}
+        onClose={() => setShowLevelUp(false)}
+        newLevel={newLevel}
+        previousLevel={previousLevel}
+      />
+      <div className="h-full flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full">
       {/* Result Header */}
       <motion.div
         initial={{ scale: 0, y: -20 }}
@@ -214,6 +246,7 @@ export function MatchResultScreen() {
           Back to Home
         </ChunkyButton>
       </motion.div>
-    </div>
+      </div>
+    </>
   );
 }

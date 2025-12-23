@@ -114,20 +114,36 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalPro
             </div>
 
             {/* Next Level Rewards */}
-            {!levelInfo.isMaxLevel && nextLevelRewards.length > 0 && (
+            {!levelInfo.isMaxLevel && (
               <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                   <span>🎁</span>
                   დონე {levelInfo.level + 1}-ის ჯილდოები
                 </h3>
-                <ul className="space-y-1">
-                  {nextLevelRewards.map((reward, i) => (
-                    <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    +{nextLevelRewards.xpBonus} XP ბონუსი
+                  </p>
+                  {nextLevelRewards.powerUps > 0 && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                      +{nextLevelRewards.powerUps} Power-Ups
+                    </p>
+                  )}
+                  {nextLevelRewards.spinTickets > 0 && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                      +{nextLevelRewards.spinTickets} Spin Tickets
+                    </p>
+                  )}
+                  {nextLevelRewards.specialRewards.map((reward, i) => (
+                    <p key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
                       {reward}
-                    </li>
+                    </p>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </motion.div>
