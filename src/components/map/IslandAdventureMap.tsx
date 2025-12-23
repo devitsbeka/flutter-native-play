@@ -50,8 +50,8 @@ export function IslandAdventureMap() {
       vantaEffect.current = BIRDS({
         el: vantaRef.current,
         THREE: THREE,
-        mouseControls: true,
-        touchControls: true,
+        mouseControls: false,
+        touchControls: false,
         gyroControls: false,
         minHeight: 200.00,
         minWidth: 200.00,
@@ -60,7 +60,8 @@ export function IslandAdventureMap() {
         color1: 0x6d67de,
         color2: 0x37e8bd,
         colorMode: "lerp",
-        backgroundColor: 0x38bdf8, // sky-400 color
+        backgroundColor: 0x000000,
+        backgroundAlpha: 0, // Transparent background
         separation: 84.00,
         alignment: 59.00,
         quantity: 3.00,
