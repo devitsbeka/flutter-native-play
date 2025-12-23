@@ -18,6 +18,7 @@ export interface FeaturedItem {
   type: "seasonal" | "daily" | "trending";
   bgGradient: string;
   expiresAt?: string;
+  categoryId: string; // Maps to actual category for quiz
 }
 
 export const categories: Category[] = [
@@ -453,6 +454,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "seasonal",
     bgGradient: "from-red-500 via-green-600 to-red-500",
     size: "large",
+    categoryId: "georgian_culture",
   },
   // Medium cards
   {
@@ -463,6 +465,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "daily",
     bgGradient: "from-amber-400 to-orange-500",
     size: "medium",
+    categoryId: "fun_facts",
   },
   {
     id: "trending_georgia",
@@ -472,6 +475,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "trending",
     bgGradient: "from-purple-500 to-pink-500",
     size: "medium",
+    categoryId: "georgian_history",
   },
   // Small cards
   {
@@ -482,6 +486,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "daily",
     bgGradient: "from-cyan-400 to-blue-500",
     size: "small",
+    categoryId: "science",
   },
   {
     id: "world_capitals",
@@ -491,6 +496,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "trending",
     bgGradient: "from-emerald-400 to-teal-500",
     size: "small",
+    categoryId: "geography",
   },
   {
     id: "movie_night",
@@ -500,6 +506,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "trending",
     bgGradient: "from-rose-400 to-pink-500",
     size: "small",
+    categoryId: "movies",
   },
   {
     id: "science_lab",
@@ -509,6 +516,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "trending",
     bgGradient: "from-lime-400 to-green-500",
     size: "small",
+    categoryId: "chemistry",
   },
   // Another medium card
   {
@@ -519,6 +527,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "seasonal",
     bgGradient: "from-yellow-400 to-amber-500",
     size: "medium",
+    categoryId: "sports",
   },
   // More small cards
   {
@@ -529,6 +538,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "trending",
     bgGradient: "from-fuchsia-400 to-purple-500",
     size: "small",
+    categoryId: "music",
   },
   {
     id: "food_lover",
@@ -538,6 +548,7 @@ export const featuredItems: FeaturedItemExtended[] = [
     type: "trending",
     bgGradient: "from-orange-400 to-red-500",
     size: "small",
+    categoryId: "georgian_cuisine",
   },
 ];
 
