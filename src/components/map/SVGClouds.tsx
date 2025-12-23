@@ -100,7 +100,7 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
       {/* Top clouds - 25% of screen */}
       <div 
         className={`absolute top-0 left-0 right-0 overflow-hidden pointer-events-none ${className}`} 
-        style={{ height: '25%', filter: 'blur(2px)' }}
+        style={{ height: '25%', filter: 'blur(5px)' }}
       >
         <svg 
           ref={topSvgRef}
@@ -142,7 +142,7 @@ const SVGClouds: React.FC<SVGCloudsProps> = ({ className = '' }) => {
       {/* Bottom clouds - 15% of screen */}
       <div 
         className={`absolute bottom-0 left-0 right-0 overflow-hidden pointer-events-none ${className}`} 
-        style={{ height: '15%', filter: 'blur(3px)' }}
+        style={{ height: '15%', filter: 'blur(6px)' }}
       >
         <svg 
           ref={bottomSvgRef}
