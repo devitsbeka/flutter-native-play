@@ -22,7 +22,7 @@ export function QuickActionsBar({ className = "" }: QuickActionsBarProps) {
     <>
       <LuckySpinModal isOpen={isSpinModalOpen} onClose={() => setIsSpinModalOpen(false)} />
       
-      <div className={`px-6 pb-6 ${className}`}>
+      <div className={`fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 safe-bottom ${className}`}>
         <div className="relative max-w-xs mx-auto">
           {/* 3D Shadow */}
           <div 
