@@ -5,6 +5,7 @@ import { ArrowLeft, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
+import { CompletedLevelModal } from "./CompletedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useLevelPositions } from "@/hooks/useLevelPositions";
 import SVGClouds from "./SVGClouds";
@@ -165,8 +166,75 @@ export function IslandAdventureMap() {
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
   const [selectedLockedLevel, setSelectedLockedLevel] = useState<number | null>(null);
 
+  // State for completed level modal
+  const [completedModalOpen, setCompletedModalOpen] = useState(false);
+  const [selectedCompletedLevel, setSelectedCompletedLevel] = useState<number | null>(null);
+  const [completedLevelStats, setCompletedLevelStats] = useState<{
+    questionsAnswered: number;
+    correctAnswers: number;
+    pointsEarned: number;
+    starsEarned: number;
+  }>({
+    questionsAnswered: 0,
+    correctAnswers: 0,
+    pointsEarned: 0,
+    starsEarned: 0,
+  });
+
   const handleLevelClick = (levelId: number) => {
-    navigate(`/game?level=${levelId}`);
+    // Find the level to check if it's completed or current
+    const level = levels.find(l => l.id === levelId);
+    
+    if (level && !level.isLocked && !level.isCurrent) {
+      // Completed level - show stats modal
+      // Calculate stats from progress data
+      const categories = Object.keys(progress);
+      let stats: {
+        questionsAnswered: number;
+        correctAnswers: number;
+        pointsEarned: number;
+        starsEarned: number;
+      } = {
+        questionsAnswered: 5,
+        correctAnswers: 3,
+        pointsEarned: levelId * 100,
+        starsEarned: level.stars || 1,
+      };
+
+      if (categories.length > 0) {
+        const categoryIndex = (levelId - 1) % categories.length;
+        const categoryId = categories[categoryIndex];
+        const catProgress = progress[categoryId];
+        
+        if (catProgress) {
+          const levelData = catProgress.completedLevels.find(
+            (l) => l.level_number === Math.floor((levelId - 1) / categories.length) + 1
+          );
+          if (levelData) {
+            stats = {
+              questionsAnswered: levelData.total_questions || 5,
+              correctAnswers: levelData.score || 3,
+              pointsEarned: levelData.score * 20,
+              starsEarned: Math.min(3, Math.max(1, levelData.stars_earned || 1)),
+            };
+          }
+        }
+      }
+
+      setCompletedLevelStats(stats);
+      setSelectedCompletedLevel(levelId);
+      setCompletedModalOpen(true);
+    } else {
+      // Current level - navigate to game
+      navigate(`/game?level=${levelId}`);
+    }
+  };
+
+  const handleReplayLevel = () => {
+    if (selectedCompletedLevel) {
+      setCompletedModalOpen(false);
+      navigate(`/game?level=${selectedCompletedLevel}`);
+    }
   };
 
   const handleLockedLevelClick = (levelId: number) => {
@@ -308,6 +376,15 @@ export function IslandAdventureMap() {
         onClose={() => setLockedModalOpen(false)}
         levelId={selectedLockedLevel || 0}
         requiredLevel={currentLevelId}
+      />
+
+      {/* Completed level modal */}
+      <CompletedLevelModal
+        isOpen={completedModalOpen}
+        onClose={() => setCompletedModalOpen(false)}
+        levelId={selectedCompletedLevel || 0}
+        stats={completedLevelStats}
+        onReplay={handleReplayLevel}
       />
     </div>
   );
