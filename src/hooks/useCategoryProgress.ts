@@ -241,16 +241,19 @@ export function useCategoryProgress() {
     else if (percentage >= 80) stars = 3;
     else if (percentage >= 60) stars = 2;
     else if (percentage >= 40) stars = 1;
+    else if (percentage >= 20) stars = 1; // At least 1 star for trying (1/5 correct)
 
-    // Determine if this unlocks a new level
+    // For unlocking: level is unlocked if stars >= 1 AND this is the current level or beyond
     const currentMax = progress[categoryId]?.currentLevel || 1;
     const unlockedLevel = stars >= 1 && levelNumber >= currentMax ? levelNumber + 1 : undefined;
 
     if (!user) {
-      // Save to localStorage for guests
-      saveGuestLevelProgress(categoryId, levelNumber, score, totalQuestions, stars);
+      // Save to localStorage for guests - always save even with 0 stars to track attempts
+      if (stars > 0) {
+        saveGuestLevelProgress(categoryId, levelNumber, score, totalQuestions, stars);
+      }
       
-      // Update local state immediately
+      // Update local state immediately for reactive UI
       setProgress((prev) => {
         const updated = { ...prev };
         if (!updated[categoryId]) {
@@ -262,34 +265,42 @@ export function useCategoryProgress() {
           };
         }
 
-        const existingIndex = updated[categoryId].completedLevels.findIndex(
-          (l) => l.level_number === levelNumber
-        );
+        // Only count as completed if earned at least 1 star
+        if (stars >= 1) {
+          const existingIndex = updated[categoryId].completedLevels.findIndex(
+            (l) => l.level_number === levelNumber
+          );
 
-        const levelData: LevelProgress = {
-          level_number: levelNumber,
-          stars_earned: stars,
-          score,
-          total_questions: totalQuestions,
-          completed_at: new Date().toISOString(),
-        };
+          const levelData: LevelProgress = {
+            level_number: levelNumber,
+            stars_earned: stars,
+            score,
+            total_questions: totalQuestions,
+            completed_at: new Date().toISOString(),
+          };
 
-        if (existingIndex >= 0) {
-          if (stars > updated[categoryId].completedLevels[existingIndex].stars_earned) {
-            updated[categoryId].completedLevels[existingIndex] = levelData;
+          if (existingIndex >= 0) {
+            // Only update if new stars are better
+            if (stars > updated[categoryId].completedLevels[existingIndex].stars_earned) {
+              const oldStars = updated[categoryId].completedLevels[existingIndex].stars_earned;
+              updated[categoryId].completedLevels[existingIndex] = levelData;
+              updated[categoryId].totalStars += (stars - oldStars);
+            }
+          } else {
+            updated[categoryId].completedLevels.push(levelData);
+            updated[categoryId].totalStars += stars;
           }
-        } else {
-          updated[categoryId].completedLevels.push(levelData);
-          updated[categoryId].totalStars += stars;
-        }
 
-        // Recalculate current level
-        const completedLevelNumbers = updated[categoryId].completedLevels.map((l) => l.level_number);
-        let nextLevel = 1;
-        while (completedLevelNumbers.includes(nextLevel)) {
-          nextLevel++;
+          // Recalculate current level - find the first level not completed with at least 1 star
+          const completedLevelNumbers = updated[categoryId].completedLevels
+            .filter(l => l.stars_earned >= 1)
+            .map((l) => l.level_number);
+          let nextLevel = 1;
+          while (completedLevelNumbers.includes(nextLevel)) {
+            nextLevel++;
+          }
+          updated[categoryId].currentLevel = nextLevel;
         }
-        updated[categoryId].currentLevel = nextLevel;
 
         return updated;
       });
