@@ -125,8 +125,8 @@ export default function Index() {
                   boxShadow: "0 8px 24px hsl(195 70% 40% / 0.25)"
                 }}
               >
-                <span className="text-xs font-semibold text-foreground/60">დონე</span>
-                <span className="text-4xl font-display font-bold text-foreground">1</span>
+                <span className="text-xs font-semibold text-slate-600">დონე</span>
+                <span className="text-4xl font-display font-bold text-slate-800">1</span>
               </div>
             </motion.div>
 
@@ -175,9 +175,9 @@ export default function Index() {
                   >
                     🎁
                   </motion.span>
-                  <span className="text-xs font-medium text-foreground/60">სპეციალური სკივრი</span>
+                  <span className="text-xs font-medium text-slate-600">სპეციალური სკივრი</span>
                 </div>
-                <span className="text-xs font-bold text-foreground/70">
+                <span className="text-xs font-bold text-slate-700">
                   {canClaimChest ? "მზადაა!" : `${chestProgress}/3`}
                 </span>
               </div>
@@ -236,12 +236,12 @@ export default function Index() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <span className="text-xs text-foreground/50">კატეგორიები</span>
+              <span className="text-xs text-slate-600">კატეგორიები</span>
               <motion.div
                 animate={{ y: [0, 4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <ChevronDown className="h-4 w-4 text-foreground/50" />
+                <ChevronDown className="h-4 w-4 text-slate-500" />
               </motion.div>
             </motion.div>
           </div>
@@ -343,8 +343,8 @@ function QuickButton({
       }`}
       whileTap={{ scale: 0.95 }}
     >
-      <span className="text-foreground/70">{icon}</span>
-      <span className="text-xs font-medium text-foreground/70">{label}</span>
+      <span className="text-slate-700">{icon}</span>
+      <span className="text-xs font-medium text-slate-700">{label}</span>
     </motion.button>
   );
 }
@@ -362,7 +362,7 @@ function NavButton({
       className="flex-1 py-4 rounded-xl bg-white/60 backdrop-blur-sm flex items-center justify-center"
       whileTap={{ scale: 0.95 }}
     >
-      <span className="text-foreground/60">{icon}</span>
+      <span className="text-slate-600">{icon}</span>
     </motion.button>
   );
 }
