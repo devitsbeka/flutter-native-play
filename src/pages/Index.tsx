@@ -292,19 +292,19 @@ export default function Index() {
                 label="ბორბალი"
                 onClick={() => setIsSpinModalOpen(true)}
               />
-              <div className="w-px h-16 bg-slate-300/30 self-center" />
+              <div className="w-px h-16 self-center" style={{ background: "rgba(30, 41, 59, 0.15)" }} />
               <QuickButton 
                 iconSrc={iconVip}
                 label="VIP"
                 onClick={() => navigate("/vip")}
               />
-              <div className="w-px h-16 bg-slate-300/30 self-center" />
+              <div className="w-px h-16 self-center" style={{ background: "rgba(30, 41, 59, 0.15)" }} />
               <QuickButton 
                 iconSrc={iconLeaderboard}
                 label="რეიტინგი"
                 onClick={() => navigate("/leaderboards")}
               />
-              <div className="w-px h-16 bg-slate-300/30 self-center" />
+              <div className="w-px h-16 self-center" style={{ background: "rgba(30, 41, 59, 0.15)" }} />
               <QuickButton 
                 iconSrc={iconMap}
                 label="რუქა"
@@ -449,7 +449,8 @@ function QuickButton({
     >
       <img src={iconSrc} alt={label} className="h-14 w-14 object-contain" />
       <span 
-        className="text-sm font-medium text-slate-700 px-2.5 py-0.5 rounded-xl border border-slate-300/40"
+        className="text-sm font-medium text-slate-700 px-2.5 py-0.5 rounded-xl"
+        style={{ border: "1.5px solid rgba(30, 41, 59, 0.2)" }}
       >
         {label}
       </span>
