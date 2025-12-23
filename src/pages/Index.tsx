@@ -284,32 +284,45 @@ export default function Index() {
 
           </div>
 
-          {/* Quick Action Row - Moved to bottom */}
+          {/* Quick Action Row - Gamified Container */}
           <div className="px-6 pb-6">
-            <div className="flex max-w-xs mx-auto justify-between items-start">
-              <QuickButton 
-                iconSrc={iconWheel}
-                label="ბორბალი"
-                onClick={() => setIsSpinModalOpen(true)}
+            <div className="relative max-w-xs mx-auto">
+              {/* 3D Shadow */}
+              <div 
+                className="absolute inset-0 rounded-2xl"
+                style={{ background: "hsl(195 30% 55%)", transform: "translateY(4px)" }}
               />
-              <div className="w-px h-16 self-center" style={{ background: "rgba(30, 41, 59, 0.15)" }} />
-              <QuickButton 
-                iconSrc={iconVip}
-                label="VIP"
-                onClick={() => navigate("/vip")}
-              />
-              <div className="w-px h-16 self-center" style={{ background: "rgba(30, 41, 59, 0.15)" }} />
-              <QuickButton 
-                iconSrc={iconLeaderboard}
-                label="რეიტინგი"
-                onClick={() => navigate("/leaderboards")}
-              />
-              <div className="w-px h-16 self-center" style={{ background: "rgba(30, 41, 59, 0.15)" }} />
-              <QuickButton 
-                iconSrc={iconMap}
-                label="რუქა"
-                onClick={() => navigate("/adventure-map")}
-              />
+              {/* Main Container */}
+              <div 
+                className="relative rounded-2xl p-4"
+                style={{ background: "linear-gradient(180deg, hsl(195 40% 88%) 0%, hsl(195 35% 82%) 100%)" }}
+              >
+                <div className="flex justify-between items-start">
+                  <QuickButton 
+                    iconSrc={iconWheel}
+                    label="ბორბალი"
+                    onClick={() => setIsSpinModalOpen(true)}
+                  />
+                  <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
+                  <QuickButton 
+                    iconSrc={iconVip}
+                    label="VIP"
+                    onClick={() => navigate("/vip")}
+                  />
+                  <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
+                  <QuickButton 
+                    iconSrc={iconLeaderboard}
+                    label="რეიტინგი"
+                    onClick={() => navigate("/leaderboards")}
+                  />
+                  <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
+                  <QuickButton 
+                    iconSrc={iconMap}
+                    label="რუქა"
+                    onClick={() => navigate("/adventure-map")}
+                  />
+                </div>
+              </div>
             </div>
             
             {/* Scroll indicator */}
@@ -444,16 +457,11 @@ function QuickButton({
   return (
     <motion.button
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5"
+      className="flex flex-col items-center gap-1"
       whileTap={{ scale: 0.95 }}
     >
-      <img src={iconSrc} alt={label} className="h-14 w-14 object-contain" />
-      <span 
-        className="text-sm font-medium text-slate-700 px-2.5 py-0.5 rounded-xl"
-        style={{ border: "1.5px solid rgba(30, 41, 59, 0.2)" }}
-      >
-        {label}
-      </span>
+      <img src={iconSrc} alt={label} className="h-12 w-12 object-contain" />
+      <span className="text-xs font-semibold text-slate-600">{label}</span>
     </motion.button>
   );
 }
