@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
-import { useEffect } from "react";
+import { useRewards } from "@/hooks/useRewards";
+import { toast } from "sonner";
 
 interface ChestRewardModalProps {
   isOpen: boolean;
@@ -11,12 +13,15 @@ interface ChestRewardModalProps {
 }
 
 const rewards = [
-  { icon: "⭐", label: "50 XP", color: "from-amber-400 to-yellow-500" },
-  { icon: "🎯", label: "2x ქულა", color: "from-blue-400 to-cyan-500" },
-  { icon: "💎", label: "VIP დღე", color: "from-purple-400 to-pink-500" },
+  { icon: "⭐", label: "50 XP", type: "xp", value: 50, color: "from-amber-400 to-yellow-500" },
+  { icon: "🎯", label: "2x ქულა", type: "multiplier", value: 2, color: "from-blue-400 to-cyan-500" },
+  { icon: "💎", label: "VIP დღე", type: "vip", value: 1, color: "from-purple-400 to-pink-500" },
 ];
 
 export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalProps) {
+  const { recordChestReward } = useRewards();
+  const [isClaiming, setIsClaiming] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
       // Celebration confetti
@@ -30,12 +35,26 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     }
   }, [isOpen]);
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
+    if (isClaiming) return;
+    setIsClaiming(true);
+
     confetti({
       particleCount: 150,
       spread: 100,
       origin: { y: 0.5 },
     });
+
+    // Persist rewards to database
+    const success = await recordChestReward(
+      rewards.map(r => ({ type: r.type, value: r.value, label: r.label }))
+    );
+
+    if (success) {
+      toast.success("ჯილდოები მიღებულია! 🎉");
+    }
+
+    setIsClaiming(false);
     onClaim();
   };
 
@@ -111,9 +130,9 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
                 </div>
 
                 {/* Claim Button */}
-                <ChunkyButton onClick={handleClaim} className="w-full">
+                <ChunkyButton onClick={handleClaim} disabled={isClaiming} className="w-full">
                   <Gift className="h-5 w-5 mr-2" />
-                  მიღება
+                  {isClaiming ? "იტვირთება..." : "მიღება"}
                 </ChunkyButton>
               </div>
             </motion.div>
