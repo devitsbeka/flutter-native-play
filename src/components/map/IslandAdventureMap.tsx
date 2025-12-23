@@ -1,13 +1,17 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { CompletedLevelModal } from "./CompletedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useLevelPositions } from "@/hooks/useLevelPositions";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "@/components/shared/Avatar";
+import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
+import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import SVGClouds from "./SVGClouds";
 import BIRDS from "vanta/dist/vanta.birds.min";
 import * as THREE from "three";
@@ -26,6 +30,8 @@ export function IslandAdventureMap() {
   const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
   const { progress, loading: progressLoading, getLevelStats } = useCategoryProgress();
   const { positions: levelPositions, loading: positionsLoading } = useLevelPositions();
+  const { profile } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const loading = progressLoading || positionsLoading;
   
@@ -245,7 +251,10 @@ export function IslandAdventureMap() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-sky-400">
+    <>
+      <SideMenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+      
+      <div className="fixed inset-0 overflow-hidden bg-sky-400">
       {/* SVG Clouds overlay - between sky and map */}
       <SVGClouds className="z-[15]" />
 
@@ -294,20 +303,43 @@ export function IslandAdventureMap() {
         </motion.div>
       </div>
 
-      {/* Back button */}
-      <div className="absolute top-4 left-4 z-50">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBack}
-          className="bg-background/80 backdrop-blur-sm rounded-full shadow-lg"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-      </div>
+      {/* Top Header Bar */}
+      <header className="absolute top-0 left-0 right-0 z-50 px-4 pt-4 safe-top">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsMenuOpen(true)}
+              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+            >
+              <Menu className="h-5 w-5 text-slate-600" />
+            </button>
+            <button 
+              onClick={() => navigate("/profile")}
+              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm overflow-hidden"
+            >
+              <Avatar
+                imageUrl={profile?.avatar_url || undefined}
+                emoji={profile?.nickname?.charAt(0) || "👤"}
+                size="sm"
+              />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
+              <span className="text-orange-400">🔥</span>
+              <span className="font-bold text-slate-700 text-sm">{profile?.current_streak || 0}</span>
+            </div>
+            <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
+              <span className="text-amber-400">👑</span>
+              <AnimatedCounter value={profile?.total_points || 0} className="font-bold text-slate-700 text-sm" />
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* Scrollable map container - MATCHING ADMIN STRUCTURE EXACTLY */}
-      <div className="absolute inset-0 pt-16 overflow-auto z-10">
+      <div className="absolute inset-0 pt-20 overflow-auto z-10">
         <div 
           ref={containerRef}
           className="relative w-full"
@@ -384,6 +416,7 @@ export function IslandAdventureMap() {
         stats={completedLevelStats}
         onReplay={handleReplayLevel}
       />
-    </div>
+      </div>
+    </>
   );
 }
