@@ -71,7 +71,7 @@ export function LockedLevelModal({ isOpen, onClose, levelId, requiredLevel }: Lo
                   <div className="flex items-center justify-center gap-2 text-amber-800">
                     <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
                     <span className="font-bold">
-                      Complete Level {requiredLevel}
+                      Complete Level {levelId - 1}
                     </span>
                   </div>
                 </div>
