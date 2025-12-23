@@ -241,11 +241,11 @@ export function IslandAdventureMap() {
       </div>
 
       {/* Scrollable map container - MATCHING ADMIN STRUCTURE EXACTLY */}
-      <div className="absolute inset-0 pt-16 overflow-auto z-10">
+      <div className="absolute inset-0 pt-16 pb-32 overflow-auto z-10">
         <div 
           ref={containerRef}
           className="relative w-full"
-          style={{ minHeight: "100%" }}
+          style={{ minHeight: "100%", paddingBottom: "120px" }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
