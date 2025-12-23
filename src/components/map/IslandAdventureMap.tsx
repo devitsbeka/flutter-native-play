@@ -1,9 +1,10 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
+import { LockedLevelModal } from "./LockedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 
 import islandBackground from "@/assets/map/island-background.svg";
@@ -108,9 +109,18 @@ export function IslandAdventureMap() {
     }
   }, [levels, currentLevelId, loading]);
 
+  // State for locked level modal
+  const [lockedModalOpen, setLockedModalOpen] = useState(false);
+  const [selectedLockedLevel, setSelectedLockedLevel] = useState<number | null>(null);
+
   const handleLevelClick = (levelId: number) => {
     // Navigate to game with the selected level
     navigate(`/game?level=${levelId}`);
+  };
+
+  const handleLockedLevelClick = (levelId: number) => {
+    setSelectedLockedLevel(levelId);
+    setLockedModalOpen(true);
   };
 
   const handleBack = () => {
@@ -171,12 +181,21 @@ export function IslandAdventureMap() {
                 level={level}
                 position={{ x: position.x, y: position.y }}
                 onClick={handleLevelClick}
+                onLockedClick={handleLockedLevelClick}
                 index={index}
               />
             );
           })}
         </div>
       </div>
+
+      {/* Locked level modal */}
+      <LockedLevelModal
+        isOpen={lockedModalOpen}
+        onClose={() => setLockedModalOpen(false)}
+        levelId={selectedLockedLevel || 0}
+        requiredLevel={currentLevelId}
+      />
     </div>
   );
 }
