@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { categories } from "@/data/categories";
+import {
+  getGuestProgress,
+  saveGuestLevelProgress,
+  clearGuestProgress,
+  hasGuestProgress,
+  GuestLevelProgress,
+} from "./useGuestProgress";
 
 interface LevelProgress {
   level_number: number;
@@ -23,23 +30,92 @@ export function useCategoryProgress() {
   const [progress, setProgress] = useState<Record<string, CategoryProgressData>>({});
   const [loading, setLoading] = useState(true);
 
+  // Transfer guest progress to database when user logs in
+  const transferGuestProgress = useCallback(async (userId: string) => {
+    if (!hasGuestProgress()) return;
+    
+    const guestProgress = getGuestProgress();
+    
+    try {
+      for (const [categoryId, catProgress] of Object.entries(guestProgress)) {
+        for (const level of catProgress.completedLevels) {
+          // Try to upsert each level progress
+          await supabase.from("user_level_progress").upsert(
+            {
+              user_id: userId,
+              category_id: categoryId,
+              level_number: level.level_number,
+              stars_earned: level.stars_earned,
+              score: level.score,
+              total_questions: level.total_questions,
+              completed_at: level.completed_at,
+            },
+            {
+              onConflict: "user_id,category_id,level_number",
+            }
+          );
+        }
+      }
+      
+      // Clear guest progress after successful transfer
+      clearGuestProgress();
+    } catch (err) {
+      console.error("Error transferring guest progress:", err);
+    }
+  }, []);
+
   // Fetch real progress from database
   const fetchProgress = useCallback(async () => {
+    // Initialize progress for all categories
+    const progressByCategory: Record<string, CategoryProgressData> = {};
+    categories.forEach((cat) => {
+      progressByCategory[cat.id] = {
+        categoryId: cat.id,
+        completedLevels: [],
+        currentLevel: 1,
+        totalStars: 0,
+      };
+    });
+
     if (!user) {
-      // Default progress for non-logged-in users - first 3 categories unlocked at level 1
-      const defaultProgress: Record<string, CategoryProgressData> = {};
-      categories.slice(0, 3).forEach((cat) => {
-        defaultProgress[cat.id] = {
-          categoryId: cat.id,
-          completedLevels: [],
-          currentLevel: 1,
-          totalStars: 0,
-        };
+      // Load guest progress from localStorage
+      const guestProgress = getGuestProgress();
+      
+      Object.entries(guestProgress).forEach(([categoryId, catProgress]) => {
+        if (progressByCategory[categoryId]) {
+          progressByCategory[categoryId].completedLevels = catProgress.completedLevels.map(
+            (l: GuestLevelProgress) => ({
+              level_number: l.level_number,
+              stars_earned: l.stars_earned,
+              score: l.score,
+              total_questions: l.total_questions,
+              completed_at: l.completed_at,
+            })
+          );
+          progressByCategory[categoryId].totalStars = catProgress.completedLevels.reduce(
+            (sum: number, l: GuestLevelProgress) => sum + l.stars_earned,
+            0
+          );
+        }
       });
-      setProgress(defaultProgress);
+
+      // Calculate current level for each category
+      Object.values(progressByCategory).forEach((catProgress) => {
+        const completedLevelNumbers = catProgress.completedLevels.map((l) => l.level_number);
+        let nextLevel = 1;
+        while (completedLevelNumbers.includes(nextLevel)) {
+          nextLevel++;
+        }
+        catProgress.currentLevel = nextLevel;
+      });
+
+      setProgress(progressByCategory);
       setLoading(false);
       return;
     }
+
+    // User is logged in - transfer any guest progress first
+    await transferGuestProgress(user.id);
 
     try {
       const { data, error } = await supabase
@@ -53,19 +129,6 @@ export function useCategoryProgress() {
         setLoading(false);
         return;
       }
-
-      // Group progress by category
-      const progressByCategory: Record<string, CategoryProgressData> = {};
-
-      // Initialize all categories
-      categories.forEach((cat) => {
-        progressByCategory[cat.id] = {
-          categoryId: cat.id,
-          completedLevels: [],
-          currentLevel: 1,
-          totalStars: 0,
-        };
-      });
 
       // Populate with actual data
       if (data) {
@@ -100,7 +163,7 @@ export function useCategoryProgress() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, transferGuestProgress]);
 
   useEffect(() => {
     fetchProgress();
@@ -133,7 +196,7 @@ export function useCategoryProgress() {
   }, [user, fetchProgress]);
 
   const getCategoryProgress = (categoryId: string): number => {
-    return progress[categoryId]?.currentLevel || 0;
+    return progress[categoryId]?.currentLevel || 1;
   };
 
   const getLevelStars = (categoryId: string, levelNumber: number): number => {
@@ -170,11 +233,7 @@ export function useCategoryProgress() {
     levelNumber: number,
     score: number,
     totalQuestions: number
-  ): Promise<{ success: boolean; stars: number }> => {
-    if (!user) {
-      return { success: false, stars: 0 };
-    }
-
+  ): Promise<{ success: boolean; stars: number; unlockedLevel?: number }> => {
     // Calculate stars based on score percentage
     const percentage = (score / totalQuestions) * 100;
     let stars = 0;
@@ -182,6 +241,61 @@ export function useCategoryProgress() {
     else if (percentage >= 80) stars = 3;
     else if (percentage >= 60) stars = 2;
     else if (percentage >= 40) stars = 1;
+
+    // Determine if this unlocks a new level
+    const currentMax = progress[categoryId]?.currentLevel || 1;
+    const unlockedLevel = stars >= 1 && levelNumber >= currentMax ? levelNumber + 1 : undefined;
+
+    if (!user) {
+      // Save to localStorage for guests
+      saveGuestLevelProgress(categoryId, levelNumber, score, totalQuestions, stars);
+      
+      // Update local state immediately
+      setProgress((prev) => {
+        const updated = { ...prev };
+        if (!updated[categoryId]) {
+          updated[categoryId] = {
+            categoryId,
+            completedLevels: [],
+            currentLevel: 1,
+            totalStars: 0,
+          };
+        }
+
+        const existingIndex = updated[categoryId].completedLevels.findIndex(
+          (l) => l.level_number === levelNumber
+        );
+
+        const levelData: LevelProgress = {
+          level_number: levelNumber,
+          stars_earned: stars,
+          score,
+          total_questions: totalQuestions,
+          completed_at: new Date().toISOString(),
+        };
+
+        if (existingIndex >= 0) {
+          if (stars > updated[categoryId].completedLevels[existingIndex].stars_earned) {
+            updated[categoryId].completedLevels[existingIndex] = levelData;
+          }
+        } else {
+          updated[categoryId].completedLevels.push(levelData);
+          updated[categoryId].totalStars += stars;
+        }
+
+        // Recalculate current level
+        const completedLevelNumbers = updated[categoryId].completedLevels.map((l) => l.level_number);
+        let nextLevel = 1;
+        while (completedLevelNumbers.includes(nextLevel)) {
+          nextLevel++;
+        }
+        updated[categoryId].currentLevel = nextLevel;
+
+        return updated;
+      });
+
+      return { success: true, stars, unlockedLevel };
+    }
 
     try {
       // Upsert the level progress
@@ -260,7 +374,7 @@ export function useCategoryProgress() {
       // Refetch progress to update UI
       await fetchProgress();
 
-      return { success: true, stars };
+      return { success: true, stars, unlockedLevel };
     } catch (err) {
       console.error("Error in updateLevelProgress:", err);
       return { success: false, stars: 0 };
