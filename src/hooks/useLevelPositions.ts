@@ -9,19 +9,21 @@ export interface LevelPosition {
 
 // Default positions matching the winding S-curve path on the island
 const DEFAULT_POSITIONS: LevelPosition[] = [
-  { id: 1, x: 22, y: 90 },
-  { id: 2, x: 45, y: 86 },
-  { id: 3, x: 68, y: 80 },
-  { id: 4, x: 78, y: 70 },
-  { id: 5, x: 65, y: 60 },
-  { id: 6, x: 42, y: 54 },
-  { id: 7, x: 22, y: 48 },
-  { id: 8, x: 28, y: 38 },
-  { id: 9, x: 50, y: 32 },
-  { id: 10, x: 72, y: 26 },
-  { id: 11, x: 75, y: 16 },
-  { id: 12, x: 55, y: 10 },
-  { id: 13, x: 35, y: 5 },
+  { id: 1, x: 22, y: 92 },
+  { id: 2, x: 45, y: 88 },
+  { id: 3, x: 68, y: 82 },
+  { id: 4, x: 78, y: 72 },
+  { id: 5, x: 65, y: 62 },
+  { id: 6, x: 42, y: 56 },
+  { id: 7, x: 22, y: 50 },
+  { id: 8, x: 28, y: 42 },
+  { id: 9, x: 50, y: 36 },
+  { id: 10, x: 72, y: 30 },
+  { id: 11, x: 75, y: 22 },
+  { id: 12, x: 55, y: 16 },
+  { id: 13, x: 35, y: 11 },
+  { id: 14, x: 50, y: 6 },
+  { id: 15, x: 70, y: 2 },
 ];
 
 export function useLevelPositions() {
