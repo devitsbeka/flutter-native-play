@@ -209,6 +209,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_spins: {
+        Row: {
+          created_at: string
+          id: string
+          max_spins: number
+          spin_date: string
+          spins_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_spins?: number
+          spin_date?: string
+          spins_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_spins?: number
+          spin_date?: string
+          spins_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_level_progress: {
         Row: {
           category_id: string
@@ -244,6 +274,81 @@ export type Database = {
           stars_earned?: number
           total_questions?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_missions: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          current_progress: number
+          id: string
+          mission_date: string
+          mission_description: string | null
+          mission_id: string
+          mission_title: string
+          reward_xp: number
+          target_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          mission_date?: string
+          mission_description?: string | null
+          mission_id: string
+          mission_title: string
+          reward_xp?: number
+          target_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          mission_date?: string
+          mission_description?: string | null
+          mission_id?: string
+          mission_title?: string
+          reward_xp?: number
+          target_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rewards: {
+        Row: {
+          claimed_at: string
+          created_at: string
+          id: string
+          reward_type: string
+          reward_value: Json
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          created_at?: string
+          id?: string
+          reward_type: string
+          reward_value?: Json
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          created_at?: string
+          id?: string
+          reward_type?: string
+          reward_value?: Json
           user_id?: string
         }
         Relationships: []
