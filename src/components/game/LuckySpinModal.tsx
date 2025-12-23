@@ -1,6 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, VolumeX } from "lucide-react";
+import { useRewards } from "@/hooks/useRewards";
+import { toast } from "sonner";
 
 interface LuckySpinModalProps {
   isOpen: boolean;
@@ -21,15 +23,24 @@ const WHEEL_SEGMENTS = [
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
 
 export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
+  const { dailySpinInfo, loading, recordSpinReward, refreshSpinInfo } = useRewards();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
-  const [hasSpun, setHasSpun] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const spinWheel = () => {
-    if (isSpinning || hasSpun) return;
+  // Refresh spin info when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      refreshSpinInfo();
+    }
+  }, [isOpen, refreshSpinInfo]);
+
+  const canSpin = dailySpinInfo.canSpin && !isSpinning && !result;
+
+  const spinWheel = async () => {
+    if (!canSpin) return;
 
     setIsSpinning(true);
     setResult(null);
@@ -43,19 +54,29 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
     setRotation(newRotation);
 
     // Calculate result after animation
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsSpinning(false);
-      setHasSpun(true);
       // The winning segment is opposite to where the pointer is
       const winningIndex = (WHEEL_SEGMENTS.length - randomSegment) % WHEEL_SEGMENTS.length;
-      setResult(WHEEL_SEGMENTS[winningIndex]);
+      const wonSegment = WHEEL_SEGMENTS[winningIndex];
+      setResult(wonSegment);
+
+      // Record the reward to database
+      const success = await recordSpinReward({
+        label: wonSegment.label,
+        value: wonSegment.value,
+        type: wonSegment.type,
+      });
+
+      if (success) {
+        toast.success(`მიღებულია ${wonSegment.label}! 🎉`);
+      }
     }, 4000);
   };
 
   const handleClose = () => {
     setRotation(0);
     setResult(null);
-    setHasSpun(false);
     setIsSpinning(false);
     onClose();
   };
@@ -189,17 +210,17 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <motion.button
                       onClick={spinWheel}
-                      disabled={isSpinning || hasSpun}
+                      disabled={!canSpin}
                       className="relative w-20 h-20 rounded-full flex items-center justify-center disabled:opacity-70"
                       style={{
                         background: "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 90%) 100%)",
                         boxShadow: "0 4px 0 hsl(0 0% 70%), 0 6px 20px hsl(0 0% 0% / 0.3)",
                       }}
-                      whileHover={{ scale: isSpinning || hasSpun ? 1 : 1.05 }}
-                      whileTap={{ scale: isSpinning || hasSpun ? 1 : 0.95 }}
+                      whileHover={{ scale: canSpin ? 1.05 : 1 }}
+                      whileTap={{ scale: canSpin ? 0.95 : 1 }}
                     >
                       <span className="font-display font-bold text-lg" style={{ color: "hsl(25 85% 50%)" }}>
-                        {isSpinning ? "..." : hasSpun ? "✓" : "SPIN"}
+                        {isSpinning ? "..." : result ? "✓" : "SPIN"}
                       </span>
                     </motion.button>
                   </div>
@@ -279,7 +300,11 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
             {!result && (
               <div className="mt-4 text-center">
                 <span className="text-white/70 text-sm">
-                  {hasSpun ? "Come back tomorrow for more spins!" : "1 free spin available"}
+                  {loading ? "იტვირთება..." : 
+                    dailySpinInfo.canSpin 
+                      ? `${dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed} უფასო სპინი დარჩა`
+                      : "ხვალ დაბრუნდი მეტი სპინებისთვის!"
+                  }
                 </span>
               </div>
             )}
