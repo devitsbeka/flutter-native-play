@@ -71,6 +71,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-react-aria-components": "^2.0.1",
     "three": "^0.160.1",
+    "vanta": "^0.5.24",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },
