@@ -11,6 +11,7 @@ import { LevelBadge } from "@/components/home/LevelBadge";
 import { StreakModal } from "@/components/home/StreakModal";
 import { PointsModal } from "@/components/home/PointsModal";
 import { GuestProgressBanner } from "@/components/home/GuestProgressBanner";
+import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +23,7 @@ type ContentTab = "featured" | "classic" | "fun" | "educational";
 
 export default function Index() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, fetchProfile, user } = useAuth();
   const { getCategoryProgress, isCategoryUnlocked } = useCategoryProgress();
   const [activeTab, setActiveTab] = useState<ContentTab>("featured");
   const [isSpinModalOpen, setIsSpinModalOpen] = useState(false);
@@ -30,6 +31,12 @@ export default function Index() {
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [isPointsModalOpen, setIsPointsModalOpen] = useState(false);
+  const [displayPoints, setDisplayPoints] = useState(profile?.total_points || 0);
+
+  // Sync display points with profile
+  useEffect(() => {
+    setDisplayPoints(profile?.total_points || 0);
+  }, [profile?.total_points]);
 
   // Calculate chest progress from games won (cycles every 3 wins)
   const gamesWon = profile?.games_won || 0;
@@ -48,10 +55,21 @@ export default function Index() {
     }
   }, [canClaimChest, gamesWon]);
 
-  const handleClaimChest = () => {
+  const handleClaimChest = (newPoints?: number) => {
     // Mark this chest as claimed
     localStorage.setItem(`chest_claimed_${Math.floor(gamesWon / 3)}`, "true");
     setIsChestModalOpen(false);
+    
+    // Animate the points update
+    if (newPoints !== undefined) {
+      setDisplayPoints(newPoints);
+    }
+    
+    // Refresh profile to get latest data
+    if (user) {
+      fetchProfile(user.id);
+    }
+    
     toast.success("ჯილდოები მიღებულია! 🎉");
   };
 
@@ -129,7 +147,7 @@ export default function Index() {
                   className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors"
                 >
                   <span className="text-amber-400">👑</span>
-                  <span className="font-bold text-slate-700 text-sm">{profile?.total_points || 0}</span>
+                  <AnimatedCounter value={displayPoints} className="font-bold text-slate-700 text-sm" />
                 </button>
               </div>
             </div>

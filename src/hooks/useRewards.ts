@@ -113,8 +113,8 @@ export function useRewards() {
     }
   };
 
-  const recordChestReward = async (rewards: { type: string; value: number; label: string }[]): Promise<boolean> => {
-    if (!user) return false;
+  const recordChestReward = async (rewards: { type: string; value: number; label: string }[]): Promise<{ success: boolean; newPoints?: number }> => {
+    if (!user) return { success: false };
 
     try {
       // Record the chest reward
@@ -126,15 +126,18 @@ export function useRewards() {
 
       // Calculate total XP from rewards
       const xpReward = rewards.find(r => r.type === "xp");
+      let newPoints: number | undefined;
+      
       if (xpReward) {
         const currentPoints = profile?.total_points || 0;
-        await updateProfile({ total_points: currentPoints + xpReward.value });
+        newPoints = currentPoints + xpReward.value;
+        await updateProfile({ total_points: newPoints });
       }
 
-      return true;
+      return { success: true, newPoints };
     } catch (error) {
       console.error("Error recording chest reward:", error);
-      return false;
+      return { success: false };
     }
   };
 

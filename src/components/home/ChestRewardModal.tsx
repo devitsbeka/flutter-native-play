@@ -9,7 +9,7 @@ import { toast } from "sonner";
 interface ChestRewardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onClaim: () => void;
+  onClaim: (newPoints?: number) => void;
 }
 
 const rewards = [
@@ -46,16 +46,16 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     });
 
     // Persist rewards to database
-    const success = await recordChestReward(
+    const result = await recordChestReward(
       rewards.map(r => ({ type: r.type, value: r.value, label: r.label }))
     );
 
-    if (success) {
+    if (result.success) {
       toast.success("ჯილდოები მიღებულია! 🎉");
     }
 
     setIsClaiming(false);
-    onClaim();
+    onClaim(result.newPoints);
   };
 
   return (
