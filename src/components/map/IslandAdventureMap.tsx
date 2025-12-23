@@ -308,12 +308,12 @@ export function IslandAdventureMap() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => setIsMenuOpen(true)}
+              onClick={handleBack}
               className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
             >
-              <Menu className="h-5 w-5 text-slate-600" />
+              <ArrowLeft className="h-5 w-5 text-slate-600" />
             </button>
-            <button 
+            <button
               onClick={() => navigate("/profile")}
               className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm overflow-hidden"
             >
