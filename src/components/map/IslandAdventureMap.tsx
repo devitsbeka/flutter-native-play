@@ -1,3 +1,4 @@
+// Island Adventure Map with animated birds
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
