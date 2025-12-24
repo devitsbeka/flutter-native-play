@@ -1,8 +1,7 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Trophy } from "lucide-react";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { CompletedLevelModal } from "./CompletedLevelModal";
@@ -13,8 +12,6 @@ import { Avatar } from "@/components/shared/Avatar";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import SVGClouds from "./SVGClouds";
-import BIRDS from "vanta/dist/vanta.birds.min";
-import * as THREE from "three";
 
 import islandBackground from "@/assets/map/island-background.svg";
 
@@ -23,11 +20,37 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 1.3;
 const DEFAULT_ZOOM = 1;
 
+// Simple animated bird component
+const AnimatedBird = ({ delay, startX, startY, duration }: { delay: number; startX: number; startY: number; duration: number }) => (
+  <motion.svg
+    className="absolute w-6 h-6 opacity-70 pointer-events-none"
+    viewBox="0 0 24 24"
+    initial={{ x: `${startX}vw`, y: `${startY}vh` }}
+    animate={{ 
+      x: [`${startX}vw`, `${startX + 80}vw`],
+      y: [`${startY}vh`, `${startY - 10}vh`, `${startY - 5}vh`, `${startY - 15}vh`]
+    }}
+    transition={{ 
+      duration, 
+      delay, 
+      repeat: Infinity, 
+      ease: "linear",
+      times: [0, 0.3, 0.6, 1]
+    }}
+  >
+    <motion.path
+      d="M12 8 L6 12 L12 10 L18 12 Z"
+      fill="currentColor"
+      className="text-slate-800"
+      animate={{ d: ["M12 8 L6 12 L12 10 L18 12 Z", "M12 10 L6 8 L12 10 L18 8 Z", "M12 8 L6 12 L12 10 L18 12 Z"] }}
+      transition={{ duration: 0.3, repeat: Infinity }}
+    />
+  </motion.svg>
+);
+
 export function IslandAdventureMap() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
-  const vantaRef = useRef<HTMLDivElement>(null);
-  const vantaEffect = useRef<ReturnType<typeof BIRDS> | null>(null);
   const { progress, loading: progressLoading, getLevelStats } = useCategoryProgress();
   const { positions: levelPositions, loading: positionsLoading } = useLevelPositions();
   const { profile } = useAuth();
@@ -38,37 +61,6 @@ export function IslandAdventureMap() {
   // Zoom state
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const lastTouchDistance = useRef<number | null>(null);
-
-  // Initialize Vanta Birds effect
-  useEffect(() => {
-    if (!vantaEffect.current && vantaRef.current) {
-      vantaEffect.current = BIRDS({
-        el: vantaRef.current,
-        THREE: THREE,
-        mouseControls: false,
-        touchControls: false,
-        gyroControls: false,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        scale: 1.00,
-        scaleMobile: 1.00,
-        color1: 0xffffff,
-        color2: 0x000000,
-        colorMode: "lerp",
-        backgroundColor: 0x000000,
-        backgroundAlpha: 0, // Transparent background
-        separation: 84.00,
-        alignment: 59.00,
-        quantity: 3.00,
-      });
-    }
-    return () => {
-      if (vantaEffect.current) {
-        vantaEffect.current.destroy();
-        vantaEffect.current = null;
-      }
-    };
-  }, []);
 
   // Calculate levels from progress data
   const levels = useMemo<LevelState[]>(() => {
@@ -258,11 +250,12 @@ export function IslandAdventureMap() {
       {/* SVG Clouds overlay - between sky and map */}
       <SVGClouds className="z-[15]" />
 
-      {/* Vanta Birds overlay - on top of everything */}
-      <div 
-        ref={vantaRef} 
-        className="absolute inset-0 z-20 pointer-events-none"
-      />
+      {/* Animated Birds overlay - on top of everything */}
+      <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+        <AnimatedBird delay={0} startX={-10} startY={15} duration={20} />
+        <AnimatedBird delay={3} startX={-5} startY={25} duration={25} />
+        <AnimatedBird delay={6} startX={-15} startY={10} duration={22} />
+      </div>
 
       {/* CSS Animated Clouds - bottom 20% */}
       <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none overflow-hidden" style={{ height: '20%' }}>
