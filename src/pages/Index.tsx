@@ -323,10 +323,10 @@ export default function Index() {
           </div>
         </header>
 
-        {/* ===== CENTER: AVATAR WITH GRADIENT RING & ARC BADGES ===== */}
+        {/* ===== CENTER: AVATAR WITH ARC BADGES ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <motion.div 
-            className="flex flex-col items-center w-full"
+            className="flex flex-col items-center w-full max-w-[280px]"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
@@ -334,7 +334,7 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar container with gradient ring */}
+            {/* Avatar container - simple transparent PNG display */}
             <motion.div 
               className="relative"
               animate={isRefreshing ? {
@@ -357,18 +357,18 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Power badges in arc formation ABOVE avatar */}
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+              {/* Power badges in arc formation ON TOP of avatar */}
+              <div className="absolute inset-0 z-30 pointer-events-auto">
                 {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
-                  // Arc positioning - 5 badges spread across ~140 degrees
+                  // Arc positioning - 5 badges spread across ~160 degrees
                   const totalBadges = 5;
-                  const arcSpan = 140; // degrees
-                  const startAngle = -70; // start from left
+                  const arcSpan = 160; // degrees
+                  const startAngle = -80; // start from left
                   const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                  const radius = 140; // distance from center
+                  const radius = 90; // smaller radius to be closer
                   const radians = (angle * Math.PI) / 180;
                   const x = Math.sin(radians) * radius;
-                  const y = -Math.cos(radians) * radius + 20; // offset to position above
+                  const y = -Math.cos(radians) * radius - 40; // position above avatar top
                   
                   return (
                     <motion.div
@@ -380,8 +380,8 @@ export default function Index() {
                       style={{ 
                         left: "50%", 
                         top: "50%",
-                        marginLeft: -20, // half of badge width
-                        marginTop: -20,
+                        marginLeft: -16,
+                        marginTop: -16,
                       }}
                     >
                       <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
@@ -390,65 +390,34 @@ export default function Index() {
                 })}
               </div>
 
-              {/* Gradient border ring - outer container with thick border */}
-              <div 
-                className="relative rounded-full"
-                style={{
-                  width: 300,
-                  height: 300,
-                  padding: 16, // thick border
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #E8D5FF 30%, #C8A1FF 70%, #9C6ADE 100%)",
-                  boxShadow: "0 12px 40px rgba(156, 106, 222, 0.4), 0 6px 20px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.8)",
-                }}
-              >
-                {/* Inner container for avatar */}
+              {/* Avatar image - just transparent PNG, no stroke */}
+              <div className="w-52 h-52 relative">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Avatar" 
+                    className="w-full h-full object-contain"
+                    style={{
+                      backfaceVisibility: "hidden",
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-7xl">🎮</span>
+                  </div>
+                )}
+                
+                {/* Bottom fade mask overlay */}
                 <div 
-                  className="w-full h-full rounded-full overflow-hidden relative"
+                  className="absolute inset-0 pointer-events-none"
                   style={{
-                    background: "radial-gradient(circle at 30% 30%, rgba(220,200,240,0.4) 0%, rgba(180,160,200,0.2) 100%)",
-                    boxShadow: "inset 0 4px 20px rgba(0,0,0,0.1)",
+                    background: "linear-gradient(to top, rgba(200,180,220,0.9) 0%, transparent 40%)",
                   }}
-                >
-                  {/* Cyan/teal glow effect */}
-                  <motion.div 
-                    className="absolute inset-0 rounded-full pointer-events-none z-10"
-                    style={{
-                      boxShadow: "inset 0 0 60px rgba(0, 200, 255, 0.25), inset 0 0 30px rgba(100, 220, 255, 0.15)",
-                    }}
-                    animate={{
-                      opacity: [0.6, 1, 0.6],
-                    }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  
-                  {/* Avatar image */}
-                  {profile?.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover"
-                      style={{
-                        backfaceVisibility: "hidden",
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
-                      <span className="text-7xl">🎮</span>
-                    </div>
-                  )}
-                  
-                  {/* Bottom fade mask overlay */}
-                  <div 
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: "linear-gradient(to top, rgba(200,180,220,0.9) 0%, transparent 30%)",
-                    }}
-                  />
-                </div>
+                />
               </div>
-              
-              {/* Level & XP bar - positioned below avatar ring */}
-              <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+            
+              {/* Level & XP bar - positioned below avatar */}
+              <div className="mt-4 z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
