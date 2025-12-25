@@ -357,8 +357,13 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image - just transparent PNG, no effects */}
-              <div className="w-64 h-64 relative">
+              {/* Avatar image with circular purple stroke */}
+              <div 
+                className="w-64 h-64 relative rounded-full"
+                style={{
+                  border: "1px solid #9C6ADE",
+                }}
+              >
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -366,7 +371,6 @@ export default function Index() {
                     className="w-full h-full object-contain"
                     style={{
                       backfaceVisibility: "hidden",
-                      filter: "drop-shadow(0 0 0 #9C6ADE) drop-shadow(1px 0 0 #9C6ADE) drop-shadow(-1px 0 0 #9C6ADE) drop-shadow(0 1px 0 #9C6ADE) drop-shadow(0 -1px 0 #9C6ADE)",
                     }}
                   />
                 ) : (
