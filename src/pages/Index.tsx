@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingBag, Zap, Map, Trophy, User, Play, Compass, Flame, Star, Diamond } from "lucide-react";
+import { ShoppingBag, Zap, Map, Trophy, Play, Flame, Star, Diamond } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateLevel } from "@/utils/levelCalculation";
+import iconCompass from "@/assets/icons/icon-compass.png";
+import iconProfile from "@/assets/icons/icon-profile.png";
 
 // Theme colors
 const theme = {
@@ -144,34 +146,24 @@ const SparkleParticle = ({ index, total }: { index: number; total: number }) => 
   );
 };
 
-// Bottom nav item - centered design
+// Bottom nav item - using image icons
 const NavItem = ({ 
-  icon: Icon, 
+  iconSrc, 
   label, 
   onClick, 
 }: { 
-  icon: React.ElementType; 
+  iconSrc: string; 
   label: string; 
   onClick?: () => void;
 }) => (
   <motion.button
     onClick={onClick}
-    className="flex flex-col items-center gap-1 py-2 px-5"
+    className="flex flex-col items-center gap-0.5 py-1"
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.92 }}
   >
-    <motion.div
-      className="w-10 h-10 rounded-xl flex items-center justify-center"
-      style={{
-        background: "linear-gradient(180deg, rgba(156,106,222,0.08) 0%, rgba(156,106,222,0.04) 100%)",
-      }}
-      whileHover={{
-        background: "linear-gradient(180deg, rgba(156,106,222,0.15) 0%, rgba(156,106,222,0.08) 100%)",
-      }}
-    >
-      <Icon className="w-5 h-5 text-gray-500" strokeWidth={1.8} />
-    </motion.div>
-    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+    <img src={iconSrc} alt={label} className="w-9 h-9 object-contain" />
+    <span className="text-[9px] uppercase tracking-wider text-gray-500 font-semibold">
       {label}
     </span>
   </motion.button>
@@ -462,14 +454,14 @@ export default function Index() {
         {/* ===== BOTTOM NAVIGATION ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="px-4 pb-4 pt-14"
+            className="px-4 pb-3 pt-12"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             {/* Nav bar container */}
             <div 
-              className="relative rounded-[28px] py-3 px-4"
+              className="relative rounded-[24px] py-2 px-6"
               style={{
                 background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,0.95) 100%)",
                 boxShadow: "0 -2px 20px rgba(156,106,222,0.08), 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)",
@@ -485,23 +477,23 @@ export default function Index() {
               />
               
               {/* Nav items - flex with centered items */}
-              <div className="flex items-center justify-center gap-4">
-                {/* Left item - positioned to center in left half */}
-                <div className="flex-1 flex justify-center pr-10">
-                  <NavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+              <div className="flex items-center justify-between">
+                {/* Left item */}
+                <div className="flex-1 flex justify-center">
+                  <NavItem iconSrc={iconCompass} label="Explore" onClick={() => navigate("/discover")} />
                 </div>
                 
                 {/* Spacer for play button */}
-                <div className="w-24" />
+                <div className="w-20" />
                 
-                {/* Right item - positioned to center in right half */}
-                <div className="flex-1 flex justify-center pl-10">
-                  <NavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
+                {/* Right item */}
+                <div className="flex-1 flex justify-center">
+                  <NavItem iconSrc={iconProfile} label="Profile" onClick={() => navigate("/profile")} />
                 </div>
               </div>
               
               {/* CENTER PLAY BUTTON */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-12">
+              <div className="absolute left-1/2 -translate-x-1/2 -top-10">
                 <PlayButton3D onClick={() => navigate("/game")} />
               </div>
             </div>
