@@ -277,15 +277,25 @@ export default function Index() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
           >
-            {/* Level Indicator - Above Avatar */}
+            {/* Avatar with level badge on top */}
             <motion.div 
-              className="mb-4 flex flex-col items-center pointer-events-auto"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              className="relative"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
-              {/* Level Badge with glow */}
-              <div className="relative">
+              {/* Shadow underneath */}
+              <div 
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-8 rounded-[50%] bg-black/30 blur-md"
+                style={{ transform: "translateX(-50%) translateY(20px)" }}
+              />
+              
+              {/* Level Badge - positioned on TOP of avatar */}
+              <motion.div 
+                className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto"
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
                 {/* Outer glow */}
                 <motion.div 
                   className="absolute inset-0 rounded-full blur-xl"
@@ -296,7 +306,7 @@ export default function Index() {
                 
                 {/* Gold ring */}
                 <div 
-                  className="relative w-16 h-16 rounded-full p-[3px]"
+                  className="relative w-14 h-14 rounded-full p-[3px]"
                   style={{
                     background: "linear-gradient(180deg, #FFE066 0%, #FFD700 30%, #B8860B 70%, #8B4513 100%)",
                     boxShadow: "0 4px 0 #5a3000, 0 6px 20px rgba(255,150,50,0.6)",
@@ -310,7 +320,7 @@ export default function Index() {
                     }}
                   >
                     <span 
-                      className="text-xl font-black"
+                      className="text-lg font-black"
                       style={{ 
                         color: "#FFE55C",
                         textShadow: "0 0 12px rgba(255,200,50,1), 0 2px 4px rgba(0,0,0,0.5)"
@@ -320,11 +330,34 @@ export default function Index() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
               
+              {/* Circular Avatar Image */}
+              <div className="w-44 h-44 sm:w-56 sm:h-56 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Your character" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                    <span className="text-7xl">🎮</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+            
+            {/* XP Progress bar - Below Avatar */}
+            <motion.div 
+              className="mt-6 flex flex-col items-center pointer-events-auto"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               {/* Level label */}
               <span 
-                className="mt-2 text-sm font-bold uppercase tracking-widest"
+                className="text-sm font-bold uppercase tracking-widest mb-2"
                 style={{ 
                   color: "#FFE55C",
                   textShadow: "0 0 10px rgba(255,200,50,0.8), 0 2px 4px rgba(0,0,0,0.8)"
@@ -334,7 +367,7 @@ export default function Index() {
               </span>
               
               {/* XP Progress bar */}
-              <div className="mt-2 w-36">
+              <div className="w-40">
                 <div 
                   className="h-2.5 rounded-full overflow-hidden border border-white/10"
                   style={{ background: "rgba(0,0,0,0.5)" }}
@@ -351,7 +384,7 @@ export default function Index() {
                   />
                 </div>
                 <p 
-                  className="text-center text-xs mt-1 font-medium"
+                  className="text-center text-xs mt-1.5 font-medium"
                   style={{ 
                     color: "rgba(255,255,255,0.8)",
                     textShadow: "0 1px 3px rgba(0,0,0,0.8)"
@@ -359,34 +392,6 @@ export default function Index() {
                 >
                   {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                 </p>
-              </div>
-            </motion.div>
-            
-            {/* Large Avatar Display */}
-            <motion.div 
-              className="relative"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              {/* Shadow underneath */}
-              <div 
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-8 rounded-[50%] bg-black/30 blur-md"
-                style={{ transform: "translateX(-50%) translateY(20px)" }}
-              />
-              
-              {/* Avatar Image */}
-              <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl">
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="Your character" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                    <span className="text-8xl">🎮</span>
-                  </div>
-                )}
               </div>
             </motion.div>
           </motion.div>
