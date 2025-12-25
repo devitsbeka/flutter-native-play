@@ -173,13 +173,6 @@ const PlayButton3D = ({ onClick }: { onClick: () => void }) => {
             boxShadow: "inset 0 -4px 8px rgba(0,0,0,0.15), inset 0 4px 8px rgba(255,255,255,0.25)",
           }}
         >
-          {/* Inner highlight arc */}
-          <div 
-            className="absolute top-1 left-2 right-2 h-6 rounded-full"
-            style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)",
-            }}
-          />
           
           {/* Play icon container */}
           <div className="absolute inset-0 flex items-center justify-center">
