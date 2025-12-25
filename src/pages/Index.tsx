@@ -361,7 +361,7 @@ export default function Index() {
               <div 
                 className="w-64 h-64 relative rounded-full flex items-center justify-center"
                 style={{
-                  border: "1px solid #9C6ADE",
+                  border: "1px solid rgba(255,255,255,0.9)",
                   padding: 4,
                 }}
               >
@@ -369,7 +369,7 @@ export default function Index() {
                 <div 
                   className="w-full h-full rounded-full flex items-center justify-center"
                   style={{
-                    border: "30px solid rgba(255,255,255,0.85)",
+                    border: "41px solid rgba(255,255,255,0.85)",
                     boxShadow: "inset 0 4px 12px rgba(0,0,0,0.05)",
                   }}
                 >
