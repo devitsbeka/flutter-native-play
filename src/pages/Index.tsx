@@ -433,38 +433,56 @@ export default function Index() {
                       }}
                       key={levelInfo.xpInCurrentLevel} // triggers animation on XP change
                     >
-                      {/* Progress fill - chunky colored bar with 3D effect */}
-                      <motion.div 
-                        className="absolute inset-y-1 left-1 rounded-xl"
-                        style={{
-                          background: `linear-gradient(180deg, #A855F7 0%, #8B5CF6 40%, #7C3AED 100%)`,
-                          boxShadow: "inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 8px rgba(139,92,246,0.5)",
-                        }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `calc(${levelInfo.progress}% - 4px)` }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      />
+                      {/* Empty state placeholder - dotted outline */}
+                      {levelInfo.progress === 0 && (
+                        <div 
+                          className="absolute inset-y-1 left-1 right-1 rounded-xl"
+                          style={{
+                            border: "2px dashed rgba(180,160,200,0.5)",
+                            background: "rgba(200,180,220,0.1)",
+                          }}
+                        />
+                      )}
                       
-                      {/* Dark text layer - visible on white bg */}
+                      {/* Progress fill - chunky colored bar with 3D effect */}
+                      {levelInfo.progress > 0 && (
+                        <motion.div 
+                          className="absolute inset-y-1 left-1 rounded-xl"
+                          style={{
+                            background: `linear-gradient(180deg, #A855F7 0%, #8B5CF6 40%, #7C3AED 100%)`,
+                            boxShadow: "inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 8px rgba(139,92,246,0.5)",
+                          }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `calc(${levelInfo.progress}% - 4px)` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        />
+                      )}
+                      
+                      {/* Text overlay */}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
                         <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
                         <span className="text-sm font-bold text-gray-700">
-                          Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
+                          {levelInfo.progress === 0 
+                            ? "Play to earn XP! ✨" 
+                            : `Level ${levelInfo.level} (${levelInfo.xpInCurrentLevel} XP) / ${levelInfo.xpNeededForNextLevel} XP`
+                          }
                         </span>
                       </div>
                       
-                      {/* White text layer - clipped to progress fill */}
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none"
-                        style={{
-                          clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)`,
-                        }}
-                      >
-                        <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
-                        <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                          Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
-                        </span>
-                      </div>
+                      {/* White text layer - clipped to progress fill (only when has progress) */}
+                      {levelInfo.progress > 0 && (
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none"
+                          style={{
+                            clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)`,
+                          }}
+                        >
+                          <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
+                          <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+                            Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
+                          </span>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </motion.div>
