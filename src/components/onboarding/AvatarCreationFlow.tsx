@@ -524,31 +524,110 @@ export function AvatarCreationFlow() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-col items-center py-8"
                 >
-                  {/* Animated avatar preview with shimmer */}
+                  {/* Optimistic UI - Blurred rotating original image */}
                   <div className="relative mb-8">
-                    <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary/30">
-                      <div className="relative w-full h-full">
-                        <img
-                          src={uploadedImage || ""}
-                          alt="Processing"
-                          className="w-full h-full object-cover opacity-70"
-                        />
-                        <ShimmerOverlay />
-                      </div>
-                    </div>
+                    {/* Main blurred container with rotation */}
+                    <motion.div
+                      className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary/30 relative"
+                      animate={{ 
+                        rotate: [0, 5, -5, 0],
+                        scale: [1, 1.02, 0.98, 1],
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                    >
+                      {/* Heavily blurred original image */}
+                      <motion.img
+                        src={uploadedImage || ""}
+                        alt="Processing"
+                        className="w-full h-full object-cover"
+                        style={{ filter: "blur(100px)" }}
+                        animate={{
+                          scale: [1.2, 1.4, 1.2],
+                        }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                      
+                      {/* Color overlay for dreamy effect */}
+                      <motion.div
+                        className="absolute inset-0"
+                        style={{
+                          background: "radial-gradient(circle, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.2) 100%)",
+                        }}
+                        animate={{
+                          opacity: [0.5, 0.8, 0.5],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </motion.div>
                     
-                    {/* Orbiting sparkles */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <LoadingSparkle key={i} index={i} />
-                      ))}
-                    </div>
+                    {/* Hourglass icon with micro animation */}
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring" }}
+                    >
+                      <motion.div
+                        className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                        animate={{
+                          y: [0, -4, 0],
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <motion.span
+                          className="text-2xl"
+                          animate={{
+                            rotate: [0, 180],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          ⏳
+                        </motion.span>
+                      </motion.div>
+                    </motion.div>
                     
                     {/* Spinning ring */}
                     <motion.div
-                      className="absolute inset-[-8px] rounded-full border-4 border-transparent border-t-primary"
+                      className="absolute inset-[-8px] rounded-full border-4 border-transparent border-t-primary border-r-primary/50"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    />
+                    
+                    {/* Outer glow pulse */}
+                    <motion.div
+                      className="absolute inset-[-16px] rounded-full"
+                      style={{
+                        background: "radial-gradient(circle, rgba(168,85,247,0.2) 0%, transparent 70%)",
+                      }}
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.5, 0.8, 0.5],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
                     />
                   </div>
                   
