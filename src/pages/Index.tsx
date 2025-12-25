@@ -285,11 +285,13 @@ export default function Index() {
                 {/* Home */}
                 <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
                 
-                {/* Explore */}
-                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+                {/* Explore - with extra spacing from center */}
+                <div className="mr-4">
+                  <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+                </div>
                 
                 {/* CENTER PLAY BUTTON */}
-                <div className="flex flex-col items-center -mt-12 relative">
+                <div className="flex flex-col items-center -mt-12 relative mx-2">
                   {/* Outermost decorative ring */}
                   <div 
                     className="absolute top-0 w-28 h-28 rounded-full"
@@ -413,8 +415,10 @@ export default function Index() {
                   </span>
                 </div>
                 
-                {/* Rank */}
-                <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
+                {/* Rank - with extra spacing from center */}
+                <div className="ml-4">
+                  <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
+                </div>
                 
                 {/* Profile */}
                 <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
