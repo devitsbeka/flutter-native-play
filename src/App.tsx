@@ -5,6 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { SplinePreloader } from "@/components/game/SplinePreloader";
+import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import CategoryQuizPage from "./pages/CategoryQuizPage";
@@ -25,6 +26,10 @@ const App = () => (
       <TooltipProvider>
         {/* Preload Spline animations in background */}
         <SplinePreloader />
+        
+        {/* Global persistent Spline background - never unmounts */}
+        <GlobalSplineBackground />
+        
         <Toaster />
         <Sonner />
         <Routes>
