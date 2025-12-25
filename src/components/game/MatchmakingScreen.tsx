@@ -7,6 +7,7 @@ import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PlayerInfoBadge } from "@/components/game/PlayerInfoBadge";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { t } from "@/lib/i18n";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -181,7 +182,7 @@ export function MatchmakingScreen() {
           {/* Player info badge - EXACT same margin as VSScreen */}
           <div className="-mt-4 z-10">
             <PlayerInfoBadge
-              name="You"
+              name={t("game.you")}
               flag={getCountryFlag(profile?.country_code || "US")}
               points={playerPoints}
               delay={0}
@@ -228,7 +229,7 @@ export function MatchmakingScreen() {
                 >
                   <span className="text-lg">{currentFlag}</span>
                   <span className="text-white/80 font-medium text-sm tracking-wide">
-                    {slotPhase === "slowing" ? "Almost there..." : "Searching..."}
+                    {slotPhase === "slowing" ? t("game.almostThere") : t("game.searching")}
                   </span>
                 </motion.div>
               )}
@@ -326,7 +327,7 @@ export function MatchmakingScreen() {
                 transition={{ type: "spring", stiffness: 300 }}
                 className="text-2xl font-bold text-emerald-400 tracking-wider"
               >
-                MATCH FOUND!
+                {t("game.matchFound")}
               </motion.p>
             ) : (
               <motion.p
@@ -335,7 +336,7 @@ export function MatchmakingScreen() {
                 animate={{ opacity: 1 }}
                 className="text-lg text-white/70 tracking-wide"
               >
-                Finding opponent
+                {t("game.findingOpponent")}
                 <motion.span
                   animate={{ opacity: [1, 0.3, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}

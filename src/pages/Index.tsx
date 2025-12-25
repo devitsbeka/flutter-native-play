@@ -321,14 +321,19 @@ export default function Index() {
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
           <div className="flex items-center justify-between">
-            {/* Burger menu button */}
+            {/* Burger menu chip - same style as currency */}
             <motion.button
-              className="text-3xl"
-              whileHover={{ scale: 1.1, rotate: 10 }}
-              whileTap={{ scale: 0.9 }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.95)",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsSideMenuOpen(true)}
             >
-              🍔
+              <span className="text-xl">🍔</span>
+              <span className="text-sm font-bold text-gray-800">{t("nav.menu")}</span>
             </motion.button>
             
             {/* Combined currency chip */}
@@ -458,8 +463,8 @@ export default function Index() {
                 })}
               </div>
             
-              {/* Level & XP bar - positioned directly below avatar, no gap */}
-              <div className="-mt-8 z-20 pointer-events-auto">
+              {/* Level & XP bar - positioned at bottom of avatar */}
+              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -514,8 +519,8 @@ export default function Index() {
                         <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
                         <span className="text-sm font-bold text-gray-700">
                           {levelInfo.progress === 0 
-                            ? "Play to earn XP! ✨" 
-                            : `Level ${levelInfo.level} (${levelInfo.xpInCurrentLevel} XP) / ${levelInfo.xpNeededForNextLevel} XP`
+                            ? t("game.playToEarn")
+                            : t("game.levelProgress", { level: levelInfo.level, current: levelInfo.xpInCurrentLevel, next: levelInfo.xpNeededForNextLevel })
                           }
                         </span>
                       </div>
@@ -530,7 +535,7 @@ export default function Index() {
                         >
                           <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
                           <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                            Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
+                            {t("game.levelProgress", { level: levelInfo.level, current: levelInfo.xpInCurrentLevel, next: levelInfo.xpNeededForNextLevel })}
                           </span>
                         </div>
                       )}

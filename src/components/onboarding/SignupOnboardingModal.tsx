@@ -6,6 +6,30 @@ import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
+
+// Confetti celebration effect
+const celebrateConfetti = () => {
+  const count = 200;
+  const defaults = {
+    origin: { y: 0.7 },
+    zIndex: 9999,
+  };
+
+  function fire(particleRatio: number, opts: confetti.Options) {
+    confetti({
+      ...defaults,
+      ...opts,
+      particleCount: Math.floor(count * particleRatio),
+    });
+  }
+
+  fire(0.25, { spread: 26, startVelocity: 55 });
+  fire(0.2, { spread: 60 });
+  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+  fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+  fire(0.1, { spread: 120, startVelocity: 45 });
+};
 
 // Sparkle particles for modal background
 const ModalSparkle = ({ index }: { index: number }) => {
@@ -110,6 +134,9 @@ export function SignupOnboardingModal() {
       
       // Wait a bit for dramatic effect
       await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Celebrate with confetti!
+      celebrateConfetti();
       
       toast.success(t("success.accountCreated"));
       setStep("avatar-upload");

@@ -7,6 +7,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { t } from "@/lib/i18n";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
+
+// Confetti celebration for avatar completion
+const celebrateAvatarConfetti = () => {
+  const end = Date.now() + 1000;
+  const colors = ["#A855F7", "#8B5CF6", "#FFD700", "#22C55E"];
+
+  (function frame() {
+    confetti({
+      particleCount: 3,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.6 },
+      colors: colors,
+      zIndex: 9999,
+    });
+    confetti({
+      particleCount: 3,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.6 },
+      colors: colors,
+      zIndex: 9999,
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+};
 
 // Shimmer effect component
 const ShimmerOverlay = () => (
@@ -264,6 +294,9 @@ export function AvatarCreationFlow() {
         .getPublicUrl(fileName);
       
       await updateProfile({ avatar_url: urlData.publicUrl });
+      
+      // Celebrate with confetti!
+      celebrateAvatarConfetti();
       
       toast.success(t("success.avatarSaved"));
       setStep("walkthrough");
