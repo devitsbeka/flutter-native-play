@@ -382,7 +382,7 @@ export default function Index() {
                     const arcSpan = 180; // wider arc spread
                     const startAngle = -90; // start from left side
                     const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                    const radius = 120; // larger radius for 16px+ gap
+                    const radius = 100; // arc radius
                     const radians = (angle * Math.PI) / 180;
                     const x = Math.sin(radians) * radius;
                     const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
