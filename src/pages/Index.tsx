@@ -342,15 +342,15 @@ export default function Index() {
         </header>
 
         {/* ===== POWER BADGES ARC (Top) ===== */}
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20">
-          <div className="flex items-end justify-center gap-2">
+        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-20">
+          <div className="flex items-end justify-center gap-1">
             {(["fifty-fifty", "freeze", "time-drain"] as const).map((type, index) => {
-              // Arc positioning - middle item higher
-              const arcOffset = Math.abs(index - 1) * 8;
+              // Arc positioning - more pronounced curve (2x)
+              const arcOffset = Math.abs(index - 1) * 20;
               return (
                 <motion.div
                   key={type}
-                  style={{ marginBottom: 12 - arcOffset }}
+                  style={{ marginBottom: 24 - arcOffset }}
                   initial={{ scale: 0, y: -20 }}
                   animate={{ scale: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.1, type: "spring", stiffness: 200 }}
