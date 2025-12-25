@@ -18,7 +18,7 @@ export function VSScreen() {
   const playerPoints = profile?.total_points || 0;
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden bg-gradient-to-b from-[#8B7FD4] to-[#9B8FE4]">
+    <div className="h-full w-full flex flex-col relative overflow-hidden bg-gradient-to-b from-[#8B7FD4] to-[#9B8FE4]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">
         <button 
@@ -35,49 +35,47 @@ export function VSScreen() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-4 pb-6 overflow-auto">
+      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-2 pb-6 overflow-auto">
         
-        {/* Player 1 Section */}
-        <div className="relative mb-2">
-          {/* Power-ups in arc around avatar */}
-          {/* Top-left */}
-          <div className="absolute -left-12 -top-2">
-            <PowerUpBadge 
-              type="fifty-fifty" 
-              size="sm" 
-              index={0} 
-              count={playerPowerUps.find(p => p.type === "fifty-fifty")?.available} 
-            />
-          </div>
-          {/* Left */}
-          <div className="absolute -left-14 top-10">
-            <PowerUpBadge 
-              type="freeze" 
-              size="sm" 
-              index={1} 
-              count={playerPowerUps.find(p => p.type === "freeze")?.available} 
-            />
-          </div>
-          {/* Top-right */}
-          <div className="absolute -right-12 -top-2">
-            <PowerUpBadge 
-              type="replace" 
-              size="sm" 
-              index={2} 
-              count={playerPowerUps.find(p => p.type === "replace")?.available} 
-            />
-          </div>
-          {/* Right */}
-          <div className="absolute -right-14 top-10">
-            <PowerUpBadge 
-              type="time-drain" 
-              size="sm" 
-              index={3} 
-              count={playerPowerUps.find(p => p.type === "time-drain")?.available} 
-            />
+        {/* Player 1 Section - Badges at TOP in semi-circle */}
+        <div className="relative flex flex-col items-center">
+          {/* Power-ups in semi-circle at TOP of avatar */}
+          <div className="flex items-end justify-center gap-2 mb-2">
+            <div className="transform -translate-y-1">
+              <PowerUpBadge 
+                type="fifty-fifty" 
+                size="sm" 
+                index={0} 
+                count={playerPowerUps.find(p => p.type === "fifty-fifty")?.available} 
+              />
+            </div>
+            <div className="transform -translate-y-3">
+              <PowerUpBadge 
+                type="freeze" 
+                size="sm" 
+                index={1} 
+                count={playerPowerUps.find(p => p.type === "freeze")?.available} 
+              />
+            </div>
+            <div className="transform -translate-y-3">
+              <PowerUpBadge 
+                type="replace" 
+                size="sm" 
+                index={2} 
+                count={playerPowerUps.find(p => p.type === "replace")?.available} 
+              />
+            </div>
+            <div className="transform -translate-y-1">
+              <PowerUpBadge 
+                type="time-drain" 
+                size="sm" 
+                index={3} 
+                count={playerPowerUps.find(p => p.type === "time-drain")?.available} 
+              />
+            </div>
           </div>
 
-          {/* Avatar with thick gradient ring */}
+          {/* Avatar with gradient ring */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -89,32 +87,32 @@ export function VSScreen() {
                 <span className="text-6xl">{playerAvatar}</span>
               </div>
             </div>
+
+            {/* Name badge centered at bottom of avatar */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+            >
+              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center gap-2 shadow-lg">
+                <span className="text-white font-bold text-sm uppercase">{playerName}</span>
+                <span className="text-lg">{getCountryFlag(profile?.country_code || "US")}</span>
+              </div>
+            </motion.div>
           </motion.div>
 
-          {/* Name badge overlapping avatar bottom */}
+          {/* Points badge */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center gap-1 mt-8"
           >
-            <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center gap-2 shadow-lg">
-              <span className="text-white font-bold text-base">{playerName}</span>
-              <span className="text-xl">{getCountryFlag(profile?.country_code || "US")}</span>
-            </div>
+            <span className="text-lg">👑</span>
+            <span className="text-white font-bold text-lg">{playerPoints}</span>
           </motion.div>
         </div>
-
-        {/* Points badge */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center gap-1 mt-6"
-        >
-          <span className="text-lg">👑</span>
-          <span className="text-white font-bold text-lg">{playerPoints}</span>
-        </motion.div>
 
         {/* VS Text */}
         <motion.div
@@ -128,57 +126,28 @@ export function VSScreen() {
           </span>
         </motion.div>
 
-        {/* Player 2 (Opponent) Section */}
-        <div className="relative mt-2">
-          {/* Power-ups in arc - all greyed/disabled for opponent */}
-          {/* Top-left */}
-          <div className="absolute -left-12 -top-2 opacity-40">
-            <PowerUpBadge 
-              type="fifty-fifty" 
-              size="sm" 
-              index={4} 
-              count={opponentPowerUps.find(p => p.type === "fifty-fifty")?.available} 
-              disabled 
-            />
-          </div>
-          {/* Left */}
-          <div className="absolute -left-14 top-10 opacity-40">
-            <PowerUpBadge 
-              type="freeze" 
-              size="sm" 
-              index={5} 
-              count={opponentPowerUps.find(p => p.type === "freeze")?.available} 
-              disabled 
-            />
-          </div>
-          {/* Top-right */}
-          <div className="absolute -right-12 -top-2 opacity-40">
-            <PowerUpBadge 
-              type="replace" 
-              size="sm" 
-              index={6} 
-              count={opponentPowerUps.find(p => p.type === "replace")?.available} 
-              disabled 
-            />
-          </div>
-          {/* Right */}
-          <div className="absolute -right-14 top-10 opacity-40">
-            <PowerUpBadge 
-              type="time-drain" 
-              size="sm" 
-              index={7} 
-              count={opponentPowerUps.find(p => p.type === "time-drain")?.available} 
-              disabled 
-            />
-          </div>
-
-          {/* Avatar with thick gradient ring */}
+        {/* Player 2 (Opponent) Section - Badges at BOTTOM in semi-circle */}
+        <div className="relative flex flex-col items-center">
+          {/* Avatar with gradient ring */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, delay: 0.5 }}
             className="relative"
           >
+            {/* Name badge centered at top of avatar */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+            >
+              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center gap-2 shadow-lg">
+                <span className="text-white font-bold text-sm uppercase">{opponent.name}</span>
+                <span className="text-lg">{getCountryFlag(opponent.countryCode)}</span>
+              </div>
+            </motion.div>
+
             <div className="w-32 h-32 rounded-full p-1.5 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500">
               <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center">
                 <span className="text-6xl">{opponent.avatarEmoji}</span>
@@ -186,42 +155,69 @@ export function VSScreen() {
             </div>
           </motion.div>
 
-          {/* Name badge overlapping avatar bottom */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
-          >
-            <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center gap-2 shadow-lg">
-              <span className="text-white font-bold text-base">{opponent.name}</span>
-              <span className="text-xl">{getCountryFlag(opponent.countryCode)}</span>
+          {/* Power-ups in semi-circle at BOTTOM of avatar - greyed for opponent */}
+          <div className="flex items-start justify-center gap-2 mt-2 opacity-50">
+            <div className="transform translate-y-1">
+              <PowerUpBadge 
+                type="fifty-fifty" 
+                size="sm" 
+                index={4} 
+                count={opponentPowerUps.find(p => p.type === "fifty-fifty")?.available} 
+                disabled 
+              />
             </div>
+            <div className="transform translate-y-3">
+              <PowerUpBadge 
+                type="freeze" 
+                size="sm" 
+                index={5} 
+                count={opponentPowerUps.find(p => p.type === "freeze")?.available} 
+                disabled 
+              />
+            </div>
+            <div className="transform translate-y-3">
+              <PowerUpBadge 
+                type="replace" 
+                size="sm" 
+                index={6} 
+                count={opponentPowerUps.find(p => p.type === "replace")?.available} 
+                disabled 
+              />
+            </div>
+            <div className="transform translate-y-1">
+              <PowerUpBadge 
+                type="time-drain" 
+                size="sm" 
+                index={7} 
+                count={opponentPowerUps.find(p => p.type === "time-drain")?.available} 
+                disabled 
+              />
+            </div>
+          </div>
+
+          {/* Opponent Points badge */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="flex items-center gap-1 mt-4"
+          >
+            <span className="text-lg">👑</span>
+            <span className="text-white font-bold text-lg">{opponent.points.toLocaleString()}</span>
           </motion.div>
         </div>
 
-        {/* Opponent Points badge */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="flex items-center gap-1 mt-6"
-        >
-          <span className="text-lg">👑</span>
-          <span className="text-white font-bold text-lg">{opponent.points.toLocaleString()}</span>
-        </motion.div>
-
         {/* Spacer */}
-        <div className="flex-1 min-h-8" />
+        <div className="flex-1 min-h-4" />
 
-        {/* Add Power Button - Large */}
+        {/* Add Power Button - 30% smaller */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 300, delay: 0.8 }}
           className="mb-4"
         >
-          <PowerUpBadge type="add-power" size="lg" index={8} className="w-24 h-24" />
+          <PowerUpBadge type="add-power" size="md" index={8} className="w-16 h-16" />
         </motion.div>
 
         {/* Start Button - Light blue outline */}
