@@ -437,10 +437,23 @@ export default function Index() {
                         transition={{ duration: 1, delay: 0.5 }}
                       />
                       
-                      {/* Text overlay - white on purple, positioned for visibility */}
+                      {/* Dark text layer - visible on white bg */}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
                         <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
-                        <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                        <span className="text-sm font-bold text-gray-700">
+                          Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
+                        </span>
+                      </div>
+                      
+                      {/* White text layer - clipped to progress fill */}
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none"
+                        style={{
+                          clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)`,
+                        }}
+                      >
+                        <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
+                        <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
                           Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
                         </span>
                       </div>
