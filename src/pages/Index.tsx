@@ -98,7 +98,53 @@ const SideIconButton = ({
   </motion.button>
 );
 
-// Bottom nav item
+// Sparkle particle for play button
+const SparkleParticle = ({ index, total }: { index: number; total: number }) => {
+  const angle = (360 / total) * index;
+  const radius = 52;
+  const duration = 3 + Math.random() * 2;
+  const size = 3 + Math.random() * 3;
+  
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{
+        width: size,
+        height: size,
+        left: "50%",
+        top: "50%",
+        marginLeft: -size / 2,
+        marginTop: -size / 2,
+        background: "radial-gradient(circle, #FFFFFF 0%, rgba(183,148,246,0.8) 50%, transparent 100%)",
+        boxShadow: "0 0 6px rgba(255,255,255,0.8), 0 0 12px rgba(183,148,246,0.6)",
+      }}
+      animate={{
+        x: [
+          Math.cos((angle * Math.PI) / 180) * radius,
+          Math.cos(((angle + 120) * Math.PI) / 180) * (radius + 8),
+          Math.cos(((angle + 240) * Math.PI) / 180) * radius,
+          Math.cos(((angle + 360) * Math.PI) / 180) * radius,
+        ],
+        y: [
+          Math.sin((angle * Math.PI) / 180) * radius,
+          Math.sin(((angle + 120) * Math.PI) / 180) * (radius + 8),
+          Math.sin(((angle + 240) * Math.PI) / 180) * radius,
+          Math.sin(((angle + 360) * Math.PI) / 180) * radius,
+        ],
+        opacity: [0.4, 1, 0.6, 0.4],
+        scale: [0.8, 1.2, 0.9, 0.8],
+      }}
+      transition={{
+        duration,
+        delay: index * 0.15,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+  );
+};
+
+// Bottom nav item - centered design
 const NavItem = ({ 
   icon: Icon, 
   label, 
@@ -110,15 +156,122 @@ const NavItem = ({
 }) => (
   <motion.button
     onClick={onClick}
-    className="flex flex-col items-center gap-0.5 px-6 py-2"
-    whileTap={{ scale: 0.95 }}
+    className="flex flex-col items-center gap-1 py-2 px-5"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.92 }}
   >
-    <Icon className="w-5 h-5 text-gray-400" strokeWidth={1.5} />
-    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+    <motion.div
+      className="w-10 h-10 rounded-xl flex items-center justify-center"
+      style={{
+        background: "linear-gradient(180deg, rgba(156,106,222,0.08) 0%, rgba(156,106,222,0.04) 100%)",
+      }}
+      whileHover={{
+        background: "linear-gradient(180deg, rgba(156,106,222,0.15) 0%, rgba(156,106,222,0.08) 100%)",
+      }}
+    >
+      <Icon className="w-5 h-5 text-gray-500" strokeWidth={1.8} />
+    </motion.div>
+    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
       {label}
     </span>
   </motion.button>
 );
+
+// 3D Play Button Component
+const PlayButton3D = ({ onClick }: { onClick: () => void }) => {
+  const sparkles = useMemo(() => Array.from({ length: 8 }, (_, i) => i), []);
+  
+  return (
+    <motion.button
+      onClick={onClick}
+      className="relative"
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.95, y: 4 }}
+      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+    >
+      {/* Sparkle particles */}
+      {sparkles.map((i) => (
+        <SparkleParticle key={i} index={i} total={sparkles.length} />
+      ))}
+      
+      {/* Outer glow pulse */}
+      <motion.div 
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: "radial-gradient(circle, rgba(183,148,246,0.5) 0%, transparent 70%)",
+          transform: "scale(2)",
+          filter: "blur(10px)",
+        }}
+        animate={{ 
+          opacity: [0.3, 0.6, 0.3],
+          scale: [1.8, 2.2, 1.8],
+        }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Base shadow (3D depth) */}
+      <div 
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: "#7B4BBF",
+          transform: "translateY(6px)",
+          boxShadow: "0 8px 20px rgba(123,75,191,0.4)",
+        }}
+      />
+      
+      {/* Outer white ring with gradient */}
+      <div 
+        className="relative w-20 h-20 rounded-full p-[3px]"
+        style={{
+          background: "linear-gradient(180deg, #FFFFFF 0%, #E8E0F0 100%)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08), inset 0 1px 2px rgba(255,255,255,1)",
+        }}
+      >
+        {/* Purple main button */}
+        <div 
+          className="w-full h-full rounded-full relative overflow-hidden"
+          style={{
+            background: "linear-gradient(180deg, #C4A7F7 0%, #9C6ADE 40%, #8B5CD6 100%)",
+            boxShadow: "inset 0 -4px 8px rgba(0,0,0,0.15), inset 0 4px 8px rgba(255,255,255,0.25)",
+          }}
+        >
+          {/* Inner highlight arc */}
+          <div 
+            className="absolute top-1 left-2 right-2 h-6 rounded-full"
+            style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)",
+            }}
+          />
+          
+          {/* Play icon container */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Play 
+                className="w-8 h-8 ml-1 drop-shadow-sm" 
+                style={{ color: "white" }}
+                fill="rgba(255,255,255,0.95)"
+                strokeWidth={0}
+              />
+            </motion.div>
+          </div>
+          
+          {/* Subtle shine overlay */}
+          <motion.div 
+            className="absolute inset-0 rounded-full opacity-0"
+            style={{
+              background: "linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%)",
+            }}
+            animate={{ opacity: [0, 0.5, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+        </div>
+      </div>
+    </motion.button>
+  );
+};
 
 export default function Index() {
   const navigate = useNavigate();
@@ -301,69 +454,47 @@ export default function Index() {
         {/* ===== BOTTOM NAVIGATION ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="px-4 pb-4 pt-10"
+            className="px-4 pb-4 pt-14"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {/* Nav bar */}
+            {/* Nav bar container */}
             <div 
-              className="relative flex items-center justify-between rounded-[28px] py-2"
+              className="relative rounded-[28px] py-3 px-4"
               style={{
-                background: "rgba(255,255,255,0.98)",
-                boxShadow: "0 -4px 24px rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.04)",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,0.95) 100%)",
+                boxShadow: "0 -2px 20px rgba(156,106,222,0.08), 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)",
+                border: "1px solid rgba(255,255,255,0.8)",
               }}
             >
-              <NavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+              {/* Top shine line */}
+              <div 
+                className="absolute top-0 left-6 right-6 h-[1px]"
+                style={{
+                  background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 30%, rgba(255,255,255,0.9) 70%, transparent 100%)",
+                }}
+              />
               
-              {/* Spacer */}
-              <div className="w-20" />
-              
-              <NavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
+              {/* Nav items - flex with centered items */}
+              <div className="flex items-center justify-center gap-4">
+                {/* Left item - positioned to center in left half */}
+                <div className="flex-1 flex justify-center pr-10">
+                  <NavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+                </div>
+                
+                {/* Spacer for play button */}
+                <div className="w-24" />
+                
+                {/* Right item - positioned to center in right half */}
+                <div className="flex-1 flex justify-center pl-10">
+                  <NavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
+                </div>
+              </div>
               
               {/* CENTER PLAY BUTTON */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-8">
-                <motion.button
-                  onClick={() => navigate("/game")}
-                  className="relative"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                >
-                  {/* Outer glow */}
-                  <motion.div 
-                    className="absolute inset-0 rounded-full blur-xl"
-                    style={{
-                      background: `radial-gradient(circle, ${theme.accent}60 0%, transparent 70%)`,
-                      transform: "scale(1.6)",
-                    }}
-                    animate={{ opacity: [0.4, 0.7, 0.4] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  
-                  {/* White outer ring */}
-                  <div 
-                    className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%)",
-                      boxShadow: "0 4px 16px rgba(156,106,222,0.25), 0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    {/* Purple inner circle */}
-                    <div 
-                      className="w-14 h-14 rounded-full flex items-center justify-center"
-                      style={{
-                        background: `linear-gradient(180deg, #B794F6 0%, ${theme.accent} 100%)`,
-                        boxShadow: `inset 0 2px 4px rgba(255,255,255,0.3)`,
-                      }}
-                    >
-                      <Play 
-                        className="w-7 h-7 ml-0.5 text-white" 
-                        fill="rgba(255,255,255,0.9)"
-                      />
-                    </div>
-                  </div>
-                </motion.button>
+              <div className="absolute left-1/2 -translate-x-1/2 -top-12">
+                <PlayButton3D onClick={() => navigate("/game")} />
               </div>
             </div>
           </motion.div>
