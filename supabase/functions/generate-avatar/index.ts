@@ -202,24 +202,15 @@ serve(async (req) => {
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
 
-    // Step 2: Expand the image at the top by 100px
-    let expandedAvatarUrl = avatarUrl;
-    try {
-      expandedAvatarUrl = await expandImageTop(avatarUrl, 100);
-      console.log("Avatar expanded successfully:", expandedAvatarUrl);
-    } catch (expandError) {
-      console.error("Image expansion failed, using original avatar:", expandError);
-    }
+    // Step 2: Expand the image at the top by 100px (REQUIRED)
+    console.log("Step 2: Expanding avatar at top...");
+    const expandedAvatarUrl = await expandImageTop(avatarUrl, 100);
+    console.log("Avatar expanded successfully:", expandedAvatarUrl);
 
-    // Step 3: Remove background from the expanded avatar
-    let finalAvatarUrl = expandedAvatarUrl;
-    try {
-      finalAvatarUrl = await removeBackground(expandedAvatarUrl);
-      console.log("Final avatar with transparent background:", finalAvatarUrl);
-    } catch (bgError) {
-      // If background removal fails, still return the expanded avatar
-      console.error("Background removal failed, using expanded avatar:", bgError);
-    }
+    // Step 3: Remove background from the expanded avatar (REQUIRED)
+    console.log("Step 3: Removing background from expanded avatar...");
+    const finalAvatarUrl = await removeBackground(expandedAvatarUrl);
+    console.log("Final avatar with transparent background:", finalAvatarUrl);
 
     return new Response(
       JSON.stringify({ 
