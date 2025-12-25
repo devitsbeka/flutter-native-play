@@ -108,8 +108,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Generate opponent while starting to fetch questions
     const opponent = generateFakeOpponent();
     
-    // Short delay for matchmaking feel
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Start fetching questions immediately in background
+    const questionsPromise = fetchQuestions(5);
+    
+    // Matchmaking screen lasts ~5 seconds for the interactive hourglass experience
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     setState(prev => ({ 
       ...prev, 
@@ -117,8 +120,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       opponent,
     }));
     
-    // Fetch questions and preload images
-    const questions = await fetchQuestions(5);
+    // Wait for questions to finish loading
+    const questions = await questionsPromise;
     
     setState(prev => ({
       ...prev,
