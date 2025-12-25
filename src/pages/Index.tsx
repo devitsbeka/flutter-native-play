@@ -384,7 +384,7 @@ export default function Index() {
           >
             {/* Avatar - FULL WIDTH with bottom fade and overlaid stats */}
             <motion.div 
-              className="relative w-full max-w-sm mx-auto"
+              className="relative w-[80%] max-w-xs mx-auto"
               animate={isRefreshing ? {
                 rotateY: [0, 360],
                 y: [0, -10, 0],
