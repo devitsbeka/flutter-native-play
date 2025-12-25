@@ -108,13 +108,9 @@ serve(async (req) => {
     const data = await response.json();
     console.log("LightX initial response:", JSON.stringify(data));
 
-    // Check for API error response
-    if (data.message) {
-      throw new Error(`LightX API error: ${data.message}`);
-    }
-
-    if (!response.ok) {
-      throw new Error(`LightX API error: ${JSON.stringify(data)}`);
+    // Check for API error response - statusCode 2000 means success
+    if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
+      throw new Error(`LightX API error: ${data.message || JSON.stringify(data)}`);
     }
 
     // Handle response structure
