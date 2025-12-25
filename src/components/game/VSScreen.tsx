@@ -90,8 +90,16 @@ export function VSScreen() {
             })}
 
             <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500">
-              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center">
-                <span className="text-6xl">{playerAvatar}</span>
+              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Your avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-6xl">😊</span>
+                )}
               </div>
             </div>
           </div>
