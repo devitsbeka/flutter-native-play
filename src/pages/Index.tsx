@@ -282,24 +282,13 @@ export default function Index() {
           <div className="flex items-center justify-between">
             {/* Burger menu button */}
             <motion.button
-              className="text-4xl"
+              className="text-3xl"
               whileHover={{ scale: 1.1, rotate: 10 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsSideMenuOpen(true)}
             >
               🍔
             </motion.button>
-            
-            <motion.h1 
-              className="text-3xl font-bold"
-              style={{ 
-                fontFamily: "'TASolivare', cursive",
-                color: "rgba(255,255,255,0.95)",
-                textShadow: "0 2px 8px rgba(156,106,222,0.4)"
-              }}
-            >
-              Trivia
-            </motion.h1>
             
             {/* Combined currency chip */}
             <motion.div 
