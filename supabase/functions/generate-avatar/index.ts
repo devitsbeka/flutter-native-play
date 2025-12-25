@@ -5,10 +5,69 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const LIGHTX_API_KEY = Deno.env.get('LIGHTX_API_KEY');
+
+// Style reference image URL - use the production app URL
+const getStyleImageUrl = () => {
+  // This image is stored in the public folder
+  return "https://mytrivia.io/images/avatar-style-reference.jpg";
+};
 
 interface AvatarRequest {
   imageUrl: string;
+}
+
+interface LightXResponse {
+  statusCode: number;
+  body: {
+    orderId: string;
+    status: string;
+  };
+}
+
+interface LightXResultResponse {
+  statusCode: number;
+  body: {
+    status: string;
+    output?: string;
+    error?: string;
+  };
+}
+
+async function pollForResult(orderId: string, maxAttempts = 60): Promise<string> {
+  const pollUrl = "https://api.lightxeditor.com/external/api/v1/order-status";
+  
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    console.log(`Polling attempt ${attempt + 1} for order ${orderId}`);
+    
+    const response = await fetch(pollUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": LIGHTX_API_KEY!,
+      },
+      body: JSON.stringify({ orderId }),
+    });
+
+    const data: LightXResultResponse = await response.json();
+    console.log(`Poll response status: ${data.body?.status}`);
+
+    if (data.body?.status === "completed" || data.body?.status === "active") {
+      if (data.body.output) {
+        return data.body.output;
+      }
+      throw new Error("No output URL in completed response");
+    }
+
+    if (data.body?.status === "failed") {
+      throw new Error(data.body.error || "Avatar generation failed");
+    }
+
+    // Wait 2 seconds before next poll
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  throw new Error("Avatar generation timed out");
 }
 
 serve(async (req) => {
@@ -18,8 +77,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LIGHTX_API_KEY) {
+      throw new Error("LIGHTX_API_KEY is not configured");
     }
 
     const { imageUrl }: AvatarRequest = await req.json();
@@ -29,67 +88,51 @@ serve(async (req) => {
     }
 
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
+    const styleImageUrl = getStyleImageUrl();
+    console.log("Using style reference:", styleImageUrl);
 
-    // Use Lovable AI with Gemini image generation to create a 3D avatar
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Call LightX Avatar API with style reference
+    const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
+        "x-api-key": LIGHTX_API_KEY,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Transform this photo into a happy 3D Pixar Disney style cartoon avatar. Make it vibrant with friendly smile, soft lighting, big expressive eyes, smooth skin, and charming character look. Keep the person's likeness recognizable."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: imageUrl
-                }
-              }
-            ]
-          }
-        ],
-        modalities: ["image", "text"]
+        imageUrl: imageUrl,
+        styleImageUrl: styleImageUrl,
+        textPrompt: "3D Pixar Disney style cartoon avatar, vibrant colors, friendly smile, soft lighting, big expressive eyes, smooth skin, charming character",
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Lovable AI error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        throw new Error("Rate limit exceeded. Please try again later.");
-      }
-      if (response.status === 402) {
-        throw new Error("AI credits exhausted. Please add funds to continue.");
-      }
-      throw new Error(`AI gateway error: ${errorText}`);
-    }
-
     const data = await response.json();
-    console.log("Lovable AI response received");
+    console.log("LightX initial response:", JSON.stringify(data));
 
-    // Extract the generated image from the response
-    const generatedImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!generatedImage) {
-      console.error("No image in response:", JSON.stringify(data));
-      throw new Error("No avatar image generated");
+    // Check for API error response
+    if (data.message) {
+      throw new Error(`LightX API error: ${data.message}`);
     }
 
-    console.log("Avatar generated successfully");
+    if (!response.ok) {
+      throw new Error(`LightX API error: ${JSON.stringify(data)}`);
+    }
+
+    // Handle response structure
+    const orderId = data.body?.orderId || data.orderId;
+    if (!orderId) {
+      throw new Error(`No orderId in response: ${JSON.stringify(data)}`);
+    }
+    
+    console.log("Got orderId:", orderId);
+
+    // Poll for the result
+    const avatarUrl = await pollForResult(orderId);
+    console.log("Avatar generated successfully:", avatarUrl);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        avatarUrl: generatedImage 
+        avatarUrl 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
