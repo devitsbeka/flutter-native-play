@@ -56,26 +56,6 @@ export function VSScreen() {
   const playerPoints = profile?.total_points || 0;
   const powerTypes: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
 
-  // Diagonal positions for power-ups (percentage based)
-  // Player power-ups: top-right area, cascading down-left along diagonal
-  const playerPowerPositions = [
-    { x: 78, y: 12 },  // time-drain - top right
-    { x: 68, y: 18 },  // replace
-    { x: 58, y: 26 },  // freeze
-    { x: 50, y: 34 },  // fifty-fifty
-  ];
-  
-  // Opponent power-ups: bottom-left area, cascading down along diagonal
-  const opponentPowerPositions = [
-    { x: 22, y: 66 },  // time-drain
-    { x: 30, y: 74 },  // replace
-    { x: 38, y: 82 },  // freeze
-    { x: 48, y: 90 },  // fifty-fifty
-  ];
-
-  // Add power button position (on diagonal, between player area and VS)
-  const addPowerPosition = { x: 38, y: 52 };
-
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
       {/* Background gradient - deep indigo to purple */}
@@ -97,7 +77,6 @@ export function VSScreen() {
             </feMerge>
           </filter>
         </defs>
-        {/* Main diagonal line */}
         <line 
           x1="100%" y1="0%" 
           x2="0%" y2="100%" 
@@ -109,14 +88,14 @@ export function VSScreen() {
 
       {/* Ambient particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(8)].map((_, i) => (
-          <StarParticle key={`star-${i}`} delay={i * 0.5} x={15 + i * 10} y={20 + i * 8} color="#a78bfa" />
-        ))}
-        {[...Array(8)].map((_, i) => (
-          <StarParticle key={`star2-${i}`} delay={i * 0.5 + 0.25} x={55 + i * 5} y={50 + i * 6} color="#e879f9" />
+        {[...Array(6)].map((_, i) => (
+          <StarParticle key={`star-${i}`} delay={i * 0.5} x={10 + i * 12} y={15 + i * 10} color="#a78bfa" />
         ))}
         {[...Array(6)].map((_, i) => (
-          <HexOutline key={`hex-${i}`} delay={i * 0.7} x={10 + i * 15} y={30 + i * 10} />
+          <StarParticle key={`star2-${i}`} delay={i * 0.5 + 0.25} x={60 + i * 6} y={55 + i * 7} color="#e879f9" />
+        ))}
+        {[...Array(4)].map((_, i) => (
+          <HexOutline key={`hex-${i}`} delay={i * 0.8} x={5 + i * 20} y={25 + i * 15} />
         ))}
       </div>
 
@@ -142,80 +121,75 @@ export function VSScreen() {
         </motion.div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 relative z-10">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative z-10 px-4">
         
-        {/* Player Section - Upper area */}
-        <motion.div 
-          className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: "8%" }}
-          initial={{ y: -30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Avatar */}
-          <div className="relative w-28 h-28 mx-auto">
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600 blur-sm" />
-            <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600">
-              <div className="w-full h-full rounded-full bg-[#2a2a4a] overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="You" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="w-full h-full flex items-center justify-center text-5xl">😊</span>
-                )}
+        {/* === PLAYER SECTION (Top-Left Area) === */}
+        <div className="flex-1 flex items-start pt-4">
+          <motion.div 
+            className="flex items-start gap-3"
+            initial={{ x: -30, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Player Power-ups - Vertical stack on far left */}
+            <div className="flex flex-col gap-2 pt-8">
+              {powerTypes.map((type, index) => (
+                <motion.div
+                  key={`player-${type}`}
+                  initial={{ scale: 0, x: -20 }}
+                  animate={{ scale: 1, x: 0 }}
+                  transition={{ delay: 0.1 + index * 0.08, type: "spring", stiffness: 200 }}
+                >
+                  <PowerUpBadge 
+                    type={type}
+                    size="sm" 
+                    index={index} 
+                    count={playerPowerUps.find(p => p.type === type)?.available} 
+                  />
+                </motion.div>
+              ))}
+              {/* Add power button */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+              >
+                <PowerUpBadge type="add-power" size="sm" index={5} />
+              </motion.div>
+            </div>
+
+            {/* Player Avatar + Badge */}
+            <div className="flex flex-col items-center">
+              <div className="relative w-28 h-28">
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600 blur-sm opacity-70" />
+                <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600">
+                  <div className="w-full h-full rounded-full bg-[#2a2a4a] overflow-hidden">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="You" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-5xl">😊</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="-mt-3 z-10">
+                <PlayerInfoBadge
+                  name="You"
+                  flag={getCountryFlag(profile?.country_code || "US")}
+                  points={playerPoints}
+                  delay={0}
+                  direction="up"
+                  isPlayer={true}
+                />
               </div>
             </div>
-          </div>
-          
-          {/* Player badge */}
-          <div className="-mt-3 relative z-10">
-            <PlayerInfoBadge
-              name="You"
-              flag={getCountryFlag(profile?.country_code || "US")}
-              points={playerPoints}
-              delay={0}
-              direction="up"
-              isPlayer={true}
-            />
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
-        {/* Player Power-ups along diagonal (top-right area) */}
-        {powerTypes.map((type, index) => {
-          const pos = playerPowerPositions[index];
-          return (
-            <motion.div
-              key={`player-${type}`}
-              className="absolute z-10"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 + index * 0.1, type: "spring", stiffness: 200 }}
-            >
-              <PowerUpBadge 
-                type={type}
-                size="sm" 
-                index={index} 
-                count={playerPowerUps.find(p => p.type === type)?.available} 
-              />
-            </motion.div>
-          );
-        })}
-
-        {/* Add Power Button on diagonal */}
-        <motion.div
-          className="absolute z-10"
-          style={{ left: `${addPowerPosition.x}%`, top: `${addPowerPosition.y}%`, transform: "translate(-50%, -50%)" }}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-        >
-          <PowerUpBadge type="add-power" size="md" index={5} />
-        </motion.div>
-
-        {/* VS Text - Centered */}
+        {/* === VS TEXT (Center) === */}
         <motion.div 
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
           initial={{ scale: 0, rotate: -15 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
@@ -226,70 +200,67 @@ export function VSScreen() {
               background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #E6A800 70%, #CC8800 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
-              textShadow: "0 4px 0 #8B6914",
-              filter: "drop-shadow(0 0 20px rgba(255,215,0,0.5))",
+              filter: "drop-shadow(0 4px 0 #8B6914) drop-shadow(0 0 20px rgba(255,215,0,0.5))",
             }}
           >
             VS
           </span>
         </motion.div>
 
-        {/* Opponent Power-ups along diagonal (bottom-left area) */}
-        {powerTypes.map((type, index) => {
-          const pos = opponentPowerPositions[index];
-          return (
-            <motion.div
-              key={`opponent-${type}`}
-              className="absolute z-10 opacity-50"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 0.5 }}
-              transition={{ delay: 0.4 + index * 0.1, type: "spring", stiffness: 200 }}
-            >
-              <PowerUpBadge 
-                type={type}
-                size="sm" 
-                index={index + 4} 
-                count={opponentPowerUps.find(p => p.type === type)?.available} 
-                disabled
-              />
-            </motion.div>
-          );
-        })}
-
-        {/* Opponent Section - Lower area */}
-        <motion.div 
-          className="absolute left-1/2 -translate-x-1/2"
-          style={{ bottom: "18%" }}
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          {/* Opponent badge */}
-          <div className="mb-[-12px] relative z-10">
-            <PlayerInfoBadge
-              name={opponent.name}
-              flag={getCountryFlag(opponent.countryCode)}
-              points={opponent.points}
-              delay={0}
-              direction="down"
-            />
-          </div>
-          
-          {/* Avatar */}
-          <div className="relative w-28 h-28 mx-auto">
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-purple-400 via-fuchsia-500 to-pink-500 blur-sm" />
-            <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-purple-400 via-fuchsia-500 to-pink-500">
-              <div className="w-full h-full rounded-full bg-[#4a2a5a] overflow-hidden">
-                {opponent.avatarUrl ? (
-                  <img src={opponent.avatarUrl} alt={opponent.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="w-full h-full flex items-center justify-center text-5xl">{opponent.avatarEmoji}</span>
-                )}
+        {/* === OPPONENT SECTION (Bottom-Right Area) === */}
+        <div className="flex-1 flex items-end justify-end pb-4">
+          <motion.div 
+            className="flex items-end gap-3"
+            initial={{ x: 30, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+          >
+            {/* Opponent Avatar + Badge */}
+            <div className="flex flex-col items-center">
+              <div className="mb-[-12px] z-10">
+                <PlayerInfoBadge
+                  name={opponent.name}
+                  flag={getCountryFlag(opponent.countryCode)}
+                  points={opponent.points}
+                  delay={0}
+                  direction="down"
+                />
+              </div>
+              <div className="relative w-28 h-28">
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-purple-400 via-fuchsia-500 to-pink-500 blur-sm opacity-70" />
+                <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-purple-400 via-fuchsia-500 to-pink-500">
+                  <div className="w-full h-full rounded-full bg-[#4a2a5a] overflow-hidden">
+                    {opponent.avatarUrl ? (
+                      <img src={opponent.avatarUrl} alt={opponent.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-5xl">{opponent.avatarEmoji}</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Opponent Power-ups - Vertical stack on far right */}
+            <div className="flex flex-col gap-2 pb-8 opacity-50">
+              {powerTypes.map((type, index) => (
+                <motion.div
+                  key={`opponent-${type}`}
+                  initial={{ scale: 0, x: 20 }}
+                  animate={{ scale: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.08, type: "spring", stiffness: 200 }}
+                >
+                  <PowerUpBadge 
+                    type={type}
+                    size="sm" 
+                    index={index + 4} 
+                    count={opponentPowerUps.find(p => p.type === type)?.available} 
+                    disabled
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Bottom Button */}
