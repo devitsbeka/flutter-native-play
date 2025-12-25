@@ -357,7 +357,7 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image - just transparent PNG, no stroke */}
+              {/* Avatar image - just transparent PNG, no effects */}
               <div className="w-64 h-64 relative">
                 {profile?.avatar_url ? (
                   <img 
@@ -374,11 +374,18 @@ export default function Index() {
                   </div>
                 )}
                 
-                {/* Power badges in arc formation centered at top of avatar */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto flex items-end justify-center gap-1" style={{ marginTop: -10 }}>
+                {/* Power badges in curved arc at top of avatar */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -30 }}>
                   {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
-                    // Arc positioning - create curved effect with y offsets
-                    const yOffsets = [20, 0, -8, 0, 20]; // curved arc pattern
+                    // True curved arc using transform positioning
+                    const totalBadges = 5;
+                    const arcSpan = 140; // degrees of arc
+                    const startAngle = -70; // start from left side
+                    const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
+                    const radius = 80; // radius of the arc
+                    const radians = (angle * Math.PI) / 180;
+                    const x = Math.sin(radians) * radius;
+                    const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
                     
                     return (
                       <motion.div
@@ -386,8 +393,11 @@ export default function Index() {
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
+                        className="absolute"
                         style={{ 
-                          marginTop: yOffsets[index],
+                          left: "50%",
+                          top: 0,
+                          transform: `translate(calc(-50% + ${x}px), ${y}px)`,
                         }}
                       >
                         <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
@@ -395,14 +405,6 @@ export default function Index() {
                     );
                   })}
                 </div>
-                
-                {/* Bottom fade mask overlay */}
-                <div 
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: "linear-gradient(to top, rgba(200,180,220,0.9) 0%, transparent 40%)",
-                  }}
-                />
               </div>
             
               {/* Level & XP bar - positioned below avatar */}
