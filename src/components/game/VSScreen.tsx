@@ -17,22 +17,26 @@ export function VSScreen() {
   const playerAvatar = profile?.avatar_url || "😊";
   const playerPoints = profile?.total_points || 0;
 
-  // Arc positions for badges - flatter arc matching reference
-  // Gentle curve: outer badges slightly lower, inner badges slightly higher
-  const topArcPositions = [
-    { x: -70, y: -20 },  // far left - lower
-    { x: -28, y: -38 },  // center-left - higher
-    { x: 28, y: -38 },   // center-right - higher
-    { x: 70, y: -20 },   // far right - lower
-  ];
+  // Calculate arc positions using proper circle trigonometry
+  // radius = distance from avatar center to badge center
+  // angle measured from top (12 o'clock), negative = left, positive = right
+  const calculateArcPosition = (angleDeg: number, radius: number) => {
+    const angleRad = (angleDeg * Math.PI) / 180;
+    return {
+      x: radius * Math.sin(angleRad),
+      y: -radius * Math.cos(angleRad), // negative because y-axis is inverted in CSS
+    };
+  };
 
-  // Bottom arc is mirrored
-  const bottomArcPositions = [
-    { x: -70, y: 20 },   // far left - higher (closer to center)
-    { x: -28, y: 38 },   // center-left - lower
-    { x: 28, y: 38 },    // center-right - lower
-    { x: 70, y: 20 },    // far right - higher (closer to center)
-  ];
+  const orbitRadius = 95; // distance from avatar center
+  
+  // Top arc: badges at -55°, -20°, 20°, 55° from vertical
+  const topAngles = [-55, -20, 20, 55];
+  const topArcPositions = topAngles.map(angle => calculateArcPosition(angle, orbitRadius));
+
+  // Bottom arc: mirrored (180° offset)
+  const bottomAngles = [180 + 55, 180 + 20, 180 - 20, 180 - 55]; // 235°, 200°, 160°, 125°
+  const bottomArcPositions = bottomAngles.map(angle => calculateArcPosition(angle, orbitRadius));
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden bg-gradient-to-b from-[#8B7FD4] to-[#9B8FE4]">
