@@ -185,31 +185,31 @@ export function VSScreen() {
                 }}
               />
               
-              {/* Avatar container - larger and transparent */}
+              {/* Avatar container - with radial fade mask */}
               <div className="relative w-36 h-36 sm:w-44 sm:h-44">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="You" 
                     className="w-full h-full object-contain"
-                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
+                    style={{ 
+                      filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))",
+                      maskImage: "radial-gradient(ellipse 80% 85% at 50% 40%, black 50%, transparent 85%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 80% 85% at 50% 40%, black 50%, transparent 85%)",
+                    }}
                   />
                 ) : (
                   <div 
                     className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
-                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
+                    style={{ 
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
+                      maskImage: "radial-gradient(ellipse 80% 85% at 50% 40%, black 50%, transparent 85%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 80% 85% at 50% 40%, black 50%, transparent 85%)",
+                    }}
                   >
                     👤
                   </div>
                 )}
-                
-                {/* Bottom fade mask - blends avatar into background */}
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
-                  style={{ 
-                    background: "linear-gradient(to top, rgba(200,180,220,0.8) 0%, rgba(200,180,220,0.4) 40%, transparent 100%)" 
-                  }}
-                />
               </div>
             </motion.div>
             
@@ -358,31 +358,31 @@ export function VSScreen() {
                 }}
               />
               
-              {/* Avatar container - larger and transparent */}
+              {/* Avatar container - with radial fade mask (inverted for opponent) */}
               <div className="relative w-36 h-36 sm:w-44 sm:h-44">
                 {opponent.avatarUrl ? (
                   <img 
                     src={opponent.avatarUrl} 
                     alt={opponent.name} 
                     className="w-full h-full object-contain"
-                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
+                    style={{ 
+                      filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))",
+                      maskImage: "radial-gradient(ellipse 80% 85% at 50% 60%, black 50%, transparent 85%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 80% 85% at 50% 60%, black 50%, transparent 85%)",
+                    }}
                   />
                 ) : (
                   <div 
                     className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
-                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
+                    style={{ 
+                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
+                      maskImage: "radial-gradient(ellipse 80% 85% at 50% 60%, black 50%, transparent 85%)",
+                      WebkitMaskImage: "radial-gradient(ellipse 80% 85% at 50% 60%, black 50%, transparent 85%)",
+                    }}
                   >
                     🤖
                   </div>
                 )}
-                
-                {/* Top fade mask - blends avatar into background */}
-                <div 
-                  className="absolute top-0 left-0 right-0 h-12 pointer-events-none"
-                  style={{ 
-                    background: "linear-gradient(to bottom, rgba(200,180,220,0.8) 0%, rgba(200,180,220,0.4) 40%, transparent 100%)" 
-                  }}
-                />
               </div>
             </motion.div>
           </div>
