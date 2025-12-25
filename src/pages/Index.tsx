@@ -414,16 +414,16 @@ export default function Index() {
                     className="w-full h-full object-contain"
                     style={{
                       backfaceVisibility: "hidden",
-                      maskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+                      maskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
+                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
                     }}
                   />
                 ) : (
                   <div 
                     className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center rounded-3xl"
                     style={{
-                      maskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+                      maskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
+                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
                     }}
                   >
                     <span className="text-9xl">🎮</span>
