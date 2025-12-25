@@ -9,12 +9,12 @@ import { CompletedLevelModal } from "./CompletedLevelModal";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useLevelPositions } from "@/hooks/useLevelPositions";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar } from "@/components/shared/Avatar";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
-import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import SVGClouds from "./SVGClouds";
 
 import islandBackground from "@/assets/map/island-background.svg";
+import iconCoin from "@/assets/icons/icon-coin.png";
+import iconGem from "@/assets/icons/icon-gem.png";
 
 // Zoom limits - matching admin page scale
 const MIN_ZOOM = 1;
@@ -300,35 +300,31 @@ export function IslandAdventureMap() {
       {/* Top Header Bar */}
       <header className="absolute top-0 left-0 right-0 z-50 px-4 pt-4 safe-top">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handleBack}
-              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
-            >
-              <ArrowLeft className="h-5 w-5 text-slate-600" />
-            </button>
-            <button
-              onClick={() => navigate("/profile")}
-              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm overflow-hidden"
-            >
-              <Avatar
-                imageUrl={profile?.avatar_url || undefined}
-                emoji={profile?.nickname?.charAt(0) || "👤"}
-                size="sm"
-              />
-            </button>
-          </div>
+          <button 
+            onClick={handleBack}
+            className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+          >
+            <ArrowLeft className="h-5 w-5 text-slate-600" />
+          </button>
 
-          <div className="flex items-center gap-2">
-            <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
-              <span className="text-orange-400">🔥</span>
-              <span className="font-bold text-slate-700 text-sm">{profile?.current_streak || 0}</span>
+          {/* Combined currency chip */}
+          <motion.div 
+            className="flex items-center gap-3 px-3 py-1.5 rounded-full"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div className="flex items-center gap-1">
+              <img src={iconCoin} alt="" className="w-6 h-6 object-contain" />
+              <span className="text-sm font-bold text-gray-800">{profile?.total_points || 0}</span>
             </div>
-            <div className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm">
-              <span className="text-amber-400">👑</span>
-              <AnimatedCounter value={profile?.total_points || 0} className="font-bold text-slate-700 text-sm" />
+            <div className="w-px h-4 bg-gray-200" />
+            <div className="flex items-center gap-1">
+              <img src={iconGem} alt="" className="w-6 h-6 object-contain" />
+              <span className="text-sm font-bold text-gray-800">0</span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </header>
 
