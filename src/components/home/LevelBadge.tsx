@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Star, Zap } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelInfoModal } from "./LevelInfoModal";
 
@@ -11,155 +10,151 @@ interface LevelBadgeProps {
 export function LevelBadge({ totalPoints }: LevelBadgeProps) {
   const [showModal, setShowModal] = useState(false);
   const levelInfo = calculateLevel(totalPoints);
-
-  // Calculate progress percentage
   const progressPercent = levelInfo.progress;
+
+  // Ring calculations
+  const radius = 58;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progressPercent / 100);
 
   return (
     <>
       <motion.button
         onClick={() => setShowModal(true)}
-        className="relative flex flex-col items-center"
-        initial={{ scale: 0.8, opacity: 0 }}
+        className="relative flex flex-col items-center group"
+        initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", duration: 0.8 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+        whileTap={{ scale: 0.97 }}
       >
-        {/* Outer glow ring */}
+        {/* Ambient glow - subtle and cinematic */}
         <motion.div
-          className="absolute inset-0 rounded-full blur-xl"
+          className="absolute inset-0 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(45 100% 60% / 0.4) 0%, transparent 70%)",
+            background: "radial-gradient(circle, hsl(200 60% 50% / 0.15) 0%, transparent 60%)",
+            filter: "blur(30px)",
+            transform: "scale(1.8)",
           }}
           animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.6, 0.9, 0.6],
+            opacity: [0.4, 0.7, 0.4],
           }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Main badge container */}
-        <div className="relative">
-          {/* Hexagonal outer frame */}
-          <div
-            className="relative w-32 h-32 flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(35 85% 45%) 100%)",
-              clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
-              boxShadow: "0 8px 32px hsl(35 80% 30% / 0.5)",
-            }}
-          >
-            {/* Inner dark circle */}
-            <div
-              className="w-24 h-24 rounded-full flex flex-col items-center justify-center relative"
-              style={{
-                background: "linear-gradient(180deg, hsl(220 30% 15%) 0%, hsl(220 25% 10%) 100%)",
-                boxShadow: "inset 0 2px 8px hsl(0 0% 0% / 0.5)",
-              }}
-            >
-              {/* Progress arc background */}
-              <svg
-                className="absolute inset-0 w-full h-full -rotate-90"
-                viewBox="0 0 100 100"
-              >
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  stroke="hsl(220 20% 25%)"
-                  strokeWidth="4"
-                />
-                <motion.circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  stroke="url(#progressGradient)"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 42}
-                  initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
-                  animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - progressPercent / 100) }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                />
-                <defs>
-                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="hsl(45 100% 60%)" />
-                    <stop offset="100%" stopColor="hsl(25 90% 55%)" />
-                  </linearGradient>
-                </defs>
-              </svg>
+        {/* Main container */}
+        <div className="relative w-36 h-36">
+          {/* Outer ring - thin and elegant */}
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 140 140">
+            {/* Background ring */}
+            <circle
+              cx="70"
+              cy="70"
+              r={radius}
+              fill="none"
+              stroke="hsl(200 20% 30% / 0.3)"
+              strokeWidth="1"
+            />
+            {/* Progress ring with gradient */}
+            <motion.circle
+              cx="70"
+              cy="70"
+              r={radius}
+              fill="none"
+              stroke="url(#interstellarGradient)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              initial={{ strokeDashoffset: circumference }}
+              animate={{ strokeDashoffset }}
+              transition={{ duration: 1.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            />
+            {/* Inner subtle ring */}
+            <circle
+              cx="70"
+              cy="70"
+              r="48"
+              fill="none"
+              stroke="hsl(200 30% 50% / 0.1)"
+              strokeWidth="0.5"
+            />
+            <defs>
+              <linearGradient id="interstellarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(200 70% 60%)" />
+                <stop offset="50%" stopColor="hsl(180 60% 50%)" />
+                <stop offset="100%" stopColor="hsl(200 50% 40%)" />
+              </linearGradient>
+            </defs>
+          </svg>
 
-              {/* Level content */}
-              <div className="relative z-10 flex flex-col items-center">
-                <span className="text-[10px] font-semibold text-amber-400/80 uppercase tracking-wider">დონე</span>
-                <motion.span
-                  className="text-4xl font-display font-bold text-white"
-                  key={levelInfo.level}
-                  initial={{ scale: 1.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  style={{ textShadow: "0 2px 8px hsl(45 100% 50% / 0.5)" }}
-                >
-                  {levelInfo.level}
-                </motion.span>
-              </div>
-            </div>
+          {/* Inner content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            {/* Level number - large and minimal */}
+            <motion.div
+              className="flex flex-col items-center"
+              key={levelInfo.level}
+              initial={{ scale: 1.2, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <span 
+                className="text-5xl font-light tracking-tight"
+                style={{ 
+                  color: "hsl(200 60% 75%)",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                  fontWeight: 200,
+                }}
+              >
+                {levelInfo.level}
+              </span>
+              <span 
+                className="text-[10px] uppercase tracking-[0.3em] mt-1"
+                style={{ color: "hsl(200 30% 50%)" }}
+              >
+                დონე
+              </span>
+            </motion.div>
           </div>
 
-          {/* Decorative stars */}
+          {/* Rotating accent dots */}
           <motion.div
-            className="absolute -top-1 -right-1"
-            animate={{ rotate: [0, 15, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
           >
-            <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-          </motion.div>
-          <motion.div
-            className="absolute -top-2 left-2"
-            animate={{ rotate: [0, -10, 0], scale: [1, 1.15, 1] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          >
-            <Star className="w-3 h-3 text-amber-300 fill-amber-300" />
+            <div 
+              className="absolute top-2 left-1/2 w-1 h-1 rounded-full -translate-x-1/2"
+              style={{ background: "hsl(200 70% 60%)" }}
+            />
           </motion.div>
         </div>
 
-        {/* XP Progress bar below */}
-        <div className="mt-3 w-36">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] text-white/60 font-medium flex items-center gap-1">
-              <Zap className="w-3 h-3 text-amber-400" />
-              {levelInfo.currentXP} XP
-            </span>
-            <span className="text-[10px] text-white/40">{levelInfo.xpForNextLevel} XP</span>
+        {/* XP indicator - minimal */}
+        <div className="mt-4 flex flex-col items-center">
+          <div className="flex items-center gap-2 text-xs" style={{ color: "hsl(200 30% 55%)" }}>
+            <span className="font-light">{levelInfo.currentXP}</span>
+            <span className="opacity-40">/</span>
+            <span className="opacity-60">{levelInfo.xpForNextLevel} XP</span>
           </div>
-          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+          
+          {/* Minimal progress bar */}
+          <div className="mt-2 w-24 h-px bg-white/10 overflow-hidden">
             <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: "linear-gradient(90deg, hsl(45 100% 60%) 0%, hsl(25 90% 55%) 100%)",
-              }}
+              className="h-full"
+              style={{ background: "hsl(200 60% 55%)" }}
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
             />
           </div>
         </div>
 
-        {/* Tap indicator */}
-        <motion.div
-          className="mt-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-          style={{
-            background: "linear-gradient(180deg, hsl(45 90% 55%) 0%, hsl(35 85% 45%) 100%)",
-            color: "hsl(35 80% 15%)",
-          }}
-          animate={{ opacity: [0.8, 1, 0.8], y: [0, -2, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
+        {/* Hover hint */}
+        <motion.span
+          className="mt-3 text-[9px] uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ color: "hsl(200 30% 45%)" }}
         >
-          შეეხე
-        </motion.div>
+          დეტალები
+        </motion.span>
       </motion.button>
 
       <LevelInfoModal

@@ -183,10 +183,10 @@ export default function Index() {
           {/* Guest Progress Warning Banner */}
           <GuestProgressBanner />
 
-          {/* Main Content Area - Positioned higher */}
-          <div className="relative z-20 flex-1 flex flex-col items-center pt-8 px-6">
-            {/* Level Badge - Higher position */}
-            <div className="mb-auto">
+          {/* Main Content Area */}
+          <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-6 pb-32">
+            {/* Level Badge - centered with slight upward offset */}
+            <div className="mb-12">
               <LevelBadge totalPoints={profile?.total_points || 0} />
             </div>
 
