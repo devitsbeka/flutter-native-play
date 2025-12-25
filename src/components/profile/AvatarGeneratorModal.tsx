@@ -130,7 +130,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
 
     try {
       // First upload the image to storage to get a public URL
-      const fileName = `temp/${user.id}/${Date.now()}.jpg`;
+      const fileName = `${user.id}/temp_${Date.now()}.jpg`;
       
       // Convert base64 to blob
       const base64Data = uploadedImage.split(",")[1];
