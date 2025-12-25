@@ -7,99 +7,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
 import { calculateLevel } from "@/utils/levelCalculation";
 
-// Theme definitions
-const themes = {
-  purpleGold: {
-    id: 'purpleGold',
-    name: 'Purple Gold',
-    isLight: false,
-    background: "radial-gradient(ellipse at center top, #4a3d60 0%, #3d3250 20%, #2a2040 40%, #1a1428 70%, #0f0a14 100%)",
-    secondaryBg: "radial-gradient(ellipse at bottom, rgba(255,100,50,0.08) 0%, transparent 50%)",
-    accent: "#FFD700",
-    accentLight: "#FFE55C",
-    particleColor: "rgba(255,200,50,0.9)",
-    particleGlow: "rgba(255,150,50,0.5)",
-    textPrimary: "#ffffff",
-    textSecondary: "rgba(255,255,255,0.5)",
-    cardBg: "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
-    cardShadow: "#1a1a2a",
-    navBg: "linear-gradient(180deg, #4a3d60 0%, #3d3250 20%, #2a2040 50%, #1a1428 80%, #0f0a14 100%)",
-    dotColor: "#6B5B8C",
-  },
-  darkBlue: {
-    id: 'darkBlue',
-    name: 'Dark Blue',
-    isLight: false,
-    background: "radial-gradient(ellipse at center top, #1e3a5f 0%, #152238 20%, #0d1929 40%, #080f18 70%, #050a10 100%)",
-    secondaryBg: "radial-gradient(ellipse at bottom, rgba(100,180,255,0.08) 0%, transparent 50%)",
-    accent: "#4FC3F7",
-    accentLight: "#81D4FA",
-    particleColor: "rgba(100,180,255,0.9)",
-    particleGlow: "rgba(100,150,255,0.5)",
-    textPrimary: "#ffffff",
-    textSecondary: "rgba(255,255,255,0.5)",
-    cardBg: "linear-gradient(180deg, #2a3a4a 0%, #1a2a3a 100%)",
-    cardShadow: "#0a1a2a",
-    navBg: "linear-gradient(180deg, #1e3a5f 0%, #152238 20%, #0d1929 50%, #080f18 80%, #050a10 100%)",
-    dotColor: "#1e3a5f",
-  },
-  lightMint: {
-    id: 'lightMint',
-    name: 'Mint Fresh',
-    isLight: true,
-    background: "radial-gradient(ellipse at center top, #e8f5e9 0%, #c8e6c9 20%, #a5d6a7 40%, #81c784 70%, #66bb6a 100%)",
-    secondaryBg: "radial-gradient(ellipse at bottom, rgba(0,100,0,0.05) 0%, transparent 50%)",
-    accent: "#2e7d32",
-    accentLight: "#43a047",
-    particleColor: "rgba(100,200,120,0.7)",
-    particleGlow: "rgba(80,180,100,0.4)",
-    textPrimary: "#1b5e20",
-    textSecondary: "rgba(27,94,32,0.6)",
-    cardBg: "linear-gradient(180deg, #ffffff 0%, #f1f8e9 100%)",
-    cardShadow: "#a5d6a7",
-    navBg: "linear-gradient(180deg, #ffffff 0%, #f1f8e9 20%, #e8f5e9 50%, #c8e6c9 80%, #a5d6a7 100%)",
-    dotColor: "#81c784",
-  },
-  lightPeach: {
-    id: 'lightPeach',
-    name: 'Warm Peach',
-    isLight: true,
-    background: "radial-gradient(ellipse at center top, #fff3e0 0%, #ffe0b2 20%, #ffcc80 40%, #ffb74d 70%, #ffa726 100%)",
-    secondaryBg: "radial-gradient(ellipse at bottom, rgba(200,100,0,0.05) 0%, transparent 50%)",
-    accent: "#e65100",
-    accentLight: "#ff6d00",
-    particleColor: "rgba(255,180,100,0.7)",
-    particleGlow: "rgba(255,150,80,0.4)",
-    textPrimary: "#bf360c",
-    textSecondary: "rgba(191,54,12,0.6)",
-    cardBg: "linear-gradient(180deg, #ffffff 0%, #fff8e1 100%)",
-    cardShadow: "#ffcc80",
-    navBg: "linear-gradient(180deg, #ffffff 0%, #fff8e1 20%, #fff3e0 50%, #ffe0b2 80%, #ffcc80 100%)",
-    dotColor: "#ffb74d",
-  },
-  lightSky: {
-    id: 'lightSky',
-    name: 'Sky Blue',
-    isLight: true,
-    background: "radial-gradient(ellipse at center top, #e3f2fd 0%, #bbdefb 20%, #90caf9 40%, #64b5f6 70%, #42a5f5 100%)",
-    secondaryBg: "radial-gradient(ellipse at bottom, rgba(0,100,200,0.05) 0%, transparent 50%)",
-    accent: "#1565c0",
-    accentLight: "#1976d2",
-    particleColor: "rgba(100,180,255,0.7)",
-    particleGlow: "rgba(80,150,255,0.4)",
-    textPrimary: "#0d47a1",
-    textSecondary: "rgba(13,71,161,0.6)",
-    cardBg: "linear-gradient(180deg, #ffffff 0%, #e3f2fd 100%)",
-    cardShadow: "#90caf9",
-    navBg: "linear-gradient(180deg, #ffffff 0%, #e3f2fd 20%, #bbdefb 50%, #90caf9 80%, #64b5f6 100%)",
-    dotColor: "#64b5f6",
-  },
+// Fixed theme - Light Pink/Lavender
+const theme = {
+  isLight: true,
+  background: "#F5E6F5",
+  secondaryBg: "radial-gradient(ellipse at 30% 20%, rgba(200,180,255,0.5) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(200,180,255,0.4) 0%, transparent 50%)",
+  accent: "#9C6ADE",
+  accentLight: "#B794F6",
+  particleColor: "rgba(180,140,255,0.8)",
+  particleGlow: "rgba(160,120,240,0.5)",
+  textPrimary: "#5C3D7A",
+  textSecondary: "rgba(92,61,122,0.6)",
+  cardBg: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(245,230,245,0.9) 100%)",
+  cardShadow: "rgba(180,140,255,0.3)",
+  navBg: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(250,240,255,0.95) 50%, rgba(245,230,250,0.95) 100%)",
 };
 
-type ThemeKey = keyof typeof themes;
-
 // Fire sparkle particle component
-const FireParticle = ({ delay, duration, left, size, startY, theme }: { delay: number; duration: number; left: string; size: number; startY: string; theme: typeof themes.purpleGold }) => (
+const FireParticle = ({ delay, duration, left, size, startY }: { delay: number; duration: number; left: string; size: number; startY: string }) => (
   <motion.div
     className="absolute rounded-full pointer-events-none"
     style={{
@@ -130,14 +55,12 @@ const SideMenuButton = ({
   icon: Icon, 
   label, 
   onClick, 
-  badge,
-  theme
+  badge
 }: { 
   icon: React.ElementType; 
   label: string; 
   onClick?: () => void;
   badge?: number;
-  theme: typeof themes.purpleGold;
 }) => (
   <motion.button
     onClick={onClick}
@@ -187,14 +110,12 @@ const BottomNavItem = ({
   icon: Icon, 
   label, 
   onClick, 
-  isActive = false,
-  theme
+  isActive = false
 }: { 
   icon: React.ElementType; 
   label: string; 
   onClick?: () => void;
   isActive?: boolean;
-  theme: typeof themes.purpleGold;
 }) => (
   <motion.button
     onClick={onClick}
@@ -222,7 +143,7 @@ const BottomNavItem = ({
 );
 
 // Fire particle for play button
-const PlayButtonParticle = ({ angle, delay, theme }: { angle: number; delay: number; theme: typeof themes.purpleGold }) => {
+const PlayButtonParticle = ({ angle, delay }: { angle: number; delay: number }) => {
   const radians = (angle * Math.PI) / 180;
   const distance = 55;
   const x = Math.cos(radians) * distance;
@@ -261,9 +182,6 @@ export default function Index() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<ThemeKey>('purpleGold');
-  
-  const theme = themes[currentTheme];
 
   const rank = profile ? getRankFromPoints(profile.total_points || 0) : { name: "Bronze", tier: 1, color: "text-amber-600" };
   const gamesWon = profile?.games_won || 0;
@@ -304,7 +222,7 @@ export default function Index() {
         {/* Fire sparkle particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {particles.map((p) => (
-            <FireParticle key={p.id} {...p} theme={theme} />
+            <FireParticle key={p.id} {...p} />
           ))}
         </div>
         
@@ -354,14 +272,14 @@ export default function Index() {
 
         {/* ===== LEFT SIDE MENU ===== */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
-          <SideMenuButton icon={ShoppingBag} label="Shop" onClick={() => {}} theme={theme} />
-          <SideMenuButton icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} badge={2} theme={theme} />
+          <SideMenuButton icon={ShoppingBag} label="Shop" onClick={() => {}} />
+          <SideMenuButton icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} badge={2} />
         </div>
 
         {/* ===== RIGHT SIDE MENU ===== */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
-          <SideMenuButton icon={Zap} label="Powers" onClick={() => {}} theme={theme} />
-          <SideMenuButton icon={Map} label="Map" onClick={() => navigate("/adventure-map")} theme={theme} />
+          <SideMenuButton icon={Zap} label="Powers" onClick={() => {}} />
+          <SideMenuButton icon={Map} label="Map" onClick={() => navigate("/adventure-map")} />
         </div>
 
         {/* ===== CENTER: CHARACTER/AVATAR DISPLAY ===== */}
@@ -493,42 +411,6 @@ export default function Index() {
                   {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                 </p>
               </div>
-              
-              {/* Theme Switcher */}
-              <div className="mt-4 flex items-center gap-2">
-                {(Object.keys(themes) as ThemeKey[]).map((themeKey) => {
-                  const t = themes[themeKey];
-                  const isSelected = currentTheme === themeKey;
-                  return (
-                    <motion.button
-                      key={themeKey}
-                      onClick={() => setCurrentTheme(themeKey)}
-                      className="relative"
-                      whileHover={{ scale: 1.15 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      {isSelected && (
-                        <motion.div 
-                          className="absolute inset-0 rounded-full"
-                          style={{ 
-                            border: `2px solid ${theme.textPrimary}`,
-                            transform: "scale(1.4)"
-                          }}
-                          layoutId="theme-selector"
-                        />
-                      )}
-                      <div 
-                        className="w-6 h-6 rounded-full"
-                        style={{ 
-                          background: t.dotColor,
-                          boxShadow: isSelected ? `0 0 10px ${t.dotColor}` : "0 2px 4px rgba(0,0,0,0.3)",
-                          border: t.isLight ? "2px solid rgba(0,0,0,0.1)" : "2px solid rgba(255,255,255,0.2)"
-                        }}
-                      />
-                    </motion.button>
-                  );
-                })}
-              </div>
             </motion.div>
           </motion.div>
         </div>
@@ -609,20 +491,20 @@ export default function Index() {
                 />
                 
                 {/* Explore */}
-                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} theme={theme} />
+                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
                 
                 {/* Spacer for Play button */}
                 <div className="w-24" />
                 
                 {/* Profile */}
-                <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} theme={theme} />
+                <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
               </div>
               
               {/* CENTER PLAY BUTTON - simplified and fiery */}
               <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center">
                 {/* Fire particles around the button */}
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <PlayButtonParticle key={i} angle={i * 30} delay={i * 0.15} theme={theme} />
+                  <PlayButtonParticle key={i} angle={i * 30} delay={i * 0.15} />
                 ))}
                 
                 <motion.button
