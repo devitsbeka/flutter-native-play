@@ -465,7 +465,7 @@ export default function Index() {
                 />
                 
                 {/* Explore */}
-                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} isActive />
+                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
                 
                 {/* Spacer for Play button */}
                 <div className="w-24" />
