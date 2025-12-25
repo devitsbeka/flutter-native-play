@@ -20,7 +20,7 @@ function GameContent() {
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result";
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden bg-background">
+    <div className="h-screen w-full flex flex-col relative overflow-hidden">
       {/* Spline Background - only show for match-result phase */}
       {!hasOwnBackground && <SplineGlobe />}
       
@@ -44,8 +44,8 @@ function GameContent() {
         </button>
       )}
       
-      {/* Game Content - Full height, no padding for full-screen phases */}
-      <div className={`relative z-10 flex-1 flex flex-col h-full overflow-hidden ${hasOwnBackground ? '' : 'px-4 pt-14 pb-4'}`}>
+      {/* Game Content - Full width/height */}
+      <div className={`relative flex-1 w-full h-full overflow-hidden ${hasOwnBackground ? '' : 'px-4 pt-14 pb-4'}`}>
         <GameContainer />
       </div>
     </div>

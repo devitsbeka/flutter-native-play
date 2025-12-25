@@ -63,10 +63,11 @@ export function GlobalSplineBackground() {
     <>
       {/* Gradient fallback - always present to prevent black flash */}
       <div 
-        className="fixed inset-0 -z-20 transition-opacity duration-500"
+        className="fixed inset-0 pointer-events-none transition-opacity duration-500"
         style={{
           background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)",
           opacity: shouldShow ? 1 : 0,
+          zIndex: -30,
         }}
       />
       
@@ -74,10 +75,10 @@ export function GlobalSplineBackground() {
       <iframe 
         src={SPLINE_BLOB_URL}
         frameBorder="0" 
-        className="fixed inset-0 w-full h-full -z-10 transition-opacity duration-300"
+        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-300"
         style={{ 
           opacity: shouldShow && ready ? 1 : 0,
-          pointerEvents: shouldShow ? "auto" : "none",
+          zIndex: -20,
         }}
         title="Global Background"
         loading="eager"
@@ -85,16 +86,20 @@ export function GlobalSplineBackground() {
       
       {/* White radial vignette mask - white edges fading to transparent center */}
       <div 
-        className="fixed inset-0 -z-5 pointer-events-none transition-opacity duration-300"
+        className="fixed inset-0 pointer-events-none transition-opacity duration-300"
         style={{
           background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 70%, rgba(255,255,255,0.7) 90%, rgba(255,255,255,0.85) 100%)",
           opacity: shouldShow ? 1 : 0,
+          zIndex: -10,
         }}
       />
       
       {/* White sparkle particles */}
       {shouldShow && (
-        <div className="fixed inset-0 -z-5 overflow-hidden pointer-events-none">
+        <div 
+          className="fixed inset-0 overflow-hidden pointer-events-none"
+          style={{ zIndex: -5 }}
+        >
           {sparkles.map((p) => (
             <SparkleParticle key={p.id} {...p} />
           ))}
