@@ -39,6 +39,7 @@ export function HomeScreen() {
         {user ? (
           <button onClick={() => navigate("/profile")}>
             <Avatar
+              imageUrl={profile?.avatar_url || undefined}
               emoji="😎"
               countryCode={profile?.country_code || "US"}
               size="md"

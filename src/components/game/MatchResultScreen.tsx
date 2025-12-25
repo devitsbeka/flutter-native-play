@@ -172,7 +172,7 @@ export function MatchResultScreen() {
         <div className="flex items-center justify-between">
           {/* You */}
           <div className="text-center flex-1">
-            <Avatar emoji={profile?.avatar_url || "😊"} size="md" className="mx-auto mb-1" />
+            <Avatar imageUrl={profile?.avatar_url || undefined} emoji="😊" size="md" className="mx-auto mb-1" />
             <p className="font-bold text-foreground text-xs mb-1">
               {profile?.nickname || "You"}
             </p>
