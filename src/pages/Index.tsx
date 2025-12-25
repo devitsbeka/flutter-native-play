@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Info } from "lucide-react";
+import { Trophy, Info, Menu } from "lucide-react";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,24 +56,42 @@ export default function Index() {
 
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
-          <div className="flex items-center justify-center gap-3">
-            {/* Trophy count */}
-            <div 
-              className="h-10 rounded-xl px-4 flex items-center gap-2"
-              style={{
-                background: "linear-gradient(180deg, #FFD700 0%, #FFA000 100%)",
-                boxShadow: "0 3px 0 #B8860B",
-              }}
-            >
-              <Trophy className="w-5 h-5 text-amber-900" />
-              <span className="font-bold text-amber-900">{totalPoints}</span>
+          <div className="flex items-center justify-between">
+            {/* Left spacer for balance */}
+            <div className="w-10" />
+            
+            {/* Center: Currencies */}
+            <div className="flex items-center gap-3">
+              {/* Trophy count */}
+              <div 
+                className="h-10 rounded-xl px-4 flex items-center gap-2"
+                style={{
+                  background: "linear-gradient(180deg, #FFD700 0%, #FFA000 100%)",
+                  boxShadow: "0 3px 0 #B8860B",
+                }}
+              >
+                <Trophy className="w-5 h-5 text-amber-900" />
+                <span className="font-bold text-amber-900">{totalPoints}</span>
+              </div>
+
+              {/* Coins */}
+              <CurrencyDisplay icon="🪙" value={gamesWon * 10} color="text-yellow-400" />
+              
+              {/* Gems */}
+              <CurrencyDisplay icon="💎" value={currentStreak} color="text-cyan-400" />
             </div>
 
-            {/* Coins */}
-            <CurrencyDisplay icon="🪙" value={gamesWon * 10} color="text-yellow-400" />
-            
-            {/* Gems */}
-            <CurrencyDisplay icon="💎" value={currentStreak} color="text-cyan-400" />
+            {/* Right: Menu button */}
+            <button 
+              onClick={() => setIsMenuOpen(true)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
+                boxShadow: "0 3px 0 #1a1a2a",
+              }}
+            >
+              <Menu className="w-5 h-5 text-white" />
+            </button>
           </div>
         </header>
 
