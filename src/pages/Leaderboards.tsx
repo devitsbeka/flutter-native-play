@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Users, Diamond } from "lucide-react";
+import { ArrowLeft, Clock, Users, Diamond, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { QuickActionsBar } from "@/components/home/QuickActionsBar";
+
+// Bottom nav icons
+import iconCompass from "@/assets/icons/icon-compass.png";
+import iconMap3d from "@/assets/icons/icon-map-3d.png";
+import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
 
 interface LeaderboardEntry {
   id: string;
@@ -19,89 +23,65 @@ interface LeaderboardEntry {
   avatar_url: string | null;
 }
 
-// Laurel Wreath SVG Component
-function LaurelWreath({ rank, size = "md" }: { rank: 1 | 2 | 3; size?: "sm" | "md" | "lg" }) {
-  const colors = {
-    1: { wreath: "#D4A500", text: "text-amber-600" }, // Gold
-    2: { wreath: "#8B8B8B", text: "text-slate-500" }, // Silver
-    3: { wreath: "#B87333", text: "text-orange-600" }, // Bronze
+// Medal emoji component for ranks
+function RankMedal({ rank, size = "md" }: { rank: 1 | 2 | 3; size?: "sm" | "md" | "lg" }) {
+  const medals = {
+    1: "🥇",
+    2: "🥈", 
+    3: "🥉",
   };
 
   const sizes = {
-    sm: { container: "w-12 h-12", text: "text-xs" },
-    md: { container: "w-16 h-16", text: "text-sm" },
-    lg: { container: "w-20 h-20", text: "text-base" },
+    sm: "text-2xl",
+    md: "text-3xl",
+    lg: "text-4xl",
   };
 
   return (
-    <div className={cn("relative flex items-center justify-center", sizes[size].container)}>
-      <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
-        {/* Left wreath */}
-        <path
-          d="M20,85 Q10,70 15,55 Q8,50 12,35 Q5,30 10,20 Q15,25 25,22 Q30,15 40,18 Q42,25 48,30"
-          fill="none"
-          stroke={colors[rank].wreath}
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        {/* Left leaves */}
-        <ellipse cx="15" cy="55" rx="6" ry="3" fill={colors[rank].wreath} transform="rotate(-30, 15, 55)" />
-        <ellipse cx="12" cy="40" rx="5" ry="2.5" fill={colors[rank].wreath} transform="rotate(-45, 12, 40)" />
-        <ellipse cx="18" cy="28" rx="5" ry="2.5" fill={colors[rank].wreath} transform="rotate(-60, 18, 28)" />
-        <ellipse cx="32" cy="20" rx="5" ry="2.5" fill={colors[rank].wreath} transform="rotate(-75, 32, 20)" />
-        
-        {/* Right wreath */}
-        <path
-          d="M80,85 Q90,70 85,55 Q92,50 88,35 Q95,30 90,20 Q85,25 75,22 Q70,15 60,18 Q58,25 52,30"
-          fill="none"
-          stroke={colors[rank].wreath}
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        {/* Right leaves */}
-        <ellipse cx="85" cy="55" rx="6" ry="3" fill={colors[rank].wreath} transform="rotate(30, 85, 55)" />
-        <ellipse cx="88" cy="40" rx="5" ry="2.5" fill={colors[rank].wreath} transform="rotate(45, 88, 40)" />
-        <ellipse cx="82" cy="28" rx="5" ry="2.5" fill={colors[rank].wreath} transform="rotate(60, 82, 28)" />
-        <ellipse cx="68" cy="20" rx="5" ry="2.5" fill={colors[rank].wreath} transform="rotate(75, 68, 20)" />
-      </svg>
-      <span className={cn("font-bold z-10", sizes[size].text, colors[rank].text)}>
-        {rank}<sup className="text-[0.6em]">{rank === 1 ? "st" : rank === 2 ? "nd" : "rd"}</sup>
-      </span>
-    </div>
+    <span className={cn("", sizes[size])}>
+      {medals[rank]}
+    </span>
   );
 }
 
-// Small laurel for list items
-function SmallLaurel({ rank }: { rank: number }) {
-  const getColor = () => {
-    if (rank <= 3) {
-      return rank === 1 ? "#D4A500" : rank === 2 ? "#8B8B8B" : "#B87333";
-    }
-    return "#7C6B5A";
-  };
-
+// 3D Play button component (same as Index)
+function PlayButton3D({ onClick }: { onClick: () => void }) {
   return (
-    <div className="relative w-10 h-10 flex items-center justify-center">
-      <svg viewBox="0 0 50 50" className="absolute inset-0 w-full h-full">
-        <path
-          d="M10,40 Q5,30 8,22 Q5,18 8,12 Q12,15 18,13 Q20,18 24,22"
-          fill="none"
-          stroke={getColor()}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M40,40 Q45,30 42,22 Q45,18 42,12 Q38,15 32,13 Q30,18 26,22"
-          fill="none"
-          stroke={getColor()}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="text-xs font-bold z-10" style={{ color: getColor() }}>
-        {rank}<sup className="text-[0.5em]">th</sup>
-      </span>
-    </div>
+    <motion.button
+      onClick={onClick}
+      className="relative"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95, y: 4 }}
+    >
+      {/* Outer glow */}
+      <div 
+        className="absolute inset-0 rounded-full blur-xl"
+        style={{ 
+          background: "rgba(255,255,255,0.4)",
+          transform: "scale(1.2)",
+        }}
+      />
+      
+      {/* Button base (shadow/depth) */}
+      <div 
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: "linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)",
+          transform: "translateY(4px)",
+        }}
+      />
+      
+      {/* Button face */}
+      <div 
+        className="relative w-20 h-20 rounded-full flex items-center justify-center"
+        style={{
+          background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
+          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
+        }}
+      >
+        <Play className="w-8 h-8 text-white fill-white ml-1" />
+      </div>
+    </motion.button>
   );
 }
 
@@ -243,8 +223,8 @@ export default function Leaderboards() {
                 transition={{ delay: 0.2 }}
                 className="flex flex-col items-center pt-8"
               >
-                <div className="relative mb-2">
-                  <LaurelWreath rank={2} size="md" />
+                <div className="mb-1">
+                  <RankMedal rank={2} size="md" />
                 </div>
                 <div className="relative mb-2">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 p-0.5 shadow-lg">
@@ -277,8 +257,8 @@ export default function Leaderboards() {
                 transition={{ delay: 0.1 }}
                 className="flex flex-col items-center"
               >
-                <div className="relative mb-2">
-                  <LaurelWreath rank={1} size="lg" />
+                <div className="mb-1">
+                  <RankMedal rank={1} size="lg" />
                 </div>
                 <div className="relative mb-2">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-xl shadow-amber-400/30">
@@ -316,8 +296,8 @@ export default function Leaderboards() {
                 transition={{ delay: 0.3 }}
                 className="flex flex-col items-center pt-12"
               >
-                <div className="relative mb-2">
-                  <LaurelWreath rank={3} size="sm" />
+                <div className="mb-1">
+                  <RankMedal rank={3} size="sm" />
                 </div>
                 <div className="relative mb-2">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 p-0.5 shadow-lg">
@@ -416,11 +396,13 @@ export default function Leaderboards() {
                       </div>
                     </div>
 
-                    {/* Rank Badge with Laurel */}
+                    {/* Rank Badge with Medal or Number */}
                     {isTopThree ? (
-                      <LaurelWreath rank={position as 1 | 2 | 3} size="sm" />
+                      <RankMedal rank={position as 1 | 2 | 3} size="sm" />
                     ) : (
-                      <SmallLaurel rank={position} />
+                      <span className="text-sm font-bold text-slate-500 w-8 text-center">
+                        #{position}
+                      </span>
                     )}
                   </motion.div>
                 );
@@ -430,8 +412,101 @@ export default function Leaderboards() {
         </div>
       </div>
 
-      {/* Fixed Quick Actions Bar at bottom */}
-      <QuickActionsBar />
+      {/* Bottom Navigation - same as Index */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
+        <motion.div 
+          className="relative px-4 pb-6"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
+        >
+          <div className="flex items-end justify-between">
+            {/* Explore */}
+            <motion.button
+              onClick={() => navigate("/discover")}
+              className="flex flex-col items-center gap-1"
+              whileHover={{ scale: 1.1, y: -3 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <img src={iconCompass} alt="Explore" className="w-10 h-10 object-contain" />
+              </div>
+              <span className="text-[9px] uppercase tracking-wider text-slate-600 font-medium">Explore</span>
+            </motion.button>
+
+            {/* Map */}
+            <motion.button
+              onClick={() => navigate("/adventure-map")}
+              className="flex flex-col items-center gap-1"
+              whileHover={{ scale: 1.1, y: -3 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <img src={iconMap3d} alt="Map" className="w-10 h-10 object-contain" />
+              </div>
+              <span className="text-[9px] uppercase tracking-wider text-slate-600 font-medium">Map</span>
+            </motion.button>
+
+            {/* Center Play Button - elevated */}
+            <div className="mb-4">
+              <PlayButton3D onClick={() => navigate("/game")} />
+            </div>
+
+            {/* Rank - active state */}
+            <motion.button
+              onClick={() => navigate("/leaderboards")}
+              className="flex flex-col items-center gap-1"
+              whileHover={{ scale: 1.1, y: -3 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "rgba(139,92,246,0.3)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(139,92,246,0.4)",
+                }}
+              >
+                <img src={iconTrophy3d} alt="Rank" className="w-10 h-10 object-contain" />
+              </div>
+              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-medium">Rank</span>
+            </motion.button>
+
+            {/* Headphones/Audio */}
+            <motion.button
+              className="flex flex-col items-center gap-1"
+              whileHover={{ scale: 1.1, y: -3 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <span className="text-3xl">🎧</span>
+              </div>
+              <span className="text-[9px] uppercase tracking-wider text-slate-600 font-medium">Sound</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
