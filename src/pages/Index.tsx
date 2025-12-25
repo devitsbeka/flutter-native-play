@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, ShoppingBag, Users, Newspaper, Trophy, MessageCircle, Shield, Plus, Info, Flame } from "lucide-react";
+import { Menu, ShoppingBag, Users, Trophy, Shield, Info, Flame } from "lucide-react";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -162,16 +162,13 @@ export default function Index() {
         {/* ===== LEFT SIDE MENU ===== */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
           <SideMenuButton icon={ShoppingBag} label="Shop" onClick={() => {}} />
-          <SideMenuButton icon={Plus} label="" onClick={() => {}} />
           <SideMenuButton icon={Trophy} label="Categories" onClick={() => navigate("/discover")} badge={2} />
-          <SideMenuButton icon={Newspaper} label="News" onClick={() => {}} badge={1} />
         </div>
 
         {/* ===== RIGHT SIDE MENU ===== */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
           <SideMenuButton icon={Users} label="Friends" onClick={() => navigate("/leaderboards")} position="right" />
           <SideMenuButton icon={Shield} label="Club" onClick={() => navigate("/team")} position="right" />
-          <SideMenuButton icon={MessageCircle} label="Chat" onClick={() => {}} position="right" />
         </div>
 
         {/* ===== CENTER: CHARACTER/AVATAR DISPLAY ===== */}
