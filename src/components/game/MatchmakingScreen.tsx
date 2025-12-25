@@ -24,11 +24,10 @@ export function MatchmakingScreen() {
   const [currentFlag, setCurrentFlag] = useState("🌍");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const playerName = profile?.nickname || "Player 1";
   const playerAvatar = profile?.avatar_url || "😊";
   const playerPoints = profile?.total_points || 0;
 
-  // Calculate arc positions for power-ups
+  // Calculate arc positions for power-ups - EXACT same as VSScreen
   const calculateArcPosition = (angleDeg: number, radius: number) => {
     const angleRad = (angleDeg * Math.PI) / 180;
     return {
@@ -46,12 +45,10 @@ export function MatchmakingScreen() {
     if (phase !== "matchmaking" && phase !== "home" && phase !== "preparing") return;
 
     let cycleCount = 0;
-    const maxCycles = 40; // Total cycles before locking
+    const maxCycles = 40;
     
     const getDelay = (count: number): number => {
-      // Fast phase (0-25): 80ms
       if (count < 25) return 80;
-      // Slowing phase (25-35): gradually slower
       if (count < 30) return 150;
       if (count < 33) return 250;
       if (count < 36) return 400;
@@ -62,24 +59,20 @@ export function MatchmakingScreen() {
     const cycleSlot = () => {
       cycleCount++;
       
-      // Update emoji and flag
       const randomEmoji = slotEmojis[Math.floor(Math.random() * slotEmojis.length)];
       const randomCountry = countries[Math.floor(Math.random() * countries.length)];
       setCurrentEmoji(randomEmoji);
       setCurrentFlag(randomCountry.flag);
 
-      // Update phase
       if (cycleCount < 25) {
         setSlotPhase("searching");
       } else if (cycleCount < maxCycles) {
         setSlotPhase("slowing");
       }
 
-      // Schedule next cycle or lock in
       if (cycleCount < maxCycles) {
         intervalRef.current = setTimeout(cycleSlot, getDelay(cycleCount));
       } else {
-        // Lock in with opponent data if available
         setSlotPhase("found");
         if (opponent) {
           setCurrentEmoji(opponent.avatarEmoji);
@@ -88,7 +81,6 @@ export function MatchmakingScreen() {
       }
     };
 
-    // Start cycling after a short delay
     intervalRef.current = setTimeout(cycleSlot, 300);
 
     return () => {
@@ -108,7 +100,7 @@ export function MatchmakingScreen() {
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
-      {/* Spline 3D Background - blob */}
+      {/* Spline 3D Background - blob (same as VS screen) */}
       <iframe 
         src="https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/" 
         frameBorder="0" 
@@ -116,7 +108,7 @@ export function MatchmakingScreen() {
         title="Matchmaking Background"
       />
       
-      {/* Header */}
+      {/* Header - EXACT same as VSScreen */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">
         <button 
           onClick={() => navigate("/")}
@@ -131,19 +123,14 @@ export function MatchmakingScreen() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-8 pb-6 overflow-auto">
+      {/* Main Content - EXACT same layout as VSScreen */}
+      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-12 pb-6 overflow-auto">
         
-        {/* Player Section (Top) */}
+        {/* Player 1 Section - NO ANIMATION to prevent re-appearing */}
         <div className="flex flex-col items-center mt-4">
-          {/* Avatar with power-ups arc */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-            className="relative"
-          >
-            {/* Power-ups arc */}
+          {/* Avatar with power-ups arc - NO motion wrapper */}
+          <div className="relative">
+            {/* Power-ups arc - EXACT same as VSScreen */}
             {topArcPositions.map((pos, index) => {
               const types: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
               const type = types[index];
@@ -167,42 +154,38 @@ export function MatchmakingScreen() {
               );
             })}
 
-            <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500">
-              <div className="w-full h-full rounded-full bg-[#1a2a3a] flex items-center justify-center">
+            {/* Avatar ring - EXACT same size/style as VSScreen */}
+            <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500">
+              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center">
                 <span className="text-6xl">{playerAvatar}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Player info badge */}
+          {/* Player info badge - EXACT same margin as VSScreen */}
           <div className="-mt-4 z-10">
             <PlayerInfoBadge
               name="You"
               flag={getCountryFlag(profile?.country_code || "US")}
               points={playerPoints}
-              delay={0.2}
+              delay={0}
               direction="up"
               isPlayer={true}
             />
           </div>
         </div>
 
-        {/* VS Text */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, delay: 0.4 }}
-          className="my-6"
-        >
+        {/* VS Text - EXACT same as VSScreen */}
+        <div className="my-3">
           <span className="font-display text-5xl font-bold text-[#FFD700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] tracking-wide">
             VS
           </span>
-        </motion.div>
+        </div>
 
-        {/* Opponent Section (Bottom) - Slot Machine */}
+        {/* Opponent Section - Slot Machine */}
         <div className="flex flex-col items-center">
-          {/* Opponent info badge - shows when found */}
-          <div className="mb-[-16px] z-10 h-12">
+          {/* Opponent info badge */}
+          <div className="mb-[-16px] z-10 h-12 flex items-center justify-center">
             <AnimatePresence mode="wait">
               {slotPhase === "found" && opponent ? (
                 <motion.div
@@ -222,7 +205,7 @@ export function MatchmakingScreen() {
               ) : (
                 <motion.div
                   key="searching"
-                  initial={{ opacity: 0 }}
+                  initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="flex items-center justify-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20"
@@ -236,13 +219,8 @@ export function MatchmakingScreen() {
             </AnimatePresence>
           </div>
 
-          {/* Slot Machine Avatar */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-            className="relative"
-          >
+          {/* Slot Machine Avatar - EXACT same size as VSScreen */}
+          <div className="relative">
             {/* Glow effect when found */}
             <AnimatePresence>
               {slotPhase === "found" && (
@@ -269,7 +247,7 @@ export function MatchmakingScreen() {
               />
             )}
 
-            {/* Avatar circle */}
+            {/* Avatar circle - EXACT same size as VSScreen */}
             <motion.div 
               className={`w-36 h-36 rounded-full p-2 transition-all duration-300 ${
                 slotPhase === "found" 
@@ -279,18 +257,8 @@ export function MatchmakingScreen() {
               animate={slotPhase === "found" ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="w-full h-full rounded-full bg-[#1a2a3a] flex items-center justify-center relative overflow-hidden">
-                {/* Slot cycling emoji */}
-                <motion.span 
-                  key={currentEmoji}
-                  initial={{ y: slotPhase !== "found" ? -20 : 0, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: 20, opacity: 0 }}
-                  transition={{ duration: slotPhase === "found" ? 0.3 : 0.05 }}
-                  className="text-6xl"
-                >
-                  {currentEmoji}
-                </motion.span>
+              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center relative overflow-hidden">
+                <span className="text-6xl">{currentEmoji}</span>
               </div>
             </motion.div>
 
@@ -320,16 +288,11 @@ export function MatchmakingScreen() {
                 </>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         </div>
 
         {/* Status Text */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8"
-        >
+        <div className="mt-8">
           <AnimatePresence mode="wait">
             {slotPhase === "found" ? (
               <motion.p
@@ -344,9 +307,8 @@ export function MatchmakingScreen() {
             ) : (
               <motion.p
                 key="searching-text"
-                initial={{ opacity: 0 }}
+                initial={{ opacity: 1 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 className="text-lg text-white/70 tracking-wide"
               >
                 Finding opponent
@@ -359,7 +321,7 @@ export function MatchmakingScreen() {
               </motion.p>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
