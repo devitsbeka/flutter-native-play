@@ -147,8 +147,8 @@ export default function Index() {
 
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
-          <div className="flex items-center justify-center gap-3">
-            {/* Gold Coins */}
+          <div className="flex items-center justify-between">
+            {/* Gold Coins - Left */}
             <CurrencyDisplay 
               icon="🪙" 
               value={gamesWon * 10} 
@@ -156,7 +156,18 @@ export default function Index() {
               bgColor="linear-gradient(180deg, #FFD700 0%, #FFA000 100%)"
             />
             
-            {/* Diamonds */}
+            {/* Title - Center */}
+            <h1 
+              className="text-3xl font-bold text-white"
+              style={{ 
+                fontFamily: "'TASolivare', cursive",
+                textShadow: "0 2px 8px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.2)"
+              }}
+            >
+              My Trivia
+            </h1>
+            
+            {/* Diamonds - Right */}
             <CurrencyDisplay 
               icon="💎" 
               value={currentStreak} 
