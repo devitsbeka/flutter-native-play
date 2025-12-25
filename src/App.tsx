@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route } from "react-router-dom";
 import { SplashScreen } from "@/components/SplashScreen";
+import { SplinePreloader } from "@/components/game/SplinePreloader";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import CategoryQuizPage from "./pages/CategoryQuizPage";
@@ -20,6 +21,8 @@ import VIP from "./pages/VIP";
 const App = () => (
   <SplashScreen>
     <TooltipProvider>
+      {/* Preload Spline animations in background */}
+      <SplinePreloader />
       <Toaster />
       <Sonner />
       <Routes>
