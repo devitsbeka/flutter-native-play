@@ -1,12 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { Play, Flame, Star } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
+import { Skeleton } from "@/components/ui/skeleton";
 import iconCompass from "@/assets/icons/icon-compass.png";
 import iconMap3d from "@/assets/icons/icon-map-3d.png";
 import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
@@ -212,9 +213,58 @@ const PlayButton3D = ({ onClick }: { onClick: () => void }) => {
 
 export default function Index() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, user, fetchProfile } = useAuth();
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
+  
+  // Pull-to-refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startY = useRef(0);
+  const isPulling = useRef(false);
+  
+  const PULL_THRESHOLD = 80;
+  
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (containerRef.current?.scrollTop === 0) {
+      startY.current = e.touches[0].clientY;
+      isPulling.current = true;
+    }
+  }, []);
+  
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isPulling.current) return;
+    
+    const currentY = e.touches[0].clientY;
+    const distance = Math.max(0, currentY - startY.current);
+    
+    if (distance > 0) {
+      // Apply resistance
+      setPullDistance(Math.min(distance * 0.5, 120));
+    }
+  }, []);
+  
+  const handleTouchEnd = useCallback(async () => {
+    if (!isPulling.current) return;
+    isPulling.current = false;
+    
+    if (pullDistance > PULL_THRESHOLD) {
+      setIsRefreshing(true);
+      setPullDistance(60);
+      
+      // Refresh profile data
+      if (user) {
+        await fetchProfile(user.id);
+      }
+      // Small delay for animation to complete
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setIsRefreshing(false);
+    }
+    
+    setPullDistance(0);
+  }, [pullDistance, user, fetchProfile]);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
@@ -225,7 +275,13 @@ export default function Index() {
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
       
-      <div className="relative h-screen w-full overflow-hidden">
+      <div 
+        ref={containerRef}
+        className="relative h-screen w-full overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
 
         {/* ===== TOP BAR ===== */}
@@ -262,15 +318,25 @@ export default function Index() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="flex items-center gap-1">
-                <img src={iconCoin} alt="" className="w-6 h-6 object-contain" />
-                <span className="text-sm font-bold text-gray-800">{(gamesWon * 10).toLocaleString()}</span>
-              </div>
-              <div className="w-px h-4 bg-gray-200" />
-              <div className="flex items-center gap-1">
-                <img src={iconGem} alt="" className="w-6 h-6 object-contain" />
-                <span className="text-sm font-bold text-gray-800">{currentStreak}</span>
-              </div>
+              {isRefreshing ? (
+                <>
+                  <Skeleton className="w-14 h-5 rounded-full bg-gray-200" />
+                  <div className="w-px h-4 bg-gray-200" />
+                  <Skeleton className="w-10 h-5 rounded-full bg-gray-200" />
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1">
+                    <img src={iconCoin} alt="" className="w-6 h-6 object-contain" />
+                    <span className="text-sm font-bold text-gray-800">{(gamesWon * 10).toLocaleString()}</span>
+                  </div>
+                  <div className="w-px h-4 bg-gray-200" />
+                  <div className="flex items-center gap-1">
+                    <img src={iconGem} alt="" className="w-6 h-6 object-contain" />
+                    <span className="text-sm font-bold text-gray-800">{currentStreak}</span>
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         </header>
@@ -312,12 +378,32 @@ export default function Index() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
+            style={{ 
+              transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
+            }}
           >
-            {/* Avatar - LARGER */}
+            {/* Avatar - LARGER with 3D flip on refresh */}
             <motion.div 
               className="relative"
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              animate={isRefreshing ? {
+                rotateY: [0, 360],
+                y: [0, -10, 0],
+              } : { 
+                y: [0, -5, 0],
+                rotateY: 0,
+              }}
+              transition={isRefreshing ? {
+                rotateY: { duration: 0.8, ease: "easeInOut" },
+                y: { duration: 0.4, ease: "easeOut" },
+              } : { 
+                duration: 3, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+              style={{ 
+                perspective: 1000,
+                transformStyle: "preserve-3d",
+              }}
             >
               {/* White ring */}
               <div 
@@ -325,6 +411,7 @@ export default function Index() {
                 style={{
                   background: "linear-gradient(180deg, #FFFFFF 0%, #F8F8F8 100%)",
                   boxShadow: "0 8px 32px rgba(156,106,222,0.25), 0 2px 8px rgba(0,0,0,0.05)",
+                  backfaceVisibility: "hidden",
                 }}
               >
                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
@@ -349,19 +436,23 @@ export default function Index() {
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
               >
-                <div 
-                  className="flex items-center justify-center gap-1 px-5 py-2 rounded-full"
-                  style={{
-                    background: "linear-gradient(180deg, #FFE066 0%, #FFD700 50%, #FFC400 100%)",
-                    boxShadow: "0 3px 0 #CC9900, 0 4px 12px rgba(255,200,0,0.3)",
-                  }}
-                >
-                  <Star className="w-5 h-5 text-amber-700 fill-amber-700 flex-shrink-0" />
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[10px] uppercase tracking-wider text-amber-700 font-semibold">Level</span>
-                    <span className="text-xl font-bold text-amber-800">{levelInfo.level}</span>
+                {isRefreshing ? (
+                  <Skeleton className="w-28 h-9 rounded-full bg-amber-200/60" />
+                ) : (
+                  <div 
+                    className="flex items-center justify-center gap-1 px-5 py-2 rounded-full"
+                    style={{
+                      background: "linear-gradient(180deg, #FFE066 0%, #FFD700 50%, #FFC400 100%)",
+                      boxShadow: "0 3px 0 #CC9900, 0 4px 12px rgba(255,200,0,0.3)",
+                    }}
+                  >
+                    <Star className="w-5 h-5 text-amber-700 fill-amber-700 flex-shrink-0" />
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[10px] uppercase tracking-wider text-amber-700 font-semibold">Level</span>
+                      <span className="text-xl font-bold text-amber-800">{levelInfo.level}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </motion.div>
             </motion.div>
             
@@ -372,47 +463,51 @@ export default function Index() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              {/* Progress bar container */}
-              <div 
-                className="relative h-9 rounded-full overflow-hidden"
-                style={{ 
-                  background: "rgba(156,106,222,0.15)",
-                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.08)",
-                }}
-              >
-                {/* Progress fill */}
-                <motion.div 
-                  className="absolute inset-y-0 left-0 rounded-full"
-                  style={{
-                    background: `linear-gradient(90deg, ${theme.accent} 0%, #B794F6 100%)`,
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2)",
+              {isRefreshing ? (
+                <Skeleton className="h-9 w-full rounded-full bg-purple-200/40" />
+              ) : (
+                /* Progress bar container */
+                <div 
+                  className="relative h-9 rounded-full overflow-hidden"
+                  style={{ 
+                    background: "rgba(156,106,222,0.15)",
+                    boxShadow: "inset 0 2px 4px rgba(0,0,0,0.08)",
                   }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${levelInfo.progress}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                />
-                
-                {/* XP text - dark version (visible on unfilled part) */}
-                <div className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
-                  <Flame className="w-4 h-4 text-orange-400" />
-                  <span className="text-sm font-bold text-gray-600">
-                    {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                  </span>
-                </div>
-                
-                {/* XP text - light version (visible on filled part via clip) */}
-                <motion.div 
-                  className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none"
-                  initial={{ clipPath: "inset(0 100% 0 0)" }}
-                  animate={{ clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)` }}
-                  transition={{ duration: 1, delay: 0.5 }}
                 >
-                  <Flame className="w-4 h-4 text-white/90" />
-                  <span className="text-sm font-bold text-white">
-                    {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                  </span>
-                </motion.div>
-              </div>
+                  {/* Progress fill */}
+                  <motion.div 
+                    className="absolute inset-y-0 left-0 rounded-full"
+                    style={{
+                      background: `linear-gradient(90deg, ${theme.accent} 0%, #B794F6 100%)`,
+                      boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2)",
+                    }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${levelInfo.progress}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  />
+                  
+                  {/* XP text - dark version (visible on unfilled part) */}
+                  <div className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    <span className="text-sm font-bold text-gray-600">
+                      {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                    </span>
+                  </div>
+                  
+                  {/* XP text - light version (visible on filled part via clip) */}
+                  <motion.div 
+                    className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none"
+                    initial={{ clipPath: "inset(0 100% 0 0)" }}
+                    animate={{ clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  >
+                    <Flame className="w-4 h-4 text-white/90" />
+                    <span className="text-sm font-bold text-white">
+                      {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                    </span>
+                  </motion.div>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         </div>
