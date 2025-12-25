@@ -58,11 +58,46 @@ export function VSScreen() {
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
-      {/* Background gradient - deep indigo to purple */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a3e] via-[#2d2060] to-[#4a1a6e]" />
+      {/* Player Avatar Background (Top-Left Diagonal) */}
+      <div 
+        className="absolute inset-0"
+        style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
+      >
+        {profile?.avatar_url ? (
+          <img 
+            src={profile.avatar_url} 
+            alt="" 
+            className="absolute inset-0 w-full h-full object-cover scale-150"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a3e] via-[#2d2060] to-[#3a2a70]" />
+        )}
+        {/* Dark overlay with purple tint */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-purple-900/85 to-violet-900/90" />
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
+
+      {/* Opponent Avatar Background (Bottom-Right Diagonal) */}
+      <div 
+        className="absolute inset-0"
+        style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
+      >
+        {opponent.avatarUrl ? (
+          <img 
+            src={opponent.avatarUrl} 
+            alt="" 
+            className="absolute inset-0 w-full h-full object-cover scale-150"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-tl from-[#4a1a6e] via-[#5a2080] to-[#6a3090]" />
+        )}
+        {/* Dark overlay with magenta tint */}
+        <div className="absolute inset-0 bg-gradient-to-tl from-fuchsia-900/80 via-purple-900/85 to-pink-900/90" />
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
       
       {/* Diagonal gold line with glow */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" preserveAspectRatio="none">
         <defs>
           <linearGradient id="goldLine" x1="100%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#FFE55C" />
