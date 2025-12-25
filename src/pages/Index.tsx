@@ -417,13 +417,23 @@ export default function Index() {
                   {isRefreshing ? (
                     <Skeleton className="w-64 h-12 rounded-2xl bg-white/40" />
                   ) : (
-                    <div 
+                    <motion.div 
                       className="relative h-14 rounded-2xl overflow-hidden min-w-[280px]"
                       style={{ 
-                        background: "rgba(255,255,255,0.95)",
-                        boxShadow: "0 6px 0 rgba(200,180,220,0.6), 0 8px 20px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,1)",
-                        border: "3px solid rgba(255,255,255,0.9)",
+                        background: "rgba(255,255,255,0.70)",
+                        backdropFilter: "blur(20px) saturate(180%)",
+                        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                        boxShadow: "0 6px 0 rgba(200,180,220,0.5), 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.8)",
+                        border: "2px solid rgba(255,255,255,0.6)",
                       }}
+                      animate={{
+                        scale: [1, 1.02, 1],
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: "easeInOut",
+                      }}
+                      key={levelInfo.xpInCurrentLevel} // triggers animation on XP change
                     >
                       {/* Progress fill - chunky colored bar with 3D effect */}
                       <motion.div 
@@ -457,7 +467,7 @@ export default function Index() {
                           Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
                         </span>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
                 </motion.div>
               </div>
