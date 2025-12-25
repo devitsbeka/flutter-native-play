@@ -12,11 +12,11 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
   useEffect(() => {
     const script = document.createElement("script");
     script.type = "module";
-    script.src = "https://unpkg.com/@splinetool/viewer@1.12.27/build/spline-viewer.js";
+    script.src = "https://unpkg.com/@splinetool/viewer@1.12.28/build/spline-viewer.js";
     script.onload = () => {
       if (containerRef.current) {
         const viewer = document.createElement("spline-viewer");
-        viewer.setAttribute("url", "https://prod.spline.design/cXZCFGvVIr5hMcfK/scene.splinecode");
+        viewer.setAttribute("url", "https://prod.spline.design/Goo2QUw1KNNhKIrp/scene.splinecode");
         viewer.style.width = "100%";
         viewer.style.height = "100%";
         viewer.addEventListener("load", () => setIsLoaded(true));
@@ -31,9 +31,9 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
   }, []);
 
   return (
-    <div className={`fixed inset-0 w-full h-full ${className}`}>
+    <div className={`absolute inset-0 w-full h-full ${className || ""}`}>
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background">
+        <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
             className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-xl"
             animate={{
