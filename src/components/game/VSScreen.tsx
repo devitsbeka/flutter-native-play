@@ -60,40 +60,44 @@ export function VSScreen() {
     <div className="h-full w-full flex flex-col relative overflow-hidden">
       {/* Player Avatar Background (Top-Left Diagonal) */}
       <div 
-        className="absolute inset-0"
+        className="absolute inset-0 overflow-hidden"
         style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
       >
         {profile?.avatar_url ? (
-          <img 
-            src={profile.avatar_url} 
-            alt="" 
-            className="absolute inset-0 w-full h-full object-cover scale-150"
+          <div 
+            className="absolute w-[200%] h-[200%] -top-1/4 -left-1/4"
+            style={{
+              backgroundImage: `url(${profile.avatar_url})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center top",
+            }}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a3e] via-[#2d2060] to-[#3a2a70]" />
         )}
-        {/* Dark overlay with purple tint */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-purple-900/85 to-violet-900/90" />
-        <div className="absolute inset-0 bg-black/40" />
+        {/* Dark overlay with indigo tint */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-purple-900/75 to-violet-900/80" />
       </div>
 
       {/* Opponent Avatar Background (Bottom-Right Diagonal) */}
       <div 
-        className="absolute inset-0"
+        className="absolute inset-0 overflow-hidden"
         style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
       >
         {opponent.avatarUrl ? (
-          <img 
-            src={opponent.avatarUrl} 
-            alt="" 
-            className="absolute inset-0 w-full h-full object-cover scale-150"
+          <div 
+            className="absolute w-[200%] h-[200%] -bottom-1/4 -right-1/4"
+            style={{
+              backgroundImage: `url(${opponent.avatarUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center top",
+            }}
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-tl from-[#4a1a6e] via-[#5a2080] to-[#6a3090]" />
         )}
         {/* Dark overlay with magenta tint */}
-        <div className="absolute inset-0 bg-gradient-to-tl from-fuchsia-900/80 via-purple-900/85 to-pink-900/90" />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-tl from-fuchsia-900/70 via-purple-900/75 to-pink-900/80" />
       </div>
       
       {/* Diagonal gold line with glow */}
@@ -105,7 +109,7 @@ export function VSScreen() {
             <stop offset="100%" stopColor="#E6A800" />
           </linearGradient>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -116,7 +120,7 @@ export function VSScreen() {
           x1="100%" y1="0%" 
           x2="0%" y2="100%" 
           stroke="url(#goldLine)" 
-          strokeWidth="8"
+          strokeWidth="10"
           filter="url(#glow)"
         />
       </svg>
