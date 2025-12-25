@@ -432,7 +432,7 @@ export default function Index() {
               </div>
               
               {/* Level & XP - simple inline display */}
-              <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center px-6">
+              <div className="absolute -bottom-8 left-0 right-0 z-20 flex justify-center px-6">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
