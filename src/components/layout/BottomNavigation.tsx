@@ -31,12 +31,14 @@ export function BottomNavigation() {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "flex flex-col items-center justify-center py-2 px-4 min-w-[64px] transition-colors",
-                  isActive ? "text-foreground" : "text-muted-foreground"
+                  "flex flex-col items-center justify-center py-2 px-4 min-w-[64px] transition-all",
+                  isActive 
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <item.icon className={cn("w-6 h-6", isActive && "stroke-[2.5]")} />
-                <span className="text-xs mt-1 font-display tracking-wide">{item.label}</span>
+                <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5]")} />
+                <span className="text-[10px] mt-1 font-display tracking-wide">{item.label}</span>
               </button>
             );
           })}
