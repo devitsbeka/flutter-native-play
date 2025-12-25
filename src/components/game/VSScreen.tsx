@@ -5,7 +5,7 @@ import { getCountryFlag } from "@/data/opponents";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // Floating sparkle particle
 const SparkleParticle = ({ delay, x, y }: { delay: number; x: number; y: number }) => (
@@ -23,17 +23,106 @@ const SparkleParticle = ({ delay, x, y }: { delay: number; x: number; y: number 
   </motion.div>
 );
 
+// Countdown overlay component
+const CountdownOverlay = ({ count, onComplete }: { count: number | string; onComplete?: () => void }) => (
+  <motion.div 
+    className="fixed inset-0 z-50 flex items-center justify-center"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+  >
+    {/* Dark overlay */}
+    <motion.div 
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    />
+    
+    {/* Countdown number/text */}
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={count}
+        className="relative z-10"
+        initial={{ scale: 3, opacity: 0, rotate: -10 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+        exit={{ scale: 0.5, opacity: 0, rotate: 10 }}
+        transition={{ duration: 0.3, type: "spring", stiffness: 200, damping: 15 }}
+      >
+        {/* Glow ring */}
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: count === "GO!" 
+              ? "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 70%)"
+              : "radial-gradient(circle, rgba(255,215,0,0.6) 0%, transparent 70%)",
+            transform: "scale(3)",
+          }}
+          animate={{ 
+            scale: [2.5, 3.5, 2.5],
+            opacity: [0.8, 0.4, 0.8],
+          }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+        />
+        
+        <span 
+          className="text-8xl font-black"
+          style={{
+            fontFamily: "'TASolivare', sans-serif",
+            background: count === "GO!" 
+              ? "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)"
+              : "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #E6A800 70%, #CC8800 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            filter: count === "GO!"
+              ? "drop-shadow(0 4px 0 #166534) drop-shadow(0 0 30px rgba(34,197,94,0.8))"
+              : "drop-shadow(0 4px 0 #8B6914) drop-shadow(0 0 30px rgba(255,215,0,0.8))",
+          }}
+        >
+          {count}
+        </span>
+      </motion.div>
+    </AnimatePresence>
+  </motion.div>
+);
+
 export function VSScreen() {
   const { opponent, startMatch, playerPowerUps, opponentPowerUps } = useGame();
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [showVS, setShowVS] = useState(false);
+  const [countdown, setCountdown] = useState<number | string | null>(null);
+  const [isCountingDown, setIsCountingDown] = useState(false);
 
   // Trigger VS text after avatars animate in
   useEffect(() => {
     const timer = setTimeout(() => setShowVS(true), 600);
     return () => clearTimeout(timer);
   }, []);
+
+  // Countdown timer logic
+  const handleStartCountdown = useCallback(() => {
+    if (isCountingDown) return;
+    setIsCountingDown(true);
+    setCountdown(3);
+    
+    const countdownSequence = [
+      { value: 3, delay: 0 },
+      { value: 2, delay: 800 },
+      { value: 1, delay: 1600 },
+      { value: "GO!", delay: 2400 },
+    ];
+    
+    countdownSequence.forEach(({ value, delay }) => {
+      setTimeout(() => setCountdown(value), delay);
+    });
+    
+    // Start match after GO!
+    setTimeout(() => {
+      setCountdown(null);
+      setIsCountingDown(false);
+      startMatch();
+    }, 3200);
+  }, [isCountingDown, startMatch]);
 
   if (!opponent) return null;
 
@@ -413,13 +502,14 @@ export function VSScreen() {
       {/* Bottom Button */}
       <div className="px-6 pb-6 pt-3 relative z-20">
         <motion.button
-          onClick={startMatch}
-          className="relative w-full py-4 rounded-2xl font-bold text-xl tracking-widest uppercase overflow-hidden"
+          onClick={handleStartCountdown}
+          disabled={isCountingDown}
+          className="relative w-full py-4 rounded-2xl font-bold text-xl tracking-widest uppercase overflow-hidden disabled:opacity-70"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.8 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: isCountingDown ? 1 : 1.02 }}
+          whileTap={{ scale: isCountingDown ? 1 : 0.98 }}
           style={{
             background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 20%, #E6A800 80%, #CC8800 100%)",
             boxShadow: "0 6px 0 #8B6914, 0 8px 20px rgba(0,0,0,0.15)",
@@ -434,6 +524,13 @@ export function VSScreen() {
           <span className="relative z-10">NEXT</span>
         </motion.button>
       </div>
+
+      {/* Countdown Overlay */}
+      <AnimatePresence>
+        {countdown !== null && (
+          <CountdownOverlay count={countdown} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
