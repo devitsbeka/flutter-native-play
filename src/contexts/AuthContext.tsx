@@ -21,7 +21,9 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signUp: (email: string, password: string, nickname: string) => Promise<{ data: any; error: any }>;
+  signUpWithUsername: (username: string, password: string) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signInWithUsername: (username: string, password: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ data?: any; error: any }>;
   fetchProfile: (userId: string) => Promise<void>;
@@ -123,9 +125,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { data, error };
   };
 
+  // Username-only signup - creates pseudo-email internally
+  const signUpWithUsername = async (username: string, password: string) => {
+    const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@worldquizzes.local`;
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email: pseudoEmail,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { nickname: username },
+      },
+    });
+    
+    return { data, error };
+  };
+
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
+      password,
+    });
+    
+    return { data, error };
+  };
+
+  // Username-only sign in - converts to pseudo-email
+  const signInWithUsername = async (username: string, password: string) => {
+    const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@worldquizzes.local`;
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: pseudoEmail,
       password,
     });
     
@@ -167,7 +198,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         signUp,
+        signUpWithUsername,
         signIn,
+        signInWithUsername,
         signOut,
         updateProfile,
         fetchProfile,
