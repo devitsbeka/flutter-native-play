@@ -188,7 +188,7 @@ const PlayButton3D = ({ onClick }: { onClick: () => void }) => {
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
               <Play 
-                className="w-8 h-8 ml-1 drop-shadow-sm" 
+                className="w-10 h-10 drop-shadow-sm" 
                 style={{ color: "white" }}
                 fill="rgba(255,255,255,0.95)"
                 strokeWidth={0}
@@ -496,16 +496,8 @@ export default function Index() {
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{
-                    background: "rgba(255,255,255,0.5)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
-                  }}
-                >
-                  <img src={iconCompass} alt="Explore" className="w-10 h-10 object-contain" />
+                <div className="flex items-center justify-center">
+                  <img src={iconCompass} alt="Explore" className="w-[52px] h-[52px] object-contain" />
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Explore</span>
               </motion.button>
@@ -517,16 +509,8 @@ export default function Index() {
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{
-                    background: "rgba(255,255,255,0.5)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
-                  }}
-                >
-                  <img src={iconMap3d} alt="Map" className="w-10 h-10 object-contain" />
+                <div className="flex items-center justify-center">
+                  <img src={iconMap3d} alt="Map" className="w-[52px] h-[52px] object-contain" />
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Map</span>
               </motion.button>
@@ -543,16 +527,8 @@ export default function Index() {
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{
-                    background: "rgba(255,255,255,0.5)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
-                  }}
-                >
-                  <img src={iconTrophy3d} alt="Rank" className="w-10 h-10 object-contain" />
+                <div className="flex items-center justify-center">
+                  <img src={iconTrophy3d} alt="Rank" className="w-[52px] h-[52px] object-contain" />
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Rank</span>
               </motion.button>
@@ -563,16 +539,8 @@ export default function Index() {
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{
-                    background: "rgba(255,255,255,0.5)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
-                  }}
-                >
-                  <span className="text-3xl">🎧</span>
+                <div className="flex items-center justify-center">
+                  <span className="text-4xl">🎧</span>
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Sound</span>
               </motion.button>
