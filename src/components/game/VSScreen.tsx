@@ -43,7 +43,7 @@ export function VSScreen() {
     <div className="h-full w-full flex flex-col relative overflow-hidden">
       {/* Spline 3D Background */}
       <iframe 
-        src="https://my.spline.design/3dpathshandwrittencopy-3vX8V4uGjEsxoAuGqrIdOU3k/" 
+        src="https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/" 
         frameBorder="0" 
         className="absolute inset-0 w-full h-full -z-10"
         title="VS Screen Background"
