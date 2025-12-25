@@ -1,11 +1,47 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Info, Menu } from "lucide-react";
+import { Trophy, Info, Menu, ShoppingBag, Zap, Map } from "lucide-react";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
+
+// Side menu button component
+const SideMenuButton = ({ 
+  icon: Icon, 
+  label, 
+  onClick, 
+  badge
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  onClick?: () => void;
+  badge?: number;
+}) => (
+  <motion.button
+    onClick={onClick}
+    className="relative flex flex-col items-center gap-1"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+  >
+    <div 
+      className="w-14 h-14 rounded-2xl flex items-center justify-center relative"
+      style={{
+        background: "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
+        boxShadow: "0 4px 0 #1a1a2a, 0 6px 10px rgba(0,0,0,0.3)",
+      }}
+    >
+      <Icon className="w-6 h-6 text-white" />
+      {badge && badge > 0 && (
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+          <span className="text-white text-xs font-bold">{badge}</span>
+        </div>
+      )}
+    </div>
+    <span className="text-white text-[10px] font-bold uppercase tracking-wide">{label}</span>
+  </motion.button>
+);
 
 // Currency display component
 const CurrencyDisplay = ({ icon, value, color }: { icon: string; value: number; color: string }) => (
@@ -94,6 +130,18 @@ export default function Index() {
             </button>
           </div>
         </header>
+
+        {/* ===== LEFT SIDE MENU ===== */}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
+          <SideMenuButton icon={ShoppingBag} label="Shop" onClick={() => {}} />
+          <SideMenuButton icon={Trophy} label="Categories" onClick={() => navigate("/discover")} badge={2} />
+        </div>
+
+        {/* ===== RIGHT SIDE MENU ===== */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
+          <SideMenuButton icon={Zap} label="Powers" onClick={() => {}} />
+          <SideMenuButton icon={Map} label="Map" onClick={() => navigate("/adventure-map")} />
+        </div>
 
         {/* ===== CENTER: CHARACTER/AVATAR DISPLAY ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
