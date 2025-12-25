@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameProvider, useGame } from "@/contexts/GameContext";
-// Force rebuild
 import { GameContainer } from "@/components/game/GameContainer";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { ArrowLeft } from "lucide-react";
@@ -17,15 +16,24 @@ function GameContent() {
     }
   }, [phase, startMatchmaking]);
 
-  // Hide background for phases that have their own full-screen background
-  const hasOwnBackground = phase === "vs-screen" || phase === "playing" || phase === "question-result";
+  // Phases that have their own full-screen background (no SplineGlobe, no overlay, no padding)
+  const hasOwnBackground = phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result";
+
+  // Don't render anything during "home" phase to avoid flash
+  if (phase === "home") {
+    return (
+      <div className="h-screen w-full bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden bg-[#8B7FD4]">
-      {/* Spline Background - only show for certain phases */}
+    <div className="h-screen flex flex-col relative overflow-hidden bg-background">
+      {/* Spline Background - only show for match-result phase */}
       {!hasOwnBackground && <SplineGlobe />}
       
-      {/* White Radial Mask - only show for certain phases */}
+      {/* White Radial Mask - only show for match-result phase */}
       {!hasOwnBackground && (
         <div 
           className="fixed inset-0 z-[1] pointer-events-none"
@@ -35,7 +43,7 @@ function GameContent() {
         />
       )}
 
-      {/* Back Button - only show for phases without their own back button */}
+      {/* Back Button - only show for phases without their own navigation */}
       {!hasOwnBackground && (
         <button
           onClick={() => navigate("/")}
@@ -45,7 +53,7 @@ function GameContent() {
         </button>
       )}
       
-      {/* Game Content - Full height */}
+      {/* Game Content - Full height, no padding for full-screen phases */}
       <div className={`relative z-10 flex-1 flex flex-col h-full overflow-hidden ${hasOwnBackground ? '' : 'px-4 pt-14 pb-4'}`}>
         <GameContainer />
       </div>
