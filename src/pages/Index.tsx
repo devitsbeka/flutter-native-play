@@ -5,9 +5,16 @@ import { Play, Flame, Star } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
+import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetailModal";
+import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
+import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
+import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
+import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { t } from "@/lib/i18n";
 import iconCompass from "@/assets/icons/icon-compass.png";
 import iconMap3d from "@/assets/icons/icon-map-3d.png";
 import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
@@ -207,8 +214,12 @@ const PlayButton3D = ({ onClick }: { onClick: () => void }) => {
 export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile } = useAuth();
+  const { step, startOnboarding, skipToAvatarCreation, needsWalkthrough, setStep, hasCompletedOnboarding } = useOnboarding();
+  
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
+  const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
+  const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -259,14 +270,44 @@ export default function Index() {
     setPullDistance(0);
   }, [pullDistance, user, fetchProfile]);
 
+  // Handle play button click - check auth status
+  const handlePlayClick = useCallback(() => {
+    if (!user) {
+      // Not logged in - start signup onboarding
+      startOnboarding();
+    } else if (!profile?.avatar_url) {
+      // Logged in but no avatar - go to avatar creation
+      skipToAvatarCreation();
+    } else if (needsWalkthrough && !hasCompletedOnboarding) {
+      // First time with avatar - show walkthrough
+      setStep("walkthrough");
+    } else {
+      // All good - navigate to game
+      navigate("/game");
+    }
+  }, [user, profile, navigate, startOnboarding, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep]);
+
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
   return (
     <>
+      {/* Onboarding modals */}
+      <SignupOnboardingModal />
+      <AvatarCreationFlow />
+      <OnboardingWalkthrough />
+      
+      {/* Other modals */}
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
+      <SoundSettingsModal isOpen={isSoundModalOpen} onClose={() => setIsSoundModalOpen(false)} />
+      <PowerUpDetailModal 
+        isOpen={selectedPowerUp !== null} 
+        onClose={() => setSelectedPowerUp(null)} 
+        type={selectedPowerUp || "fifty-fifty"} 
+      />
+      
       
       <div 
         ref={containerRef}
@@ -358,7 +399,7 @@ export default function Index() {
               }}
             >
               {/* Avatar image - clean display without ring */}
-              <div className="w-64 relative flex items-end justify-center">
+              <div className="w-64 relative flex items-end justify-center" data-walkthrough="avatar">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -376,7 +417,11 @@ export default function Index() {
               </div>
                 
               {/* Power badges in curved arc at top of avatar */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -80 }}>
+              <div 
+                className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" 
+                style={{ marginTop: -80 }}
+                data-walkthrough="powerups"
+              >
                 {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
                   // True curved arc using calculated positions
                   const totalBadges = 5;
@@ -401,7 +446,13 @@ export default function Index() {
                         marginLeft: -24, // half badge size
                       }}
                     >
-                      <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
+                      <PowerUpBadge 
+                        type={type} 
+                        size="sm" 
+                        index={index} 
+                        count={type === "add-power" ? undefined : 3}
+                        onClick={() => setSelectedPowerUp(type)}
+                      />
                     </motion.div>
                   );
                 })}
@@ -524,11 +575,12 @@ export default function Index() {
                 className="flex flex-col items-center gap-1"
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
+                data-walkthrough="explore"
               >
                 <div className="flex items-center justify-center">
                   <img src={iconCompass} alt="Explore" className="w-[52px] h-[52px] object-contain" />
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Explore</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">{t("nav.explore")}</span>
               </motion.button>
 
               {/* Map */}
@@ -537,16 +589,17 @@ export default function Index() {
                 className="flex flex-col items-center gap-1"
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
+                data-walkthrough="map"
               >
                 <div className="flex items-center justify-center">
                   <img src={iconMap3d} alt="Map" className="w-[52px] h-[52px] object-contain" />
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Map</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">{t("nav.map")}</span>
               </motion.button>
 
               {/* Center Play Button - elevated */}
-              <div className="mb-4">
-                <PlayButton3D onClick={() => navigate("/game")} />
+              <div className="mb-4" data-walkthrough="play">
+                <PlayButton3D onClick={handlePlayClick} />
               </div>
 
               {/* Rank */}
@@ -555,15 +608,17 @@ export default function Index() {
                 className="flex flex-col items-center gap-1"
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
+                data-walkthrough="rank"
               >
                 <div className="flex items-center justify-center">
                   <img src={iconTrophy3d} alt="Rank" className="w-[52px] h-[52px] object-contain" />
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Rank</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">{t("nav.rank")}</span>
               </motion.button>
 
               {/* Headphones/Audio */}
               <motion.button
+                onClick={() => setIsSoundModalOpen(true)}
                 className="flex flex-col items-center gap-1"
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
@@ -571,7 +626,7 @@ export default function Index() {
                 <div className="flex items-center justify-center">
                   <span className="text-4xl">🎧</span>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Sound</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">{t("nav.sound")}</span>
               </motion.button>
             </div>
           </motion.div>
