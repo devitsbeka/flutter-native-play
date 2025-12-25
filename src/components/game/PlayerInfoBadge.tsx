@@ -25,12 +25,6 @@ export function PlayerInfoBadge({
       transition={{ delay, type: "spring", stiffness: 200 }}
       className="relative"
     >
-      {/* "You" label for player */}
-      {isPlayer && (
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#22C55E] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 shadow-md">
-          You
-        </div>
-      )}
       
       {/* Main badge container with gradient border */}
       <div className={`relative p-[2px] rounded-2xl shadow-lg ${
