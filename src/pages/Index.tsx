@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Info, Menu, ShoppingBag, Zap, Map } from "lucide-react";
-import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
+import { ShoppingBag, Zap, Map, Trophy, User, Home } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
@@ -44,12 +43,12 @@ const SideMenuButton = ({
 );
 
 // Currency display component
-const CurrencyDisplay = ({ icon, value, color }: { icon: string; value: number; color: string }) => (
+const CurrencyDisplay = ({ icon, value, color, bgColor }: { icon: string; value: number; color: string; bgColor?: string }) => (
   <div 
-    className="h-10 rounded-xl px-3 flex items-center gap-2"
+    className="h-10 rounded-xl px-4 flex items-center gap-2"
     style={{
-      background: "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
-      boxShadow: "0 3px 0 #1a1a2a",
+      background: bgColor || "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
+      boxShadow: bgColor ? "0 3px 0 #B8860B" : "0 3px 0 #1a1a2a",
     }}
   >
     <span className="text-lg">{icon}</span>
@@ -57,20 +56,47 @@ const CurrencyDisplay = ({ icon, value, color }: { icon: string; value: number; 
   </div>
 );
 
+// Bottom nav item component
+const BottomNavItem = ({ 
+  icon: Icon, 
+  label, 
+  onClick, 
+  isActive = false 
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  onClick?: () => void;
+  isActive?: boolean;
+}) => (
+  <motion.button
+    onClick={onClick}
+    className="flex flex-col items-center gap-1 flex-1"
+    whileTap={{ scale: 0.9 }}
+  >
+    <div 
+      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+        isActive ? "bg-white/20" : "bg-transparent"
+      }`}
+    >
+      <Icon className={`w-6 h-6 ${isActive ? "text-yellow-400" : "text-white/70"}`} />
+    </div>
+    <span className={`text-[10px] font-bold uppercase ${isActive ? "text-yellow-400" : "text-white/70"}`}>
+      {label}
+    </span>
+  </motion.button>
+);
+
 export default function Index() {
   const navigate = useNavigate();
-  const { profile, user } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { profile } = useAuth();
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
 
   const rank = profile ? getRankFromPoints(profile.total_points || 0) : { name: "Bronze", tier: 1, color: "text-amber-600" };
-  const totalPoints = profile?.total_points || 0;
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
 
   return (
     <>
-      <SideMenuDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       
       <div className="relative h-screen w-full overflow-hidden">
@@ -92,42 +118,21 @@ export default function Index() {
 
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
-          <div className="flex items-center justify-between">
-            {/* Left spacer for balance */}
-            <div className="w-10" />
+          <div className="flex items-center justify-center gap-3">
+            {/* Gold Coins */}
+            <CurrencyDisplay 
+              icon="🪙" 
+              value={gamesWon * 10} 
+              color="text-amber-900" 
+              bgColor="linear-gradient(180deg, #FFD700 0%, #FFA000 100%)"
+            />
             
-            {/* Center: Currencies */}
-            <div className="flex items-center gap-3">
-              {/* Trophy count */}
-              <div 
-                className="h-10 rounded-xl px-4 flex items-center gap-2"
-                style={{
-                  background: "linear-gradient(180deg, #FFD700 0%, #FFA000 100%)",
-                  boxShadow: "0 3px 0 #B8860B",
-                }}
-              >
-                <Trophy className="w-5 h-5 text-amber-900" />
-                <span className="font-bold text-amber-900">{totalPoints}</span>
-              </div>
-
-              {/* Coins */}
-              <CurrencyDisplay icon="🪙" value={gamesWon * 10} color="text-yellow-400" />
-              
-              {/* Gems */}
-              <CurrencyDisplay icon="💎" value={currentStreak} color="text-cyan-400" />
-            </div>
-
-            {/* Right: Menu button */}
-            <button 
-              onClick={() => setIsMenuOpen(true)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{
-                background: "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
-                boxShadow: "0 3px 0 #1a1a2a",
-              }}
-            >
-              <Menu className="w-5 h-5 text-white" />
-            </button>
+            {/* Diamonds */}
+            <CurrencyDisplay 
+              icon="💎" 
+              value={currentStreak} 
+              color="text-cyan-400"
+            />
           </div>
         </header>
 
@@ -181,58 +186,65 @@ export default function Index() {
           </motion.div>
         </div>
 
-        {/* ===== BOTTOM: GAME MODE & PLAY BUTTON ===== */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-6 safe-bottom">
-          {/* Game Mode Selector + Play Button */}
+        {/* ===== BOTTOM NAVIGATION BAR ===== */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="flex gap-3 max-w-md mx-auto"
-            initial={{ y: 30, opacity: 0 }}
+            className="px-2 pb-4 pt-2"
+            initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.3 }}
           >
-            {/* Game Mode Card */}
             <div 
-              className="flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl"
+              className="flex items-end justify-around rounded-3xl py-2 px-2 mx-2"
               style={{
-                background: "linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%)",
-                boxShadow: "0 4px 0 #1a1a2a",
+                background: "linear-gradient(180deg, #2a2a3a 0%, #1a1a2a 100%)",
+                boxShadow: "0 -4px 20px rgba(0,0,0,0.3), 0 4px 0 #0a0a1a",
               }}
             >
-              <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🌍</span>
+              {/* Home */}
+              <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
+              
+              {/* Shop */}
+              <BottomNavItem icon={ShoppingBag} label="Shop" onClick={() => {}} />
+              
+              {/* CENTER PLAY BUTTON */}
+              <div className="flex flex-col items-center -mt-8">
+                <motion.button
+                  onClick={() => navigate("/game")}
+                  className="relative"
+                  whileHover={{ scale: 1.05, y: -4 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
+                >
+                  {/* Glow effect */}
+                  <div 
+                    className="absolute inset-0 rounded-full blur-xl opacity-60"
+                    style={{
+                      background: "radial-gradient(circle, #FFD700 0%, #FF6B00 100%)",
+                      transform: "scale(1.3)",
+                    }}
+                  />
+                  
+                  {/* Button */}
+                  <div 
+                    className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #FF9500 70%, #FF6B00 100%)",
+                      boxShadow: "0 6px 0 #CC5500, 0 8px 20px rgba(255,107,0,0.5), inset 0 2px 0 rgba(255,255,255,0.3)",
+                    }}
+                  >
+                    <span className="text-3xl">🎯</span>
+                  </div>
+                </motion.button>
+                <span className="text-white font-black text-xs mt-2 uppercase tracking-wide">Play</span>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">⭐</span>
-                  <span className="text-white font-black uppercase">World Quiz</span>
-                </div>
-                <p className="text-purple-400 text-sm">Random Topics</p>
-              </div>
-              <button className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
-                <Info className="w-4 h-4 text-white/60" />
-              </button>
+              
+              {/* Leaderboard */}
+              <BottomNavItem icon={Trophy} label="Ranks" onClick={() => navigate("/leaderboards")} />
+              
+              {/* Profile */}
+              <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
             </div>
-
-            {/* PLAY Button */}
-            <motion.button
-              onClick={() => navigate("/game")}
-              className="px-8 py-4 rounded-2xl font-black text-xl uppercase tracking-wider"
-              style={{
-                background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #FFA000 100%)",
-                boxShadow: "0 6px 0 #B8860B, 0 8px 20px rgba(0,0,0,0.3)",
-                color: "#5C4A00",
-              }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98, y: 4 }}
-            >
-              PLAY
-            </motion.button>
           </motion.div>
-
-          {/* Event Timer */}
-          <p className="text-center text-white/50 text-xs mt-3">
-            New Event in: 9h 18m
-          </p>
         </div>
       </div>
     </>
