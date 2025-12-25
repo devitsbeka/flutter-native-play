@@ -495,8 +495,8 @@ export default function Index() {
                 })}
               </div>
             
-              {/* Level & XP bar - positioned below avatar bottom */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+8px)] z-20 pointer-events-auto">
+              {/* Level & XP bar - positioned below avatar bottom, touching */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%-8px)] z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
