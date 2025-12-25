@@ -366,6 +366,7 @@ export default function Index() {
                     className="w-full h-full object-contain"
                     style={{
                       backfaceVisibility: "hidden",
+                      filter: "drop-shadow(0 0 0 #9C6ADE) drop-shadow(1px 0 0 #9C6ADE) drop-shadow(-1px 0 0 #9C6ADE) drop-shadow(0 1px 0 #9C6ADE) drop-shadow(0 -1px 0 #9C6ADE)",
                     }}
                   />
                 ) : (
