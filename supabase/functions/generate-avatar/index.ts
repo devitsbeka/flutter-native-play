@@ -60,14 +60,51 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
     }
 
     if (data.body?.status === "failed") {
-      throw new Error(data.body.error || "Avatar generation failed");
+      throw new Error(data.body.error || "Operation failed");
     }
 
     // Wait 2 seconds before next poll
     await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
-  throw new Error("Avatar generation timed out");
+  throw new Error("Operation timed out");
+}
+
+async function removeBackground(imageUrl: string): Promise<string> {
+  console.log("Starting background removal for:", imageUrl.substring(0, 100));
+  
+  // Call LightX Remove Background API - no background color for transparency
+  const response = await fetch("https://api.lightxeditor.com/external/api/v1/remove-background", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": LIGHTX_API_KEY!,
+    },
+    body: JSON.stringify({
+      imageUrl: imageUrl,
+      // Omit background to get transparent PNG
+    }),
+  });
+
+  const data = await response.json();
+  console.log("LightX remove-bg response:", JSON.stringify(data));
+
+  if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
+    throw new Error(`LightX remove-bg API error: ${data.message || JSON.stringify(data)}`);
+  }
+
+  const orderId = data.body?.orderId || data.orderId;
+  if (!orderId) {
+    throw new Error(`No orderId in remove-bg response: ${JSON.stringify(data)}`);
+  }
+
+  console.log("Background removal orderId:", orderId);
+
+  // Poll for the result
+  const resultUrl = await pollForResult(orderId);
+  console.log("Background removed successfully:", resultUrl);
+
+  return resultUrl;
 }
 
 serve(async (req) => {
@@ -91,7 +128,7 @@ serve(async (req) => {
     const styleImageUrl = getStyleImageUrl();
     console.log("Using style reference:", styleImageUrl);
 
-    // Call LightX Avatar API with style reference
+    // Step 1: Call LightX Avatar API with style reference
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
@@ -121,14 +158,25 @@ serve(async (req) => {
     
     console.log("Got orderId:", orderId);
 
-    // Poll for the result
+    // Poll for the avatar generation result
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
+
+    // Step 2: Remove background from the generated avatar
+    let finalAvatarUrl = avatarUrl;
+    try {
+      finalAvatarUrl = await removeBackground(avatarUrl);
+      console.log("Final avatar with transparent background:", finalAvatarUrl);
+    } catch (bgError) {
+      // If background removal fails, still return the original avatar
+      console.error("Background removal failed, using original avatar:", bgError);
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        avatarUrl 
+        avatarUrl: finalAvatarUrl,
+        originalAvatarUrl: avatarUrl, // Include original in case needed
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
