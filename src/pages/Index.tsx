@@ -263,6 +263,91 @@ export default function Index() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
           >
+            {/* Level Indicator - Above Avatar */}
+            <motion.div 
+              className="mb-4 flex flex-col items-center pointer-events-auto"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {/* Level Badge with glow */}
+              <div className="relative">
+                {/* Outer glow */}
+                <motion.div 
+                  className="absolute inset-0 rounded-full blur-xl"
+                  style={{ background: "radial-gradient(circle, rgba(255,200,50,0.6) 0%, transparent 70%)" }}
+                  animate={{ opacity: [0.5, 0.9, 0.5], scale: [1, 1.15, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                
+                {/* Gold ring */}
+                <div 
+                  className="relative w-16 h-16 rounded-full p-[3px]"
+                  style={{
+                    background: "linear-gradient(180deg, #FFE066 0%, #FFD700 30%, #B8860B 70%, #8B4513 100%)",
+                    boxShadow: "0 4px 0 #5a3000, 0 6px 20px rgba(255,150,50,0.6)",
+                  }}
+                >
+                  {/* Inner dark circle */}
+                  <div 
+                    className="w-full h-full rounded-full flex flex-col items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, #3d3250 0%, #2a2040 100%)",
+                    }}
+                  >
+                    <span 
+                      className="text-xl font-black"
+                      style={{ 
+                        color: "#FFE55C",
+                        textShadow: "0 0 12px rgba(255,200,50,1), 0 2px 4px rgba(0,0,0,0.5)"
+                      }}
+                    >
+                      {levelInfo.level}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Level label */}
+              <span 
+                className="mt-2 text-sm font-bold uppercase tracking-widest"
+                style={{ 
+                  color: "#FFE55C",
+                  textShadow: "0 0 10px rgba(255,200,50,0.8), 0 2px 4px rgba(0,0,0,0.8)"
+                }}
+              >
+                Level {levelInfo.level}
+              </span>
+              
+              {/* XP Progress bar */}
+              <div className="mt-2 w-36">
+                <div 
+                  className="h-2.5 rounded-full overflow-hidden border border-white/10"
+                  style={{ background: "rgba(0,0,0,0.5)" }}
+                >
+                  <motion.div 
+                    className="h-full rounded-full"
+                    style={{
+                      background: "linear-gradient(90deg, #FFD700 0%, #FF9500 100%)",
+                      boxShadow: "0 0 10px rgba(255,200,50,0.8)",
+                    }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${levelInfo.progress}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  />
+                </div>
+                <p 
+                  className="text-center text-xs mt-1 font-medium"
+                  style={{ 
+                    color: "rgba(255,255,255,0.8)",
+                    textShadow: "0 1px 3px rgba(0,0,0,0.8)"
+                  }}
+                >
+                  {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                </p>
+              </div>
+            </motion.div>
+            
             {/* Large Avatar Display */}
             <motion.div 
               className="relative"
@@ -288,75 +373,6 @@ export default function Index() {
                     <span className="text-8xl">🎮</span>
                   </div>
                 )}
-              </div>
-            </motion.div>
-            
-            {/* Level Indicator Badge */}
-            <motion.div 
-              className="mt-6 flex flex-col items-center pointer-events-auto"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              {/* Level number with decorative ring */}
-              <div className="relative">
-                {/* Outer glow */}
-                <motion.div 
-                  className="absolute inset-0 rounded-full blur-lg"
-                  style={{ background: "radial-gradient(circle, rgba(255,200,50,0.5) 0%, transparent 70%)" }}
-                  animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                
-                {/* Gold ring */}
-                <div 
-                  className="relative w-20 h-20 rounded-full p-[3px]"
-                  style={{
-                    background: "linear-gradient(180deg, #FFE066 0%, #FFD700 30%, #B8860B 70%, #8B4513 100%)",
-                    boxShadow: "0 4px 0 #5a3000, 0 6px 15px rgba(255,150,50,0.5)",
-                  }}
-                >
-                  {/* Inner dark circle */}
-                  <div 
-                    className="w-full h-full rounded-full flex flex-col items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, #2a2040 0%, #1a1428 100%)",
-                    }}
-                  >
-                    <span 
-                      className="text-2xl font-black"
-                      style={{ 
-                        color: "#FFD700",
-                        textShadow: "0 0 10px rgba(255,200,50,0.8)"
-                      }}
-                    >
-                      {levelInfo.level}
-                    </span>
-                    <span className="text-[9px] text-white/60 uppercase tracking-wider -mt-1">Level</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* XP Progress bar */}
-              <div className="mt-3 w-32">
-                <div 
-                  className="h-2 rounded-full overflow-hidden"
-                  style={{ background: "rgba(0,0,0,0.4)" }}
-                >
-                  <motion.div 
-                    className="h-full rounded-full"
-                    style={{
-                      background: "linear-gradient(90deg, #FFD700 0%, #FF9500 100%)",
-                      boxShadow: "0 0 8px rgba(255,200,50,0.6)",
-                    }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${levelInfo.progress}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                  />
-                </div>
-                <p className="text-center text-[10px] text-white/50 mt-1">
-                  {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                </p>
               </div>
             </motion.div>
           </motion.div>
