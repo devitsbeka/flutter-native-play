@@ -357,59 +357,69 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image with circular purple stroke */}
+              {/* Avatar image with circular purple stroke and white inner stroke */}
               <div 
-                className="w-64 h-64 relative rounded-full overflow-visible flex items-center justify-center"
+                className="w-64 h-64 relative rounded-full flex items-center justify-center"
                 style={{
                   border: "1px solid #9C6ADE",
+                  padding: 4,
                 }}
               >
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="Avatar" 
-                    className="w-[90%] h-[90%] object-contain"
-                    style={{
-                      backfaceVisibility: "hidden",
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-7xl">🎮</span>
-                  </div>
-                )}
-                
-                {/* Power badges in curved arc at top of avatar */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -80 }}>
-                  {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
-                    // True curved arc using calculated positions
-                    const totalBadges = 5;
-                    const arcSpan = 130; // flatter curve
-                    const startAngle = -65; // start position
-                    const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                    const radius = 140; // wider horizontal spread
-                    const radians = (angle * Math.PI) / 180;
-                    const x = Math.sin(radians) * radius;
-                    const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
-                    
-                    return (
-                      <motion.div
-                        key={type}
-                        initial={{ scale: 0, opacity: 0, x, y }}
-                        animate={{ scale: 1, opacity: 1, x, y }}
-                        transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
-                        className="absolute"
-                        style={{ 
-                          left: "50%",
-                          top: 0,
-                          marginLeft: -24, // half badge size
-                        }}
-                      >
-                        <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
-                      </motion.div>
-                    );
-                  })}
+                {/* White inner ring */}
+                <div 
+                  className="w-full h-full rounded-full flex items-center justify-center"
+                  style={{
+                    border: "30px solid rgba(255,255,255,0.85)",
+                    boxShadow: "inset 0 4px 12px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  {profile?.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt="Avatar" 
+                      className="w-full h-full object-contain"
+                      style={{
+                        backfaceVisibility: "hidden",
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-7xl">🎮</span>
+                    </div>
+                  )}
                 </div>
+              </div>
+                
+              {/* Power badges in curved arc at top of avatar */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -80 }}>
+                {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
+                  // True curved arc using calculated positions
+                  const totalBadges = 5;
+                  const arcSpan = 130; // flatter curve
+                  const startAngle = -65; // start position
+                  const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
+                  const radius = 140; // wider horizontal spread
+                  const radians = (angle * Math.PI) / 180;
+                  const x = Math.sin(radians) * radius;
+                  const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
+                  
+                  return (
+                    <motion.div
+                      key={type}
+                      initial={{ scale: 0, opacity: 0, x, y }}
+                      animate={{ scale: 1, opacity: 1, x, y }}
+                      transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
+                      className="absolute"
+                      style={{ 
+                        left: "50%",
+                        top: 0,
+                        marginLeft: -24, // half badge size
+                      }}
+                    >
+                      <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
+                    </motion.div>
+                  );
+                })}
               </div>
             
               {/* Level & XP bar - positioned directly below avatar, no gap */}
