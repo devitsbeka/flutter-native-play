@@ -1,9 +1,10 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Play, Flame, Star } from "lucide-react";
+import { Play, Flame, Star, Gift } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
+import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -219,6 +220,7 @@ export default function Index() {
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
+  const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   
   // Pull-to-refresh state
@@ -302,6 +304,12 @@ export default function Index() {
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
       <SoundSettingsModal isOpen={isSoundModalOpen} onClose={() => setIsSoundModalOpen(false)} />
+      <DailyRewardsModal 
+        isOpen={isDailyRewardsOpen} 
+        onClose={() => setIsDailyRewardsOpen(false)} 
+        currentStreak={currentStreak || 1}
+        onClaim={() => console.log("Claimed daily reward")}
+      />
       <PowerUpDetailModal 
         isOpen={selectedPowerUp !== null} 
         onClose={() => setSelectedPowerUp(null)} 
@@ -366,6 +374,30 @@ export default function Index() {
                 </>
               )}
             </motion.div>
+            
+            {/* Daily rewards button */}
+            <motion.button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,215,0,0.95) 0%, rgba(255,165,0,0.95) 100%)",
+                boxShadow: "0 2px 12px rgba(255,165,0,0.3), 0 1px 3px rgba(0,0,0,0.1)",
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsDailyRewardsOpen(true)}
+              animate={{ 
+                scale: [1, 1.05, 1],
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Gift className="w-5 h-5 text-white" />
+              <Flame className="w-4 h-4 text-white" />
+              <span className="text-sm font-bold text-white">{currentStreak || 1}</span>
+            </motion.button>
           </div>
         </header>
 
@@ -463,8 +495,8 @@ export default function Index() {
                 })}
               </div>
             
-              {/* Level & XP bar - positioned at bottom of avatar */}
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+              {/* Level & XP bar - positioned below avatar bottom */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+8px)] z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}

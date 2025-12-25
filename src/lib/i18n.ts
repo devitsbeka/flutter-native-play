@@ -277,6 +277,30 @@ export const ka = {
     profileUpdated: "პროფილი განახლდა!",
     accountCreated: "ანგარიში შეიქმნა!",
   },
+
+  // ==========================================
+  // Daily Rewards / ყოველდღიური ჯილდოები
+  // ==========================================
+  dailyRewards: {
+    title: "ყოველდღიური ჯილდოები",
+    subtitle: "შედი ყოველდღე და მიიღე ჯილდოები!",
+    day: "დღე {day}",
+    today: "დღეს",
+    claimed: "მიღებული",
+    claim: "მიიღე",
+    claimNow: "მიიღე ახლა!",
+    streak: "სტრიკი",
+    daysInRow: "{days} დღე ზედიზედ",
+    comeBackTomorrow: "ხვალ დაბრუნდი მეტი ჯილდოებისთვის!",
+    streakBonus: "სტრიკ ბონუსი!",
+    coins: "მონეტა",
+    gems: "ალმასი",
+    xp: "XP",
+    powerUp: "სუპერ ძალა",
+    keepItUp: "ასე გააგრძელე!",
+    amazing: "საოცარია!",
+    congratulations: "გილოცავ!",
+  },
 };
 
 // Type for translation keys
