@@ -99,7 +99,7 @@ const themes = {
 type ThemeKey = keyof typeof themes;
 
 // Fire sparkle particle component
-const FireParticle = ({ delay, duration, left, size, startY }: { delay: number; duration: number; left: string; size: number; startY: string }) => (
+const FireParticle = ({ delay, duration, left, size, startY, theme }: { delay: number; duration: number; left: string; size: number; startY: string; theme: typeof themes.purpleGold }) => (
   <motion.div
     className="absolute rounded-full pointer-events-none"
     style={{
@@ -107,14 +107,14 @@ const FireParticle = ({ delay, duration, left, size, startY }: { delay: number; 
       bottom: startY,
       width: size,
       height: size,
-      background: `radial-gradient(circle, rgba(255,200,50,0.9) 0%, rgba(255,120,20,0.6) 50%, transparent 100%)`,
-      boxShadow: `0 0 ${size * 2}px rgba(255,150,50,0.5)`,
+      background: `radial-gradient(circle, ${theme.particleColor} 0%, ${theme.particleGlow} 50%, transparent 100%)`,
+      boxShadow: `0 0 ${size * 2}px ${theme.particleGlow}`,
     }}
     animate={{
       y: [0, -400 - Math.random() * 300],
       x: [0, (Math.random() - 0.5) * 100],
-      opacity: [0, 0.8, 0.6, 0],
-      scale: [0.5, 1, 0.8, 0.3],
+      opacity: theme.isLight ? [0, 0.9, 0.7, 0] : [0, 0.8, 0.6, 0],
+      scale: [0.5, 1.2, 0.8, 0.3],
     }}
     transition={{
       duration,
@@ -304,7 +304,7 @@ export default function Index() {
         {/* Fire sparkle particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {particles.map((p) => (
-            <FireParticle key={p.id} {...p} />
+            <FireParticle key={p.id} {...p} theme={theme} />
           ))}
         </div>
         
