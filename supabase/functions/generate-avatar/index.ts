@@ -70,6 +70,45 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
   throw new Error("Operation timed out");
 }
 
+async function expandImageTop(imageUrl: string, topPadding: number = 100): Promise<string> {
+  console.log("Expanding image at top by", topPadding, "px for:", imageUrl.substring(0, 100));
+  
+  const response = await fetch("https://api.lightxeditor.com/external/api/v2/expand-photo", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": LIGHTX_API_KEY!,
+    },
+    body: JSON.stringify({
+      imageUrl: imageUrl,
+      topPadding: topPadding,
+      bottomPadding: 0,
+      leftPadding: 0,
+      rightPadding: 0,
+    }),
+  });
+
+  const data = await response.json();
+  console.log("LightX expand response:", JSON.stringify(data));
+
+  if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
+    throw new Error(`LightX expand API error: ${data.message || JSON.stringify(data)}`);
+  }
+
+  const orderId = data.body?.orderId || data.orderId;
+  if (!orderId) {
+    throw new Error(`No orderId in expand response: ${JSON.stringify(data)}`);
+  }
+
+  console.log("Expand orderId:", orderId);
+
+  // Poll for the result
+  const resultUrl = await pollForResult(orderId);
+  console.log("Image expanded successfully:", resultUrl);
+
+  return resultUrl;
+}
+
 async function removeBackground(imageUrl: string): Promise<string> {
   console.log("Starting background removal for:", imageUrl.substring(0, 100));
   
@@ -138,7 +177,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, full hair visible, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
+        textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
         styleStrength: 80,
       }),
     });
@@ -163,20 +202,30 @@ serve(async (req) => {
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
 
-    // Step 2: Remove background from the generated avatar
-    let finalAvatarUrl = avatarUrl;
+    // Step 2: Expand the image at the top by 100px
+    let expandedAvatarUrl = avatarUrl;
     try {
-      finalAvatarUrl = await removeBackground(avatarUrl);
+      expandedAvatarUrl = await expandImageTop(avatarUrl, 100);
+      console.log("Avatar expanded successfully:", expandedAvatarUrl);
+    } catch (expandError) {
+      console.error("Image expansion failed, using original avatar:", expandError);
+    }
+
+    // Step 3: Remove background from the expanded avatar
+    let finalAvatarUrl = expandedAvatarUrl;
+    try {
+      finalAvatarUrl = await removeBackground(expandedAvatarUrl);
       console.log("Final avatar with transparent background:", finalAvatarUrl);
     } catch (bgError) {
-      // If background removal fails, still return the original avatar
-      console.error("Background removal failed, using original avatar:", bgError);
+      // If background removal fails, still return the expanded avatar
+      console.error("Background removal failed, using expanded avatar:", bgError);
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         avatarUrl: finalAvatarUrl,
+        expandedAvatarUrl: expandedAvatarUrl,
         originalAvatarUrl: avatarUrl, // Include original in case needed
       }),
       { 

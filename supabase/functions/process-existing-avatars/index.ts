@@ -57,6 +57,45 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
 // Style reference image - 3D Pixar style avatar
 const styleImageUrl = "https://mytrivia.io/images/avatar-style-reference.jpg";
 
+async function expandImageTop(imageUrl: string, topPadding: number = 100): Promise<string> {
+  console.log("Expanding image at top by", topPadding, "px for:", imageUrl.substring(0, 100));
+  
+  const response = await fetch("https://api.lightxeditor.com/external/api/v2/expand-photo", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": LIGHTX_API_KEY!,
+    },
+    body: JSON.stringify({
+      imageUrl: imageUrl,
+      topPadding: topPadding,
+      bottomPadding: 0,
+      leftPadding: 0,
+      rightPadding: 0,
+    }),
+  });
+
+  const data = await response.json();
+  console.log("LightX expand response:", JSON.stringify(data));
+
+  if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
+    throw new Error(`LightX expand API error: ${data.message || JSON.stringify(data)}`);
+  }
+
+  const orderId = data.body?.orderId || data.orderId;
+  if (!orderId) {
+    throw new Error(`No orderId in expand response: ${JSON.stringify(data)}`);
+  }
+
+  console.log("Expand orderId:", orderId);
+
+  // Poll for the result
+  const resultUrl = await pollForResult(orderId);
+  console.log("Image expanded successfully:", resultUrl);
+
+  return resultUrl;
+}
+
 async function regenerateAvatar(originalImageUrl: string): Promise<string> {
   console.log("Starting avatar regeneration for:", originalImageUrl);
   
@@ -70,7 +109,7 @@ async function regenerateAvatar(originalImageUrl: string): Promise<string> {
     body: JSON.stringify({
       imageUrl: originalImageUrl,
       styleImageUrl: styleImageUrl,
-      textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, full hair visible, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
+      textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
       styleStrength: 80,
     }),
   });
@@ -91,7 +130,16 @@ async function regenerateAvatar(originalImageUrl: string): Promise<string> {
   const avatarUrl = await pollForResult(orderId);
   console.log("Avatar generated successfully:", avatarUrl);
 
-  // Step 2: Remove background
+  // Step 2: Expand image at top by 100px
+  let expandedUrl = avatarUrl;
+  try {
+    expandedUrl = await expandImageTop(avatarUrl, 100);
+    console.log("Avatar expanded successfully:", expandedUrl);
+  } catch (expandError) {
+    console.error("Image expansion failed, using original avatar:", expandError);
+  }
+
+  // Step 3: Remove background
   console.log("Starting background removal...");
   const bgResponse = await fetch("https://api.lightxeditor.com/external/api/v1/remove-background", {
     method: "POST",
@@ -100,7 +148,7 @@ async function regenerateAvatar(originalImageUrl: string): Promise<string> {
       "x-api-key": LIGHTX_API_KEY!,
     },
     body: JSON.stringify({
-      imageUrl: avatarUrl,
+      imageUrl: expandedUrl,
     }),
   });
 
@@ -265,7 +313,7 @@ serve(async (req) => {
 
         console.log("Using original URL for regeneration:", originalUrl);
 
-        // Regenerate avatar with new prompt + remove background
+        // Regenerate avatar with new prompt + expand + remove background
         const processedUrl = await regenerateAvatar(originalUrl);
         
         // Download and upload to our storage
