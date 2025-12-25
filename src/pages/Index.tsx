@@ -260,7 +260,7 @@ export default function Index() {
         {/* ===== LEFT SIDE MENU ===== */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
           <SideMenuButton icon={ShoppingBag} label="Shop" onClick={() => {}} />
-          <SideMenuButton icon={Trophy} label="Categories" onClick={() => navigate("/discover")} badge={2} />
+          <SideMenuButton icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} badge={2} />
         </div>
 
         {/* ===== RIGHT SIDE MENU ===== */}
@@ -464,17 +464,11 @@ export default function Index() {
                   }}
                 />
                 
-                {/* Home */}
-                <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
-                
                 {/* Explore */}
-                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} isActive />
                 
                 {/* Spacer for Play button */}
                 <div className="w-24" />
-                
-                {/* Rank */}
-                <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
                 
                 {/* Profile */}
                 <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
