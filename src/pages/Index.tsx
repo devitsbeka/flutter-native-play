@@ -420,11 +420,9 @@ export default function Index() {
                     <motion.div 
                       className="relative h-14 rounded-2xl overflow-hidden min-w-[280px]"
                       style={{ 
-                        background: "rgba(255,255,255,0.60)",
-                        backdropFilter: "blur(80px) saturate(200%)",
-                        WebkitBackdropFilter: "blur(80px) saturate(200%)",
-                        boxShadow: "0 6px 0 rgba(200,180,220,0.5), 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.8)",
-                        border: "2px solid rgba(255,255,255,0.6)",
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(245,240,250,0.9) 50%, rgba(255,255,255,0.85) 100%)",
+                        boxShadow: "0 6px 0 rgba(200,180,220,0.5), 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(200,180,220,0.3)",
+                        border: "2px solid rgba(255,255,255,0.7)",
                       }}
                       animate={{
                         scale: [1, 1.02, 1],
