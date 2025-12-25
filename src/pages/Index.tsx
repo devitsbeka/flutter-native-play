@@ -218,7 +218,7 @@ export default function Index() {
         {/* ===== BOTTOM NAVIGATION BAR ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="px-3 pb-3 pt-2"
+            className="px-3 pb-3 pt-14"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
@@ -250,7 +250,7 @@ export default function Index() {
               
               {/* Main container with rich gradient */}
               <div 
-                className="relative flex items-end justify-around rounded-[26px] py-3 px-3 overflow-hidden"
+                className="relative flex items-end justify-around rounded-[26px] py-3 px-4"
                 style={{
                   background: "linear-gradient(180deg, #4a3d60 0%, #3d3250 20%, #2a2040 50%, #1a1428 80%, #0f0a14 100%)",
                   boxShadow: "inset 0 2px 4px rgba(255,255,255,0.15), inset 0 -2px 8px rgba(0,0,0,0.4)",
@@ -276,7 +276,7 @@ export default function Index() {
                 
                 {/* Subtle texture overlay */}
                 <div 
-                  className="absolute inset-0 opacity-5 pointer-events-none"
+                  className="absolute inset-0 opacity-5 pointer-events-none rounded-[26px]"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M20 20h1v1h-1z'/%3E%3C/g%3E%3C/svg%3E")`,
                   }}
@@ -285,143 +285,142 @@ export default function Index() {
                 {/* Home */}
                 <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
                 
-                {/* Explore - with extra spacing from center */}
-                <div className="mr-4">
-                  <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
-                </div>
+                {/* Explore */}
+                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
                 
-                {/* CENTER PLAY BUTTON */}
-                <div className="flex flex-col items-center -mt-12 relative mx-2">
-                  {/* Outermost decorative ring */}
-                  <div 
-                    className="absolute top-0 w-28 h-28 rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #FFE066 0%, #B8860B 50%, #553300 100%)",
-                      boxShadow: "0 5px 0 #3d2200, inset 0 2px 0 rgba(255,255,255,0.3)",
-                    }}
-                  />
-                  {/* Inner dark ring */}
-                  <div 
-                    className="absolute top-1 w-[104px] h-[104px] rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #2a2040 0%, #1a1428 100%)",
-                      boxShadow: "inset 0 2px 4px rgba(0,0,0,0.5)",
-                    }}
-                  />
-                  {/* Second gold accent ring */}
-                  <div 
-                    className="absolute top-2.5 w-[96px] h-[96px] rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #FFD700 0%, #996600 100%)",
-                    }}
-                  />
-                  <div 
-                    className="absolute top-3 w-[90px] h-[90px] rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #1a1428 0%, #0f0a14 100%)",
-                    }}
-                  />
-                  
-                  <motion.button
-                    onClick={() => navigate("/game")}
-                    className="relative z-10 mt-1"
-                    whileHover={{ scale: 1.08, y: -4 }}
-                    whileTap={{ scale: 0.95, y: 4 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  >
-                    {/* Animated outer glow */}
-                    <motion.div 
-                      className="absolute inset-0 rounded-full blur-2xl"
-                      style={{
-                        background: "radial-gradient(circle, #FFD700 0%, #FF6B00 50%, transparent 100%)",
-                        transform: "scale(1.8)",
-                      }}
-                      animate={{ opacity: [0.4, 0.7, 0.4], scale: [1.6, 1.8, 1.6] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    
-                    {/* Secondary pulse glow */}
-                    <motion.div 
-                      className="absolute inset-0 rounded-full blur-md"
-                      style={{
-                        background: "radial-gradient(circle, #FFE55C 0%, transparent 70%)",
-                        transform: "scale(1.3)",
-                      }}
-                      animate={{ opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    
-                    {/* Outer bezel ring */}
-                    <div 
-                      className="relative w-[82px] h-[82px] rounded-full p-[3px]"
-                      style={{
-                        background: "linear-gradient(180deg, #FFE88C 0%, #FFD700 20%, #CC7000 80%, #8B4513 100%)",
-                        boxShadow: "0 8px 0 #5a3000, 0 10px 30px rgba(255,107,0,0.7), inset 0 2px 0 rgba(255,255,255,0.5)",
-                      }}
-                    >
-                      {/* Inner shadow ring */}
-                      <div 
-                        className="w-full h-full rounded-full p-[2px]"
-                        style={{
-                          background: "linear-gradient(180deg, #AA5500 0%, #663300 100%)",
-                        }}
-                      >
-                        {/* Main button face */}
-                        <div 
-                          className="w-full h-full rounded-full flex items-center justify-center relative overflow-hidden"
-                          style={{
-                            background: "linear-gradient(180deg, #FFE88C 0%, #FFD700 25%, #FFB800 50%, #FF9500 75%, #FF6B00 100%)",
-                          }}
-                        >
-                          {/* Top shine highlight */}
-                          <div 
-                            className="absolute top-0 left-3 right-3 h-8 rounded-full"
-                            style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 50%, transparent 100%)" }}
-                          />
-                          
-                          {/* Side highlights */}
-                          <div 
-                            className="absolute top-4 left-1 w-2 h-10 rounded-full opacity-40"
-                            style={{ background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)" }}
-                          />
-                          <div 
-                            className="absolute top-4 right-1 w-2 h-10 rounded-full opacity-30"
-                            style={{ background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)" }}
-                          />
-                          
-                          {/* Bottom ambient */}
-                          <div 
-                            className="absolute bottom-1 left-4 right-4 h-3 rounded-full opacity-30"
-                            style={{ background: "linear-gradient(180deg, transparent 0%, rgba(139,69,19,0.5) 100%)" }}
-                          />
-                          
-                          {/* Play icon with shadow */}
-                          <div className="relative">
-                            <Play className="w-10 h-10 text-amber-950 fill-amber-900 ml-1 relative z-10" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.3))" }} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.button>
-                  
-                  <span 
-                    className="font-black text-[11px] mt-3 uppercase tracking-wider"
-                    style={{ 
-                      color: "#FFD700", 
-                      textShadow: "0 0 10px rgba(255,200,0,0.8), 0 2px 4px rgba(0,0,0,0.5)" 
-                    }}
-                  >
-                    Play
-                  </span>
-                </div>
+                {/* Spacer for Play button */}
+                <div className="w-24" />
                 
-                {/* Rank - with extra spacing from center */}
-                <div className="ml-4">
-                  <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
-                </div>
+                {/* Rank */}
+                <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
                 
                 {/* Profile */}
                 <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
+              </div>
+              
+              {/* CENTER PLAY BUTTON - positioned absolutely to avoid clipping */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-10 flex flex-col items-center">
+                {/* Outermost decorative ring */}
+                <div 
+                  className="absolute top-0 w-28 h-28 rounded-full"
+                  style={{
+                    background: "linear-gradient(180deg, #FFE066 0%, #B8860B 50%, #553300 100%)",
+                    boxShadow: "0 5px 0 #3d2200, inset 0 2px 0 rgba(255,255,255,0.3)",
+                  }}
+                />
+                {/* Inner dark ring */}
+                <div 
+                  className="absolute top-1 w-[104px] h-[104px] rounded-full"
+                  style={{
+                    background: "linear-gradient(180deg, #2a2040 0%, #1a1428 100%)",
+                    boxShadow: "inset 0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                />
+                {/* Second gold accent ring */}
+                <div 
+                  className="absolute top-2.5 w-[96px] h-[96px] rounded-full"
+                  style={{
+                    background: "linear-gradient(180deg, #FFD700 0%, #996600 100%)",
+                  }}
+                />
+                <div 
+                  className="absolute top-3 w-[90px] h-[90px] rounded-full"
+                  style={{
+                    background: "linear-gradient(180deg, #1a1428 0%, #0f0a14 100%)",
+                  }}
+                />
+                
+                <motion.button
+                  onClick={() => navigate("/game")}
+                  className="relative z-10 mt-1"
+                  whileHover={{ scale: 1.08, y: -4 }}
+                  whileTap={{ scale: 0.95, y: 4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                >
+                  {/* Animated outer glow */}
+                  <motion.div 
+                    className="absolute inset-0 rounded-full blur-2xl"
+                    style={{
+                      background: "radial-gradient(circle, #FFD700 0%, #FF6B00 50%, transparent 100%)",
+                      transform: "scale(1.8)",
+                    }}
+                    animate={{ opacity: [0.4, 0.7, 0.4], scale: [1.6, 1.8, 1.6] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  {/* Secondary pulse glow */}
+                  <motion.div 
+                    className="absolute inset-0 rounded-full blur-md"
+                    style={{
+                      background: "radial-gradient(circle, #FFE55C 0%, transparent 70%)",
+                      transform: "scale(1.3)",
+                    }}
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  {/* Outer bezel ring */}
+                  <div 
+                    className="relative w-[82px] h-[82px] rounded-full p-[3px]"
+                    style={{
+                      background: "linear-gradient(180deg, #FFE88C 0%, #FFD700 20%, #CC7000 80%, #8B4513 100%)",
+                      boxShadow: "0 8px 0 #5a3000, 0 10px 30px rgba(255,107,0,0.7), inset 0 2px 0 rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    {/* Inner shadow ring */}
+                    <div 
+                      className="w-full h-full rounded-full p-[2px]"
+                      style={{
+                        background: "linear-gradient(180deg, #AA5500 0%, #663300 100%)",
+                      }}
+                    >
+                      {/* Main button face */}
+                      <div 
+                        className="w-full h-full rounded-full flex items-center justify-center relative overflow-hidden"
+                        style={{
+                          background: "linear-gradient(180deg, #FFE88C 0%, #FFD700 25%, #FFB800 50%, #FF9500 75%, #FF6B00 100%)",
+                        }}
+                      >
+                        {/* Top shine highlight */}
+                        <div 
+                          className="absolute top-0 left-3 right-3 h-8 rounded-full"
+                          style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 50%, transparent 100%)" }}
+                        />
+                        
+                        {/* Side highlights */}
+                        <div 
+                          className="absolute top-4 left-1 w-2 h-10 rounded-full opacity-40"
+                          style={{ background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)" }}
+                        />
+                        <div 
+                          className="absolute top-4 right-1 w-2 h-10 rounded-full opacity-30"
+                          style={{ background: "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)" }}
+                        />
+                        
+                        {/* Bottom ambient */}
+                        <div 
+                          className="absolute bottom-1 left-4 right-4 h-3 rounded-full opacity-30"
+                          style={{ background: "linear-gradient(180deg, transparent 0%, rgba(139,69,19,0.5) 100%)" }}
+                        />
+                        
+                        {/* Play icon with shadow */}
+                        <div className="relative">
+                          <Play className="w-10 h-10 text-amber-950 fill-amber-900 ml-1 relative z-10" style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.3))" }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.button>
+                
+                <span 
+                  className="font-black text-[11px] mt-3 uppercase tracking-wider"
+                  style={{ 
+                    color: "#FFD700", 
+                    textShadow: "0 0 10px rgba(255,200,0,0.8), 0 2px 4px rgba(0,0,0,0.5)" 
+                  }}
+                >
+                  Play
+                </span>
               </div>
             </div>
           </motion.div>
