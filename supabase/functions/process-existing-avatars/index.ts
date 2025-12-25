@@ -110,7 +110,7 @@ async function regenerateAvatar(originalImageUrl: string): Promise<string> {
       imageUrl: originalImageUrl,
       styleImageUrl: styleImageUrl,
       textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
-      styleStrength: 80,
+      styleStrength: 100,
     }),
   });
 
