@@ -422,13 +422,6 @@ export default function Index() {
                   </div>
                 )}
                 
-                {/* Smooth bottom fade mask - transparent to purple gradient */}
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-                  style={{
-                    background: "linear-gradient(to top, hsl(270, 60%, 75%) 0%, transparent 100%)",
-                  }}
-                />
               </div>
               
               {/* Level & XP - simple inline display */}
@@ -446,7 +439,6 @@ export default function Index() {
                       className="relative h-10 rounded-full overflow-hidden min-w-[280px]"
                       style={{ 
                         background: "rgba(80, 40, 120, 0.6)",
-                        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15)",
                       }}
                     >
                       {/* Progress fill */}
