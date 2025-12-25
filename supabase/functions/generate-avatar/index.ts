@@ -138,7 +138,8 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "3D Pixar Disney style cartoon avatar portrait. CRITICAL: DO NOT crop the top of the head - full hair must be visible from the very top of the head down. Include complete scalp and all hair. Face centered with forehead fully visible. Portrait includes shoulders and upper chest. Generous empty space above the head. Soft feathered edges, no hard cutoffs. Vibrant colors, friendly warm smile, soft ambient lighting, big expressive eyes, smooth skin, charming character. The entire head from crown to shoulders must fit within frame with padding.",
+        textPrompt: "3D Pixar Disney style cartoon avatar, ZOOMED OUT portrait showing full head from top of hair to chest. Camera pulled back to show complete person. Leave 20% empty space above the crown of the head. Full scalp visible. Medium shot framing. Soft edges, vibrant colors, friendly smile, big expressive eyes, smooth skin.",
+        styleStrength: 80,
       }),
     });
 
