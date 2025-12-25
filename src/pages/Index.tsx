@@ -115,42 +115,6 @@ const SparkleParticle = ({ index, total }: { index: number; total: number }) => 
     />
   );
 };
-
-// Bottom nav arc item
-const ArcNavItem = ({ 
-  iconSrc, 
-  label, 
-  onClick,
-  position,
-}: { 
-  iconSrc: string; 
-  label: string; 
-  onClick?: () => void;
-  position: 'left' | 'right';
-}) => (
-  <motion.button
-    onClick={onClick}
-    className="flex flex-col items-center gap-1"
-    whileHover={{ scale: 1.1, y: -5 }}
-    whileTap={{ scale: 0.9 }}
-    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-    style={{
-      transform: position === 'left' ? 'translateX(10px)' : 'translateX(-10px)',
-    }}
-  >
-    <motion.div
-      className="relative"
-      animate={{ y: [0, -3, 0] }}
-      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: position === 'left' ? 0 : 0.3 }}
-    >
-      <img src={iconSrc} alt={label} className="w-12 h-12 object-contain drop-shadow-md" />
-    </motion.div>
-    <span className="text-[10px] uppercase tracking-wider text-gray-600 font-bold">
-      {label}
-    </span>
-  </motion.button>
-);
-
 // 3D Play Button Component
 const PlayButton3D = ({ onClick }: { onClick: () => void }) => {
   const sparkles = useMemo(() => Array.from({ length: 8 }, (_, i) => i), []);
@@ -261,13 +225,7 @@ export default function Index() {
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       
       <div className="relative h-screen w-full overflow-hidden">
-        {/* Background comes from GlobalSplineBackground - just add subtle overlay for depth */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle at 50% 50%, transparent 20%, rgba(10,5,20,0.3) 100%)",
-          }}
-        />
+        {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
 
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
@@ -414,94 +372,66 @@ export default function Index() {
           </motion.div>
         </div>
 
-        {/* ===== CURVED BOTTOM NAVIGATION ===== */}
+        {/* ===== MINIMAL BOTTOM NAVIGATION ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="relative px-4 pb-4"
-            initial={{ y: 80, opacity: 0 }}
+            className="relative px-6 pb-6"
+            initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
           >
-            {/* Curved arc background with SVG */}
-            <div className="relative">
-              {/* SVG curved shape */}
-              <svg 
-                viewBox="0 0 400 120" 
-                className="w-full h-auto"
-                preserveAspectRatio="xMidYMid meet"
+            {/* Compact nav container - no background, just items */}
+            <div className="flex items-end justify-between">
+              {/* Left nav item */}
+              <motion.button
+                onClick={() => navigate("/discover")}
+                className="flex flex-col items-center gap-1"
+                whileHover={{ scale: 1.1, y: -3 }}
+                whileTap={{ scale: 0.9 }}
               >
-                <defs>
-                  {/* Main gradient */}
-                  <linearGradient id="curveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
-                    <stop offset="100%" stopColor="rgba(248,245,255,0.95)" />
-                  </linearGradient>
-                  {/* Shadow filter */}
-                  <filter id="curveShadow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="-4" stdDeviation="12" floodColor="rgba(156,106,222,0.15)" />
-                    <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="rgba(0,0,0,0.08)" />
-                  </filter>
-                  {/* Inner glow */}
-                  <radialGradient id="centerGlow" cx="50%" cy="0%" r="60%">
-                    <stop offset="0%" stopColor="rgba(183,148,246,0.15)" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                </defs>
-                
-                {/* Main curved shape - deeper curve for play button */}
-                <path 
-                  d="M 0,50 
-                     Q 0,20 30,20 
-                     L 140,20 
-                     Q 170,20 180,45 
-                     Q 200,-15 220,45 
-                     Q 230,20 260,20 
-                     L 370,20 
-                     Q 400,20 400,50 
-                     L 400,120 
-                     L 0,120 
-                     Z"
-                  fill="url(#curveGradient)"
-                  filter="url(#curveShadow)"
-                />
-                
-                {/* Center glow overlay */}
-                <ellipse cx="200" cy="30" rx="80" ry="50" fill="url(#centerGlow)" />
-                
-                {/* Top shine line */}
-                <path 
-                  d="M 50,22 Q 140,22 140,22 L 140,21 L 50,21 Z"
-                  fill="rgba(255,255,255,0.8)"
-                />
-                <path 
-                  d="M 260,22 Q 350,22 350,22 L 350,21 L 260,21 Z"
-                  fill="rgba(255,255,255,0.8)"
-                />
-              </svg>
-              
-              {/* Nav items overlay positioned on the curve */}
-              <div className="absolute inset-0 flex items-end justify-between px-12 pb-6">
-                {/* Left item */}
-                <ArcNavItem 
-                  iconSrc={iconCompass} 
-                  label="Explore" 
-                  onClick={() => navigate("/discover")} 
-                  position="left"
-                />
-                
-                {/* Right item */}
-                <ArcNavItem 
-                  iconSrc={iconProfile} 
-                  label="Profile" 
-                  onClick={() => navigate("/profile")} 
-                  position="right"
-                />
-              </div>
-              
-              {/* CENTER PLAY BUTTON - positioned in the curve dip */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-[70%]">
+                <div 
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(255,255,255,0.15)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <img src={iconCompass} alt="Explore" className="w-8 h-8 object-contain" />
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-white/80 font-semibold">
+                  Explore
+                </span>
+              </motion.button>
+
+              {/* Center Play Button - elevated */}
+              <div className="mb-6">
                 <PlayButton3D onClick={() => navigate("/game")} />
               </div>
+
+              {/* Right nav item */}
+              <motion.button
+                onClick={() => navigate("/profile")}
+                className="flex flex-col items-center gap-1"
+                whileHover={{ scale: 1.1, y: -3 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <div 
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(255,255,255,0.15)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <img src={iconProfile} alt="Profile" className="w-8 h-8 object-contain" />
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-white/80 font-semibold">
+                  Profile
+                </span>
+              </motion.button>
             </div>
           </motion.div>
         </div>
