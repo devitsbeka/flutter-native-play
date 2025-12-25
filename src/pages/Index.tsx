@@ -222,7 +222,7 @@ const BottomNavItem = ({
 );
 
 // Fire particle for play button
-const PlayButtonParticle = ({ angle, delay }: { angle: number; delay: number }) => {
+const PlayButtonParticle = ({ angle, delay, theme }: { angle: number; delay: number; theme: typeof themes.purpleGold }) => {
   const radians = (angle * Math.PI) / 180;
   const distance = 55;
   const x = Math.cos(radians) * distance;
@@ -238,8 +238,8 @@ const PlayButtonParticle = ({ angle, delay }: { angle: number; delay: number }) 
         top: "50%",
         marginLeft: x,
         marginTop: y,
-        background: `radial-gradient(circle, rgba(255,220,80,1) 0%, rgba(255,120,30,0.8) 60%, transparent 100%)`,
-        boxShadow: "0 0 8px rgba(255,150,50,0.8)",
+        background: `radial-gradient(circle, ${theme.accentLight} 0%, ${theme.accent}CC 60%, transparent 100%)`,
+        boxShadow: `0 0 8px ${theme.accent}CC`,
       }}
       animate={{
         opacity: [0, 1, 0.8, 0],
@@ -622,7 +622,7 @@ export default function Index() {
               <div className="absolute left-1/2 -translate-x-1/2 -top-8 flex flex-col items-center">
                 {/* Fire particles around the button */}
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <PlayButtonParticle key={i} angle={i * 30} delay={i * 0.15} />
+                  <PlayButtonParticle key={i} angle={i * 30} delay={i * 0.15} theme={theme} />
                 ))}
                 
                 <motion.button
@@ -636,7 +636,7 @@ export default function Index() {
                   <motion.div 
                     className="absolute inset-0 rounded-full blur-2xl"
                     style={{
-                      background: "radial-gradient(circle, #FFD700 0%, #FF6B00 50%, transparent 100%)",
+                      background: `radial-gradient(circle, ${theme.accent} 0%, ${theme.accentLight} 50%, transparent 100%)`,
                       transform: "scale(2)",
                     }}
                     animate={{ opacity: [0.5, 0.8, 0.5], scale: [1.8, 2.2, 1.8] }}
@@ -647,7 +647,7 @@ export default function Index() {
                   <motion.div 
                     className="absolute inset-0 rounded-full blur-lg"
                     style={{
-                      background: "radial-gradient(circle, #FFF 0%, #FFE55C 30%, transparent 70%)",
+                      background: `radial-gradient(circle, #FFF 0%, ${theme.accentLight} 30%, transparent 70%)`,
                       transform: "scale(1.4)",
                     }}
                     animate={{ opacity: [0.4, 0.8, 0.4] }}
@@ -658,15 +658,15 @@ export default function Index() {
                   <div 
                     className="relative w-20 h-20 rounded-full p-1"
                     style={{
-                      background: "linear-gradient(180deg, #FFE066 0%, #FFD700 30%, #FF9500 100%)",
-                      boxShadow: "0 6px 0 #8B4513, 0 8px 25px rgba(255,107,0,0.8)",
+                      background: `linear-gradient(180deg, ${theme.accentLight} 0%, ${theme.accent} 100%)`,
+                      boxShadow: `0 6px 0 ${theme.cardShadow}, 0 8px 25px ${theme.accent}CC`,
                     }}
                   >
                     {/* Button face */}
                     <div 
                       className="w-full h-full rounded-full flex items-center justify-center relative overflow-hidden"
                       style={{
-                        background: "linear-gradient(180deg, #FFE88C 0%, #FFD700 40%, #FF9500 100%)",
+                        background: `linear-gradient(180deg, ${theme.accentLight} 0%, ${theme.accent} 100%)`,
                       }}
                     >
                       {/* Simple top shine */}
@@ -679,8 +679,8 @@ export default function Index() {
                       <Play 
                         className="w-9 h-9 ml-1 relative z-10" 
                         style={{ 
-                          color: "#7C3A00",
-                          fill: "#8B4513",
+                          color: theme.isLight ? "rgba(255,255,255,0.9)" : theme.cardShadow,
+                          fill: theme.isLight ? "rgba(255,255,255,0.7)" : theme.cardShadow,
                           filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))" 
                         }} 
                       />
