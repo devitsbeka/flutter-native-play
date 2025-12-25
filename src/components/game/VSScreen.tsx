@@ -185,8 +185,8 @@ export function VSScreen() {
                 }}
               />
               
-              {/* Avatar container - full image with bottom fade */}
-              <div className="relative w-36 h-36 sm:w-44 sm:h-44">
+              {/* Avatar container - larger with bottom fade */}
+              <div className="relative w-44 h-44 sm:w-56 sm:h-56">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -358,8 +358,8 @@ export function VSScreen() {
                 }}
               />
               
-              {/* Avatar container - full image with top fade */}
-              <div className="relative w-36 h-36 sm:w-44 sm:h-44">
+              {/* Avatar container - larger with top fade */}
+              <div className="relative w-44 h-44 sm:w-56 sm:h-56">
                 {opponent.avatarUrl ? (
                   <img 
                     src={opponent.avatarUrl} 
