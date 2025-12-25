@@ -130,14 +130,10 @@ async function regenerateAvatar(originalImageUrl: string): Promise<string> {
   const avatarUrl = await pollForResult(orderId);
   console.log("Avatar generated successfully:", avatarUrl);
 
-  // Step 2: Expand image at top by 100px
-  let expandedUrl = avatarUrl;
-  try {
-    expandedUrl = await expandImageTop(avatarUrl, 100);
-    console.log("Avatar expanded successfully:", expandedUrl);
-  } catch (expandError) {
-    console.error("Image expansion failed, using original avatar:", expandError);
-  }
+  // Step 2: Expand image at top by 100px (REQUIRED)
+  console.log("Step 2: Expanding avatar at top...");
+  const expandedUrl = await expandImageTop(avatarUrl, 100);
+  console.log("Avatar expanded successfully:", expandedUrl);
 
   // Step 3: Remove background
   console.log("Starting background removal...");
