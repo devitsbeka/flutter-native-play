@@ -14,37 +14,11 @@ import iconShop3d from "@/assets/icons/icon-shop-3d.png";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 
-// Theme colors
+// Theme colors (background now comes from global Spline)
 const theme = {
-  background: "linear-gradient(180deg, #E8D5F0 0%, #F0E0F5 30%, #F5E6F8 60%, #E5D0F0 100%)",
   accent: "#9C6ADE",
   accentDark: "#7B4BBF",
 };
-
-// Floating particle
-const FloatingParticle = ({ delay, left, size }: { delay: number; left: string; size: number }) => (
-  <motion.div
-    className="absolute rounded-full pointer-events-none"
-    style={{
-      left,
-      bottom: "-5%",
-      width: size,
-      height: size,
-      background: "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.4) 60%, transparent 100%)",
-    }}
-    animate={{
-      y: [0, -600 - Math.random() * 200],
-      opacity: [0, 0.7, 0.5, 0],
-      scale: [0.5, 1, 0.7, 0.3],
-    }}
-    transition={{
-      duration: 8 + Math.random() * 4,
-      delay,
-      repeat: Infinity,
-      ease: "easeOut",
-    }}
-  />
-);
 
 // Compact currency pill with image icon
 const CurrencyPill = ({ iconSrc, value }: { iconSrc: string; value: number }) => (
@@ -282,38 +256,18 @@ export default function Index() {
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
-  const particles = useMemo(() => 
-    Array.from({ length: 30 }, (_, i) => ({
-      id: i,
-      delay: Math.random() * 8,
-      left: `${Math.random() * 100}%`,
-      size: 3 + Math.random() * 5,
-    })), []
-  );
-
   return (
     <>
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       
       <div className="relative h-screen w-full overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0" style={{ background: theme.background }} />
-        
-        {/* Subtle radial accents */}
+        {/* Background comes from GlobalSplineBackground - just add subtle overlay for depth */}
         <div 
-          className="absolute inset-0 opacity-40"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 30%, rgba(156,106,222,0.15) 0%, transparent 50%),
-                              radial-gradient(circle at 80% 70%, rgba(156,106,222,0.1) 0%, transparent 40%)`,
+            background: "radial-gradient(circle at 50% 50%, transparent 20%, rgba(10,5,20,0.3) 100%)",
           }}
         />
-        
-        {/* Particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {particles.map((p) => (
-            <FloatingParticle key={p.id} {...p} />
-          ))}
-        </div>
 
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
