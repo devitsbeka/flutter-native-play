@@ -18,3 +18,9 @@ verify_jwt = false
 
 [functions.generate-avatar]
 verify_jwt = true
+
+[functions.generate-category-trivia]
+verify_jwt = false
+
+[functions.process-existing-avatars]
+verify_jwt = false
