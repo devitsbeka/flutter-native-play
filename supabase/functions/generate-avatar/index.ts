@@ -70,8 +70,8 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
   throw new Error("Operation timed out");
 }
 
-async function expandImage(imageUrl: string, padding: number = 150): Promise<string> {
-  console.log("Expanding image by", padding, "px (top, left, right) for:", imageUrl.substring(0, 100));
+async function expandImage(imageUrl: string, topPadding: number = 150, sidePadding: number = 300): Promise<string> {
+  console.log(`Expanding image: top=${topPadding}px, sides=${sidePadding}px for:`, imageUrl.substring(0, 100));
   
   const response = await fetch("https://api.lightxeditor.com/external/api/v2/expand-photo", {
     method: "POST",
@@ -81,10 +81,10 @@ async function expandImage(imageUrl: string, padding: number = 150): Promise<str
     },
     body: JSON.stringify({
       imageUrl: imageUrl,
-      topPadding: padding,
+      topPadding: topPadding,
       bottomPadding: 0,
-      leftPadding: padding,
-      rightPadding: padding,
+      leftPadding: sidePadding,
+      rightPadding: sidePadding,
     }),
   });
 
@@ -202,9 +202,9 @@ serve(async (req) => {
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
 
-    // Step 2: Expand the image (top, left, right by 150px) to prevent cropping
-    console.log("Step 2: Expanding avatar (top, left, right by 150px)...");
-    const expandedAvatarUrl = await expandImage(avatarUrl, 150);
+    // Step 2: Expand the image to prevent cropping (top: 150px, sides: 300px)
+    console.log("Step 2: Expanding avatar (top: 150px, sides: 300px)...");
+    const expandedAvatarUrl = await expandImage(avatarUrl, 150, 300);
     console.log("Avatar expanded successfully:", expandedAvatarUrl);
 
     // Step 3: Remove background from the expanded avatar
