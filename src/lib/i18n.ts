@@ -174,6 +174,7 @@ export const ka = {
     profile: "პროფილი",
     settings: "პარამეტრები",
     home: "მთავარი",
+    menu: "მენიუ",
   },
 
   // ==========================================
@@ -202,7 +203,11 @@ export const ka = {
     educational: "საგანმანათლებლო",
     
     // Game states
-    findingOpponent: "მოწინააღმდეგე იძებნება...",
+    searching: "ძებნა...",
+    almostThere: "თითქმის მზადაა...",
+    findingOpponent: "მოწინააღმდეგე იძებნება",
+    matchFound: "მოწინააღმდეგე ნაპოვნია!",
+    you: "შენ",
     getReady: "მოემზადე!",
     questionOf: "კითხვა {current}/{total}",
     timeUp: "დრო ამოიწურა!",
