@@ -102,7 +102,7 @@ export function VSScreen() {
           {/* Player info badge with flag, name, points */}
           <div className="-mt-4 z-10">
             <PlayerInfoBadge
-              name={playerName}
+              name="You"
               flag={getCountryFlag(profile?.country_code || "US")}
               points={playerPoints}
               delay={0.2}
