@@ -357,7 +357,7 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image with overlay ring to mask edges */}
+              {/* Avatar image - clean display without ring */}
               <div className="w-64 h-64 relative">
                 {profile?.avatar_url ? (
                   <img 
@@ -373,22 +373,6 @@ export default function Index() {
                     <span className="text-7xl">🎮</span>
                   </div>
                 )}
-                
-                {/* White ring overlay to mask sharp edges */}
-                <div 
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    border: "41px solid rgba(255,255,255,0.85)",
-                    boxShadow: "inset 0 4px 12px rgba(0,0,0,0.05)",
-                  }}
-                />
-                {/* Outer stroke */}
-                <div 
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.9)",
-                  }}
-                />
               </div>
                 
               {/* Power badges in curved arc at top of avatar */}
