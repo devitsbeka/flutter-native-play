@@ -144,8 +144,16 @@ export function VSScreen() {
             className="relative"
           >
             <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500">
-              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center">
-                <span className="text-6xl">{opponent.avatarEmoji}</span>
+              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center overflow-hidden">
+                {opponent.avatarUrl ? (
+                  <img 
+                    src={opponent.avatarUrl} 
+                    alt={opponent.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-6xl">{opponent.avatarEmoji}</span>
+                )}
               </div>
             </div>
 

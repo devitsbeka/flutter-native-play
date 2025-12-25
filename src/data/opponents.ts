@@ -1,5 +1,16 @@
 // Fake opponent data for simulated matchmaking
 
+import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
+import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
+import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
+import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
+import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
+import botAvatar6 from "@/assets/avatars/bot-avatar-6.png";
+import botAvatar7 from "@/assets/avatars/bot-avatar-7.png";
+import botAvatar8 from "@/assets/avatars/bot-avatar-8.png";
+import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
+import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
+
 export interface FakeOpponent {
   name: string;
   countryCode: string;
@@ -7,7 +18,21 @@ export interface FakeOpponent {
   points: number;
   rank: string;
   avatarEmoji: string;
+  avatarUrl: string;
 }
+
+const botAvatars = [
+  botAvatar1,
+  botAvatar2,
+  botAvatar3,
+  botAvatar4,
+  botAvatar5,
+  botAvatar6,
+  botAvatar7,
+  botAvatar8,
+  botAvatar9,
+  botAvatar10,
+];
 
 const firstNames = [
   "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery",
@@ -84,6 +109,7 @@ export function generateFakeOpponent(): FakeOpponent {
   const points = Math.floor(Math.random() * 15000) + 500;
   const rankInfo = getRankFromPoints(points);
   const avatarEmoji = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
+  const avatarUrl = botAvatars[Math.floor(Math.random() * botAvatars.length)];
 
   return {
     name: `${firstName}${lastName.charAt(0)}`,
@@ -92,6 +118,7 @@ export function generateFakeOpponent(): FakeOpponent {
     points,
     rank: rankInfo.name,
     avatarEmoji,
+    avatarUrl,
   };
 }
 

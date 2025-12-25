@@ -8,8 +8,22 @@ import { PlayerInfoBadge } from "@/components/game/PlayerInfoBadge";
 import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Slot machine emojis for cycling effect
-const slotEmojis = ["😎", "🤓", "🧐", "😏", "🤔", "🦊", "🐱", "🤖", "👾", "🦁", "🐼", "🦄", "🐲", "🤠", "👻"];
+import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
+import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
+import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
+import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
+import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
+import botAvatar6 from "@/assets/avatars/bot-avatar-6.png";
+import botAvatar7 from "@/assets/avatars/bot-avatar-7.png";
+import botAvatar8 from "@/assets/avatars/bot-avatar-8.png";
+import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
+import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
+
+// Slot machine avatars for cycling effect
+const slotAvatars = [
+  botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
+  botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10
+];
 
 type SlotPhase = "searching" | "slowing" | "found";
 
@@ -20,7 +34,7 @@ export function MatchmakingScreen() {
 
   // Slot machine state
   const [slotPhase, setSlotPhase] = useState<SlotPhase>("searching");
-  const [currentEmoji, setCurrentEmoji] = useState("?");
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const [currentFlag, setCurrentFlag] = useState("🌍");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -59,9 +73,9 @@ export function MatchmakingScreen() {
     const cycleSlot = () => {
       cycleCount++;
       
-      const randomEmoji = slotEmojis[Math.floor(Math.random() * slotEmojis.length)];
+      const randomAvatar = slotAvatars[Math.floor(Math.random() * slotAvatars.length)];
       const randomCountry = countries[Math.floor(Math.random() * countries.length)];
-      setCurrentEmoji(randomEmoji);
+      setCurrentAvatar(randomAvatar);
       setCurrentFlag(randomCountry.flag);
 
       if (cycleCount < 25) {
@@ -75,7 +89,7 @@ export function MatchmakingScreen() {
       } else {
         setSlotPhase("found");
         if (opponent) {
-          setCurrentEmoji(opponent.avatarEmoji);
+          setCurrentAvatar(opponent.avatarUrl);
           setCurrentFlag(getCountryFlag(opponent.countryCode));
         }
       }
@@ -93,7 +107,7 @@ export function MatchmakingScreen() {
   // Update to final opponent when found
   useEffect(() => {
     if (slotPhase === "found" && opponent) {
-      setCurrentEmoji(opponent.avatarEmoji);
+      setCurrentAvatar(opponent.avatarUrl);
       setCurrentFlag(getCountryFlag(opponent.countryCode));
     }
   }, [slotPhase, opponent]);
@@ -260,7 +274,15 @@ export function MatchmakingScreen() {
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
               <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center relative overflow-hidden">
-                <span className="text-6xl">{currentEmoji}</span>
+                {currentAvatar ? (
+                  <img 
+                    src={currentAvatar} 
+                    alt="Opponent avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-6xl">?</span>
+                )}
               </div>
             </motion.div>
 
