@@ -1,12 +1,18 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingBag, Zap, Map, Trophy, Play, Flame, Star, Diamond } from "lucide-react";
+import { Play, Flame, Star } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateLevel } from "@/utils/levelCalculation";
 import iconCompass from "@/assets/icons/icon-compass.png";
 import iconProfile from "@/assets/icons/icon-profile.png";
+import iconMap3d from "@/assets/icons/icon-map-3d.png";
+import iconPowers3d from "@/assets/icons/icon-powers-3d.png";
+import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
+import iconShop3d from "@/assets/icons/icon-shop-3d.png";
+import iconCoin from "@/assets/icons/icon-coin.png";
+import iconGem from "@/assets/icons/icon-gem.png";
 
 // Theme colors
 const theme = {
@@ -40,62 +46,52 @@ const FloatingParticle = ({ delay, left, size }: { delay: number; left: string; 
   />
 );
 
-// Compact currency pill
-const CurrencyPill = ({ icon: Icon, value, label, iconColor }: { icon: React.ElementType; value: number; label: string; iconColor: string }) => (
-  <div 
-    className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+// Compact currency pill with image icon
+const CurrencyPill = ({ iconSrc, value }: { iconSrc: string; value: number }) => (
+  <motion.div 
+    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
     style={{
       background: "rgba(255,255,255,0.95)",
-      boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
     }}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
   >
-    <div 
-      className="w-7 h-7 rounded-full flex items-center justify-center"
-      style={{ background: `${iconColor}15` }}
-    >
-      <Icon className="w-4 h-4" style={{ color: iconColor }} />
-    </div>
-    <div className="flex flex-col -space-y-0.5">
-      <span className="text-base font-bold text-gray-800 leading-tight">{value}</span>
-      <span className="text-[9px] uppercase tracking-wider text-gray-400 font-medium">{label}</span>
-    </div>
-  </div>
+    <img src={iconSrc} alt="" className="w-7 h-7 object-contain" />
+    <span className="text-base font-bold text-gray-800">{value.toLocaleString()}</span>
+  </motion.div>
 );
 
-// Side icon button (no label)
+// Side icon button with image (no label)
 const SideIconButton = ({ 
-  icon: Icon, 
+  iconSrc, 
   onClick, 
   badge,
-  iconColor,
 }: { 
-  icon: React.ElementType; 
+  iconSrc: string; 
   onClick?: () => void;
   badge?: number;
-  iconColor: string;
 }) => (
   <motion.button
     onClick={onClick}
     className="relative"
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
+    whileHover={{ scale: 1.1, rotate: 5 }}
+    whileTap={{ scale: 0.9 }}
+    transition={{ type: "spring", stiffness: 400, damping: 15 }}
   >
-    <div 
-      className="w-14 h-14 rounded-2xl flex items-center justify-center"
-      style={{
-        background: "rgba(255,255,255,0.95)",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-      }}
-    >
-      <Icon className="w-6 h-6" style={{ color: iconColor }} strokeWidth={2} />
-    </div>
+    <img src={iconSrc} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
     {badge && badge > 0 && (
-      <div 
+      <motion.div 
         className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
-        style={{ background: "#EF4444" }}
+        style={{ 
+          background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
+          boxShadow: "0 2px 4px rgba(239,68,68,0.4)"
+        }}
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
       >
         <span className="text-white text-[10px] font-bold">{badge}</span>
-      </div>
+      </motion.div>
     )}
   </motion.button>
 );
@@ -146,24 +142,36 @@ const SparkleParticle = ({ index, total }: { index: number; total: number }) => 
   );
 };
 
-// Bottom nav item - using image icons
-const NavItem = ({ 
+// Bottom nav arc item
+const ArcNavItem = ({ 
   iconSrc, 
   label, 
-  onClick, 
+  onClick,
+  position,
 }: { 
   iconSrc: string; 
   label: string; 
   onClick?: () => void;
+  position: 'left' | 'right';
 }) => (
   <motion.button
     onClick={onClick}
-    className="flex flex-col items-center gap-0.5 py-1"
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.92 }}
+    className="flex flex-col items-center gap-1"
+    whileHover={{ scale: 1.1, y: -5 }}
+    whileTap={{ scale: 0.9 }}
+    transition={{ type: "spring", stiffness: 400, damping: 15 }}
+    style={{
+      transform: position === 'left' ? 'translateX(10px)' : 'translateX(-10px)',
+    }}
   >
-    <img src={iconSrc} alt={label} className="w-9 h-9 object-contain" />
-    <span className="text-[9px] uppercase tracking-wider text-gray-500 font-semibold">
+    <motion.div
+      className="relative"
+      animate={{ y: [0, -3, 0] }}
+      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: position === 'left' ? 0 : 0.3 }}
+    >
+      <img src={iconSrc} alt={label} className="w-12 h-12 object-contain drop-shadow-md" />
+    </motion.div>
+    <span className="text-[10px] uppercase tracking-wider text-gray-600 font-bold">
       {label}
     </span>
   </motion.button>
@@ -310,7 +318,7 @@ export default function Index() {
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
           <div className="flex items-center justify-between">
-            <CurrencyPill icon={Diamond} value={gamesWon * 10} label="Coins" iconColor="#6B7280" />
+            <CurrencyPill iconSrc={iconCoin} value={gamesWon * 10} />
             
             <motion.h1 
               className="text-3xl font-bold"
@@ -323,20 +331,20 @@ export default function Index() {
               Trivia
             </motion.h1>
             
-            <CurrencyPill icon={Diamond} value={currentStreak} label="Gems" iconColor="#60A5FA" />
+            <CurrencyPill iconSrc={iconGem} value={currentStreak} />
           </div>
         </header>
 
         {/* ===== LEFT SIDE ===== */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
-          <SideIconButton icon={ShoppingBag} iconColor="#F59E0B" />
-          <SideIconButton icon={Trophy} onClick={() => navigate("/leaderboards")} badge={2} iconColor="#FBBF24" />
+          <SideIconButton iconSrc={iconTrophy3d} onClick={() => navigate("/leaderboards")} badge={2} />
+          <SideIconButton iconSrc={iconShop3d} />
         </div>
 
         {/* ===== RIGHT SIDE ===== */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
-          <SideIconButton icon={Zap} iconColor="#3B82F6" />
-          <SideIconButton icon={Map} onClick={() => navigate("/adventure-map")} iconColor="#22C55E" />
+          <SideIconButton iconSrc={iconPowers3d} />
+          <SideIconButton iconSrc={iconMap3d} onClick={() => navigate("/adventure-map")} />
         </div>
 
         {/* ===== CENTER: AVATAR & LEVEL ===== */}
@@ -376,24 +384,25 @@ export default function Index() {
                 </div>
               </div>
               
-              {/* Level badge */}
+              {/* Level badge - CENTERED */}
               <motion.div 
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20"
+                className="absolute -bottom-3 z-20"
+                style={{ left: '50%', transform: 'translateX(-50%)' }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
               >
                 <div 
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
+                  className="flex items-center justify-center gap-1 px-4 py-1.5 rounded-full"
                   style={{
                     background: "linear-gradient(180deg, #FFE066 0%, #FFD700 50%, #FFC400 100%)",
                     boxShadow: "0 3px 0 #CC9900, 0 4px 12px rgba(255,200,0,0.3)",
                   }}
                 >
-                  <Star className="w-3.5 h-3.5 text-amber-700 fill-amber-700" />
-                  <div className="flex flex-col items-center -space-y-0.5">
-                    <span className="text-[9px] uppercase tracking-wider text-amber-700 font-semibold leading-tight">Level</span>
-                    <span className="text-base font-bold text-amber-800 leading-tight">{levelInfo.level}</span>
+                  <Star className="w-4 h-4 text-amber-700 fill-amber-700 flex-shrink-0" />
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[9px] uppercase tracking-wider text-amber-700 font-semibold">Level</span>
+                    <span className="text-lg font-bold text-amber-800">{levelInfo.level}</span>
                   </div>
                 </div>
               </motion.div>
@@ -451,49 +460,92 @@ export default function Index() {
           </motion.div>
         </div>
 
-        {/* ===== BOTTOM NAVIGATION ===== */}
+        {/* ===== CURVED BOTTOM NAVIGATION ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="px-4 pb-3 pt-12"
-            initial={{ y: 50, opacity: 0 }}
+            className="relative px-4 pb-4"
+            initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
           >
-            {/* Nav bar container */}
-            <div 
-              className="relative rounded-[24px] py-2 px-6"
-              style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,0.95) 100%)",
-                boxShadow: "0 -2px 20px rgba(156,106,222,0.08), 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,1)",
-                border: "1px solid rgba(255,255,255,0.8)",
-              }}
-            >
-              {/* Top shine line */}
-              <div 
-                className="absolute top-0 left-6 right-6 h-[1px]"
-                style={{
-                  background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 30%, rgba(255,255,255,0.9) 70%, transparent 100%)",
-                }}
-              />
-              
-              {/* Nav items - flex with centered items */}
-              <div className="flex items-center justify-between">
-                {/* Left item */}
-                <div className="flex-1 flex justify-center">
-                  <NavItem iconSrc={iconCompass} label="Explore" onClick={() => navigate("/discover")} />
-                </div>
+            {/* Curved arc background with SVG */}
+            <div className="relative">
+              {/* SVG curved shape */}
+              <svg 
+                viewBox="0 0 400 120" 
+                className="w-full h-auto"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <defs>
+                  {/* Main gradient */}
+                  <linearGradient id="curveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
+                    <stop offset="100%" stopColor="rgba(248,245,255,0.95)" />
+                  </linearGradient>
+                  {/* Shadow filter */}
+                  <filter id="curveShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="-4" stdDeviation="12" floodColor="rgba(156,106,222,0.15)" />
+                    <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="rgba(0,0,0,0.08)" />
+                  </filter>
+                  {/* Inner glow */}
+                  <radialGradient id="centerGlow" cx="50%" cy="0%" r="60%">
+                    <stop offset="0%" stopColor="rgba(183,148,246,0.15)" />
+                    <stop offset="100%" stopColor="transparent" />
+                  </radialGradient>
+                </defs>
                 
-                {/* Spacer for play button */}
-                <div className="w-20" />
+                {/* Main curved shape - deeper curve for play button */}
+                <path 
+                  d="M 0,50 
+                     Q 0,20 30,20 
+                     L 140,20 
+                     Q 170,20 180,45 
+                     Q 200,-15 220,45 
+                     Q 230,20 260,20 
+                     L 370,20 
+                     Q 400,20 400,50 
+                     L 400,120 
+                     L 0,120 
+                     Z"
+                  fill="url(#curveGradient)"
+                  filter="url(#curveShadow)"
+                />
+                
+                {/* Center glow overlay */}
+                <ellipse cx="200" cy="30" rx="80" ry="50" fill="url(#centerGlow)" />
+                
+                {/* Top shine line */}
+                <path 
+                  d="M 50,22 Q 140,22 140,22 L 140,21 L 50,21 Z"
+                  fill="rgba(255,255,255,0.8)"
+                />
+                <path 
+                  d="M 260,22 Q 350,22 350,22 L 350,21 L 260,21 Z"
+                  fill="rgba(255,255,255,0.8)"
+                />
+              </svg>
+              
+              {/* Nav items overlay positioned on the curve */}
+              <div className="absolute inset-0 flex items-end justify-between px-12 pb-6">
+                {/* Left item */}
+                <ArcNavItem 
+                  iconSrc={iconCompass} 
+                  label="Explore" 
+                  onClick={() => navigate("/discover")} 
+                  position="left"
+                />
                 
                 {/* Right item */}
-                <div className="flex-1 flex justify-center">
-                  <NavItem iconSrc={iconProfile} label="Profile" onClick={() => navigate("/profile")} />
-                </div>
+                <ArcNavItem 
+                  iconSrc={iconProfile} 
+                  label="Profile" 
+                  onClick={() => navigate("/profile")} 
+                  position="right"
+                />
               </div>
               
-              {/* CENTER PLAY BUTTON */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-10">
+              {/* CENTER PLAY BUTTON - positioned in the curve dip */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-[70%]">
                 <PlayButton3D onClick={() => navigate("/game")} />
               </div>
             </div>
