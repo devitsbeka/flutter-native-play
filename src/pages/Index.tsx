@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingBag, Zap, Map, Trophy, User, Home } from "lucide-react";
+import { ShoppingBag, Zap, Map, Trophy, User, Home, Play } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
@@ -232,7 +232,7 @@ export default function Index() {
                       boxShadow: "0 6px 0 #CC5500, 0 8px 20px rgba(255,107,0,0.5), inset 0 2px 0 rgba(255,255,255,0.3)",
                     }}
                   >
-                    <span className="text-3xl">🎯</span>
+                    <Play className="w-9 h-9 text-amber-900 fill-amber-900 ml-1" />
                   </div>
                 </motion.button>
                 <span className="text-white font-black text-xs mt-2 uppercase tracking-wide">Play</span>
