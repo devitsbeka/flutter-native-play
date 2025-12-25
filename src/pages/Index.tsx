@@ -379,10 +379,10 @@ export default function Index() {
                   {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
                     // True curved arc using calculated positions
                     const totalBadges = 5;
-                    const arcSpan = 140; // degrees of arc
-                    const startAngle = -70; // start from left side
+                    const arcSpan = 160; // wider arc spread
+                    const startAngle = -80; // start from left side
                     const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                    const radius = 80; // radius of the arc
+                    const radius = 100; // larger radius for more spacing
                     const radians = (angle * Math.PI) / 180;
                     const x = Math.sin(radians) * radius;
                     const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
