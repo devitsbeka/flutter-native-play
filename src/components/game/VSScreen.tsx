@@ -8,58 +8,139 @@ import { ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-// Floating particle component
-const Particle = ({ delay, side }: { delay: number; side: "blue" | "red" }) => {
-  const isBlue = side === "blue";
+// Floating star particle
+const StarParticle = ({ delay, side, size = "sm" }: { delay: number; side: "player" | "opponent"; size?: "sm" | "md" }) => {
+  const isPlayer = side === "player";
+  const baseX = isPlayer ? Math.random() * 120 + 20 : Math.random() * 120 + 220;
+  const baseY = isPlayer ? Math.random() * 250 + 80 : Math.random() * 250 + 400;
+  const dimension = size === "sm" ? 8 : 12;
+  
   return (
     <motion.div
-      className={`absolute w-1.5 h-1.5 rounded-full ${isBlue ? "bg-purple-400" : "bg-fuchsia-400"}`}
-      initial={{ 
-        opacity: 0, 
-        scale: 0,
-        x: isBlue ? Math.random() * 150 : Math.random() * 150 + 200,
-        y: isBlue ? Math.random() * 300 + 50 : Math.random() * 300 + 350,
+      className="absolute pointer-events-none"
+      style={{
+        left: baseX,
+        top: baseY,
       }}
+      initial={{ opacity: 0, scale: 0, rotate: 0 }}
       animate={{ 
-        opacity: [0, 0.8, 0],
-        scale: [0, 1.5, 0],
-        y: isBlue ? [null, Math.random() * -100 - 50] : [null, Math.random() * -100 - 50],
+        opacity: [0, 1, 1, 0],
+        scale: [0, 1, 1.2, 0],
+        rotate: [0, 180, 360],
+        y: [0, -80, -120],
       }}
       transition={{
-        duration: 3,
+        duration: 2.5,
         delay: delay,
         repeat: Infinity,
         ease: "easeOut"
       }}
-      style={{
-        filter: `blur(0.5px) drop-shadow(0 0 4px ${isBlue ? "#a855f7" : "#e879f9"})`,
-      }}
-    />
+    >
+      <svg width={dimension} height={dimension} viewBox="0 0 24 24" fill="none">
+        <path 
+          d="M12 2L14.5 9H22L16 14L18.5 22L12 17L5.5 22L8 14L2 9H9.5L12 2Z" 
+          fill={isPlayer ? "#a78bfa" : "#e879f9"}
+          filter="drop-shadow(0 0 3px currentColor)"
+        />
+      </svg>
+    </motion.div>
   );
 };
 
-// Sparkle along diagonal
-const DiagonalSparkle = ({ index }: { index: number }) => {
-  const progress = index / 8;
+// Rising sparkle with trail
+const RisingSparkle = ({ delay, side }: { delay: number; side: "player" | "opponent" }) => {
+  const isPlayer = side === "player";
+  const baseX = isPlayer ? Math.random() * 140 + 10 : Math.random() * 140 + 210;
+  const baseY = isPlayer ? 350 : 650;
+  
   return (
     <motion.div
-      className="absolute w-2 h-2 bg-yellow-300 rounded-full"
+      className="absolute pointer-events-none"
+      style={{ left: baseX, top: baseY }}
+      initial={{ opacity: 0, y: 0 }}
+      animate={{ 
+        opacity: [0, 1, 1, 0.5, 0],
+        y: [0, -150, -250, -350],
+        x: [0, Math.random() * 20 - 10, Math.random() * 30 - 15],
+      }}
+      transition={{
+        duration: 4,
+        delay: delay,
+        repeat: Infinity,
+        ease: "easeOut"
+      }}
+    >
+      <div 
+        className={`w-2 h-2 ${isPlayer ? "bg-indigo-400" : "bg-purple-400"} rounded-full`}
+        style={{
+          boxShadow: `0 0 8px ${isPlayer ? "#818cf8" : "#c084fc"}, 0 0 16px ${isPlayer ? "#818cf8" : "#c084fc"}`,
+        }}
+      />
+    </motion.div>
+  );
+};
+
+// Hexagon floating particle
+const HexParticle = ({ delay, x, y }: { delay: number; x: number; y: number }) => (
+  <motion.div
+    className="absolute pointer-events-none"
+    style={{ left: x, top: y }}
+    initial={{ opacity: 0, scale: 0, rotate: 0 }}
+    animate={{ 
+      opacity: [0, 0.7, 0.7, 0],
+      scale: [0.5, 1, 1, 0.5],
+      rotate: [0, 60, 120],
+      y: [0, -30, -60],
+    }}
+    transition={{
+      duration: 3,
+      delay: delay,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path 
+        d="M12 2L21 7V17L12 22L3 17V7L12 2Z" 
+        fill="none"
+        stroke="#fbbf24"
+        strokeWidth="2"
+        filter="drop-shadow(0 0 4px #fbbf24)"
+      />
+    </svg>
+  </motion.div>
+);
+
+// Diagonal energy spark
+const EnergySpark = ({ index }: { index: number }) => {
+  const progress = (index + 0.5) / 10;
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
       style={{
         left: `${100 - progress * 100}%`,
         top: `${progress * 100}%`,
-        filter: "blur(0.5px) drop-shadow(0 0 6px #ffd700)",
+        transform: "translate(-50%, -50%)",
       }}
+      initial={{ scale: 0, opacity: 0 }}
       animate={{
-        scale: [1, 1.8, 1],
-        opacity: [0.5, 1, 0.5],
+        scale: [0, 1.5, 1, 1.5, 0],
+        opacity: [0, 1, 0.8, 1, 0],
       }}
       transition={{
-        duration: 1.5,
-        delay: index * 0.2,
+        duration: 2,
+        delay: index * 0.25,
         repeat: Infinity,
         ease: "easeInOut",
       }}
-    />
+    >
+      <div 
+        className="w-3 h-3 bg-yellow-400 rounded-full"
+        style={{
+          boxShadow: "0 0 10px #fbbf24, 0 0 20px #fbbf24, 0 0 30px #f59e0b",
+        }}
+      />
+    </motion.div>
   );
 };
 
@@ -130,20 +211,37 @@ export function VSScreen() {
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/10 via-transparent to-red-900/10" />
       </div>
 
-      {/* Floating particles */}
+      {/* Star particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(12)].map((_, i) => (
-          <Particle key={`blue-${i}`} delay={i * 0.3} side="blue" />
+        {[...Array(8)].map((_, i) => (
+          <StarParticle key={`star-p-${i}`} delay={i * 0.4} side="player" size={i % 3 === 0 ? "md" : "sm"} />
         ))}
-        {[...Array(12)].map((_, i) => (
-          <Particle key={`red-${i}`} delay={i * 0.3 + 0.15} side="red" />
+        {[...Array(8)].map((_, i) => (
+          <StarParticle key={`star-o-${i}`} delay={i * 0.4 + 0.2} side="opponent" size={i % 3 === 0 ? "md" : "sm"} />
         ))}
       </div>
 
-      {/* Diagonal sparkles */}
+      {/* Rising sparkles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(6)].map((_, i) => (
+          <RisingSparkle key={`rise-p-${i}`} delay={i * 0.7} side="player" />
+        ))}
+        {[...Array(6)].map((_, i) => (
+          <RisingSparkle key={`rise-o-${i}`} delay={i * 0.7 + 0.35} side="opponent" />
+        ))}
+      </div>
+
+      {/* Hex particles scattered */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(5)].map((_, i) => (
+          <HexParticle key={`hex-${i}`} delay={i * 0.6} x={80 + i * 60} y={200 + i * 80} />
+        ))}
+      </div>
+
+      {/* Energy sparks along diagonal */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(8)].map((_, i) => (
-          <DiagonalSparkle key={i} index={i} />
+        {[...Array(10)].map((_, i) => (
+          <EnergySpark key={i} index={i} />
         ))}
       </div>
       
