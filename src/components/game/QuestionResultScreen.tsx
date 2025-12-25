@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useGame } from "@/contexts/GameContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Check, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressDots } from "./ProgressDots";
 import { Avatar } from "@/components/shared/Avatar";
 
 export function QuestionResultScreen() {
+  const { profile } = useAuth();
   const { 
     lastAnswerCorrect, 
     lastPointsEarned, 
@@ -92,7 +94,7 @@ export function QuestionResultScreen() {
           <div className="flex items-center justify-between">
             {/* You */}
             <div className="flex items-center gap-3">
-              <Avatar emoji="😊" size="md" />
+              <Avatar imageUrl={profile?.avatar_url || undefined} emoji="😊" size="md" />
               <div>
                 <p className="font-bold text-foreground">You</p>
                 <p className="text-2xl font-bold text-primary">{userScore}</p>
