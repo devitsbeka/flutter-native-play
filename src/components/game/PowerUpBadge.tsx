@@ -30,10 +30,25 @@ const powerUpAssets: Record<PowerUpType | "add-power", string> = {
   "add-power": addPowerImg,
 };
 
+// Ring colors matching the design
+const ringColors: Record<PowerUpType | "add-power", string> = {
+  "fifty-fifty": "rgba(255, 150, 100, 0.6)",
+  "freeze": "rgba(130, 200, 255, 0.6)",
+  "replace": "rgba(100, 220, 200, 0.6)",
+  "time-drain": "rgba(180, 140, 220, 0.6)",
+  "add-power": "rgba(140, 220, 100, 0.6)",
+};
+
 const sizeClasses = {
-  sm: "w-12 h-12",
-  md: "w-14 h-14",
+  sm: "w-16 h-16",
+  md: "w-18 h-18",
   lg: "w-24 h-24",
+};
+
+const ringSize = {
+  sm: "w-[72px] h-[72px]",
+  md: "w-20 h-20",
+  lg: "w-28 h-28",
 };
 
 export function PowerUpBadge({
@@ -64,20 +79,32 @@ export function PowerUpBadge({
       disabled={disabled || used}
       className={cn(
         "relative flex items-center justify-center transition-all",
-        sizeClasses[size],
+        ringSize[size],
         disabled && "opacity-40 cursor-not-allowed",
         used && "grayscale opacity-50",
         className
       )}
     >
-      <img
-        src={imageSrc}
-        alt={type}
-        className="w-full h-full object-contain drop-shadow-lg"
+      {/* Circular ring background */}
+      <div 
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `linear-gradient(135deg, ${ringColors[type]}, transparent 60%)`,
+          border: `3px solid ${ringColors[type]}`,
+        }}
       />
       
+      {/* Inner icon */}
+      <div className={cn("relative flex items-center justify-center", sizeClasses[size])}>
+        <img
+          src={imageSrc}
+          alt={type}
+          className="w-full h-full object-contain drop-shadow-lg"
+        />
+      </div>
+      
       {/* Count badge */}
-      {count !== undefined && count > 1 && !used && (
+      {count !== undefined && count > 0 && !used && (
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}

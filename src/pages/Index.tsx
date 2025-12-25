@@ -341,33 +341,19 @@ export default function Index() {
           </div>
         </header>
 
-        {/* ===== POWER BADGES ARC (Top) ===== */}
-        <div className="absolute top-36 left-1/2 -translate-x-1/2 z-20">
-          <div className="flex items-end justify-center gap-1">
-            {(["fifty-fifty", "freeze", "time-drain"] as const).map((type, index) => {
-              // Arc positioning - more pronounced curve (2x)
-              const arcOffset = Math.abs(index - 1) * 20;
-              return (
-                <motion.div
-                  key={type}
-                  style={{ marginBottom: 24 - arcOffset }}
-                  initial={{ scale: 0, y: -20 }}
-                  animate={{ scale: 1, y: 0 }}
-                  transition={{ delay: 0.2 + index * 0.1, type: "spring", stiffness: 200 }}
-                >
-                  <PowerUpBadge type={type} size="sm" index={index} count={3} />
-                </motion.div>
-              );
-            })}
-            {/* Add power button at the end */}
-            <motion.div
-              style={{ marginBottom: 4 }}
-              initial={{ scale: 0, y: -20 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-            >
-              <PowerUpBadge type="add-power" size="sm" index={3} />
-            </motion.div>
+        {/* ===== POWER BADGES ROW (Flat, closer to avatar) ===== */}
+        <div className="absolute top-48 left-1/2 -translate-x-1/2 z-20">
+          <div className="flex items-center justify-center gap-3">
+            {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => (
+              <motion.div
+                key={type}
+                initial={{ scale: 0, y: -20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
+              >
+                <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
+              </motion.div>
+            ))}
           </div>
         </div>
 
