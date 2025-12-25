@@ -374,7 +374,7 @@ export default function Index() {
         {/* ===== CENTER: AVATAR & LEVEL ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <motion.div 
-            className="flex flex-col items-center"
+            className="flex flex-col items-center w-full"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
@@ -382,9 +382,9 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar - LARGER with 3D flip on refresh */}
+            {/* Avatar - FULL WIDTH with fade masks */}
             <motion.div 
-              className="relative"
+              className="relative w-full max-w-sm mx-auto"
               animate={isRefreshing ? {
                 rotateY: [0, 360],
                 y: [0, -10, 0],
@@ -405,33 +405,54 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* White ring */}
+              {/* Top fade mask */}
               <div 
-                className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full p-1.5"
+                className="absolute -top-8 left-0 right-0 h-20 z-10 pointer-events-none"
                 style={{
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #F8F8F8 100%)",
-                  boxShadow: "0 8px 32px rgba(156,106,222,0.25), 0 2px 8px rgba(0,0,0,0.05)",
+                  background: "linear-gradient(to bottom, rgba(183, 148, 246, 0.6) 0%, transparent 100%)",
+                }}
+              />
+              
+              {/* Avatar container - full width square */}
+              <div 
+                className="relative w-full aspect-square rounded-3xl overflow-hidden"
+                style={{
+                  boxShadow: "0 12px 48px rgba(156,106,222,0.35), 0 4px 16px rgba(0,0,0,0.1)",
                   backfaceVisibility: "hidden",
                 }}
               >
-                <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
-                  {profile?.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
-                      <span className="text-7xl">🎮</span>
-                    </div>
-                  )}
-                </div>
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
+                    <span className="text-9xl">🎮</span>
+                  </div>
+                )}
+                
+                {/* Inner vignette overlay for depth */}
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%)",
+                  }}
+                />
               </div>
+              
+              {/* Bottom fade mask */}
+              <div 
+                className="absolute -bottom-8 left-0 right-0 h-20 z-10 pointer-events-none"
+                style={{
+                  background: "linear-gradient(to top, rgba(183, 148, 246, 0.6) 0%, transparent 100%)",
+                }}
+              />
               
               {/* Level badge - CENTERED */}
               <motion.div 
-                className="absolute -bottom-4 left-0 right-0 flex justify-center z-20"
+                className="absolute -bottom-2 left-0 right-0 flex justify-center z-20"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
