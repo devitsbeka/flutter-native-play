@@ -177,8 +177,8 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
-        styleStrength: 100,
+        textPrompt: "3D cartoon avatar with a friendly smile, Disney Pixar style, hyper-detailed, HD, HDR, 4K, 8K.",
+        styleStrength: 60,
       }),
     });
 
