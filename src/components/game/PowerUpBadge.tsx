@@ -40,9 +40,9 @@ const ringGradients: Record<PowerUpType | "add-power", { from: string; to: strin
 };
 
 const sizeConfig = {
-  sm: { outer: 72, inner: 48 },
-  md: { outer: 86, inner: 56 },
-  lg: { outer: 110, inner: 72 },
+  sm: { outer: 58, inner: 38 },
+  md: { outer: 69, inner: 45 },
+  lg: { outer: 88, inner: 58 },
 };
 
 export function PowerUpBadge({
