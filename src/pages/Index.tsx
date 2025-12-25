@@ -189,22 +189,20 @@ export default function Index() {
           <GuestProgressBanner />
 
           {/* Main Content Area */}
-          <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-6 pb-24">
-            {/* Quick Stats - Top */}
-            <div className="mb-8">
-              <QuickStats 
-                gamesPlayed={profile?.games_played || 0}
-                gamesWon={profile?.games_won || 0}
-                currentStreak={profile?.current_streak || 0}
-              />
-            </div>
+          <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-6 pb-20">
+            {/* Quick Stats */}
+            <QuickStats 
+              gamesPlayed={profile?.games_played || 0}
+              gamesWon={profile?.games_won || 0}
+              currentStreak={profile?.current_streak || 0}
+            />
 
-            {/* Level Badge - centered */}
-            <div className="mb-10">
+            {/* Level Badge */}
+            <div className="mt-6 mb-8">
               <LevelBadge totalPoints={profile?.total_points || 0} />
             </div>
 
-            {/* Play Button - Main CTA on top of earth */}
+            {/* Play Button - Main CTA */}
             <motion.button
               onClick={() => navigate("/game")}
               className="relative w-full max-w-xs"
@@ -224,16 +222,10 @@ export default function Index() {
               </div>
             </motion.button>
 
-            {/* Motivational tagline */}
-            <motion.p
-              className="mt-6 text-center text-xs tracking-wide"
-              style={{ color: "hsl(200 20% 45%)" }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
+            {/* Tagline */}
+            <p className="mt-4 text-xs text-white/40 tracking-wide">
               გამოცადე შენი ცოდნა მსოფლიოზე
-            </motion.p>
+            </p>
           </div>
             
           {/* Scroll indicator */}
