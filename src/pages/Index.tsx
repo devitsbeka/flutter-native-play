@@ -470,6 +470,16 @@ export default function Index() {
 
         {/* ===== BOTTOM NAVIGATION - 5 items ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
+          {/* Smooth white gradient fade - no hard edges */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.2) 60%, transparent 100%)",
+              height: "180%",
+              bottom: 0,
+              top: "auto",
+            }}
+          />
           <motion.div 
             className="relative px-4 pb-6"
             initial={{ y: 50, opacity: 0 }}
