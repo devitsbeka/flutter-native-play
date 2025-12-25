@@ -54,37 +54,72 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
   throw new Error("Operation timed out");
 }
 
-async function removeBackground(imageUrl: string): Promise<string> {
-  console.log("Starting background removal for:", imageUrl);
+// Style reference image - 3D Pixar style avatar
+const styleImageUrl = "https://mytrivia.io/images/avatar-style-reference.jpg";
+
+async function regenerateAvatar(originalImageUrl: string): Promise<string> {
+  console.log("Starting avatar regeneration for:", originalImageUrl);
   
-  const response = await fetch("https://api.lightxeditor.com/external/api/v1/remove-background", {
+  // Step 1: Generate new avatar with improved prompt using avatar endpoint
+  const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": LIGHTX_API_KEY!,
     },
     body: JSON.stringify({
-      imageUrl: imageUrl,
+      imageUrl: originalImageUrl,
+      styleImageUrl: styleImageUrl,
+      textPrompt: "3D Pixar Disney style cartoon avatar portrait, full visible hair with no cropping, complete face visible, shoulders and upper torso visible, centered composition with generous padding around the subject, no hard edges or cutoffs, soft feathered edges, vibrant colors, friendly warm smile, soft ambient lighting, big expressive eyes, smooth skin, charming character, full head of hair visible from top to bottom, portrait extends well below chin to show neck and shoulders",
     }),
   });
 
   const data = await response.json();
-  console.log("LightX remove-bg response:", JSON.stringify(data));
+  console.log("LightX avatar response:", JSON.stringify(data));
 
   if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
-    throw new Error(`LightX remove-bg API error: ${data.message || JSON.stringify(data)}`);
+    throw new Error(`LightX avatar API error: ${data.message || JSON.stringify(data)}`);
   }
 
   const orderId = data.body?.orderId || data.orderId;
   if (!orderId) {
-    throw new Error(`No orderId in remove-bg response: ${JSON.stringify(data)}`);
+    throw new Error(`No orderId in response: ${JSON.stringify(data)}`);
   }
 
-  console.log("Background removal orderId:", orderId);
-  const resultUrl = await pollForResult(orderId);
-  console.log("Background removed successfully:", resultUrl);
+  console.log("Avatar generation orderId:", orderId);
+  const avatarUrl = await pollForResult(orderId);
+  console.log("Avatar generated successfully:", avatarUrl);
 
-  return resultUrl;
+  // Step 2: Remove background
+  console.log("Starting background removal...");
+  const bgResponse = await fetch("https://api.lightxeditor.com/external/api/v1/remove-background", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": LIGHTX_API_KEY!,
+    },
+    body: JSON.stringify({
+      imageUrl: avatarUrl,
+    }),
+  });
+
+  const bgData = await bgResponse.json();
+  console.log("LightX remove-bg response:", JSON.stringify(bgData));
+
+  if (!bgResponse.ok || (bgData.statusCode && bgData.statusCode !== 2000)) {
+    throw new Error(`LightX remove-bg API error: ${bgData.message || JSON.stringify(bgData)}`);
+  }
+
+  const bgOrderId = bgData.body?.orderId || bgData.orderId;
+  if (!bgOrderId) {
+    throw new Error(`No orderId in remove-bg response: ${JSON.stringify(bgData)}`);
+  }
+
+  console.log("Background removal orderId:", bgOrderId);
+  const finalUrl = await pollForResult(bgOrderId);
+  console.log("Background removed successfully:", finalUrl);
+
+  return finalUrl;
 }
 
 async function downloadAndUpload(
@@ -103,8 +138,8 @@ async function downloadAndUpload(
   const arrayBuffer = await imageBlob.arrayBuffer();
   const uint8Array = new Uint8Array(arrayBuffer);
   
-  // Upload to Supabase storage with .png extension for transparency
-  const fileName = `avatar_nobg_${Date.now()}.png`;
+  // Upload to Supabase storage with unique filename
+  const fileName = `avatar_regen_${Date.now()}.png`;
   const filePath = `${userId}/${fileName}`;
   
   console.log("Uploading to Supabase storage:", filePath);
@@ -126,6 +161,45 @@ async function downloadAndUpload(
     .getPublicUrl(filePath);
 
   return urlData.publicUrl;
+}
+
+// Store original avatar URLs in storage for regeneration
+async function getOriginalAvatarUrl(supabase: any, userId: string, currentUrl: string): Promise<string | null> {
+  // Check if we have an original stored
+  const { data: files } = await supabase.storage
+    .from('avatars')
+    .list(userId, { search: 'original_' });
+  
+  if (files && files.length > 0) {
+    const { data: urlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(`${userId}/${files[0].name}`);
+    return urlData.publicUrl;
+  }
+  
+  // If the current URL doesn't contain regen or nobg, it's likely the original
+  if (!currentUrl.includes('_regen_') && !currentUrl.includes('_nobg_')) {
+    return currentUrl;
+  }
+  
+  // Try to find any non-processed image
+  const { data: allFiles } = await supabase.storage
+    .from('avatars')
+    .list(userId);
+  
+  if (allFiles) {
+    for (const file of allFiles) {
+      if (!file.name.includes('_regen_') && !file.name.includes('_nobg_')) {
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(`${userId}/${file.name}`);
+        return urlData.publicUrl;
+      }
+    }
+  }
+  
+  // Fallback: use current URL and hope for the best
+  return currentUrl;
 }
 
 serve(async (req) => {
@@ -162,20 +236,24 @@ serve(async (req) => {
       console.log(`\n--- Processing user ${profile.user_id} ---`);
       
       try {
-        // Skip if already processed (has _nobg_ in filename)
-        if (profile.avatar_url.includes('_nobg_')) {
-          console.log("Already processed, skipping");
-          results.push({ userId: profile.user_id, success: true, newUrl: profile.avatar_url });
+        // Get original avatar URL for regeneration
+        const originalUrl = await getOriginalAvatarUrl(supabase, profile.user_id, profile.avatar_url);
+        
+        if (!originalUrl) {
+          console.log("No original avatar found, skipping");
+          results.push({ userId: profile.user_id, success: false, error: "No original avatar found" });
           continue;
         }
 
-        // Remove background
-        const processedUrl = await removeBackground(profile.avatar_url);
+        console.log("Using original URL for regeneration:", originalUrl);
+
+        // Regenerate avatar with new prompt + remove background
+        const processedUrl = await regenerateAvatar(originalUrl);
         
         // Download and upload to our storage
         const newAvatarUrl = await downloadAndUpload(supabase, processedUrl, profile.user_id);
         
-        // Update profile
+        // Update profile - this will trigger realtime update
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: newAvatarUrl })
@@ -185,7 +263,7 @@ serve(async (req) => {
           throw new Error(`Failed to update profile: ${updateError.message}`);
         }
 
-        console.log(`Successfully processed avatar for user ${profile.user_id}`);
+        console.log(`Successfully regenerated avatar for user ${profile.user_id}`);
         results.push({ userId: profile.user_id, success: true, newUrl: newAvatarUrl });
 
       } catch (error) {
@@ -197,8 +275,8 @@ serve(async (req) => {
         });
       }
 
-      // Small delay between users to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Delay between users to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     const successCount = results.filter(r => r.success).length;
@@ -207,7 +285,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Processed ${results.length} avatars: ${successCount} succeeded, ${failCount} failed`,
+        message: `Regenerated ${results.length} avatars: ${successCount} succeeded, ${failCount} failed`,
         results
       }),
       { 
