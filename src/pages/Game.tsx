@@ -20,7 +20,7 @@ function GameContent() {
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result";
 
   return (
-    <div className="h-screen w-full flex flex-col relative overflow-hidden">
+    <div className="h-screen w-full flex flex-col relative overflow-hidden bg-transparent">
       {/* Spline Background - only show for match-result phase */}
       {!hasOwnBackground && <SplineGlobe />}
       
