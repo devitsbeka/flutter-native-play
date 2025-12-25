@@ -12,12 +12,12 @@ import { PointsModal } from "@/components/home/PointsModal";
 import { GuestProgressBanner } from "@/components/home/GuestProgressBanner";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
 import { QuickActionsBar } from "@/components/home/QuickActionsBar";
+import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { toast } from "sonner";
-
 
 type ContentTab = "featured" | "classic" | "fun" | "educational";
 
@@ -124,29 +124,34 @@ export default function Index() {
       />
       
       <div className="relative min-h-[200vh] overflow-x-hidden pb-28">
-        {/* Sky Background */}
+        {/* Dark gradient background for globe */}
         <div 
           className="fixed inset-0 z-0"
           style={{
-            background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 50%, hsl(45 40% 90%) 100%)"
+            background: "linear-gradient(180deg, hsl(220 30% 8%) 0%, hsl(220 25% 12%) 50%, hsl(220 20% 18%) 100%)"
           }}
         />
         
         {/* First Screen */}
         <div className="relative z-10 flex flex-col min-h-screen">
+          {/* 3D Spline Globe Background */}
+          <div className="fixed inset-0 z-0">
+            <SplineGlobe />
+          </div>
+
           {/* Header */}
-          <header className="px-4 pt-4 safe-top">
+          <header className="relative z-20 px-4 pt-4 safe-top">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setIsMenuOpen(true)}
-                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-black/30 backdrop-blur-md border border-white/10"
                 >
-                  <Menu className="h-5 w-5 text-slate-600" />
+                  <Menu className="h-5 w-5 text-white/80" />
                 </button>
                 <button 
                   onClick={() => navigate("/profile")}
-                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm overflow-hidden"
+                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-black/30 backdrop-blur-md border border-white/10 overflow-hidden"
                 >
                   <Avatar
                     imageUrl={profile?.avatar_url || undefined}
@@ -159,17 +164,17 @@ export default function Index() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setIsStreakModalOpen(true)}
-                  className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors"
+                  className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-black/30 backdrop-blur-md border border-white/10 hover:bg-black/40 transition-colors"
                 >
                   <span className="text-orange-400">🔥</span>
-                  <span className="font-bold text-slate-700 text-sm">{profile?.current_streak || 0}</span>
+                  <span className="font-bold text-white/90 text-sm">{profile?.current_streak || 0}</span>
                 </button>
                 <button 
                   onClick={() => setIsPointsModalOpen(true)}
-                  className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-white/70 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors"
+                  className="h-11 rounded-2xl px-3 flex items-center gap-1.5 bg-black/30 backdrop-blur-md border border-white/10 hover:bg-black/40 transition-colors"
                 >
                   <span className="text-amber-400">👑</span>
-                  <AnimatedCounter value={displayPoints} className="font-bold text-slate-700 text-sm" />
+                  <AnimatedCounter value={displayPoints} className="font-bold text-white/90 text-sm" />
                 </button>
               </div>
             </div>
@@ -178,14 +183,14 @@ export default function Index() {
           {/* Guest Progress Warning Banner */}
           <GuestProgressBanner />
 
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-            {/* Level Badge */}
-            <div className="mb-6">
+          {/* Main Content Area - Overlaid on Globe */}
+          <div className="relative z-20 flex-1 flex flex-col items-center justify-end px-6 pb-8">
+            {/* Level Badge - Positioned higher */}
+            <div className="mb-auto pt-8">
               <LevelBadge totalPoints={profile?.total_points || 0} />
             </div>
 
-            {/* Play Button */}
+            {/* Play Button - Bottom of screen */}
             <motion.button
               onClick={() => navigate("/game")}
               className="relative w-full max-w-xs mb-4"
@@ -202,101 +207,6 @@ export default function Index() {
                 <span className="font-display text-white text-xl font-bold tracking-wide uppercase">
                   თამაშის დაწყება
                 </span>
-              </div>
-            </motion.button>
-
-            {/* Special Chest Progress - Gamified 3D Style */}
-            <motion.button
-              onClick={() => canClaimChest && setIsChestModalOpen(true)}
-              className="w-full max-w-xs mb-6 relative"
-              whileTap={canClaimChest ? { scale: 0.98, y: 2 } : undefined}
-            >
-              {/* 3D Shadow Layer */}
-              <div 
-                className="absolute inset-0 rounded-2xl"
-                style={{ 
-                  background: canClaimChest ? "hsl(142 60% 25%)" : "hsl(30 50% 30%)",
-                  transform: "translateY(4px)" 
-                }}
-              />
-              
-              {/* Main Container */}
-              <div 
-                className="relative rounded-2xl p-3"
-                style={{ 
-                  background: canClaimChest 
-                    ? "linear-gradient(180deg, hsl(142 50% 45%) 0%, hsl(142 55% 38%) 100%)"
-                    : "linear-gradient(180deg, hsl(35 45% 45%) 0%, hsl(30 50% 38%) 100%)"
-                }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <motion.span 
-                      className="text-xl"
-                      animate={canClaimChest ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : undefined}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    >
-                      🎁
-                    </motion.span>
-                    <span className="text-sm font-display font-bold text-white drop-shadow-sm uppercase">სპეციალური სკივრი</span>
-                  </div>
-                  <div 
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold text-white"
-                    style={{ background: "rgba(0,0,0,0.2)" }}
-                  >
-                    {canClaimChest ? "მზადაა!" : `${chestProgress}/3`}
-                  </div>
-                </div>
-                
-                {/* 3D Progress Bar */}
-                <div 
-                  className="h-4 rounded-lg overflow-hidden relative"
-                  style={{ 
-                    background: "rgba(0,0,0,0.25)",
-                    boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)"
-                  }}
-                >
-                  <motion.div 
-                    className="h-full rounded-lg relative overflow-hidden"
-                    initial={{ width: 0 }}
-                    animate={{ width: canClaimChest ? "100%" : `${chestProgressPercent}%` }}
-                    transition={{ duration: 0.5 }}
-                    style={{ 
-                      background: canClaimChest 
-                        ? "linear-gradient(180deg, hsl(50 95% 60%) 0%, hsl(45 90% 50%) 50%, hsl(40 85% 45%) 100%)"
-                        : "linear-gradient(180deg, hsl(45 95% 65%) 0%, hsl(40 90% 55%) 50%, hsl(35 85% 48%) 100%)"
-                    }}
-                  >
-                    {/* Shine effect */}
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
-                      }}
-                    />
-                  </motion.div>
-                  
-                  {/* Progress markers */}
-                  <div className="absolute inset-0 flex justify-around items-center px-1">
-                    {[1, 2, 3].map((i) => (
-                      <div 
-                        key={i}
-                        className={`w-1 h-2/3 rounded-full ${chestProgress >= i || canClaimChest ? 'opacity-0' : 'opacity-30'}`}
-                        style={{ background: "rgba(255,255,255,0.5)" }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                
-                {canClaimChest && (
-                  <motion.p 
-                    className="text-xs font-bold text-white/90 mt-2 text-center"
-                    animate={{ opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    შეეხე სკივრის გასახსნელად!
-                  </motion.p>
-                )}
               </div>
             </motion.button>
 
