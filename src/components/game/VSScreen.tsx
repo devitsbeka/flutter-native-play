@@ -164,15 +164,15 @@ export function VSScreen() {
       <div className="flex-1 flex flex-col relative z-10 px-4">
         
         {/* === PLAYER SECTION (Top-Left Area) === */}
-        <div className="flex-1 flex items-start pt-4">
+        <div className="flex-1 flex items-start pt-6">
           <motion.div 
-            className="flex items-start gap-3"
+            className="flex items-start gap-4"
             initial={{ x: -30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             {/* Player Power-ups - Vertical stack on far left */}
-            <div className="flex flex-col gap-2 pt-8">
+            <div className="flex flex-col gap-2">
               {powerTypes.map((type, index) => (
                 <motion.div
                   key={`player-${type}`}
@@ -198,31 +198,24 @@ export function VSScreen() {
               </motion.div>
             </div>
 
-            {/* Player Avatar + Badge */}
-            <div className="flex flex-col items-center">
-              <div className="relative w-28 h-28">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600 blur-sm opacity-70" />
-                <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600">
-                  <div className="w-full h-full rounded-full bg-[#2a2a4a] overflow-hidden">
-                    {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="You" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="w-full h-full flex items-center justify-center text-5xl">😊</span>
-                    )}
-                  </div>
-                </div>
+            {/* Player Name/Flag/Points - UFC Style */}
+            <motion.div 
+              className="flex flex-col items-start"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-3xl">{getCountryFlag(profile?.country_code || "US")}</span>
+                <span className="text-white font-black text-2xl uppercase tracking-wide drop-shadow-lg">
+                  YOU
+                </span>
               </div>
-              <div className="-mt-3 z-10">
-                <PlayerInfoBadge
-                  name="You"
-                  flag={getCountryFlag(profile?.country_code || "US")}
-                  points={playerPoints}
-                  delay={0}
-                  direction="up"
-                  isPlayer={true}
-                />
+              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                <span className="text-yellow-400 text-lg">👑</span>
+                <span className="text-yellow-400 font-bold text-xl">{playerPoints.toLocaleString()}</span>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -247,40 +240,34 @@ export function VSScreen() {
         </motion.div>
 
         {/* === OPPONENT SECTION (Bottom-Right Area) === */}
-        <div className="flex-1 flex items-end justify-end pb-4">
+        <div className="flex-1 flex items-end justify-end pb-6">
           <motion.div 
-            className="flex items-end gap-3"
+            className="flex items-end gap-4"
             initial={{ x: 30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.15 }}
           >
-            {/* Opponent Avatar + Badge */}
-            <div className="flex flex-col items-center">
-              <div className="mb-[-12px] z-10">
-                <PlayerInfoBadge
-                  name={opponent.name}
-                  flag={getCountryFlag(opponent.countryCode)}
-                  points={opponent.points}
-                  delay={0}
-                  direction="down"
-                />
+            {/* Opponent Name/Flag/Points - UFC Style */}
+            <motion.div 
+              className="flex flex-col items-end"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-white font-black text-2xl uppercase tracking-wide drop-shadow-lg">
+                  {opponent.name}
+                </span>
+                <span className="text-3xl">{getCountryFlag(opponent.countryCode)}</span>
               </div>
-              <div className="relative w-28 h-28">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-purple-400 via-fuchsia-500 to-pink-500 blur-sm opacity-70" />
-                <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-purple-400 via-fuchsia-500 to-pink-500">
-                  <div className="w-full h-full rounded-full bg-[#4a2a5a] overflow-hidden">
-                    {opponent.avatarUrl ? (
-                      <img src={opponent.avatarUrl} alt={opponent.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="w-full h-full flex items-center justify-center text-5xl">{opponent.avatarEmoji}</span>
-                    )}
-                  </div>
-                </div>
+              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                <span className="text-yellow-400 text-lg">👑</span>
+                <span className="text-yellow-400 font-bold text-xl">{opponent.points.toLocaleString()}</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Opponent Power-ups - Vertical stack on far right */}
-            <div className="flex flex-col gap-2 pb-8 opacity-50">
+            <div className="flex flex-col gap-2 opacity-50">
               {powerTypes.map((type, index) => (
                 <motion.div
                   key={`opponent-${type}`}
