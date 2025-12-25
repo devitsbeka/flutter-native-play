@@ -216,19 +216,36 @@ serve(async (req) => {
       throw new Error("Supabase credentials not configured");
     }
 
+    // Parse request body for optional user_ids filter
+    let userIds: string[] = [];
+    try {
+      const body = await req.json();
+      if (body.user_ids && Array.isArray(body.user_ids)) {
+        userIds = body.user_ids;
+      }
+    } catch {
+      // No body or invalid JSON, process all users
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Fetch all profiles with avatars
-    const { data: profiles, error: fetchError } = await supabase
+    // Fetch profiles with avatars, optionally filtered by user_ids
+    let query = supabase
       .from('profiles')
       .select('id, user_id, avatar_url')
       .not('avatar_url', 'is', null);
+    
+    if (userIds.length > 0) {
+      query = query.in('user_id', userIds);
+    }
+
+    const { data: profiles, error: fetchError } = await query;
 
     if (fetchError) {
       throw new Error(`Failed to fetch profiles: ${fetchError.message}`);
     }
 
-    console.log(`Found ${profiles?.length || 0} profiles with avatars`);
+    console.log(`Found ${profiles?.length || 0} profiles to process`);
 
     const results: { userId: string; success: boolean; error?: string; newUrl?: string }[] = [];
 
