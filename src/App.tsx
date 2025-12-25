@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { SplinePreloader } from "@/components/game/SplinePreloader";
 import Index from "./pages/Index";
@@ -19,29 +20,31 @@ import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
 
 const App = () => (
-  <SplashScreen>
-    <TooltipProvider>
-      {/* Preload Spline animations in background */}
-      <SplinePreloader />
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/adventure-map" element={<AdventureMap />} />
-        <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
-        <Route path="/category/:categoryId" element={<CategoryPage />} />
-        <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/leaderboards" element={<Leaderboards />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/world" element={<WorldHome />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/vip" element={<VIP />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
-  </SplashScreen>
+  <AuthProvider>
+    <SplashScreen>
+      <TooltipProvider>
+        {/* Preload Spline animations in background */}
+        <SplinePreloader />
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/adventure-map" element={<AdventureMap />} />
+          <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
+          <Route path="/category/:categoryId" element={<CategoryPage />} />
+          <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/leaderboards" element={<Leaderboards />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/world" element={<WorldHome />} />
+          <Route path="/game" element={<Game />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/vip" element={<VIP />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </SplashScreen>
+  </AuthProvider>
 );
 
 export default App;
