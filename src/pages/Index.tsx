@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingBag, Zap, Map, Trophy, User, Home, Play } from "lucide-react";
+import { ShoppingBag, Zap, Map, Trophy, User, Home, Play, Compass } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
@@ -204,8 +204,8 @@ export default function Index() {
               {/* Home */}
               <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
               
-              {/* Shop */}
-              <BottomNavItem icon={ShoppingBag} label="Shop" onClick={() => {}} />
+              {/* Explore */}
+              <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
               
               {/* CENTER PLAY BUTTON */}
               <div className="flex flex-col items-center -mt-8">
@@ -238,8 +238,8 @@ export default function Index() {
                 <span className="text-white font-black text-xs mt-2 uppercase tracking-wide">Play</span>
               </div>
               
-              {/* Leaderboard */}
-              <BottomNavItem icon={Trophy} label="Ranks" onClick={() => navigate("/leaderboards")} />
+              {/* Rank */}
+              <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
               
               {/* Profile */}
               <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
