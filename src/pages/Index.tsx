@@ -289,9 +289,9 @@ export default function Index() {
                 style={{ transform: "translateX(-50%) translateY(20px)" }}
               />
               
-              {/* Level Badge - positioned on TOP of avatar */}
+              {/* Level Badge - positioned at BOTTOM center of avatar */}
               <motion.div 
-                className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto"
+                className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
