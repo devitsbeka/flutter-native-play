@@ -102,30 +102,18 @@ const BottomNavItem = ({
     whileTap={{ scale: 0.9 }}
   >
     {/* Just the icon - no container shape */}
-    <div className="relative">
-      {isActive && (
-        <motion.div 
-          className="absolute inset-0 blur-md"
-          style={{ background: "radial-gradient(circle, rgba(255,215,0,0.6) 0%, transparent 70%)" }}
-          animate={{ opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-      )}
-      <Icon 
-        className="w-6 h-6 relative z-10" 
-        style={{ 
-          color: isActive ? "#FFD700" : "rgba(255,255,255,0.5)",
-          filter: isActive ? "drop-shadow(0 0 6px rgba(255,215,0,0.8))" : "none"
-        }}
-        strokeWidth={isActive ? 2.5 : 2}
-      />
-    </div>
+    <Icon 
+      className="w-6 h-6" 
+      style={{ 
+        color: isActive ? "#ffffff" : "rgba(255,255,255,0.5)",
+      }}
+      strokeWidth={isActive ? 2.5 : 2}
+    />
     
     <span 
       className="text-[9px] font-bold uppercase tracking-wide"
       style={{ 
-        color: isActive ? "#FFD700" : "rgba(255,255,255,0.5)",
-        textShadow: isActive ? "0 0 8px rgba(255,215,0,0.6)" : "none"
+        color: isActive ? "#ffffff" : "rgba(255,255,255,0.5)",
       }}
     >
       {label}
@@ -557,15 +545,6 @@ export default function Index() {
                   </div>
                 </motion.button>
                 
-                <span 
-                  className="font-bold text-[10px] mt-2 uppercase tracking-wider"
-                  style={{ 
-                    color: "#FFD700", 
-                    textShadow: "0 0 10px rgba(255,200,0,0.8), 0 2px 4px rgba(0,0,0,0.5)" 
-                  }}
-                >
-                  Play
-                </span>
               </div>
             </div>
           </motion.div>
