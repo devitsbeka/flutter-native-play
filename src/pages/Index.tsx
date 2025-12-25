@@ -436,12 +436,12 @@ export default function Index() {
               }}
             >
               {/* Avatar image - clean display without ring */}
-              <div className="w-64 relative flex items-end justify-center" data-walkthrough="avatar">
+              <div className="w-80 relative flex items-end justify-center" data-walkthrough="avatar">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-auto max-h-72 object-contain object-bottom"
+                    className="w-full h-auto max-h-[336px] object-contain object-bottom"
                     style={{
                       backfaceVisibility: "hidden",
                     }}
@@ -456,7 +456,7 @@ export default function Index() {
               {/* Power badges in curved arc at top of avatar */}
               <div 
                 className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" 
-                style={{ marginTop: -80 }}
+                style={{ marginTop: -180 }}
                 data-walkthrough="powerups"
               >
                 {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
@@ -521,16 +521,14 @@ export default function Index() {
                       }}
                       key={levelInfo.xpInCurrentLevel} // triggers animation on XP change
                     >
-                      {/* Empty state placeholder - dotted outline */}
-                      {levelInfo.progress === 0 && (
-                        <div 
-                          className="absolute inset-y-1 left-1 right-1 rounded-xl"
-                          style={{
-                            border: "2px dashed rgba(180,160,200,0.5)",
-                            background: "rgba(200,180,220,0.1)",
-                          }}
-                        />
-                      )}
+                      {/* Grey subtle foil background for unfilled area */}
+                      <div 
+                        className="absolute inset-y-1 left-1 right-1 rounded-xl"
+                        style={{
+                          background: "linear-gradient(135deg, rgba(180,175,190,0.35) 0%, rgba(160,155,175,0.25) 50%, rgba(180,175,190,0.35) 100%)",
+                          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.08), inset 0 -1px 2px rgba(255,255,255,0.5)",
+                        }}
+                      />
                       
                       {/* Progress fill - chunky colored bar with 3D effect */}
                       {levelInfo.progress > 0 && (
