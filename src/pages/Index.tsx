@@ -1,10 +1,37 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShoppingBag, Zap, Map, Trophy, User, Home, Play, Compass } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
+
+// Fire sparkle particle component
+const FireParticle = ({ delay, duration, left, size, startY }: { delay: number; duration: number; left: string; size: number; startY: string }) => (
+  <motion.div
+    className="absolute rounded-full pointer-events-none"
+    style={{
+      left,
+      bottom: startY,
+      width: size,
+      height: size,
+      background: `radial-gradient(circle, rgba(255,200,50,0.9) 0%, rgba(255,120,20,0.6) 50%, transparent 100%)`,
+      boxShadow: `0 0 ${size * 2}px rgba(255,150,50,0.5)`,
+    }}
+    animate={{
+      y: [0, -400 - Math.random() * 300],
+      x: [0, (Math.random() - 0.5) * 100],
+      opacity: [0, 0.8, 0.6, 0],
+      scale: [0.5, 1, 0.8, 0.3],
+    }}
+    transition={{
+      duration,
+      delay,
+      repeat: Infinity,
+      ease: "easeOut",
+    }}
+  />
+);
 
 // Side menu button component
 const SideMenuButton = ({ 
@@ -124,24 +151,51 @@ export default function Index() {
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
 
+  // Generate particles with stable random values
+  const particles = useMemo(() => 
+    Array.from({ length: 35 }, (_, i) => ({
+      id: i,
+      delay: Math.random() * 4,
+      duration: 4 + Math.random() * 4,
+      left: `${Math.random() * 100}%`,
+      size: 3 + Math.random() * 6,
+      startY: `${Math.random() * 30}%`,
+    })), []
+  );
+
   return (
     <>
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       
       <div className="relative h-screen w-full overflow-hidden">
-        {/* Background - Bright blue gradient like Brawl Stars */}
+        {/* Background - Dark purple gradient matching bottom nav */}
         <div 
           className="absolute inset-0"
           style={{
-            background: "radial-gradient(ellipse at center, #4FC3F7 0%, #29B6F6 30%, #0288D1 70%, #01579B 100%)",
+            background: "radial-gradient(ellipse at center top, #4a3d60 0%, #3d3250 20%, #2a2040 40%, #1a1428 70%, #0f0a14 100%)",
           }}
         />
         
-        {/* Subtle pattern overlay */}
+        {/* Secondary gradient overlay for depth */}
         <div 
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            background: "radial-gradient(ellipse at bottom, rgba(255,100,50,0.08) 0%, transparent 50%)",
+          }}
+        />
+        
+        {/* Fire sparkle particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {particles.map((p) => (
+            <FireParticle key={p.id} {...p} />
+          ))}
+        </div>
+        
+        {/* Subtle vignette */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%)",
           }}
         />
 
@@ -156,16 +210,25 @@ export default function Index() {
               bgColor="linear-gradient(180deg, #FFD700 0%, #FFA000 100%)"
             />
             
-            {/* Title - Center */}
-            <h1 
-              className="text-3xl font-bold text-white"
+            {/* Title - Center with animated glow */}
+            <motion.h1 
+              className="text-3xl font-bold relative"
               style={{ 
                 fontFamily: "'TASolivare', cursive",
-                textShadow: "0 2px 8px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.2)"
+                color: "#FFE55C",
+                textShadow: "0 2px 8px rgba(0,0,0,0.5), 0 0 30px rgba(255,200,50,0.5), 0 0 60px rgba(255,150,50,0.3)"
               }}
+              animate={{
+                textShadow: [
+                  "0 2px 8px rgba(0,0,0,0.5), 0 0 30px rgba(255,200,50,0.5), 0 0 60px rgba(255,150,50,0.3)",
+                  "0 2px 8px rgba(0,0,0,0.5), 0 0 40px rgba(255,200,50,0.7), 0 0 80px rgba(255,150,50,0.5)",
+                  "0 2px 8px rgba(0,0,0,0.5), 0 0 30px rgba(255,200,50,0.5), 0 0 60px rgba(255,150,50,0.3)",
+                ]
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
               My Trivia
-            </h1>
+            </motion.h1>
             
             {/* Diamonds - Right */}
             <CurrencyDisplay 
