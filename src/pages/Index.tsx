@@ -5,6 +5,7 @@ import { ShoppingBag, Zap, Map, Trophy, User, Home, Play, Compass } from "lucide
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { getRankFromPoints } from "@/data/opponents";
+import { calculateLevel } from "@/utils/levelCalculation";
 
 // Fire sparkle particle component
 const FireParticle = ({ delay, duration, left, size, startY }: { delay: number; duration: number; left: string; size: number; startY: string }) => (
@@ -151,15 +152,18 @@ export default function Index() {
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
 
-  // Generate particles with stable random values
+  // Calculate level info
+  const levelInfo = calculateLevel(profile?.total_points || 0);
+
+  // Generate particles with stable random values - way more particles
   const particles = useMemo(() => 
-    Array.from({ length: 35 }, (_, i) => ({
+    Array.from({ length: 80 }, (_, i) => ({
       id: i,
-      delay: Math.random() * 4,
-      duration: 4 + Math.random() * 4,
+      delay: Math.random() * 6,
+      duration: 5 + Math.random() * 5,
       left: `${Math.random() * 100}%`,
-      size: 3 + Math.random() * 6,
-      startY: `${Math.random() * 30}%`,
+      size: 2 + Math.random() * 5,
+      startY: `${-10 + Math.random() * 40}%`,
     })), []
   );
 
@@ -284,6 +288,75 @@ export default function Index() {
                     <span className="text-8xl">🎮</span>
                   </div>
                 )}
+              </div>
+            </motion.div>
+            
+            {/* Level Indicator Badge */}
+            <motion.div 
+              className="mt-6 flex flex-col items-center pointer-events-auto"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {/* Level number with decorative ring */}
+              <div className="relative">
+                {/* Outer glow */}
+                <motion.div 
+                  className="absolute inset-0 rounded-full blur-lg"
+                  style={{ background: "radial-gradient(circle, rgba(255,200,50,0.5) 0%, transparent 70%)" }}
+                  animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                
+                {/* Gold ring */}
+                <div 
+                  className="relative w-20 h-20 rounded-full p-[3px]"
+                  style={{
+                    background: "linear-gradient(180deg, #FFE066 0%, #FFD700 30%, #B8860B 70%, #8B4513 100%)",
+                    boxShadow: "0 4px 0 #5a3000, 0 6px 15px rgba(255,150,50,0.5)",
+                  }}
+                >
+                  {/* Inner dark circle */}
+                  <div 
+                    className="w-full h-full rounded-full flex flex-col items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, #2a2040 0%, #1a1428 100%)",
+                    }}
+                  >
+                    <span 
+                      className="text-2xl font-black"
+                      style={{ 
+                        color: "#FFD700",
+                        textShadow: "0 0 10px rgba(255,200,50,0.8)"
+                      }}
+                    >
+                      {levelInfo.level}
+                    </span>
+                    <span className="text-[9px] text-white/60 uppercase tracking-wider -mt-1">Level</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* XP Progress bar */}
+              <div className="mt-3 w-32">
+                <div 
+                  className="h-2 rounded-full overflow-hidden"
+                  style={{ background: "rgba(0,0,0,0.4)" }}
+                >
+                  <motion.div 
+                    className="h-full rounded-full"
+                    style={{
+                      background: "linear-gradient(90deg, #FFD700 0%, #FF9500 100%)",
+                      boxShadow: "0 0 8px rgba(255,200,50,0.6)",
+                    }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${levelInfo.progress}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  />
+                </div>
+                <p className="text-center text-[10px] text-white/50 mt-1">
+                  {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                </p>
               </div>
             </motion.div>
           </motion.div>
