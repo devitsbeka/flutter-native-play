@@ -185,27 +185,19 @@ export function VSScreen() {
                 }}
               />
               
-              {/* Avatar container - larger with bottom fade */}
+              {/* Avatar container - larger, no mask */}
               <div className="relative w-44 h-44 sm:w-56 sm:h-56">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="You" 
                     className="w-full h-full object-contain"
-                    style={{ 
-                      filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))",
-                      maskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
-                    }}
+                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
                   />
                 ) : (
                   <div 
                     className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
-                    style={{ 
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
-                      maskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 70%, transparent 100%)",
-                    }}
+                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
                   >
                     👤
                   </div>
@@ -358,27 +350,19 @@ export function VSScreen() {
                 }}
               />
               
-              {/* Avatar container - larger with top fade */}
+              {/* Avatar container - larger, no mask */}
               <div className="relative w-44 h-44 sm:w-56 sm:h-56">
                 {opponent.avatarUrl ? (
                   <img 
                     src={opponent.avatarUrl} 
                     alt={opponent.name} 
                     className="w-full h-full object-contain"
-                    style={{ 
-                      filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))",
-                      maskImage: "linear-gradient(to top, black 0%, black 70%, transparent 100%)",
-                      WebkitMaskImage: "linear-gradient(to top, black 0%, black 70%, transparent 100%)",
-                    }}
+                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
                   />
                 ) : (
                   <div 
                     className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
-                    style={{ 
-                      filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
-                      maskImage: "linear-gradient(to top, black 0%, black 70%, transparent 100%)",
-                      WebkitMaskImage: "linear-gradient(to top, black 0%, black 70%, transparent 100%)",
-                    }}
+                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
                   >
                     🤖
                   </div>
