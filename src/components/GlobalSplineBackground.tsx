@@ -84,15 +84,6 @@ export function GlobalSplineBackground() {
         loading="eager"
       />
       
-      {/* Purple vignette mask - matches the app theme */}
-      <div 
-        className="fixed inset-0 pointer-events-none transition-opacity duration-300"
-        style={{
-          background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(183, 148, 246, 0.2) 75%, rgba(183, 148, 246, 0.5) 100%)",
-          opacity: shouldShow ? 1 : 0,
-          zIndex: -10,
-        }}
-      />
       
       {/* White sparkle particles */}
       {shouldShow && (
