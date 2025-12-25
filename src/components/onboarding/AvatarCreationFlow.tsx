@@ -651,32 +651,73 @@ export function AvatarCreationFlow() {
               {step === "avatar-preview" && generatedAvatar && (
                 <motion.div
                   key="preview"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
                   className="flex flex-col items-center"
                 >
                   <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     className="relative mb-6"
                   >
-                    <div className="w-44 h-44 rounded-full overflow-hidden border-4 border-primary shadow-xl">
-                      <img
+                    {/* Container for crossfade effect */}
+                    <div className="w-44 h-44 rounded-full overflow-hidden border-4 border-primary shadow-xl relative">
+                      {/* Blurred original image underneath - fades out */}
+                      <motion.img
+                        src={uploadedImage || ""}
+                        alt="Original"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ filter: "blur(80px)" }}
+                        initial={{ opacity: 1, scale: 1.3 }}
+                        animate={{ opacity: 0, scale: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      />
+                      
+                      {/* Generated avatar - fades in on top */}
+                      <motion.img
                         src={generatedAvatar}
                         alt="Generated Avatar"
-                        className="w-full h-full object-cover"
+                        className="relative w-full h-full object-cover"
+                        initial={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
                       />
                     </div>
                     
                     {/* Success checkmark */}
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3, type: "spring" }}
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}
                       className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-success flex items-center justify-center shadow-lg"
                     >
                       <Check className="w-6 h-6 text-white" />
+                    </motion.div>
+                    
+                    {/* Sparkle burst on reveal */}
+                    <motion.div
+                      className="absolute inset-0 pointer-events-none"
+                      initial={{ opacity: 1 }}
+                      animate={{ opacity: 0 }}
+                      transition={{ duration: 1, delay: 0.3 }}
+                    >
+                      {[...Array(6)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-2 h-2 rounded-full bg-primary"
+                          style={{
+                            left: "50%",
+                            top: "50%",
+                          }}
+                          initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                          animate={{ 
+                            x: Math.cos((i * 60) * Math.PI / 180) * 80,
+                            y: Math.sin((i * 60) * Math.PI / 180) * 80,
+                            scale: 0,
+                            opacity: 0,
+                          }}
+                          transition={{ duration: 0.6, delay: 0.3 + i * 0.05, ease: "easeOut" }}
+                        />
+                      ))}
                     </motion.div>
                   </motion.div>
                   
