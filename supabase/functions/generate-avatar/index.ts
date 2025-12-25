@@ -202,22 +202,19 @@ serve(async (req) => {
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
 
-    // Step 2: Expand the image (top, left, right by 150px) (REQUIRED)
-    console.log("Step 2: Expanding avatar (top, left, right by 150px)...");
-    const expandedAvatarUrl = await expandImage(avatarUrl, 150);
-    console.log("Avatar expanded successfully:", expandedAvatarUrl);
+    // Step 2: Remove background FIRST (before any expansion)
+    console.log("Step 2: Removing background from avatar...");
+    const transparentAvatarUrl = await removeBackground(avatarUrl);
+    console.log("Avatar with transparent background:", transparentAvatarUrl);
 
-    // Step 3: Remove background from the expanded avatar (REQUIRED)
-    console.log("Step 3: Removing background from expanded avatar...");
-    const finalAvatarUrl = await removeBackground(expandedAvatarUrl);
-    console.log("Final avatar with transparent background:", finalAvatarUrl);
+    // Note: Skipping expand step - LightX expand adds AI-generated content WITH background,
+    // which doesn't work well with transparent avatars. The transparent avatar is the final result.
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        avatarUrl: finalAvatarUrl,
-        expandedAvatarUrl: expandedAvatarUrl,
-        originalAvatarUrl: avatarUrl, // Include original in case needed
+        avatarUrl: transparentAvatarUrl,
+        originalAvatarUrl: avatarUrl,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
