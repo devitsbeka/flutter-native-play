@@ -1,48 +1,81 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 // Blob background used in matchmaking and VS screens
-const SPLINE_BLOB_URL = "https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/";
+export const SPLINE_BLOB_URL = "https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/";
+
+// Global state to track if Spline is ready
+let splineLoaded = false;
+const splineLoadedCallbacks: (() => void)[] = [];
+
+export function isSplineLoaded() {
+  return splineLoaded;
+}
+
+export function onSplineLoaded(callback: () => void) {
+  if (splineLoaded) {
+    callback();
+  } else {
+    splineLoadedCallbacks.push(callback);
+  }
+}
 
 export function SplinePreloader() {
-  const [loaded, setLoaded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [loaded, setLoaded] = useState(splineLoaded);
 
   useEffect(() => {
-    // Pre-fetch the iframe content immediately
-    const preloadIframe = () => {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'document';
-      link.href = SPLINE_BLOB_URL;
-      document.head.appendChild(link);
+    if (splineLoaded) {
+      setLoaded(true);
+      return;
+    }
+
+    const handleLoad = () => {
+      splineLoaded = true;
+      setLoaded(true);
+      splineLoadedCallbacks.forEach(cb => cb());
+      splineLoadedCallbacks.length = 0;
     };
-    
-    preloadIframe();
-    
-    // Mark as loaded after iframe has time to load
-    const timer = setTimeout(() => setLoaded(true), 3000);
-    return () => clearTimeout(timer);
+
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.addEventListener('load', handleLoad);
+      
+      // Fallback: mark as loaded after timeout even if load event doesn't fire
+      const timer = setTimeout(() => {
+        if (!splineLoaded) {
+          handleLoad();
+        }
+      }, 5000);
+
+      return () => {
+        iframe.removeEventListener('load', handleLoad);
+        clearTimeout(timer);
+      };
+    }
   }, []);
 
-  // Render a visible but offscreen iframe for aggressive preloading
+  // Render a full-size iframe in a fixed container for aggressive caching
+  // The iframe is positioned offscreen but fully rendered
   return (
     <div 
       className="fixed pointer-events-none"
       style={{ 
         opacity: 0,
         position: 'fixed',
-        left: '-9999px',
-        top: '-9999px',
+        left: '-200vw',
+        top: 0,
         width: '100vw',
         height: '100vh',
         overflow: 'hidden',
       }}
       aria-hidden="true"
     >
-      {/* Full-size hidden iframe for better caching */}
       <iframe
+        ref={iframeRef}
         src={SPLINE_BLOB_URL}
         title="Preload Background"
         style={{ width: '100%', height: '100%', border: 'none' }}
+        loading="eager"
       />
     </div>
   );
