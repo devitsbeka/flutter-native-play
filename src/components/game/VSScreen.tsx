@@ -28,7 +28,7 @@ export function VSScreen() {
     };
   };
 
-  const orbitRadius = 95; // distance from avatar center
+  const orbitRadius = 110; // increased distance from avatar center for more spacing
   
   // Top arc: badges at -55°, -20°, 20°, 55° from vertical
   const topAngles = [-55, -20, 20, 55];
@@ -98,16 +98,16 @@ export function VSScreen() {
             </div>
           </motion.div>
 
-          {/* Name badge - separate from avatar, centered */}
+          {/* Name badge - gamified style */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="-mt-4 z-10"
           >
-            <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
-              <span className="text-white font-bold text-sm uppercase tracking-wide">{playerName}</span>
-              <span className="text-lg">{getCountryFlag(profile?.country_code || "US")}</span>
+            <div className="bg-[#2E2560] px-6 py-2.5 rounded-2xl flex items-center justify-center gap-3 shadow-lg border-2 border-[#4A3F8C]">
+              <span className="text-white font-bold text-lg uppercase tracking-wide">{playerName}</span>
+              <span className="text-xl">{getCountryFlag(profile?.country_code || "US")}</span>
             </div>
           </motion.div>
 
@@ -123,30 +123,30 @@ export function VSScreen() {
           </motion.div>
         </div>
 
-        {/* VS Text */}
+        {/* VS Text - bright yellow for visibility */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200, delay: 0.4 }}
           className="my-3"
         >
-          <span className="font-display text-4xl font-bold text-[#C4A84B] drop-shadow-lg tracking-wide">
+          <span className="font-display text-5xl font-bold text-[#FFD700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] tracking-wide">
             VS
           </span>
         </motion.div>
 
         {/* Player 2 (Opponent) Section */}
         <div className="flex flex-col items-center">
-          {/* Name badge - separate from avatar, centered */}
+          {/* Name badge - gamified style */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
             className="mb-[-16px] z-10"
           >
-            <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
-              <span className="text-white font-bold text-sm uppercase tracking-wide">{opponent.name}</span>
-              <span className="text-lg">{getCountryFlag(opponent.countryCode)}</span>
+            <div className="bg-[#2E2560] px-6 py-2.5 rounded-2xl flex items-center justify-center gap-3 shadow-lg border-2 border-[#4A3F8C]">
+              <span className="text-white font-bold text-lg uppercase tracking-wide">{opponent.name}</span>
+              <span className="text-xl">{getCountryFlag(opponent.countryCode)}</span>
             </div>
           </motion.div>
 
