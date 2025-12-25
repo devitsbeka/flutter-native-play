@@ -5,12 +5,10 @@ import { Play, Flame, Star } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import iconCompass from "@/assets/icons/icon-compass.png";
-import iconProfile from "@/assets/icons/icon-profile.png";
 import iconMap3d from "@/assets/icons/icon-map-3d.png";
-import iconPowers3d from "@/assets/icons/icon-powers-3d.png";
 import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
-import iconShop3d from "@/assets/icons/icon-shop-3d.png";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 
@@ -274,16 +272,34 @@ export default function Index() {
           </div>
         </header>
 
-        {/* ===== LEFT SIDE ===== */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
-          <SideIconButton iconSrc={iconTrophy3d} onClick={() => navigate("/leaderboards")} badge={2} />
-          <SideIconButton iconSrc={iconShop3d} />
-        </div>
-
-        {/* ===== RIGHT SIDE ===== */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
-          <SideIconButton iconSrc={iconPowers3d} />
-          <SideIconButton iconSrc={iconMap3d} onClick={() => navigate("/adventure-map")} />
+        {/* ===== POWER BADGES ARC (Top) ===== */}
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20">
+          <div className="relative flex items-end justify-center gap-2">
+            {(["fifty-fifty", "freeze", "replace", "time-drain"] as const).map((type, index) => {
+              // Arc positioning - middle items higher
+              const arcOffset = Math.abs(index - 1.5) * 8;
+              return (
+                <motion.div
+                  key={type}
+                  style={{ marginBottom: 16 - arcOffset }}
+                  initial={{ scale: 0, y: -20 }}
+                  animate={{ scale: 1, y: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1, type: "spring", stiffness: 200 }}
+                >
+                  <PowerUpBadge type={type} size="sm" index={index} count={3} />
+                </motion.div>
+              );
+            })}
+            {/* Add power button in center-top */}
+            <motion.div
+              className="absolute -top-2 left-1/2 -translate-x-1/2"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+            >
+              <PowerUpBadge type="add-power" size="sm" index={5} />
+            </motion.div>
+          </div>
         </div>
 
         {/* ===== CENTER: AVATAR & LEVEL ===== */}
@@ -294,7 +310,7 @@ export default function Index() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
           >
-            {/* Avatar */}
+            {/* Avatar - LARGER */}
             <motion.div 
               className="relative"
               animate={{ y: [0, -5, 0] }}
@@ -302,10 +318,10 @@ export default function Index() {
             >
               {/* White ring */}
               <div 
-                className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full p-1"
+                className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full p-1.5"
                 style={{
                   background: "linear-gradient(180deg, #FFFFFF 0%, #F8F8F8 100%)",
-                  boxShadow: "0 8px 32px rgba(156,106,222,0.2), 0 2px 8px rgba(0,0,0,0.05)",
+                  boxShadow: "0 8px 32px rgba(156,106,222,0.25), 0 2px 8px rgba(0,0,0,0.05)",
                 }}
               >
                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
@@ -317,7 +333,7 @@ export default function Index() {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
-                      <span className="text-6xl">🎮</span>
+                      <span className="text-7xl">🎮</span>
                     </div>
                   )}
                 </div>
@@ -332,16 +348,16 @@ export default function Index() {
                 transition={{ delay: 0.3, type: "spring" }}
               >
                 <div 
-                  className="flex items-center justify-center gap-1 px-4 py-1.5 rounded-full"
+                  className="flex items-center justify-center gap-1 px-5 py-2 rounded-full"
                   style={{
                     background: "linear-gradient(180deg, #FFE066 0%, #FFD700 50%, #FFC400 100%)",
                     boxShadow: "0 3px 0 #CC9900, 0 4px 12px rgba(255,200,0,0.3)",
                   }}
                 >
-                  <Star className="w-4 h-4 text-amber-700 fill-amber-700 flex-shrink-0" />
+                  <Star className="w-5 h-5 text-amber-700 fill-amber-700 flex-shrink-0" />
                   <div className="flex items-baseline gap-1">
-                    <span className="text-[9px] uppercase tracking-wider text-amber-700 font-semibold">Level</span>
-                    <span className="text-lg font-bold text-amber-800">{levelInfo.level}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-amber-700 font-semibold">Level</span>
+                    <span className="text-xl font-bold text-amber-800">{levelInfo.level}</span>
                   </div>
                 </div>
               </motion.div>
@@ -349,14 +365,14 @@ export default function Index() {
             
             {/* XP Progress Bar - Chunky with inline text */}
             <motion.div 
-              className="mt-8 pointer-events-auto w-56"
+              className="mt-10 pointer-events-auto w-64"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
               {/* Progress bar container */}
               <div 
-                className="relative h-8 rounded-full overflow-hidden"
+                className="relative h-9 rounded-full overflow-hidden"
                 style={{ 
                   background: "rgba(156,106,222,0.15)",
                   boxShadow: "inset 0 2px 4px rgba(0,0,0,0.08)",
@@ -399,17 +415,16 @@ export default function Index() {
           </motion.div>
         </div>
 
-        {/* ===== MINIMAL BOTTOM NAVIGATION ===== */}
+        {/* ===== BOTTOM NAVIGATION - 5 items ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="relative px-6 pb-6"
+            className="relative px-4 pb-6"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
           >
-            {/* Compact nav container - no background, just items */}
             <div className="flex items-end justify-between">
-              {/* Left nav item */}
+              {/* Explore */}
               <motion.button
                 onClick={() => navigate("/discover")}
                 className="flex flex-col items-center gap-1"
@@ -417,47 +432,80 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
                   style={{
                     background: "rgba(255,255,255,0.15)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.2)",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <img src={iconCompass} alt="Explore" className="w-8 h-8 object-contain" />
+                  <img src={iconCompass} alt="Explore" className="w-7 h-7 object-contain" />
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-white/80 font-semibold">
-                  Explore
-                </span>
+                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Explore</span>
               </motion.button>
 
-              {/* Center Play Button - elevated */}
-              <div className="mb-6">
-                <PlayButton3D onClick={() => navigate("/game")} />
-              </div>
-
-              {/* Right nav item */}
+              {/* Map */}
               <motion.button
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate("/adventure-map")}
                 className="flex flex-col items-center gap-1"
                 whileHover={{ scale: 1.1, y: -3 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
                   style={{
                     background: "rgba(255,255,255,0.15)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.2)",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <img src={iconProfile} alt="Profile" className="w-8 h-8 object-contain" />
+                  <img src={iconMap3d} alt="Map" className="w-7 h-7 object-contain" />
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-white/80 font-semibold">
-                  Profile
-                </span>
+                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Map</span>
+              </motion.button>
+
+              {/* Center Play Button - elevated */}
+              <div className="mb-4">
+                <PlayButton3D onClick={() => navigate("/game")} />
+              </div>
+
+              {/* Rank */}
+              <motion.button
+                onClick={() => navigate("/leaderboards")}
+                className="flex flex-col items-center gap-1"
+                whileHover={{ scale: 1.1, y: -3 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(255,255,255,0.15)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                  }}
+                >
+                  <img src={iconTrophy3d} alt="Rank" className="w-7 h-7 object-contain" />
+                </div>
+                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Rank</span>
+              </motion.button>
+
+              {/* Headphones/Audio */}
+              <motion.button
+                className="flex flex-col items-center gap-1"
+                whileHover={{ scale: 1.1, y: -3 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <div 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "rgba(255,255,255,0.15)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                  }}
+                >
+                  <span className="text-2xl">🎧</span>
+                </div>
+                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Sound</span>
               </motion.button>
             </div>
           </motion.div>
