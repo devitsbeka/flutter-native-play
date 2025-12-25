@@ -342,14 +342,15 @@ export default function Index() {
         </header>
 
         {/* ===== POWER BADGES ROW (Flat, closer to avatar) ===== */}
-        <div className="absolute top-[140px] left-1/2 -translate-x-1/2 z-20">
-          <div className="flex items-center justify-center gap-1">
+        <div className="absolute top-[140px] left-1/2 -translate-x-1/2 z-20 w-[80%] max-w-sm">
+          <div className="flex items-center justify-center gap-0">
             {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => (
               <motion.div
                 key={type}
                 initial={{ scale: 0, y: -20 }}
                 animate={{ scale: 1, y: 0 }}
                 transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
+                className="flex-shrink-0"
               >
                 <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
               </motion.div>
