@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 // List of all Spline URLs used in the game
 const SPLINE_URLS = [
-  "https://my.spline.design/interactivehourglass-C5OKzkXWhesjwl8ajjoHgflj/?v=2",
+  "https://my.spline.design/interactivehourglass-C5OKzkXWhesjwl8ajjoHgflj/?t=1703520000",
   "https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/",
 ];
 
