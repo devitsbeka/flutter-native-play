@@ -31,13 +31,13 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
   }, []);
 
   return (
-    <div className={`absolute inset-0 w-full h-full ${className || ""}`}>
+    <div className={`absolute inset-x-0 bottom-0 w-full overflow-hidden ${className || ""}`} style={{ height: "60vh" }}>
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-end justify-center pb-[-20%]">
           <motion.div
-            className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-xl"
+            className="w-[120vw] h-[120vw] rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-xl"
             animate={{
-              scale: [1, 1.2, 1],
+              scale: [1, 1.05, 1],
               opacity: [0.5, 0.8, 0.5],
             }}
             transition={{
@@ -48,7 +48,14 @@ export function SplineGlobe({ className }: SplineGlobeProps) {
           />
         </div>
       )}
-      <div ref={containerRef} className="w-full h-full" />
+      <div 
+        ref={containerRef} 
+        className="w-full h-full"
+        style={{ 
+          transform: "scale(2.5) translateY(35%)",
+          transformOrigin: "center center"
+        }} 
+      />
     </div>
   );
 }

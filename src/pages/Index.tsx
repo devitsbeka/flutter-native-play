@@ -11,7 +11,7 @@ import { StreakModal } from "@/components/home/StreakModal";
 import { PointsModal } from "@/components/home/PointsModal";
 import { GuestProgressBanner } from "@/components/home/GuestProgressBanner";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
-import { QuickActionsBar } from "@/components/home/QuickActionsBar";
+
 import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { featuredItems, getCategoriesByType } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -134,8 +134,8 @@ export default function Index() {
         
         {/* First Screen */}
         <div className="relative z-10 flex flex-col min-h-screen">
-          {/* 3D Spline Globe Background */}
-          <div className="fixed inset-0 z-0">
+          {/* 3D Spline Globe - Positioned at bottom as half curve */}
+          <div className="fixed inset-0 z-0 pointer-events-none">
             <SplineGlobe />
           </div>
 
@@ -183,17 +183,17 @@ export default function Index() {
           {/* Guest Progress Warning Banner */}
           <GuestProgressBanner />
 
-          {/* Main Content Area - Overlaid on Globe */}
-          <div className="relative z-20 flex-1 flex flex-col items-center justify-end px-6 pb-8">
-            {/* Level Badge - Positioned higher */}
-            <div className="mb-auto pt-8">
+          {/* Main Content Area - Centered above globe */}
+          <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-6">
+            {/* Level Badge */}
+            <div className="mb-8">
               <LevelBadge totalPoints={profile?.total_points || 0} />
             </div>
 
-            {/* Play Button - Bottom of screen */}
+            {/* Play Button - Main CTA on top of earth */}
             <motion.button
               onClick={() => navigate("/game")}
-              className="relative w-full max-w-xs mb-4"
+              className="relative w-full max-w-xs"
               whileTap={{ scale: 0.98, y: 3 }}
             >
               <div 
@@ -209,15 +209,11 @@ export default function Index() {
                 </span>
               </div>
             </motion.button>
-
           </div>
-
-          {/* Quick Action Row - Gamified Container */}
-          <QuickActionsBar />
             
           {/* Scroll indicator */}
           <motion.div 
-            className="pb-6 flex flex-col items-center"
+            className="pb-6 flex flex-col items-center relative z-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -226,7 +222,7 @@ export default function Index() {
               animate={{ y: [0, 4, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              <ChevronDown className="h-5 w-5 text-slate-500" />
+              <ChevronDown className="h-5 w-5 text-white/40" />
             </motion.div>
           </motion.div>
         </div>
