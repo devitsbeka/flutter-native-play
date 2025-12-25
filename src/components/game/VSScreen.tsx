@@ -13,7 +13,7 @@ const Particle = ({ delay, side }: { delay: number; side: "blue" | "red" }) => {
   const isBlue = side === "blue";
   return (
     <motion.div
-      className={`absolute w-1.5 h-1.5 rounded-full ${isBlue ? "bg-cyan-400" : "bg-orange-400"}`}
+      className={`absolute w-1.5 h-1.5 rounded-full ${isBlue ? "bg-purple-400" : "bg-amber-500"}`}
       initial={{ 
         opacity: 0, 
         scale: 0,
@@ -32,7 +32,7 @@ const Particle = ({ delay, side }: { delay: number; side: "blue" | "red" }) => {
         ease: "easeOut"
       }}
       style={{
-        filter: `blur(0.5px) drop-shadow(0 0 4px ${isBlue ? "#22d3ee" : "#f97316"})`,
+        filter: `blur(0.5px) drop-shadow(0 0 4px ${isBlue ? "#a855f7" : "#f59e0b"})`,
       }}
     />
   );
@@ -83,17 +83,18 @@ export function VSScreen() {
       {/* Background with gradient overlays for depth */}
       <div className="absolute inset-0">
         <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-          {/* Blue section with texture */}
+          {/* Player section - Deep indigo/purple */}
           <defs>
             <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0F4C5C" />
-              <stop offset="50%" stopColor="#1A6B7C" />
-              <stop offset="100%" stopColor="#2A8A9C" />
+              <stop offset="0%" stopColor="#1a1a3e" />
+              <stop offset="50%" stopColor="#2d2d5a" />
+              <stop offset="100%" stopColor="#3d3d7a" />
             </linearGradient>
+            {/* Opponent section - Deep bronze/brown */}
             <linearGradient id="redGradient" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#4A1515" />
-              <stop offset="50%" stopColor="#6B2525" />
-              <stop offset="100%" stopColor="#8B3535" />
+              <stop offset="0%" stopColor="#2a1a0a" />
+              <stop offset="50%" stopColor="#4a3020" />
+              <stop offset="100%" stopColor="#5a4030" />
             </linearGradient>
             <linearGradient id="goldGradient" x1="100%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#FFE55C" />
@@ -215,22 +216,22 @@ export function VSScreen() {
             <motion.div 
               className="relative"
               animate={{ 
-                filter: ["drop-shadow(0 0 15px rgba(34,211,238,0.3))", "drop-shadow(0 0 25px rgba(34,211,238,0.5))", "drop-shadow(0 0 15px rgba(34,211,238,0.3))"]
+                filter: ["drop-shadow(0 0 15px rgba(168,85,247,0.3))", "drop-shadow(0 0 25px rgba(168,85,247,0.5))", "drop-shadow(0 0 15px rgba(168,85,247,0.3))"]
               }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
               {/* Outer glow ring */}
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-cyan-400/30 via-blue-500/20 to-cyan-300/30 blur-md" />
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-purple-400/30 via-indigo-500/20 to-violet-300/30 blur-md" />
               
               {/* Main avatar frame */}
-              <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-cyan-300 via-cyan-500 to-blue-600"
+              <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-purple-400 via-indigo-500 to-violet-600"
                 style={{
-                  boxShadow: "0 0 20px rgba(34,211,238,0.4), inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.4)"
+                  boxShadow: "0 0 20px rgba(168,85,247,0.4), inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.4)"
                 }}
               >
                 {/* Inner border highlight */}
                 <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-b from-white/30 to-transparent">
-                  <div className="w-full h-full rounded-full bg-[#1A5570] flex items-center justify-center overflow-hidden"
+                  <div className="w-full h-full rounded-full bg-[#2a2a4a] flex items-center justify-center overflow-hidden"
                     style={{
                       boxShadow: "inset 0 4px 8px rgba(0,0,0,0.4)"
                     }}
@@ -332,26 +333,26 @@ export function VSScreen() {
               />
             </motion.div>
 
-            {/* Avatar with premium frame - red theme */}
+            {/* Avatar with premium frame - bronze/amber theme */}
             <motion.div 
               className="relative"
               animate={{ 
-                filter: ["drop-shadow(0 0 15px rgba(249,115,22,0.3))", "drop-shadow(0 0 25px rgba(249,115,22,0.5))", "drop-shadow(0 0 15px rgba(249,115,22,0.3))"]
+                filter: ["drop-shadow(0 0 15px rgba(245,158,11,0.3))", "drop-shadow(0 0 25px rgba(245,158,11,0.5))", "drop-shadow(0 0 15px rgba(245,158,11,0.3))"]
               }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             >
               {/* Outer glow ring */}
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-orange-400/30 via-red-500/20 to-orange-300/30 blur-md" />
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-amber-400/30 via-orange-500/20 to-yellow-500/30 blur-md" />
               
               {/* Main avatar frame */}
-              <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-orange-400 via-red-500 to-orange-600"
+              <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600"
                 style={{
-                  boxShadow: "0 0 20px rgba(249,115,22,0.4), inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.4)"
+                  boxShadow: "0 0 20px rgba(245,158,11,0.4), inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.4)"
                 }}
               >
                 {/* Inner border highlight */}
                 <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-b from-white/30 to-transparent">
-                  <div className="w-full h-full rounded-full bg-[#6B2525] flex items-center justify-center overflow-hidden"
+                  <div className="w-full h-full rounded-full bg-[#3a2a1a] flex items-center justify-center overflow-hidden"
                     style={{
                       boxShadow: "inset 0 4px 8px rgba(0,0,0,0.4)"
                     }}
