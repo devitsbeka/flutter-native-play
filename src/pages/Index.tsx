@@ -359,7 +359,7 @@ export default function Index() {
             >
               {/* Avatar image with circular purple stroke */}
               <div 
-                className="w-64 h-64 relative rounded-full"
+                className="w-64 h-64 relative rounded-full overflow-visible flex items-center justify-center"
                 style={{
                   border: "1px solid #9C6ADE",
                 }}
@@ -368,7 +368,7 @@ export default function Index() {
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-full object-contain"
+                    className="w-[90%] h-[90%] object-contain"
                     style={{
                       backfaceVisibility: "hidden",
                     }}
