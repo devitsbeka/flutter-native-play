@@ -56,7 +56,7 @@ const CurrencyDisplay = ({ icon, value, color, bgColor }: { icon: string; value:
   </div>
 );
 
-// Bottom nav item component
+// Bottom nav item component - Game quality design
 const BottomNavItem = ({ 
   icon: Icon, 
   label, 
@@ -70,17 +70,46 @@ const BottomNavItem = ({
 }) => (
   <motion.button
     onClick={onClick}
-    className="flex flex-col items-center gap-1 flex-1"
+    className="flex flex-col items-center gap-0.5 flex-1 relative"
     whileTap={{ scale: 0.9 }}
   >
-    <div 
-      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-        isActive ? "bg-white/20" : "bg-transparent"
-      }`}
-    >
-      <Icon className={`w-6 h-6 ${isActive ? "text-yellow-400" : "text-white/70"}`} />
+    {/* Icon container with 3D effect */}
+    <div className="relative">
+      {/* Glow for active state */}
+      {isActive && (
+        <div 
+          className="absolute inset-0 rounded-2xl blur-md opacity-60"
+          style={{ background: "radial-gradient(circle, #FFD700 0%, transparent 70%)" }}
+        />
+      )}
+      
+      <div 
+        className="relative w-12 h-12 rounded-2xl flex items-center justify-center"
+        style={{
+          background: isActive 
+            ? "linear-gradient(180deg, #FFD700 0%, #FF9500 50%, #CC7000 100%)"
+            : "linear-gradient(180deg, #4a4a5a 0%, #3a3a4a 50%, #2a2a3a 100%)",
+          boxShadow: isActive 
+            ? "0 3px 0 #995500, inset 0 1px 0 rgba(255,255,255,0.4), 0 0 12px rgba(255,200,0,0.4)"
+            : "0 3px 0 #1a1a2a, inset 0 1px 0 rgba(255,255,255,0.1)",
+        }}
+      >
+        {/* Inner highlight */}
+        <div 
+          className="absolute top-1 left-1 right-1 h-3 rounded-t-xl opacity-30"
+          style={{ background: "linear-gradient(180deg, white 0%, transparent 100%)" }}
+        />
+        <Icon className={`w-6 h-6 relative z-10 ${isActive ? "text-amber-900" : "text-white/80"}`} />
+      </div>
     </div>
-    <span className={`text-[10px] font-bold uppercase ${isActive ? "text-yellow-400" : "text-white/70"}`}>
+    
+    <span 
+      className="text-[9px] font-black uppercase tracking-wide mt-1"
+      style={{ 
+        color: isActive ? "#FFD700" : "rgba(255,255,255,0.6)",
+        textShadow: isActive ? "0 0 10px rgba(255,200,0,0.5)" : "none"
+      }}
+    >
       {label}
     </span>
   </motion.button>
@@ -189,60 +218,113 @@ export default function Index() {
         {/* ===== BOTTOM NAVIGATION BAR ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
           <motion.div 
-            className="px-2 pb-4 pt-2"
+            className="px-3 pb-3 pt-2"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <div 
-              className="flex items-end justify-around rounded-3xl py-2 px-2 mx-2"
-              style={{
-                background: "linear-gradient(180deg, #2a2a3a 0%, #1a1a2a 100%)",
-                boxShadow: "0 -4px 20px rgba(0,0,0,0.3), 0 4px 0 #0a0a1a",
-              }}
-            >
-              {/* Home */}
-              <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
+            {/* Outer decorative frame */}
+            <div className="relative">
+              {/* Gold border accent */}
+              <div 
+                className="absolute -inset-[2px] rounded-[28px] opacity-60"
+                style={{
+                  background: "linear-gradient(180deg, #FFD700 0%, #996600 50%, #332200 100%)",
+                }}
+              />
               
-              {/* Explore */}
-              <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
-              
-              {/* CENTER PLAY BUTTON */}
-              <div className="flex flex-col items-center -mt-8">
-                <motion.button
-                  onClick={() => navigate("/game")}
-                  className="relative"
-                  whileHover={{ scale: 1.05, y: -4 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
-                >
-                  {/* Glow effect */}
+              {/* Main container */}
+              <div 
+                className="relative flex items-end justify-around rounded-[26px] py-3 px-3"
+                style={{
+                  background: "linear-gradient(180deg, #3d3250 0%, #2a2040 40%, #1a1428 100%)",
+                  boxShadow: "inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3)",
+                }}
+              >
+                {/* Top shine */}
+                <div 
+                  className="absolute top-0 left-4 right-4 h-[1px] opacity-30"
+                  style={{ background: "linear-gradient(90deg, transparent 0%, #FFD700 50%, transparent 100%)" }}
+                />
+                
+                {/* Home */}
+                <BottomNavItem icon={Home} label="Home" onClick={() => {}} isActive />
+                
+                {/* Explore */}
+                <BottomNavItem icon={Compass} label="Explore" onClick={() => navigate("/discover")} />
+                
+                {/* CENTER PLAY BUTTON */}
+                <div className="flex flex-col items-center -mt-10 relative">
+                  {/* Decorative ring behind button */}
                   <div 
-                    className="absolute inset-0 rounded-full blur-xl opacity-60"
+                    className="absolute top-2 w-24 h-24 rounded-full"
                     style={{
-                      background: "radial-gradient(circle, #FFD700 0%, #FF6B00 100%)",
-                      transform: "scale(1.3)",
+                      background: "linear-gradient(180deg, #FFD700 0%, #996600 100%)",
+                      boxShadow: "0 4px 0 #553300",
+                    }}
+                  />
+                  <div 
+                    className="absolute top-3 w-[88px] h-[88px] rounded-full"
+                    style={{
+                      background: "linear-gradient(180deg, #2a2040 0%, #1a1428 100%)",
                     }}
                   />
                   
-                  {/* Button */}
-                  <div 
-                    className="relative w-20 h-20 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #FF9500 70%, #FF6B00 100%)",
-                      boxShadow: "0 6px 0 #CC5500, 0 8px 20px rgba(255,107,0,0.5), inset 0 2px 0 rgba(255,255,255,0.3)",
-                    }}
+                  <motion.button
+                    onClick={() => navigate("/game")}
+                    className="relative z-10"
+                    whileHover={{ scale: 1.08, y: -4 }}
+                    whileTap={{ scale: 0.95, y: 2 }}
                   >
-                    <Play className="w-9 h-9 text-amber-900 fill-amber-900 ml-1" />
-                  </div>
-                </motion.button>
-                <span className="text-white font-black text-xs mt-2 uppercase tracking-wide">Play</span>
+                    {/* Animated glow */}
+                    <motion.div 
+                      className="absolute inset-0 rounded-full blur-xl"
+                      style={{
+                        background: "radial-gradient(circle, #FFD700 0%, #FF6B00 60%, transparent 100%)",
+                        transform: "scale(1.4)",
+                      }}
+                      animate={{ opacity: [0.5, 0.8, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    
+                    {/* Outer ring */}
+                    <div 
+                      className="relative w-20 h-20 rounded-full p-1"
+                      style={{
+                        background: "linear-gradient(180deg, #FFE55C 0%, #CC7000 100%)",
+                        boxShadow: "0 6px 0 #8B4513, 0 8px 20px rgba(255,107,0,0.6)",
+                      }}
+                    >
+                      {/* Inner button */}
+                      <div 
+                        className="w-full h-full rounded-full flex items-center justify-center relative overflow-hidden"
+                        style={{
+                          background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #FF9500 70%, #FF6B00 100%)",
+                        }}
+                      >
+                        {/* Top shine */}
+                        <div 
+                          className="absolute top-0 left-2 right-2 h-6 rounded-full opacity-50"
+                          style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, transparent 100%)" }}
+                        />
+                        <Play className="w-9 h-9 text-amber-900 fill-amber-900 ml-1 relative z-10 drop-shadow-sm" />
+                      </div>
+                    </div>
+                  </motion.button>
+                  <span 
+                    className="font-black text-[10px] mt-2 uppercase tracking-wide"
+                    style={{ color: "#FFD700", textShadow: "0 0 8px rgba(255,200,0,0.6)" }}
+                  >
+                    Play
+                  </span>
+                </div>
+                
+                {/* Rank */}
+                <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
+                
+                {/* Profile */}
+                <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
               </div>
-              
-              {/* Rank */}
-              <BottomNavItem icon={Trophy} label="Rank" onClick={() => navigate("/leaderboards")} />
-              
-              {/* Profile */}
-              <BottomNavItem icon={User} label="Profile" onClick={() => navigate("/profile")} />
             </div>
           </motion.div>
         </div>
