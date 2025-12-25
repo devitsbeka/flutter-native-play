@@ -30,13 +30,13 @@ export function MatchmakingScreen() {
   }, []);
 
   return (
-    <div className="h-full w-full relative overflow-hidden">
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-background">
       {/* Interactive Hourglass Background */}
       <iframe
         ref={iframeRef}
         src="https://my.spline.design/interactivehourglass-C5OKzkXWhesjwl8ajjoHgflj/"
         frameBorder="0"
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full border-0"
         title="Finding Opponent"
         style={{ pointerEvents: 'auto' }}
       />
