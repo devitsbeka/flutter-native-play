@@ -59,7 +59,7 @@ export function VSScreen() {
       <div className="flex-1 flex flex-col items-center justify-start px-6 pt-12 pb-6 overflow-auto">
         
         {/* Player 1 Section */}
-        <div className="relative flex flex-col items-center mt-4">
+        <div className="flex flex-col items-center mt-4">
           {/* Avatar with gradient ring and arc badges */}
           <motion.div
             initial={{ scale: 0 }}
@@ -96,19 +96,19 @@ export function VSScreen() {
                 <span className="text-6xl">{playerAvatar}</span>
               </div>
             </div>
+          </motion.div>
 
-            {/* Name badge centered at bottom of avatar */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-10"
-            >
-              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
-                <span className="text-white font-bold text-sm uppercase tracking-wide">{playerName}</span>
-                <span className="text-lg">{getCountryFlag(profile?.country_code || "US")}</span>
-              </div>
-            </motion.div>
+          {/* Name badge - separate from avatar, centered */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="-mt-4 z-10"
+          >
+            <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
+              <span className="text-white font-bold text-sm uppercase tracking-wide">{playerName}</span>
+              <span className="text-lg">{getCountryFlag(profile?.country_code || "US")}</span>
+            </div>
           </motion.div>
 
           {/* Points badge */}
@@ -116,7 +116,7 @@ export function VSScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center gap-1 mt-8"
+            className="flex items-center gap-1 mt-2"
           >
             <span className="text-lg">👑</span>
             <span className="text-white font-bold text-lg">{playerPoints}</span>
@@ -136,7 +136,20 @@ export function VSScreen() {
         </motion.div>
 
         {/* Player 2 (Opponent) Section */}
-        <div className="relative flex flex-col items-center">
+        <div className="flex flex-col items-center">
+          {/* Name badge - separate from avatar, centered */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mb-[-16px] z-10"
+          >
+            <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
+              <span className="text-white font-bold text-sm uppercase tracking-wide">{opponent.name}</span>
+              <span className="text-lg">{getCountryFlag(opponent.countryCode)}</span>
+            </div>
+          </motion.div>
+
           {/* Avatar with gradient ring and arc badges */}
           <motion.div
             initial={{ scale: 0 }}
@@ -144,19 +157,6 @@ export function VSScreen() {
             transition={{ type: "spring", stiffness: 200, delay: 0.5 }}
             className="relative"
           >
-            {/* Name badge centered at top of avatar */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="absolute -top-5 left-1/2 -translate-x-1/2 z-10"
-            >
-              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
-                <span className="text-white font-bold text-sm uppercase tracking-wide">{opponent.name}</span>
-                <span className="text-lg">{getCountryFlag(opponent.countryCode)}</span>
-              </div>
-            </motion.div>
-
             <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500">
               <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center">
                 <span className="text-6xl">{opponent.avatarEmoji}</span>
@@ -194,7 +194,7 @@ export function VSScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
-            className="flex items-center gap-1 mt-8"
+            className="flex items-center gap-1 mt-2"
           >
             <span className="text-lg">👑</span>
             <span className="text-white font-bold text-lg">{opponent.points.toLocaleString()}</span>
