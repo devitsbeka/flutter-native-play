@@ -412,6 +412,14 @@ export default function Leaderboards() {
         </div>
       </div>
 
+      {/* Gradient fade overlay at bottom */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 h-40 pointer-events-none z-10"
+        style={{
+          background: "linear-gradient(to top, hsl(45 40% 88%) 0%, hsl(45 40% 88% / 0.8) 30%, transparent 100%)",
+        }}
+      />
+
       {/* Bottom Navigation - Liquid Glass Effect */}
       <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
         {/* Glass container with blur */}
