@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Play, Flame, Star } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
+import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { useAuth } from "@/hooks/useAuth";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
@@ -213,6 +214,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
@@ -221,6 +223,7 @@ export default function Index() {
   return (
     <>
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
+      <SideMenuDrawer isOpen={isSideMenuOpen} onClose={() => setIsSideMenuOpen(false)} />
       
       <div className="relative h-screen w-full overflow-hidden">
         {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
@@ -230,10 +233,10 @@ export default function Index() {
           <div className="flex items-center justify-between">
             {/* Burger menu button */}
             <motion.button
-              className="text-3xl"
+              className="text-4xl"
               whileHover={{ scale: 1.1, rotate: 10 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => {/* TODO: open side menu */}}
+              onClick={() => setIsSideMenuOpen(true)}
             >
               🍔
             </motion.button>
@@ -274,14 +277,14 @@ export default function Index() {
 
         {/* ===== POWER BADGES ARC (Top) ===== */}
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-20">
-          <div className="relative flex items-end justify-center gap-2">
-            {(["fifty-fifty", "freeze", "replace", "time-drain"] as const).map((type, index) => {
-              // Arc positioning - middle items higher
-              const arcOffset = Math.abs(index - 1.5) * 8;
+          <div className="flex items-end justify-center gap-2">
+            {(["fifty-fifty", "freeze", "time-drain"] as const).map((type, index) => {
+              // Arc positioning - middle item higher
+              const arcOffset = Math.abs(index - 1) * 8;
               return (
                 <motion.div
                   key={type}
-                  style={{ marginBottom: 16 - arcOffset }}
+                  style={{ marginBottom: 12 - arcOffset }}
                   initial={{ scale: 0, y: -20 }}
                   animate={{ scale: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.1, type: "spring", stiffness: 200 }}
@@ -290,14 +293,14 @@ export default function Index() {
                 </motion.div>
               );
             })}
-            {/* Add power button in center-top */}
+            {/* Add power button at the end */}
             <motion.div
-              className="absolute -top-2 left-1/2 -translate-x-1/2"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+              style={{ marginBottom: 4 }}
+              initial={{ scale: 0, y: -20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
             >
-              <PowerUpBadge type="add-power" size="sm" index={5} />
+              <PowerUpBadge type="add-power" size="sm" index={3} />
             </motion.div>
           </div>
         </div>
