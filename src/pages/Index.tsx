@@ -230,7 +230,15 @@ export default function Index() {
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
           <div className="flex items-center justify-between">
-            <CurrencyPill iconSrc={iconCoin} value={gamesWon * 10} />
+            {/* Burger menu button */}
+            <motion.button
+              className="text-3xl"
+              whileHover={{ scale: 1.1, rotate: 10 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {/* TODO: open side menu */}}
+            >
+              🍔
+            </motion.button>
             
             <motion.h1 
               className="text-3xl font-bold"
@@ -243,7 +251,26 @@ export default function Index() {
               Trivia
             </motion.h1>
             
-            <CurrencyPill iconSrc={iconGem} value={currentStreak} />
+            {/* Combined currency chip */}
+            <motion.div 
+              className="flex items-center gap-3 px-3 py-1.5 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.95)",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="flex items-center gap-1">
+                <img src={iconCoin} alt="" className="w-6 h-6 object-contain" />
+                <span className="text-sm font-bold text-gray-800">{(gamesWon * 10).toLocaleString()}</span>
+              </div>
+              <div className="w-px h-4 bg-gray-200" />
+              <div className="flex items-center gap-1">
+                <img src={iconGem} alt="" className="w-6 h-6 object-contain" />
+                <span className="text-sm font-bold text-gray-800">{currentStreak}</span>
+              </div>
+            </motion.div>
           </div>
         </header>
 
