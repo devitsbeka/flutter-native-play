@@ -10,12 +10,14 @@ import {
   LogOut,
   User,
   Bell,
-  Shield
+  Shield,
+  Wand2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
+import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 
 interface SideMenuDrawerProps {
@@ -25,7 +27,8 @@ interface SideMenuDrawerProps {
 
 const menuItems = [
   { icon: Target, label: "მისიები", description: "დღიური დავალებები", badge: "3", onClick: "missions" },
-  { icon: Sparkles, label: "ივენთები", description: "სპეციალური გამოწვევები", badge: "ახალი", onClick: "events" },
+  { icon: Wand2, label: "AI Avatar", description: "Generate 3D cartoon avatar", badge: "ახალი", onClick: "avatar" },
+  { icon: Sparkles, label: "ივენთები", description: "სპეციალური გამოწვევები", onClick: "events" },
   { icon: Award, label: "ტრივია პასი", description: "ექსკლუზიური ჯილდოები", onClick: "pass" },
   { icon: Bell, label: "შეტყობინებები", description: "სიახლეები და განახლებები", onClick: "notifications" },
 ];
@@ -40,12 +43,17 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
   const handleItemClick = (action: string) => {
     if (action === "missions") {
       setIsMissionsOpen(true);
+      return;
+    }
+    if (action === "avatar") {
+      setIsAvatarModalOpen(true);
       return;
     }
     console.log("Menu action:", action);
@@ -62,6 +70,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   return (
     <>
       <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
+      <AvatarGeneratorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
       <AnimatePresence>
       {isOpen && (
         <>

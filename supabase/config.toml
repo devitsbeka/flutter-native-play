@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.generate-country-trivia]
 verify_jwt = false
+
+[functions.generate-avatar]
+verify_jwt = true
