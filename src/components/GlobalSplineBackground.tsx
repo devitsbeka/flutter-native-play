@@ -84,11 +84,11 @@ export function GlobalSplineBackground() {
         loading="eager"
       />
       
-      {/* White radial vignette mask - white edges fading to transparent center */}
+      {/* Purple vignette mask - matches the app theme */}
       <div 
         className="fixed inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 70%, rgba(255,255,255,0.7) 90%, rgba(255,255,255,0.85) 100%)",
+          background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(183, 148, 246, 0.2) 75%, rgba(183, 148, 246, 0.5) 100%)",
           opacity: shouldShow ? 1 : 0,
           zIndex: -10,
         }}
