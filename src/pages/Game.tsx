@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameProvider, useGame } from "@/contexts/GameContext";
+// Force rebuild
 import { GameContainer } from "@/components/game/GameContainer";
 import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { ArrowLeft } from "lucide-react";
