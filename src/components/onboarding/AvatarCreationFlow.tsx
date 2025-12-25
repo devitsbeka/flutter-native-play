@@ -9,14 +9,72 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
+// Play celebration sound using Web Audio API
+const playCelebrationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Create a cheerful "success" melody
+    const notes = [
+      { freq: 523.25, start: 0, duration: 0.1 },     // C5
+      { freq: 659.25, start: 0.1, duration: 0.1 },   // E5
+      { freq: 783.99, start: 0.2, duration: 0.15 },  // G5
+      { freq: 1046.50, start: 0.35, duration: 0.25 }, // C6 (held longer)
+    ];
+    
+    notes.forEach(({ freq, start, duration }) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = "sine";
+      
+      // Envelope for smooth sound
+      const now = audioContext.currentTime;
+      gainNode.gain.setValueAtTime(0, now + start);
+      gainNode.gain.linearRampToValueAtTime(0.3, now + start + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + start + duration);
+      
+      oscillator.start(now + start);
+      oscillator.stop(now + start + duration);
+    });
+  } catch (e) {
+    console.log("Audio not available");
+  }
+};
+
+// Trigger haptic feedback
+const triggerHaptic = () => {
+  try {
+    if (navigator.vibrate) {
+      // Pattern: short-pause-medium-pause-long
+      navigator.vibrate([50, 30, 100, 30, 150]);
+    }
+  } catch (e) {
+    console.log("Haptic not available");
+  }
+};
+
 // Confetti celebration for avatar completion
 const celebrateAvatarConfetti = () => {
-  const end = Date.now() + 1000;
-  const colors = ["#A855F7", "#8B5CF6", "#FFD700", "#22C55E"];
+  const end = Date.now() + 1500;
+  const colors = ["#A855F7", "#8B5CF6", "#FFD700", "#22C55E", "#EC4899", "#3B82F6"];
+
+  // Initial burst
+  confetti({
+    particleCount: 80,
+    spread: 100,
+    origin: { x: 0.5, y: 0.4 },
+    colors: colors,
+    zIndex: 9999,
+  });
 
   (function frame() {
     confetti({
-      particleCount: 3,
+      particleCount: 4,
       angle: 60,
       spread: 55,
       origin: { x: 0, y: 0.6 },
@@ -24,7 +82,7 @@ const celebrateAvatarConfetti = () => {
       zIndex: 9999,
     });
     confetti({
-      particleCount: 3,
+      particleCount: 4,
       angle: 120,
       spread: 55,
       origin: { x: 1, y: 0.6 },
@@ -36,6 +94,13 @@ const celebrateAvatarConfetti = () => {
       requestAnimationFrame(frame);
     }
   })();
+};
+
+// Full celebration: sound + haptic + confetti
+const celebrateAvatarGeneration = () => {
+  playCelebrationSound();
+  triggerHaptic();
+  celebrateAvatarConfetti();
 };
 
 // Shimmer effect component
@@ -260,6 +325,10 @@ export function AvatarCreationFlow() {
       
       setGeneratedAvatar(data.avatarUrl);
       setStep("avatar-preview");
+      
+      // Celebrate with sound, haptic, and confetti!
+      celebrateAvatarGeneration();
+      
       toast.success(t("onboarding.avatarReady"));
       
     } catch (error: any) {
