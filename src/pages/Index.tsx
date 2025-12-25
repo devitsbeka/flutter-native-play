@@ -358,18 +358,18 @@ export default function Index() {
               }}
             >
               {/* Avatar image - clean display without ring */}
-              <div className="w-64 h-64 relative">
+              <div className="w-64 relative flex items-end justify-center">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-full object-contain"
+                    className="w-full h-auto max-h-72 object-contain object-bottom"
                     style={{
                       backfaceVisibility: "hidden",
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-64 flex items-center justify-center">
                     <span className="text-7xl">🎮</span>
                   </div>
                 )}
@@ -408,7 +408,7 @@ export default function Index() {
               </div>
             
               {/* Level & XP bar - positioned directly below avatar, no gap */}
-              <div className="-mt-4 z-20 pointer-events-auto">
+              <div className="-mt-8 z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
