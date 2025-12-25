@@ -343,7 +343,7 @@ export default function Index() {
 
         {/* ===== POWER BADGES ROW (Flat, closer to avatar) ===== */}
         <div className="absolute top-[140px] left-1/2 -translate-x-1/2 z-20 w-[80%] max-w-sm">
-          <div className="flex items-center justify-center gap-0">
+          <div className="flex items-center justify-center gap-2">
             {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => (
               <motion.div
                 key={type}
