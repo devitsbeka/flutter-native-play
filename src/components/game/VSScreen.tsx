@@ -67,15 +67,10 @@ export function VSScreen() {
       {/* Main Content - extra top padding to prevent cropping */}
       <div className="flex-1 flex flex-col items-center justify-start px-6 pt-12 pb-6 overflow-auto">
         
-        {/* Player 1 Section */}
+        {/* Player 1 Section - NO ANIMATION for seamless transition */}
         <div className="flex flex-col items-center mt-4">
-          {/* Avatar with gradient ring and arc badges */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-            className="relative"
-          >
+          {/* Avatar with gradient ring and arc badges - NO motion wrapper */}
+          <div className="relative">
             {/* Power-ups in arc at TOP of avatar */}
             {topArcPositions.map((pos, index) => {
               const types: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
@@ -105,7 +100,7 @@ export function VSScreen() {
                 <span className="text-6xl">{playerAvatar}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Player info badge with flag, name, points */}
           <div className="-mt-4 z-10">
@@ -113,24 +108,19 @@ export function VSScreen() {
               name="You"
               flag={getCountryFlag(profile?.country_code || "US")}
               points={playerPoints}
-              delay={0.2}
+              delay={0}
               direction="up"
               isPlayer={true}
             />
           </div>
         </div>
 
-        {/* VS Text - bright yellow for visibility */}
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 200, delay: 0.4 }}
-          className="my-3"
-        >
+        {/* VS Text - NO animation for seamless transition */}
+        <div className="my-3">
           <span className="font-display text-5xl font-bold text-[#FFD700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] tracking-wide">
             VS
           </span>
-        </motion.div>
+        </div>
 
         {/* Player 2 (Opponent) Section */}
         <div className="flex flex-col items-center">
@@ -140,19 +130,18 @@ export function VSScreen() {
               name={opponent.name}
               flag={getCountryFlag(opponent.countryCode)}
               points={opponent.points}
-              delay={0.6}
+              delay={0}
               direction="down"
             />
           </div>
 
-          {/* Avatar with gradient ring and arc badges */}
+          {/* Avatar with gradient ring and arc badges - smooth scale in */}
           <motion.div
-            initial={{ scale: 0 }}
+            initial={{ scale: 1 }}
             animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.5 }}
             className="relative"
           >
-            <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500">
+            <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500">
               <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center">
                 <span className="text-6xl">{opponent.avatarEmoji}</span>
               </div>
@@ -189,29 +178,19 @@ export function VSScreen() {
         <div className="flex-1 min-h-4" />
 
         {/* Add Power Button */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 300, delay: 0.8 }}
-          className="mb-4"
-        >
+        <div className="mb-4">
           <PowerUpBadge type="add-power" size="md" index={8} className="w-16 h-16" />
-        </motion.div>
+        </div>
 
         {/* Start Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, type: "spring" }}
-          className="w-full max-w-xs"
-        >
+        <div className="w-full max-w-xs">
           <button
             onClick={startMatch}
             className="w-full py-4 rounded-full border-2 border-[#7DD3FC] text-[#7DD3FC] font-bold text-xl tracking-wider bg-transparent hover:bg-[#7DD3FC]/10 transition-colors uppercase"
           >
             NEXT
           </button>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
