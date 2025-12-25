@@ -412,57 +412,51 @@ export default function Leaderboards() {
         </div>
       </div>
 
-      {/* Bottom Navigation - same as Index */}
+      {/* Bottom Navigation - Liquid Glass Effect */}
       <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
+        {/* Glass container with blur */}
         <motion.div 
-          className="relative px-4 pb-6"
+          className="mx-3 mb-4 rounded-3xl overflow-hidden"
+          style={{
+            background: "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.45) 100%)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            border: "1px solid rgba(255,255,255,0.5)",
+            boxShadow: "0 -4px 30px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.7)",
+          }}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
         >
-          <div className="flex items-end justify-between">
+          <div className="relative px-4 py-3 flex items-end justify-between">
             {/* Explore */}
             <motion.button
               onClick={() => navigate("/discover")}
               className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.1, y: -3 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                }}
-              >
-                <img src={iconCompass} alt="Explore" className="w-10 h-10 object-contain" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
+                <img src={iconCompass} alt="Explore" className="w-9 h-9 object-contain" />
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-600 font-medium">Explore</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Explore</span>
             </motion.button>
 
             {/* Map */}
             <motion.button
               onClick={() => navigate("/adventure-map")}
               className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.1, y: -3 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                }}
-              >
-                <img src={iconMap3d} alt="Map" className="w-10 h-10 object-contain" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
+                <img src={iconMap3d} alt="Map" className="w-9 h-9 object-contain" />
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-600 font-medium">Map</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Map</span>
             </motion.button>
 
             {/* Center Play Button - elevated */}
-            <div className="mb-4">
+            <div className="-mt-6">
               <PlayButton3D onClick={() => navigate("/game")} />
             </div>
 
@@ -470,39 +464,25 @@ export default function Leaderboards() {
             <motion.button
               onClick={() => navigate("/leaderboards")}
               className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.1, y: -3 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "rgba(139,92,246,0.3)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(139,92,246,0.4)",
-                }}
-              >
-                <img src={iconTrophy3d} alt="Rank" className="w-10 h-10 object-contain" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-purple-200/60">
+                <img src={iconTrophy3d} alt="Rank" className="w-9 h-9 object-contain" />
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-medium">Rank</span>
+              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">Rank</span>
             </motion.button>
 
             {/* Headphones/Audio */}
             <motion.button
               className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.1, y: -3 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                }}
-              >
-                <span className="text-3xl">🎧</span>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
+                <span className="text-2xl">🎧</span>
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-600 font-medium">Sound</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Sound</span>
             </motion.button>
           </div>
         </motion.div>
