@@ -357,37 +357,38 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image with circular purple stroke and white inner stroke */}
-              <div 
-                className="w-64 h-64 relative rounded-full flex items-center justify-center"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.9)",
-                  padding: 4,
-                }}
-              >
-                {/* White inner ring */}
+              {/* Avatar image with overlay ring to mask edges */}
+              <div className="w-64 h-64 relative">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Avatar" 
+                    className="w-full h-full object-contain"
+                    style={{
+                      backfaceVisibility: "hidden",
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-7xl">🎮</span>
+                  </div>
+                )}
+                
+                {/* White ring overlay to mask sharp edges */}
                 <div 
-                  className="w-full h-full rounded-full flex items-center justify-center"
+                  className="absolute inset-0 rounded-full pointer-events-none"
                   style={{
                     border: "41px solid rgba(255,255,255,0.85)",
                     boxShadow: "inset 0 4px 12px rgba(0,0,0,0.05)",
                   }}
-                >
-                  {profile?.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt="Avatar" 
-                      className="w-full h-full object-contain"
-                      style={{
-                        backfaceVisibility: "hidden",
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-7xl">🎮</span>
-                    </div>
-                  )}
-                </div>
+                />
+                {/* Outer stroke */}
+                <div 
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.9)",
+                  }}
+                />
               </div>
                 
               {/* Power badges in curved arc at top of avatar */}
