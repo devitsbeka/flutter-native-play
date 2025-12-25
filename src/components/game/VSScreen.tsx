@@ -107,6 +107,7 @@ export function VSScreen() {
               points={playerPoints}
               delay={0.2}
               direction="up"
+              isPlayer={true}
             />
           </div>
         </div>
