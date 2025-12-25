@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 
-// List of all Spline URLs used in the game
+// List of all Spline URLs used in the game (removed hourglass, kept blob)
 const SPLINE_URLS = [
-  "https://my.spline.design/interactivehourglass-C5OKzkXWhesjwl8ajjoHgflj/",
   "https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/",
 ];
 
