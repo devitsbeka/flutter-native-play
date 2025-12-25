@@ -195,11 +195,15 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
       const response = await fetch(generatedAvatar);
       const blob = await response.blob();
       
-      const fileName = `${user.id}/avatar_${Date.now()}.jpg`;
+      // Use .png to preserve transparency from background removal
+      const fileName = `${user.id}/avatar_${Date.now()}.png`;
       
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(fileName, blob, { upsert: true });
+        .upload(fileName, blob, { 
+          upsert: true,
+          contentType: 'image/png'
+        });
 
       if (uploadError) {
         throw new Error(`Failed to save avatar: ${uploadError.message}`);
