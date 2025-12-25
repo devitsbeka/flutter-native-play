@@ -377,7 +377,7 @@ export default function Index() {
                 {/* Power badges in curved arc at top of avatar */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -30 }}>
                   {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
-                    // True curved arc using transform positioning
+                    // True curved arc using calculated positions
                     const totalBadges = 5;
                     const arcSpan = 140; // degrees of arc
                     const startAngle = -70; // start from left side
@@ -390,14 +390,14 @@ export default function Index() {
                     return (
                       <motion.div
                         key={type}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        initial={{ scale: 0, opacity: 0, x, y }}
+                        animate={{ scale: 1, opacity: 1, x, y }}
                         transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
                         className="absolute"
                         style={{ 
                           left: "50%",
                           top: 0,
-                          transform: `translate(calc(-50% + ${x}px), ${y}px)`,
+                          marginLeft: -24, // half badge size
                         }}
                       >
                         <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
