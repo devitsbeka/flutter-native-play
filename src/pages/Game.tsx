@@ -17,16 +17,7 @@ function GameContent() {
   }, [phase, startMatchmaking]);
 
   // Phases that have their own full-screen background (no SplineGlobe, no overlay, no padding)
-  const hasOwnBackground = phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result";
-
-  // Don't render anything during "home" phase to avoid flash
-  if (phase === "home") {
-    return (
-      <div className="h-screen w-full bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result";
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden bg-background">

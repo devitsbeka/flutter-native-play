@@ -12,7 +12,7 @@ export function GameContainer() {
   // Use stable key for question-related phases to prevent unmount/remount
   const getStableKey = () => {
     if (phase === "playing" || phase === "question-result") return "question-flow";
-    if (phase === "matchmaking" || phase === "preparing") return "matchmaking-flow";
+    if (phase === "home" || phase === "matchmaking" || phase === "preparing") return "matchmaking-flow";
     return phase;
   };
 
@@ -20,14 +20,13 @@ export function GameContainer() {
     <AnimatePresence mode="wait">
       <motion.div
         key={getStableKey()}
-        initial={{ opacity: 0 }}
+        initial={{ opacity: 1 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
+        transition={{ duration: 0.1 }}
         className="w-full h-full"
       >
-        {phase === "home" && <HomeScreen />}
-        {(phase === "matchmaking" || phase === "preparing") && <MatchmakingScreen />}
+        {(phase === "home" || phase === "matchmaking" || phase === "preparing") && <MatchmakingScreen />}
         {phase === "vs-screen" && <VSScreen />}
         {(phase === "playing" || phase === "question-result") && <QuestionScreen />}
         {phase === "match-result" && <MatchResultScreen />}
