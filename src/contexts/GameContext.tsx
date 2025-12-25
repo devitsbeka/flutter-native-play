@@ -3,10 +3,17 @@ import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 
 export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
+export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
 
 export interface AnswerHistory {
   correct: boolean;
   points: number;
+}
+
+export interface PowerUpState {
+  type: PowerUpType;
+  available: number;
+  usedThisQuestion: boolean;
 }
 
 interface GameState {
@@ -28,6 +35,16 @@ interface GameState {
   lastOpponentAnswer: string | null;
   lastUserAnswer: string | null;
   preparationProgress: number;
+  
+  // Power-up state
+  playerPowerUps: PowerUpState[];
+  opponentPowerUps: PowerUpState[];
+  activePowerUp: PowerUpType | null;
+  opponentFrozen: boolean;
+  opponentFreezeEndTime: number | null;
+  playerTimerBonus: number;
+  hiddenAnswers: string[];
+  replacedAnswer: { old: string; new: string } | null;
 }
 
 interface GameContextType extends GameState {
@@ -37,8 +54,16 @@ interface GameContextType extends GameState {
   nextQuestion: () => void;
   finishMatch: () => void;
   resetGame: () => void;
+  usePowerUp: (type: PowerUpType) => void;
   loading: boolean;
 }
+
+const defaultPowerUps: PowerUpState[] = [
+  { type: "fifty-fifty", available: 2, usedThisQuestion: false },
+  { type: "freeze", available: 1, usedThisQuestion: false },
+  { type: "replace", available: 1, usedThisQuestion: false },
+  { type: "time-drain", available: 1, usedThisQuestion: false },
+];
 
 const initialState: GameState = {
   phase: "home",
@@ -59,6 +84,16 @@ const initialState: GameState = {
   lastOpponentAnswer: null,
   lastUserAnswer: null,
   preparationProgress: 0,
+  
+  // Power-up initial state
+  playerPowerUps: defaultPowerUps.map(p => ({ ...p })),
+  opponentPowerUps: defaultPowerUps.map(p => ({ ...p })),
+  activePowerUp: null,
+  opponentFrozen: false,
+  opponentFreezeEndTime: null,
+  playerTimerBonus: 0,
+  hiddenAnswers: [],
+  replacedAnswer: null,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -115,7 +150,72 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       opponentProgress: 0,
       userAnswerHistory: [],
       opponentAnswerHistory: [],
+      // Reset power-ups for new match
+      playerPowerUps: defaultPowerUps.map(p => ({ ...p })),
+      opponentPowerUps: defaultPowerUps.map(p => ({ ...p })),
+      activePowerUp: null,
+      opponentFrozen: false,
+      opponentFreezeEndTime: null,
+      playerTimerBonus: 0,
+      hiddenAnswers: [],
+      replacedAnswer: null,
     }));
+  }, []);
+
+  const usePowerUp = useCallback((type: PowerUpType) => {
+    setState(prev => {
+      const currentQuestion = prev.questions[prev.currentQuestionIndex];
+      if (!currentQuestion) return prev;
+
+      const powerUpIndex = prev.playerPowerUps.findIndex(p => p.type === type);
+      if (powerUpIndex === -1) return prev;
+      
+      const powerUp = prev.playerPowerUps[powerUpIndex];
+      if (powerUp.available <= 0 || powerUp.usedThisQuestion) return prev;
+
+      // Clone power-ups array
+      const newPowerUps = prev.playerPowerUps.map((p, i) => 
+        i === powerUpIndex 
+          ? { ...p, available: p.available - 1, usedThisQuestion: true }
+          : p
+      );
+
+      let updates: Partial<GameState> = {
+        playerPowerUps: newPowerUps,
+        activePowerUp: type,
+      };
+
+      // Apply power-up effect
+      switch (type) {
+        case "fifty-fifty": {
+          const wrongAnswers = currentQuestion.allAnswers
+            .filter(a => a !== currentQuestion.correctAnswer);
+          const shuffled = wrongAnswers.sort(() => Math.random() - 0.5);
+          updates.hiddenAnswers = shuffled.slice(0, 2);
+          break;
+        }
+        case "freeze": {
+          updates.opponentFrozen = true;
+          updates.opponentFreezeEndTime = Date.now() + 5000;
+          break;
+        }
+        case "replace": {
+          const wrongAnswers = currentQuestion.allAnswers
+            .filter(a => a !== currentQuestion.correctAnswer)
+            .filter(a => !prev.hiddenAnswers.includes(a));
+          if (wrongAnswers.length > 0) {
+            updates.replacedAnswer = { old: wrongAnswers[0], new: "---" };
+          }
+          break;
+        }
+        case "time-drain": {
+          updates.playerTimerBonus = prev.playerTimerBonus + 3;
+          break;
+        }
+      }
+
+      return { ...prev, ...updates };
+    });
   }, []);
 
   const answerQuestion = useCallback((answer: string, timeRemaining: number) => {
@@ -132,7 +232,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         prev.streak
       );
 
-      const opponentCorrect = Math.random() < 0.7;
+      const opponentCorrect = prev.opponentFrozen ? false : Math.random() < 0.7;
       const opponentTime = prev.timePerQuestion * (0.3 + Math.random() * 0.5);
       const opponentPoints = calculateScore(
         opponentCorrect,
@@ -194,6 +294,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastOpponentCorrect: null,
         lastOpponentAnswer: null,
         lastUserAnswer: null,
+        // Reset per-question power-up state
+        playerPowerUps: prev.playerPowerUps.map(p => ({ ...p, usedThisQuestion: false })),
+        activePowerUp: null,
+        opponentFrozen: false,
+        opponentFreezeEndTime: null,
+        playerTimerBonus: 0,
+        hiddenAnswers: [],
+        replacedAnswer: null,
       };
     });
   }, []);
@@ -216,6 +324,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         nextQuestion,
         finishMatch,
         resetGame,
+        usePowerUp,
         loading,
       }}
     >
