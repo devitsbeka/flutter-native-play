@@ -13,7 +13,7 @@ const Particle = ({ delay, side }: { delay: number; side: "blue" | "red" }) => {
   const isBlue = side === "blue";
   return (
     <motion.div
-      className={`absolute w-1.5 h-1.5 rounded-full ${isBlue ? "bg-purple-400" : "bg-amber-500"}`}
+      className={`absolute w-1.5 h-1.5 rounded-full ${isBlue ? "bg-purple-400" : "bg-fuchsia-400"}`}
       initial={{ 
         opacity: 0, 
         scale: 0,
@@ -32,7 +32,7 @@ const Particle = ({ delay, side }: { delay: number; side: "blue" | "red" }) => {
         ease: "easeOut"
       }}
       style={{
-        filter: `blur(0.5px) drop-shadow(0 0 4px ${isBlue ? "#a855f7" : "#f59e0b"})`,
+        filter: `blur(0.5px) drop-shadow(0 0 4px ${isBlue ? "#a855f7" : "#e879f9"})`,
       }}
     />
   );
@@ -90,11 +90,11 @@ export function VSScreen() {
               <stop offset="50%" stopColor="#2d2d5a" />
               <stop offset="100%" stopColor="#3d3d7a" />
             </linearGradient>
-            {/* Opponent section - Deep bronze/brown */}
+            {/* Opponent section - Bright purple/magenta */}
             <linearGradient id="redGradient" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2a1a0a" />
-              <stop offset="50%" stopColor="#4a3020" />
-              <stop offset="100%" stopColor="#5a4030" />
+              <stop offset="0%" stopColor="#6B21A8" />
+              <stop offset="50%" stopColor="#9333EA" />
+              <stop offset="100%" stopColor="#A855F7" />
             </linearGradient>
             <linearGradient id="goldGradient" x1="100%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#FFE55C" />
@@ -333,26 +333,26 @@ export function VSScreen() {
               />
             </motion.div>
 
-            {/* Avatar with premium frame - bronze/amber theme */}
+            {/* Avatar with premium frame - purple theme */}
             <motion.div 
               className="relative"
               animate={{ 
-                filter: ["drop-shadow(0 0 15px rgba(245,158,11,0.3))", "drop-shadow(0 0 25px rgba(245,158,11,0.5))", "drop-shadow(0 0 15px rgba(245,158,11,0.3))"]
+                filter: ["drop-shadow(0 0 15px rgba(192,132,252,0.3))", "drop-shadow(0 0 25px rgba(192,132,252,0.5))", "drop-shadow(0 0 15px rgba(192,132,252,0.3))"]
               }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             >
               {/* Outer glow ring */}
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-amber-400/30 via-orange-500/20 to-yellow-500/30 blur-md" />
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-purple-400/30 via-fuchsia-500/20 to-violet-400/30 blur-md" />
               
               {/* Main avatar frame */}
-              <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600"
+              <div className="relative w-28 h-28 rounded-full p-1 bg-gradient-to-br from-purple-400 via-fuchsia-500 to-violet-500"
                 style={{
-                  boxShadow: "0 0 20px rgba(245,158,11,0.4), inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.4)"
+                  boxShadow: "0 0 20px rgba(192,132,252,0.4), inset 0 2px 4px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.4)"
                 }}
               >
                 {/* Inner border highlight */}
                 <div className="w-full h-full rounded-full p-0.5 bg-gradient-to-b from-white/30 to-transparent">
-                  <div className="w-full h-full rounded-full bg-[#3a2a1a] flex items-center justify-center overflow-hidden"
+                  <div className="w-full h-full rounded-full bg-[#581c87] flex items-center justify-center overflow-hidden"
                     style={{
                       boxShadow: "inset 0 4px 8px rgba(0,0,0,0.4)"
                     }}
