@@ -138,7 +138,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "3D Pixar Disney style cartoon avatar, ZOOMED OUT portrait showing full head from top of hair to chest. Camera pulled back to show complete person. Leave 20% empty space above the crown of the head. Full scalp visible. Medium shot framing. Soft edges, vibrant colors, friendly smile, big expressive eyes, smooth skin.",
+        textPrompt: "animated person in a hoodie with a big smile on his face, appears to be from the Disney Pixar movie, full hair visible, 3D cartoon, hyper-detailed,HD,HDR,4K,8K.",
         styleStrength: 80,
       }),
     });
