@@ -223,28 +223,63 @@ export default function Index() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {/* Outer decorative frame */}
+            {/* Outer decorative frame with multiple layers */}
             <div className="relative">
-              {/* Gold border accent */}
+              {/* Outermost gold glow */}
               <div 
-                className="absolute -inset-[2px] rounded-[28px] opacity-60"
+                className="absolute -inset-1 rounded-[32px] blur-sm opacity-40"
+                style={{ background: "linear-gradient(180deg, #FFD700 0%, #996600 100%)" }}
+              />
+              
+              {/* Gold border accent - top lighter, bottom darker */}
+              <div 
+                className="absolute -inset-[3px] rounded-[30px]"
                 style={{
-                  background: "linear-gradient(180deg, #FFD700 0%, #996600 50%, #332200 100%)",
+                  background: "linear-gradient(180deg, #FFE066 0%, #FFD700 20%, #B8860B 60%, #664400 100%)",
+                  boxShadow: "0 4px 0 #332200",
                 }}
               />
               
-              {/* Main container */}
+              {/* Inner dark border */}
               <div 
-                className="relative flex items-end justify-around rounded-[26px] py-3 px-3"
+                className="absolute -inset-[1px] rounded-[28px]"
                 style={{
-                  background: "linear-gradient(180deg, #3d3250 0%, #2a2040 40%, #1a1428 100%)",
-                  boxShadow: "inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3)",
+                  background: "linear-gradient(180deg, #3d3250 0%, #1a1020 100%)",
+                }}
+              />
+              
+              {/* Main container with rich gradient */}
+              <div 
+                className="relative flex items-end justify-around rounded-[26px] py-3 px-3 overflow-hidden"
+                style={{
+                  background: "linear-gradient(180deg, #4a3d60 0%, #3d3250 20%, #2a2040 50%, #1a1428 80%, #0f0a14 100%)",
+                  boxShadow: "inset 0 2px 4px rgba(255,255,255,0.15), inset 0 -2px 8px rgba(0,0,0,0.4)",
                 }}
               >
-                {/* Top shine */}
+                {/* Top highlight shine */}
                 <div 
-                  className="absolute top-0 left-4 right-4 h-[1px] opacity-30"
-                  style={{ background: "linear-gradient(90deg, transparent 0%, #FFD700 50%, transparent 100%)" }}
+                  className="absolute top-0 left-0 right-0 h-[2px]"
+                  style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.3) 80%, transparent 100%)" }}
+                />
+                
+                {/* Secondary inner glow at top */}
+                <div 
+                  className="absolute top-1 left-8 right-8 h-4 rounded-full opacity-20 blur-sm"
+                  style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)" }}
+                />
+                
+                {/* Gold accent line at bottom */}
+                <div 
+                  className="absolute bottom-0 left-6 right-6 h-[1px] opacity-40"
+                  style={{ background: "linear-gradient(90deg, transparent 0%, #FFD700 30%, #FFD700 70%, transparent 100%)" }}
+                />
+                
+                {/* Subtle texture overlay */}
+                <div 
+                  className="absolute inset-0 opacity-5 pointer-events-none"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M20 20h1v1h-1z'/%3E%3C/g%3E%3C/svg%3E")`,
+                  }}
                 />
                 
                 {/* Home */}
