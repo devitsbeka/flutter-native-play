@@ -30,25 +30,19 @@ const powerUpAssets: Record<PowerUpType | "add-power", string> = {
   "add-power": addPowerImg,
 };
 
-// Ring colors matching the design
-const ringColors: Record<PowerUpType | "add-power", string> = {
-  "fifty-fifty": "rgba(255, 150, 100, 0.6)",
-  "freeze": "rgba(130, 200, 255, 0.6)",
-  "replace": "rgba(100, 220, 200, 0.6)",
-  "time-drain": "rgba(180, 140, 220, 0.6)",
-  "add-power": "rgba(140, 220, 100, 0.6)",
+// SVG ring gradients matching design (from -> to colors)
+const ringGradients: Record<PowerUpType | "add-power", { from: string; to: string; fill: string }> = {
+  "fifty-fifty": { from: "#E85C3A", to: "#FFB347", fill: "#FFF5ED" },
+  "freeze": { from: "#1C8CA8", to: "#95EBE9", fill: "#EDF8FF" },
+  "replace": { from: "#1CA88C", to: "#95EBD4", fill: "#EDFFF8" },
+  "time-drain": { from: "#7B4BBF", to: "#C9A8E9", fill: "#F5EDFF" },
+  "add-power": { from: "#5BA81C", to: "#B5EB95", fill: "#F2FFED" },
 };
 
-const sizeClasses = {
-  sm: "w-16 h-16",
-  md: "w-18 h-18",
-  lg: "w-24 h-24",
-};
-
-const ringSize = {
-  sm: "w-[72px] h-[72px]",
-  md: "w-20 h-20",
-  lg: "w-28 h-28",
+const sizeConfig = {
+  sm: { outer: 72, inner: 48 },
+  md: { outer: 86, inner: 56 },
+  lg: { outer: 110, inner: 72 },
 };
 
 export function PowerUpBadge({
@@ -62,6 +56,9 @@ export function PowerUpBadge({
   className,
 }: PowerUpBadgeProps) {
   const imageSrc = powerUpAssets[type];
+  const gradient = ringGradients[type];
+  const { outer, inner } = sizeConfig[size];
+  const gradientId = `gradient-${type}-${index}`;
 
   return (
     <motion.button
@@ -77,29 +74,56 @@ export function PowerUpBadge({
       whileHover={{ scale: 1.1 }}
       onClick={onClick}
       disabled={disabled || used}
+      style={{ width: outer, height: outer }}
       className={cn(
         "relative flex items-center justify-center transition-all",
-        ringSize[size],
         disabled && "opacity-40 cursor-not-allowed",
         used && "grayscale opacity-50",
         className
       )}
     >
-      {/* Circular ring background */}
-      <div 
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `linear-gradient(135deg, ${ringColors[type]}, transparent 60%)`,
-          border: `3px solid ${ringColors[type]}`,
-        }}
-      />
+      {/* SVG Ring matching exact design specs */}
+      <svg 
+        width={outer} 
+        height={outer} 
+        viewBox={`0 0 ${outer} ${outer}`} 
+        fill="none" 
+        className="absolute inset-0"
+      >
+        {/* Background fill circle */}
+        <circle 
+          cx={outer / 2} 
+          cy={outer / 2} 
+          r={outer / 2} 
+          fill={gradient.fill}
+        />
+        {/* Gradient stroke ring - 7px at 60% opacity */}
+        <circle 
+          cx={outer / 2} 
+          cy={outer / 2} 
+          r={(outer / 2) - 3.5} 
+          stroke={`url(#${gradientId})`}
+          strokeOpacity="0.6"
+          strokeWidth="7"
+          fill="none"
+        />
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+            <stop stopColor={gradient.from} />
+            <stop offset="1" stopColor={gradient.to} />
+          </linearGradient>
+        </defs>
+      </svg>
       
       {/* Inner icon */}
-      <div className={cn("relative flex items-center justify-center", sizeClasses[size])}>
+      <div 
+        className="relative flex items-center justify-center z-10"
+        style={{ width: inner, height: inner }}
+      >
         <img
           src={imageSrc}
           alt={type}
-          className="w-full h-full object-contain drop-shadow-lg"
+          className="w-full h-full object-contain drop-shadow-md"
         />
       </div>
       
@@ -108,7 +132,7 @@ export function PowerUpBadge({
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center shadow-lg"
+          className="absolute -top-0.5 -right-0.5 w-6 h-6 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center shadow-lg z-20"
         >
           {count}
         </motion.span>
@@ -119,7 +143,7 @@ export function PowerUpBadge({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center z-20"
         >
           <div className="w-6 h-6 bg-black/60 rounded-full flex items-center justify-center">
             <span className="text-white text-xs">✓</span>
