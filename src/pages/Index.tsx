@@ -323,24 +323,7 @@ export default function Index() {
           </div>
         </header>
 
-        {/* ===== POWER BADGES ROW (Flat, closer to avatar) ===== */}
-        <div className="absolute top-[140px] left-1/2 -translate-x-1/2 z-20 w-[80%] max-w-sm">
-          <div className="flex items-center justify-center gap-2">
-            {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => (
-              <motion.div
-                key={type}
-                initial={{ scale: 0, y: -20 }}
-                animate={{ scale: 1, y: 0 }}
-                transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
-                className="flex-shrink-0"
-              >
-                <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* ===== CENTER: AVATAR & LEVEL ===== */}
+        {/* ===== CENTER: AVATAR WITH GRADIENT RING & ARC BADGES ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <motion.div 
             className="flex flex-col items-center w-full"
@@ -351,9 +334,9 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar - FULL WIDTH with bottom fade and overlaid stats */}
+            {/* Avatar container with gradient ring */}
             <motion.div 
-              className="relative w-[80%] max-w-xs mx-auto"
+              className="relative"
               animate={isRefreshing ? {
                 rotateY: [0, 360],
                 y: [0, -10, 0],
@@ -374,39 +357,102 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar container - full width with fade mask at bottom */}
-              <div className="relative w-full aspect-square flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="Avatar" 
-                    className="w-full h-full object-contain"
+              {/* Power badges in arc formation ABOVE avatar */}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+                {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
+                  // Arc positioning - 5 badges spread across ~140 degrees
+                  const totalBadges = 5;
+                  const arcSpan = 140; // degrees
+                  const startAngle = -70; // start from left
+                  const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
+                  const radius = 140; // distance from center
+                  const radians = (angle * Math.PI) / 180;
+                  const x = Math.sin(radians) * radius;
+                  const y = -Math.cos(radians) * radius + 20; // offset to position above
+                  
+                  return (
+                    <motion.div
+                      key={type}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1, x, y }}
+                      transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
+                      className="absolute"
+                      style={{ 
+                        left: "50%", 
+                        top: "50%",
+                        marginLeft: -20, // half of badge width
+                        marginTop: -20,
+                      }}
+                    >
+                      <PowerUpBadge type={type} size="sm" index={index} count={type === "add-power" ? undefined : 3} />
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Gradient border ring - outer container with thick border */}
+              <div 
+                className="relative rounded-full"
+                style={{
+                  width: 300,
+                  height: 300,
+                  padding: 16, // thick border
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #E8D5FF 30%, #C8A1FF 70%, #9C6ADE 100%)",
+                  boxShadow: "0 12px 40px rgba(156, 106, 222, 0.4), 0 6px 20px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.8)",
+                }}
+              >
+                {/* Inner container for avatar */}
+                <div 
+                  className="w-full h-full rounded-full overflow-hidden relative"
+                  style={{
+                    background: "radial-gradient(circle at 30% 30%, rgba(220,200,240,0.4) 0%, rgba(180,160,200,0.2) 100%)",
+                    boxShadow: "inset 0 4px 20px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {/* Cyan/teal glow effect */}
+                  <motion.div 
+                    className="absolute inset-0 rounded-full pointer-events-none z-10"
                     style={{
-                      backfaceVisibility: "hidden",
-                      maskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
+                      boxShadow: "inset 0 0 60px rgba(0, 200, 255, 0.25), inset 0 0 30px rgba(100, 220, 255, 0.15)",
+                    }}
+                    animate={{
+                      opacity: [0.6, 1, 0.6],
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  
+                  {/* Avatar image */}
+                  {profile?.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                      style={{
+                        backfaceVisibility: "hidden",
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
+                      <span className="text-7xl">🎮</span>
+                    </div>
+                  )}
+                  
+                  {/* Bottom fade mask overlay */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(to top, rgba(200,180,220,0.9) 0%, transparent 30%)",
                     }}
                   />
-                ) : (
-                  <div 
-                    className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center rounded-3xl"
-                    style={{
-                      maskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 75%, transparent 100%)",
-                    }}
-                  >
-                    <span className="text-9xl">🎮</span>
-                  </div>
-                )}
+                </div>
               </div>
               
-              {/* Level & XP - simple inline display */}
-              <div className="absolute -bottom-12 left-0 right-0 z-20 flex justify-center px-6">
+              {/* Level & XP bar - positioned below avatar ring */}
+              <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring" }}
-                  className="pointer-events-auto"
                 >
                   {isRefreshing ? (
                     <Skeleton className="w-48 h-10 rounded-full bg-purple-200/40" />
