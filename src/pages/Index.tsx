@@ -341,8 +341,7 @@ export default function Index() {
               
               {/* Level badge - CENTERED */}
               <motion.div 
-                className="absolute -bottom-3 z-20"
-                style={{ left: '50%', transform: 'translateX(-50%)' }}
+                className="absolute -bottom-4 left-0 right-0 flex justify-center z-20"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
@@ -432,14 +431,14 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
                   style={{
                     background: "rgba(255,255,255,0.15)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.2)",
                   }}
                 >
-                  <img src={iconCompass} alt="Explore" className="w-7 h-7 object-contain" />
+                  <img src={iconCompass} alt="Explore" className="w-10 h-10 object-contain" />
                 </div>
                 <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Explore</span>
               </motion.button>
@@ -452,14 +451,14 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
                   style={{
                     background: "rgba(255,255,255,0.15)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.2)",
                   }}
                 >
-                  <img src={iconMap3d} alt="Map" className="w-7 h-7 object-contain" />
+                  <img src={iconMap3d} alt="Map" className="w-10 h-10 object-contain" />
                 </div>
                 <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Map</span>
               </motion.button>
@@ -477,14 +476,14 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
                   style={{
                     background: "rgba(255,255,255,0.15)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.2)",
                   }}
                 >
-                  <img src={iconTrophy3d} alt="Rank" className="w-7 h-7 object-contain" />
+                  <img src={iconTrophy3d} alt="Rank" className="w-10 h-10 object-contain" />
                 </div>
                 <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Rank</span>
               </motion.button>
@@ -496,14 +495,14 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
                   style={{
                     background: "rgba(255,255,255,0.15)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(255,255,255,0.2)",
                   }}
                 >
-                  <span className="text-2xl">🎧</span>
+                  <span className="text-3xl">🎧</span>
                 </div>
                 <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Sound</span>
               </motion.button>
