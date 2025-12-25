@@ -375,14 +375,14 @@ export default function Index() {
                 )}
                 
                 {/* Power badges in curved arc at top of avatar */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -30 }}>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" style={{ marginTop: -80 }}>
                   {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
                     // True curved arc using calculated positions
                     const totalBadges = 5;
-                    const arcSpan = 160; // wider arc spread
-                    const startAngle = -80; // start from left side
+                    const arcSpan = 180; // wider arc spread
+                    const startAngle = -90; // start from left side
                     const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                    const radius = 100; // larger radius for more spacing
+                    const radius = 120; // larger radius for 16px+ gap
                     const radians = (angle * Math.PI) / 180;
                     const x = Math.sin(radians) * radius;
                     const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
