@@ -405,7 +405,7 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar container - full width */}
+              {/* Avatar container - full width with fade mask at bottom */}
               <div className="relative w-full aspect-square flex items-center justify-center">
                 {profile?.avatar_url ? (
                   <img 
@@ -414,14 +414,21 @@ export default function Index() {
                     className="w-full h-full object-contain"
                     style={{
                       backfaceVisibility: "hidden",
+                      maskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center rounded-3xl">
+                  <div 
+                    className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center rounded-3xl"
+                    style={{
+                      maskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+                      WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+                    }}
+                  >
                     <span className="text-9xl">🎮</span>
                   </div>
                 )}
-                
               </div>
               
               {/* Level & XP - simple inline display */}
@@ -470,14 +477,22 @@ export default function Index() {
 
         {/* ===== BOTTOM NAVIGATION - 5 items ===== */}
         <div className="absolute bottom-0 left-0 right-0 z-20 safe-bottom">
-          {/* Smooth white gradient fade - no hard edges */}
+          {/* Smooth gradient fade layer - extends upward with soft transition */}
           <div 
-            className="absolute inset-0 pointer-events-none"
+            className="absolute left-0 right-0 bottom-0 pointer-events-none"
             style={{
-              background: "linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.2) 60%, transparent 100%)",
-              height: "180%",
-              bottom: 0,
-              top: "auto",
+              height: "220px",
+              background: "linear-gradient(to top, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 70%, transparent 100%)",
+            }}
+          />
+          {/* Frosted glass backing for nav area */}
+          <div 
+            className="absolute left-0 right-0 bottom-0 pointer-events-none"
+            style={{
+              height: "120px",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              background: "linear-gradient(to top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 60%, transparent 100%)",
             }}
           />
           <motion.div 
@@ -495,16 +510,17 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
                   style={{
-                    background: "rgba(255,255,255,0.15)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    background: "rgba(255,255,255,0.5)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.6)",
+                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
                   }}
                 >
                   <img src={iconCompass} alt="Explore" className="w-10 h-10 object-contain" />
                 </div>
-                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Explore</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Explore</span>
               </motion.button>
 
               {/* Map */}
@@ -515,16 +531,17 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
                   style={{
-                    background: "rgba(255,255,255,0.15)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    background: "rgba(255,255,255,0.5)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.6)",
+                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
                   }}
                 >
                   <img src={iconMap3d} alt="Map" className="w-10 h-10 object-contain" />
                 </div>
-                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Map</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Map</span>
               </motion.button>
 
               {/* Center Play Button - elevated */}
@@ -540,16 +557,17 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
                   style={{
-                    background: "rgba(255,255,255,0.15)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    background: "rgba(255,255,255,0.5)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.6)",
+                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
                   }}
                 >
                   <img src={iconTrophy3d} alt="Rank" className="w-10 h-10 object-contain" />
                 </div>
-                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Rank</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Rank</span>
               </motion.button>
 
               {/* Headphones/Audio */}
@@ -559,16 +577,17 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
                   style={{
-                    background: "rgba(255,255,255,0.15)",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    background: "rgba(255,255,255,0.5)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.6)",
+                    boxShadow: "0 4px 20px rgba(100,50,150,0.15), inset 0 1px 0 rgba(255,255,255,0.5)",
                   }}
                 >
                   <span className="text-3xl">🎧</span>
                 </div>
-                <span className="text-[9px] uppercase tracking-wider text-white/70 font-medium">Sound</span>
+                <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">Sound</span>
               </motion.button>
             </div>
           </motion.div>
