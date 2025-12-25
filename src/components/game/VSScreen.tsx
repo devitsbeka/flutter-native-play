@@ -15,52 +15,46 @@ export function VSScreen() {
   if (!opponent) return null;
 
   const playerPoints = profile?.total_points || 0;
-
-  // Calculate arc positions using proper circle trigonometry
-  const calculateArcPosition = (angleDeg: number, radius: number) => {
-    const angleRad = (angleDeg * Math.PI) / 180;
-    return {
-      x: radius * Math.sin(angleRad),
-      y: -radius * Math.cos(angleRad),
-    };
-  };
-
-  const orbitRadius = 85;
-  
-  // Power-up positions for player (arc above avatar)
-  const playerAngles = [-50, -18, 18, 50];
-  const playerArcPositions = playerAngles.map(angle => calculateArcPosition(angle, orbitRadius));
-
-  // Power-up positions for opponent (arc below avatar)
-  const opponentAngles = [130, 162, 198, 230];
-  const opponentArcPositions = opponentAngles.map(angle => calculateArcPosition(angle, orbitRadius));
+  const powerTypes: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
-      {/* Diagonal Background Split */}
-      <div className="absolute inset-0">
-        {/* Top-left section - Blue/Teal for Player */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-br from-[#1A5570] via-[#2A6A85] to-[#3A7F9A]"
-          style={{
-            clipPath: "polygon(0 0, 100% 0, 0 100%)",
-          }}
+      {/* Diagonal Background Split - using SVG for precise diagonal */}
+      <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+        {/* Blue section - top-left triangle */}
+        <polygon 
+          points="0,0 100,0 0,100" 
+          fill="url(#blueGradient)"
         />
-        {/* Bottom-right section - Red/Crimson for Opponent */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-tl from-[#6B2020] via-[#8B3030] to-[#A04040]"
-          style={{
-            clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
-          }}
+        {/* Red section - bottom-right triangle */}
+        <polygon 
+          points="100,0 100,100 0,100" 
+          fill="url(#redGradient)"
         />
-        {/* Diagonal gold line accent */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "linear-gradient(135deg, transparent 48.5%, #C5A028 48.5%, #FFD700 50%, #C5A028 51.5%, transparent 51.5%)",
-          }}
+        {/* Gold diagonal line from top-right to bottom-left */}
+        <line 
+          x1="100" y1="0" 
+          x2="0" y2="100" 
+          stroke="url(#goldGradient)" 
+          strokeWidth="2"
         />
-      </div>
+        
+        <defs>
+          <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1A5570" />
+            <stop offset="100%" stopColor="#2A7A95" />
+          </linearGradient>
+          <linearGradient id="redGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#6B2525" />
+            <stop offset="100%" stopColor="#8B3535" />
+          </linearGradient>
+          <linearGradient id="goldGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FFD700" />
+            <stop offset="50%" stopColor="#FFC800" />
+            <stop offset="100%" stopColor="#E6A800" />
+          </linearGradient>
+        </defs>
+      </svg>
       
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">
@@ -78,54 +72,41 @@ export function VSScreen() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col relative z-10 px-4">
+      <div className="flex-1 flex flex-col relative z-10">
         
-        {/* Player Section - Top Left Area */}
-        <div className="flex justify-start pt-2">
+        {/* Player Section - Top Left */}
+        <div className="flex-1 flex flex-col items-start justify-start px-6 pt-2">
           <motion.div 
             className="flex flex-col items-center"
             initial={{ x: -30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            {/* Avatar with power-ups arc */}
-            <div className="relative">
-              {/* Power-ups arc above avatar */}
-              {playerArcPositions.map((pos, index) => {
-                const types: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
-                const type = types[index];
-                return (
-                  <div
-                    key={type}
-                    className="absolute z-10"
-                    style={{
-                      left: `calc(50% + ${pos.x}px)`,
-                      top: `calc(50% + ${pos.y}px)`,
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <PowerUpBadge 
-                      type={type}
-                      size="sm" 
-                      index={index} 
-                      count={playerPowerUps.find(p => p.type === type)?.available} 
-                    />
-                  </div>
-                );
-              })}
+            {/* Power-ups row above avatar */}
+            <div className="flex gap-1 mb-2">
+              {powerTypes.map((type, index) => (
+                <PowerUpBadge 
+                  key={type}
+                  type={type}
+                  size="sm" 
+                  index={index} 
+                  count={playerPowerUps.find(p => p.type === type)?.available} 
+                />
+              ))}
+            </div>
 
-              <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-br from-cyan-400 via-blue-500 to-cyan-300 shadow-xl">
-                <div className="w-full h-full rounded-full bg-[#2A6A85] flex items-center justify-center overflow-hidden border-2 border-cyan-300/30">
-                  {profile?.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt="Your avatar" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-5xl">😊</span>
-                  )}
-                </div>
+            {/* Avatar */}
+            <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-br from-cyan-400 via-blue-500 to-cyan-300 shadow-xl">
+              <div className="w-full h-full rounded-full bg-[#2A6A85] flex items-center justify-center overflow-hidden border-2 border-cyan-300/30">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Your avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-5xl">😊</span>
+                )}
               </div>
             </div>
 
@@ -143,8 +124,8 @@ export function VSScreen() {
           </motion.div>
         </div>
 
-        {/* VS Text - Centered in the middle of the screen */}
-        <div className="flex-1 flex items-center justify-center">
+        {/* VS Text - Centered */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <motion.div 
             initial={{ scale: 0, rotate: -15 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -162,8 +143,8 @@ export function VSScreen() {
           </motion.div>
         </div>
 
-        {/* Opponent Section - Bottom Right Area */}
-        <div className="flex justify-end pb-2">
+        {/* Opponent Section - Bottom Right */}
+        <div className="flex-1 flex flex-col items-end justify-end px-6 pb-2">
           <motion.div 
             className="flex flex-col items-center"
             initial={{ x: 30, opacity: 0 }}
@@ -181,46 +162,33 @@ export function VSScreen() {
               />
             </div>
 
-            {/* Avatar with power-ups arc */}
-            <div className="relative">
-              <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-br from-orange-500 via-red-500 to-orange-400 shadow-xl">
-                <div className="w-full h-full rounded-full bg-[#8B3030] flex items-center justify-center overflow-hidden border-2 border-orange-300/30">
-                  {opponent.avatarUrl ? (
-                    <img 
-                      src={opponent.avatarUrl} 
-                      alt={opponent.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-5xl">{opponent.avatarEmoji}</span>
-                  )}
-                </div>
+            {/* Avatar */}
+            <div className="w-28 h-28 rounded-full p-1 bg-gradient-to-br from-orange-500 via-red-500 to-orange-400 shadow-xl">
+              <div className="w-full h-full rounded-full bg-[#8B3030] flex items-center justify-center overflow-hidden border-2 border-orange-300/30">
+                {opponent.avatarUrl ? (
+                  <img 
+                    src={opponent.avatarUrl} 
+                    alt={opponent.name} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-5xl">{opponent.avatarEmoji}</span>
+                )}
               </div>
+            </div>
 
-              {/* Power-ups arc below avatar - greyed for opponent */}
-              {opponentArcPositions.map((pos, index) => {
-                const types: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
-                const type = types[index];
-                return (
-                  <div
-                    key={type}
-                    className="absolute opacity-50 z-10"
-                    style={{
-                      left: `calc(50% + ${pos.x}px)`,
-                      top: `calc(50% + ${pos.y}px)`,
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <PowerUpBadge 
-                      type={type}
-                      size="sm" 
-                      index={index + 4} 
-                      count={opponentPowerUps.find(p => p.type === type)?.available} 
-                      disabled 
-                    />
-                  </div>
-                );
-              })}
+            {/* Power-ups row below avatar - greyed for opponent */}
+            <div className="flex gap-1 mt-2 opacity-50">
+              {powerTypes.map((type, index) => (
+                <PowerUpBadge 
+                  key={type}
+                  type={type}
+                  size="sm" 
+                  index={index + 4} 
+                  count={opponentPowerUps.find(p => p.type === type)?.available} 
+                  disabled
+                />
+              ))}
             </div>
           </motion.div>
         </div>
