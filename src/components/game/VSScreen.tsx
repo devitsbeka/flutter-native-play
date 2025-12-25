@@ -172,51 +172,50 @@ export function VSScreen() {
             {/* Large Avatar with glow and fade masks */}
             <motion.div
               className="relative"
-              initial={{ scale: 2, opacity: 0, y: -50 }}
+              initial={{ scale: 1.5, opacity: 0, y: -30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 12 }}
             >
-              {/* Top fade mask */}
+              {/* Cyan glow behind avatar */}
               <div 
-                className="absolute -top-4 left-1/2 -translate-x-1/2 w-[200%] h-8 z-10 pointer-events-none"
-                style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 100%)" }}
-              />
-              
-              {/* Cyan glow */}
-              <div 
-                className="absolute inset-0 blur-3xl pointer-events-none"
+                className="absolute inset-0 blur-3xl pointer-events-none -z-10"
                 style={{ 
-                  background: "radial-gradient(circle, rgba(0,255,255,0.6) 0%, transparent 50%)",
-                  transform: "scale(2)",
+                  background: "radial-gradient(circle, rgba(0,255,255,0.5) 0%, transparent 60%)",
+                  transform: "scale(2.5)",
                 }}
               />
               
-              {/* Avatar - BIG */}
-              <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+              {/* Avatar container - larger and transparent */}
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="You" 
                     className="w-full h-full object-contain"
-                    style={{ filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.35))" }}
+                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-6xl sm:text-7xl">
+                  <div 
+                    className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
+                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
+                  >
                     👤
                   </div>
                 )}
+                
+                {/* Bottom fade mask - blends avatar into background */}
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
+                  style={{ 
+                    background: "linear-gradient(to top, rgba(200,180,220,0.8) 0%, rgba(200,180,220,0.4) 40%, transparent 100%)" 
+                  }}
+                />
               </div>
-              
-              {/* Bottom fade mask */}
-              <div 
-                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[200%] h-6 z-10 pointer-events-none"
-                style={{ background: "linear-gradient(to top, rgba(0,0,0,0.15) 0%, transparent 100%)" }}
-              />
             </motion.div>
             
             {/* Player info */}
             <motion.div 
-              className="flex items-center gap-2 mt-1"
+              className="flex items-center gap-2 -mt-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -346,46 +345,45 @@ export function VSScreen() {
             {/* Large Avatar with glow and fade masks */}
             <motion.div
               className="relative"
-              initial={{ scale: 2, opacity: 0, y: 50 }}
+              initial={{ scale: 1.5, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1, type: "spring", stiffness: 100, damping: 12 }}
             >
-              {/* Top fade mask */}
+              {/* Magenta glow behind avatar */}
               <div 
-                className="absolute -top-2 left-1/2 -translate-x-1/2 w-[200%] h-6 z-10 pointer-events-none"
-                style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 100%)" }}
-              />
-              
-              {/* Magenta glow */}
-              <div 
-                className="absolute inset-0 blur-3xl pointer-events-none"
+                className="absolute inset-0 blur-3xl pointer-events-none -z-10"
                 style={{ 
-                  background: "radial-gradient(circle, rgba(255,0,200,0.5) 0%, transparent 50%)",
-                  transform: "scale(2)",
+                  background: "radial-gradient(circle, rgba(255,0,200,0.4) 0%, transparent 60%)",
+                  transform: "scale(2.5)",
                 }}
               />
               
-              {/* Avatar - BIG */}
-              <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+              {/* Avatar container - larger and transparent */}
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44">
                 {opponent.avatarUrl ? (
                   <img 
                     src={opponent.avatarUrl} 
                     alt={opponent.name} 
                     className="w-full h-full object-contain"
-                    style={{ filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.35))" }}
+                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-6xl sm:text-7xl">
+                  <div 
+                    className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
+                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
+                  >
                     🤖
                   </div>
                 )}
+                
+                {/* Top fade mask - blends avatar into background */}
+                <div 
+                  className="absolute top-0 left-0 right-0 h-12 pointer-events-none"
+                  style={{ 
+                    background: "linear-gradient(to bottom, rgba(200,180,220,0.8) 0%, rgba(200,180,220,0.4) 40%, transparent 100%)" 
+                  }}
+                />
               </div>
-              
-              {/* Bottom fade mask */}
-              <div 
-                className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-[200%] h-8 z-10 pointer-events-none"
-                style={{ background: "linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 100%)" }}
-              />
             </motion.div>
           </div>
 
