@@ -382,7 +382,7 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar - FULL WIDTH with fade masks */}
+            {/* Avatar - FULL WIDTH */}
             <motion.div 
               className="relative w-full max-w-sm mx-auto"
               animate={isRefreshing ? {
@@ -405,50 +405,23 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Top fade mask */}
-              <div 
-                className="absolute -top-8 left-0 right-0 h-20 z-10 pointer-events-none"
-                style={{
-                  background: "linear-gradient(to bottom, rgba(183, 148, 246, 0.6) 0%, transparent 100%)",
-                }}
-              />
-              
-              {/* Avatar container - full width square */}
-              <div 
-                className="relative w-full aspect-square rounded-3xl overflow-hidden"
-                style={{
-                  boxShadow: "0 12px 48px rgba(156,106,222,0.35), 0 4px 16px rgba(0,0,0,0.1)",
-                  backfaceVisibility: "hidden",
-                }}
-              >
+              {/* Avatar container - full width */}
+              <div className="relative w-full aspect-square flex items-center justify-center">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
+                    style={{
+                      backfaceVisibility: "hidden",
+                    }}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center rounded-3xl">
                     <span className="text-9xl">🎮</span>
                   </div>
                 )}
-                
-                {/* Inner vignette overlay for depth */}
-                <div 
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%)",
-                  }}
-                />
               </div>
-              
-              {/* Bottom fade mask */}
-              <div 
-                className="absolute -bottom-8 left-0 right-0 h-20 z-10 pointer-events-none"
-                style={{
-                  background: "linear-gradient(to top, rgba(183, 148, 246, 0.6) 0%, transparent 100%)",
-                }}
-              />
               
               {/* Level badge - CENTERED */}
               <motion.div 
@@ -477,9 +450,9 @@ export default function Index() {
               </motion.div>
             </motion.div>
             
-            {/* XP Progress Bar - Chunky with inline text */}
+            {/* XP Progress Bar - Chunky with inline text - no gap */}
             <motion.div 
-              className="mt-10 pointer-events-auto w-64"
+              className="mt-0 pointer-events-auto w-64"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
