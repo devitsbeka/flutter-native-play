@@ -418,29 +418,29 @@ export default function Index() {
                     <Skeleton className="w-64 h-12 rounded-2xl bg-white/40" />
                   ) : (
                     <div 
-                      className="relative h-12 rounded-2xl overflow-hidden min-w-[280px]"
+                      className="relative h-14 rounded-2xl overflow-hidden min-w-[280px]"
                       style={{ 
                         background: "rgba(255,255,255,0.95)",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05), inset 0 2px 0 rgba(255,255,255,1)",
-                        border: "2px solid rgba(255,255,255,0.8)",
+                        boxShadow: "0 6px 0 rgba(200,180,220,0.6), 0 8px 20px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,1)",
+                        border: "3px solid rgba(255,255,255,0.9)",
                       }}
                     >
-                      {/* Progress fill - chunky colored bar */}
+                      {/* Progress fill - chunky colored bar with 3D effect */}
                       <motion.div 
                         className="absolute inset-y-1 left-1 rounded-xl"
                         style={{
-                          background: `linear-gradient(90deg, #A855F7 0%, #8B5CF6 50%, #7C3AED 100%)`,
-                          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 8px rgba(139,92,246,0.4)",
+                          background: `linear-gradient(180deg, #A855F7 0%, #8B5CF6 40%, #7C3AED 100%)`,
+                          boxShadow: "inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 8px rgba(139,92,246,0.5)",
                         }}
                         initial={{ width: 0 }}
                         animate={{ width: `calc(${levelInfo.progress}% - 4px)` }}
                         transition={{ duration: 1, delay: 0.5 }}
                       />
                       
-                      {/* Text overlay */}
+                      {/* Text overlay - white on purple, positioned for visibility */}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
-                        <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-sm" />
-                        <span className="text-sm font-bold text-gray-700 drop-shadow-sm">
+                        <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
+                        <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                           Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
                         </span>
                       </div>
