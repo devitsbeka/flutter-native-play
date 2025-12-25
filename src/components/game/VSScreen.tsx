@@ -41,13 +41,7 @@ export function VSScreen() {
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
-      {/* Spline 3D Background */}
-      <iframe 
-        src="https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/" 
-        frameBorder="0" 
-        className="absolute inset-0 w-full h-full -z-10"
-        title="VS Screen Background"
-      />
+      {/* Background comes from parent GameContainer - no local iframe */}
       
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">

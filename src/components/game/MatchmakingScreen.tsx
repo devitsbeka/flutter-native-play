@@ -100,13 +100,7 @@ export function MatchmakingScreen() {
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
-      {/* Spline 3D Background - blob (same as VS screen) */}
-      <iframe 
-        src="https://my.spline.design/floatingblob-fNd2CwqSRe1QdyRbYBDFvR22/" 
-        frameBorder="0" 
-        className="absolute inset-0 w-full h-full -z-10"
-        title="Matchmaking Background"
-      />
+      {/* Background comes from parent GameContainer - no local iframe */}
       
       {/* Header - EXACT same as VSScreen */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">
