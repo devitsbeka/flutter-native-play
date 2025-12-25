@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Settings, ChevronRight } from "lucide-react";
+import { Settings, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { HexBadge } from "@/components/shared/HexBadge";
@@ -8,7 +8,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { getRankFromPoints } from "@/data/opponents";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
+import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
 const badges = [
   { icon: "🏆", color: "yellow" as const, locked: false },
   { icon: "⚡", color: "purple" as const, locked: false },
@@ -26,6 +26,7 @@ export default function Profile() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Badge");
+  const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
@@ -71,13 +72,22 @@ export default function Profile() {
           className="bg-card rounded-3xl shadow-lg p-6 mb-6"
         >
           <div className="flex flex-col items-center">
-            <Avatar
-              emoji="😎"
-              countryCode={profile.country_code || "US"}
-              size="xl"
-              showRing
-              ringColor="ring-primary"
-            />
+            <div className="relative">
+              <Avatar
+                emoji="😎"
+                countryCode={profile.country_code || "US"}
+                size="xl"
+                showRing
+                ringColor="ring-primary"
+                imageUrl={profile.avatar_url || undefined}
+              />
+              <button
+                onClick={() => setShowAvatarGenerator(true)}
+                className="absolute -bottom-1 -right-1 p-2 bg-primary rounded-full shadow-lg hover:scale-110 transition-transform"
+              >
+                <Sparkles className="w-4 h-4 text-primary-foreground" />
+              </button>
+            </div>
             <h2 className="text-xl font-bold text-foreground mt-4">
               {profile.nickname}
             </h2>
@@ -206,6 +216,11 @@ export default function Profile() {
           </motion.div>
         )}
       </div>
+
+      <AvatarGeneratorModal
+        isOpen={showAvatarGenerator}
+        onClose={() => setShowAvatarGenerator(false)}
+      />
     </AppLayout>
   );
 }
