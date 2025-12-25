@@ -24,3 +24,6 @@ verify_jwt = false
 
 [functions.process-existing-avatars]
 verify_jwt = false
+
+[functions.expand-avatar]
+verify_jwt = false
