@@ -104,13 +104,13 @@ export function VSScreen() {
         </motion.div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col relative z-10 px-4">
+      {/* Main Content - Diagonal Split Layout */}
+      <div className="flex-1 relative z-10">
         
-        {/* === PLAYER SECTION (Top Area) === */}
-        <div className="flex items-start gap-3 pt-2">
-          {/* Player Power-ups - Vertical stack */}
-          <div className="flex flex-col gap-2">
+        {/* === PLAYER SECTION (Top Half) === */}
+        <div className="absolute top-0 left-0 right-0 h-1/2 flex">
+          {/* Player Power-ups - Left side */}
+          <div className="flex flex-col gap-2 pl-3 pt-2 z-10">
             {powerTypes.map((type, index) => (
               <motion.div
                 key={`player-${type}`}
@@ -126,7 +126,6 @@ export function VSScreen() {
                 />
               </motion.div>
             ))}
-            {/* Add power button */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -136,44 +135,41 @@ export function VSScreen() {
             </motion.div>
           </div>
 
-          {/* Player Avatar - Large and Visible */}
-          <motion.div
-            className="flex-1 flex flex-col items-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-          >
-            <div className="relative">
+          {/* Player Avatar - LARGE, Full Display like Home Page */}
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <motion.div
+              className="relative"
+              initial={{ scale: 0.5, opacity: 0, y: -50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 120 }}
+            >
               {/* Cyan glow behind avatar */}
               <div 
-                className="absolute inset-0 rounded-full blur-2xl"
+                className="absolute inset-0 blur-3xl"
                 style={{ 
-                  background: "radial-gradient(circle, rgba(0,255,255,0.4) 0%, transparent 70%)",
-                  transform: "scale(1.3)",
+                  background: "radial-gradient(circle, rgba(0,255,255,0.5) 0%, transparent 60%)",
+                  transform: "scale(1.5)",
                 }}
               />
-              {/* Avatar image */}
-              <div 
-                className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-white/50"
-                style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}
-              >
+              {/* Large avatar image - NO CIRCLE, full display */}
+              <div className="relative w-44 h-44">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="You" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain drop-shadow-2xl"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-4xl">
+                  <div className="w-full h-full flex items-center justify-center text-8xl">
                     👤
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
             
             {/* Player info below avatar */}
             <motion.div 
-              className="flex items-center gap-2 mt-3"
+              className="flex items-center gap-2 mt-2"
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -195,13 +191,12 @@ export function VSScreen() {
               <span className="text-lg">👑</span>
               <span className="text-purple-700 font-bold">{playerPoints.toLocaleString()}</span>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* === VS TEXT (Center) with Diagonal Line === */}
-        <div className="flex-1 flex items-center justify-center relative">
-          {/* Diagonal gold line */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+        {/* === DIAGONAL GOLD LINE + VS (Center) === */}
+        <div className="absolute inset-0 pointer-events-none z-20">
+          <svg className="w-full h-full" preserveAspectRatio="none">
             <defs>
               <linearGradient id="goldLineVS" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#FFE55C" />
@@ -209,7 +204,7 @@ export function VSScreen() {
                 <stop offset="100%" stopColor="#E6A800" />
               </linearGradient>
               <filter id="glowVS" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feGaussianBlur stdDeviation="4" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
@@ -217,22 +212,23 @@ export function VSScreen() {
               </filter>
             </defs>
             <line 
-              x1="0%" y1="100%" 
-              x2="100%" y2="0%" 
+              x1="0%" y1="55%" 
+              x2="100%" y2="45%" 
               stroke="url(#goldLineVS)" 
-              strokeWidth="6"
+              strokeWidth="8"
               filter="url(#glowVS)"
             />
           </svg>
-
+          
+          {/* VS Text */}
           <motion.div 
-            className="relative z-10"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             initial={{ scale: 0, rotate: -15 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+            transition={{ duration: 0.5, delay: 0.4, type: "spring" }}
           >
             <span 
-              className="font-display text-7xl font-black tracking-wider"
+              className="font-display text-6xl font-black tracking-wider"
               style={{
                 background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #E6A800 70%, #CC8800 100%)",
                 WebkitBackgroundClip: "text",
@@ -245,15 +241,10 @@ export function VSScreen() {
           </motion.div>
         </div>
 
-        {/* === OPPONENT SECTION (Bottom Area) === */}
-        <div className="flex items-end justify-end gap-3 pb-2">
-          {/* Opponent Avatar - Large and Visible */}
-          <motion.div
-            className="flex-1 flex flex-col items-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, type: "spring" }}
-          >
+        {/* === OPPONENT SECTION (Bottom Half) === */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 flex">
+          {/* Opponent Avatar - LARGE, Full Display */}
+          <div className="flex-1 flex flex-col items-center justify-center">
             {/* Opponent info above avatar */}
             <motion.div 
               className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 mb-1"
@@ -265,7 +256,7 @@ export function VSScreen() {
               <span className="text-purple-700 font-bold">{opponent.points.toLocaleString()}</span>
             </motion.div>
             <motion.div 
-              className="flex items-center gap-2 mb-3"
+              className="flex items-center gap-2 mb-2"
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -279,37 +270,39 @@ export function VSScreen() {
               <span className="text-2xl">{getCountryFlag(opponent.countryCode)}</span>
             </motion.div>
 
-            <div className="relative">
+            <motion.div
+              className="relative"
+              initial={{ scale: 0.5, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
+            >
               {/* Magenta glow behind avatar */}
               <div 
-                className="absolute inset-0 rounded-full blur-2xl"
+                className="absolute inset-0 blur-3xl"
                 style={{ 
-                  background: "radial-gradient(circle, rgba(255,0,200,0.3) 0%, transparent 70%)",
-                  transform: "scale(1.3)",
+                  background: "radial-gradient(circle, rgba(255,0,200,0.4) 0%, transparent 60%)",
+                  transform: "scale(1.5)",
                 }}
               />
-              {/* Avatar image */}
-              <div 
-                className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-white/50"
-                style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}
-              >
+              {/* Large avatar image - NO CIRCLE, full display */}
+              <div className="relative w-44 h-44">
                 {opponent.avatarUrl ? (
                   <img 
                     src={opponent.avatarUrl} 
                     alt={opponent.name} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain drop-shadow-2xl"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-fuchsia-400 to-pink-400 flex items-center justify-center text-4xl">
+                  <div className="w-full h-full flex items-center justify-center text-8xl">
                     🤖
                   </div>
                 )}
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
-          {/* Opponent Power-ups - Vertical stack on right */}
-          <div className="flex flex-col gap-2 opacity-60">
+          {/* Opponent Power-ups - Right side */}
+          <div className="flex flex-col gap-2 pr-3 pt-2 opacity-60 z-10">
             {powerTypes.map((type, index) => (
               <motion.div
                 key={`opponent-${type}`}
