@@ -17,21 +17,21 @@ export function VSScreen() {
   const playerAvatar = profile?.avatar_url || "😊";
   const playerPoints = profile?.total_points || 0;
 
-  // Arc positions for badges around avatar (following circle curve)
-  // For top arc: positions at -60°, -30°, 30°, 60° from top
+  // Arc positions for badges - flatter arc matching reference
+  // Gentle curve: outer badges slightly lower, inner badges slightly higher
   const topArcPositions = [
-    { x: -52, y: -24 },  // far left
-    { x: -24, y: -44 },  // left
-    { x: 24, y: -44 },   // right
-    { x: 52, y: -24 },   // far right
+    { x: -70, y: -20 },  // far left - lower
+    { x: -28, y: -38 },  // center-left - higher
+    { x: 28, y: -38 },   // center-right - higher
+    { x: 70, y: -20 },   // far right - lower
   ];
 
-  // For bottom arc: positions at 120°, 150°, 210°, 240° from top (mirrored)
+  // Bottom arc is mirrored
   const bottomArcPositions = [
-    { x: -52, y: 24 },   // far left
-    { x: -24, y: 44 },   // left
-    { x: 24, y: 44 },    // right
-    { x: 52, y: 24 },    // far right
+    { x: -70, y: 20 },   // far left - higher (closer to center)
+    { x: -28, y: 38 },   // center-left - lower
+    { x: 28, y: 38 },    // center-right - lower
+    { x: 70, y: 20 },    // far right - higher (closer to center)
   ];
 
   return (
