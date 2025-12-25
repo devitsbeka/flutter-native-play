@@ -2,7 +2,7 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Settings } from "lucide-react";
 import { IslandLevelNode, LevelState } from "./IslandLevelNode";
 import { LockedLevelModal } from "./LockedLevelModal";
 import { CompletedLevelModal } from "./CompletedLevelModal";
@@ -300,12 +300,20 @@ export function IslandAdventureMap() {
       {/* Top Header Bar */}
       <header className="absolute top-0 left-0 right-0 z-50 px-4 pt-4 safe-top">
         <div className="flex items-center justify-between gap-3">
-          <button 
-            onClick={handleBack}
-            className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
-          >
-            <ArrowLeft className="h-5 w-5 text-slate-600" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleBack}
+              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+            >
+              <ArrowLeft className="h-5 w-5 text-slate-600" />
+            </button>
+            <button 
+              onClick={() => navigate("/profile")}
+              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+            >
+              <Settings className="h-5 w-5 text-slate-600" />
+            </button>
+          </div>
 
           {/* Combined currency chip */}
           <motion.div 
