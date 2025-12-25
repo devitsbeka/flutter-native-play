@@ -40,7 +40,15 @@ export function VSScreen() {
   const bottomArcPositions = bottomAngles.map(angle => calculateArcPosition(angle, orbitRadius));
 
   return (
-    <div className="h-full w-full flex flex-col relative overflow-hidden bg-gradient-to-b from-[#8B7FD4] to-[#9B8FE4]">
+    <div className="h-full w-full flex flex-col relative overflow-hidden">
+      {/* Spline 3D Background */}
+      <iframe 
+        src="https://my.spline.design/3dpathshandwrittencopy-3vX8V4uGjEsxoAuGqrIdOU3k/" 
+        frameBorder="0" 
+        className="absolute inset-0 w-full h-full -z-10"
+        title="VS Screen Background"
+      />
+      
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">
         <button 
