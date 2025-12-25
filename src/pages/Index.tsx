@@ -407,45 +407,53 @@ export default function Index() {
               </motion.div>
             </motion.div>
             
-            {/* XP Progress Card */}
+            {/* XP Progress Bar - Chunky with inline text */}
             <motion.div 
-              className="mt-8 pointer-events-auto"
+              className="mt-8 pointer-events-auto w-56"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
+              {/* Progress bar container */}
               <div 
-                className="px-5 py-3 rounded-2xl flex flex-col items-center"
-                style={{
-                  background: "rgba(255,255,255,0.95)",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                className="relative h-8 rounded-full overflow-hidden"
+                style={{ 
+                  background: "rgba(156,106,222,0.15)",
+                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.08)",
                 }}
               >
-                {/* Progress bar */}
-                <div className="w-44 mb-2">
-                  <div 
-                    className="h-2.5 rounded-full overflow-hidden"
-                    style={{ background: "rgba(156,106,222,0.12)" }}
-                  >
-                    <motion.div 
-                      className="h-full rounded-full"
-                      style={{
-                        background: `linear-gradient(90deg, ${theme.accent} 0%, #B794F6 100%)`,
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${levelInfo.progress}%` }}
-                      transition={{ duration: 1, delay: 0.5 }}
-                    />
-                  </div>
-                </div>
+                {/* Progress fill */}
+                <motion.div 
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    background: `linear-gradient(90deg, ${theme.accent} 0%, #B794F6 100%)`,
+                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2)",
+                  }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${levelInfo.progress}%` }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                />
                 
-                {/* XP text */}
-                <div className="flex items-center gap-1.5">
+                {/* XP text - dark version (visible on unfilled part) */}
+                <div className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
                   <Flame className="w-4 h-4 text-orange-400" />
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-sm font-bold text-gray-600">
                     {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                   </span>
                 </div>
+                
+                {/* XP text - light version (visible on filled part via clip) */}
+                <motion.div 
+                  className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none"
+                  initial={{ clipPath: "inset(0 100% 0 0)" }}
+                  animate={{ clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)` }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                >
+                  <Flame className="w-4 h-4 text-white/90" />
+                  <span className="text-sm font-bold text-white">
+                    {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                  </span>
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
