@@ -422,93 +422,52 @@ export default function Index() {
                   </div>
                 )}
                 
-                {/* Smooth bottom fade mask - blends with background */}
+                {/* Smooth bottom fade mask - transparent to purple gradient */}
                 <div 
-                  className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
+                  className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
                   style={{
-                    background: "linear-gradient(to top, rgba(183, 148, 246, 1) 0%, rgba(183, 148, 246, 0.85) 25%, rgba(183, 148, 246, 0.4) 60%, transparent 100%)",
+                    background: "linear-gradient(to top, hsl(270, 60%, 75%) 0%, transparent 100%)",
                   }}
                 />
               </div>
               
-              {/* Level & XP overlay - positioned on top of avatar */}
-              <div className="absolute bottom-6 left-0 right-0 z-20 flex flex-col items-center gap-3 px-6">
-                {/* Level badge - redesigned with glass effect */}
+              {/* Level & XP - simple inline display */}
+              <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center px-6">
                 <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.3, type: "spring" }}
-                >
-                  {isRefreshing ? (
-                    <Skeleton className="w-32 h-10 rounded-full bg-amber-200/60" />
-                  ) : (
-                    <div 
-                      className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full"
-                      style={{
-                        background: "linear-gradient(180deg, #FFE066 0%, #FFD700 50%, #FFC400 100%)",
-                        boxShadow: "0 4px 0 #CC9900, 0 6px 20px rgba(255,200,0,0.4), inset 0 2px 4px rgba(255,255,255,0.4)",
-                      }}
-                    >
-                      <Star className="w-6 h-6 text-amber-700 fill-amber-700 flex-shrink-0" />
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-xs uppercase tracking-wider text-amber-700 font-bold">Level</span>
-                        <span className="text-2xl font-bold text-amber-800">{levelInfo.level}</span>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-                
-                {/* XP Progress Bar - glass style overlay */}
-                <motion.div 
-                  className="w-full max-w-xs pointer-events-auto"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className="pointer-events-auto"
                 >
                   {isRefreshing ? (
-                    <Skeleton className="h-10 w-full rounded-full bg-white/30" />
+                    <Skeleton className="w-48 h-10 rounded-full bg-purple-200/40" />
                   ) : (
                     <div 
-                      className="relative h-10 rounded-full overflow-hidden"
+                      className="relative h-10 rounded-full overflow-hidden min-w-[280px]"
                       style={{ 
-                        background: "rgba(255,255,255,0.25)",
-                        backdropFilter: "blur(12px)",
-                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.1)",
-                        border: "1px solid rgba(255,255,255,0.4)",
+                        background: "rgba(80, 40, 120, 0.6)",
+                        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15)",
                       }}
                     >
                       {/* Progress fill */}
                       <motion.div 
                         className="absolute inset-y-0 left-0 rounded-full"
                         style={{
-                          background: `linear-gradient(90deg, ${theme.accent} 0%, #B794F6 50%, #C4A7F7 100%)`,
-                          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 0 12px rgba(156,106,222,0.4)",
+                          background: `linear-gradient(90deg, #7B4BBF 0%, ${theme.accent} 50%, #B794F6 100%)`,
+                          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2)",
                         }}
                         initial={{ width: 0 }}
                         animate={{ width: `${levelInfo.progress}%` }}
                         transition={{ duration: 1, delay: 0.5 }}
                       />
                       
-                      {/* XP text - dark version (visible on unfilled part) */}
-                      <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
-                        <Flame className="w-5 h-5 text-orange-400 drop-shadow-sm" />
-                        <span className="text-sm font-bold text-gray-700 drop-shadow-sm">
-                          {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                      {/* Text overlay - always white for visibility */}
+                      <div className="absolute inset-0 flex items-center justify-center gap-1.5 pointer-events-none">
+                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        <span className="text-sm font-bold text-white drop-shadow-md">
+                          Level {levelInfo.level} ({levelInfo.xpInCurrentLevel} XP) / {levelInfo.xpNeededForNextLevel} XP
                         </span>
                       </div>
-                      
-                      {/* XP text - light version (visible on filled part via clip) */}
-                      <motion.div 
-                        className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none"
-                        initial={{ clipPath: "inset(0 100% 0 0)" }}
-                        animate={{ clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)` }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      >
-                        <Flame className="w-5 h-5 text-white drop-shadow-md" />
-                        <span className="text-sm font-bold text-white drop-shadow-md">
-                          {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                        </span>
-                      </motion.div>
                     </div>
                   )}
                 </motion.div>
