@@ -19,6 +19,7 @@ import Team from "./pages/Team";
 import AdventureMap from "./pages/AdventureMap";
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
+import Discover from "./pages/Discover";
 
 const App = () => (
   <AuthProvider>
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/game" element={<Game />} />
           <Route path="/team" element={<Team />} />
           <Route path="/vip" element={<VIP />} />
+          <Route path="/discover" element={<Discover />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
