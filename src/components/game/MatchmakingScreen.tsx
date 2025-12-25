@@ -34,7 +34,7 @@ export function MatchmakingScreen() {
       {/* Interactive Hourglass Background - preloaded on app start */}
       <iframe
         ref={iframeRef}
-        src="https://my.spline.design/interactivehourglass-C5OKzkXWhesjwl8ajjoHgflj/"
+        src="https://my.spline.design/interactivehourglass-C5OKzkXWhesjwl8ajjoHgflj/?v=2"
         frameBorder="0"
         className="absolute inset-0 w-full h-full border-0"
         title="Finding Opponent"
