@@ -55,11 +55,11 @@ export function VSScreen() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-4 pb-6 overflow-auto">
+      {/* Main Content - extra top padding to prevent cropping */}
+      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-12 pb-6 overflow-auto">
         
         {/* Player 1 Section */}
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center mt-4">
           {/* Avatar with gradient ring and arc badges */}
           <motion.div
             initial={{ scale: 0 }}
@@ -102,10 +102,10 @@ export function VSScreen() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+              className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-10"
             >
-              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center gap-2 shadow-lg">
-                <span className="text-white font-bold text-sm uppercase">{playerName}</span>
+              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
+                <span className="text-white font-bold text-sm uppercase tracking-wide">{playerName}</span>
                 <span className="text-lg">{getCountryFlag(profile?.country_code || "US")}</span>
               </div>
             </motion.div>
@@ -149,10 +149,10 @@ export function VSScreen() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10"
+              className="absolute -top-5 left-1/2 -translate-x-1/2 z-10"
             >
-              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center gap-2 shadow-lg">
-                <span className="text-white font-bold text-sm uppercase">{opponent.name}</span>
+              <div className="bg-[#3D3670] px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-lg">
+                <span className="text-white font-bold text-sm uppercase tracking-wide">{opponent.name}</span>
                 <span className="text-lg">{getCountryFlag(opponent.countryCode)}</span>
               </div>
             </motion.div>
