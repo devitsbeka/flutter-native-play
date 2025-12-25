@@ -31,9 +31,9 @@ const powerUpAssets: Record<PowerUpType | "add-power", string> = {
 };
 
 const sizeClasses = {
-  sm: "w-10 h-10",
+  sm: "w-12 h-12",
   md: "w-14 h-14",
-  lg: "w-18 h-18",
+  lg: "w-24 h-24",
 };
 
 export function PowerUpBadge({
