@@ -35,11 +35,11 @@ interface MultiplayerState {
   questions: TriviaQuestion[];
   currentQuestionIndex: number;
   myScore: number;
-  opponentScore: number;
   lastAnswerCorrect: boolean | null;
   lastPointsEarned: number;
-  opponentAnswer: PlayerAnswer | null;
   timePerQuestion: number;
+  // Multi-player: track all opponent answers for current question
+  opponentAnswers: Record<string, PlayerAnswer>;
 }
 
 interface MultiplayerContextType extends MultiplayerState {
@@ -72,11 +72,10 @@ const initialState: MultiplayerState = {
   questions: [],
   currentQuestionIndex: 0,
   myScore: 0,
-  opponentScore: 0,
   lastAnswerCorrect: null,
   lastPointsEarned: 0,
-  opponentAnswer: null,
   timePerQuestion: 15,
+  opponentAnswers: {},
 };
 
 const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
@@ -205,7 +204,7 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     };
   }, [currentRoom?.id, isHost, state.phase]);
 
-  // Subscribe to opponent answers
+  // Subscribe to all player answers (multi-player support)
   useEffect(() => {
     if (!currentRoom?.id || (state.phase !== "playing" && state.phase !== "question-result")) return;
 
@@ -221,12 +220,14 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
         },
         (payload) => {
           const answer = payload.new as PlayerAnswer;
-          // Only track opponent's answers
+          // Track all players' answers (except own)
           if (answer.user_id !== user?.id && answer.question_index === state.currentQuestionIndex) {
             setState(prev => ({
               ...prev,
-              opponentAnswer: answer,
-              opponentScore: prev.opponentScore + answer.points_earned,
+              opponentAnswers: {
+                ...prev.opponentAnswers,
+                [answer.user_id]: answer,
+              },
             }));
           }
         }
@@ -238,14 +239,16 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     };
   }, [currentRoom?.id, state.phase, state.currentQuestionIndex, user?.id]);
 
-  // Watch for opponent to finish when we're waiting
+  // Watch for all players to finish when we're waiting
   useEffect(() => {
     if (state.phase !== "waiting-for-opponent") return;
     
-    const opponent = participants.find(p => p.user_id !== user?.id);
+    // Check if all other players have finished
+    const otherPlayers = participants.filter(p => p.user_id !== user?.id);
+    const allOthersFinished = otherPlayers.length > 0 && otherPlayers.every(p => p.status === "finished");
     
-    if (opponent?.status === "finished") {
-      // Opponent finished - now we can show results with their final score
+    if (allOthersFinished) {
+      // All players finished - now we can show results
       if (currentRoom) {
         updateRoomStatus(currentRoom.id, "completed");
       }
@@ -256,7 +259,6 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
         ...prev, 
         phase: "match-result",
         myScore: myParticipant?.score || prev.myScore,
-        opponentScore: opponent?.score || prev.opponentScore,
       }));
     }
   }, [state.phase, participants, user?.id, currentRoom, updateRoomStatus]);
@@ -422,16 +424,18 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
           .eq("id", currentParticipant.id);
       }
       
-      // Check if opponent has also finished
-      const opponent = participants.find(p => p.user_id !== user?.id);
-      if (opponent?.status === "finished") {
-        // Both finished - go to result
+      // Check if all other players have also finished
+      const otherPlayers = participants.filter(p => p.user_id !== user?.id);
+      const allOthersFinished = otherPlayers.every(p => p.status === "finished");
+      
+      if (allOthersFinished) {
+        // All finished - go to result
         if (currentRoom) {
           updateRoomStatus(currentRoom.id, "completed");
         }
         setState(prev => ({ ...prev, phase: "match-result" }));
       } else {
-        // Wait for opponent
+        // Wait for other players
         setState(prev => ({ ...prev, phase: "waiting-for-opponent" }));
       }
     } else {
@@ -441,7 +445,7 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
         currentQuestionIndex: nextIndex,
         lastAnswerCorrect: null,
         lastPointsEarned: 0,
-        opponentAnswer: null,
+        opponentAnswers: {}, // Reset opponent answers for new question
       }));
     }
   }, [state.currentQuestionIndex, state.questions.length, currentRoom, updateRoomStatus, participants, user?.id]);

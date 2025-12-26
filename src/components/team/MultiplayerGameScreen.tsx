@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { Check, X, Crown, Clock, User } from "lucide-react";
+import { Check, X, Crown, User, ChevronUp, ChevronDown } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type AnswerState = "idle" | "selected" | "revealed";
 
@@ -19,11 +20,10 @@ export function MultiplayerGameScreen() {
     nextQuestion,
     timePerQuestion,
     myScore,
-    opponentScore,
     phase,
     lastAnswerCorrect,
     lastPointsEarned,
-    opponentAnswer,
+    opponentAnswers,
     participants,
   } = useMultiplayer();
 
@@ -36,9 +36,15 @@ export function MultiplayerGameScreen() {
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
-  const opponent = participants.find(p => p.user_id !== user?.id);
+  
+  // Get all other players (opponents)
+  const opponents = participants.filter(p => p.user_id !== user?.id);
+  
+  // Sort participants by score for leaderboard
+  const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // Sync state with phase changes
   useEffect(() => {
@@ -49,7 +55,6 @@ export function MultiplayerGameScreen() {
       playSound("game-start");
     } else if (phase === "question-result") {
       setAnswerState("revealed");
-      // Play sound based on answer correctness
       if (lastAnswerCorrect) {
         playSound("correct-answer");
         vibrate(50);
@@ -101,14 +106,8 @@ export function MultiplayerGameScreen() {
   const isRevealed = answerState === "revealed";
   const letters = ["A", "B", "C", "D"];
 
-  // Get flag emoji
-  const getFlagEmoji = (countryCode: string) => {
-    const codePoints = countryCode
-      .toUpperCase()
-      .split("")
-      .map(char => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
-  };
+  // Count how many opponents have answered
+  const answeredCount = Object.keys(opponentAnswers).length;
 
   return (
     <div className="w-full h-[100dvh] flex flex-col bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
@@ -136,42 +135,87 @@ export function MultiplayerGameScreen() {
           {currentQuestionIndex + 1}/{questions.length}
         </div>
 
-        {/* Opponent */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full">
-            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold text-sm">{opponentScore}</span>
-          </div>
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-[#5B4BC4] border-2 border-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.5)]">
-              {opponent?.avatar_url ? (
-                <img src={opponent.avatar_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-              )}
-            </div>
-            {/* Opponent answered indicator */}
-            {opponentAnswer && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={cn(
-                  "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center",
-                  opponentAnswer.is_correct ? "bg-green-500" : "bg-red-500"
-                )}
-              >
-                {opponentAnswer.is_correct ? (
-                  <Check className="w-3 h-3 text-white" />
-                ) : (
-                  <X className="w-3 h-3 text-white" />
-                )}
-              </motion.div>
+        {/* Leaderboard toggle / opponent count */}
+        <motion.button
+          onClick={() => setShowLeaderboard(!showLeaderboard)}
+          className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/10"
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className="flex -space-x-2">
+            {opponents.slice(0, 3).map((opp, i) => (
+              <Avatar key={opp.id} className="w-6 h-6 border border-white/30" style={{ zIndex: 3 - i }}>
+                <AvatarImage src={opp.avatar_url || undefined} />
+                <AvatarFallback className="bg-purple-500 text-white text-[10px]">
+                  {opp.nickname?.charAt(0) || "?"}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {opponents.length > 3 && (
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px] text-white border border-white/30">
+                +{opponents.length - 3}
+              </div>
             )}
           </div>
-        </div>
+          {showLeaderboard ? (
+            <ChevronUp className="w-4 h-4 text-white/60" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-white/60" />
+          )}
+        </motion.button>
       </div>
+
+      {/* Leaderboard dropdown */}
+      <AnimatePresence>
+        {showLeaderboard && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 overflow-hidden"
+          >
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 mb-2 space-y-1.5">
+              {sortedParticipants.map((p, index) => (
+                <div
+                  key={p.id}
+                  className={cn(
+                    "flex items-center gap-2 p-2 rounded-lg",
+                    p.user_id === user?.id ? "bg-white/10" : ""
+                  )}
+                >
+                  <span className="w-5 text-center text-white/60 text-sm font-bold">
+                    {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                  </span>
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={p.avatar_url || undefined} />
+                    <AvatarFallback className="bg-purple-500 text-white text-[10px]">
+                      {p.nickname?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="flex-1 text-white text-sm truncate">
+                    {p.user_id === user?.id ? "შენ" : p.nickname}
+                  </span>
+                  <span className="text-white font-bold text-sm">{p.score || 0}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Answered indicator */}
+      {answeredCount > 0 && !isRevealed && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4 mb-2"
+        >
+          <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-full bg-white/10 mx-auto w-fit">
+            <span className="text-white/80 text-xs">
+              {answeredCount}/{opponents.length} უპასუხა
+            </span>
+          </div>
+        </motion.div>
+      )}
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden min-h-0">
@@ -229,7 +273,16 @@ export function MultiplayerGameScreen() {
           {currentQuestion.allAnswers.map((answer, index) => {
             const isThisSelected = selectedAnswer === answer;
             const isCorrect = answer === currentQuestion.correctAnswer;
-            const isOpponentAnswer = isRevealed && opponentAnswer?.answer === answer;
+            
+            // Find all opponents who chose this answer
+            const opponentsWhoChoseThis = isRevealed 
+              ? Object.entries(opponentAnswers)
+                  .filter(([_, ans]) => ans.answer === answer)
+                  .map(([userId, ans]) => ({
+                    ...participants.find(p => p.user_id === userId),
+                    isCorrect: ans.is_correct,
+                  }))
+              : [];
 
             let buttonBg = "bg-white";
             let letterBg = "bg-[#7DD3FC]";
@@ -293,21 +346,28 @@ export function MultiplayerGameScreen() {
                   {answer}
                 </span>
 
-                {/* Opponent answer indicator */}
-                {isOpponentAnswer && (
-                  <div className="flex items-center gap-1">
-                    <div className={cn(
-                      "w-7 h-7 rounded-full overflow-hidden border-2",
-                      opponentAnswer.is_correct ? "border-green-500" : "border-red-500"
-                    )}>
-                      {opponent?.avatar_url ? (
-                        <img src={opponent.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-purple-500 flex items-center justify-center">
-                          <User className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </div>
+                {/* Opponent avatars who chose this answer */}
+                {opponentsWhoChoseThis.length > 0 && (
+                  <div className="flex -space-x-1.5">
+                    {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
+                      <Avatar 
+                        key={opp?.id || i} 
+                        className={cn(
+                          "w-7 h-7 border-2",
+                          opp?.isCorrect ? "border-green-500" : "border-red-500"
+                        )}
+                      >
+                        <AvatarImage src={opp?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-purple-500 text-white text-[10px]">
+                          {opp?.nickname?.charAt(0) || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {opponentsWhoChoseThis.length > 4 && (
+                      <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
+                        +{opponentsWhoChoseThis.length - 4}
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.button>

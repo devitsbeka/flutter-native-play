@@ -172,6 +172,7 @@ export type Database = {
           host_user_id: string
           id: string
           max_players: number | null
+          min_players: number | null
           room_code: string
           started_at: string | null
           status: Database["public"]["Enums"]["room_status"] | null
@@ -185,6 +186,7 @@ export type Database = {
           host_user_id: string
           id?: string
           max_players?: number | null
+          min_players?: number | null
           room_code: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
@@ -198,6 +200,7 @@ export type Database = {
           host_user_id?: string
           id?: string
           max_players?: number | null
+          min_players?: number | null
           room_code?: string
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
