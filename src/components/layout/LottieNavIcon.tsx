@@ -27,7 +27,11 @@ export function LottieNavIcon({
   return (
     <div 
       className={className}
-      style={{ width: size, height: size }}
+      style={{ 
+        width: size, 
+        height: size,
+        filter: "brightness(0) saturate(100%) invert(28%) sepia(89%) saturate(1640%) hue-rotate(243deg) brightness(88%) contrast(96%)",
+      }}
     >
       <Lottie
         animationData={animationMap[type]}
