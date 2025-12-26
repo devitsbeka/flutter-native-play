@@ -415,7 +415,7 @@ export default function Index() {
             >
               {/* Avatar Circle Component */}
               <div data-walkthrough="avatar">
-                <AvatarCircle avatarUrl={profile?.avatar_url} size={320} />
+                <AvatarCircle avatarUrl={profile?.avatar_url} size={352} />
               </div>
                 
               {/* Power badges in curved arc at top of avatar */}
