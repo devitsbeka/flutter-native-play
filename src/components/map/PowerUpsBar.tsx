@@ -1,55 +1,25 @@
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-
-// Import power-up images
-import power5050 from "@/assets/powers/5050.png";
-import powerFreeze from "@/assets/powers/freeze.png";
-import powerReplace from "@/assets/powers/replace.png";
-import powerTimeDrain from "@/assets/powers/time-drain.png";
-
-interface PowerUp {
-  id: string;
-  name: string;
-  image: string;
-  quantity: number;
-  ringColor: string;
-}
+import { PowerUpBadge, PowerUpType } from "@/components/game/PowerUpBadge";
 
 interface PowerUpsBarProps {
   powerUps?: Record<string, number>;
   onAddClick?: () => void;
 }
 
+// Map from our internal IDs to PowerUpBadge types
+const typeMap: Record<string, PowerUpType> = {
+  "5050": "fifty-fifty",
+  "freeze": "freeze",
+  "replace": "replace",
+  "time-drain": "time-drain",
+};
+
 export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
-  const powers: PowerUp[] = [
-    {
-      id: "5050",
-      name: "50/50",
-      image: power5050,
-      quantity: powerUps["5050"] || 2,
-      ringColor: "linear-gradient(135deg, #F97316, #EF4444)",
-    },
-    {
-      id: "freeze",
-      name: "გაყინვა",
-      image: powerFreeze,
-      quantity: powerUps["freeze"] || 1,
-      ringColor: "linear-gradient(135deg, #3B82F6, #1D4ED8)",
-    },
-    {
-      id: "replace",
-      name: "შეცვლა",
-      image: powerReplace,
-      quantity: powerUps["replace"] || 3,
-      ringColor: "linear-gradient(135deg, #14B8A6, #0D9488)",
-    },
-    {
-      id: "time-drain",
-      name: "დრო",
-      image: powerTimeDrain,
-      quantity: powerUps["time-drain"] || 0,
-      ringColor: "linear-gradient(135deg, #6B7280, #4B5563)",
-    },
+  const powers = [
+    { id: "5050", quantity: powerUps["5050"] || 2 },
+    { id: "freeze", quantity: powerUps["freeze"] || 1 },
+    { id: "replace", quantity: powerUps["replace"] || 3 },
+    { id: "time-drain", quantity: powerUps["time-drain"] || 0 },
   ];
 
   return (
@@ -69,61 +39,27 @@ export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
       
       {/* Power-ups row */}
       <div 
-        className="flex items-center justify-center gap-4 p-4"
+        className="flex items-center justify-center gap-3"
         style={{ marginTop: "-10px" }}
       >
         {powers.map((power, index) => (
-          <motion.div
+          <PowerUpBadge
             key={power.id}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5 + index * 0.1 }}
-            className="relative"
-          >
-            {/* Ring container */}
-            <div
-              className="w-14 h-14 rounded-full p-0.5 flex items-center justify-center"
-              style={{ background: power.ringColor }}
-            >
-              <div 
-                className="w-full h-full rounded-full flex items-center justify-center overflow-hidden"
-                style={{ background: "rgba(255, 255, 255, 0.95)" }}
-              >
-                <img
-                  src={power.image}
-                  alt={power.name}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
-            </div>
-            
-            {/* Quantity badge */}
-            {power.quantity > 0 && (
-              <div
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                style={{ background: "#EF4444" }}
-              >
-                {power.quantity}
-              </div>
-            )}
-          </motion.div>
+            type={typeMap[power.id]}
+            size="sm"
+            index={index}
+            count={power.quantity}
+            disabled={power.quantity === 0}
+          />
         ))}
         
         {/* Add button */}
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.9 }}
+        <PowerUpBadge
+          type="add-power"
+          size="sm"
+          index={4}
           onClick={onAddClick}
-          className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200"
-          style={{
-            background: "rgba(255, 255, 255, 0.9)",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Plus className="w-7 h-7 text-gray-500" />
-        </motion.button>
+        />
       </div>
     </motion.div>
   );
