@@ -375,29 +375,6 @@ export default function Index() {
               )}
             </motion.div>
             
-            {/* Daily rewards button */}
-            <motion.button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,215,0,0.95) 0%, rgba(255,165,0,0.95) 100%)",
-                boxShadow: "0 2px 12px rgba(255,165,0,0.3), 0 1px 3px rgba(0,0,0,0.1)",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsDailyRewardsOpen(true)}
-              animate={{ 
-                scale: [1, 1.05, 1],
-              }}
-              transition={{ 
-                duration: 2, 
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <Gift className="w-5 h-5 text-white" />
-              <Flame className="w-4 h-4 text-white" />
-              <span className="text-sm font-bold text-white">{currentStreak || 1}</span>
-            </motion.button>
           </div>
         </header>
 
@@ -436,18 +413,18 @@ export default function Index() {
               }}
             >
               {/* Avatar image - clean display without ring */}
-              <div className="w-80 relative flex items-end justify-center" data-walkthrough="avatar">
+              <div className="w-[400px] relative flex items-end justify-center" data-walkthrough="avatar">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-auto max-h-[336px] object-contain object-bottom"
+                    className="w-full h-auto max-h-[420px] object-contain object-bottom"
                     style={{
                       backfaceVisibility: "hidden",
                     }}
                   />
                 ) : (
-                  <div className="w-full h-64 flex items-center justify-center">
+                  <div className="w-full h-80 flex items-center justify-center">
                     <span className="text-7xl">🎮</span>
                   </div>
                 )}
