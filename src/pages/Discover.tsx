@@ -5,10 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { categories, Category } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
-// Bottom nav icons
-import iconCompass from "@/assets/icons/icon-compass.png";
-import iconMap3d from "@/assets/icons/icon-map-3d.png";
-import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
+import { LottieNavIcon } from "@/components/layout/LottieNavIcon";
 
 type CategoryType = "all" | "classic" | "fun" | "educational";
 
@@ -283,7 +280,7 @@ export default function Discover() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center bg-purple-100/50">
-                <img src={iconCompass} alt="Explore" className="w-[52px] h-[52px] object-contain" />
+                <LottieNavIcon type="explore" size={52} isActive />
               </div>
               <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">აღმოაჩინე</span>
             </motion.button>
@@ -296,7 +293,7 @@ export default function Discover() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
-                <img src={iconMap3d} alt="Map" className="w-[52px] h-[52px] object-contain" />
+                <LottieNavIcon type="map" size={52} />
               </div>
               <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">რუკა</span>
             </motion.button>
@@ -314,7 +311,7 @@ export default function Discover() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
-                <img src={iconTrophy3d} alt="Rank" className="w-[52px] h-[52px] object-contain" />
+                <LottieNavIcon type="rank" size={52} />
               </div>
               <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">რანკი</span>
             </motion.button>
