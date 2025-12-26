@@ -137,12 +137,16 @@ function TeamContent() {
   // Show async result screen
   if (phase === "async-result") {
     const isChallenger = room?.host_user_id === user?.id;
+    const opponentUserId = isChallenger ? room?.challenged_user_id : room?.host_user_id;
     return (
       <AsyncResultScreen
         challengerInfo={asyncChallengerInfo || undefined}
         myScore={myScore}
         isChallenger={isChallenger}
         opponentCompleted={asyncOpponentCompleted}
+        roomCategoryId={room?.category_id || undefined}
+        roomCategoryName={room?.category_name || undefined}
+        opponentUserId={opponentUserId || undefined}
       />
     );
   }
