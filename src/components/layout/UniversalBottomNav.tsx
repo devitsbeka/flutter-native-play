@@ -36,12 +36,24 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
       />
       
       <div className="relative px-0 pb-0 overflow-visible">
-        {/* Unified white pill container */}
+        {/* Curved top edge SVG */}
+        <svg 
+          className="absolute left-0 right-0 w-full pointer-events-none"
+          style={{ top: -40, height: 42 }}
+          viewBox="0 0 100 20" 
+          preserveAspectRatio="none"
+        >
+          <path 
+            d="M0,20 L0,15 Q50,0 100,15 L100,20 Z" 
+            fill="rgba(255,255,255,0.88)"
+          />
+        </svg>
+        
+        {/* Unified white container */}
         <div 
           className="relative overflow-visible"
           style={{
             background: "rgba(255,255,255,0.88)",
-            borderRadius: "0",
             padding: "4px 20px 6px",
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
             backdropFilter: "blur(16px)",
