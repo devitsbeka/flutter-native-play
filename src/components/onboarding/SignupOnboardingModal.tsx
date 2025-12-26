@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Sparkles, User, Lock, Eye, EyeOff } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +31,105 @@ const celebrateConfetti = () => {
   fire(0.1, { spread: 120, startVelocity: 45 });
 };
 
+// Step order for determining animation direction
+const stepOrder = ["welcome", "username", "password", "creating"] as const;
+
+// Slide and fade animation variants
+const slideVariants: Variants = {
+  enterFromRight: {
+    x: 60,
+    opacity: 0,
+    scale: 0.95,
+  },
+  enterFromLeft: {
+    x: -60,
+    opacity: 0,
+    scale: 0.95,
+  },
+  center: {
+    x: 0,
+    opacity: 1,
+    scale: 1,
+  },
+  exitToLeft: {
+    x: -60,
+    opacity: 0,
+    scale: 0.95,
+  },
+  exitToRight: {
+    x: 60,
+    opacity: 0,
+    scale: 0.95,
+  },
+};
+
+// Icon animation variants
+const iconVariants: Variants = {
+  initial: {
+    scale: 0,
+    rotate: -180,
+    opacity: 0,
+  },
+  animate: {
+    scale: 1,
+    rotate: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 20,
+      delay: 0.1,
+    },
+  },
+  exit: {
+    scale: 0,
+    rotate: 180,
+    opacity: 0,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
+
+// Content stagger animation
+const contentVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.15,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: 0.05,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 24,
+    },
+  },
+  exit: { 
+    opacity: 0, 
+    y: -10,
+    transition: {
+      duration: 0.15,
+    },
+  },
+};
+
 export function SignupOnboardingModal() {
   const { 
     step, 
@@ -46,18 +145,30 @@ export function SignupOnboardingModal() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ username?: string; password?: string }>({});
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
+  const [prevStep, setPrevStep] = useState(step);
   
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   
   const isOpen = step === "welcome" || step === "username" || step === "password" || step === "creating";
   
-  // Auto-focus inputs
+  // Track step changes to determine animation direction
+  useEffect(() => {
+    if (step !== prevStep) {
+      const currentIndex = stepOrder.indexOf(step as any);
+      const prevIndex = stepOrder.indexOf(prevStep as any);
+      setDirection(currentIndex > prevIndex ? "forward" : "backward");
+      setPrevStep(step);
+    }
+  }, [step, prevStep]);
+  
+  // Auto-focus inputs with delay for animation
   useEffect(() => {
     if (step === "username") {
-      setTimeout(() => usernameRef.current?.focus(), 300);
+      setTimeout(() => usernameRef.current?.focus(), 400);
     } else if (step === "password") {
-      setTimeout(() => passwordRef.current?.focus(), 300);
+      setTimeout(() => passwordRef.current?.focus(), 400);
     }
   }, [step]);
   
@@ -104,12 +215,8 @@ export function SignupOnboardingModal() {
         throw signUpError;
       }
       
-      // Wait a bit for dramatic effect
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Celebrate with confetti!
       celebrateConfetti();
-      
       toast.success(t("success.accountCreated"));
       setStep("avatar-upload");
       
@@ -132,6 +239,10 @@ export function SignupOnboardingModal() {
     }
   };
   
+  // Get animation variants based on direction
+  const getEnterVariant = () => direction === "forward" ? "enterFromRight" : "enterFromLeft";
+  const getExitVariant = () => direction === "forward" ? "exitToLeft" : "exitToRight";
+  
   // Determine current step config
   const getStepConfig = () => {
     switch (step) {
@@ -148,7 +259,7 @@ export function SignupOnboardingModal() {
         };
       case "username":
         return {
-          icon: <User className="w-10 h-10 text-primary" />,
+          icon: <User className="w-10 h-10 text-white" />,
           title: t("onboarding.chooseUsername"),
           subtitle: t("onboarding.usernameHint"),
           primaryLabel: t("common.next"),
@@ -158,7 +269,7 @@ export function SignupOnboardingModal() {
         };
       case "password":
         return {
-          icon: <Lock className="w-10 h-10 text-primary" />,
+          icon: <Lock className="w-10 h-10 text-white" />,
           title: t("onboarding.createPassword"),
           subtitle: t("onboarding.passwordHint"),
           primaryLabel: t("auth.createAccount"),
@@ -168,7 +279,7 @@ export function SignupOnboardingModal() {
         };
       case "creating":
         return {
-          icon: "⏳",
+          icon: "✨",
           iconEmoji: true,
           title: t("onboarding.creatingAccount"),
           subtitle: t("onboarding.almostThere"),
@@ -188,28 +299,41 @@ export function SignupOnboardingModal() {
     <GameModal
       isOpen={isOpen}
       onClose={step !== "creating" ? () => setStep("idle") : undefined}
-      icon={config.iconEmoji ? (
-        <motion.span 
-          className="text-5xl"
-          animate={step === "welcome" ? { 
-            rotate: [0, -10, 10, -10, 0],
-            scale: [1, 1.1, 1],
-          } : step === "creating" ? {
-            rotate: [0, 360],
-          } : {}}
-          transition={step === "creating" ? { duration: 2, repeat: Infinity, ease: "linear" } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
-        >
-          {config.icon}
-        </motion.span>
-      ) : (
-        <motion.div
-          className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          {config.icon}
-        </motion.div>
-      )}
+      icon={
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            variants={iconVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="flex items-center justify-center"
+          >
+            {config.iconEmoji ? (
+              <motion.span 
+                className="text-5xl"
+                animate={step === "welcome" ? { 
+                  rotate: [0, -10, 10, -10, 0],
+                  scale: [1, 1.1, 1],
+                } : step === "creating" ? {
+                  scale: [1, 1.2, 1],
+                } : {}}
+                transition={step === "creating" ? { duration: 1, repeat: Infinity } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
+              >
+                {config.icon}
+              </motion.span>
+            ) : (
+              <motion.div
+                className="w-full h-full flex items-center justify-center"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {config.icon}
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      }
       title={config.title || ""}
       subtitle={config.subtitle}
       showBackButton={config.showBack}
@@ -221,104 +345,188 @@ export function SignupOnboardingModal() {
       hideFooter={config.hideFooter}
       hideCloseButton={step === "creating"}
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" custom={direction}>
+        {/* Welcome Step - empty content */}
+        {step === "welcome" && (
+          <motion.div
+            key="welcome-content"
+            variants={slideVariants}
+            initial={getEnterVariant()}
+            animate="center"
+            exit={getExitVariant()}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full min-h-[60px]"
+          />
+        )}
+        
         {/* Username Input */}
         {step === "username" && (
           <motion.div
-            key="username-input"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            key="username-content"
+            variants={slideVariants}
+            initial={getEnterVariant()}
+            animate="center"
+            exit={getExitVariant()}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="w-full"
           >
-            <div className="relative">
-              <input
-                ref={usernameRef}
-                type="text"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setErrors({});
-                }}
-                onKeyDown={(e) => e.key === "Enter" && handleNextFromUsername()}
-                placeholder={t("auth.usernamePlaceholder")}
-                className="w-full px-5 py-4 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-colors"
-                style={{
-                  boxShadow: "0 4px 0 hsl(var(--border))",
-                }}
-              />
-            </div>
-            {errors.username && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-destructive text-sm mt-3 text-center font-medium"
-              >
-                {errors.username}
-              </motion.p>
-            )}
+            <motion.div 
+              variants={contentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <motion.div variants={itemVariants} className="relative">
+                <input
+                  ref={usernameRef}
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setErrors({});
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleNextFromUsername()}
+                  placeholder={t("auth.usernamePlaceholder")}
+                  className="w-full px-5 py-4 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-all duration-200"
+                  style={{
+                    boxShadow: "0 4px 0 hsl(var(--border))",
+                  }}
+                />
+              </motion.div>
+              
+              <AnimatePresence>
+                {errors.username && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                    className="text-destructive text-sm mt-3 text-center font-medium overflow-hidden"
+                  >
+                    {errors.username}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </motion.div>
         )}
         
         {/* Password Input */}
         {step === "password" && (
           <motion.div
-            key="password-input"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            key="password-content"
+            variants={slideVariants}
+            initial={getEnterVariant()}
+            animate="center"
+            exit={getExitVariant()}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="w-full"
           >
-            <div className="relative">
-              <input
-                ref={passwordRef}
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setErrors({});
-                }}
-                onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
-                placeholder={t("auth.passwordPlaceholder")}
-                className="w-full px-5 py-4 pr-14 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-colors"
-                style={{
-                  boxShadow: "0 4px 0 hsl(var(--border))",
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-            {errors.password && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-destructive text-sm mt-3 text-center font-medium"
-              >
-                {errors.password}
-              </motion.p>
-            )}
+            <motion.div 
+              variants={contentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <motion.div variants={itemVariants} className="relative">
+                <input
+                  ref={passwordRef}
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors({});
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  className="w-full px-5 py-4 pr-14 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-all duration-200"
+                  style={{
+                    boxShadow: "0 4px 0 hsl(var(--border))",
+                  }}
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </motion.button>
+              </motion.div>
+              
+              <AnimatePresence>
+                {errors.password && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                    className="text-destructive text-sm mt-3 text-center font-medium overflow-hidden"
+                  >
+                    {errors.password}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </motion.div>
         )}
         
         {/* Creating spinner */}
         {step === "creating" && (
           <motion.div
-            key="creating"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            key="creating-content"
+            variants={slideVariants}
+            initial={getEnterVariant()}
+            animate="center"
+            exit={getExitVariant()}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="flex flex-col items-center py-4"
           >
-            <motion.div
-              className="relative"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            <motion.div 
+              variants={contentVariants}
+              initial="initial"
+              animate="animate"
+              className="flex flex-col items-center"
             >
-              <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary" />
+              <motion.div
+                variants={itemVariants}
+                className="relative"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                >
+                  <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary" />
+                </motion.div>
+                
+                {/* Pulsing glow behind spinner */}
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-primary/20 blur-xl"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              </motion.div>
+              
+              {/* Progress dots */}
+              <motion.div 
+                variants={itemVariants}
+                className="flex gap-2 mt-6"
+              >
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-primary"
+                    animate={{ 
+                      scale: [1, 1.5, 1],
+                      opacity: [0.4, 1, 0.4],
+                    }}
+                    transition={{ 
+                      duration: 0.8, 
+                      repeat: Infinity, 
+                      delay: i * 0.2,
+                    }}
+                  />
+                ))}
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
