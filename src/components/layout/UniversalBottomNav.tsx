@@ -45,7 +45,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         >
           <path 
             d="M0,20 L0,5 Q50,20 100,5 L100,20 Z" 
-            fill="rgba(255,255,255,0.88)"
+            fill="rgba(255,255,255,0.95)"
           />
         </svg>
         
@@ -53,7 +53,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         <div 
           className="relative overflow-visible"
           style={{
-            background: "rgba(255,255,255,0.88)",
+            background: "rgba(255,255,255,0.95)",
             padding: "4px 20px 6px",
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
             backdropFilter: "blur(16px)",
@@ -195,27 +195,8 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
           top: 0,
           bottom: 12,
           background: "linear-gradient(160deg, #9080b8 0%, #7a68a6 30%, #6b5a94 60%, #5d4d86 100%)",
-          boxShadow: "inset 0 3px 10px rgba(255,255,255,0.3)",
         }}
       >
-        {/* Top shine highlight */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-full"
-          style={{
-            top: 5,
-            width: "60%",
-            height: 10,
-            background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%)",
-          }}
-        />
-        
-        {/* Inner radial glow */}
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: "radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.2) 0%, transparent 50%)",
-          }}
-        />
         
         {/* Electric blue particles */}
         {[...Array(6)].map((_, i) => (
