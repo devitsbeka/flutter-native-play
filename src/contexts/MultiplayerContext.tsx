@@ -51,6 +51,7 @@ interface MultiplayerContextType extends MultiplayerState {
   
   // Actions
   createRoom: (categoryId?: string, categoryName?: string) => Promise<void>;
+  createChallengeRoom: (friendId: string, categoryId: string, categoryName: string, isOnline: boolean) => Promise<boolean>;
   joinRoom: (code: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
@@ -464,6 +465,7 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
         isHost,
         loading,
         createRoom,
+        createChallengeRoom,
         joinRoom,
         leaveRoom,
         setReady,

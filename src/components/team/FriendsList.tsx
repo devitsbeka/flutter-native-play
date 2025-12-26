@@ -24,12 +24,11 @@ import {
 
 interface FriendsListProps {
   onAddFriendClick: () => void;
-  onInviteFriend: (friendId: string) => void;
+  onQuickPlay: (friend: Friend) => void;
   onStartChat?: (friend: Friend) => void;
-  roomCode?: string;
 }
 
-export function FriendsList({ onAddFriendClick, onInviteFriend, onStartChat, roomCode }: FriendsListProps) {
+export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: FriendsListProps) {
   const { friends, pendingRequests, loading, acceptFriendRequest, declineFriendRequest, removeFriend } = useFriends();
   const { playSound, vibrate } = useSound();
   const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null);
@@ -140,10 +139,9 @@ export function FriendsList({ onAddFriendClick, onInviteFriend, onStartChat, roo
               <FriendCard
                 key={friend.id}
                 friend={friend}
-                onInvite={() => onInviteFriend(friend.friendId)}
+                onQuickPlay={() => onQuickPlay(friend)}
                 onChat={() => onStartChat?.(friend)}
                 onRemove={() => setFriendToRemove(friend)}
-                showInvite={!!roomCode}
               />
             ))}
           </AnimatePresence>
@@ -180,13 +178,12 @@ export function FriendsList({ onAddFriendClick, onInviteFriend, onStartChat, roo
 
 interface FriendCardProps {
   friend: Friend;
-  onInvite: () => void;
+  onQuickPlay: () => void;
   onChat: () => void;
   onRemove: () => void;
-  showInvite: boolean;
 }
 
-function FriendCard({ friend, onInvite, onChat, onRemove, showInvite }: FriendCardProps) {
+function FriendCard({ friend, onQuickPlay, onChat, onRemove }: FriendCardProps) {
   return (
     <motion.div
       layout
@@ -257,15 +254,10 @@ function FriendCard({ friend, onInvite, onChat, onRemove, showInvite }: FriendCa
       {/* Quick Action Buttons */}
       <div className="flex items-center gap-2 w-full">
         <motion.button
-          onClick={onInvite}
-          disabled={!friend.isOnline}
-          className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-medium transition-colors ${
-            friend.isOnline 
-              ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white" 
-              : "bg-white/10 text-white/40 cursor-not-allowed"
-          }`}
-          whileHover={friend.isOnline ? { scale: 1.02 } : {}}
-          whileTap={friend.isOnline ? { scale: 0.98 } : {}}
+          onClick={onQuickPlay}
+          className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-medium transition-colors bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <Gamepad2 className="w-3.5 h-3.5" />
           თამაში
