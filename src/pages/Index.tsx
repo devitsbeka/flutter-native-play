@@ -433,7 +433,7 @@ export default function Index() {
                   const radius = 160; // wider radius to match bigger circle
                   const radians = (angle * Math.PI) / 180;
                   const badgeWidth = 48; // approximate badge width
-                  const x = Math.sin(radians) * radius - badgeWidth / 2 - 12;
+                  const x = Math.sin(radians) * radius - badgeWidth / 2 - 6;
                   const y = -Math.cos(radians) * radius + radius;
                   
                   return (
