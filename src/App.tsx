@@ -9,6 +9,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import { SplinePreloader } from "@/components/game/SplinePreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { AdminRoute } from "@/components/admin/AdminRoute";
+import { UserPresenceTracker } from "@/components/UserPresenceTracker";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import CategoryQuizPage from "./pages/CategoryQuizPage";
@@ -43,6 +44,7 @@ const App = () => (
             
             <Toaster />
             <Sonner />
+            <UserPresenceTracker />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/adventure-map" element={<AdventureMap />} />
