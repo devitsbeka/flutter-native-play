@@ -136,92 +136,91 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
     <motion.button
       onClick={onClick}
       className="relative"
-      whileHover={{ scale: 1.06 }}
-      whileTap={{ scale: 0.94, y: 5 }}
+      whileHover={{ scale: 1.08, y: -2 }}
+      whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      {/* Subtle outer glow - not too blurry */}
+      {/* Soft ambient glow */}
       <motion.div
-        className="absolute -inset-2"
+        className="absolute -inset-3"
         style={{
-          borderRadius: "30px",
-          background: "radial-gradient(circle, rgba(80,220,180,0.35) 0%, transparent 70%)",
-          filter: "blur(8px)",
+          borderRadius: "32px",
+          background: "radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)",
+          filter: "blur(12px)",
         }}
         animate={{
-          opacity: [0.5, 0.8, 0.5],
+          opacity: [0.4, 0.7, 0.4],
+          scale: [1, 1.05, 1],
         }}
         transition={{
-          duration: 2.5,
+          duration: 3,
           repeat: Infinity,
           ease: "easeInOut",
         }}
       />
       
-      {/* 3D Base/Shadow layer - crisp edges */}
+      {/* Subtle lift shadow - very soft, no dark colors */}
       <div 
         className="absolute inset-0"
         style={{
           borderRadius: "26px",
-          background: "linear-gradient(180deg, #2A9D8F 0%, #1D7A6F 100%)",
-          transform: "translateY(5px)",
-          boxShadow: "0 4px 12px rgba(30,120,100,0.5)",
+          background: "hsl(var(--primary) / 0.15)",
+          transform: "translateY(3px)",
+          filter: "blur(4px)",
         }}
       />
       
-      {/* White border ring for polish */}
+      {/* Main button container with soft border */}
       <div 
-        className="relative w-20 h-20 p-[3px]"
+        className="relative w-[72px] h-[72px] p-[2px]"
         style={{
           borderRadius: "26px",
-          background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(220,250,240,0.8) 100%)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%)",
+          boxShadow: "0 4px 16px hsl(var(--primary) / 0.2), 0 1px 3px rgba(0,0,0,0.08)",
         }}
       >
-        {/* Main button face */}
+        {/* Main button face with primary color */}
         <div 
           className="w-full h-full overflow-hidden flex items-center justify-center"
           style={{
-            borderRadius: "23px",
-            background: "linear-gradient(160deg, #7EEFC8 0%, #50DCB4 35%, #3CC9A0 70%, #2FB08A 100%)",
+            borderRadius: "24px",
+            background: "linear-gradient(160deg, hsl(var(--primary) / 0.85) 0%, hsl(var(--primary)) 50%, hsl(var(--primary) / 0.9) 100%)",
             boxShadow: `
-              inset 0 2px 8px rgba(255,255,255,0.5),
-              inset 0 -3px 8px rgba(0,80,60,0.2)
+              inset 0 2px 12px rgba(255,255,255,0.35),
+              inset 0 -2px 8px hsl(var(--primary) / 0.3)
             `,
           }}
         >
-          {/* Top shine highlight */}
+          {/* Top shine */}
           <div
-            className="absolute top-[6px] left-1/2 -translate-x-1/2 w-10 h-3"
+            className="absolute top-[5px] left-1/2 -translate-x-1/2 w-9 h-2.5"
             style={{
-              borderRadius: "10px",
-              background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%)",
+              borderRadius: "8px",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%)",
             }}
           />
           
-          {/* Floating sparkle particles */}
-          {[...Array(4)].map((_, i) => (
+          {/* Subtle floating particles */}
+          {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute rounded-full"
               style={{
-                width: 4,
-                height: 4,
-                background: "rgba(255,255,255,0.9)",
-                left: `${25 + (i * 18)}%`,
-                top: `${35 + (i * 10)}%`,
-                boxShadow: "0 0 4px rgba(255,255,255,0.8)",
+                width: 3,
+                height: 3,
+                background: "rgba(255,255,255,0.8)",
+                left: `${30 + (i * 20)}%`,
+                top: `${40 + (i * 8)}%`,
               }}
               animate={{
-                y: [-6, 6, -6],
-                opacity: [0.3, 1, 0.3],
-                scale: [0.8, 1.3, 0.8],
+                y: [-4, 4, -4],
+                opacity: [0.4, 0.9, 0.4],
               }}
               transition={{
-                duration: 2.2 + (i * 0.4),
+                duration: 2.5 + (i * 0.3),
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: i * 0.25,
+                delay: i * 0.3,
               }}
             />
           ))}
@@ -229,22 +228,16 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
           {/* Icon */}
           {isPlayButton ? (
             <Play 
-              className="w-9 h-9 ml-1 relative z-10" 
-              style={{ 
-                color: "white", 
-                filter: "drop-shadow(0 2px 3px rgba(0,60,50,0.35))" 
-              }}
-              fill="white"
+              className="w-8 h-8 ml-0.5 relative z-10 text-primary-foreground" 
+              fill="currentColor"
               strokeWidth={0}
+              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }}
             />
           ) : (
             <Home 
-              className="w-8 h-8 relative z-10" 
-              style={{ 
-                color: "white", 
-                filter: "drop-shadow(0 2px 3px rgba(0,60,50,0.35))" 
-              }}
+              className="w-7 h-7 relative z-10 text-primary-foreground" 
               strokeWidth={2.5}
+              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }}
             />
           )}
         </div>
