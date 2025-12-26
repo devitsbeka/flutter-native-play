@@ -71,6 +71,75 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          friend_id: string
+          id: string
+          status: Database["public"]["Enums"]["friendship_status"] | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          friend_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["friendship_status"] | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          friend_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["friendship_status"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      game_rooms: {
+        Row: {
+          category_id: string | null
+          category_name: string | null
+          completed_at: string | null
+          created_at: string | null
+          host_user_id: string
+          id: string
+          max_players: number | null
+          room_code: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["room_status"] | null
+          total_questions: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          category_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          host_user_id: string
+          id?: string
+          max_players?: number | null
+          room_code: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["room_status"] | null
+          total_questions?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          category_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          host_user_id?: string
+          id?: string
+          max_players?: number | null
+          room_code?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["room_status"] | null
+          total_questions?: number | null
+        }
+        Relationships: []
+      }
       game_sessions: {
         Row: {
           completed_at: string | null
@@ -140,6 +209,50 @@ export type Database = {
         }
         Relationships: []
       }
+      player_answers: {
+        Row: {
+          answer: string
+          answered_at: string | null
+          id: string
+          is_correct: boolean
+          points_earned: number
+          question_index: number
+          room_id: string
+          time_remaining: number
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          answered_at?: string | null
+          id?: string
+          is_correct: boolean
+          points_earned?: number
+          question_index: number
+          room_id: string
+          time_remaining: number
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          answered_at?: string | null
+          id?: string
+          is_correct?: boolean
+          points_earned?: number
+          question_index?: number
+          room_id?: string
+          time_remaining?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_answers_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -184,6 +297,97 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      room_participants: {
+        Row: {
+          avatar_url: string | null
+          country_code: string | null
+          current_question: number | null
+          id: string
+          is_host: boolean | null
+          joined_at: string | null
+          nickname: string
+          room_id: string
+          score: number | null
+          status: Database["public"]["Enums"]["participant_status"] | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          country_code?: string | null
+          current_question?: number | null
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string | null
+          nickname: string
+          room_id: string
+          score?: number | null
+          status?: Database["public"]["Enums"]["participant_status"] | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          country_code?: string | null
+          current_question?: number | null
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string | null
+          nickname?: string
+          room_id?: string
+          score?: number | null
+          status?: Database["public"]["Enums"]["participant_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          difficulty: string | null
+          id: string
+          incorrect_answers: Json
+          question_index: number
+          question_text: string
+          room_id: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          incorrect_answers: Json
+          question_index: number
+          question_text: string
+          room_id: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          difficulty?: string | null
+          id?: string
+          incorrect_answers?: Json
+          question_index?: number
+          question_text?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_questions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_category_progress: {
         Row: {
@@ -412,10 +616,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_room_code: { Args: never; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      friendship_status: "pending" | "accepted" | "blocked"
+      participant_status:
+        | "joined"
+        | "ready"
+        | "playing"
+        | "finished"
+        | "disconnected"
+      room_status: "waiting" | "ready" | "playing" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -542,6 +753,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      friendship_status: ["pending", "accepted", "blocked"],
+      participant_status: [
+        "joined",
+        "ready",
+        "playing",
+        "finished",
+        "disconnected",
+      ],
+      room_status: ["waiting", "ready", "playing", "completed", "cancelled"],
+    },
   },
 } as const
