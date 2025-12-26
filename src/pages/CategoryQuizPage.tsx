@@ -252,7 +252,15 @@ export default function CategoryQuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center relative">
+        {/* Back button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-4 left-4 z-20 p-2.5 rounded-full bg-foreground/10 backdrop-blur-sm hover:bg-foreground/20 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
