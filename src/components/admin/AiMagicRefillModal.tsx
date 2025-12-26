@@ -34,6 +34,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminCategory } from "@/hooks/useAdminCategories";
 import { cn } from "@/lib/utils";
 import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
+import { QuestionPreviewMockup } from "./QuestionPreviewMockup";
 
 interface GeneratedQuestion {
   id: string;
@@ -112,6 +113,7 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     difficulty: string;
   } | null>(null);
   const [currentBatch, setCurrentBatch] = useState({ current: 0, total: 0 });
+  const [previewQuestion, setPreviewQuestion] = useState<GeneratedQuestion | null>(null);
   const abortRef = useRef(false);
   const existingQuestionsRef = useRef<Map<string, string[]>>(new Map());
   const generatedTextsRef = useRef<Set<string>>(new Set());
@@ -380,6 +382,23 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
 
   const dismissAllPending = () => {
     const pendingQuestions = generatedQuestions.filter((q) => q.status === "pending");
+    pendingQuestions.forEach((q) => dismissQuestion(q.id));
+  };
+
+  // Category-level approve/dismiss
+  const approveCategoryPending = async (categoryId: string) => {
+    const pendingQuestions = generatedQuestions.filter(
+      (q) => q.category_id === categoryId && q.status === "pending"
+    );
+    for (const question of pendingQuestions) {
+      await approveQuestion(question);
+    }
+  };
+
+  const dismissCategoryPending = (categoryId: string) => {
+    const pendingQuestions = generatedQuestions.filter(
+      (q) => q.category_id === categoryId && q.status === "pending"
+    );
     pendingQuestions.forEach((q) => dismissQuestion(q.id));
   };
 
@@ -775,6 +794,44 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
                   </div>
                 )}
 
+                {/* Floating Preview Mockup */}
+                <AnimatePresence>
+                  {previewQuestion && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                      className="sticky top-0 z-10 mb-4"
+                    >
+                      <div className="bg-gradient-to-br from-violet-500/5 via-purple-500/5 to-fuchsia-500/5 rounded-2xl p-4 border border-purple-500/20">
+                        <div className="flex items-start gap-4">
+                          <QuestionPreviewMockup question={previewQuestion} className="scale-75 origin-top-left -my-8 -mx-2" />
+                          <div className="flex-1 min-w-0 pt-2">
+                            <p className="text-xs text-muted-foreground mb-1">Preview</p>
+                            <p className="font-medium text-sm truncate">{previewQuestion.question_text}</p>
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant="secondary" className="text-[10px]">
+                                {previewQuestion.category_name}
+                              </Badge>
+                              <Badge 
+                                variant="secondary" 
+                                className={cn(
+                                  "text-[10px]",
+                                  previewQuestion.difficulty === "easy" && "bg-emerald-500/20 text-emerald-600",
+                                  previewQuestion.difficulty === "medium" && "bg-amber-500/20 text-amber-600",
+                                  previewQuestion.difficulty === "hard" && "bg-red-500/20 text-red-600"
+                                )}
+                              >
+                                {previewQuestion.difficulty}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Questions by Category */}
                 {Object.entries(questionsByCategory).map(([categoryId, questions]) => {
                   const category = categories.find((c) => c.id === categoryId);
@@ -784,21 +841,51 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
 
                   return (
                     <div key={categoryId} className="border rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => toggleCategoryExpand(categoryId)}
-                        className="w-full flex items-center gap-3 p-3 bg-muted/30 hover:bg-muted/50 transition-colors"
-                      >
-                        <span className="text-xl">{category?.icon}</span>
-                        <span className="flex-1 font-medium text-left">{category?.name}</span>
-                        <Badge variant="secondary">{questions.length}</Badge>
+                      <div className="flex items-center gap-2 p-3 bg-muted/30">
+                        <button
+                          onClick={() => toggleCategoryExpand(categoryId)}
+                          className="flex-1 flex items-center gap-3 hover:opacity-80 transition-opacity"
+                        >
+                          <span className="text-xl">{category?.icon}</span>
+                          <span className="flex-1 font-medium text-left">{category?.name}</span>
+                          <Badge variant="secondary">{questions.length}</Badge>
+                          {pendingCount > 0 && (
+                            <Badge className="bg-amber-500">{pendingCount} pending</Badge>
+                          )}
+                          {approvedCount > 0 && (
+                            <Badge className="bg-emerald-500">{approvedCount} approved</Badge>
+                          )}
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                        
+                        {/* Category-level bulk actions */}
                         {pendingCount > 0 && (
-                          <Badge className="bg-amber-500">{pendingCount} pending</Badge>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              className="h-7 px-2 bg-emerald-500 hover:bg-emerald-600 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                approveCategoryPending(categoryId);
+                              }}
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              All
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-500/10 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                dismissCategoryPending(categoryId);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         )}
-                        {approvedCount > 0 && (
-                          <Badge className="bg-emerald-500">{approvedCount} approved</Badge>
-                        )}
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </button>
+                      </div>
 
                       <AnimatePresence>
                         {isExpanded && (
@@ -812,11 +899,14 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
                               {questions.map((q) => (
                                 <div
                                   key={q.id}
+                                  onMouseEnter={() => setPreviewQuestion(q)}
+                                  onMouseLeave={() => setPreviewQuestion(null)}
                                   className={cn(
-                                    "p-3 rounded-lg border transition-all",
+                                    "p-3 rounded-lg border transition-all cursor-pointer",
                                     q.status === "approved" && "bg-emerald-500/5 border-emerald-500/30",
                                     q.status === "dismissed" && "bg-red-500/5 border-red-500/30 opacity-50",
-                                    q.status === "pending" && "bg-card hover:shadow-sm"
+                                    q.status === "pending" && "bg-card hover:shadow-sm hover:ring-2 hover:ring-purple-500/30",
+                                    previewQuestion?.id === q.id && "ring-2 ring-purple-500"
                                   )}
                                 >
                                   {editingQuestionId === q.id && editForm ? (
@@ -917,14 +1007,14 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
                   );
                 })}
 
-                {/* Empty State */}
+                {/* Empty State with Preview */}
                 {generatedQuestions.length === 0 && !isRunning && (
-                  <div className="text-center py-16">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 flex items-center justify-center">
-                      <Sparkles className="h-10 w-10 text-purple-500/50" />
-                    </div>
+                  <div className="flex flex-col items-center py-8">
+                    {/* Preview Mockup */}
+                    <QuestionPreviewMockup question={null} className="mb-6 scale-90" />
+                    
                     <h3 className="text-lg font-semibold mb-2">Ready to Generate</h3>
-                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                    <p className="text-muted-foreground text-sm max-w-xs mx-auto text-center">
                       Select categories from the left panel and click "Generate Questions" to start
                     </p>
                   </div>
