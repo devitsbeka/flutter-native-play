@@ -94,7 +94,7 @@ export function VideoAdventureMap() {
         </motion.div>
 
         {/* Center content - Level Circle */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-start justify-center pt-8">
           {!loading && <LevelCircle totalPoints={totalPoints} />}
         </div>
 

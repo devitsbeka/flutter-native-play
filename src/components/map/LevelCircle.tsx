@@ -14,7 +14,6 @@ export function LevelCircle({ totalPoints }: LevelCircleProps) {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: "spring", duration: 0.6 }}
       className="flex flex-col items-center"
-      style={{ transform: "translateY(-80px)" }}
     >
       {/* Main Circle Container */}
       <div className="relative w-44 h-44">
