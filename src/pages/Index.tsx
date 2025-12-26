@@ -412,19 +412,19 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image - clean display without ring */}
-              <div className="w-[400px] relative flex items-end justify-center" data-walkthrough="avatar">
+              {/* Avatar image - circular display */}
+              <div className="w-[280px] h-[280px] relative flex items-center justify-center" data-walkthrough="avatar">
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-auto max-h-[420px] object-contain object-bottom"
+                    className="w-full h-full object-cover rounded-full border-4 border-white/20 shadow-2xl"
                     style={{
                       backfaceVisibility: "hidden",
                     }}
                   />
                 ) : (
-                  <div className="w-full h-80 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full bg-background/30 border-4 border-white/20 flex items-center justify-center">
                     <span className="text-7xl">🎮</span>
                   </div>
                 )}
