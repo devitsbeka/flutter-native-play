@@ -28,7 +28,7 @@ const theme = {
 };
 
 // Convert country code to flag emoji
-const getFlagEmoji = (countryCode: string) => {
+const getFlagEmoji = (countryCode: string): string => {
   const codePoints = countryCode
     .toUpperCase()
     .split('')
