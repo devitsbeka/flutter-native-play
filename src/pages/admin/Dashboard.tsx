@@ -13,7 +13,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
-import { useAdminQuestions } from '@/hooks/useAdminQuestions';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -22,20 +21,36 @@ import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
 
 export default function AdminDashboard() {
   const { categories } = useAdminCategories();
-  const { questions } = useAdminQuestions();
   const { onlineUsers, onlineCount, awayCount } = useOnlineUsers();
   const [totalGameSessions, setTotalGameSessions] = useState(0);
   const [showMagicRefill, setShowMagicRefill] = useState(false);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [activeQuestions, setActiveQuestions] = useState(0);
 
   useEffect(() => {
     const fetchStats = async () => {
       const today = new Date().toISOString().split('T')[0];
-      const { count } = await supabase
+      
+      // Fetch game sessions count
+      const { count: sessionsCount } = await supabase
         .from('game_sessions')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today);
       
-      setTotalGameSessions(count || 0);
+      // Fetch total questions count (bypasses 1000 row limit)
+      const { count: totalQ } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true });
+      
+      // Fetch active questions count
+      const { count: activeQ } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+      
+      setTotalGameSessions(sessionsCount || 0);
+      setTotalQuestions(totalQ || 0);
+      setActiveQuestions(activeQ || 0);
     };
     fetchStats();
   }, []);
@@ -51,8 +66,8 @@ export default function AdminDashboard() {
     },
     {
       title: 'კითხვები',
-      value: questions.length,
-      subValue: `${questions.filter(q => q.is_active).length} აქტიური`,
+      value: totalQuestions,
+      subValue: `${activeQuestions} აქტიური`,
       icon: HelpCircle,
       gradient: 'from-violet-500 to-purple-500',
       link: '/admin/questions',
@@ -241,7 +256,7 @@ export default function AdminDashboard() {
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-violet-500">
-                {questions.filter(q => q.is_active).length}
+                {activeQuestions}
               </p>
               <p className="text-xs text-muted-foreground">აქტიური კითხვები</p>
             </CardContent>
@@ -249,7 +264,7 @@ export default function AdminDashboard() {
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-amber-500">
-                {Math.round(questions.length / Math.max(categories.length, 1))}
+                {Math.round(totalQuestions / Math.max(categories.length, 1))}
               </p>
               <p className="text-xs text-muted-foreground">საშ. კითხვა/კატეგ.</p>
             </CardContent>
