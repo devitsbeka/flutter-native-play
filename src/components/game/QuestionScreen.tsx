@@ -167,7 +167,7 @@ export function QuestionScreen() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
         {/* Question card */}
-        <div className="bg-[#5B4BC4] rounded-3xl p-5 mb-4 flex-shrink-0">
+        <div className="bg-[#5B4BC4] rounded-3xl p-5 mb-4 flex-shrink-0 relative">
           {/* Timer progress */}
           <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-4">
             <motion.div
@@ -182,30 +182,32 @@ export function QuestionScreen() {
             />
           </div>
 
-          {/* Result banner */}
-          <AnimatePresence>
-            {isRevealed && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={cn(
-                  "mb-3 py-2 px-4 rounded-xl flex items-center justify-center gap-2",
-                  lastAnswerCorrect ? "bg-success/20" : "bg-destructive/20"
-                )}
-              >
-                <div className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center",
-                  lastAnswerCorrect ? "bg-success" : "bg-destructive"
-                )}>
-                  {lastAnswerCorrect ? <Check className="w-4 h-4 text-white" /> : <X className="w-4 h-4 text-white" />}
-                </div>
-                <span className="text-white font-bold">
-                  {lastAnswerCorrect ? `+${lastPointsEarned} points!` : "Wrong!"}
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Result banner - absolute positioned to prevent layout shift */}
+          <div className="h-12 mb-2">
+            <AnimatePresence>
+              {isRevealed && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className={cn(
+                    "py-2 px-4 rounded-xl flex items-center justify-center gap-2",
+                    lastAnswerCorrect ? "bg-success/20" : "bg-destructive/20"
+                  )}
+                >
+                  <div className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center",
+                    lastAnswerCorrect ? "bg-success" : "bg-destructive"
+                  )}>
+                    {lastAnswerCorrect ? <Check className="w-4 h-4 text-white" /> : <X className="w-4 h-4 text-white" />}
+                  </div>
+                  <span className="text-white font-bold">
+                    {lastAnswerCorrect ? `+${lastPointsEarned} ქულა!` : "არასწორია!"}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Question text */}
           <p className="text-white text-2xl font-bold italic text-center leading-snug">
@@ -213,8 +215,8 @@ export function QuestionScreen() {
           </p>
         </div>
 
-        {/* Answer buttons */}
-        <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-auto">
+        {/* Answer buttons - fixed height container */}
+        <div className="flex-1 flex flex-col gap-3 min-h-0">
           {visibleAnswers.map((answer, visibleIndex) => {
             const originalIndex = currentQuestion.allAnswers.indexOf(answer);
             const isThisSelected = selectedAnswer === answer;
@@ -261,7 +263,7 @@ export function QuestionScreen() {
                 disabled={answerState !== "idle"}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-2xl text-left relative",
-                  "disabled:cursor-not-allowed min-h-[64px]",
+                  "disabled:cursor-not-allowed h-16",
                   buttonBg,
                   shadow
                 )}
@@ -298,26 +300,22 @@ export function QuestionScreen() {
           })}
         </div>
 
-        {/* Next Button */}
-        <AnimatePresence>
-          {isRevealed && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-4 flex-shrink-0"
+        {/* Next Button - always reserve space to prevent jumping */}
+        <div className="mt-4 flex-shrink-0 h-14">
+          <div className={cn(
+            "transition-opacity duration-200",
+            isRevealed ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            <ChunkyButton
+              variant="primary"
+              size="lg"
+              onClick={handleNext}
+              className="w-full"
             >
-              <ChunkyButton
-                variant="primary"
-                size="lg"
-                onClick={handleNext}
-                className="w-full"
-              >
-                {currentQuestionIndex < questions.length - 1 ? "Next Question" : "See Results"}
-              </ChunkyButton>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
+            </ChunkyButton>
+          </div>
+        </div>
       </div>
     </div>
   );

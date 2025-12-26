@@ -12,51 +12,15 @@ export interface TriviaQuestion {
   imageUrl?: string;
 }
 
-interface OpenTDBResponse {
-  response_code: number;
-  results: {
-    category: string;
-    type: string;
-    difficulty: string;
-    question: string;
-    correct_answer: string;
-    incorrect_answers: string[];
-  }[];
-}
-
-// Map Open Trivia DB categories
-const categoryMap: Record<number, string> = {
-  9: "General Knowledge",
-  10: "Books",
-  11: "Film",
-  12: "Music",
-  13: "Musicals & Theatre",
-  14: "Television",
-  15: "Video Games",
-  16: "Board Games",
-  17: "Science & Nature",
-  18: "Computers",
-  19: "Mathematics",
-  20: "Mythology",
-  21: "Sports",
-  22: "Geography",
-  23: "History",
-  24: "Politics",
-  25: "Art",
-  26: "Celebrities",
-  27: "Animals",
-  28: "Vehicles",
-  29: "Comics",
-  30: "Gadgets",
-  31: "Anime & Manga",
-  32: "Cartoons",
-};
-
-function decodeHTML(html: string): string {
-  const txt = document.createElement("textarea");
-  txt.innerHTML = html;
-  return txt.value;
-}
+// Georgian categories for the game
+const georgianCategories = [
+  { id: "general", name: "ზოგადი ცოდნა" },
+  { id: "geography", name: "გეოგრაფია" },
+  { id: "history", name: "ისტორია" },
+  { id: "science", name: "მეცნიერება" },
+  { id: "culture", name: "კულტურა" },
+  { id: "sports", name: "სპორტი" },
+];
 
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -67,32 +31,15 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-async function searchQuestionImage(question: string, category: string): Promise<string | undefined> {
-  try {
-    const { data, error } = await supabase.functions.invoke('search-question-image', {
-      body: { question, category }
-    });
-    
-    if (error) {
-      console.error('Error searching image:', error);
-      return undefined;
-    }
-    
-    return data?.imageUrl;
-  } catch (err) {
-    console.error('Failed to search image:', err);
-    return undefined;
+// Hash a question for tracking
+function hashQuestion(question: string): string {
+  let hash = 0;
+  for (let i = 0; i < question.length; i++) {
+    const char = question.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
   }
-}
-
-// Preload image into browser cache
-function preloadImage(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-    img.src = url;
-  });
+  return hash.toString(36);
 }
 
 export function useTrivia() {
@@ -101,89 +48,93 @@ export function useTrivia() {
   const [error, setError] = useState<string | null>(null);
   const [preparationProgress, setPreparationProgress] = useState(0);
   const [imagesReady, setImagesReady] = useState(false);
+  const [askedQuestionHashes, setAskedQuestionHashes] = useState<Set<string>>(new Set());
 
-  const fetchQuestions = useCallback(async (amount: number = 5) => {
+  const fetchQuestions = useCallback(async (
+    amount: number = 5,
+    category?: string,
+    level: number = 1,
+    excludeHashes: string[] = []
+  ) => {
     setLoading(true);
     setError(null);
     setPreparationProgress(0);
     setImagesReady(false);
 
     try {
-      // Get random category or mixed
-      const categoryIds = Object.keys(categoryMap).map(Number);
-      const randomCategory = categoryIds[Math.floor(Math.random() * categoryIds.length)];
-      
-      const response = await fetch(
-        `https://opentdb.com/api.php?amount=${amount}&category=${randomCategory}&type=multiple`
-      );
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch questions");
-      }
+      // Select random category if not provided
+      const selectedCategory = category 
+        ? georgianCategories.find(c => c.id === category) || georgianCategories[0]
+        : georgianCategories[Math.floor(Math.random() * georgianCategories.length)];
 
-      const data: OpenTDBResponse = await response.json();
+      setPreparationProgress(10);
 
-      if (data.response_code !== 0) {
-        throw new Error("No questions available");
-      }
-
-      setPreparationProgress(20);
-
-      const formattedQuestions: TriviaQuestion[] = data.results.map((q, index) => {
-        const correctAnswer = decodeHTML(q.correct_answer);
-        const incorrectAnswers = q.incorrect_answers.map(decodeHTML);
-        const allAnswers = shuffleArray([correctAnswer, ...incorrectAnswers]);
-
-        return {
-          id: `q-${index}-${Date.now()}`,
-          category: q.category,
-          difficulty: q.difficulty as "easy" | "medium" | "hard",
-          question: decodeHTML(q.question),
-          correctAnswer,
-          incorrectAnswers,
-          allAnswers,
-        };
+      // Call the Georgian trivia edge function
+      const { data, error: fetchError } = await supabase.functions.invoke('generate-category-trivia', {
+        body: {
+          category: selectedCategory.name,
+          categoryId: selectedCategory.id,
+          level,
+          count: amount + 3, // Request more to filter duplicates
+        }
       });
 
-      // Fetch images for all questions in parallel
-      const questionsWithImages = await Promise.all(
-        formattedQuestions.map(async (q, index) => {
-          const imageUrl = await searchQuestionImage(q.question, q.category);
-          setPreparationProgress(20 + Math.floor(((index + 1) / formattedQuestions.length) * 50));
-          return { ...q, imageUrl };
+      if (fetchError) {
+        console.error("Error fetching Georgian questions:", fetchError);
+        throw new Error(fetchError.message || "კითხვების ჩატვირთვა ვერ მოხერხდა");
+      }
+
+      if (!data?.questions || !Array.isArray(data.questions)) {
+        throw new Error("კითხვები არ მოიძებნა");
+      }
+
+      setPreparationProgress(50);
+
+      // Format and filter questions
+      const allHashes = new Set([...askedQuestionHashes, ...excludeHashes]);
+      
+      const formattedQuestions: TriviaQuestion[] = data.questions
+        .map((q: any, index: number) => {
+          const correctAnswer = q.correct_answer;
+          const incorrectAnswers = q.incorrect_answers || [];
+          const allAnswers = shuffleArray([correctAnswer, ...incorrectAnswers]);
+          const questionHash = hashQuestion(q.question);
+
+          return {
+            id: `q-${index}-${Date.now()}`,
+            category: selectedCategory.name,
+            difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
+            question: q.question,
+            correctAnswer,
+            incorrectAnswers,
+            allAnswers,
+            hash: questionHash,
+          };
         })
-      );
+        .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash))
+        .slice(0, amount);
 
-      setPreparationProgress(70);
+      // Track these questions as asked
+      const newHashes = formattedQuestions.map((q: any) => q.hash);
+      setAskedQuestionHashes(prev => new Set([...prev, ...newHashes]));
 
-      // Preload all images into browser cache
-      await Promise.all(
-        questionsWithImages
-          .filter(q => q.imageUrl)
-          .map(async (q, index) => {
-            if (q.imageUrl) {
-              try {
-                await preloadImage(q.imageUrl);
-              } catch (e) {
-                console.warn(`Failed to preload image for question ${index}`, e);
-              }
-              setPreparationProgress(70 + Math.floor(((index + 1) / questionsWithImages.length) * 30));
-            }
-          })
-      );
-
-      setQuestions(questionsWithImages);
       setPreparationProgress(100);
+      setQuestions(formattedQuestions);
       setImagesReady(true);
       
-      return questionsWithImages;
+      return formattedQuestions;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : "შეცდომა მოხდა";
       setError(message);
+      console.error("Trivia fetch error:", err);
       return [];
     } finally {
       setLoading(false);
     }
+  }, [askedQuestionHashes]);
+
+  const resetAskedQuestions = useCallback(() => {
+    setAskedQuestionHashes(new Set());
   }, []);
 
   return {
@@ -193,6 +144,7 @@ export function useTrivia() {
     fetchQuestions,
     preparationProgress,
     imagesReady,
+    resetAskedQuestions,
   };
 }
 

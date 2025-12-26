@@ -115,31 +115,29 @@ export function MatchmakingScreen() {
 
   return (
     <div className="h-full w-full flex flex-col relative overflow-hidden">
-      {/* Background comes from parent GameContainer - no local iframe */}
-      
-      {/* Header - EXACT same as VSScreen */}
+      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 relative z-10">
         <button 
           onClick={() => navigate("/")}
-          className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
+          className="w-10 h-10 rounded-full bg-foreground/20 backdrop-blur-sm flex items-center justify-center"
         >
-          <ChevronLeft className="w-6 h-6 text-white" />
+          <ChevronLeft className="w-6 h-6 text-foreground" />
         </button>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 bg-foreground/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
           <span className="text-xl">👑</span>
-          <span className="text-white font-bold text-lg">20</span>
+          <span className="text-foreground font-bold text-lg">20</span>
         </div>
       </div>
 
-      {/* Main Content - EXACT same layout as VSScreen */}
-      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-12 pb-6 overflow-auto">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-start px-6 pt-8 pb-6 overflow-auto">
         
-        {/* Player 1 Section - NO ANIMATION to prevent re-appearing */}
+        {/* Player Section */}
         <div className="flex flex-col items-center mt-4">
-          {/* Avatar with power-ups arc - NO motion wrapper */}
+          {/* Avatar with power-ups arc */}
           <div className="relative">
-            {/* Power-ups arc - EXACT same as VSScreen */}
+            {/* Power-ups arc */}
             {topArcPositions.map((pos, index) => {
               const types: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
               const type = types[index];
@@ -163,23 +161,32 @@ export function MatchmakingScreen() {
               );
             })}
 
-            {/* Avatar ring - EXACT same size/style as VSScreen */}
-            <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-red-500 via-purple-500 to-blue-500">
-              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="Your avatar" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-6xl">😊</span>
-                )}
+            {/* Avatar container with fade overlay */}
+            <div className="relative">
+              <div className="w-36 h-36 rounded-full p-2 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-500 shadow-lg shadow-cyan-500/30">
+                <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center overflow-hidden">
+                  {profile?.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt="Your avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-6xl">😊</span>
+                  )}
+                </div>
               </div>
+              {/* Fade overlay at bottom of avatar */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 h-16 rounded-b-full pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent 0%, rgba(139, 120, 180, 0.6) 60%, rgba(139, 120, 180, 0.9) 100%)'
+                }}
+              />
             </div>
           </div>
 
-          {/* Player info badge - EXACT same margin as VSScreen */}
+          {/* Player info badge */}
           <div className="-mt-4 z-10">
             <PlayerInfoBadge
               name={t("game.you")}
@@ -192,11 +199,13 @@ export function MatchmakingScreen() {
           </div>
         </div>
 
-        {/* VS Text - EXACT same as VSScreen */}
-        <div className="my-3">
-          <span className="font-display text-5xl font-bold text-[#FFD700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] tracking-wide">
-            VS
-          </span>
+        {/* VS Text */}
+        <div className="my-4">
+          <div className="bg-foreground/10 backdrop-blur-sm px-6 py-2 rounded-full">
+            <span className="font-display text-5xl font-bold text-[#FFD700] drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] tracking-wide">
+              VS
+            </span>
+          </div>
         </div>
 
         {/* Opponent Section - Slot Machine */}
@@ -225,10 +234,10 @@ export function MatchmakingScreen() {
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center justify-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20"
+                  className="flex items-center justify-center gap-2 bg-foreground/20 backdrop-blur-md px-4 py-2 rounded-full border border-foreground/10"
                 >
                   <span className="text-lg">{currentFlag}</span>
-                  <span className="text-white/80 font-medium text-sm tracking-wide">
+                  <span className="text-foreground font-medium text-sm tracking-wide">
                     {slotPhase === "slowing" ? t("game.almostThere") : t("game.searching")}
                   </span>
                 </motion.div>
@@ -236,7 +245,7 @@ export function MatchmakingScreen() {
             </AnimatePresence>
           </div>
 
-          {/* Slot Machine Avatar - EXACT same size as VSScreen */}
+          {/* Slot Machine Avatar */}
           <div className="relative">
             {/* Glow effect when found */}
             <AnimatePresence>
@@ -254,7 +263,7 @@ export function MatchmakingScreen() {
             {/* Spinning ring effect during search */}
             {slotPhase !== "found" && (
               <motion.div
-                className="absolute inset-[-4px] rounded-full border-2 border-dashed border-white/30"
+                className="absolute inset-[-4px] rounded-full border-2 border-dashed border-foreground/30"
                 animate={{ rotate: 360 }}
                 transition={{ 
                   duration: slotPhase === "slowing" ? 3 : 1.5, 
@@ -264,28 +273,37 @@ export function MatchmakingScreen() {
               />
             )}
 
-            {/* Avatar circle - EXACT same size as VSScreen */}
-            <motion.div 
-              className={`w-36 h-36 rounded-full p-2 transition-all duration-300 ${
-                slotPhase === "found" 
-                  ? "bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500" 
-                  : "bg-gradient-to-br from-red-500 via-purple-500 to-blue-500"
-              }`}
-              animate={slotPhase === "found" ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center relative overflow-hidden">
-                {currentAvatar ? (
-                  <img 
-                    src={currentAvatar} 
-                    alt="Opponent avatar" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-6xl">?</span>
-                )}
-              </div>
-            </motion.div>
+            {/* Avatar container with fade overlay */}
+            <div className="relative">
+              <motion.div 
+                className={`w-36 h-36 rounded-full p-2 transition-all duration-300 ${
+                  slotPhase === "found" 
+                    ? "bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 shadow-lg shadow-amber-500/30" 
+                    : "bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 shadow-lg shadow-purple-500/30"
+                }`}
+                animate={slotPhase === "found" ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <div className="w-full h-full rounded-full bg-[#6B5BC4] flex items-center justify-center relative overflow-hidden">
+                  {currentAvatar ? (
+                    <img 
+                      src={currentAvatar} 
+                      alt="Opponent avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-6xl">?</span>
+                  )}
+                </div>
+              </motion.div>
+              {/* Fade overlay at bottom of avatar */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 h-16 rounded-b-full pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent 0%, rgba(139, 120, 180, 0.6) 60%, rgba(139, 120, 180, 0.9) 100%)'
+                }}
+              />
+            </div>
 
             {/* Sparkle particles when found */}
             <AnimatePresence>
@@ -317,33 +335,37 @@ export function MatchmakingScreen() {
         </div>
 
         {/* Status Text */}
-        <div className="mt-8">
+        <div className="mt-6">
           <AnimatePresence mode="wait">
             {slotPhase === "found" ? (
-              <motion.p
+              <motion.div
                 key="found-text"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="text-2xl font-bold text-emerald-400 tracking-wider"
+                className="bg-success/20 backdrop-blur-sm px-6 py-2 rounded-full border border-success/30"
               >
-                {t("game.matchFound")}
-              </motion.p>
+                <span className="text-xl font-bold text-success tracking-wider">
+                  {t("game.matchFound")}
+                </span>
+              </motion.div>
             ) : (
-              <motion.p
+              <motion.div
                 key="searching-text"
                 initial={{ opacity: 1 }}
                 animate={{ opacity: 1 }}
-                className="text-lg text-white/70 tracking-wide"
+                className="bg-foreground/10 backdrop-blur-sm px-6 py-2 rounded-full"
               >
-                {t("game.findingOpponent")}
-                <motion.span
-                  animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  ...
-                </motion.span>
-              </motion.p>
+                <span className="text-lg text-foreground/80 tracking-wide">
+                  {t("game.findingOpponent")}
+                  <motion.span
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    ...
+                  </motion.span>
+                </span>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

@@ -100,7 +100,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
-  const { fetchQuestions, loading, preparationProgress } = useTrivia();
+  const { fetchQuestions, loading, preparationProgress, resetAskedQuestions } = useTrivia();
 
   const startMatchmaking = useCallback(async () => {
     setState(prev => ({ ...prev, phase: "matchmaking" }));
@@ -108,10 +108,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Generate opponent while starting to fetch questions
     const opponent = generateFakeOpponent();
     
-    // Start fetching questions immediately in background
-    const questionsPromise = fetchQuestions(5);
+    // Start fetching Georgian questions immediately in background
+    // Pass level 1 and random category - the hook will select from Georgian categories
+    const questionsPromise = fetchQuestions(5, undefined, 1);
     
-    // Matchmaking screen lasts ~5 seconds for the interactive hourglass experience
+    // Matchmaking screen lasts ~5 seconds for the interactive experience
     await new Promise(resolve => setTimeout(resolve, 5000));
     
     setState(prev => ({ 
@@ -315,7 +316,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const resetGame = useCallback(() => {
     setState(initialState);
-  }, []);
+    resetAskedQuestions(); // Clear tracked questions on game reset
+  }, [resetAskedQuestions]);
 
   return (
     <GameContext.Provider
