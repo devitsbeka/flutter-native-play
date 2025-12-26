@@ -46,7 +46,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
       />
       
       <motion.div 
-        className="relative px-4 pb-6"
+        className="relative px-4 pb-2"
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
@@ -55,16 +55,16 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         <div 
           className="relative max-w-md mx-auto"
           style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.75) 100%)",
-            borderRadius: "28px",
-            padding: "12px 16px 14px",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.78) 100%)",
+            borderRadius: "24px",
+            padding: "8px 12px 10px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,0.9)",
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
             border: "1px solid rgba(255,255,255,0.5)",
           }}
         >
-          <div className="flex items-end justify-between">
+          <div className="flex items-center justify-between">
             {/* Explore */}
             <NavButton
               onClick={() => navigate("/discover")}
@@ -84,8 +84,8 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             </NavButton>
 
             {/* Center Button - Play on home, Home on other pages */}
-            <div className="mb-6 -mt-6">
-              <MagicalGreenPlayButton 
+            <div className="-mt-10">
+              <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={isHome}
               />
@@ -145,64 +145,25 @@ function NavButton({
   );
 }
 
-function MagicalGreenPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPlayButton: boolean }) {
+function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPlayButton: boolean }) {
   return (
     <motion.button
       onClick={onClick}
       className="relative"
-      whileHover={{ scale: 1.08, y: -3 }}
-      whileTap={{ scale: 0.92 }}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.95, y: 2 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      {/* Outer electric glow rings */}
-      <motion.div
-        className="absolute -inset-6"
-        style={{
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,255,136,0.4) 0%, rgba(0,255,200,0.2) 40%, transparent 70%)",
-          filter: "blur(16px)",
-        }}
-        animate={{
-          opacity: [0.5, 0.9, 0.5],
-          scale: [0.95, 1.1, 0.95],
-        }}
-        transition={{
-          duration: 2.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      
-      {/* Secondary pulsing glow */}
+      {/* Outer glow */}
       <motion.div
         className="absolute -inset-4"
         style={{
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(0,255,170,0.5) 0%, rgba(0,220,150,0.25) 50%, transparent 75%)",
-          filter: "blur(10px)",
+          background: "radial-gradient(circle, rgba(120,200,80,0.5) 0%, rgba(100,180,60,0.3) 40%, transparent 70%)",
+          filter: "blur(12px)",
         }}
         animate={{
           opacity: [0.6, 1, 0.6],
-          scale: [1, 1.05, 1],
-        }}
-        transition={{
-          duration: 1.8,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.3,
-        }}
-      />
-
-      {/* Glowing ring effect */}
-      <motion.div
-        className="absolute -inset-1"
-        style={{
-          borderRadius: "28px",
-          background: "linear-gradient(135deg, rgba(0,255,170,0.8) 0%, rgba(0,200,120,0.6) 50%, rgba(0,255,200,0.8) 100%)",
-          filter: "blur(3px)",
-        }}
-        animate={{
-          opacity: [0.7, 1, 0.7],
+          scale: [0.95, 1.05, 0.95],
         }}
         transition={{
           duration: 2,
@@ -211,94 +172,125 @@ function MagicalGreenPlayButton({ onClick, isPlayButton }: { onClick: () => void
         }}
       />
       
-      {/* White border ring */}
-      <div 
-        className="relative w-[76px] h-[76px] p-[3px]"
-        style={{
-          borderRadius: "26px",
-          background: "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 100%)",
-          boxShadow: "0 8px 32px rgba(0,255,150,0.4), 0 4px 16px rgba(0,200,120,0.3), 0 2px 8px rgba(0,0,0,0.1)",
-        }}
-      >
-        {/* Main button face with electric green gradient */}
-        <div 
-          className="w-full h-full overflow-hidden flex items-center justify-center relative"
+      {/* 3D Pentagon/Hexagon container */}
+      <div className="relative" style={{ width: 80, height: 90 }}>
+        {/* Bottom 3D depth layer - darker green */}
+        <div
           style={{
-            borderRadius: "23px",
-            background: "linear-gradient(160deg, #00ff9d 0%, #00e68a 30%, #00cc77 60%, #00b368 100%)",
-            boxShadow: `
-              inset 0 3px 16px rgba(255,255,255,0.5),
-              inset 0 -3px 12px rgba(0,100,60,0.3)
-            `,
+            position: "absolute",
+            bottom: 0,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 76,
+            height: 70,
+            background: "linear-gradient(180deg, #4a9e3a 0%, #3d8530 50%, #2d6a24 100%)",
+            clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
+            boxShadow: "0 4px 20px rgba(50,100,40,0.5)",
+          }}
+        />
+        
+        {/* Inner bevel edge - medium green */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 6,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 70,
+            height: 64,
+            background: "linear-gradient(180deg, #5cb848 0%, #4da03c 100%)",
+            clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
+          }}
+        />
+        
+        {/* Main top face - bright lime green */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 10,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 68,
+            height: 62,
+            background: "linear-gradient(160deg, #8ed656 0%, #7bc842 30%, #6ab838 60%, #5aa830 100%)",
+            clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
+            boxShadow: "inset 0 4px 12px rgba(255,255,255,0.4), inset 0 -4px 8px rgba(50,100,40,0.2)",
           }}
         >
-          {/* Bright top shine */}
+          {/* Top highlight shine */}
           <div
-            className="absolute top-[4px] left-1/2 -translate-x-1/2 w-12 h-3"
             style={{
-              borderRadius: "10px",
-              background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%)",
+              position: "absolute",
+              top: 6,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 40,
+              height: 12,
+              background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)",
+              borderRadius: "8px",
             }}
           />
           
-          {/* Inner glow */}
+          {/* Inner subtle gradient */}
           <div
-            className="absolute inset-0"
             style={{
-              borderRadius: "23px",
-              background: "radial-gradient(circle at 50% 30%, rgba(255,255,255,0.3) 0%, transparent 50%)",
+              position: "absolute",
+              inset: 0,
+              background: "radial-gradient(circle at 50% 25%, rgba(255,255,255,0.25) 0%, transparent 50%)",
+              clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
             }}
           />
           
-          {/* Floating sparkle particles */}
-          {[...Array(5)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                width: i % 2 === 0 ? 4 : 3,
-                height: i % 2 === 0 ? 4 : 3,
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 0 6px rgba(255,255,255,0.8)",
-                left: `${20 + (i * 15)}%`,
-                top: `${25 + (i * 10)}%`,
-              }}
-              animate={{
-                y: [-6, 6, -6],
-                x: [i % 2 === 0 ? -3 : 3, i % 2 === 0 ? 3 : -3, i % 2 === 0 ? -3 : 3],
-                opacity: [0.3, 1, 0.3],
-                scale: [0.8, 1.2, 0.8],
-              }}
-              transition={{
-                duration: 2 + (i * 0.4),
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.2,
-              }}
-            />
-          ))}
-          
-          {/* Icon */}
-          {isPlayButton ? (
-            <Play 
-              className="w-9 h-9 ml-1 relative z-10" 
-              fill="white"
-              stroke="white"
-              strokeWidth={0}
-              style={{ 
-                filter: "drop-shadow(0 2px 4px rgba(0,80,50,0.3))",
-              }}
-            />
-          ) : (
-            <Home 
-              className="w-8 h-8 relative z-10 text-white" 
-              strokeWidth={2.5}
-              style={{ 
-                filter: "drop-shadow(0 2px 4px rgba(0,80,50,0.3))",
-              }}
-            />
-          )}
+          {/* Icon container */}
+          <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: 8 }}>
+            {isPlayButton ? (
+              <Play 
+                className="w-8 h-8 ml-1" 
+                fill="white"
+                stroke="white"
+                strokeWidth={0}
+                style={{ 
+                  filter: "drop-shadow(0 2px 4px rgba(50,100,40,0.4))",
+                }}
+              />
+            ) : (
+              <Home 
+                className="w-7 h-7 text-white" 
+                strokeWidth={2.5}
+                style={{ 
+                  filter: "drop-shadow(0 2px 4px rgba(50,100,40,0.4))",
+                }}
+              />
+            )}
+          </div>
         </div>
+        
+        {/* Sparkle particles */}
+        {[...Array(4)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: 4,
+              height: 4,
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 0 8px rgba(255,255,255,0.9)",
+              left: `${25 + (i * 18)}%`,
+              top: `${20 + (i * 12)}%`,
+            }}
+            animate={{
+              y: [-4, 4, -4],
+              opacity: [0.4, 1, 0.4],
+              scale: [0.8, 1.3, 0.8],
+            }}
+            transition={{
+              duration: 1.8 + (i * 0.3),
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.25,
+            }}
+          />
+        ))}
       </div>
     </motion.button>
   );
