@@ -27,6 +27,15 @@ const theme = {
   accentDark: "#7B4BBF",
 };
 
+// Convert country code to flag emoji
+const getFlagEmoji = (countryCode: string) => {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
+
 // Compact currency pill with image icon
 const CurrencyPill = ({ iconSrc, value }: { iconSrc: string; value: number }) => (
   <motion.div 
@@ -279,7 +288,7 @@ export default function Index() {
             >
               {/* Avatar Circle Component */}
               <div data-walkthrough="avatar">
-                <AvatarCircle avatarUrl={profile?.avatar_url} size={352} />
+                <AvatarCircle avatarUrl={profile?.avatar_url} size={324} />
               </div>
                 
               {/* Power badges in curved arc at top of avatar */}
@@ -324,81 +333,67 @@ export default function Index() {
                 })}
               </div>
             
-              {/* Level & XP bar - positioned below avatar bottom, touching */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%-8px)] z-20 pointer-events-auto">
+              {/* User info & XP bar - positioned below avatar */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+16px)] z-20 pointer-events-auto">
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring" }}
+                  className="flex flex-col items-center gap-3"
                 >
                   {isRefreshing ? (
-                    <Skeleton className="w-64 h-12 rounded-2xl bg-white/40" />
+                    <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
                   ) : (
-                    <motion.div 
-                      className="relative h-14 rounded-2xl overflow-hidden min-w-[280px]"
-                      style={{ 
-                        background: "linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(245,240,250,0.9) 50%, rgba(255,255,255,0.85) 100%)",
-                        boxShadow: "0 6px 0 rgba(200,180,220,0.5), 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 2px rgba(255,255,255,0.9), inset 0 -1px 2px rgba(200,180,220,0.3)",
-                        border: "2px solid rgba(255,255,255,0.7)",
-                      }}
-                      animate={{
-                        scale: [1, 1.02, 1],
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        ease: "easeInOut",
-                      }}
-                      key={levelInfo.xpInCurrentLevel} // triggers animation on XP change
-                    >
-                      {/* Grey subtle foil background for unfilled area */}
-                      <div 
-                        className="absolute inset-y-1 left-1 right-1 rounded-xl"
-                        style={{
-                          background: "linear-gradient(135deg, rgba(180,175,190,0.35) 0%, rgba(160,155,175,0.25) 50%, rgba(180,175,190,0.35) 100%)",
-                          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.08), inset 0 -1px 2px rgba(255,255,255,0.5)",
-                        }}
-                      />
-                      
-                      {/* Progress fill - chunky colored bar with 3D effect */}
-                      {levelInfo.progress > 0 && (
-                        <motion.div 
-                          className="absolute inset-y-1 left-1 rounded-xl"
-                          style={{
-                            background: `linear-gradient(180deg, #A855F7 0%, #8B5CF6 40%, #7C3AED 100%)`,
-                            boxShadow: "inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 8px rgba(139,92,246,0.5)",
-                          }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `calc(${levelInfo.progress}% - 4px)` }}
-                          transition={{ duration: 1, delay: 0.5 }}
-                        />
-                      )}
-                      
-                      {/* Text overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none">
-                        <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
-                        <span className="text-sm font-bold text-gray-700">
-                          {levelInfo.progress === 0 
-                            ? t("game.playToEarn")
-                            : t("game.levelProgress", { level: levelInfo.level, current: levelInfo.xpInCurrentLevel, next: levelInfo.xpNeededForNextLevel })
-                          }
+                    <>
+                      {/* Name, Flag, Level row */}
+                      <div className="flex items-center justify-center gap-3">
+                        <span className="text-2xl font-display font-bold text-gray-800 drop-shadow-sm">
+                          {profile?.nickname || t("game.guest")}
                         </span>
-                      </div>
-                      
-                      {/* White text layer - clipped to progress fill (only when has progress) */}
-                      {levelInfo.progress > 0 && (
+                        {profile?.country_code && (
+                          <span className="text-2xl">
+                            {getFlagEmoji(profile.country_code)}
+                          </span>
+                        )}
                         <div 
-                          className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none"
+                          className="px-3 py-1 rounded-full text-sm font-bold text-white"
                           style={{
-                            clipPath: `inset(0 ${100 - levelInfo.progress}% 0 0)`,
+                            background: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
+                            boxShadow: "0 2px 8px rgba(139,92,246,0.4)",
                           }}
                         >
-                          <Star className="w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
-                          <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                            {t("game.levelProgress", { level: levelInfo.level, current: levelInfo.xpInCurrentLevel, next: levelInfo.xpNeededForNextLevel })}
-                          </span>
+                          Lv. {levelInfo.level}
                         </div>
-                      )}
-                    </motion.div>
+                      </div>
+                      
+                      {/* Progress bar - clean on spline bg */}
+                      <div className="relative h-4 rounded-full overflow-hidden min-w-[280px]"
+                        style={{
+                          background: "rgba(255,255,255,0.3)",
+                          backdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255,255,255,0.4)",
+                        }}
+                      >
+                        {/* Progress fill */}
+                        {levelInfo.progress > 0 && (
+                          <motion.div 
+                            className="absolute inset-y-0 left-0 rounded-full"
+                            style={{
+                              background: `linear-gradient(90deg, #A855F7 0%, #8B5CF6 50%, #7C3AED 100%)`,
+                              boxShadow: "0 0 12px rgba(139,92,246,0.6)",
+                            }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${levelInfo.progress}%` }}
+                            transition={{ duration: 1, delay: 0.5 }}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* XP text below bar */}
+                      <span className="text-xs font-semibold text-gray-600">
+                        {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                      </span>
+                    </>
                   )}
                 </motion.div>
               </div>
