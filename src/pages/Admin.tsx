@@ -7,7 +7,8 @@ import {
   Users, 
   Menu,
   ChevronLeft,
-  Shield
+  Shield,
+  Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,11 @@ const navItems = [
     to: '/admin/questions', 
     icon: HelpCircle, 
     label: 'კითხვები' 
+  },
+  { 
+    to: '/admin/import', 
+    icon: Upload, 
+    label: 'იმპორტი' 
   },
   { 
     to: '/admin/users', 
