@@ -8,6 +8,7 @@ import { SoundProvider } from "@/contexts/SoundContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { SplinePreloader } from "@/components/game/SplinePreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
+import { AdminRoute } from "@/components/admin/AdminRoute";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import CategoryQuizPage from "./pages/CategoryQuizPage";
@@ -22,6 +23,11 @@ import AdventureMap from "./pages/AdventureMap";
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
 import Discover from "./pages/Discover";
+import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminCategories from "./pages/admin/Categories";
+import AdminQuestions from "./pages/admin/Questions";
+import AdminOnlineUsers from "./pages/admin/OnlineUsers";
 
 const App = () => (
   <AuthProvider>
@@ -51,6 +57,12 @@ const App = () => (
               <Route path="/team" element={<Team />} />
               <Route path="/vip" element={<VIP />} />
               <Route path="/discover" element={<Discover />} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="questions" element={<AdminQuestions />} />
+                <Route path="users" element={<AdminOnlineUsers />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
