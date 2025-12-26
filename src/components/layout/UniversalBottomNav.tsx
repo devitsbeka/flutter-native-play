@@ -44,7 +44,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           preserveAspectRatio="none"
         >
           <path 
-            d="M0,20 L0,15 Q50,0 100,15 L100,20 Z" 
+            d="M0,20 L0,5 Q50,20 100,5 L100,20 Z" 
             fill="rgba(255,255,255,0.88)"
           />
         </svg>
