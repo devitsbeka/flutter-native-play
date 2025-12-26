@@ -60,7 +60,13 @@ function CategoryCard({ category, onClick }: { category: Category; onClick: () =
   return (
     <motion.button
       onClick={onClick}
-      className="relative overflow-hidden rounded-2xl p-4 text-left w-full"
+      className="relative overflow-hidden rounded-2xl p-5 text-left w-full"
+      style={{
+        background: "rgba(255,255,255,0.65)",
+        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.5)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+      }}
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
     >
@@ -70,7 +76,7 @@ function CategoryCard({ category, onClick }: { category: Category; onClick: () =
       />
       
       {/* Row 1: Icon + Title */}
-      <div className="flex items-center gap-3 mt-1">
+      <div className="flex items-center gap-4 mt-1">
         <div 
           className={cn(
             "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br shrink-0 shadow-md",
@@ -83,10 +89,10 @@ function CategoryCard({ category, onClick }: { category: Category; onClick: () =
       </div>
       
       {/* Row 2: Description */}
-      <p className="text-sm text-slate-600 mt-3 line-clamp-2">{category.description}</p>
+      <p className="text-sm text-slate-600 mt-4 line-clamp-2 px-1">{category.description}</p>
       
       {/* Row 3: Level badge */}
-      <div className="mt-3">
+      <div className="mt-4">
         <span className="text-xs px-3 py-1.5 rounded-full bg-white/70 text-slate-700 font-semibold shadow-sm">
           {category.totalLevels} დონე
         </span>
@@ -160,17 +166,9 @@ export default function Discover() {
           </div>
         </div>
 
-        {/* Tabs - filled glass container */}
+        {/* Tabs - transparent container */}
         <div className="px-4 pb-4">
-          <div 
-            className="flex gap-1 p-1.5 rounded-2xl"
-            style={{
-              background: "rgba(255,255,255,0.7)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,255,255,0.5)",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-            }}
-          >
+          <div className="flex gap-1 p-1.5 rounded-2xl">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
