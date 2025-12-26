@@ -412,19 +412,26 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image - circular display */}
+              {/* Avatar image - circular display with gradient background */}
               <div className="w-[280px] h-[280px] relative flex items-center justify-center" data-walkthrough="avatar">
+                {/* Gradient background circle */}
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(145deg, #4a5568 0%, #2d3748 50%, #1a202c 100%)",
+                  }}
+                />
                 {profile?.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
                     alt="Avatar" 
-                    className="w-full h-full object-cover rounded-full border-4 border-white/20 shadow-2xl"
+                    className="w-full h-full object-cover rounded-full border-4 border-white/20 shadow-2xl relative z-10"
                     style={{
                       backfaceVisibility: "hidden",
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-background/30 border-4 border-white/20 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full border-4 border-white/20 flex items-center justify-center relative z-10">
                     <span className="text-7xl">🎮</span>
                   </div>
                 )}
