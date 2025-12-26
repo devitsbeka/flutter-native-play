@@ -1,0 +1,195 @@
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, UserPlus, X, Loader2, Check } from "lucide-react";
+import { GameModal } from "@/components/ui/game-modal";
+import { useFriends } from "@/hooks/useFriends";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+
+interface AddFriendModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface SearchResult {
+  user_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  country_code: string | null;
+}
+
+export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const { searchUsers, sendFriendRequest, friends } = useFriends();
+
+  // Get friend IDs for filtering
+  const friendIds = new Set(friends.map(f => f.friendId));
+
+  // Debounced search
+  const performSearch = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const results = await searchUsers(query);
+      // Filter out existing friends
+      setSearchResults(results.filter(r => !friendIds.has(r.user_id)));
+    } finally {
+      setSearching(false);
+    }
+  }, [searchUsers, friendIds]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, performSearch]);
+
+  const handleSendRequest = async (userId: string) => {
+    const success = await sendFriendRequest(userId);
+    if (success) {
+      setSentRequests(prev => new Set([...prev, userId]));
+    }
+  };
+
+  const handleClose = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSentRequests(new Set());
+    onClose();
+  };
+
+  return (
+    <GameModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="მეგობრის დამატება"
+      icon={<UserPlus className="w-8 h-8" />}
+      variant="success"
+    >
+      <div className="space-y-4">
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="მომხმარებლის ძებნა..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white/10 border-white/20 text-foreground placeholder:text-muted-foreground"
+            autoFocus
+          />
+          {searching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin" />
+          )}
+        </div>
+
+        {/* Search Results */}
+        <div className="min-h-[200px] max-h-[300px] overflow-y-auto space-y-2">
+          <AnimatePresence mode="popLayout">
+            {searchQuery.length < 2 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8 text-muted-foreground text-sm"
+              >
+                მინიმუმ 2 სიმბოლო შეიყვანე
+              </motion.div>
+            ) : searchResults.length === 0 && !searching ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8 text-muted-foreground text-sm"
+              >
+                მომხმარებელი ვერ მოიძებნა
+              </motion.div>
+            ) : (
+              searchResults.map((result) => (
+                <SearchResultCard
+                  key={result.user_id}
+                  result={result}
+                  onSendRequest={() => handleSendRequest(result.user_id)}
+                  isSent={sentRequests.has(result.user_id)}
+                />
+              ))
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </GameModal>
+  );
+}
+
+interface SearchResultCardProps {
+  result: SearchResult;
+  onSendRequest: () => void;
+  isSent: boolean;
+}
+
+function SearchResultCard({ result, onSendRequest, isSent }: SearchResultCardProps) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+    >
+      <Avatar className="w-12 h-12 border-2 border-white/20">
+        <AvatarImage src={result.avatar_url || undefined} />
+        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
+          {result.nickname.charAt(0).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-foreground truncate">{result.nickname}</p>
+        {result.country_code && (
+          <p className="text-sm text-muted-foreground">
+            {getCountryFlag(result.country_code)}
+          </p>
+        )}
+      </div>
+
+      <motion.button
+        onClick={onSendRequest}
+        disabled={isSent}
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+          isSent
+            ? "bg-green-500/20 text-green-400 cursor-default"
+            : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90"
+        }`}
+        whileHover={!isSent ? { scale: 1.02 } : {}}
+        whileTap={!isSent ? { scale: 0.98 } : {}}
+      >
+        {isSent ? (
+          <>
+            <Check className="w-4 h-4" />
+            გაგზავნილია
+          </>
+        ) : (
+          <>
+            <UserPlus className="w-4 h-4" />
+            დამატება
+          </>
+        )}
+      </motion.button>
+    </motion.div>
+  );
+}
+
+function getCountryFlag(countryCode: string): string {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}

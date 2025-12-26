@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, KeyRound, Users, Gamepad2 } from "lucide-react";
+import { ArrowLeft, Plus, KeyRound, Users, Gamepad2, UserPlus } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CreateRoomModal } from "@/components/team/CreateRoomModal";
@@ -9,7 +9,10 @@ import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobby } from "@/components/team/RoomLobby";
 import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
 import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScreen";
+import { FriendsList } from "@/components/team/FriendsList";
+import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { toast } from "sonner";
 
 function TeamContent() {
   const navigate = useNavigate();
@@ -17,12 +20,15 @@ function TeamContent() {
   const { user } = useAuth();
   const { 
     phase, 
+    room,
     showCreateModal, 
     setShowCreateModal, 
     showJoinModal, 
     setShowJoinModal,
     joinRoom,
   } = useMultiplayer();
+
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
 
   // Handle join code from URL
   useEffect(() => {
@@ -31,6 +37,23 @@ function TeamContent() {
       joinRoom(joinCode);
     }
   }, [searchParams, user, joinRoom]);
+
+  // Handle inviting a friend (share room code)
+  const handleInviteFriend = async (friendId: string) => {
+    if (!room) {
+      toast.info("შექმენი ოთახი მეგობრის მოსაწვევად");
+      return;
+    }
+    
+    // Copy room link to clipboard
+    const roomLink = `${window.location.origin}/team?join=${room.room_code}`;
+    try {
+      await navigator.clipboard.writeText(roomLink);
+      toast.success("ლინკი დაკოპირდა! გაუზიარე მეგობარს");
+    } catch {
+      toast.error("კოპირება ვერ მოხერხდა");
+    }
+  };
 
   // Show game screen if playing
   if (phase === "playing" || phase === "question-result") {
@@ -43,6 +66,9 @@ function TeamContent() {
   }
 
   // Show lobby if in room
+  if (phase === "lobby" || phase === "countdown") {
+    return <RoomLobby />;
+  }
 
   // Show login prompt if not authenticated
   if (!user) {
@@ -73,7 +99,7 @@ function TeamContent() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden pb-24">
       {/* Background */}
       <div 
         className="fixed inset-0 z-0"
@@ -83,80 +109,69 @@ function TeamContent() {
       />
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col px-6 py-8">
+      <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate("/")}
-          className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">უკან</span>
-        </motion.button>
+        <div className="flex items-center justify-between mb-6">
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">უკან</span>
+          </motion.button>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
-          {/* Icon */}
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
-            className="w-28 h-28 rounded-full flex items-center justify-center mb-6"
-            style={{
-              background: "linear-gradient(135deg, hsl(280 70% 60%) 0%, hsl(320 70% 50%) 100%)",
-              boxShadow: "0 12px 40px rgba(168, 85, 247, 0.4)"
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm"
           >
-            <Gamepad2 className="w-14 h-14 text-white" />
-          </motion.div>
-
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="font-display text-3xl font-bold text-white mb-3 text-center"
-          >
-            მულტიპლეიერი
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-white/80 text-center mb-8"
-          >
-            შექმენი ოთახი ან შეუერთდი მეგობარს
-          </motion.p>
-
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="w-full space-y-3"
-          >
-            <ChunkyButton
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={() => setShowCreateModal(true)}
-              icon={<Plus className="w-5 h-5" />}
-            >
-              ოთახის შექმნა
-            </ChunkyButton>
-
-            <ChunkyButton
-              variant="secondary"
-              size="lg"
-              className="w-full"
-              onClick={() => setShowJoinModal(true)}
-              icon={<KeyRound className="w-5 h-5" />}
-            >
-              კოდით შესვლა
-            </ChunkyButton>
+            <Gamepad2 className="w-5 h-5 text-white" />
+            <span className="font-display text-white font-bold">გუნდი</span>
           </motion.div>
         </div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-2 gap-3 mb-6"
+        >
+          <ChunkyButton
+            variant="primary"
+            size="lg"
+            className="w-full"
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            ოთახის შექმნა
+          </ChunkyButton>
+
+          <ChunkyButton
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            onClick={() => setShowJoinModal(true)}
+            icon={<KeyRound className="w-5 h-5" />}
+          >
+            კოდით შესვლა
+          </ChunkyButton>
+        </motion.div>
+
+        {/* Friends Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex-1"
+        >
+          <FriendsList
+            onAddFriendClick={() => setShowAddFriendModal(true)}
+            onInviteFriend={handleInviteFriend}
+            roomCode={room?.room_code}
+          />
+        </motion.div>
       </div>
 
       {/* Modals */}
@@ -167,6 +182,10 @@ function TeamContent() {
       <JoinRoomModal 
         isOpen={showJoinModal} 
         onClose={() => setShowJoinModal(false)} 
+      />
+      <AddFriendModal
+        isOpen={showAddFriendModal}
+        onClose={() => setShowAddFriendModal(false)}
       />
     </div>
   );
