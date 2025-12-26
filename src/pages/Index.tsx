@@ -366,31 +366,76 @@ export default function Index() {
                         </div>
                       </div>
                       
-                      {/* Progress bar - clean on spline bg */}
-                      <div className="relative h-4 rounded-full overflow-hidden min-w-[280px]"
+                      {/* 3D Chunky Progress bar */}
+                      <div 
+                        className="relative h-7 rounded-full overflow-hidden min-w-[300px]"
                         style={{
-                          background: "rgba(255,255,255,0.3)",
-                          backdropFilter: "blur(8px)",
-                          border: "1px solid rgba(255,255,255,0.4)",
+                          background: "linear-gradient(180deg, #E8DFF5 0%, #D4C4E8 50%, #C9B8DE 100%)",
+                          boxShadow: "inset 0 3px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.5), 0 4px 0 #B8A5D0",
+                          border: "2px solid rgba(180,160,200,0.4)",
                         }}
                       >
-                        {/* Progress fill */}
+                        {/* Progress fill with 3D depth */}
                         {levelInfo.progress > 0 && (
                           <motion.div 
-                            className="absolute inset-y-0 left-0 rounded-full"
+                            className="absolute inset-y-0.5 left-0.5 rounded-full overflow-hidden"
                             style={{
-                              background: `linear-gradient(90deg, #A855F7 0%, #8B5CF6 50%, #7C3AED 100%)`,
-                              boxShadow: "0 0 12px rgba(139,92,246,0.6)",
+                              background: "linear-gradient(180deg, #C084FC 0%, #A855F7 30%, #9333EA 70%, #7E22CE 100%)",
+                              boxShadow: "inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), 0 0 16px rgba(168,85,247,0.5)",
                             }}
                             initial={{ width: 0 }}
-                            animate={{ width: `${levelInfo.progress}%` }}
+                            animate={{ width: `calc(${levelInfo.progress}% - 2px)` }}
                             transition={{ duration: 1, delay: 0.5 }}
-                          />
+                          >
+                            {/* Sparkle particles inside filled area */}
+                            {[...Array(8)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="absolute rounded-full"
+                                style={{
+                                  width: i % 2 === 0 ? 4 : 3,
+                                  height: i % 2 === 0 ? 4 : 3,
+                                  background: "rgba(255,255,255,0.9)",
+                                  boxShadow: "0 0 6px rgba(255,255,255,0.8)",
+                                  left: `${10 + (i * 11)}%`,
+                                  top: "50%",
+                                }}
+                                animate={{
+                                  y: [-4, 4, -4],
+                                  opacity: [0.4, 1, 0.4],
+                                  scale: [0.8, 1.2, 0.8],
+                                }}
+                                transition={{
+                                  duration: 1.2 + (i * 0.15),
+                                  repeat: Infinity,
+                                  ease: "easeInOut",
+                                  delay: i * 0.1,
+                                }}
+                              />
+                            ))}
+                            
+                            {/* Shine effect */}
+                            <motion.div
+                              className="absolute inset-0 rounded-full"
+                              style={{
+                                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)",
+                              }}
+                              animate={{
+                                x: ["-100%", "200%"],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                                repeatDelay: 1,
+                              }}
+                            />
+                          </motion.div>
                         )}
                       </div>
                       
                       {/* XP text below bar */}
-                      <span className="text-xs font-semibold text-gray-600">
+                      <span className="text-sm font-bold text-gray-700 drop-shadow-sm">
                         {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                       </span>
                     </>
