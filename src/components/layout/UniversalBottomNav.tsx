@@ -75,7 +75,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               onClick={() => navigate("/adventure-map")}
               isActive={isActive("/adventure-map")}
               label={t("nav.map")}
-              className="mr-[10px]"
+              className="mr-[20px]"
             >
               <LottieNavIcon type="map" size={60} />
             </NavButton>
@@ -95,7 +95,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               onClick={() => navigate("/leaderboards")}
               isActive={isActive("/leaderboards")}
               label={t("nav.rank")}
-              className="ml-[10px]"
+              className="ml-[20px]"
             >
               <LottieNavIcon type="rank" size={60} />
             </NavButton>
