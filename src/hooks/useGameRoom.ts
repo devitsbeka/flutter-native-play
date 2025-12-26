@@ -158,12 +158,12 @@ export function useGameRoom() {
 
     setLoading(true);
     try {
-      // Find the room
+      // Find the room - allow joining rooms in waiting or ready status
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
         .select("*")
         .eq("room_code", roomCode.toUpperCase())
-        .eq("status", "waiting")
+        .in("status", ["waiting", "ready"])
         .maybeSingle();
 
       if (roomError || !room) {
