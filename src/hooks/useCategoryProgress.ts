@@ -127,16 +127,23 @@ export function useCategoryProgress() {
       if (data) {
         data.forEach((record) => {
           const catId = record.category_id;
-          if (progressByCategory[catId]) {
-            progressByCategory[catId].completedLevels.push({
-              level_number: record.level_number,
-              stars_earned: record.stars_earned,
-              score: record.score,
-              total_questions: record.total_questions,
-              completed_at: record.completed_at,
-            });
-            progressByCategory[catId].totalStars += record.stars_earned;
+          // Initialize category if it doesn't exist
+          if (!progressByCategory[catId]) {
+            progressByCategory[catId] = {
+              categoryId: catId,
+              completedLevels: [],
+              currentLevel: 1,
+              totalStars: 0,
+            };
           }
+          progressByCategory[catId].completedLevels.push({
+            level_number: record.level_number,
+            stars_earned: record.stars_earned,
+            score: record.score,
+            total_questions: record.total_questions,
+            completed_at: record.completed_at,
+          });
+          progressByCategory[catId].totalStars += record.stars_earned;
         });
       }
 
