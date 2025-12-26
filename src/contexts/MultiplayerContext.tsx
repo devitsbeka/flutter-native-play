@@ -14,6 +14,7 @@ export type MultiplayerPhase =
   | "countdown" 
   | "playing" 
   | "question-result" 
+  | "waiting-for-opponent"
   | "match-result";
 
 export interface PlayerAnswer {
@@ -237,6 +238,29 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     };
   }, [currentRoom?.id, state.phase, state.currentQuestionIndex, user?.id]);
 
+  // Watch for opponent to finish when we're waiting
+  useEffect(() => {
+    if (state.phase !== "waiting-for-opponent") return;
+    
+    const opponent = participants.find(p => p.user_id !== user?.id);
+    
+    if (opponent?.status === "finished") {
+      // Opponent finished - now we can show results with their final score
+      if (currentRoom) {
+        updateRoomStatus(currentRoom.id, "completed");
+      }
+      
+      // Use database scores as single source of truth
+      const myParticipant = participants.find(p => p.user_id === user?.id);
+      setState(prev => ({ 
+        ...prev, 
+        phase: "match-result",
+        myScore: myParticipant?.score || prev.myScore,
+        opponentScore: opponent?.score || prev.opponentScore,
+      }));
+    }
+  }, [state.phase, participants, user?.id, currentRoom, updateRoomStatus]);
+
   const createRoom = useCallback(async (categoryId?: string, categoryName?: string) => {
     setState(prev => ({ ...prev, phase: "creating" }));
     
@@ -385,15 +409,31 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     }));
   }, [currentRoom, user, state.questions, state.currentQuestionIndex, participants]);
 
-  const nextQuestion = useCallback(() => {
+  const nextQuestion = useCallback(async () => {
     const nextIndex = state.currentQuestionIndex + 1;
     
     if (nextIndex >= state.questions.length) {
-      // Game over
-      if (currentRoom) {
-        updateRoomStatus(currentRoom.id, "completed");
+      // Mark this player as finished in the database
+      const currentParticipant = participants.find(p => p.user_id === user?.id);
+      if (currentParticipant) {
+        await supabase
+          .from("room_participants")
+          .update({ status: "finished" })
+          .eq("id", currentParticipant.id);
       }
-      setState(prev => ({ ...prev, phase: "match-result" }));
+      
+      // Check if opponent has also finished
+      const opponent = participants.find(p => p.user_id !== user?.id);
+      if (opponent?.status === "finished") {
+        // Both finished - go to result
+        if (currentRoom) {
+          updateRoomStatus(currentRoom.id, "completed");
+        }
+        setState(prev => ({ ...prev, phase: "match-result" }));
+      } else {
+        // Wait for opponent
+        setState(prev => ({ ...prev, phase: "waiting-for-opponent" }));
+      }
     } else {
       setState(prev => ({
         ...prev,
@@ -404,7 +444,7 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
         opponentAnswer: null,
       }));
     }
-  }, [state.currentQuestionIndex, state.questions.length, currentRoom, updateRoomStatus]);
+  }, [state.currentQuestionIndex, state.questions.length, currentRoom, updateRoomStatus, participants, user?.id]);
 
   const resetMultiplayer = useCallback(() => {
     setState(initialState);
