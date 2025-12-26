@@ -128,57 +128,13 @@ export function useTrivia() {
         setPreparationProgress(80);
       }
 
-      // ============ AI FALLBACK: Generate if not enough DB questions ============
+      // No AI fallback - only use database questions
       if (formattedQuestions.length < amount) {
-        console.log(`Not enough DB questions (${formattedQuestions.length}/${amount}), generating with AI...`);
+        console.warn(`Not enough questions in database (${formattedQuestions.length}/${amount}) for category ${selectedCategory.id}`);
         
-        setPreparationProgress(40);
-
-        const { data, error: fetchError } = await supabase.functions.invoke('generate-category-trivia', {
-          body: {
-            category: selectedCategory.name,
-            categoryId: selectedCategory.id,
-            level,
-            count: amount - formattedQuestions.length + 3,
-          }
-        });
-
-        if (fetchError) {
-          console.error("Error fetching Georgian questions:", fetchError);
-          throw new Error(fetchError.message || "კითხვების ჩატვირთვა ვერ მოხერხდა");
+        if (formattedQuestions.length === 0) {
+          throw new Error("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
         }
-
-        if (!data?.questions || !Array.isArray(data.questions)) {
-          throw new Error("კითხვები არ მოიძებნა");
-        }
-
-        setPreparationProgress(60);
-
-        // Format AI-generated questions
-        const aiQuestions: TriviaQuestion[] = data.questions
-          .map((q: any, index: number) => {
-            const correctAnswer = q.correct_answer;
-            const incorrectAnswers = q.incorrect_answers || [];
-            const allAnswers = shuffleArray([correctAnswer, ...incorrectAnswers]);
-            const questionHash = hashQuestion(q.question);
-
-            return {
-              id: `ai-${index}-${Date.now()}`,
-              category: selectedCategory.name,
-              difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
-              question: q.question,
-              correctAnswer,
-              incorrectAnswers,
-              allAnswers,
-              hash: questionHash,
-            };
-          })
-          .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash));
-
-        // Combine DB and AI questions
-        formattedQuestions = [...formattedQuestions, ...aiQuestions].slice(0, amount);
-
-        setPreparationProgress(80);
       }
 
       // Track these questions as asked
