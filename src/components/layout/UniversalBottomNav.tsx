@@ -35,13 +35,13 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         }}
       />
       
-      <div className="relative px-4 pb-0 overflow-visible">
+      <div className="relative px-0 pb-0 overflow-visible">
         {/* Unified white pill container */}
         <div 
           className="relative overflow-visible"
           style={{
             background: "rgba(255,255,255,0.88)",
-            borderRadius: "18px",
+            borderRadius: "0",
             padding: "4px 20px 6px",
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
             backdropFilter: "blur(16px)",
