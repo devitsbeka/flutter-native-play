@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Mail, Gamepad2, Trash2, Check, X, Users } from "lucide-react";
+import { UserPlus, Mail, Gamepad2, Check, X, Users } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
+import { useSound } from "@/contexts/SoundContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
@@ -12,6 +13,22 @@ interface FriendsListProps {
 
 export function FriendsList({ onAddFriendClick, onInviteFriend, roomCode }: FriendsListProps) {
   const { friends, pendingRequests, loading, acceptFriendRequest, declineFriendRequest } = useFriends();
+  const { playSound, vibrate } = useSound();
+
+  const handleAccept = async (id: string) => {
+    const result = await acceptFriendRequest(id);
+    if (result) {
+      playSound("friend-accepted");
+      vibrate(100);
+    }
+  };
+
+  const handleDecline = async (id: string) => {
+    const result = await declineFriendRequest(id);
+    if (result) {
+      playSound("button-click");
+    }
+  };
 
   if (loading) {
     return (
@@ -38,8 +55,8 @@ export function FriendsList({ onAddFriendClick, onInviteFriend, roomCode }: Frie
               <PendingRequestCard
                 key={request.id}
                 request={request}
-                onAccept={() => acceptFriendRequest(request.id)}
-                onDecline={() => declineFriendRequest(request.id)}
+                onAccept={() => handleAccept(request.id)}
+                onDecline={() => handleDecline(request.id)}
               />
             ))}
           </AnimatePresence>

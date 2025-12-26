@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSound } from "@/contexts/SoundContext";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Check, X, Crown, Clock, User } from "lucide-react";
@@ -10,6 +11,7 @@ type AnswerState = "idle" | "selected" | "revealed";
 
 export function MultiplayerGameScreen() {
   const { user, profile } = useAuth();
+  const { playSound, vibrate } = useSound();
   const {
     questions,
     currentQuestionIndex,
@@ -38,10 +40,19 @@ export function MultiplayerGameScreen() {
       setAnswerState("idle");
       setSelectedAnswer(null);
       setTimeRemaining(timePerQuestion);
+      playSound("game-start");
     } else if (phase === "question-result") {
       setAnswerState("revealed");
+      // Play sound based on answer correctness
+      if (lastAnswerCorrect) {
+        playSound("correct-answer");
+        vibrate(50);
+      } else {
+        playSound("wrong-answer");
+        vibrate([50, 50, 50]);
+      }
     }
-  }, [phase, timePerQuestion]);
+  }, [phase, timePerQuestion, lastAnswerCorrect, playSound, vibrate]);
 
   // Reset on question change
   useEffect(() => {
