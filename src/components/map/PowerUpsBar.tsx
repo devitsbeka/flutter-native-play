@@ -16,10 +16,10 @@ const typeMap: Record<string, PowerUpType> = {
 
 export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
   const powers = [
-    { id: "5050", quantity: powerUps["5050"] || 2 },
-    { id: "freeze", quantity: powerUps["freeze"] || 1 },
-    { id: "replace", quantity: powerUps["replace"] || 3 },
-    { id: "time-drain", quantity: powerUps["time-drain"] || 0 },
+    { id: "5050", quantity: powerUps["5050"] ?? 0 },
+    { id: "freeze", quantity: powerUps["freeze"] ?? 0 },
+    { id: "replace", quantity: powerUps["replace"] ?? 3 },
+    { id: "time-drain", quantity: powerUps["time-drain"] ?? 2 },
   ];
 
   return (
