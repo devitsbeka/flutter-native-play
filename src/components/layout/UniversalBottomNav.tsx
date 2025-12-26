@@ -42,7 +42,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           style={{
             background: "rgba(255,255,255,0.88)",
             borderRadius: "18px",
-            padding: "8px 20px 10px",
+            padding: "4px 20px 6px",
             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
@@ -69,7 +69,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 
             {/* Center Button - positioned to float above */}
             <div className="relative" style={{ width: 70 }}>
-              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -6 }}>
+              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -26 }}>
                 <Hex3DPlayButton 
                   onClick={handleCenterClick}
                   isPlayButton={isHome}
