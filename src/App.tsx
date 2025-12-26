@@ -26,8 +26,7 @@ import VIP from "./pages/VIP";
 import Discover from "./pages/Discover";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/admin/Dashboard";
-import AdminCategories from "./pages/admin/Categories";
-import AdminQuestions from "./pages/admin/Questions";
+import ContentManager from "./pages/admin/ContentManager";
 import AdminOnlineUsers from "./pages/admin/OnlineUsers";
 import AdminImport from "./pages/admin/Import";
 import DuplicateScanner from "./pages/admin/DuplicateScanner";
@@ -63,8 +62,7 @@ const App = () => (
               <Route path="/discover" element={<Discover />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="questions" element={<AdminQuestions />} />
+                <Route path="content" element={<ContentManager />} />
                 <Route path="import" element={<AdminImport />} />
                 <Route path="users" element={<AdminOnlineUsers />} />
                 <Route path="duplicates" element={<DuplicateScanner />} />
