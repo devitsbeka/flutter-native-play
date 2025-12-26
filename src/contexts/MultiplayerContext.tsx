@@ -126,13 +126,43 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
           table: "game_rooms",
           filter: `id=eq.${currentRoom.id}`,
         },
-        (payload) => {
+        async (payload) => {
           const updated = payload.new as GameRoom;
           setCurrentRoom(updated);
           
           // Handle status transitions
-          if (updated.status === "playing" && state.phase === "countdown") {
-            setState(prev => ({ ...prev, phase: "playing" }));
+          if (updated.status === "playing") {
+            // Non-host needs to fetch questions when game starts
+            if (!isHost && state.questions.length === 0) {
+              const { data: roomQuestions } = await supabase
+                .from("room_questions")
+                .select("*")
+                .eq("room_id", currentRoom.id)
+                .order("question_index", { ascending: true });
+
+              if (roomQuestions && roomQuestions.length > 0) {
+                const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
+                  id: `${currentRoom.id}-${q.question_index}`,
+                  question: q.question_text,
+                  correctAnswer: q.correct_answer,
+                  incorrectAnswers: q.incorrect_answers,
+                  allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
+                  difficulty: q.difficulty || "medium",
+                  category: updated.category_name || "ზოგადი ცოდნა",
+                }));
+
+                setState(prev => ({
+                  ...prev,
+                  questions,
+                  currentQuestionIndex: 0,
+                  myScore: 0,
+                  opponentScore: 0,
+                  phase: "playing",
+                }));
+              }
+            } else if (state.phase === "countdown") {
+              setState(prev => ({ ...prev, phase: "playing" }));
+            }
           } else if (updated.status === "cancelled") {
             toast.info("ოთახი დაიხურა");
             resetMultiplayer();
@@ -144,11 +174,39 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentRoom?.id, state.phase]);
+  }, [currentRoom?.id, state.phase, state.questions.length, isHost]);
+
+  // Subscribe to room questions being added (for non-host to enter countdown)
+  useEffect(() => {
+    if (!currentRoom?.id || isHost || state.phase !== "lobby") return;
+
+    const channel = supabase
+      .channel(`room-questions-${currentRoom.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "room_questions",
+          filter: `room_id=eq.${currentRoom.id}`,
+        },
+        () => {
+          // Questions are being added - game is starting
+          if (state.phase === "lobby") {
+            setState(prev => ({ ...prev, phase: "countdown" }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentRoom?.id, isHost, state.phase]);
 
   // Subscribe to opponent answers
   useEffect(() => {
-    if (!currentRoom?.id || state.phase !== "playing") return;
+    if (!currentRoom?.id || (state.phase !== "playing" && state.phase !== "question-result")) return;
 
     const channel = supabase
       .channel(`player-answers-${currentRoom.id}`)

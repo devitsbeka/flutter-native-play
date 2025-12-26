@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CreateRoomModal } from "@/components/team/CreateRoomModal";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobby } from "@/components/team/RoomLobby";
+import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
+import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScreen";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
 function TeamContent() {
@@ -30,10 +32,17 @@ function TeamContent() {
     }
   }, [searchParams, user, joinRoom]);
 
-  // Show lobby if in room
-  if (phase === "lobby" || phase === "countdown") {
-    return <RoomLobby />;
+  // Show game screen if playing
+  if (phase === "playing" || phase === "question-result") {
+    return <MultiplayerGameScreen />;
   }
+
+  // Show result screen
+  if (phase === "match-result") {
+    return <MultiplayerResultScreen />;
+  }
+
+  // Show lobby if in room
 
   // Show login prompt if not authenticated
   if (!user) {
