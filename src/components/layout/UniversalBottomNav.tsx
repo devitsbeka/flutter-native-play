@@ -232,13 +232,14 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
           {isPlayButton ? (
             <Play 
               className="w-8 h-8 ml-1" 
-              fill="white"
-              stroke="white"
+              fill="#1a3d2e"
+              stroke="#1a3d2e"
               strokeWidth={0}
             />
           ) : (
             <Home 
-              className="w-7 h-7 text-white" 
+              className="w-7 h-7" 
+              color="#1a3d2e"
               strokeWidth={2.5}
             />
           )}
