@@ -15,6 +15,7 @@ import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
+import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
@@ -96,6 +97,7 @@ export default function Index() {
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -188,6 +190,10 @@ export default function Index() {
         isOpen={selectedPowerUp !== null} 
         onClose={() => setSelectedPowerUp(null)} 
         type={selectedPowerUp || "fifty-fifty"} 
+      />
+      <AvatarModal 
+        isOpen={isAvatarModalOpen} 
+        onClose={() => setIsAvatarModalOpen(false)} 
       />
       
       
@@ -286,8 +292,12 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar Circle Component */}
-              <div data-walkthrough="avatar">
+              {/* Avatar Circle Component - clickable to open modal */}
+              <div 
+                data-walkthrough="avatar" 
+                className="pointer-events-auto cursor-pointer"
+                onClick={() => user && setIsAvatarModalOpen(true)}
+              >
                 <AvatarCircle avatarUrl={profile?.avatar_url} size={292} />
               </div>
                 

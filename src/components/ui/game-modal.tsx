@@ -72,18 +72,28 @@ export type GameModalVariant = "primary" | "success" | "gold" | "info";
 
 interface GameModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   variant?: GameModalVariant;
   icon?: React.ReactNode;
   iconEmoji?: string;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   footer?: React.ReactNode;
   showSparkles?: boolean;
   showStars?: boolean;
   className?: string;
   hideCloseButton?: boolean;
+  hideFooter?: boolean;
+  showBackButton?: boolean;
+  onBack?: () => void;
+  // Quick footer props (alternative to custom footer)
+  primaryLabel?: string;
+  primaryIcon?: React.ReactNode;
+  onPrimaryClick?: () => void;
+  primaryDisabled?: boolean;
+  secondaryLabel?: string;
+  onSecondaryClick?: () => void;
 }
 
 const variantStyles: Record<GameModalVariant, {
@@ -132,21 +142,45 @@ export function GameModal({
   showStars = false,
   className,
   hideCloseButton = false,
+  hideFooter = false,
+  showBackButton = false,
+  onBack,
+  primaryLabel,
+  primaryIcon,
+  onPrimaryClick,
+  primaryDisabled,
+  secondaryLabel,
+  onSecondaryClick,
 }: GameModalProps) {
   const styles = variantStyles[variant];
   const sparkles = Array.from({ length: 12 }, (_, i) => i);
   const stars = Array.from({ length: 4 }, (_, i) => i);
+  
+  // Build footer from props if not provided
+  const effectiveFooter = footer || (!hideFooter && primaryLabel && onPrimaryClick ? (
+    <GameModalFooter
+      primaryLabel={primaryLabel}
+      onPrimary={onPrimaryClick}
+      primaryIcon={primaryIcon}
+      secondaryLabel={secondaryLabel}
+      onSecondary={onSecondaryClick}
+      primaryVariant={variant === "success" ? "success" : "primary"}
+      isLoading={primaryDisabled}
+    />
+  ) : null);
+
+  const handleClose = onClose || (() => {});
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4"
-          onClick={onClose}
-        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4"
+            onClick={onClose ? handleClose : undefined}
+          >
           <motion.div
             initial={{ scale: 0.8, opacity: 0, y: 30 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -189,10 +223,29 @@ export function GameModal({
                 </div>
               )}
               
-              {/* Close button - 3D chunky style */}
-              {!hideCloseButton && (
+              {/* Back button */}
+              {showBackButton && onBack && (
                 <motion.button
-                  onClick={onClose}
+                  onClick={onBack}
+                  className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+                  style={{
+                    boxShadow: "0 3px 0 0 hsl(var(--border))",
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </motion.button>
+              )}
+              
+              {/* Close button - 3D chunky style */}
+              {!hideCloseButton && onClose && (
+                <motion.button
+                  onClick={handleClose}
                   className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-muted flex items-center justify-center"
                   style={{
                     boxShadow: "0 3px 0 0 hsl(var(--border))",
@@ -281,24 +334,26 @@ export function GameModal({
               </div>
               
               {/* Content area */}
-              <motion.div 
-                className="px-5 pb-5"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.25 }}
-              >
-                {children}
-              </motion.div>
+              {children && (
+                <motion.div 
+                  className="px-5 pb-5"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  {children}
+                </motion.div>
+              )}
               
               {/* Footer with action buttons */}
-              {footer && (
+              {effectiveFooter && (
                 <motion.div 
                   className="px-5 pb-5"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  {footer}
+                  {effectiveFooter}
                 </motion.div>
               )}
             </div>
