@@ -30,6 +30,7 @@ import AdminCategories from "./pages/admin/Categories";
 import AdminQuestions from "./pages/admin/Questions";
 import AdminOnlineUsers from "./pages/admin/OnlineUsers";
 import AdminImport from "./pages/admin/Import";
+import DuplicateScanner from "./pages/admin/DuplicateScanner";
 
 const App = () => (
   <AuthProvider>
@@ -66,6 +67,7 @@ const App = () => (
                 <Route path="questions" element={<AdminQuestions />} />
                 <Route path="import" element={<AdminImport />} />
                 <Route path="users" element={<AdminOnlineUsers />} />
+                <Route path="duplicates" element={<DuplicateScanner />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

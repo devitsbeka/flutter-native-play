@@ -29,7 +29,7 @@ const EXAMPLE_JSON = `[
 export function JsonImport() {
   const [jsonText, setJsonText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const { parsedQuestions, parseFromJson, clearParsedQuestions } = useQuestionParser();
+  const { parsedQuestions, parseFromJson, clearParsedQuestions, updateQuestion, removeQuestion } = useQuestionParser();
   const { categories } = useAdminCategories();
   const { bulkAddQuestions } = useAdminQuestions();
   const { toast } = useToast();
