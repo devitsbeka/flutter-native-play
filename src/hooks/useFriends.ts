@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -18,9 +18,12 @@ export function useFriends() {
   const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const previousPendingCount = useRef(0);
+  const isInitialLoad = useRef(true);
 
-  const fetchFriends = async () => {
+  const fetchFriends = useCallback(async () => {
     if (!user) {
       setFriends([]);
       setPendingRequests([]);
@@ -72,23 +75,44 @@ export function useFriends() {
           countryCode: profile?.country_code || null,
           status: f.status as "pending" | "accepted" | "blocked",
           isOutgoing,
+          isOnline: onlineUsers.has(friendId),
         };
       });
 
-      setFriends(allFriends.filter(f => f.status === "accepted"));
-      setPendingRequests(allFriends.filter(f => f.status === "pending" && !f.isOutgoing));
+      const acceptedFriends = allFriends.filter(f => f.status === "accepted");
+      const newPendingRequests = allFriends.filter(f => f.status === "pending" && !f.isOutgoing);
+      
+      // Show notification for new friend requests (not on initial load)
+      if (!isInitialLoad.current && newPendingRequests.length > previousPendingCount.current) {
+        const newRequest = newPendingRequests[newPendingRequests.length - 1];
+        toast.info(`${newRequest.nickname} გთხოვს მეგობრობას! 🤝`, {
+          duration: 5000,
+          action: {
+            label: "ნახვა",
+            onClick: () => {
+              // Navigate to team page handled by parent
+            },
+          },
+        });
+      }
+      
+      previousPendingCount.current = newPendingRequests.length;
+      isInitialLoad.current = false;
+      
+      setFriends(acceptedFriends);
+      setPendingRequests(newPendingRequests);
     } catch (error) {
       console.error("Error fetching friends:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, onlineUsers]);
 
   useEffect(() => {
     fetchFriends();
-  }, [user]);
+  }, [fetchFriends]);
 
-  // Subscribe to friendship changes
+  // Subscribe to friendship changes with notifications
   useEffect(() => {
     if (!user) return;
 
@@ -97,12 +121,53 @@ export function useFriends() {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
+          schema: "public",
+          table: "friendships",
+          filter: `friend_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          // New friend request received - fetch sender's profile for notification
+          const senderId = payload.new.user_id;
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("user_id", senderId)
+            .maybeSingle();
+          
+          const senderName = profile?.nickname || "ვიღაც";
+          toast.info(`${senderName} გთხოვს მეგობრობას! 🤝`, {
+            duration: 5000,
+          });
+          
+          fetchFriends();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
           schema: "public",
           table: "friendships",
           filter: `user_id=eq.${user.id}`,
         },
-        () => fetchFriends()
+        async (payload) => {
+          // Friend request was accepted
+          if (payload.new.status === "accepted" && payload.old?.status === "pending") {
+            const friendId = payload.new.friend_id;
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("nickname")
+              .eq("user_id", friendId)
+              .maybeSingle();
+            
+            const friendName = profile?.nickname || "მოთამაშე";
+            toast.success(`${friendName} მიიღო შენი მოთხოვნა! 🎉`, {
+              duration: 5000,
+            });
+          }
+          fetchFriends();
+        }
       )
       .on(
         "postgres_changes",
@@ -119,7 +184,64 @@ export function useFriends() {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [user, fetchFriends]);
+
+  // Presence tracking for online status
+  useEffect(() => {
+    if (!user) return;
+
+    const presenceChannel = supabase.channel("online-users", {
+      config: {
+        presence: {
+          key: user.id,
+        },
+      },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const onlineIds = new Set<string>();
+        
+        Object.keys(state).forEach((key) => {
+          onlineIds.add(key);
+        });
+        
+        setOnlineUsers(onlineIds);
+      })
+      .on("presence", { event: "join" }, ({ key }) => {
+        setOnlineUsers(prev => new Set([...prev, key]));
+      })
+      .on("presence", { event: "leave" }, ({ key }) => {
+        setOnlineUsers(prev => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({
+            user_id: user.id,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
   }, [user]);
+
+  // Update friends with online status when onlineUsers changes
+  useEffect(() => {
+    setFriends(prev => 
+      prev.map(friend => ({
+        ...friend,
+        isOnline: onlineUsers.has(friend.friendId),
+      }))
+    );
+  }, [onlineUsers]);
 
   const searchUsers = async (query: string) => {
     if (!user || query.length < 2) return [];
@@ -246,6 +368,7 @@ export function useFriends() {
   return {
     friends,
     pendingRequests,
+    onlineUsers,
     loading,
     searchUsers,
     sendFriendRequest,

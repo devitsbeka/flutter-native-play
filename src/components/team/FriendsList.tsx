@@ -52,6 +52,11 @@ export function FriendsList({ onAddFriendClick, onInviteFriend, roomCode }: Frie
           <div className="flex items-center gap-2 text-white/80">
             <Users className="w-4 h-4" />
             <span className="text-sm font-medium">მეგობრები ({friends.length})</span>
+            {friends.some(f => f.isOnline) && (
+              <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 text-xs">
+                {friends.filter(f => f.isOnline).length} ონლაინ
+              </span>
+            )}
           </div>
           
           <motion.button
@@ -84,7 +89,8 @@ export function FriendsList({ onAddFriendClick, onInviteFriend, roomCode }: Frie
           </motion.div>
         ) : (
           <AnimatePresence>
-            {friends.map((friend) => (
+            {/* Sort online friends first */}
+            {[...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).map((friend) => (
               <FriendCard
                 key={friend.id}
                 friend={friend}
@@ -112,30 +118,45 @@ function FriendCard({ friend, onInvite, showInvite }: FriendCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="flex items-center gap-3 p-3 rounded-2xl bg-white/10 backdrop-blur-sm"
+      className={`flex items-center gap-3 p-3 rounded-2xl backdrop-blur-sm transition-colors ${
+        friend.isOnline 
+          ? "bg-white/15 border border-green-500/20" 
+          : "bg-white/10"
+      }`}
     >
       <div className="relative">
-        <Avatar className="w-12 h-12 border-2 border-white/30">
+        <Avatar className={`w-12 h-12 border-2 ${friend.isOnline ? "border-green-400/50" : "border-white/30"}`}>
           <AvatarImage src={friend.avatarUrl || undefined} />
           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
             {friend.nickname.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        {friend.isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-white/30" />
-        )}
+        {/* Online indicator dot with pulse animation */}
+        <motion.div 
+          className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white/30 ${
+            friend.isOnline ? "bg-green-400" : "bg-gray-400"
+          }`}
+          animate={friend.isOnline ? { 
+            scale: [1, 1.2, 1],
+            boxShadow: ["0 0 0 0 rgba(74, 222, 128, 0.4)", "0 0 0 4px rgba(74, 222, 128, 0)", "0 0 0 0 rgba(74, 222, 128, 0.4)"]
+          } : {}}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-white truncate">{friend.nickname}</p>
-        {friend.countryCode && (
-          <p className="text-sm text-white/60">
-            {getCountryFlag(friend.countryCode)}
-          </p>
-        )}
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-white truncate">{friend.nickname}</p>
+          {friend.countryCode && (
+            <span className="text-sm">{getCountryFlag(friend.countryCode)}</span>
+          )}
+        </div>
+        <p className={`text-xs ${friend.isOnline ? "text-green-300" : "text-white/50"}`}>
+          {friend.isOnline ? "ონლაინ" : "ოფლაინ"}
+        </p>
       </div>
 
-      {showInvite && (
+      {showInvite && friend.isOnline && (
         <motion.button
           onClick={onInvite}
           className="flex items-center gap-1 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium"
