@@ -4,7 +4,7 @@ import { ArrowLeft, Search, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { categories, Category } from "@/data/categories";
-
+import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 // Bottom nav icons
 import iconCompass from "@/assets/icons/icon-compass.png";
 import iconMap3d from "@/assets/icons/icon-map-3d.png";
@@ -55,8 +55,18 @@ function PlayButton3D({ onClick }: { onClick: () => void }) {
   );
 }
 
-// Category Card Component - 3 row layout (no fill, transparent)
-function CategoryCard({ category, onClick }: { category: Category; onClick: () => void }) {
+// Category Card Component - 3 row layout with progress
+function CategoryCard({ 
+  category, 
+  onClick, 
+  completedLevels 
+}: { 
+  category: Category; 
+  onClick: () => void;
+  completedLevels: number;
+}) {
+  const progressPercent = (completedLevels / category.totalLevels) * 100;
+  
   return (
     <motion.button
       onClick={onClick}
@@ -91,11 +101,30 @@ function CategoryCard({ category, onClick }: { category: Category; onClick: () =
       {/* Row 2: Description */}
       <p className="text-sm text-slate-600 mt-4 line-clamp-2 px-1">{category.description}</p>
       
-      {/* Row 3: Level badge */}
-      <div className="mt-4">
-        <span className="text-xs px-3 py-1.5 rounded-full bg-white/70 text-slate-700 font-semibold shadow-sm">
-          {category.totalLevels} დონე
+      {/* Row 3: Progress badge + bar */}
+      <div className="mt-4 flex items-center gap-3">
+        <span 
+          className="text-xs px-3 py-1.5 rounded-full bg-white/80 text-slate-700 font-semibold shadow-sm flex items-center gap-1"
+          style={{ backdropFilter: "blur(4px)" }}
+        >
+          <span className="text-purple-600 font-bold">{completedLevels}</span>
+          <span className="text-slate-400">/</span>
+          <span>{category.totalLevels}</span>
+          <span className="ml-0.5 text-slate-500">დონე</span>
         </span>
+        
+        {/* Progress bar */}
+        <div className="flex-1 h-2 bg-slate-200/60 rounded-full overflow-hidden shadow-inner">
+          <motion.div 
+            className="h-full rounded-full"
+            style={{
+              background: "linear-gradient(90deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
+            }}
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          />
+        </div>
       </div>
     </motion.button>
   );
@@ -105,6 +134,7 @@ export default function Discover() {
   const [activeTab, setActiveTab] = useState<CategoryType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { progress } = useCategoryProgress();
 
   // Filter categories by tab and search
   const filteredCategories = categories.filter((category) => {
@@ -206,6 +236,7 @@ export default function Discover() {
                 <CategoryCard 
                   category={category} 
                   onClick={() => handleCategoryClick(category)}
+                  completedLevels={progress[category.id]?.completedLevels?.length || 0}
                 />
               </motion.div>
             ))}
