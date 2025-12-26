@@ -432,7 +432,8 @@ export default function Index() {
                   const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
                   const radius = 160; // wider radius to match bigger circle
                   const radians = (angle * Math.PI) / 180;
-                  const x = Math.sin(radians) * radius;
+                  const badgeWidth = 48; // approximate badge width
+                  const x = Math.sin(radians) * radius - badgeWidth / 2;
                   const y = -Math.cos(radians) * radius + radius;
                   
                   return (
@@ -445,7 +446,6 @@ export default function Index() {
                       style={{ 
                         left: "50%",
                         top: 0,
-                        transform: "translateX(-50%)",
                       }}
                     >
                       <PowerUpBadge 
