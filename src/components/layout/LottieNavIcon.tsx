@@ -21,16 +21,16 @@ interface LottieNavIconProps {
 
 export function LottieNavIcon({ 
   type, 
-  size = 104, 
+  size = 52, 
   className = "",
 }: LottieNavIconProps) {
   return (
     <div 
-      className={`rounded-3xl bg-white shadow-sm ${className}`}
+      className={`rounded-2xl bg-white shadow-sm ${className}`}
       style={{ 
         width: size, 
         height: size,
-        padding: 16,
+        padding: 4,
       }}
     >
       <div
