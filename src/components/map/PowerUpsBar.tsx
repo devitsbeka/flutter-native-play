@@ -40,7 +40,7 @@ export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
       {/* Power-ups row */}
       <div 
         className="flex items-center justify-center gap-3"
-        style={{ marginTop: "10px" }}
+        style={{ marginTop: "20px" }}
       >
         {powers.map((power, index) => (
           <PowerUpBadge
