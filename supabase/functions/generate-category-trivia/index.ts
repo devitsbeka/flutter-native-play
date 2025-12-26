@@ -11,9 +11,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { category, categoryId, level, count = 5 } = await req.json();
+    const { category, categoryId, level = 1, count = 5 } = await req.json();
 
-    if (!category || !categoryId) {
+    if (!category) {
       return new Response(
         JSON.stringify({ error: "კატეგორიის ინფორმაცია აკლია" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
