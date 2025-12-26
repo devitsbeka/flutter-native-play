@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Settings } from "lucide-react";
@@ -6,12 +6,21 @@ import { LevelCircle } from "./LevelCircle";
 import { PowerUpsBar } from "./PowerUpsBar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { MAP_VIDEOS } from "@/components/game/VideoPreloader";
+
+type VideoPhase = "default" | "video-b" | "video-c";
 
 export function VideoAdventureMap() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentPhase, setCurrentPhase] = useState<VideoPhase>("default");
+  
+  // Refs for all three video elements
+  const videoDefaultRef = useRef<HTMLVideoElement>(null);
+  const videoBRef = useRef<HTMLVideoElement>(null);
+  const videoCRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -40,28 +49,113 @@ export function VideoAdventureMap() {
     fetchProfile();
   }, [user]);
 
+  // Video playback control based on phase
+  useEffect(() => {
+    const videoDefault = videoDefaultRef.current;
+    const videoB = videoBRef.current;
+    const videoC = videoCRef.current;
+
+    if (!videoDefault || !videoB || !videoC) return;
+
+    // Pause all videos first
+    videoDefault.pause();
+    videoB.pause();
+    videoC.pause();
+
+    // Play the active video
+    switch (currentPhase) {
+      case "default":
+        videoDefault.currentTime = 0;
+        videoDefault.play().catch(() => {});
+        break;
+      case "video-b":
+        videoB.currentTime = 0;
+        videoB.play().catch(() => {});
+        break;
+      case "video-c":
+        videoC.currentTime = 0;
+        videoC.play().catch(() => {});
+        break;
+    }
+  }, [currentPhase]);
+
   const handleBack = () => {
     navigate(-1);
   };
 
   const handleAddPowerUp = () => {
-    // Navigate to shop or open power-up purchase modal
     console.log("Open power-up shop");
+  };
+
+  // Trigger video sequence when level circle is clicked
+  const handleLevelCircleClick = () => {
+    if (currentPhase !== "default") return; // Prevent triggering during sequence
+    setCurrentPhase("video-b");
+  };
+
+  // Handle video B ended - transition to video C
+  const handleVideoBEnded = () => {
+    setCurrentPhase("video-c");
+  };
+
+  // Handle video C ended - transition back to default
+  const handleVideoCEnded = () => {
+    setCurrentPhase("default");
   };
 
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden">
-      {/* Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ zIndex: 0 }}
-      >
-        <source src="/videos/map-background.mp4" type="video/mp4" />
-      </video>
+      {/* Video Background Container - All 3 videos always mounted */}
+      <div className="absolute inset-0 w-full h-full">
+        {/* Default Video (looping) */}
+        <video
+          ref={videoDefaultRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ 
+            zIndex: 0,
+            opacity: currentPhase === "default" ? 1 : 0,
+            transition: "opacity 300ms linear",
+          }}
+        >
+          <source src={MAP_VIDEOS.default} type="video/mp4" />
+        </video>
+
+        {/* Video B (plays once) */}
+        <video
+          ref={videoBRef}
+          muted
+          playsInline
+          onEnded={handleVideoBEnded}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ 
+            zIndex: 0,
+            opacity: currentPhase === "video-b" ? 1 : 0,
+            transition: "opacity 300ms linear",
+          }}
+        >
+          <source src={MAP_VIDEOS.videoB} type="video/mp4" />
+        </video>
+
+        {/* Video C (plays once) */}
+        <video
+          ref={videoCRef}
+          muted
+          playsInline
+          onEnded={handleVideoCEnded}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ 
+            zIndex: 0,
+            opacity: currentPhase === "video-c" ? 1 : 0,
+            transition: "opacity 300ms linear",
+          }}
+        >
+          <source src={MAP_VIDEOS.videoC} type="video/mp4" />
+        </video>
+      </div>
 
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col h-full">
@@ -95,7 +189,12 @@ export function VideoAdventureMap() {
 
         {/* Center content - Level Circle */}
         <div className="flex-1 flex items-start justify-center -mt-4">
-          {!loading && <LevelCircle totalPoints={totalPoints} />}
+          {!loading && (
+            <LevelCircle 
+              totalPoints={totalPoints} 
+              onClick={handleLevelCircleClick}
+            />
+          )}
         </div>
 
         {/* Bottom content - Power-ups bar */}
