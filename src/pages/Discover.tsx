@@ -123,10 +123,9 @@ export default function Discover() {
       <div className="relative z-10 flex flex-col h-screen">
         {/* Sticky Header Container */}
         <div 
-          className="sticky top-0 z-20 shrink-0"
+          className="sticky top-0 z-20 shrink-0 relative"
           style={{
             background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 100%)",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
           }}
         >
           {/* Header */}
@@ -185,16 +184,25 @@ export default function Discover() {
             </div>
           </div>
 
-          {/* Category Count */}
-          <div className="px-4 pb-3">
-            <p className="text-sm text-slate-600">
-              <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
-            </p>
-          </div>
+          {/* Fade overlay at bottom of sticky header */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none -mb-6"
+            style={{
+              background: "linear-gradient(to bottom, hsl(195 80% 85%) 0%, transparent 100%)"
+            }}
+          />
         </div>
 
-        {/* Category Grid - scrollable area */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-32">
+        {/* Category Grid - smooth scrollable area */}
+        <div 
+          className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-32 scroll-smooth"
+          style={{ scrollBehavior: "smooth" }}
+        >
+          {/* Category Count - scrolls with content */}
+          <p className="text-sm text-slate-600 py-3">
+            <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
+          </p>
+          
           <div className="grid grid-cols-1 gap-[15px]">
             {filteredCategories.map((category, index) => (
               <motion.div
