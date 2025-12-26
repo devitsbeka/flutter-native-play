@@ -7,22 +7,8 @@ const corsHeaders = {
 
 const LIGHTX_API_KEY = Deno.env.get('LIGHTX_API_KEY');
 
-// Style reference image URL - use the production app URL
-const getStyleImageUrl = () => {
-  // This image is stored in the public folder
-  return "https://mytrivia.io/images/avatar-style-reference.jpg";
-};
-
 interface AvatarRequest {
   imageUrl: string;
-}
-
-interface LightXResponse {
-  statusCode: number;
-  body: {
-    orderId: string;
-    status: string;
-  };
 }
 
 interface LightXResultResponse {
@@ -70,49 +56,9 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
   throw new Error("Operation timed out");
 }
 
-async function expandImage(imageUrl: string, topPadding: number = 150, sidePadding: number = 300): Promise<string> {
-  console.log(`Expanding image: top=${topPadding}px, sides=${sidePadding}px for:`, imageUrl.substring(0, 100));
-  
-  const response = await fetch("https://api.lightxeditor.com/external/api/v2/expand-photo", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": LIGHTX_API_KEY!,
-    },
-    body: JSON.stringify({
-      imageUrl: imageUrl,
-      topPadding: topPadding,
-      bottomPadding: 0,
-      leftPadding: sidePadding,
-      rightPadding: sidePadding,
-    }),
-  });
-
-  const data = await response.json();
-  console.log("LightX expand response:", JSON.stringify(data));
-
-  if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
-    throw new Error(`LightX expand API error: ${data.message || JSON.stringify(data)}`);
-  }
-
-  const orderId = data.body?.orderId || data.orderId;
-  if (!orderId) {
-    throw new Error(`No orderId in expand response: ${JSON.stringify(data)}`);
-  }
-
-  console.log("Expand orderId:", orderId);
-
-  // Poll for the result
-  const resultUrl = await pollForResult(orderId);
-  console.log("Image expanded successfully:", resultUrl);
-
-  return resultUrl;
-}
-
 async function removeBackground(imageUrl: string): Promise<string> {
   console.log("Starting background removal for:", imageUrl.substring(0, 100));
   
-  // Call LightX Remove Background API - no background color for transparency
   const response = await fetch("https://api.lightxeditor.com/external/api/v1/remove-background", {
     method: "POST",
     headers: {
@@ -121,7 +67,6 @@ async function removeBackground(imageUrl: string): Promise<string> {
     },
     body: JSON.stringify({
       imageUrl: imageUrl,
-      // Omit background to get transparent PNG
     }),
   });
 
@@ -139,7 +84,6 @@ async function removeBackground(imageUrl: string): Promise<string> {
 
   console.log("Background removal orderId:", orderId);
 
-  // Poll for the result
   const resultUrl = await pollForResult(orderId);
   console.log("Background removed successfully:", resultUrl);
 
@@ -147,7 +91,6 @@ async function removeBackground(imageUrl: string): Promise<string> {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -164,10 +107,8 @@ serve(async (req) => {
     }
 
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
-    const styleImageUrl = getStyleImageUrl();
-    console.log("Using style reference:", styleImageUrl);
 
-    // Step 1: Call LightX Avatar API with style reference
+    // Step 1: Generate avatar with prompt only (no style image)
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
@@ -176,21 +117,18 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         imageUrl: imageUrl,
-        styleImageUrl: styleImageUrl,
-        textPrompt: "3D cartoon avatar with a friendly smile, Disney Pixar style, hyper-detailed, HD, HDR, 4K, 8K.",
-        styleStrength: 60,
+        textPrompt: "High quality 3D cartoon avatar, Disney Pixar animation style, friendly welcoming expression, soft studio lighting, vibrant colors, detailed facial features, smooth skin texture, expressive eyes, full head and shoulders visible with extra space around head, centered composition",
+        styleStrength: 50,
       }),
     });
 
     const data = await response.json();
-    console.log("LightX initial response:", JSON.stringify(data));
+    console.log("LightX avatar response:", JSON.stringify(data));
 
-    // Check for API error response - statusCode 2000 means success
     if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
       throw new Error(`LightX API error: ${data.message || JSON.stringify(data)}`);
     }
 
-    // Handle response structure
     const orderId = data.body?.orderId || data.orderId;
     if (!orderId) {
       throw new Error(`No orderId in response: ${JSON.stringify(data)}`);
@@ -202,21 +140,15 @@ serve(async (req) => {
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
 
-    // Step 2: Expand the image to prevent cropping (top: 150px, sides: 300px)
-    console.log("Step 2: Expanding avatar (top: 150px, sides: 300px)...");
-    const expandedAvatarUrl = await expandImage(avatarUrl, 150, 300);
-    console.log("Avatar expanded successfully:", expandedAvatarUrl);
-
-    // Step 3: Remove background from the expanded avatar
-    console.log("Step 3: Removing background from expanded avatar...");
-    const finalAvatarUrl = await removeBackground(expandedAvatarUrl);
+    // Step 2: Remove background
+    console.log("Step 2: Removing background...");
+    const finalAvatarUrl = await removeBackground(avatarUrl);
     console.log("Final avatar with transparent background:", finalAvatarUrl);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         avatarUrl: finalAvatarUrl,
-        expandedAvatarUrl: expandedAvatarUrl,
         originalAvatarUrl: avatarUrl,
       }),
       { 
