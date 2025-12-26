@@ -75,6 +75,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               onClick={() => navigate("/adventure-map")}
               isActive={isActive("/adventure-map")}
               label={t("nav.map")}
+              className="mr-[10px]"
             >
               <LottieNavIcon type="map" size={60} />
             </NavButton>
@@ -94,6 +95,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               onClick={() => navigate("/leaderboards")}
               isActive={isActive("/leaderboards")}
               label={t("nav.rank")}
+              className="ml-[10px]"
             >
               <LottieNavIcon type="rank" size={60} />
             </NavButton>
@@ -117,17 +119,19 @@ function NavButton({
   children, 
   onClick, 
   isActive, 
-  label 
+  label,
+  className = ""
 }: { 
   children: React.ReactNode;
   onClick: () => void;
   isActive: boolean;
   label: string;
+  className?: string;
 }) {
   return (
     <motion.button
       onClick={onClick}
-      className="flex flex-col items-center gap-1"
+      className={`flex flex-col items-center gap-1 ${className}`}
       whileHover={{ scale: 1.1, y: -3 }}
       whileTap={{ scale: 0.9 }}
     >
