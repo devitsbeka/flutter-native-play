@@ -59,11 +59,17 @@ export function AiGenerator() {
 
         if (data.questions) {
           const questions = data.questions.map((q: any) => {
-            const validation = validateQuestion(q);
-            return {
-              ...q,
+            // Map edge function response fields to expected format
+            const normalizedQ = {
+              question_text: q.question_text || q.question || '',
+              correct_answer: q.correct_answer || '',
+              incorrect_answers: q.incorrect_answers || [],
               difficulty: q.difficulty || difficulty,
               level_number: q.level_number || 1,
+            };
+            const validation = validateQuestion(normalizedQ);
+            return {
+              ...normalizedQ,
               ...validation,
             };
           });
