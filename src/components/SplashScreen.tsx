@@ -2,6 +2,7 @@ import { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import splashBackground from '@/assets/splash-background.png';
 import logoImage from '@/assets/logo-worldquizzes.png';
+import { onVideosLoaded, areVideosLoaded } from '@/components/game/VideoPreloader';
 
 interface SplashScreenProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [videosReady, setVideosReady] = useState(areVideosLoaded());
 
   // Preload images before starting the loading animation
   useEffect(() => {
@@ -31,7 +33,20 @@ export function SplashScreen({ children }: SplashScreenProps) {
     logoImg.src = logoImage;
   }, []);
 
+  // Listen for video preloading completion
+  useEffect(() => {
+    if (areVideosLoaded()) {
+      setVideosReady(true);
+      return;
+    }
+    
+    onVideosLoaded(() => {
+      setVideosReady(true);
+    });
+  }, []);
+
   // Start progress animation only after images are loaded
+  // Complete only after both images AND videos are ready
   useEffect(() => {
     if (!imagesLoaded) return;
 
@@ -44,8 +59,10 @@ export function SplashScreen({ children }: SplashScreenProps) {
         const next = prev + increment;
         if (next >= 100) {
           clearInterval(timer);
-          // Add small delay before hiding splash
-          setTimeout(() => setIsLoading(false), 400);
+          // Only finish loading when videos are also ready
+          if (videosReady) {
+            setTimeout(() => setIsLoading(false), 400);
+          }
           return 100;
         }
         return next;
@@ -53,7 +70,14 @@ export function SplashScreen({ children }: SplashScreenProps) {
     }, interval);
 
     return () => clearInterval(timer);
-  }, [imagesLoaded]);
+  }, [imagesLoaded, videosReady]);
+
+  // Handle case where progress finishes before videos
+  useEffect(() => {
+    if (progress >= 100 && videosReady && isLoading) {
+      setTimeout(() => setIsLoading(false), 400);
+    }
+  }, [progress, videosReady, isLoading]);
 
   return (
     <>

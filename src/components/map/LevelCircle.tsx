@@ -3,9 +3,10 @@ import { calculateLevel } from "@/utils/levelCalculation";
 
 interface LevelCircleProps {
   totalPoints: number;
+  onClick?: () => void;
 }
 
-export function LevelCircle({ totalPoints }: LevelCircleProps) {
+export function LevelCircle({ totalPoints, onClick }: LevelCircleProps) {
   const levelInfo = calculateLevel(totalPoints);
   
   return (
@@ -15,8 +16,13 @@ export function LevelCircle({ totalPoints }: LevelCircleProps) {
       transition={{ type: "spring", duration: 0.6 }}
       className="flex flex-col items-center"
     >
-      {/* Main Circle Container */}
-      <div className="relative w-44 h-44">
+      {/* Main Circle Container - Clickable */}
+      <motion.div 
+        className="relative w-44 h-44 cursor-pointer"
+        onClick={onClick}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
         {/* Outer ring with gradient */}
         <div 
           className="absolute inset-0 rounded-full"
@@ -75,7 +81,7 @@ export function LevelCircle({ totalPoints }: LevelCircleProps) {
             </span>
           </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
