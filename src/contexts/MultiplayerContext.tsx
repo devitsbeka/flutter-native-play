@@ -64,6 +64,7 @@ interface MultiplayerContextType extends MultiplayerState {
   leaveRoom: () => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
   startGame: () => Promise<void>;
+  startGameSolo: () => Promise<void>;
   submitAnswer: (answer: string, timeRemaining: number) => Promise<void>;
   nextQuestion: () => void;
   resetMultiplayer: () => void;
@@ -487,6 +488,78 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     }
   }, [currentRoom, isHost, allReady, updateRoomStatus]);
 
+  // Start game solo - converts to async challenge for friends to play later
+  const startGameSolo = useCallback(async () => {
+    if (!currentRoom || !isHost) return;
+
+    setState(prev => ({ ...prev, phase: "countdown" }));
+
+    try {
+      // First, convert the room to async challenge with expiry
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 48);
+
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          game_type: "async",
+          challenge_expires_at: expiresAt.toISOString(),
+        })
+        .eq("id", currentRoom.id);
+
+      // Generate questions
+      const response = await supabase.functions.invoke("generate-category-trivia", {
+        body: { 
+          category: currentRoom.category_name || "ზოგადი ცოდნა",
+          count: currentRoom.total_questions,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      const questions: TriviaQuestion[] = response.data.questions.map((q: any, index: number) => ({
+        id: `${currentRoom.id}-${index}`,
+        question: q.question,
+        correctAnswer: q.correct_answer,
+        incorrectAnswers: q.incorrect_answers,
+        allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
+        difficulty: q.difficulty || "medium",
+        category: currentRoom.category_name || "ზოგადი ცოდნა",
+      }));
+
+      // Store questions in database for the challenged user to play later
+      for (let i = 0; i < questions.length; i++) {
+        await supabase.from("room_questions").insert({
+          room_id: currentRoom.id,
+          question_index: i,
+          question_text: questions[i].question,
+          correct_answer: questions[i].correctAnswer,
+          incorrect_answers: questions[i].incorrectAnswers,
+          difficulty: questions[i].difficulty,
+        });
+      }
+
+      setState(prev => ({
+        ...prev,
+        questions,
+        currentQuestionIndex: 0,
+        myScore: 0,
+      }));
+
+      // Update room status after countdown
+      setTimeout(async () => {
+        await updateRoomStatus(currentRoom.id, "playing");
+        setState(prev => ({ ...prev, phase: "playing" }));
+      }, 4000); // 3-2-1-GO countdown
+
+      toast.success("მეგობარი მოგვიანებით ითამაშებს!");
+    } catch (error) {
+      console.error("Failed to start solo game:", error);
+      toast.error("თამაშის დაწყება ვერ მოხერხდა");
+      setState(prev => ({ ...prev, phase: "lobby" }));
+    }
+  }, [currentRoom, isHost, updateRoomStatus]);
+
   const submitAnswer = useCallback(async (answer: string, timeRemaining: number) => {
     if (!currentRoom || !user) return;
 
@@ -650,6 +723,7 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
         leaveRoom,
         setReady,
         startGame,
+        startGameSolo,
         submitAnswer,
         nextQuestion,
         resetMultiplayer,

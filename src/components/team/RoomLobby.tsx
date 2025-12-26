@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Share2, Users, Play, LogOut, Check, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Users, Play, LogOut, Check, X, Loader2, UserX } from "lucide-react";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ParticipantCard } from "./ParticipantCard";
@@ -19,6 +19,7 @@ export function RoomLobby() {
     leaveRoom, 
     setReady, 
     startGame,
+    startGameSolo,
     loading,
     phase,
   } = useMultiplayer();
@@ -83,6 +84,10 @@ export function RoomLobby() {
 
   const handleStart = async () => {
     await startGame();
+  };
+
+  const handleStartSolo = async () => {
+    await startGameSolo();
   };
 
   if (!room) return null;
@@ -207,6 +212,9 @@ export function RoomLobby() {
                 <div className="text-center">
                   <Loader2 className="w-6 h-6 text-white/50 animate-spin mx-auto mb-2" />
                   <p className="text-white/50 text-sm">ველოდებით მოთამაშეს...</p>
+                  {isHost && participants.length < 2 && (
+                    <p className="text-white/40 text-xs mt-1">ან დაიწყე მარტო - მეგობარი მოგვიანებით ითამაშებს</p>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -230,16 +238,48 @@ export function RoomLobby() {
 
           {/* Start button (for host) */}
           {isHost && (
-            <ChunkyButton
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={handleStart}
-              disabled={!allReady || loading}
-              icon={<Play className="w-5 h-5" />}
-            >
-              {loading ? "იწყება..." : allReady ? "დაწყება" : "ველოდებით მოთამაშეებს..."}
-            </ChunkyButton>
+            <>
+              {/* Normal start when multiple players ready */}
+              {participants.length >= 2 && allReady && (
+                <ChunkyButton
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleStart}
+                  disabled={loading}
+                  icon={<Play className="w-5 h-5" />}
+                >
+                  {loading ? "იწყება..." : "დაწყება"}
+                </ChunkyButton>
+              )}
+              
+              {/* Start solo when alone - converts to async */}
+              {participants.length < 2 && (
+                <ChunkyButton
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleStartSolo}
+                  disabled={loading}
+                  icon={<UserX className="w-5 h-5" />}
+                >
+                  {loading ? "იწყება..." : "დაწყება მარტო"}
+                </ChunkyButton>
+              )}
+              
+              {/* Waiting state when multiple players but not all ready */}
+              {participants.length >= 2 && !allReady && (
+                <ChunkyButton
+                  variant="secondary"
+                  size="lg"
+                  className="w-full"
+                  disabled
+                  icon={<Loader2 className="w-5 h-5 animate-spin" />}
+                >
+                  ველოდებით მოთამაშეებს...
+                </ChunkyButton>
+              )}
+            </>
           )}
 
           {/* Leave button */}

@@ -183,20 +183,26 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <p className="font-medium text-white truncate">{challenge.challengerNickname}</p>
-            <span className="text-amber-300">გამოგიწვია!</span>
           </div>
+          
+          {/* Show challenger's score prominently if they've already played */}
+          {challenge.challengerScore !== null ? (
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 text-sm font-semibold">
+                <Trophy className="w-3.5 h-3.5" />
+                {challenge.challengerScore} ქულა
+              </div>
+              <span className="text-white/60 text-sm">- გადააჯობე!</span>
+            </div>
+          ) : (
+            <p className="text-amber-300 text-sm mb-1">გამოგიწვია!</p>
+          )}
           
           <div className="flex items-center gap-3 text-sm text-white/70">
             <span className="flex items-center gap-1">
               <Gamepad2 className="w-3.5 h-3.5" />
               {challenge.categoryName || "ზოგადი"}
             </span>
-            {challenge.challengerScore !== null && (
-              <span className="flex items-center gap-1 text-amber-300">
-                <Trophy className="w-3.5 h-3.5" />
-                {challenge.challengerScore} ქულა
-              </span>
-            )}
           </div>
 
           {/* Countdown Timer */}
@@ -215,14 +221,15 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
           </div>
         </div>
 
-        {/* Accept Button */}
+        {/* Accept Button - more prominent "Play Now!" */}
         <ChunkyButton
           variant="primary"
           size="sm"
           onClick={onAccept}
           icon={<Gamepad2 className="w-4 h-4" />}
+          className="min-w-[100px]"
         >
-          თამაში
+          ითამაშე!
         </ChunkyButton>
       </div>
     </motion.div>
