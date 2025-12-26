@@ -157,48 +157,49 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
       style={{ width: 88, height: 88 }}
     >
-      {/* Outer ring/border */}
+      {/* Soft outer glow - box-shadow only, no filter */}
       <div
-        className="absolute -inset-1 rounded-full"
+        className="absolute rounded-full"
         style={{
-          background: "linear-gradient(180deg, rgba(180,160,220,0.5) 0%, rgba(140,120,180,0.3) 100%)",
-          filter: "blur(2px)",
+          inset: -8,
+          background: "radial-gradient(circle, rgba(110,255,194,0.25) 0%, rgba(80,230,170,0.1) 50%, transparent 70%)",
+          boxShadow: "0 0 25px rgba(110,255,194,0.4), 0 0 50px rgba(80,230,170,0.2)",
         }}
       />
       
-      {/* Bottom 3D depth layer - darkest purple */}
+      {/* Bottom 3D depth layer - darkest teal */}
       <div
         className="absolute rounded-full"
         style={{
           inset: 0,
           top: 6,
-          background: "linear-gradient(180deg, #4a3a6e 0%, #3d2d5c 50%, #2e2248 100%)",
+          background: "linear-gradient(180deg, #1E8563 0%, #166A50 50%, #0F5A42 100%)",
         }}
       />
       
-      {/* Middle bevel layer - medium purple */}
+      {/* Middle bevel layer - medium teal */}
       <div
         className="absolute rounded-full"
         style={{
           inset: 3,
           top: 4,
           bottom: 8,
-          background: "linear-gradient(180deg, #6b5a8e 0%, #5a4a7d 100%)",
+          background: "linear-gradient(180deg, #2DB888 0%, #259F72 100%)",
         }}
       />
       
-      {/* Main face - gradient purple */}
+      {/* Main face - mint green radial gradient */}
       <div
         className="absolute rounded-full overflow-hidden"
         style={{
           inset: 4,
           top: 0,
           bottom: 12,
-          background: "linear-gradient(160deg, #9080b8 0%, #7a68a6 30%, #6b5a94 60%, #5d4d86 100%)",
+          background: "radial-gradient(circle at 40% 35%, #8AFFDA 0%, #6EFFC2 25%, #5EE8B5 50%, #4DD8A5 75%, #3FC99A 100%)",
         }}
       >
         
-        {/* Electric blue particles */}
+        {/* Mint green sparkle particles */}
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
@@ -206,8 +207,8 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
             style={{
               width: i % 2 === 0 ? 4 : 3,
               height: i % 2 === 0 ? 4 : 3,
-              background: "rgba(100,200,255,0.95)",
-              boxShadow: "0 0 8px rgba(100,200,255,0.9), 0 0 12px rgba(80,180,255,0.6)",
+              background: "rgba(180,255,220,0.95)",
+              boxShadow: "0 0 6px rgba(150,255,210,0.9), 0 0 10px rgba(100,230,180,0.6)",
               left: `${20 + (i * 12)}%`,
               top: `${25 + ((i % 3) * 18)}%`,
             }}
@@ -234,13 +235,11 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
               fill="white"
               stroke="white"
               strokeWidth={0}
-              style={{ filter: "drop-shadow(0 2px 4px rgba(30,20,50,0.5))" }}
             />
           ) : (
             <Home 
               className="w-7 h-7 text-white" 
               strokeWidth={2.5}
-              style={{ filter: "drop-shadow(0 2px 4px rgba(30,20,50,0.5))" }}
             />
           )}
         </div>
