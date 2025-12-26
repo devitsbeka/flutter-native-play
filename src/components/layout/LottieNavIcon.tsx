@@ -24,6 +24,10 @@ export function LottieNavIcon({
   size = 52, 
   className = "",
 }: LottieNavIconProps) {
+  // TV icon needs special handling - use drop-shadow to add purple glow
+  // while preserving inner white areas
+  const isTV = type === "team";
+  
   return (
     <div 
       className={`${className}`}
@@ -37,15 +41,25 @@ export function LottieNavIcon({
         style={{
           width: "100%",
           height: "100%",
-          // Softer filter that preserves white areas (no brightness(0))
-          filter: "sepia(20%) saturate(400%) hue-rotate(220deg) brightness(95%)",
+          // Standard filter for most icons (colorizes white to purple)
+          // TV uses different approach to preserve white inner frame
+          filter: isTV 
+            ? "drop-shadow(0 0 1px hsl(263 60% 59%)) drop-shadow(0 0 2px hsl(263 60% 59%))"
+            : "brightness(0) saturate(100%) invert(40%) sepia(15%) saturate(1000%) hue-rotate(220deg) brightness(95%) contrast(90%)",
         }}
       >
         <Lottie
           animationData={animationMap[type]}
           loop={true}
           autoplay={true}
-          style={{ width: "100%", height: "100%" }}
+          style={{ 
+            width: "100%", 
+            height: "100%",
+            // For TV, add purple tint overlay while keeping white visible
+            ...(isTV ? { 
+              filter: "brightness(0.6) sepia(100%) saturate(300%) hue-rotate(210deg) brightness(1.1)",
+            } : {}),
+          }}
         />
       </div>
     </div>
