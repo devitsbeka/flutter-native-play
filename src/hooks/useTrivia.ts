@@ -70,22 +70,29 @@ export function useTrivia() {
       setPreparationProgress(10);
 
       // ============ DB-FIRST: Try to fetch from database first ============
-      const { data: dbQuestions, error: dbError } = await supabase
-        .from('questions')
-        .select(`
-          id,
-          question_text,
-          correct_answer,
-          incorrect_answers,
-          difficulty,
-          level_number,
-          categories!inner(category_id, name)
-        `)
-        .eq('is_active', true)
-        .eq('categories.category_id', selectedCategory.id)
-        .gte('level_number', level)
-        .lte('level_number', level + 2) // Get questions from nearby levels
-        .limit(amount + 5); // Get extra for filtering
+      // First, get the category UUID from the category_id string
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('category_id', selectedCategory.id)
+        .single();
+
+      let dbQuestions: any[] = [];
+      let dbError: any = null;
+
+      if (categoryData) {
+        const result = await supabase
+          .from('questions')
+          .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id')
+          .eq('is_active', true)
+          .eq('category_id', categoryData.id)
+          .gte('level_number', level)
+          .lte('level_number', level + 2)
+          .limit(amount + 5);
+        
+        dbQuestions = result.data || [];
+        dbError = result.error;
+      }
 
       setPreparationProgress(30);
 
