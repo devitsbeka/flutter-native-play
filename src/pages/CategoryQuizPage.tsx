@@ -54,7 +54,7 @@ export default function CategoryQuizPage() {
     return shuffled;
   };
 
-  // Fetch questions
+  // Fetch questions from database ONLY
   useEffect(() => {
     if (hasFetched.current) return;
     if (!categoryId || !category) return;
@@ -65,42 +65,67 @@ export default function CategoryQuizPage() {
 
     const fetchQuestions = async () => {
       try {
-        const { data, error: fetchError } = await supabase.functions.invoke("generate-category-trivia", {
-          body: {
-            category: category.name,
-            categoryId: categoryId,
-            level: parseInt(levelId || "1"),
-            count: 5,
-          },
+        const levelNumber = parseInt(levelId || "1");
+        
+        // First, get the category UUID from the category_id string
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('category_id', categoryId)
+          .maybeSingle();
+
+        if (categoryError) {
+          console.error("Category fetch error:", categoryError);
+          setError("კატეგორია ვერ მოიძებნა.");
+          return;
+        }
+
+        if (!categoryData) {
+          setError("კატეგორია ვერ მოიძებნა.");
+          return;
+        }
+
+        // Fetch questions from database
+        const { data: dbQuestions, error: dbError } = await supabase
+          .from('questions')
+          .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number')
+          .eq('is_active', true)
+          .eq('category_id', categoryData.id)
+          .gte('level_number', levelNumber)
+          .lte('level_number', levelNumber + 2)
+          .limit(10);
+
+        if (dbError) {
+          console.error("Questions fetch error:", dbError);
+          setError("კითხვების ჩატვირთვა ვერ მოხერხდა.");
+          return;
+        }
+
+        if (!dbQuestions || dbQuestions.length === 0) {
+          setError("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
+          return;
+        }
+
+        // Shuffle and take 5 questions
+        const shuffledDbQuestions = shuffleArray(dbQuestions).slice(0, 5);
+
+        const processedQuestions = shuffledDbQuestions.map((q: any) => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers 
+            : JSON.parse(q.incorrect_answers || '[]');
+          
+          return {
+            question: q.question_text,
+            correct_answer: q.correct_answer,
+            incorrect_answers: incorrectAnswers,
+            difficulty: q.difficulty as "easy" | "medium" | "hard",
+            allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
+          };
         });
-
-        if (fetchError) {
-          const errorMessage = fetchError.message || "";
-          if (errorMessage.includes("429") || errorMessage.includes("Rate limit")) {
-            setError("ძალიან ბევრი მოთხოვნა. გთხოვთ მოიცადოთ და სცადოთ თავიდან.");
-          } else {
-            setError("კითხვების ჩატვირთვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.");
-          }
-          return;
-        }
-
-        if (data?.error) {
-          setError(data.error);
-          return;
-        }
-
-        if (!data?.questions || !Array.isArray(data.questions)) {
-          setError("კითხვები ვერ მიიღო. გთხოვთ სცადოთ თავიდან.");
-          return;
-        }
-
-        const processedQuestions = data.questions.map((q: TriviaQuestion) => ({
-          ...q,
-          allAnswers: shuffleArray([q.correct_answer, ...q.incorrect_answers]),
-        }));
 
         setQuestions(processedQuestions);
       } catch (err) {
+        console.error("Unexpected error:", err);
         setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");
       } finally {
         setLoading(false);
