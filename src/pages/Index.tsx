@@ -445,7 +445,7 @@ export default function Index() {
                       style={{ 
                         left: "50%",
                         top: 0,
-                        marginLeft: -24,
+                        transform: "translateX(-50%)",
                       }}
                     >
                       <PowerUpBadge 
