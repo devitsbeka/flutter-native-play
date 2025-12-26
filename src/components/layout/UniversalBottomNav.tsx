@@ -148,9 +148,6 @@ function NavButton({
 }
 
 function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPlayButton: boolean }) {
-  // Hexagon shape
-  const hexPath = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
-  
   return (
     <motion.button
       onClick={onClick}
@@ -158,93 +155,111 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
       whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.92, y: 4 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      style={{ width: 68, height: 76 }}
+      style={{ width: 88, height: 88 }}
     >
       {/* Outer ring/border */}
       <div
+        className="absolute -inset-1 rounded-full"
         style={{
-          position: "absolute",
-          inset: -4,
-          background: "linear-gradient(180deg, rgba(180,160,220,0.6) 0%, rgba(140,120,180,0.4) 100%)",
-          clipPath: hexPath,
-          filter: "blur(1px)",
+          background: "linear-gradient(180deg, rgba(180,160,220,0.5) 0%, rgba(140,120,180,0.3) 100%)",
+          filter: "blur(2px)",
         }}
       />
       
       {/* Bottom 3D depth layer - darkest purple */}
       <div
+        className="absolute rounded-full"
         style={{
-          position: "absolute",
           inset: 0,
-          top: 8,
+          top: 6,
           background: "linear-gradient(180deg, #4a3a6e 0%, #3d2d5c 50%, #2e2248 100%)",
-          clipPath: hexPath,
         }}
       />
       
       {/* Middle bevel layer - medium purple */}
       <div
+        className="absolute rounded-full"
         style={{
-          position: "absolute",
-          inset: 2,
+          inset: 3,
           top: 4,
           bottom: 8,
           background: "linear-gradient(180deg, #6b5a8e 0%, #5a4a7d 100%)",
-          clipPath: hexPath,
         }}
       />
       
       {/* Main face - gradient purple */}
       <div
+        className="absolute rounded-full overflow-hidden"
         style={{
-          position: "absolute",
-          inset: 3,
+          inset: 4,
           top: 0,
           bottom: 12,
           background: "linear-gradient(160deg, #9080b8 0%, #7a68a6 30%, #6b5a94 60%, #5d4d86 100%)",
-          clipPath: hexPath,
-          boxShadow: "inset 0 3px 8px rgba(255,255,255,0.25)",
+          boxShadow: "inset 0 3px 10px rgba(255,255,255,0.3)",
         }}
       >
         {/* Top shine highlight */}
         <div
+          className="absolute left-1/2 -translate-x-1/2 rounded-full"
           style={{
-            position: "absolute",
-            top: 6,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "55%",
-            height: 8,
-            background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%)",
-            borderRadius: "4px",
+            top: 5,
+            width: "60%",
+            height: 10,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%)",
           }}
         />
         
         {/* Inner radial glow */}
         <div
+          className="absolute inset-0 rounded-full"
           style={{
-            position: "absolute",
-            inset: 0,
             background: "radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.2) 0%, transparent 50%)",
-            clipPath: hexPath,
           }}
         />
+        
+        {/* Electric blue particles */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: i % 2 === 0 ? 4 : 3,
+              height: i % 2 === 0 ? 4 : 3,
+              background: "rgba(100,200,255,0.95)",
+              boxShadow: "0 0 8px rgba(100,200,255,0.9), 0 0 12px rgba(80,180,255,0.6)",
+              left: `${20 + (i * 12)}%`,
+              top: `${25 + ((i % 3) * 18)}%`,
+            }}
+            animate={{
+              y: [-5, 5, -5],
+              x: [i % 2 === 0 ? -3 : 3, i % 2 === 0 ? 3 : -3, i % 2 === 0 ? -3 : 3],
+              opacity: [0.4, 1, 0.4],
+              scale: [0.8, 1.3, 0.8],
+            }}
+            transition={{
+              duration: 1.5 + (i * 0.25),
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.15,
+            }}
+          />
+        ))}
         
         {/* Icon */}
         <div className="absolute inset-0 flex items-center justify-center">
           {isPlayButton ? (
             <Play 
-              className="w-6 h-6 ml-0.5" 
+              className="w-8 h-8 ml-1" 
               fill="white"
               stroke="white"
               strokeWidth={0}
-              style={{ filter: "drop-shadow(0 1px 2px rgba(30,20,50,0.5))" }}
+              style={{ filter: "drop-shadow(0 2px 4px rgba(30,20,50,0.5))" }}
             />
           ) : (
             <Home 
-              className="w-5 h-5 text-white" 
+              className="w-7 h-7 text-white" 
               strokeWidth={2.5}
-              style={{ filter: "drop-shadow(0 1px 2px rgba(30,20,50,0.5))" }}
+              style={{ filter: "drop-shadow(0 2px 4px rgba(30,20,50,0.5))" }}
             />
           )}
         </div>
