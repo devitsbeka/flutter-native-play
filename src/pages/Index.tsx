@@ -221,7 +221,7 @@ export default function Index() {
               onClick={() => setIsSideMenuOpen(true)}
             >
               <span className="w-6 h-6 flex items-center justify-center text-lg">🍔</span>
-              <span className="text-sm font-bold text-gray-800">{t("nav.menu")}</span>
+              <span className="text-sm font-display font-bold text-gray-800 uppercase">{t("nav.menu")}</span>
             </motion.button>
             
             {/* Combined currency chip */}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -92,15 +92,19 @@ function CategoryCard({
     >
       {/* Row 1: Icon + Title */}
       <div className="flex items-center gap-4">
+        {/* Softer icon badge - glass style */}
         <div 
-          className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br shrink-0 shadow-md",
-            category.color
-          )}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+          style={{
+            background: "rgba(255,255,255,0.8)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06), inset 0 1px 2px rgba(255,255,255,0.8)",
+          }}
         >
           {category.icon}
         </div>
-        <h3 className="font-bold text-slate-800 text-lg">{category.name}</h3>
+        <h3 className="font-display font-bold text-slate-800 text-lg uppercase tracking-wide">{category.name}</h3>
       </div>
       
       {/* Row 2: Description */}
@@ -128,8 +132,14 @@ function CategoryCard({
           <span className="ml-0.5 text-slate-500">დონე</span>
         </span>
         
-        {/* Progress bar with category color */}
-        <div className="flex-1 h-2 bg-slate-200/60 rounded-full overflow-hidden shadow-inner">
+        {/* Progress bar - more visible unfilled track */}
+        <div 
+          className="flex-1 h-2 rounded-full overflow-hidden"
+          style={{
+            background: "linear-gradient(180deg, #E2E8F0 0%, #CBD5E1 100%)",
+            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
           <motion.div 
             className="h-full rounded-full"
             style={{ background: progressGradient }}
@@ -146,6 +156,7 @@ function CategoryCard({
 export default function Discover() {
   const [activeTab, setActiveTab] = useState<CategoryType>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
@@ -182,58 +193,118 @@ export default function Discover() {
             backdropFilter: "blur(20px)",
           }}
         >
-          {/* Header */}
+          {/* Header - Title and Search Icon on same row */}
           <header className="px-4 pt-4 pb-3 safe-top">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate("/")}
-                className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+            <div className="flex items-center justify-between gap-3">
+              {/* Left: Back + Title */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate("/")}
+                  className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+                >
+                  <ArrowLeft className="w-5 h-5 text-slate-600" />
+                </button>
+                <h1 className="text-xl font-display font-bold text-slate-800 uppercase">
+                  აღმოაჩინე
+                </h1>
+              </div>
+              
+              {/* Right: Search Icon */}
+              <motion.button
+                onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                className="h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm"
+                style={{
+                  background: isSearchExpanded 
+                    ? "linear-gradient(180deg, #A855F7 0%, #7C3AED 100%)" 
+                    : "rgba(255,255,255,0.7)",
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </button>
-              <h1 className="text-xl font-display font-bold text-slate-800">
-                აღმოაჩინე
-              </h1>
+                <Search className={cn("w-5 h-5", isSearchExpanded ? "text-white" : "text-slate-600")} />
+              </motion.button>
             </div>
           </header>
 
-          {/* Search Bar */}
-          <div className="px-4 pb-3">
+          {/* Expandable Search Bar */}
+          <AnimatePresence>
+            {isSearchExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="overflow-hidden px-4"
+              >
+                <div className="pb-3">
+                  <div 
+                    className="relative rounded-2xl overflow-hidden"
+                    style={{
+                      background: "rgba(255,255,255,0.6)",
+                      backdropFilter: "blur(12px)",
+                      border: "1px solid rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="მოძებნე კატეგორია..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Tabs - 3D Chunky Active Style */}
+          <div className="px-4 pb-4">
             <div 
-              className="relative rounded-2xl overflow-hidden"
+              className="flex gap-1 p-1.5 rounded-2xl"
               style={{
-                background: "rgba(255,255,255,0.6)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255,255,255,0.5)",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 100%)",
+                backdropFilter: "blur(8px)",
               }}
             >
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="მოძებნე კატეგორია..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Tabs - transparent container */}
-          <div className="px-4 pb-4">
-            <div className="flex gap-1 p-1.5 rounded-2xl">
               {tabs.map((tab) => (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
-                    activeTab === tab.id
-                      ? "bg-purple-500 text-white shadow-lg"
-                      : "text-slate-600 hover:bg-white/50"
-                  )}
+                  className="flex-1 relative"
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {tab.label}
-                </button>
+                  {activeTab === tab.id ? (
+                    // 3D Chunky Active State
+                    <div className="relative">
+                      {/* 3D depth shadow */}
+                      <div 
+                        className="absolute inset-0 rounded-xl"
+                        style={{
+                          background: "linear-gradient(180deg, #7C3AED 0%, #6D28D9 100%)",
+                          top: 3,
+                        }}
+                      />
+                      {/* Main face */}
+                      <div 
+                        className="relative px-4 py-2.5 rounded-xl text-sm font-bold text-white"
+                        style={{
+                          background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
+                          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 0 #6D28D9",
+                        }}
+                      >
+                        {tab.label}
+                      </div>
+                    </div>
+                  ) : (
+                    // Inactive state
+                    <div className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white/50 transition-colors">
+                      {tab.label}
+                    </div>
+                  )}
+                </motion.button>
               ))}
             </div>
           </div>
