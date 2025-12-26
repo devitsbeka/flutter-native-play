@@ -3,7 +3,6 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FolderOpen, 
-  HelpCircle, 
   Users, 
   Menu,
   ChevronLeft,
@@ -23,14 +22,9 @@ const navItems = [
     end: true 
   },
   { 
-    to: '/admin/categories', 
+    to: '/admin/content', 
     icon: FolderOpen, 
-    label: 'კატეგორიები' 
-  },
-  { 
-    to: '/admin/questions', 
-    icon: HelpCircle, 
-    label: 'კითხვები' 
+    label: 'კონტენტი' 
   },
   { 
     to: '/admin/import', 
