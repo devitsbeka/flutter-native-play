@@ -281,6 +281,60 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
     }
   }, [createRoomHook]);
 
+  const createChallengeRoom = useCallback(async (
+    friendId: string, 
+    categoryId: string, 
+    categoryName: string, 
+    isOnline: boolean
+  ): Promise<boolean> => {
+    setState(prev => ({ ...prev, phase: "creating" }));
+    
+    try {
+      const { data: codeData } = await supabase.rpc("generate_room_code");
+      const roomCode = codeData || Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 48);
+
+      const { data: room, error } = await supabase
+        .from("game_rooms")
+        .insert({
+          host_user_id: user!.id,
+          room_code: roomCode,
+          category_id: categoryId,
+          category_name: categoryName,
+          game_type: isOnline ? "realtime" : "async",
+          challenged_user_id: friendId,
+          challenge_expires_at: isOnline ? null : expiresAt.toISOString(),
+          status: "waiting",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await supabase.from("room_participants").insert({
+        room_id: room.id,
+        user_id: user!.id,
+        nickname: profile?.nickname || "Player",
+        avatar_url: profile?.avatar_url,
+        country_code: profile?.country_code,
+        is_host: true,
+        status: "ready",
+      });
+
+      setCurrentRoom(room);
+      setState(prev => ({ ...prev, phase: "lobby", room }));
+      toast.success(isOnline ? "ოთახი შეიქმნა!" : "გამოწვევა გაიგზავნა!");
+      return true;
+    } catch (error) {
+      console.error("Error creating challenge room:", error);
+      toast.error("ოთახის შექმნა ვერ მოხერხდა");
+      setState(prev => ({ ...prev, phase: "idle" }));
+      return false;
+    }
+  }, [user, profile, setCurrentRoom]);
+
   const joinRoom = useCallback(async (code: string) => {
     setState(prev => ({ ...prev, phase: "joining" }));
     
