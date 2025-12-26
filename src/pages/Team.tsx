@@ -13,10 +13,13 @@ import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScre
 import { WaitingForOpponentScreen } from "@/components/team/WaitingForOpponentScreen";
 import { FriendsList } from "@/components/team/FriendsList";
 import { RecentPlayersList } from "@/components/team/RecentPlayersList";
+import { RecentRoomsSection } from "@/components/team/RecentRoomsSection";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChatModal } from "@/components/team/ChatModal";
+import { GameInviteModal } from "@/components/team/GameInviteModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Friend } from "@/hooks/useFriends";
+import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { toast } from "sonner";
 
 function TeamContent() {
@@ -33,9 +36,23 @@ function TeamContent() {
     joinRoom,
   } = useMultiplayer();
   const { playSound } = useSound();
+  const { 
+    pendingInvitations, 
+    acceptInvitation, 
+    declineInvitation,
+    sendInvitation,
+  } = useGameInvitations();
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [chatFriend, setChatFriend] = useState<Friend | null>(null);
+  const [currentInvitation, setCurrentInvitation] = useState<typeof pendingInvitations[0] | null>(null);
+
+  // Show latest pending invitation
+  useEffect(() => {
+    if (pendingInvitations.length > 0 && !currentInvitation) {
+      setCurrentInvitation(pendingInvitations[0]);
+    }
+  }, [pendingInvitations, currentInvitation]);
 
   // Handle join code from URL
   useEffect(() => {
@@ -45,21 +62,33 @@ function TeamContent() {
     }
   }, [searchParams, user, joinRoom]);
 
-  // Handle inviting a friend (share room code)
+  // Handle inviting a friend to game (sends real invitation if room exists)
   const handleInviteFriend = async (friendId: string) => {
     if (!room) {
+      // Copy room link to clipboard as fallback
       toast.info("შექმენი ოთახი მეგობრის მოსაწვევად");
       return;
     }
     
-    // Copy room link to clipboard
-    const roomLink = `${window.location.origin}/team?join=${room.room_code}`;
-    try {
-      await navigator.clipboard.writeText(roomLink);
-      toast.success("ლინკი დაკოპირდა! გაუზიარე მეგობარს");
-    } catch {
-      toast.error("კოპირება ვერ მოხერხდა");
-    }
+    // Send real-time invitation
+    await sendInvitation(friendId, room.id);
+  };
+
+  // Handle accepting invitation
+  const handleAcceptInvitation = async (invitationId: string) => {
+    setCurrentInvitation(null);
+    return await acceptInvitation(invitationId);
+  };
+
+  // Handle declining invitation
+  const handleDeclineInvitation = async (invitationId: string) => {
+    setCurrentInvitation(null);
+    return await declineInvitation(invitationId);
+  };
+
+  // Handle joining room from invitation
+  const handleJoinFromInvitation = (roomCode: string) => {
+    joinRoom(roomCode);
   };
 
   // Show game screen if playing
@@ -177,11 +206,21 @@ function TeamContent() {
           </ChunkyButton>
         </motion.div>
 
-        {/* Friends Section */}
+        {/* Recent Rooms Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <RecentRoomsSection />
+        </motion.div>
+
+        {/* Friends Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
           className="space-y-6"
         >
           <FriendsList
@@ -213,6 +252,12 @@ function TeamContent() {
         isOpen={!!chatFriend}
         onClose={() => setChatFriend(null)}
         friend={chatFriend}
+      />
+      <GameInviteModal
+        invitation={currentInvitation}
+        onAccept={handleAcceptInvitation}
+        onDecline={handleDeclineInvitation}
+        onJoinRoom={handleJoinFromInvitation}
       />
     </div>
   );
