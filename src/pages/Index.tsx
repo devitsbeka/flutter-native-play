@@ -421,7 +421,7 @@ export default function Index() {
               {/* Power badges in curved arc at top of avatar */}
               <div 
                 className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" 
-                style={{ marginTop: -60 }}
+                style={{ marginTop: -30 }}
                 data-walkthrough="powerups"
               >
                 {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
