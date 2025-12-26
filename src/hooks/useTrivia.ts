@@ -62,57 +62,117 @@ export function useTrivia() {
     setImagesReady(false);
 
     try {
-      // Select random category if not provided
+      // Select category
       const selectedCategory = category 
         ? georgianCategories.find(c => c.id === category) || georgianCategories[0]
         : georgianCategories[Math.floor(Math.random() * georgianCategories.length)];
 
       setPreparationProgress(10);
 
-      // Call the Georgian trivia edge function
-      const { data, error: fetchError } = await supabase.functions.invoke('generate-category-trivia', {
-        body: {
-          category: selectedCategory.name,
-          categoryId: selectedCategory.id,
-          level,
-          count: amount + 3, // Request more to filter duplicates
-        }
-      });
+      // ============ DB-FIRST: Try to fetch from database first ============
+      const { data: dbQuestions, error: dbError } = await supabase
+        .from('questions')
+        .select(`
+          id,
+          question_text,
+          correct_answer,
+          incorrect_answers,
+          difficulty,
+          level_number,
+          categories!inner(category_id, name)
+        `)
+        .eq('is_active', true)
+        .eq('categories.category_id', selectedCategory.id)
+        .gte('level_number', level)
+        .lte('level_number', level + 2) // Get questions from nearby levels
+        .limit(amount + 5); // Get extra for filtering
 
-      if (fetchError) {
-        console.error("Error fetching Georgian questions:", fetchError);
-        throw new Error(fetchError.message || "კითხვების ჩატვირთვა ვერ მოხერხდა");
-      }
+      setPreparationProgress(30);
 
-      if (!data?.questions || !Array.isArray(data.questions)) {
-        throw new Error("კითხვები არ მოიძებნა");
-      }
-
-      setPreparationProgress(50);
-
-      // Format and filter questions
+      let formattedQuestions: TriviaQuestion[] = [];
       const allHashes = new Set([...askedQuestionHashes, ...excludeHashes]);
-      
-      const formattedQuestions: TriviaQuestion[] = data.questions
-        .map((q: any, index: number) => {
-          const correctAnswer = q.correct_answer;
-          const incorrectAnswers = q.incorrect_answers || [];
-          const allAnswers = shuffleArray([correctAnswer, ...incorrectAnswers]);
-          const questionHash = hashQuestion(q.question);
 
-          return {
-            id: `q-${index}-${Date.now()}`,
+      // If we have enough DB questions, use them
+      if (!dbError && dbQuestions && dbQuestions.length >= amount) {
+        console.log(`Found ${dbQuestions.length} questions in database for ${selectedCategory.id}`);
+        
+        formattedQuestions = dbQuestions
+          .map((q: any, index: number) => {
+            const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+              ? q.incorrect_answers 
+              : JSON.parse(q.incorrect_answers || '[]');
+            const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
+            const questionHash = hashQuestion(q.question_text);
+
+            return {
+              id: q.id,
+              category: selectedCategory.name,
+              difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
+              question: q.question_text,
+              correctAnswer: q.correct_answer,
+              incorrectAnswers,
+              allAnswers,
+              hash: questionHash,
+            };
+          })
+          .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash))
+          .slice(0, amount);
+
+        setPreparationProgress(80);
+      }
+
+      // ============ AI FALLBACK: Generate if not enough DB questions ============
+      if (formattedQuestions.length < amount) {
+        console.log(`Not enough DB questions (${formattedQuestions.length}/${amount}), generating with AI...`);
+        
+        setPreparationProgress(40);
+
+        const { data, error: fetchError } = await supabase.functions.invoke('generate-category-trivia', {
+          body: {
             category: selectedCategory.name,
-            difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
-            question: q.question,
-            correctAnswer,
-            incorrectAnswers,
-            allAnswers,
-            hash: questionHash,
-          };
-        })
-        .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash))
-        .slice(0, amount);
+            categoryId: selectedCategory.id,
+            level,
+            count: amount - formattedQuestions.length + 3,
+          }
+        });
+
+        if (fetchError) {
+          console.error("Error fetching Georgian questions:", fetchError);
+          throw new Error(fetchError.message || "კითხვების ჩატვირთვა ვერ მოხერხდა");
+        }
+
+        if (!data?.questions || !Array.isArray(data.questions)) {
+          throw new Error("კითხვები არ მოიძებნა");
+        }
+
+        setPreparationProgress(60);
+
+        // Format AI-generated questions
+        const aiQuestions: TriviaQuestion[] = data.questions
+          .map((q: any, index: number) => {
+            const correctAnswer = q.correct_answer;
+            const incorrectAnswers = q.incorrect_answers || [];
+            const allAnswers = shuffleArray([correctAnswer, ...incorrectAnswers]);
+            const questionHash = hashQuestion(q.question);
+
+            return {
+              id: `ai-${index}-${Date.now()}`,
+              category: selectedCategory.name,
+              difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
+              question: q.question,
+              correctAnswer,
+              incorrectAnswers,
+              allAnswers,
+              hash: questionHash,
+            };
+          })
+          .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash));
+
+        // Combine DB and AI questions
+        formattedQuestions = [...formattedQuestions, ...aiQuestions].slice(0, amount);
+
+        setPreparationProgress(80);
+      }
 
       // Track these questions as asked
       const newHashes = formattedQuestions.map((q: any) => q.hash);
@@ -158,17 +218,13 @@ export function calculateScore(
 ): number {
   if (!isCorrect) return 0;
 
-  // Base points by difficulty
   const basePoints = {
     easy: 100,
     medium: 150,
     hard: 200,
   };
 
-  // Time bonus (up to 50% extra for answering fast)
   const timeBonus = Math.floor((timeRemaining / maxTime) * basePoints[difficulty] * 0.5);
-
-  // Streak bonus (5% per streak, max 25%)
   const streakMultiplier = 1 + Math.min(streak, 5) * 0.05;
 
   return Math.floor((basePoints[difficulty] + timeBonus) * streakMultiplier);

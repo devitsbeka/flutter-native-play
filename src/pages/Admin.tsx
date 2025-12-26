@@ -7,9 +7,9 @@ import {
   Users, 
   Menu,
   ChevronLeft,
-  Shield,
   Upload,
-  Search
+  Search,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ const navItems = [
   { 
     to: '/admin/users', 
     icon: Users, 
-    label: 'ონლაინ მომხმარებლები' 
+    label: 'მომხმარებლები' 
   },
 ];
 
@@ -55,34 +55,36 @@ export default function Admin() {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
+      {/* Modern Sidebar */}
       <aside 
         className={cn(
-          "bg-card border-r border-border transition-all duration-300 flex flex-col",
-          collapsed ? "w-16" : "w-64"
+          "bg-card/50 backdrop-blur-sm border-r border-border/50 transition-all duration-300 flex flex-col",
+          collapsed ? "w-[60px]" : "w-56"
         )}
       >
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-border">
+        <div className="h-14 flex items-center justify-between px-3 border-b border-border/50">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">ადმინ პანელი</span>
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <span className="font-semibold text-sm">Admin</span>
             </div>
           )}
           <Button 
             variant="ghost" 
             size="icon"
+            className="h-8 w-8"
             onClick={() => setCollapsed(!collapsed)}
-            className={cn(collapsed && "mx-auto")}
           >
-            {collapsed ? <Menu className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            {collapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
 
         {/* Navigation */}
-        <ScrollArea className="flex-1 py-4">
-          <nav className="space-y-1 px-2">
+        <ScrollArea className="flex-1 py-3">
+          <nav className="space-y-0.5 px-2">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -90,36 +92,39 @@ export default function Admin() {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground",
+                    "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-sm",
+                    "hover:bg-accent/50",
                     isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground",
+                      ? "bg-primary text-primary-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground",
                     collapsed && "justify-center px-2"
                   )
                 }
               >
-                <item.icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                <item.icon className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
+                {!collapsed && <span className="font-medium">{item.label}</span>}
               </NavLink>
             ))}
           </nav>
         </ScrollArea>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border">
+        <div className="p-2 border-t border-border/50">
           <NavLink 
             to="/"
-            className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors"
+            className={cn(
+              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all",
+              collapsed && "justify-center px-2"
+            )}
           >
-            <ChevronLeft className="h-5 w-5" />
-            {!collapsed && <span>მთავარზე დაბრუნება</span>}
+            <ChevronLeft className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
+            {!collapsed && <span className="font-medium">მთავარი</span>}
           </NavLink>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden bg-muted/30">
         <Outlet />
       </main>
     </div>

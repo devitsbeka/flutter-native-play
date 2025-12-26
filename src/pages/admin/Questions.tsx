@@ -8,7 +8,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Loader2,
-  Filter
+  Filter,
+  X
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,12 +44,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions, AdminQuestion } from '@/hooks/useAdminQuestions';
+import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTIES = [
-  { value: 'easy', label: 'ადვილი', color: 'bg-green-500' },
-  { value: 'medium', label: 'საშუალო', color: 'bg-yellow-500' },
-  { value: 'hard', label: 'რთული', color: 'bg-red-500' },
+  { value: 'easy', label: 'ადვილი', color: 'bg-emerald-500' },
+  { value: 'medium', label: 'საშუალო', color: 'bg-amber-500' },
+  { value: 'hard', label: 'რთული', color: 'bg-rose-500' },
 ];
 
 export default function AdminQuestions() {
@@ -61,7 +63,6 @@ export default function AdminQuestions() {
   const [deleteTarget, setDeleteTarget] = useState<AdminQuestion | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     category_id: '',
     question_text: '',
@@ -160,42 +161,42 @@ export default function AdminQuestions() {
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-6 space-y-6">
-        {/* Header */}
+      <div className="p-6 space-y-5">
+        {/* Compact Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <HelpCircle className="h-6 w-6 text-purple-500" />
+            <div className="p-2.5 bg-violet-500/10 rounded-xl">
+              <HelpCircle className="h-5 w-5 text-violet-500" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">კითხვები</h1>
-              <p className="text-muted-foreground">მართეთ თამაშის კითხვები</p>
+              <h1 className="text-xl font-semibold tracking-tight">კითხვები</h1>
+              <p className="text-sm text-muted-foreground">{questions.length} კითხვა</p>
             </div>
           </div>
-          <Button onClick={openAddDialog} disabled={categories.length === 0}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" onClick={openAddDialog} disabled={categories.length === 0}>
+            <Plus className="h-4 w-4 mr-1.5" />
             დამატება
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-4">
+        {/* Compact Filters */}
+        <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="მოძებნე კითხვა..."
+              placeholder="ძიება..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
+              className="pl-9 h-9"
             />
           </div>
           <Select value={filterCategoryId} onValueChange={setFilterCategoryId}>
-            <SelectTrigger className="w-64">
-              <Filter className="h-4 w-4 mr-2" />
+            <SelectTrigger className="w-48 h-9">
+              <Filter className="h-3.5 w-3.5 mr-1.5" />
               <SelectValue placeholder="კატეგორია" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">ყველა კატეგორია</SelectItem>
+              <SelectItem value="all">ყველა</SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   {cat.icon} {cat.name}
@@ -205,66 +206,72 @@ export default function AdminQuestions() {
           </Select>
         </div>
 
-        {/* Questions List */}
-        <div className="space-y-3">
+        {/* Questions List - Compact Cards */}
+        <div className="space-y-2">
           {filteredQuestions.map((question) => (
-            <Card key={question.id} className={cn(!question.is_active && "opacity-60")}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
+            <Card 
+              key={question.id} 
+              className={cn(
+                "transition-all hover:shadow-sm",
+                !question.is_active && "opacity-50"
+              )}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="text-xs">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                         {getCategoryName(question.category_id)}
                       </Badge>
                       <Badge 
                         className={cn(
-                          "text-xs",
+                          "text-[10px] px-1.5 py-0 text-white",
                           DIFFICULTIES.find(d => d.value === question.difficulty)?.color
                         )}
                       >
                         {DIFFICULTIES.find(d => d.value === question.difficulty)?.label}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        დონე {question.level_number}
+                      <span className="text-[10px] text-muted-foreground">
+                        L{question.level_number}
                       </span>
                     </div>
-                    <p className="font-medium">{question.question_text}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">
+                    <p className="text-sm font-medium leading-snug line-clamp-2">
+                      {question.question_text}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded">
                         ✓ {question.correct_answer}
                       </span>
-                      {question.incorrect_answers.map((ans, i) => (
-                        <span key={i} className="text-xs bg-muted px-2 py-1 rounded">
-                          {ans}
-                        </span>
-                      ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-7 w-7"
                       onClick={() => handleToggleActive(question)}
                     >
                       {question.is_active ? (
-                        <ToggleRight className="h-4 w-4 text-green-500" />
+                        <ToggleRight className="h-4 w-4 text-emerald-500" />
                       ) : (
                         <ToggleLeft className="h-4 w-4 text-muted-foreground" />
                       )}
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-7 w-7"
                       onClick={() => openEditDialog(question)}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-7 w-7"
                       onClick={() => setDeleteTarget(question)}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
                   </div>
                 </div>
@@ -275,115 +282,140 @@ export default function AdminQuestions() {
 
         {filteredQuestions.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {search || filterCategoryId !== 'all' ? 'კითხვები ვერ მოიძებნა' : 'კითხვები არ არის. დაამატეთ პირველი კითხვა!'}
+            <HelpCircle className="h-12 w-12 mx-auto mb-3 opacity-20" />
+            <p className="text-sm">
+              {search || filterCategoryId !== 'all' ? 'კითხვები ვერ მოიძებნა' : 'დაამატეთ პირველი კითხვა'}
+            </p>
           </div>
         )}
       </div>
 
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Dialog with Split Layout */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="text-lg">
               {editingQuestion ? 'კითხვის რედაქტირება' : 'ახალი კითხვა'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>კატეგორია</Label>
-              <Select 
-                value={formData.category_id} 
-                onValueChange={(v) => setFormData({ ...formData, category_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="აირჩიე კატეგორია" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 max-h-[calc(90vh-140px)] overflow-hidden">
+            {/* Form Side */}
+            <ScrollArea className="h-[500px] border-r">
+              <div className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">კატეგორია</Label>
+                  <Select 
+                    value={formData.category_id} 
+                    onValueChange={(v) => setFormData({ ...formData, category_id: v })}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="აირჩიე" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.icon} {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label>კითხვა</Label>
-              <Textarea
-                value={formData.question_text}
-                onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
-                placeholder="შეიყვანეთ კითხვა..."
-                rows={3}
-              />
-            </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">კითხვა</Label>
+                  <Textarea
+                    value={formData.question_text}
+                    onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
+                    placeholder="შეიყვანეთ კითხვა..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>სწორი პასუხი</Label>
-              <Input
-                value={formData.correct_answer}
-                onChange={(e) => setFormData({ ...formData, correct_answer: e.target.value })}
-                placeholder="სწორი პასუხი"
-              />
-            </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-emerald-600">სწორი პასუხი</Label>
+                  <Input
+                    value={formData.correct_answer}
+                    onChange={(e) => setFormData({ ...formData, correct_answer: e.target.value })}
+                    placeholder="სწორი პასუხი"
+                    className="h-9 border-emerald-200 focus-visible:ring-emerald-500"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>არასწორი პასუხები</Label>
-              {formData.incorrect_answers.map((ans, i) => (
-                <Input
-                  key={i}
-                  value={ans}
-                  onChange={(e) => {
-                    const newAnswers = [...formData.incorrect_answers];
-                    newAnswers[i] = e.target.value;
-                    setFormData({ ...formData, incorrect_answers: newAnswers });
-                  }}
-                  placeholder={`არასწორი პასუხი ${i + 1}`}
-                />
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>სირთულე</Label>
-                <Select 
-                  value={formData.difficulty} 
-                  onValueChange={(v) => setFormData({ ...formData, difficulty: v as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DIFFICULTIES.map((d) => (
-                      <SelectItem key={d.value} value={d.value}>
-                        {d.label}
-                      </SelectItem>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">არასწორი პასუხები</Label>
+                  <div className="space-y-2">
+                    {formData.incorrect_answers.map((ans, i) => (
+                      <Input
+                        key={i}
+                        value={ans}
+                        onChange={(e) => {
+                          const newAnswers = [...formData.incorrect_answers];
+                          newAnswers[i] = e.target.value;
+                          setFormData({ ...formData, incorrect_answers: newAnswers });
+                        }}
+                        placeholder={`პასუხი ${i + 1}`}
+                        className="h-9"
+                      />
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">სირთულე</Label>
+                    <Select 
+                      value={formData.difficulty} 
+                      onValueChange={(v) => setFormData({ ...formData, difficulty: v as any })}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DIFFICULTIES.map((d) => (
+                          <SelectItem key={d.value} value={d.value}>
+                            {d.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">დონე</Label>
+                    <Input
+                      type="number"
+                      value={formData.level_number}
+                      onChange={(e) => setFormData({ ...formData, level_number: parseInt(e.target.value) || 1 })}
+                      min={1}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>დონე</Label>
-                <Input
-                  type="number"
-                  value={formData.level_number}
-                  onChange={(e) => setFormData({ ...formData, level_number: parseInt(e.target.value) || 1 })}
-                  min={1}
-                />
-              </div>
+            </ScrollArea>
+
+            {/* Preview Side */}
+            <div className="bg-muted/30 flex items-center justify-center p-6">
+              <QuestionMockupPreview
+                question={formData.question_text}
+                correctAnswer={formData.correct_answer}
+                incorrectAnswers={formData.incorrect_answers.filter(a => a.trim())}
+                difficulty={formData.difficulty}
+              />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+          <DialogFooter className="px-6 py-4 border-t">
+            <Button variant="outline" size="sm" onClick={() => setIsAddDialogOpen(false)}>
               გაუქმება
             </Button>
             <Button 
+              size="sm"
               onClick={handleSave} 
               disabled={saving || !formData.category_id || !formData.question_text || !formData.correct_answer}
             >
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
               {editingQuestion ? 'შენახვა' : 'დამატება'}
             </Button>
           </DialogFooter>
@@ -396,7 +428,7 @@ export default function AdminQuestions() {
           <AlertDialogHeader>
             <AlertDialogTitle>დარწმუნებული ხარ?</AlertDialogTitle>
             <AlertDialogDescription>
-              კითხვა წაიშლება სამუდამოდ. ეს მოქმედება შეუქცევადია.
+              კითხვა წაიშლება სამუდამოდ.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
