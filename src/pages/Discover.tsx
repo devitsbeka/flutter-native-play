@@ -55,12 +55,12 @@ function PlayButton3D({ onClick }: { onClick: () => void }) {
   );
 }
 
-// Category Card Component
+// Category Card Component - 3 row layout
 function CategoryCard({ category, onClick }: { category: Category; onClick: () => void }) {
   return (
     <motion.button
       onClick={onClick}
-      className="relative overflow-hidden rounded-2xl p-4 text-left"
+      className="relative overflow-hidden rounded-2xl p-4 text-left w-full"
       style={{
         background: "rgba(255,255,255,0.6)",
         backdropFilter: "blur(12px)",
@@ -75,24 +75,27 @@ function CategoryCard({ category, onClick }: { category: Category; onClick: () =
         className={cn("absolute top-0 left-0 right-0 h-1 bg-gradient-to-r", category.color)}
       />
       
-      <div className="flex items-start gap-3">
+      {/* Row 1: Icon + Title */}
+      <div className="flex items-center gap-3">
         <div 
           className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br",
+            "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br shrink-0",
             category.color
           )}
         >
           {category.icon}
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-slate-800 text-sm truncate">{category.name}</h3>
-          <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{category.description}</p>
-          <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200/60 text-slate-600 font-medium">
-              {category.totalLevels} დონე
-            </span>
-          </div>
-        </div>
+        <h3 className="font-bold text-slate-800 text-base">{category.name}</h3>
+      </div>
+      
+      {/* Row 2: Description */}
+      <p className="text-sm text-slate-500 mt-2.5 line-clamp-2">{category.description}</p>
+      
+      {/* Row 3: Level badge */}
+      <div className="mt-3">
+        <span className="text-xs px-3 py-1 rounded-full bg-slate-200/60 text-slate-600 font-medium">
+          {category.totalLevels} დონე
+        </span>
       </div>
     </motion.button>
   );
@@ -196,9 +199,9 @@ export default function Discover() {
           </p>
         </div>
 
-        {/* Category Grid */}
-        <div className="px-4">
-          <div className="grid grid-cols-1 gap-3">
+        {/* Category Grid - increased gap, no fill */}
+        <div className="px-4 pb-6 overflow-y-auto scrollbar-hide">
+          <div className="grid grid-cols-1 gap-5">
             {filteredCategories.map((category, index) => (
               <motion.div
                 key={category.id}
@@ -216,30 +219,37 @@ export default function Discover() {
         </div>
       </div>
 
-      {/* Gradient fade overlay at bottom */}
+      {/* Gradient fade overlay - smooth transition to bottom nav */}
       <div 
-        className="fixed bottom-0 left-0 right-0 h-40 pointer-events-none z-10"
+        className="fixed bottom-0 left-0 right-0 pointer-events-none z-10"
         style={{
-          background: "linear-gradient(to top, hsl(45 40% 88%) 0%, hsl(45 40% 88% / 0.8) 30%, transparent 100%)",
+          height: "220px",
+          background: "linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.2) 60%, transparent 100%)",
         }}
       />
 
-      {/* Bottom Navigation - Liquid Glass Effect */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
+      {/* Frosted glass backing layer */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 pointer-events-none z-15"
+        style={{
+          height: "120px",
+          backdropFilter: "blur(16px) saturate(180%)",
+          WebkitBackdropFilter: "blur(16px) saturate(180%)",
+          background: "linear-gradient(to top, rgba(255,255,255,0.3) 0%, transparent 100%)",
+          maskImage: "linear-gradient(to top, black 0%, black 60%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to top, black 0%, black 60%, transparent 100%)",
+        }}
+      />
+
+      {/* Bottom Navigation - Transparent style matching Index page */}
+      <nav className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
         <motion.div 
-          className="mx-3 mb-4 rounded-3xl overflow-hidden"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.45) 100%)",
-            backdropFilter: "blur(24px) saturate(180%)",
-            WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            border: "1px solid rgba(255,255,255,0.5)",
-            boxShadow: "0 -4px 30px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.7)",
-          }}
+          className="px-6 pb-6 pt-4"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
         >
-          <div className="relative px-4 py-3 flex items-end justify-between">
+          <div className="relative flex items-end justify-between max-w-md mx-auto">
             {/* Explore - active */}
             <motion.button
               onClick={() => navigate("/discover")}
@@ -247,10 +257,10 @@ export default function Discover() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-purple-200/60">
-                <img src={iconCompass} alt="Explore" className="w-9 h-9 object-contain" />
+              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center bg-purple-100/50">
+                <img src={iconCompass} alt="Explore" className="w-[52px] h-[52px] object-contain" />
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">Explore</span>
+              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">აღმოაჩინე</span>
             </motion.button>
 
             {/* Map */}
@@ -260,10 +270,10 @@ export default function Discover() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <img src={iconMap3d} alt="Map" className="w-9 h-9 object-contain" />
+              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
+                <img src={iconMap3d} alt="Map" className="w-[52px] h-[52px] object-contain" />
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Map</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">რუკა</span>
             </motion.button>
 
             {/* Center Play Button */}
@@ -278,10 +288,10 @@ export default function Discover() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <img src={iconTrophy3d} alt="Rank" className="w-9 h-9 object-contain" />
+              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
+                <img src={iconTrophy3d} alt="Rank" className="w-[52px] h-[52px] object-contain" />
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Rank</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">რანკი</span>
             </motion.button>
 
             {/* Sound */}
@@ -290,14 +300,14 @@ export default function Discover() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <span className="text-2xl">🎧</span>
+              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
+                <span className="text-4xl">🎧</span>
               </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Sound</span>
+              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">ხმა</span>
             </motion.button>
           </div>
         </motion.div>
-      </div>
+      </nav>
     </div>
   );
 }
