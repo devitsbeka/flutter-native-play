@@ -1,10 +1,10 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Gamepad2, Trophy, Sparkles } from "lucide-react";
+import { Clock, Gamepad2, Trophy, Sparkles, AlertTriangle } from "lucide-react";
 import { usePendingChallenges, PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { formatDistanceToNow } from "date-fns";
-import { ka } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface PendingChallengesSectionProps {
   onAcceptChallenge: (challenge: PendingChallenge) => void;
@@ -58,26 +58,89 @@ interface ChallengeCardProps {
   onAccept: () => void;
 }
 
+// Hook for live countdown timer
+function useCountdown(expiresAt: string) {
+  const [timeLeft, setTimeLeft] = useState<{
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isExpired: boolean;
+    isUrgent: boolean;
+  }>({ hours: 0, minutes: 0, seconds: 0, isExpired: false, isUrgent: false });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const expires = new Date(expiresAt).getTime();
+      const diff = expires - now;
+
+      if (diff <= 0) {
+        return { hours: 0, minutes: 0, seconds: 0, isExpired: true, isUrgent: true };
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      const isUrgent = diff < 1000 * 60 * 60; // Less than 1 hour
+
+      return { hours, minutes, seconds, isExpired: false, isUrgent };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  return timeLeft;
+}
+
 function ChallengeCard({ challenge, onAccept }: ChallengeCardProps) {
-  const timeLeft = formatDistanceToNow(new Date(challenge.expiresAt), { 
-    addSuffix: false,
-    locale: ka 
-  });
+  const { hours, minutes, seconds, isExpired, isUrgent } = useCountdown(challenge.expiresAt);
+
+  const formatTime = () => {
+    if (isExpired) return "ვადა ამოიწურა";
+    
+    if (hours > 0) {
+      return `${hours}სთ ${minutes}წთ`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  if (isExpired) {
+    return null; // Don't show expired challenges
+  }
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="relative p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 backdrop-blur-sm border border-amber-500/30"
+      className={cn(
+        "relative p-4 rounded-2xl backdrop-blur-sm border",
+        isUrgent 
+          ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30" 
+          : "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30"
+      )}
     >
       {/* Glowing effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-400/10 to-orange-400/10 animate-pulse" />
+      <div className={cn(
+        "absolute inset-0 rounded-2xl animate-pulse",
+        isUrgent 
+          ? "bg-gradient-to-r from-red-400/10 to-orange-400/10" 
+          : "bg-gradient-to-r from-amber-400/10 to-orange-400/10"
+      )} />
       
       <div className="relative flex items-center gap-4">
         {/* Challenger Avatar */}
         <div className="relative">
-          <Avatar className="w-14 h-14 border-2 border-amber-400/50">
+          <Avatar className={cn(
+            "w-14 h-14 border-2",
+            isUrgent ? "border-red-400/50" : "border-amber-400/50"
+          )}>
             <AvatarImage src={challenge.challengerAvatar || undefined} />
             <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold">
               {challenge.challengerNickname.charAt(0).toUpperCase()}
@@ -110,9 +173,19 @@ function ChallengeCard({ challenge, onAccept }: ChallengeCardProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-1 mt-1 text-xs text-amber-300/80">
-            <Clock className="w-3 h-3" />
-            დარჩა: {timeLeft}
+          {/* Countdown Timer */}
+          <div className={cn(
+            "flex items-center gap-1 mt-1 text-xs font-medium",
+            isUrgent ? "text-red-300" : "text-amber-300/80"
+          )}>
+            {isUrgent ? (
+              <AlertTriangle className="w-3 h-3 animate-pulse" />
+            ) : (
+              <Clock className="w-3 h-3" />
+            )}
+            <span className={isUrgent ? "animate-pulse" : ""}>
+              დარჩა: {formatTime()}
+            </span>
           </div>
         </div>
 

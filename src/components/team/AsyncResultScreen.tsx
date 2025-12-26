@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Clock, Trophy, ArrowRight, Home, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 interface AsyncResultScreenProps {
   challengerInfo?: {
@@ -27,17 +28,50 @@ export function AsyncResultScreen({
 }: AsyncResultScreenProps) {
   const navigate = useNavigate();
   const { resetMultiplayer } = useMultiplayer();
-  const { playSound } = useSound();
+  const { playSound, vibrate } = useSound();
+  const hasPlayedSound = useRef(false);
 
   useEffect(() => {
+    if (hasPlayedSound.current) return;
+    
     if (opponentCompleted) {
-      // Both completed - play result sound
+      hasPlayedSound.current = true;
+      // Both completed - play result sound and vibrate
       const iWon = challengerInfo?.score !== null && myScore > (challengerInfo.score || 0);
       playSound(iWon ? "game-win" : "game-lose");
+      vibrate(iWon ? [100, 50, 100] : [200]);
+      
+      // Confetti for win
+      if (iWon) {
+        const duration = 2000;
+        const end = Date.now() + duration;
+
+        const frame = () => {
+          confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#7C5CFC', '#F5A623', '#FFD6E0'],
+          });
+          confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#7C5CFC', '#F5A623', '#FFD6E0'],
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        };
+        frame();
+      }
     } else {
       playSound("button-click");
     }
-  }, [opponentCompleted, challengerInfo?.score, myScore, playSound]);
+  }, [opponentCompleted, challengerInfo?.score, myScore, playSound, vibrate]);
 
   const handleSendReminder = () => {
     toast.success("შეხსენება გაიგზავნა!");
