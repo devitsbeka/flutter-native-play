@@ -6,14 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 
+export interface SelectableParsedQuestion extends ParsedQuestion {
+  selected?: boolean;
+}
+
 interface QuestionPreviewListProps {
-  questions: ParsedQuestion[];
-  onUpdate?: (index: number, updates: Partial<ParsedQuestion>) => void;
+  questions: SelectableParsedQuestion[];
+  onUpdate?: (index: number, updates: Partial<SelectableParsedQuestion>) => void;
   onRemove?: (index: number) => void;
+  onSelectionChange?: (index: number, selected: boolean) => void;
+  onSelectAll?: (selected: boolean) => void;
+  showSelection?: boolean;
 }
 
 const DIFFICULTIES = [
@@ -40,12 +48,16 @@ function CharLimitIndicator({ length, limit }: { length: number; limit: { max: n
   );
 }
 
-export function QuestionPreviewList({ questions, onUpdate, onRemove }: QuestionPreviewListProps) {
+export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelectionChange, onSelectAll, showSelection = false }: QuestionPreviewListProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<ParsedQuestion>>({});
 
   if (questions.length === 0) return null;
+
+  const validQuestions = questions.filter(q => q.isValid);
+  const selectedCount = questions.filter(q => q.selected && q.isValid).length;
+  const allValidSelected = validQuestions.length > 0 && validQuestions.every(q => q.selected);
 
   const startEdit = (idx: number) => {
     const q = questions[idx];
@@ -83,6 +95,19 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove }: QuestionP
       {/* Questions List */}
       <ScrollArea className="h-[500px] rounded-md border">
         <div className="p-4 space-y-3">
+          {/* Select All Header */}
+          {showSelection && validQuestions.length > 0 && (
+            <div className="flex items-center gap-2 pb-2 border-b">
+              <Checkbox
+                checked={allValidSelected}
+                onCheckedChange={(checked) => onSelectAll?.(!!checked)}
+              />
+              <span className="text-sm text-muted-foreground">
+                ყველას მონიშვნა ({selectedCount}/{validQuestions.length} არჩეულია)
+              </span>
+            </div>
+          )}
+
           {questions.map((q, idx) => {
             const isExpanded = expandedIndex === idx;
             const isEditing = editingIndex === idx;
@@ -93,7 +118,8 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove }: QuestionP
                 className={cn(
                   'rounded-lg border transition-all',
                   q.isValid ? 'bg-card' : 'bg-destructive/5 border-destructive/20',
-                  isExpanded && 'ring-2 ring-primary'
+                  isExpanded && 'ring-2 ring-primary',
+                  showSelection && q.selected && q.isValid && 'ring-2 ring-green-500/50 bg-green-500/5'
                 )}
               >
                 {/* Header - always visible */}
@@ -102,7 +128,15 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove }: QuestionP
                   onClick={() => toggleExpand(idx)}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {q.isValid ? (
+                    {showSelection && q.isValid ? (
+                      <Checkbox
+                        checked={q.selected || false}
+                        onCheckedChange={(checked) => {
+                          onSelectionChange?.(idx, !!checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : q.isValid ? (
                       <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                     ) : (
                       <XCircle className="h-4 w-4 text-destructive shrink-0" />
@@ -111,7 +145,7 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove }: QuestionP
                     <Badge variant="outline" className="text-xs shrink-0">
                       {q.difficulty === 'easy' ? 'მარტივი' : q.difficulty === 'hard' ? 'რთული' : 'საშუალო'}
                     </Badge>
-                    <p className="text-sm truncate flex-1">{q.question_text}</p>
+                    <p className="text-sm truncate flex-1">{q.question_text || <span className="text-destructive italic">კითხვა ცარიელია</span>}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {!isEditing && onUpdate && (
