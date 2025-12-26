@@ -35,12 +35,34 @@ export function AvatarCircle({ avatarUrl, size = 320 }: AvatarCircleProps) {
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
     >
+      {/* Outer glow effect */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: size + 40,
+          height: size + 40,
+          background: "radial-gradient(circle, rgba(147,112,219,0.25) 0%, rgba(100,149,237,0.15) 40%, transparent 70%)",
+          filter: "blur(20px)",
+        }}
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0.7, 1, 0.7],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      
       {/* Main circle with studio gradient background */}
       <div 
         className="absolute inset-0 rounded-full overflow-hidden"
         style={{
           background: "linear-gradient(145deg, #f8f9fa 0%, #e9ecef 25%, #dee2e6 50%, #e9ecef 75%, #f8f9fa 100%)",
           boxShadow: `
+            0 0 40px rgba(147,112,219,0.2),
+            0 0 80px rgba(100,149,237,0.15),
             0 20px 60px rgba(0,0,0,0.15),
             0 8px 25px rgba(0,0,0,0.1),
             inset 0 2px 4px rgba(255,255,255,0.9),
