@@ -1,0 +1,389 @@
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
+import { GameRoom, RoomParticipant, RoomStatus, useGameRoom } from "@/hooks/useGameRoom";
+import { useRoomParticipants } from "@/hooks/useRoomParticipants";
+import { TriviaQuestion } from "@/hooks/useTrivia";
+import { toast } from "sonner";
+
+export type MultiplayerPhase = 
+  | "idle" 
+  | "creating" 
+  | "joining" 
+  | "lobby" 
+  | "countdown" 
+  | "playing" 
+  | "question-result" 
+  | "match-result";
+
+export interface PlayerAnswer {
+  id: string;
+  room_id: string;
+  user_id: string;
+  question_index: number;
+  answer: string;
+  is_correct: boolean;
+  time_remaining: number;
+  points_earned: number;
+  answered_at: string;
+}
+
+interface MultiplayerState {
+  phase: MultiplayerPhase;
+  room: GameRoom | null;
+  questions: TriviaQuestion[];
+  currentQuestionIndex: number;
+  myScore: number;
+  opponentScore: number;
+  lastAnswerCorrect: boolean | null;
+  lastPointsEarned: number;
+  opponentAnswer: PlayerAnswer | null;
+  timePerQuestion: number;
+}
+
+interface MultiplayerContextType extends MultiplayerState {
+  // Room management
+  participants: RoomParticipant[];
+  allReady: boolean;
+  isHost: boolean;
+  loading: boolean;
+  
+  // Actions
+  createRoom: (categoryId?: string, categoryName?: string) => Promise<void>;
+  joinRoom: (code: string) => Promise<void>;
+  leaveRoom: () => Promise<void>;
+  setReady: (ready: boolean) => Promise<void>;
+  startGame: () => Promise<void>;
+  submitAnswer: (answer: string, timeRemaining: number) => Promise<void>;
+  nextQuestion: () => void;
+  resetMultiplayer: () => void;
+  
+  // Modal control
+  showCreateModal: boolean;
+  setShowCreateModal: (show: boolean) => void;
+  showJoinModal: boolean;
+  setShowJoinModal: (show: boolean) => void;
+}
+
+const initialState: MultiplayerState = {
+  phase: "idle",
+  room: null,
+  questions: [],
+  currentQuestionIndex: 0,
+  myScore: 0,
+  opponentScore: 0,
+  lastAnswerCorrect: null,
+  lastPointsEarned: 0,
+  opponentAnswer: null,
+  timePerQuestion: 15,
+};
+
+const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
+
+export function MultiplayerProvider({ children }: { children: React.ReactNode }) {
+  const { user, profile } = useAuth();
+  const [state, setState] = useState<MultiplayerState>(initialState);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  
+  const {
+    loading,
+    currentRoom,
+    setCurrentRoom,
+    createRoom: createRoomHook,
+    joinRoom: joinRoomHook,
+    leaveRoom: leaveRoomHook,
+    updateRoomStatus,
+    setParticipantReady,
+  } = useGameRoom();
+
+  const { 
+    participants, 
+    allReady, 
+    hostParticipant,
+  } = useRoomParticipants(currentRoom?.id || null);
+
+  const isHost = currentRoom?.host_user_id === user?.id;
+
+  // Sync room to state
+  useEffect(() => {
+    if (currentRoom) {
+      setState(prev => ({ ...prev, room: currentRoom }));
+    }
+  }, [currentRoom]);
+
+  // Subscribe to room status changes
+  useEffect(() => {
+    if (!currentRoom?.id) return;
+
+    const channel = supabase
+      .channel(`room-status-${currentRoom.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "game_rooms",
+          filter: `id=eq.${currentRoom.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as GameRoom;
+          setCurrentRoom(updated);
+          
+          // Handle status transitions
+          if (updated.status === "playing" && state.phase === "countdown") {
+            setState(prev => ({ ...prev, phase: "playing" }));
+          } else if (updated.status === "cancelled") {
+            toast.info("ოთახი დაიხურა");
+            resetMultiplayer();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentRoom?.id, state.phase]);
+
+  // Subscribe to opponent answers
+  useEffect(() => {
+    if (!currentRoom?.id || state.phase !== "playing") return;
+
+    const channel = supabase
+      .channel(`player-answers-${currentRoom.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "player_answers",
+          filter: `room_id=eq.${currentRoom.id}`,
+        },
+        (payload) => {
+          const answer = payload.new as PlayerAnswer;
+          // Only track opponent's answers
+          if (answer.user_id !== user?.id && answer.question_index === state.currentQuestionIndex) {
+            setState(prev => ({
+              ...prev,
+              opponentAnswer: answer,
+              opponentScore: prev.opponentScore + answer.points_earned,
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentRoom?.id, state.phase, state.currentQuestionIndex, user?.id]);
+
+  const createRoom = useCallback(async (categoryId?: string, categoryName?: string) => {
+    setState(prev => ({ ...prev, phase: "creating" }));
+    
+    const room = await createRoomHook(categoryId, categoryName);
+    
+    if (room) {
+      setState(prev => ({ 
+        ...prev, 
+        phase: "lobby",
+        room,
+      }));
+      setShowCreateModal(false);
+    } else {
+      setState(prev => ({ ...prev, phase: "idle" }));
+    }
+  }, [createRoomHook]);
+
+  const joinRoom = useCallback(async (code: string) => {
+    setState(prev => ({ ...prev, phase: "joining" }));
+    
+    const room = await joinRoomHook(code);
+    
+    if (room) {
+      setState(prev => ({ 
+        ...prev, 
+        phase: "lobby",
+        room,
+      }));
+      setShowJoinModal(false);
+    } else {
+      setState(prev => ({ ...prev, phase: "idle" }));
+    }
+  }, [joinRoomHook]);
+
+  const leaveRoom = useCallback(async () => {
+    if (currentRoom) {
+      await leaveRoomHook(currentRoom.id);
+    }
+    resetMultiplayer();
+  }, [currentRoom, leaveRoomHook]);
+
+  const setReady = useCallback(async (ready: boolean) => {
+    if (!currentRoom) return;
+    await setParticipantReady(currentRoom.id, ready);
+  }, [currentRoom, setParticipantReady]);
+
+  const startGame = useCallback(async () => {
+    if (!currentRoom || !isHost || !allReady) return;
+
+    setState(prev => ({ ...prev, phase: "countdown" }));
+
+    // Generate questions
+    try {
+      const response = await supabase.functions.invoke("generate-category-trivia", {
+        body: { 
+          category: currentRoom.category_name || "ზოგადი ცოდნა",
+          count: currentRoom.total_questions,
+        },
+      });
+
+      if (response.error) throw response.error;
+
+      const questions: TriviaQuestion[] = response.data.questions.map((q: any, index: number) => ({
+        id: `${currentRoom.id}-${index}`,
+        question: q.question,
+        correctAnswer: q.correct_answer,
+        incorrectAnswers: q.incorrect_answers,
+        allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
+        difficulty: q.difficulty || "medium",
+        category: currentRoom.category_name || "ზოგადი ცოდნა",
+      }));
+
+      // Store questions in database for sync
+      for (let i = 0; i < questions.length; i++) {
+        await supabase.from("room_questions").insert({
+          room_id: currentRoom.id,
+          question_index: i,
+          question_text: questions[i].question,
+          correct_answer: questions[i].correctAnswer,
+          incorrect_answers: questions[i].incorrectAnswers,
+          difficulty: questions[i].difficulty,
+        });
+      }
+
+      setState(prev => ({
+        ...prev,
+        questions,
+        currentQuestionIndex: 0,
+        myScore: 0,
+        opponentScore: 0,
+      }));
+
+      // Update room status after countdown
+      setTimeout(async () => {
+        await updateRoomStatus(currentRoom.id, "playing");
+        setState(prev => ({ ...prev, phase: "playing" }));
+      }, 4000); // 3-2-1-GO countdown
+
+    } catch (error) {
+      console.error("Failed to generate questions:", error);
+      toast.error("კითხვების გენერირება ვერ მოხერხდა");
+      setState(prev => ({ ...prev, phase: "lobby" }));
+    }
+  }, [currentRoom, isHost, allReady, updateRoomStatus]);
+
+  const submitAnswer = useCallback(async (answer: string, timeRemaining: number) => {
+    if (!currentRoom || !user) return;
+
+    const question = state.questions[state.currentQuestionIndex];
+    if (!question) return;
+
+    const isCorrect = answer === question.correctAnswer;
+    const basePoints = isCorrect ? 100 : 0;
+    const timeBonus = isCorrect ? Math.floor(timeRemaining * 10) : 0;
+    const points = basePoints + timeBonus;
+
+    // Save answer
+    await supabase.from("player_answers").insert({
+      room_id: currentRoom.id,
+      user_id: user.id,
+      question_index: state.currentQuestionIndex,
+      answer,
+      is_correct: isCorrect,
+      time_remaining: timeRemaining,
+      points_earned: points,
+    });
+
+    // Update participant score
+    const currentParticipant = participants.find(p => p.user_id === user.id);
+    if (currentParticipant) {
+      await supabase
+        .from("room_participants")
+        .update({ 
+          score: (currentParticipant.score || 0) + points,
+          current_question: state.currentQuestionIndex + 1,
+        })
+        .eq("id", currentParticipant.id);
+    }
+
+    setState(prev => ({
+      ...prev,
+      phase: "question-result",
+      lastAnswerCorrect: isCorrect,
+      lastPointsEarned: points,
+      myScore: prev.myScore + points,
+    }));
+  }, [currentRoom, user, state.questions, state.currentQuestionIndex, participants]);
+
+  const nextQuestion = useCallback(() => {
+    const nextIndex = state.currentQuestionIndex + 1;
+    
+    if (nextIndex >= state.questions.length) {
+      // Game over
+      if (currentRoom) {
+        updateRoomStatus(currentRoom.id, "completed");
+      }
+      setState(prev => ({ ...prev, phase: "match-result" }));
+    } else {
+      setState(prev => ({
+        ...prev,
+        phase: "playing",
+        currentQuestionIndex: nextIndex,
+        lastAnswerCorrect: null,
+        lastPointsEarned: 0,
+        opponentAnswer: null,
+      }));
+    }
+  }, [state.currentQuestionIndex, state.questions.length, currentRoom, updateRoomStatus]);
+
+  const resetMultiplayer = useCallback(() => {
+    setState(initialState);
+    setCurrentRoom(null);
+  }, [setCurrentRoom]);
+
+  return (
+    <MultiplayerContext.Provider
+      value={{
+        ...state,
+        participants,
+        allReady,
+        isHost,
+        loading,
+        createRoom,
+        joinRoom,
+        leaveRoom,
+        setReady,
+        startGame,
+        submitAnswer,
+        nextQuestion,
+        resetMultiplayer,
+        showCreateModal,
+        setShowCreateModal,
+        showJoinModal,
+        setShowJoinModal,
+      }}
+    >
+      {children}
+    </MultiplayerContext.Provider>
+  );
+}
+
+export function useMultiplayer() {
+  const context = useContext(MultiplayerContext);
+  if (!context) {
+    throw new Error("useMultiplayer must be used within a MultiplayerProvider");
+  }
+  return context;
+}

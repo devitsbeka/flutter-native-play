@@ -1,50 +1,93 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Bell, Sparkles, Check } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, Plus, KeyRound, Users, Gamepad2 } from "lucide-react";
+import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { CreateRoomModal } from "@/components/team/CreateRoomModal";
+import { JoinRoomModal } from "@/components/team/JoinRoomModal";
+import { RoomLobby } from "@/components/team/RoomLobby";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
-const features = [
-  { id: 1, text: "შექმენი ან შეუერთდი გუნდს მეგობრებთან ერთად" },
-  { id: 2, text: "რეალურ დროში გუნდი გუნდის წინააღმდეგ" },
-  { id: 3, text: "გუნდის რეიტინგები და ლიდერბორდი" },
-  { id: 4, text: "ყოველკვირეული გუნდური ტურნირები" },
-];
-
-export default function Team() {
+function TeamContent() {
   const navigate = useNavigate();
-  const [isNotified, setIsNotified] = useState(false);
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const { 
+    phase, 
+    showCreateModal, 
+    setShowCreateModal, 
+    showJoinModal, 
+    setShowJoinModal,
+    joinRoom,
+  } = useMultiplayer();
 
-  const handleNotify = () => {
-    setIsNotified(true);
-    toast.success("შენ მიიღებ შეტყობინებას როცა გუნდური ბრძოლები გაეშვება! 🎉");
-  };
+  // Handle join code from URL
+  useEffect(() => {
+    const joinCode = searchParams.get("join");
+    if (joinCode && user) {
+      joinRoom(joinCode);
+    }
+  }, [searchParams, user, joinRoom]);
+
+  // Show lobby if in room
+  if (phase === "lobby" || phase === "countdown") {
+    return <RoomLobby />;
+  }
+
+  // Show login prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <div 
+          className="fixed inset-0 z-0"
+          style={{
+            background: "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
+          }}
+        />
+        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-6"
+          >
+            <Users className="w-12 h-12 text-white" />
+          </motion.div>
+          <h1 className="font-display text-2xl text-white mb-3">მულტიპლეიერი</h1>
+          <p className="text-white/80 text-center mb-6">შედი ანგარიშზე მეგობრებთან სათამაშოდ</p>
+          <ChunkyButton variant="secondary" onClick={() => navigate("/auth")}>
+            შესვლა
+          </ChunkyButton>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Sky Background */}
+      {/* Background */}
       <div 
         className="fixed inset-0 z-0"
         style={{
-          background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 50%, hsl(45 40% 90%) 100%)"
+          background: "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
         }}
       />
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center px-6 py-8">
-        {/* Back Button */}
+      <div className="relative z-10 min-h-screen flex flex-col px-6 py-8">
+        {/* Header */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate("/")}
-          className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/70 backdrop-blur-sm text-slate-600 hover:bg-white/90 transition-colors"
+          className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">უკან</span>
         </motion.button>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center max-w-sm w-full">
+        <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
           {/* Icon */}
           <motion.div
             initial={{ scale: 0 }}
@@ -52,110 +95,78 @@ export default function Team() {
             transition={{ type: "spring", stiffness: 200 }}
             className="w-28 h-28 rounded-full flex items-center justify-center mb-6"
             style={{
-              background: "linear-gradient(135deg, hsl(220 70% 50%) 0%, hsl(260 60% 55%) 100%)",
-              boxShadow: "0 12px 40px hsl(240 60% 50% / 0.3)"
+              background: "linear-gradient(135deg, hsl(280 70% 60%) 0%, hsl(320 70% 50%) 100%)",
+              boxShadow: "0 12px 40px rgba(168, 85, 247, 0.4)"
             }}
           >
-            <Users className="w-14 h-14 text-white" />
-          </motion.div>
-
-          {/* Coming Soon Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center gap-2 mb-3"
-          >
-            <Sparkles className="w-4 h-4 text-purple-500" />
-            <span className="text-sm font-semibold text-purple-600 uppercase tracking-wide">
-              მალე დაემატება
-            </span>
-            <Sparkles className="w-4 h-4 text-purple-500" />
+            <Gamepad2 className="w-14 h-14 text-white" />
           </motion.div>
 
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="text-3xl font-display font-bold text-slate-800 mb-3 text-center"
+            className="font-display text-3xl font-bold text-white mb-3 text-center"
           >
-            გუნდური ბრძოლები
+            მულტიპლეიერი
           </motion.h1>
 
-          {/* Description */}
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-slate-600 text-center mb-8 leading-relaxed"
+            transition={{ delay: 0.1 }}
+            className="text-white/80 text-center mb-8"
           >
-            გაერთიანდი მეგობრებთან და იბრძოლე სხვა გუნდების წინააღმდეგ ეპიკურ ტრივია ბრძოლებში. რეალურ დროში მულტიპლეიერი მალე!
+            შექმენი ოთახი ან შეუერთდი მეგობარს
           </motion.p>
 
-          {/* Features */}
+          {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="w-full space-y-3 mb-8"
+            transition={{ delay: 0.2 }}
+            className="w-full space-y-3"
           >
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.08 }}
-                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white/60 backdrop-blur-sm border border-white/50"
-              >
-                <div 
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg, hsl(280 70% 60%), hsl(320 70% 60%))" }}
-                />
-                <span className="text-sm text-slate-700 font-medium">{feature.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Notify Button */}
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            onClick={handleNotify}
-            disabled={isNotified}
-            className="w-full relative"
-            whileTap={{ scale: 0.98, y: 3 }}
-          >
-            <div 
-              className="absolute inset-0 rounded-2xl"
-              style={{ background: "hsl(220 25% 20%)", transform: "translateY(4px)" }}
-            />
-            <div 
-              className={`relative rounded-2xl px-6 py-4 flex items-center justify-center gap-3 transition-colors ${
-                isNotified ? "bg-green-500" : ""
-              }`}
-              style={!isNotified ? { background: "linear-gradient(180deg, hsl(220 20% 30%) 0%, hsl(220 25% 25%) 100%)" } : undefined}
+            <ChunkyButton
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => setShowCreateModal(true)}
+              icon={<Plus className="w-5 h-5" />}
             >
-              {isNotified ? (
-                <>
-                  <Check className="w-5 h-5 text-white" />
-                  <span className="font-display text-white text-base font-bold">
-                    შეტყობინება ჩართულია
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Bell className="w-5 h-5 text-white" />
-                  <span className="font-display text-white text-base font-bold">
-                    შემატყობინე როცა გაეშვება
-                  </span>
-                </>
-              )}
-            </div>
-          </motion.button>
+              ოთახის შექმნა
+            </ChunkyButton>
+
+            <ChunkyButton
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              onClick={() => setShowJoinModal(true)}
+              icon={<KeyRound className="w-5 h-5" />}
+            >
+              კოდით შესვლა
+            </ChunkyButton>
+          </motion.div>
         </div>
       </div>
+
+      {/* Modals */}
+      <CreateRoomModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+      />
+      <JoinRoomModal 
+        isOpen={showJoinModal} 
+        onClose={() => setShowJoinModal(false)} 
+      />
     </div>
+  );
+}
+
+export default function Team() {
+  return (
+    <MultiplayerProvider>
+      <TeamContent />
+    </MultiplayerProvider>
   );
 }
