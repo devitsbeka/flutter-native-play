@@ -93,14 +93,9 @@ export function useQuestionAvailability() {
     const catAvail = availability.get(categoryId);
     if (!catAvail) return false;
 
-    // Check if we have enough questions for this level range (current + 2 like the quiz does)
-    let totalAvailable = 0;
-    for (let i = levelNumber; i <= levelNumber + 2; i++) {
-      const levelCount = catAvail.levelCounts.find(l => l.levelNumber === i);
-      totalAvailable += levelCount?.count || 0;
-    }
-
-    return totalAvailable >= MIN_QUESTIONS_PER_LEVEL;
+    // If category has enough total questions, all levels are playable
+    // Questions will be randomly selected from the pool
+    return catAvail.totalQuestions >= MIN_QUESTIONS_PER_LEVEL;
   };
 
   const getQuestionCount = (categoryId: string, levelNumber: number): number => {
