@@ -6,22 +6,26 @@ import {
   Users,
   Activity,
   ArrowUpRight,
-  TrendingUp
+  TrendingUp,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { NavLink } from 'react-router-dom';
+import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
 
 export default function AdminDashboard() {
   const { categories } = useAdminCategories();
   const { questions } = useAdminQuestions();
   const { onlineUsers, onlineCount, awayCount } = useOnlineUsers();
   const [totalGameSessions, setTotalGameSessions] = useState(0);
+  const [showMagicRefill, setShowMagicRefill] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -72,18 +76,34 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-6 space-y-6">
-        {/* Compact Header */}
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-primary/10 rounded-xl">
-            <LayoutDashboard className="h-5 w-5 text-primary" />
+    <>
+      <AiMagicRefillModal
+        isOpen={showMagicRefill}
+        onClose={() => setShowMagicRefill(false)}
+        categories={categories}
+      />
+
+      <ScrollArea className="h-full">
+        <div className="p-6 space-y-6">
+          {/* Compact Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-primary/10 rounded-xl">
+                <LayoutDashboard className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold tracking-tight">დეშბორდი</h1>
+                <p className="text-sm text-muted-foreground">მიმოხილვა</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowMagicRefill(true)}
+              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI Magic Refill
+            </Button>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">დეშბორდი</h1>
-            <p className="text-sm text-muted-foreground">მიმოხილვა</p>
-          </div>
-        </div>
 
         {/* Modern Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -235,7 +255,8 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </ScrollArea>
+        </div>
+      </ScrollArea>
+    </>
   );
 }
