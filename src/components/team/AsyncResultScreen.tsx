@@ -1,0 +1,240 @@
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { Clock, Trophy, ArrowRight, Home, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useMultiplayer } from "@/contexts/MultiplayerContext";
+import { useSound } from "@/contexts/SoundContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { toast } from "sonner";
+
+interface AsyncResultScreenProps {
+  challengerInfo?: {
+    nickname: string;
+    avatar: string | null;
+    score: number | null;
+  };
+  myScore: number;
+  isChallenger: boolean;
+  opponentCompleted: boolean;
+}
+
+export function AsyncResultScreen({ 
+  challengerInfo, 
+  myScore, 
+  isChallenger,
+  opponentCompleted 
+}: AsyncResultScreenProps) {
+  const navigate = useNavigate();
+  const { resetMultiplayer } = useMultiplayer();
+  const { playSound } = useSound();
+
+  useEffect(() => {
+    if (opponentCompleted) {
+      // Both completed - play result sound
+      const iWon = challengerInfo?.score !== null && myScore > (challengerInfo.score || 0);
+      playSound(iWon ? "game-win" : "game-lose");
+    } else {
+      playSound("button-click");
+    }
+  }, [opponentCompleted, challengerInfo?.score, myScore, playSound]);
+
+  const handleSendReminder = () => {
+    toast.success("შეხსენება გაიგზავნა!");
+    // In a real implementation, this would send a push notification
+  };
+
+  const handleBackToTeam = () => {
+    resetMultiplayer();
+    navigate("/team");
+  };
+
+  // Waiting for opponent to play
+  if (!opponentCompleted) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        <div 
+          className="fixed inset-0 z-0"
+          style={{
+            background: "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
+          }}
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative z-10 max-w-md w-full mx-4"
+        >
+          <div className="p-8 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 text-center">
+            {/* Your Score */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mb-6"
+            >
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center shadow-lg">
+                <Trophy className="w-12 h-12 text-white" />
+              </div>
+            </motion.div>
+
+            <h2 className="font-display text-2xl text-white mb-2">შენი ქულა</h2>
+            <p className="text-5xl font-bold text-white mb-6">{myScore}</p>
+
+            {/* Waiting Message */}
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="flex items-center justify-center gap-3 mb-6 p-4 rounded-xl bg-white/10"
+            >
+              <Clock className="w-6 h-6 text-amber-300" />
+              <span className="text-white/80">
+                ველოდებით {challengerInfo?.nickname || "მოწინააღმდეგეს"}...
+              </span>
+            </motion.div>
+
+            {isChallenger && (
+              <p className="text-white/60 text-sm mb-6">
+                შენ გაგზავნე გამოწვევა. როცა მეგობარი ითამაშებს, შეძლებ შედეგების ნახვას.
+              </p>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <ChunkyButton
+                variant="secondary"
+                className="w-full"
+                onClick={handleSendReminder}
+                icon={<Bell className="w-5 h-5" />}
+              >
+                შეხსენების გაგზავნა
+              </ChunkyButton>
+
+              <ChunkyButton
+                variant="primary"
+                className="w-full"
+                onClick={handleBackToTeam}
+                icon={<Home className="w-5 h-5" />}
+              >
+                უკან დაბრუნება
+              </ChunkyButton>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Both completed - show comparison
+  const opponentScore = challengerInfo?.score || 0;
+  const iWon = myScore > opponentScore;
+  const isTie = myScore === opponentScore;
+
+  return (
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          background: iWon 
+            ? "linear-gradient(180deg, hsl(145 70% 45%) 0%, hsl(160 60% 40%) 50%, hsl(180 50% 35%) 100%)"
+            : "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative z-10 max-w-md w-full mx-4"
+      >
+        <div className="p-8 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 text-center">
+          {/* Result Header */}
+          <motion.h1
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className={`font-display text-4xl mb-6 ${
+              iWon ? "text-yellow-300" : isTie ? "text-white" : "text-white/80"
+            }`}
+          >
+            {iWon ? "🎉 გაიმარჯვე!" : isTie ? "🤝 ფრე!" : "😔 წააგე..."}
+          </motion.h1>
+
+          {/* Score Comparison */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            {/* Your Score */}
+            <motion.div
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-center"
+            >
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-2 ${
+                iWon ? "bg-gradient-to-br from-yellow-400 to-amber-500" : "bg-white/20"
+              }`}>
+                <span className="text-2xl font-bold text-white">{myScore}</span>
+              </div>
+              <p className="text-white/80 text-sm">შენ</p>
+            </motion.div>
+
+            {/* VS */}
+            <div className="text-white/50 font-display text-xl">VS</div>
+
+            {/* Opponent Score */}
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-center"
+            >
+              <div className="relative mb-2">
+                <Avatar className={`w-20 h-20 border-3 ${
+                  !iWon && !isTie ? "border-yellow-400" : "border-white/30"
+                }`}>
+                  <AvatarImage src={challengerInfo?.avatar || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl font-bold">
+                    {(challengerInfo?.nickname || "?").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xl font-bold text-white drop-shadow-lg">
+                    {opponentScore}
+                  </span>
+                </div>
+              </div>
+              <p className="text-white/80 text-sm truncate max-w-[80px]">
+                {challengerInfo?.nickname || "მოწინააღმდეგე"}
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Point Difference */}
+          {!isTie && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mb-6 p-3 rounded-xl bg-white/10"
+            >
+              <p className="text-white/80">
+                {iWon ? "+" : "-"}{Math.abs(myScore - opponentScore)} ქულით {iWon ? "უკეთესი!" : "ჩამორჩი"}
+              </p>
+            </motion.div>
+          )}
+
+          {/* Actions */}
+          <div className="space-y-3">
+            <ChunkyButton
+              variant="primary"
+              className="w-full"
+              onClick={handleBackToTeam}
+              icon={<ArrowRight className="w-5 h-5" />}
+            >
+              გაგრძელება
+            </ChunkyButton>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+export default AsyncResultScreen;

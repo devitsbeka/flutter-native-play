@@ -17,9 +17,13 @@ import { RecentRoomsSection } from "@/components/team/RecentRoomsSection";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChatModal } from "@/components/team/ChatModal";
 import { GameInviteModal } from "@/components/team/GameInviteModal";
+import { QuickPlayModal } from "@/components/team/QuickPlayModal";
+import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
+import { PendingChallenge } from "@/hooks/usePendingChallenges";
+import { Category } from "@/data/categories";
 import { toast } from "sonner";
 
 function TeamContent() {
@@ -34,6 +38,7 @@ function TeamContent() {
     showJoinModal, 
     setShowJoinModal,
     joinRoom,
+    createChallengeRoom,
   } = useMultiplayer();
   const { playSound } = useSound();
   const { 
@@ -45,6 +50,8 @@ function TeamContent() {
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [chatFriend, setChatFriend] = useState<Friend | null>(null);
+  const [quickPlayFriend, setQuickPlayFriend] = useState<Friend | null>(null);
+  const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
   const [currentInvitation, setCurrentInvitation] = useState<typeof pendingInvitations[0] | null>(null);
 
   // Show latest pending invitation
@@ -62,16 +69,33 @@ function TeamContent() {
     }
   }, [searchParams, user, joinRoom]);
 
-  // Handle inviting a friend to game (sends real invitation if room exists)
-  const handleInviteFriend = async (friendId: string) => {
-    if (!room) {
-      // Copy room link to clipboard as fallback
-      toast.info("შექმენი ოთახი მეგობრის მოსაწვევად");
-      return;
+  // Handle quick play with friend (opens category picker)
+  const handleQuickPlay = (friend: Friend) => {
+    playSound("button-click");
+    setQuickPlayFriend(friend);
+  };
+
+  // Handle starting a challenge from quick play modal
+  const handleStartChallenge = async (friend: Friend, category: Category) => {
+    setIsCreatingChallenge(true);
+    try {
+      const success = await createChallengeRoom(friend.friendId, category.id, category.name, friend.isOnline || false);
+      if (success) {
+        setQuickPlayFriend(null);
+        // If friend is online, send real-time invitation as well
+        if (friend.isOnline && room) {
+          await sendInvitation(friend.friendId, room.id);
+        }
+      }
+    } finally {
+      setIsCreatingChallenge(false);
     }
-    
-    // Send real-time invitation
-    await sendInvitation(friendId, room.id);
+  };
+
+  // Handle accepting a pending challenge
+  const handleAcceptChallenge = async (challenge: PendingChallenge) => {
+    playSound("button-click");
+    await joinRoom(challenge.roomCode);
   };
 
   // Handle accepting invitation
@@ -216,6 +240,16 @@ function TeamContent() {
           <RecentRoomsSection />
         </motion.div>
 
+        {/* Pending Challenges Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="mb-6"
+        >
+          <PendingChallengesSection onAcceptChallenge={handleAcceptChallenge} />
+        </motion.div>
+
         {/* Friends Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -225,9 +259,8 @@ function TeamContent() {
         >
           <FriendsList
             onAddFriendClick={() => setShowAddFriendModal(true)}
-            onInviteFriend={handleInviteFriend}
+            onQuickPlay={handleQuickPlay}
             onStartChat={(friend) => setChatFriend(friend)}
-            roomCode={room?.room_code}
           />
 
           {/* Recent Players Section */}
@@ -258,6 +291,13 @@ function TeamContent() {
         onAccept={handleAcceptInvitation}
         onDecline={handleDeclineInvitation}
         onJoinRoom={handleJoinFromInvitation}
+      />
+      <QuickPlayModal
+        isOpen={!!quickPlayFriend}
+        onClose={() => setQuickPlayFriend(null)}
+        friend={quickPlayFriend}
+        onStartChallenge={handleStartChallenge}
+        isLoading={isCreatingChallenge}
       />
     </div>
   );

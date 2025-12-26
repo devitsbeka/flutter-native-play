@@ -167,8 +167,12 @@ export type Database = {
         Row: {
           category_id: string | null
           category_name: string | null
+          challenge_expires_at: string | null
+          challenged_user_id: string | null
+          challenger_completed_at: string | null
           completed_at: string | null
           created_at: string | null
+          game_type: Database["public"]["Enums"]["game_type"]
           host_user_id: string
           id: string
           max_players: number | null
@@ -181,8 +185,12 @@ export type Database = {
         Insert: {
           category_id?: string | null
           category_name?: string | null
+          challenge_expires_at?: string | null
+          challenged_user_id?: string | null
+          challenger_completed_at?: string | null
           completed_at?: string | null
           created_at?: string | null
+          game_type?: Database["public"]["Enums"]["game_type"]
           host_user_id: string
           id?: string
           max_players?: number | null
@@ -195,8 +203,12 @@ export type Database = {
         Update: {
           category_id?: string | null
           category_name?: string | null
+          challenge_expires_at?: string | null
+          challenged_user_id?: string | null
+          challenger_completed_at?: string | null
           completed_at?: string | null
           created_at?: string | null
+          game_type?: Database["public"]["Enums"]["game_type"]
           host_user_id?: string
           id?: string
           max_players?: number | null
@@ -688,6 +700,7 @@ export type Database = {
     }
     Enums: {
       friendship_status: "pending" | "accepted" | "blocked"
+      game_type: "realtime" | "async"
       participant_status:
         | "joined"
         | "ready"
@@ -823,6 +836,7 @@ export const Constants = {
   public: {
     Enums: {
       friendship_status: ["pending", "accepted", "blocked"],
+      game_type: ["realtime", "async"],
       participant_status: [
         "joined",
         "ready",
