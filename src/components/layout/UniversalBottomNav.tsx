@@ -58,7 +58,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             isActive={isActive("/discover")}
             label={t("nav.explore")}
           >
-            <LottieNavIcon type="explore" size={104} />
+            <LottieNavIcon type="explore" size={52} />
           </NavButton>
 
           {/* Map */}
@@ -67,7 +67,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             isActive={isActive("/adventure-map")}
             label={t("nav.map")}
           >
-            <LottieNavIcon type="map" size={104} />
+            <LottieNavIcon type="map" size={52} />
           </NavButton>
 
           {/* Center Button - Play on home, Home on other pages */}
@@ -84,7 +84,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             isActive={isActive("/leaderboards")}
             label={t("nav.rank")}
           >
-            <LottieNavIcon type="rank" size={104} />
+            <LottieNavIcon type="rank" size={52} />
           </NavButton>
 
           {/* Team */}
@@ -93,7 +93,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             isActive={isActive("/team")}
             label={t("nav.sound")}
           >
-            <LottieNavIcon type="team" size={104} />
+            <LottieNavIcon type="team" size={52} />
           </NavButton>
         </div>
       </motion.div>
