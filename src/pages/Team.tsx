@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, KeyRound, Users, Gamepad2 } from "lucide-react";
+import { ArrowLeft, Plus, KeyRound, Users, DoorOpen } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -136,8 +136,8 @@ function TeamContent() {
             animate={{ opacity: 1 }}
             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm"
           >
-            <Gamepad2 className="w-5 h-5 text-white" />
-            <span className="font-display text-white font-bold">გუნდი</span>
+            <DoorOpen className="w-5 h-5 text-white" />
+            <span className="font-display text-white font-bold">ოთახები</span>
           </motion.div>
         </div>
 
@@ -145,7 +145,7 @@ function TeamContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 gap-3 mb-6"
+          className="flex flex-col gap-3 mb-6"
         >
           <ChunkyButton
             variant="primary"
@@ -157,7 +157,7 @@ function TeamContent() {
             }}
             icon={<Plus className="w-5 h-5" />}
           >
-            ოთახის შექმნა
+            შექმნა
           </ChunkyButton>
 
           <ChunkyButton
@@ -170,7 +170,7 @@ function TeamContent() {
             }}
             icon={<KeyRound className="w-5 h-5" />}
           >
-            კოდით შესვლა
+            შესვლა
           </ChunkyButton>
         </motion.div>
 
