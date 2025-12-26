@@ -10,6 +10,7 @@ import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobby } from "@/components/team/RoomLobby";
 import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
 import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScreen";
+import { WaitingForOpponentScreen } from "@/components/team/WaitingForOpponentScreen";
 import { FriendsList } from "@/components/team/FriendsList";
 import { RecentPlayersList } from "@/components/team/RecentPlayersList";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
@@ -61,6 +62,11 @@ function TeamContent() {
   // Show game screen if playing
   if (phase === "playing" || phase === "question-result") {
     return <MultiplayerGameScreen />;
+  }
+
+  // Show waiting screen if waiting for opponent
+  if (phase === "waiting-for-opponent") {
+    return <WaitingForOpponentScreen />;
   }
 
   // Show result screen

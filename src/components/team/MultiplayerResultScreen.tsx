@@ -15,8 +15,8 @@ export function MultiplayerResultScreen() {
   const { user, profile, updateProfile } = useAuth();
   const { playSound, vibrate } = useSound();
   const { 
-    myScore, 
-    opponentScore, 
+    myScore: localMyScore, 
+    opponentScore: localOpponentScore, 
     participants, 
     resetMultiplayer,
     room,
@@ -24,6 +24,10 @@ export function MultiplayerResultScreen() {
 
   const opponent = participants.find(p => p.user_id !== user?.id);
   const myParticipant = participants.find(p => p.user_id === user?.id);
+
+  // Use database scores as single source of truth (fallback to local if not available)
+  const myScore = myParticipant?.score ?? localMyScore;
+  const opponentScore = opponent?.score ?? localOpponentScore;
 
   const isWin = myScore > opponentScore;
   const isDraw = myScore === opponentScore;
