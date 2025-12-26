@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSound } from "@/contexts/SoundContext";
 import { toast } from "sonner";
 
 export interface PendingChallenge {
@@ -17,6 +18,7 @@ export interface PendingChallenge {
 
 export function usePendingChallenges() {
   const { user } = useAuth();
+  const { playSound, vibrate } = useSound();
   const [pendingChallenges, setPendingChallenges] = useState<PendingChallenge[]>([]);
   const [loading, setLoading] = useState(true);
   const previousChallengeIds = useRef<Set<string>>(new Set());
@@ -94,11 +96,15 @@ export function usePendingChallenges() {
         };
       });
 
-      // Check for new challenges and show notification
+      // Check for new challenges and show notification with sound
       const currentIds = new Set(challenges.map(c => c.id));
       challenges.forEach(challenge => {
         if (!previousChallengeIds.current.has(challenge.id) && previousChallengeIds.current.size > 0) {
-          // This is a new challenge - show notification
+          // This is a new challenge - play sound and vibrate
+          playSound("friend-request");
+          vibrate([100, 50, 100, 50, 100]);
+          
+          // Show notification
           toast.success(`${challenge.challengerNickname} გამოგიწვია თამაშში!`, {
             description: challenge.categoryName || "ზოგადი ცოდნა",
             duration: 5000,
