@@ -8,7 +8,8 @@ import {
   Menu,
   ChevronLeft,
   Shield,
-  Upload
+  Upload,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,11 @@ const navItems = [
     to: '/admin/import', 
     icon: Upload, 
     label: 'იმპორტი' 
+  },
+  { 
+    to: '/admin/duplicates', 
+    icon: Search, 
+    label: 'დუბლიკატები' 
   },
   { 
     to: '/admin/users', 

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Link2, FileJson, FileSpreadsheet, Sparkles, FileText } from 'lucide-react';
+import { Link2, FileJson, FileSpreadsheet, Sparkles, FileText, FolderPlus } from 'lucide-react';
 import { ParserTool } from './import/ParserTool';
 import { JsonImport } from './import/JsonImport';
 import { CsvImport } from './import/CsvImport';
 import { AiGenerator } from './import/AiGenerator';
 import { TextImport } from './import/TextImport';
+import { CategoryImport } from './import/CategoryImport';
 
 const importTools = [
   { id: 'parser', label: 'URL Parser', icon: Link2, description: 'AI-powered web scraper' },
@@ -14,6 +15,7 @@ const importTools = [
   { id: 'csv', label: 'CSV', icon: FileSpreadsheet, description: 'Import from CSV' },
   { id: 'generate', label: 'AI Generator', icon: Sparkles, description: 'Generate with AI' },
   { id: 'text', label: 'ტექსტი', icon: FileText, description: 'Parse plain text' },
+  { id: 'categories', label: 'კატეგორიები', icon: FolderPlus, description: 'Bulk import categories' },
 ];
 
 export default function Import() {
@@ -25,12 +27,12 @@ export default function Import() {
         <div>
           <h1 className="text-3xl font-bold">იმპორტი</h1>
           <p className="text-muted-foreground mt-1">
-            კითხვების მასობრივი იმპორტი სხვადასხვა წყაროებიდან
+            კითხვების და კატეგორიების მასობრივი იმპორტი სხვადასხვა წყაროებიდან
           </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-6 h-auto p-1">
             {importTools.map((tool) => (
               <TabsTrigger
                 key={tool.id}
@@ -62,6 +64,10 @@ export default function Import() {
 
             <TabsContent value="text" className="mt-0">
               <TextImport />
+            </TabsContent>
+
+            <TabsContent value="categories" className="mt-0">
+              <CategoryImport />
             </TabsContent>
           </div>
         </Tabs>
