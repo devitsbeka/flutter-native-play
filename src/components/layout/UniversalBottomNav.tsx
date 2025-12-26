@@ -136,124 +136,114 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
     <motion.button
       onClick={onClick}
       className="relative"
-      whileHover={{ scale: 1.08 }}
-      whileTap={{ scale: 0.95, y: 4 }}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      whileHover={{ scale: 1.06 }}
+      whileTap={{ scale: 0.94, y: 5 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      {/* Outer glow pulse */}
-      <motion.div
-        className="absolute -inset-3"
-        style={{
-          borderRadius: "26px",
-          background: "radial-gradient(circle, rgba(80,220,180,0.4) 0%, rgba(120,200,255,0.2) 50%, transparent 70%)",
-          filter: "blur(12px)",
-        }}
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.6, 0.9, 0.6],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      
-      {/* Secondary cyan glow */}
+      {/* Subtle outer glow - not too blurry */}
       <motion.div
         className="absolute -inset-2"
         style={{
-          borderRadius: "26px",
-          background: "radial-gradient(circle, rgba(0,255,200,0.5) 0%, transparent 60%)",
+          borderRadius: "30px",
+          background: "radial-gradient(circle, rgba(80,220,180,0.35) 0%, transparent 70%)",
           filter: "blur(8px)",
         }}
         animate={{
-          scale: [1.1, 0.95, 1.1],
-          opacity: [0.4, 0.7, 0.4],
+          opacity: [0.5, 0.8, 0.5],
         }}
         transition={{
-          duration: 1.5,
+          duration: 2.5,
           repeat: Infinity,
           ease: "easeInOut",
-          delay: 0.3,
         }}
       />
       
-      {/* Base shadow */}
+      {/* 3D Base/Shadow layer - crisp edges */}
       <div 
         className="absolute inset-0"
         style={{
           borderRadius: "26px",
-          background: "rgba(60,180,140,0.6)",
-          transform: "translateY(6px)",
-          boxShadow: "0 8px 25px rgba(80,220,180,0.5)",
-          filter: "blur(2px)",
+          background: "linear-gradient(180deg, #2A9D8F 0%, #1D7A6F 100%)",
+          transform: "translateY(5px)",
+          boxShadow: "0 4px 12px rgba(30,120,100,0.5)",
         }}
       />
       
-      {/* Main button */}
+      {/* White border ring for polish */}
       <div 
-        className="relative w-20 h-20 overflow-hidden"
+        className="relative w-20 h-20 p-[3px]"
         style={{
           borderRadius: "26px",
-          background: "linear-gradient(160deg, #7EEFC8 0%, #50DCB4 30%, #3CC9A0 60%, #30B898 100%)",
-          boxShadow: `
-            inset 0 -8px 20px rgba(0,100,80,0.3),
-            inset 0 8px 20px rgba(255,255,255,0.4),
-            0 0 30px rgba(80,220,180,0.5)
-          `,
+          background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(220,250,240,0.8) 100%)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         }}
       >
-        {/* Inner highlight */}
-        <div
-          className="absolute top-2 left-3 w-8 h-6"
+        {/* Main button face */}
+        <div 
+          className="w-full h-full overflow-hidden flex items-center justify-center"
           style={{
-            borderRadius: "12px",
-            background: "radial-gradient(ellipse, rgba(255,255,255,0.6) 0%, transparent 70%)",
-            filter: "blur(2px)",
+            borderRadius: "23px",
+            background: "linear-gradient(160deg, #7EEFC8 0%, #50DCB4 35%, #3CC9A0 70%, #2FB08A 100%)",
+            boxShadow: `
+              inset 0 2px 8px rgba(255,255,255,0.5),
+              inset 0 -3px 8px rgba(0,80,60,0.2)
+            `,
           }}
-        />
-        
-        {/* Floating particles inside */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-white"
+        >
+          {/* Top shine highlight */}
+          <div
+            className="absolute top-[6px] left-1/2 -translate-x-1/2 w-10 h-3"
             style={{
-              width: 3 + (i % 3),
-              height: 3 + (i % 3),
-              left: `${20 + (i * 12)}%`,
-              top: `${30 + (i * 8)}%`,
-              filter: "blur(0.5px)",
-            }}
-            animate={{
-              y: [-8, 8, -8],
-              x: [0, (i % 2 === 0 ? 4 : -4), 0],
-              opacity: [0.4, 0.9, 0.4],
-              scale: [0.8, 1.2, 0.8],
-            }}
-            transition={{
-              duration: 2 + (i * 0.3),
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.2,
+              borderRadius: "10px",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%)",
             }}
           />
-        ))}
-        
-        {/* Icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
+          
+          {/* Floating sparkle particles */}
+          {[...Array(4)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: 4,
+                height: 4,
+                background: "rgba(255,255,255,0.9)",
+                left: `${25 + (i * 18)}%`,
+                top: `${35 + (i * 10)}%`,
+                boxShadow: "0 0 4px rgba(255,255,255,0.8)",
+              }}
+              animate={{
+                y: [-6, 6, -6],
+                opacity: [0.3, 1, 0.3],
+                scale: [0.8, 1.3, 0.8],
+              }}
+              transition={{
+                duration: 2.2 + (i * 0.4),
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.25,
+              }}
+            />
+          ))}
+          
+          {/* Icon */}
           {isPlayButton ? (
             <Play 
-              className="w-9 h-9 drop-shadow-md ml-1" 
-              style={{ color: "white", filter: "drop-shadow(0 2px 4px rgba(0,80,60,0.3))" }}
+              className="w-9 h-9 ml-1 relative z-10" 
+              style={{ 
+                color: "white", 
+                filter: "drop-shadow(0 2px 3px rgba(0,60,50,0.35))" 
+              }}
               fill="white"
               strokeWidth={0}
             />
           ) : (
             <Home 
-              className="w-8 h-8 drop-shadow-md" 
-              style={{ color: "white", filter: "drop-shadow(0 2px 4px rgba(0,80,60,0.3))" }}
+              className="w-8 h-8 relative z-10" 
+              style={{ 
+                color: "white", 
+                filter: "drop-shadow(0 2px 3px rgba(0,60,50,0.35))" 
+              }}
               strokeWidth={2.5}
             />
           )}
