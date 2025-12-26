@@ -13,6 +13,9 @@ import {
   Trash2,
   Plus,
   Zap,
+  Pencil,
+  Save,
+  Settings2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminCategory } from "@/hooks/useAdminCategories";
 import { cn } from "@/lib/utils";
@@ -47,6 +52,12 @@ interface ProcessingStep {
   text: string;
   status: "pending" | "running" | "done" | "error";
   detail?: string;
+}
+
+interface DifficultyDistribution {
+  easy: number;
+  medium: number;
+  hard: number;
 }
 
 interface AiMagicRefillModalProps {
@@ -87,6 +98,19 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [stats, setStats] = useState({ total: 0, approved: 0, dismissed: 0, pending: 0, duplicates: 0 });
+  const [difficultyDistribution, setDifficultyDistribution] = useState<DifficultyDistribution>({
+    easy: 33,
+    medium: 34,
+    hard: 33,
+  });
+  const [showSettings, setShowSettings] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+    difficulty: string;
+  } | null>(null);
   const abortRef = useRef(false);
   const existingQuestionsRef = useRef<Map<string, string[]>>(new Map());
   const generatedTextsRef = useRef<Set<string>>(new Set());
@@ -173,6 +197,16 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     }
   };
 
+  // Calculate how many questions of each difficulty to generate based on distribution
+  const getDifficultyForQuestion = (index: number, total: number): string => {
+    const easyCount = Math.round((difficultyDistribution.easy / 100) * total);
+    const mediumCount = Math.round((difficultyDistribution.medium / 100) * total);
+    
+    if (index < easyCount) return "easy";
+    if (index < easyCount + mediumCount) return "medium";
+    return "hard";
+  };
+
   const generateQuestionsForCategory = async (
     category: AdminCategory,
     quantity: number,
@@ -181,11 +215,13 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     const questions: GeneratedQuestion[] = [];
     let duplicateCount = 0;
     const chunks = Math.ceil(quantity / CHUNK_SIZE);
+    let questionIndex = 0;
 
     for (let i = 0; i < chunks; i++) {
       if (abortRef.current || isPaused) break;
 
       const chunkSize = Math.min(CHUNK_SIZE, quantity - i * CHUNK_SIZE);
+      const targetDifficulty = getDifficultyForQuestion(questionIndex, quantity);
 
       try {
         const { data, error } = await supabase.functions.invoke("generate-category-trivia", {
@@ -194,6 +230,7 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
             categoryId: category.id,
             level: Math.floor(Math.random() * 20) + 1,
             count: chunkSize,
+            difficulty: targetDifficulty,
           },
         });
 
@@ -211,12 +248,16 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
           // Mark as seen
           generatedTextsRef.current.add(normalizeText(questionText));
           
+          // Assign difficulty based on distribution
+          const assignedDifficulty = getDifficultyForQuestion(questionIndex, quantity);
+          questionIndex++;
+          
           questions.push({
             id: crypto.randomUUID(),
             question_text: questionText,
             correct_answer: q.correct_answer,
             incorrect_answers: q.incorrect_answers || [],
-            difficulty: q.difficulty || "medium",
+            difficulty: q.difficulty || assignedDifficulty,
             category_id: category.id,
             category_name: category.name,
             status: "pending" as const,
@@ -369,6 +410,48 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     }
   };
 
+  const startEditing = (question: GeneratedQuestion) => {
+    setEditingQuestionId(question.id);
+    setEditForm({
+      question_text: question.question_text,
+      correct_answer: question.correct_answer,
+      incorrect_answers: [...question.incorrect_answers],
+      difficulty: question.difficulty,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingQuestionId(null);
+    setEditForm(null);
+  };
+
+  const saveEditing = () => {
+    if (!editingQuestionId || !editForm) return;
+    
+    setGeneratedQuestions((prev) =>
+      prev.map((q) =>
+        q.id === editingQuestionId
+          ? {
+              ...q,
+              question_text: editForm.question_text,
+              correct_answer: editForm.correct_answer,
+              incorrect_answers: editForm.incorrect_answers,
+              difficulty: editForm.difficulty,
+            }
+          : q
+      )
+    );
+    setEditingQuestionId(null);
+    setEditForm(null);
+  };
+
+  const updateIncorrectAnswer = (index: number, value: string) => {
+    if (!editForm) return;
+    const newAnswers = [...editForm.incorrect_answers];
+    newAnswers[index] = value;
+    setEditForm({ ...editForm, incorrect_answers: newAnswers });
+  };
+
   const toggleCategoryExpand = (categoryId: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
@@ -379,6 +462,13 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
       }
       return next;
     });
+  };
+
+  const updateDifficultySlider = (values: number[]) => {
+    const easy = values[0];
+    const medium = values[1] - values[0];
+    const hard = 100 - values[1];
+    setDifficultyDistribution({ easy, medium, hard });
   };
 
   // Group questions by category
@@ -426,6 +516,75 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
                   გამოყენება ყველაზე
                 </Button>
               </div>
+
+              {/* Difficulty Distribution Settings */}
+              <Collapsible open={showSettings} onOpenChange={setShowSettings}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between">
+                    <span className="flex items-center gap-2">
+                      <Settings2 className="h-4 w-4" />
+                      სირთულის განაწილება
+                    </span>
+                    {showSettings ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 space-y-3">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-emerald-500">მარტივი: {difficultyDistribution.easy}%</span>
+                    <span className="text-amber-500">საშუალო: {difficultyDistribution.medium}%</span>
+                    <span className="text-red-500">რთული: {difficultyDistribution.hard}%</span>
+                  </div>
+                  <div className="relative h-3 rounded-full overflow-hidden">
+                    <div className="absolute inset-0 flex">
+                      <div 
+                        className="bg-emerald-500 h-full" 
+                        style={{ width: `${difficultyDistribution.easy}%` }} 
+                      />
+                      <div 
+                        className="bg-amber-500 h-full" 
+                        style={{ width: `${difficultyDistribution.medium}%` }} 
+                      />
+                      <div 
+                        className="bg-red-500 h-full" 
+                        style={{ width: `${difficultyDistribution.hard}%` }} 
+                      />
+                    </div>
+                  </div>
+                  <Slider
+                    value={[difficultyDistribution.easy, difficultyDistribution.easy + difficultyDistribution.medium]}
+                    onValueChange={updateDifficultySlider}
+                    max={100}
+                    step={1}
+                    className="mt-2"
+                  />
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs h-7"
+                      onClick={() => setDifficultyDistribution({ easy: 33, medium: 34, hard: 33 })}
+                    >
+                      თანაბარი
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs h-7"
+                      onClick={() => setDifficultyDistribution({ easy: 50, medium: 30, hard: 20 })}
+                    >
+                      მარტივი+
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs h-7"
+                      onClick={() => setDifficultyDistribution({ easy: 20, medium: 30, hard: 50 })}
+                    >
+                      რთული+
+                    </Button>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
 
             <ScrollArea className="flex-1">
@@ -603,28 +762,121 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
                                     q.status === "pending" && "bg-card"
                                   )}
                                 >
-                                  <p className="font-medium mb-1">{q.question_text}</p>
-                                  <p className="text-emerald-600">✓ {q.correct_answer}</p>
-                                  {q.status === "pending" && (
-                                    <div className="flex gap-1 mt-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-6 text-xs"
-                                        onClick={() => approveQuestion(q)}
-                                      >
-                                        <Plus className="h-3 w-3 mr-1" />
-                                        დამატება
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 text-xs text-red-500"
-                                        onClick={() => dismissQuestion(q.id)}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
+                                  {editingQuestionId === q.id && editForm ? (
+                                    // Edit Mode
+                                    <div className="space-y-2">
+                                      <Input
+                                        value={editForm.question_text}
+                                        onChange={(e) => setEditForm({ ...editForm, question_text: e.target.value })}
+                                        placeholder="კითხვა"
+                                        className="h-7 text-xs"
+                                      />
+                                      <div className="flex gap-1 items-center">
+                                        <span className="text-emerald-600 text-xs">✓</span>
+                                        <Input
+                                          value={editForm.correct_answer}
+                                          onChange={(e) => setEditForm({ ...editForm, correct_answer: e.target.value })}
+                                          placeholder="სწორი პასუხი"
+                                          className="h-7 text-xs flex-1"
+                                        />
+                                      </div>
+                                      {editForm.incorrect_answers.map((ans, idx) => (
+                                        <div key={idx} className="flex gap-1 items-center">
+                                          <span className="text-red-500 text-xs">✗</span>
+                                          <Input
+                                            value={ans}
+                                            onChange={(e) => updateIncorrectAnswer(idx, e.target.value)}
+                                            placeholder={`არასწორი ${idx + 1}`}
+                                            className="h-7 text-xs flex-1"
+                                          />
+                                        </div>
+                                      ))}
+                                      <div className="flex gap-1 items-center">
+                                        <span className="text-xs text-muted-foreground">სირთულე:</span>
+                                        <select
+                                          value={editForm.difficulty}
+                                          onChange={(e) => setEditForm({ ...editForm, difficulty: e.target.value })}
+                                          className="h-7 text-xs rounded border px-2 bg-background"
+                                        >
+                                          <option value="easy">მარტივი</option>
+                                          <option value="medium">საშუალო</option>
+                                          <option value="hard">რთული</option>
+                                        </select>
+                                      </div>
+                                      <div className="flex gap-1 mt-2">
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          className="h-6 text-xs"
+                                          onClick={saveEditing}
+                                        >
+                                          <Save className="h-3 w-3 mr-1" />
+                                          შენახვა
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 text-xs"
+                                          onClick={cancelEditing}
+                                        >
+                                          გაუქმება
+                                        </Button>
+                                      </div>
                                     </div>
+                                  ) : (
+                                    // View Mode
+                                    <>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <p className="font-medium mb-1 flex-1">{q.question_text}</p>
+                                        <Badge
+                                          variant="secondary"
+                                          className={cn(
+                                            "text-[10px] shrink-0",
+                                            q.difficulty === "easy" && "bg-emerald-500/20 text-emerald-600",
+                                            q.difficulty === "medium" && "bg-amber-500/20 text-amber-600",
+                                            q.difficulty === "hard" && "bg-red-500/20 text-red-600"
+                                          )}
+                                        >
+                                          {q.difficulty === "easy" ? "მარტივი" : q.difficulty === "medium" ? "საშუალო" : "რთული"}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-emerald-600">✓ {q.correct_answer}</p>
+                                      <div className="text-muted-foreground mt-1">
+                                        {q.incorrect_answers.map((ans, idx) => (
+                                          <span key={idx}>✗ {ans}{idx < q.incorrect_answers.length - 1 ? " | " : ""}</span>
+                                        ))}
+                                      </div>
+                                      {q.status === "pending" && (
+                                        <div className="flex gap-1 mt-2">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-6 text-xs"
+                                            onClick={() => startEditing(q)}
+                                          >
+                                            <Pencil className="h-3 w-3 mr-1" />
+                                            რედაქტირება
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-6 text-xs"
+                                            onClick={() => approveQuestion(q)}
+                                          >
+                                            <Plus className="h-3 w-3 mr-1" />
+                                            დამატება
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-6 text-xs text-red-500"
+                                            onClick={() => dismissQuestion(q.id)}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               ))}
