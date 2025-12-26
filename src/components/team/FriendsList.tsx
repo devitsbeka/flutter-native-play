@@ -25,7 +25,7 @@ import {
 interface FriendsListProps {
   onAddFriendClick: () => void;
   onInviteFriend: (friendId: string) => void;
-  onStartChat?: (friendId: string) => void;
+  onStartChat?: (friend: Friend) => void;
   roomCode?: string;
 }
 
@@ -141,7 +141,7 @@ export function FriendsList({ onAddFriendClick, onInviteFriend, onStartChat, roo
                 key={friend.id}
                 friend={friend}
                 onInvite={() => onInviteFriend(friend.friendId)}
-                onChat={() => onStartChat?.(friend.friendId)}
+                onChat={() => onStartChat?.(friend)}
                 onRemove={() => setFriendToRemove(friend)}
                 showInvite={!!roomCode}
               />
