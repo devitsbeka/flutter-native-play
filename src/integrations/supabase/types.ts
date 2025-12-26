@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      avatar_generations: {
+        Row: {
+          avatar_url: string
+          created_at: string
+          id: string
+          is_current: boolean | null
+          source_image_url: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url: string
+          created_at?: string
+          id?: string
+          is_current?: boolean | null
+          source_image_url?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string
+          created_at?: string
+          id?: string
+          is_current?: boolean | null
+          source_image_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       category_stats: {
         Row: {
           category: string
