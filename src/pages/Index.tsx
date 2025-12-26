@@ -214,7 +214,7 @@ export default function Index() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsSideMenuOpen(true)}
             >
-              <span className="text-xl">🍔</span>
+              <span className="w-6 h-6 flex items-center justify-center text-lg">🍔</span>
               <span className="text-sm font-bold text-gray-800">{t("nav.menu")}</span>
             </motion.button>
             
