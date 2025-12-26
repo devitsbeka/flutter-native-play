@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, KeyRound, Users, Gamepad2, UserPlus } from "lucide-react";
+import { ArrowLeft, Plus, KeyRound, Users, Gamepad2 } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSound } from "@/contexts/SoundContext";
 import { CreateRoomModal } from "@/components/team/CreateRoomModal";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobby } from "@/components/team/RoomLobby";
 import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
 import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScreen";
 import { FriendsList } from "@/components/team/FriendsList";
+import { RecentPlayersList } from "@/components/team/RecentPlayersList";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
@@ -27,6 +29,7 @@ function TeamContent() {
     setShowJoinModal,
     joinRoom,
   } = useMultiplayer();
+  const { playSound } = useSound();
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
 
@@ -142,7 +145,10 @@ function TeamContent() {
             variant="primary"
             size="lg"
             className="w-full"
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              playSound("button-click");
+              setShowCreateModal(true);
+            }}
             icon={<Plus className="w-5 h-5" />}
           >
             ოთახის შექმნა
@@ -152,7 +158,10 @@ function TeamContent() {
             variant="secondary"
             size="lg"
             className="w-full"
-            onClick={() => setShowJoinModal(true)}
+            onClick={() => {
+              playSound("button-click");
+              setShowJoinModal(true);
+            }}
             icon={<KeyRound className="w-5 h-5" />}
           >
             კოდით შესვლა
@@ -164,13 +173,16 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex-1"
+          className="space-y-6"
         >
           <FriendsList
             onAddFriendClick={() => setShowAddFriendModal(true)}
             onInviteFriend={handleInviteFriend}
             roomCode={room?.room_code}
           />
+
+          {/* Recent Players Section */}
+          <RecentPlayersList />
         </motion.div>
       </div>
 

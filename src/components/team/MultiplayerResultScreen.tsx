@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSound } from "@/contexts/SoundContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Home, RotateCcw, Star, User, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ import confetti from "canvas-confetti";
 export function MultiplayerResultScreen() {
   const navigate = useNavigate();
   const { user, profile, updateProfile } = useAuth();
+  const { playSound, vibrate } = useSound();
   const { 
     myScore, 
     opponentScore, 
@@ -29,9 +31,12 @@ export function MultiplayerResultScreen() {
 
   const hasUpdatedStats = useRef(false);
 
-  // Victory confetti and stats update
+  // Victory/loss sound and confetti
   useEffect(() => {
     if (isWin) {
+      playSound("game-win");
+      vibrate([100, 50, 100]);
+      
       const duration = 2000;
       const end = Date.now() + duration;
 
@@ -56,9 +61,14 @@ export function MultiplayerResultScreen() {
         }
       };
       frame();
+    } else if (!isDraw) {
+      playSound("game-lose");
+      vibrate(200);
     }
+  }, [isWin, isDraw, playSound, vibrate]);
 
-    // Update stats
+  // Update stats
+  useEffect(() => {
     if (user && profile && room && !hasUpdatedStats.current) {
       hasUpdatedStats.current = true;
 
