@@ -14,10 +14,16 @@ export interface GameRoom {
   category_id: string | null;
   category_name: string | null;
   max_players: number;
+  min_players: number;
   total_questions: number;
   created_at: string;
   started_at: string | null;
   completed_at: string | null;
+  // Async challenge fields
+  game_type: "realtime" | "async";
+  challenged_user_id: string | null;
+  challenge_expires_at: string | null;
+  challenger_completed_at: string | null;
 }
 
 export interface RoomParticipant {
@@ -121,11 +127,16 @@ export function useGameRoom() {
         status: room.status as RoomStatus,
         category_id: room.category_id,
         category_name: room.category_name,
-        max_players: room.max_players,
-        total_questions: room.total_questions,
+        max_players: room.max_players ?? 10,
+        min_players: room.min_players ?? 2,
+        total_questions: room.total_questions ?? 5,
         created_at: room.created_at,
         started_at: room.started_at,
         completed_at: room.completed_at,
+        game_type: room.game_type ?? "realtime",
+        challenged_user_id: room.challenged_user_id,
+        challenge_expires_at: room.challenge_expires_at,
+        challenger_completed_at: room.challenger_completed_at,
       };
 
       setCurrentRoom(typedRoom);
@@ -188,11 +199,16 @@ export function useGameRoom() {
           status: room.status as RoomStatus,
           category_id: room.category_id,
           category_name: room.category_name,
-          max_players: room.max_players,
-          total_questions: room.total_questions,
+          max_players: room.max_players ?? 10,
+          min_players: room.min_players ?? 2,
+          total_questions: room.total_questions ?? 5,
           created_at: room.created_at,
           started_at: room.started_at,
           completed_at: room.completed_at,
+          game_type: room.game_type ?? "realtime",
+          challenged_user_id: room.challenged_user_id,
+          challenge_expires_at: room.challenge_expires_at,
+          challenger_completed_at: room.challenger_completed_at,
         };
         setCurrentRoom(typedRoom);
         return typedRoom;
@@ -224,11 +240,16 @@ export function useGameRoom() {
         status: room.status as RoomStatus,
         category_id: room.category_id,
         category_name: room.category_name,
-        max_players: room.max_players,
-        total_questions: room.total_questions,
+        max_players: room.max_players ?? 10,
+        min_players: room.min_players ?? 2,
+        total_questions: room.total_questions ?? 5,
         created_at: room.created_at,
         started_at: room.started_at,
         completed_at: room.completed_at,
+        game_type: room.game_type ?? "realtime",
+        challenged_user_id: room.challenged_user_id,
+        challenge_expires_at: room.challenge_expires_at,
+        challenger_completed_at: room.challenger_completed_at,
       };
 
       setCurrentRoom(typedRoom);
@@ -311,11 +332,16 @@ export function useGameRoom() {
       status: data.status as RoomStatus,
       category_id: data.category_id,
       category_name: data.category_name,
-      max_players: data.max_players,
-      total_questions: data.total_questions,
+      max_players: data.max_players ?? 10,
+      min_players: data.min_players ?? 2,
+      total_questions: data.total_questions ?? 5,
       created_at: data.created_at,
       started_at: data.started_at,
       completed_at: data.completed_at,
+      game_type: data.game_type ?? "realtime",
+      challenged_user_id: data.challenged_user_id,
+      challenge_expires_at: data.challenge_expires_at,
+      challenger_completed_at: data.challenger_completed_at,
     };
   }, []);
 

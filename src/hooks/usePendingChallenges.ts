@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface PendingChallenge {
   id: string;
@@ -18,6 +19,7 @@ export function usePendingChallenges() {
   const { user } = useAuth();
   const [pendingChallenges, setPendingChallenges] = useState<PendingChallenge[]>([]);
   const [loading, setLoading] = useState(true);
+  const previousChallengeIds = useRef<Set<string>>(new Set());
 
   const fetchChallenges = useCallback(async () => {
     if (!user) {
@@ -91,6 +93,19 @@ export function usePendingChallenges() {
           createdAt: room.created_at!,
         };
       });
+
+      // Check for new challenges and show notification
+      const currentIds = new Set(challenges.map(c => c.id));
+      challenges.forEach(challenge => {
+        if (!previousChallengeIds.current.has(challenge.id) && previousChallengeIds.current.size > 0) {
+          // This is a new challenge - show notification
+          toast.success(`${challenge.challengerNickname} გამოგიწვია თამაშში!`, {
+            description: challenge.categoryName || "ზოგადი ცოდნა",
+            duration: 5000,
+          });
+        }
+      });
+      previousChallengeIds.current = currentIds;
 
       setPendingChallenges(challenges);
     } catch (error) {

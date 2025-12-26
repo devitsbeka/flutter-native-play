@@ -15,7 +15,8 @@ export type MultiplayerPhase =
   | "playing" 
   | "question-result" 
   | "waiting-for-opponent"
-  | "match-result";
+  | "match-result"
+  | "async-result";
 
 export interface PlayerAnswer {
   id: string;
@@ -40,6 +41,13 @@ interface MultiplayerState {
   timePerQuestion: number;
   // Multi-player: track all opponent answers for current question
   opponentAnswers: Record<string, PlayerAnswer>;
+  // Async challenge info
+  asyncChallengerInfo: {
+    nickname: string;
+    avatar: string | null;
+    score: number | null;
+  } | null;
+  asyncOpponentCompleted: boolean;
 }
 
 interface MultiplayerContextType extends MultiplayerState {
@@ -77,6 +85,8 @@ const initialState: MultiplayerState = {
   lastPointsEarned: 0,
   timePerQuestion: 15,
   opponentAnswers: {},
+  asyncChallengerInfo: null,
+  asyncOpponentCompleted: false,
 };
 
 const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
@@ -263,6 +273,60 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
       }));
     }
   }, [state.phase, participants, user?.id, currentRoom, updateRoomStatus]);
+
+  // Subscribe to async challenge completion (when opponent finishes their game)
+  useEffect(() => {
+    if (state.phase !== "async-result" || !currentRoom?.id || state.asyncOpponentCompleted) return;
+    
+    const isChallenger = currentRoom?.host_user_id === user?.id;
+    const opponentId = isChallenger ? currentRoom?.challenged_user_id : currentRoom?.host_user_id;
+    
+    if (!opponentId) return;
+
+    // Subscribe to room_participants changes to detect when opponent finishes
+    const channel = supabase
+      .channel(`async-completion-${currentRoom.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "room_participants",
+          filter: `room_id=eq.${currentRoom.id}`,
+        },
+        async (payload) => {
+          const updated = payload.new as RoomParticipant;
+          
+          // Check if this is the opponent finishing
+          if (updated.user_id === opponentId && updated.status === "finished") {
+            // Fetch opponent profile for display
+            const { data: opponentProfile } = await supabase
+              .from("profiles")
+              .select("nickname, avatar_url")
+              .eq("user_id", opponentId)
+              .single();
+            
+            setState(prev => ({
+              ...prev,
+              asyncOpponentCompleted: true,
+              asyncChallengerInfo: {
+                nickname: opponentProfile?.nickname || "მოწინააღმდეგე",
+                avatar: opponentProfile?.avatar_url || null,
+                score: updated.score,
+              },
+            }));
+            
+            // Show toast notification
+            toast.success(`${opponentProfile?.nickname || "მეგობარმა"} დაასრულა თამაში!`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [state.phase, currentRoom?.id, currentRoom?.host_user_id, currentRoom?.challenged_user_id, state.asyncOpponentCompleted, user?.id]);
 
   const createRoom = useCallback(async (categoryId?: string, categoryName?: string) => {
     setState(prev => ({ ...prev, phase: "creating" }));
@@ -479,7 +543,69 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
           .eq("id", currentParticipant.id);
       }
       
-      // Check if all other players have also finished
+      // Check if this is an async game
+      const isAsyncGame = currentRoom?.game_type === "async";
+      
+      if (isAsyncGame) {
+        // For async games, mark challenger as completed and show async result screen
+        const isChallenger = currentRoom?.host_user_id === user?.id;
+        
+        if (isChallenger) {
+          // Update challenger_completed_at timestamp
+          await supabase
+            .from("game_rooms")
+            .update({ challenger_completed_at: new Date().toISOString() })
+            .eq("id", currentRoom?.id);
+        } else {
+          // Challenged user completed - mark room as completed
+          await supabase
+            .from("game_rooms")
+            .update({ 
+              status: "completed" as const,
+              completed_at: new Date().toISOString() 
+            })
+            .eq("id", currentRoom?.id);
+        }
+        
+        // Fetch opponent info for async result
+        const opponentId = isChallenger ? currentRoom?.challenged_user_id : currentRoom?.host_user_id;
+        let asyncChallengerInfo = null;
+        let asyncOpponentCompleted = false;
+        
+        if (opponentId) {
+          const { data: opponentProfile } = await supabase
+            .from("profiles")
+            .select("nickname, avatar_url")
+            .eq("user_id", opponentId)
+            .single();
+          
+          // Check if opponent has played (check room_participants)
+          const { data: opponentParticipant } = await supabase
+            .from("room_participants")
+            .select("score, status")
+            .eq("room_id", currentRoom?.id)
+            .eq("user_id", opponentId)
+            .single();
+          
+          asyncChallengerInfo = {
+            nickname: opponentProfile?.nickname || "მოწინააღმდეგე",
+            avatar: opponentProfile?.avatar_url || null,
+            score: opponentParticipant?.status === "finished" ? opponentParticipant.score : null,
+          };
+          
+          asyncOpponentCompleted = opponentParticipant?.status === "finished";
+        }
+        
+        setState(prev => ({ 
+          ...prev, 
+          phase: "async-result",
+          asyncChallengerInfo,
+          asyncOpponentCompleted,
+        }));
+        return;
+      }
+      
+      // Check if all other players have also finished (realtime games)
       const otherPlayers = participants.filter(p => p.user_id !== user?.id);
       const allOthersFinished = otherPlayers.every(p => p.status === "finished");
       
