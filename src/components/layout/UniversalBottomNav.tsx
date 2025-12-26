@@ -138,9 +138,12 @@ function NavButton({
       <div className="flex items-center justify-center">
         {children}
       </div>
-      <span className={`text-[10px] uppercase tracking-wider font-semibold drop-shadow-sm ${
-        isActive ? "text-primary font-bold" : "text-foreground/80"
-      }`}>
+      <span 
+        className={`text-[10px] uppercase tracking-wider font-semibold drop-shadow-sm ${
+          isActive ? "text-primary font-bold" : "text-foreground/80"
+        }`}
+        style={{ marginTop: -8 }}
+      >
         {label}
       </span>
     </motion.button>
