@@ -77,7 +77,7 @@ export function PowerUpBadge({
       style={{ width: outer, height: outer }}
       className={cn(
         "relative flex items-center justify-center transition-all",
-        disabled && "opacity-40 cursor-not-allowed",
+        disabled && "grayscale opacity-60 cursor-not-allowed",
         used && "grayscale opacity-50",
         className
       )}
