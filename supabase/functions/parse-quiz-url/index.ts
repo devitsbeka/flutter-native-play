@@ -45,8 +45,9 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         url: formattedUrl,
-        formats: ['markdown'],
-        onlyMainContent: true,
+        formats: ['markdown', 'html'],
+        onlyMainContent: false, // Get full page content
+        waitFor: 2000, // Wait for dynamic content
       }),
     });
 
@@ -61,11 +62,21 @@ serve(async (req) => {
     }
 
     const markdown = scrapeData.data?.markdown || '';
-    console.log('Scraped content length:', markdown.length);
+    const html = scrapeData.data?.html || '';
+    console.log('Scraped markdown length:', markdown.length);
+    console.log('Scraped html length:', html.length);
+    console.log('Markdown preview:', markdown.slice(0, 500));
 
-    if (!markdown || markdown.length < 50) {
+    // Use HTML if markdown is too short
+    const content = markdown.length > html.length ? markdown : html;
+
+    if (!content || content.length < 50) {
       return new Response(
-        JSON.stringify({ success: false, error: 'გვერდზე შინაარსი ვერ მოიძებნა' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'გვერდზე შინაარსი ვერ მოიძებნა',
+          scrapedContent: content.slice(0, 500) 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -79,32 +90,51 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a quiz question extractor. Extract trivia questions from the provided web content.
+    const systemPrompt = `You are an expert quiz question extractor. Your task is to extract trivia questions from web content, especially from Georgian (ქართული) websites.
 
-Rules:
-1. Extract all quiz/trivia questions with their answers
-2. Identify which answer is correct (look for markers like ✓, *, "correct", highlighted answers, etc.)
-3. If correct answer is not marked, use your knowledge to determine the correct answer
-4. Each question must have exactly 4 answer options (1 correct + 3 incorrect)
-5. Question text should be max 150 characters
-6. Each answer should be max 60 characters
-7. Output in Georgian if the content is in Georgian, otherwise output in the original language
-8. Determine difficulty: easy (basic facts), medium (requires some knowledge), hard (requires deep knowledge)
+CRITICAL INSTRUCTIONS:
+1. Look for ANY patterns that indicate quiz questions, such as:
+   - Numbered lists with questions
+   - Multiple choice options (A, B, C, D or ა, ბ, გ, დ)
+   - Question marks followed by answer options
+   - Radio buttons or checkboxes with answers
+   - "კითხვა" or "პასუხი" keywords
+   - Any Q&A format
 
-Return a JSON array of questions with this exact structure:
+2. For each question found:
+   - Extract the complete question text
+   - Identify ALL answer options (usually 4)
+   - Determine which answer is correct (look for: ✓, ✔, correct, სწორი, highlighted, selected, checked)
+   - If correct answer is not marked, use your knowledge to determine it
+
+3. Output MUST be in the same language as the source content (Georgian if Georgian)
+
+4. Each question MUST have:
+   - question_text: The full question (max 200 characters)
+   - correct_answer: The correct answer (max 80 characters)
+   - incorrect_answers: Array of EXACTLY 3 wrong answers
+   - difficulty: "easy", "medium", or "hard" based on question complexity
+   - level_number: 1 (default)
+
+5. If you find questions but they don't have 4 options, try to generate appropriate wrong answers
+
+6. Even if the content seems incomplete, extract whatever questions you can find
+
+Return a JSON object with this EXACT structure:
 {
   "questions": [
     {
-      "question_text": "The question text",
-      "correct_answer": "The correct answer",
-      "incorrect_answers": ["Wrong 1", "Wrong 2", "Wrong 3"],
-      "difficulty": "easy|medium|hard",
+      "question_text": "კითხვის ტექსტი?",
+      "correct_answer": "სწორი პასუხი",
+      "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
+      "difficulty": "medium",
       "level_number": 1
     }
-  ]
+  ],
+  "extraction_notes": "Any notes about the extraction process"
 }
 
-If no valid questions found, return: {"questions": []}`;
+If absolutely no questions can be found, return: {"questions": [], "extraction_notes": "reason why no questions found"}`;
 
     console.log('Calling AI to extract questions...');
     
@@ -118,9 +148,10 @@ If no valid questions found, return: {"questions": []}`;
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Extract quiz questions from this web content:\n\n${markdown.slice(0, 15000)}` }
+          { role: 'user', content: `Extract ALL quiz questions from this web content. Look carefully for any question-answer patterns:\n\n${content.slice(0, 20000)}` }
         ],
-        response_format: { type: 'json_object' }
+        response_format: { type: 'json_object' },
+        temperature: 0.3, // Lower temperature for more consistent extraction
       }),
     });
 
@@ -128,29 +159,44 @@ If no valid questions found, return: {"questions": []}`;
       const errorText = await aiResponse.text();
       console.error('AI API error:', aiResponse.status, errorText);
       return new Response(
-        JSON.stringify({ success: false, error: 'AI დამუშავება ვერ მოხერხდა' }),
+        JSON.stringify({ success: false, error: 'AI დამუშავება ვერ მოხერხდა: ' + aiResponse.status }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content || '{"questions": []}';
+    const aiContent = aiData.choices?.[0]?.message?.content || '{"questions": []}';
+    
+    console.log('AI response:', aiContent.slice(0, 500));
     
     let parsed;
     try {
-      parsed = JSON.parse(content);
+      parsed = JSON.parse(aiContent);
     } catch (e) {
-      console.error('Failed to parse AI response:', content);
+      console.error('Failed to parse AI response:', aiContent);
       return new Response(
-        JSON.stringify({ success: false, error: 'AI პასუხის გარჩევა ვერ მოხერხდა' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'AI პასუხის გარჩევა ვერ მოხერხდა',
+          rawResponse: aiContent.slice(0, 500)
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Extracted questions count:', parsed.questions?.length || 0);
+    const questions = parsed.questions || [];
+    console.log('Extracted questions count:', questions.length);
+    if (parsed.extraction_notes) {
+      console.log('Extraction notes:', parsed.extraction_notes);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, questions: parsed.questions || [] }),
+      JSON.stringify({ 
+        success: true, 
+        questions,
+        scrapedContent: content.slice(0, 1000),
+        extractionNotes: parsed.extraction_notes
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
