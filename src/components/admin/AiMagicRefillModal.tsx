@@ -58,6 +58,24 @@ interface AiMagicRefillModalProps {
 const CHUNK_SIZE = 10; // Questions per API call
 const DELAY_BETWEEN_CHUNKS = 500; // ms between API calls to avoid rate limits
 
+// Normalize text for comparison
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .replace(/[?!.,;:'"()-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+// Calculate similarity between two strings (Jaccard similarity)
+const calculateSimilarity = (str1: string, str2: string): number => {
+  const set1 = new Set(normalizeText(str1).split(" "));
+  const set2 = new Set(normalizeText(str2).split(" "));
+  const intersection = new Set([...set1].filter((x) => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+  return intersection.size / union.size;
+};
+
 export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefillModalProps) {
   const [categorySelections, setCategorySelections] = useState<CategorySelection[]>(() =>
     categories.map((cat) => ({ category: cat, selected: false, quantity: 10 }))
@@ -68,8 +86,10 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
   const [steps, setSteps] = useState<ProcessingStep[]>([]);
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [stats, setStats] = useState({ total: 0, approved: 0, dismissed: 0, pending: 0 });
+  const [stats, setStats] = useState({ total: 0, approved: 0, dismissed: 0, pending: 0, duplicates: 0 });
   const abortRef = useRef(false);
+  const existingQuestionsRef = useRef<Map<string, string[]>>(new Map());
+  const generatedTextsRef = useRef<Set<string>>(new Set());
 
   // Update selections when categories change
   useState(() => {
@@ -114,12 +134,52 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
 
   const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  // Check if a question is a duplicate
+  const isDuplicate = (questionText: string, categoryId: string): boolean => {
+    const normalized = normalizeText(questionText);
+    
+    // Check if exact duplicate in generated texts
+    if (generatedTextsRef.current.has(normalized)) {
+      return true;
+    }
+    
+    // Check against existing questions in this category
+    const existingQuestions = existingQuestionsRef.current.get(categoryId) || [];
+    for (const existing of existingQuestions) {
+      if (calculateSimilarity(questionText, existing) > 0.85) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  // Fetch existing questions for selected categories
+  const fetchExistingQuestions = async (categoryIds: string[]): Promise<void> => {
+    existingQuestionsRef.current.clear();
+    
+    for (const categoryId of categoryIds) {
+      const { data } = await supabase
+        .from("questions")
+        .select("question_text")
+        .eq("category_id", categoryId);
+      
+      if (data) {
+        existingQuestionsRef.current.set(
+          categoryId,
+          data.map((q) => q.question_text)
+        );
+      }
+    }
+  };
+
   const generateQuestionsForCategory = async (
     category: AdminCategory,
     quantity: number,
-    onProgress: (generated: number) => void
-  ): Promise<GeneratedQuestion[]> => {
+    onProgress: (generated: number, duplicates: number) => void
+  ): Promise<{ questions: GeneratedQuestion[]; duplicateCount: number }> => {
     const questions: GeneratedQuestion[] = [];
+    let duplicateCount = 0;
     const chunks = Math.ceil(quantity / CHUNK_SIZE);
 
     for (let i = 0; i < chunks; i++) {
@@ -139,19 +199,31 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
 
         if (error) throw error;
 
-        const newQuestions: GeneratedQuestion[] = (data.questions || []).map((q: any) => ({
-          id: crypto.randomUUID(),
-          question_text: q.question || q.question_text,
-          correct_answer: q.correct_answer,
-          incorrect_answers: q.incorrect_answers || [],
-          difficulty: q.difficulty || "medium",
-          category_id: category.id,
-          category_name: category.name,
-          status: "pending" as const,
-        }));
+        for (const q of data.questions || []) {
+          const questionText = q.question || q.question_text;
+          
+          // Check for duplicates
+          if (isDuplicate(questionText, category.id)) {
+            duplicateCount++;
+            continue;
+          }
+          
+          // Mark as seen
+          generatedTextsRef.current.add(normalizeText(questionText));
+          
+          questions.push({
+            id: crypto.randomUUID(),
+            question_text: questionText,
+            correct_answer: q.correct_answer,
+            incorrect_answers: q.incorrect_answers || [],
+            difficulty: q.difficulty || "medium",
+            category_id: category.id,
+            category_name: category.name,
+            status: "pending" as const,
+          });
+        }
 
-        questions.push(...newQuestions);
-        onProgress(questions.length);
+        onProgress(questions.length, duplicateCount);
 
         // Add delay between chunks to avoid rate limiting
         if (i < chunks - 1) {
@@ -163,7 +235,7 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
       }
     }
 
-    return questions;
+    return { questions, duplicateCount };
   };
 
   const runGeneration = async () => {
@@ -172,6 +244,8 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     abortRef.current = false;
     setSteps([]);
     setGeneratedQuestions([]);
+    setStats({ total: 0, approved: 0, dismissed: 0, pending: 0, duplicates: 0 });
+    generatedTextsRef.current.clear();
 
     const selectedCategories = categorySelections.filter((c) => c.selected);
 
@@ -180,7 +254,13 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     await delay(300);
     updateStep(initStepId, { status: "done", text: "✅ გენერაცია დაიწყო" });
 
-    // Step 2: Calculate totals
+    // Step 2: Fetch existing questions for duplicate detection
+    const fetchStepId = addStep("📥 იტვირთება არსებული კითხვები დუბლიკატების შესამოწმებლად...", "running");
+    await fetchExistingQuestions(selectedCategories.map((c) => c.category.id));
+    const totalExisting = Array.from(existingQuestionsRef.current.values()).reduce((sum, arr) => sum + arr.length, 0);
+    updateStep(fetchStepId, { status: "done", text: `✅ ჩაიტვირთა ${totalExisting} არსებული კითხვა` });
+
+    // Step 3: Calculate totals
     const calcStepId = addStep(
       `📊 გაანგარიშება: ${selectedCategories.length} კატეგორია, ${totalQuestionsToGenerate} კითხვა`,
       "running"
@@ -189,29 +269,35 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
     updateStep(calcStepId, { status: "done" });
 
     let totalGenerated = 0;
+    let totalDuplicates = 0;
 
     for (let i = 0; i < selectedCategories.length; i++) {
       if (abortRef.current) break;
 
       const { category, quantity } = selectedCategories[i];
       const categoryStepId = addStep(
-        `🎯 ${category.icon} ${category.name}: 0/${quantity} კითხვა`,
+        `🎯 ${category.icon} ${category.name}: 0/${quantity} კითხვა (0 დუბლიკატი)`,
         "running"
       );
 
-      const questions = await generateQuestionsForCategory(category, quantity, (generated) => {
-        updateStep(categoryStepId, {
-          text: `🎯 ${category.icon} ${category.name}: ${generated}/${quantity} კითხვა`,
-        });
-      });
+      const { questions, duplicateCount } = await generateQuestionsForCategory(
+        category,
+        quantity,
+        (generated, dups) => {
+          updateStep(categoryStepId, {
+            text: `🎯 ${category.icon} ${category.name}: ${generated}/${quantity} კითხვა (${dups} დუბლიკატი)`,
+          });
+        }
+      );
 
       // Add questions to state as they're generated
       setGeneratedQuestions((prev) => [...prev, ...questions]);
       totalGenerated += questions.length;
+      totalDuplicates += duplicateCount;
 
       updateStep(categoryStepId, {
         status: questions.length > 0 ? "done" : "error",
-        text: `${questions.length > 0 ? "✅" : "❌"} ${category.icon} ${category.name}: ${questions.length}/${quantity} კითხვა`,
+        text: `${questions.length > 0 ? "✅" : "❌"} ${category.icon} ${category.name}: ${questions.length} უნიკალური (${duplicateCount} დუბლიკატი გამოტოვებულია)`,
       });
 
       // Update stats
@@ -219,12 +305,13 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
         ...prev,
         total: prev.total + questions.length,
         pending: prev.pending + questions.length,
+        duplicates: prev.duplicates + duplicateCount,
       }));
     }
 
     // Final step
-    const finalStepId = addStep(
-      `🎉 დასრულდა! სულ დაგენერირდა ${totalGenerated} კითხვა`,
+    addStep(
+      `🎉 დასრულდა! ${totalGenerated} უნიკალური კითხვა, ${totalDuplicates} დუბლიკატი გამოტოვდა`,
       "done"
     );
 
@@ -402,7 +489,7 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
           <div className="w-1/2 flex flex-col">
             {/* Stats Bar */}
             <div className="p-3 border-b bg-muted/30">
-              <div className="grid grid-cols-4 gap-2 text-center text-xs">
+              <div className="grid grid-cols-5 gap-2 text-center text-xs">
                 <div>
                   <div className="font-bold text-lg">{stats.total}</div>
                   <div className="text-muted-foreground">სულ</div>
@@ -418,6 +505,10 @@ export function AiMagicRefillModal({ isOpen, onClose, categories }: AiMagicRefil
                 <div>
                   <div className="font-bold text-lg text-red-500">{stats.dismissed}</div>
                   <div className="text-muted-foreground">უარყოფილი</div>
+                </div>
+                <div>
+                  <div className="font-bold text-lg text-orange-500">{stats.duplicates}</div>
+                  <div className="text-muted-foreground">დუბლიკატი</div>
                 </div>
               </div>
             </div>
