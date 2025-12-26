@@ -25,53 +25,37 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
       {/* Smooth gradient fade layer */}
       <div 
         className="absolute left-0 right-0 bottom-0 pointer-events-none"
         style={{
-          height: "180px",
-          background: "linear-gradient(to top, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 70%, transparent 100%)",
-        }}
-      />
-      {/* Frosted glass backing */}
-      <div 
-        className="absolute left-0 right-0 bottom-0 pointer-events-none"
-        style={{
-          height: "100px",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          background: "linear-gradient(to top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 60%, transparent 100%)",
+          height: "140px",
+          background: "linear-gradient(to top, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0.2) 70%, transparent 100%)",
         }}
       />
       
-      <motion.div 
-        className="relative px-4 pb-2"
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
-      >
-        {/* Unified white container */}
+      <div className="relative px-4 pb-3 overflow-visible">
+        {/* Unified white pill container */}
         <div 
           className="relative max-w-md mx-auto overflow-visible"
           style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%)",
-            borderRadius: "20px",
-            padding: "10px 16px 12px",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)",
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            border: "1px solid rgba(255,255,255,0.6)",
+            background: "rgba(255,255,255,0.88)",
+            borderRadius: "18px",
+            padding: "8px 20px 10px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
           }}
         >
-          <div className="flex items-center justify-between overflow-visible">
+          <div className="flex items-center justify-around overflow-visible">
             {/* Explore */}
             <NavButton
               onClick={() => navigate("/discover")}
               isActive={isActive("/discover")}
               label={t("nav.explore")}
             >
-              <LottieNavIcon type="explore" size={52} />
+              <LottieNavIcon type="explore" size={48} />
             </NavButton>
 
             {/* Map */}
@@ -80,15 +64,17 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               isActive={isActive("/adventure-map")}
               label={t("nav.map")}
             >
-              <LottieNavIcon type="map" size={52} />
+              <LottieNavIcon type="map" size={48} />
             </NavButton>
 
-            {/* Center Button - Play on home, Home on other pages */}
-            <div className="-mt-14 overflow-visible">
-              <Hex3DPlayButton 
-                onClick={handleCenterClick}
-                isPlayButton={isHome}
-              />
+            {/* Center Button - positioned to float above */}
+            <div className="relative" style={{ width: 70 }}>
+              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -6 }}>
+                <Hex3DPlayButton 
+                  onClick={handleCenterClick}
+                  isPlayButton={isHome}
+                />
+              </div>
             </div>
 
             {/* Rank */}
@@ -97,7 +83,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               isActive={isActive("/leaderboards")}
               label={t("nav.rank")}
             >
-              <LottieNavIcon type="rank" size={52} />
+              <LottieNavIcon type="rank" size={48} />
             </NavButton>
 
             {/* Team */}
@@ -106,11 +92,11 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               isActive={isActive("/team")}
               label={t("nav.sound")}
             >
-              <LottieNavIcon type="team" size={52} />
+              <LottieNavIcon type="team" size={48} />
             </NavButton>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -146,152 +132,139 @@ function NavButton({
 }
 
 function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPlayButton: boolean }) {
+  // Shield/badge shape pointing UP with flat bottom
+  const shieldPath = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
+  
   return (
     <motion.button
       onClick={onClick}
       className="relative"
-      whileHover={{ scale: 1.05, y: -2 }}
+      whileHover={{ scale: 1.08, y: -3 }}
       whileTap={{ scale: 0.95, y: 2 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      style={{ width: 72, height: 82 }}
     >
       {/* Outer glow */}
       <motion.div
-        className="absolute -inset-4"
+        className="absolute -inset-3"
         style={{
-          background: "radial-gradient(circle, rgba(120,200,80,0.5) 0%, rgba(100,180,60,0.3) 40%, transparent 70%)",
-          filter: "blur(12px)",
+          background: "radial-gradient(circle, rgba(120,200,80,0.6) 0%, rgba(100,180,60,0.3) 50%, transparent 75%)",
+          filter: "blur(10px)",
         }}
         animate={{
-          opacity: [0.6, 1, 0.6],
-          scale: [0.95, 1.05, 0.95],
+          opacity: [0.5, 0.9, 0.5],
+          scale: [0.95, 1.08, 0.95],
         }}
         transition={{
-          duration: 2,
+          duration: 2.2,
           repeat: Infinity,
           ease: "easeInOut",
         }}
       />
       
-      {/* 3D Pentagon/Hexagon container */}
-      <div className="relative" style={{ width: 80, height: 90 }}>
-        {/* Bottom 3D depth layer - darker green */}
+      {/* Bottom 3D depth layer - darkest */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          top: 6,
+          background: "linear-gradient(180deg, #3a7d2e 0%, #2d6524 100%)",
+          clipPath: shieldPath,
+        }}
+      />
+      
+      {/* Middle bevel layer */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 3,
+          top: 3,
+          bottom: 6,
+          background: "linear-gradient(180deg, #4a9e3a 0%, #3d8530 100%)",
+          clipPath: shieldPath,
+        }}
+      />
+      
+      {/* Main face - bright lime */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 4,
+          top: 0,
+          bottom: 10,
+          background: "linear-gradient(160deg, #9be065 0%, #7bc842 40%, #6ab838 70%, #5aa830 100%)",
+          clipPath: shieldPath,
+        }}
+      >
+        {/* Top shine */}
         <div
           style={{
             position: "absolute",
-            bottom: 0,
+            top: 8,
             left: "50%",
             transform: "translateX(-50%)",
-            width: 76,
-            height: 70,
-            background: "linear-gradient(180deg, #4a9e3a 0%, #3d8530 50%, #2d6a24 100%)",
-            clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
-            boxShadow: "0 4px 20px rgba(50,100,40,0.5)",
+            width: "60%",
+            height: 10,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%)",
+            borderRadius: "6px",
           }}
         />
         
-        {/* Inner bevel edge - medium green */}
+        {/* Inner radial highlight */}
         <div
           style={{
             position: "absolute",
-            bottom: 6,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 70,
-            height: 64,
-            background: "linear-gradient(180deg, #5cb848 0%, #4da03c 100%)",
-            clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
+            inset: 0,
+            background: "radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.3) 0%, transparent 55%)",
+            clipPath: shieldPath,
           }}
         />
         
-        {/* Main top face - bright lime green */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 10,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 68,
-            height: 62,
-            background: "linear-gradient(160deg, #8ed656 0%, #7bc842 30%, #6ab838 60%, #5aa830 100%)",
-            clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
-            boxShadow: "inset 0 4px 12px rgba(255,255,255,0.4), inset 0 -4px 8px rgba(50,100,40,0.2)",
-          }}
-        >
-          {/* Top highlight shine */}
-          <div
-            style={{
-              position: "absolute",
-              top: 6,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 40,
-              height: 12,
-              background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)",
-              borderRadius: "8px",
-            }}
-          />
-          
-          {/* Inner subtle gradient */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "radial-gradient(circle at 50% 25%, rgba(255,255,255,0.25) 0%, transparent 50%)",
-              clipPath: "polygon(50% 100%, 0% 65%, 0% 20%, 50% 0%, 100% 20%, 100% 65%)",
-            }}
-          />
-          
-          {/* Icon container */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: 8 }}>
-            {isPlayButton ? (
-              <Play 
-                className="w-8 h-8 ml-1" 
-                fill="white"
-                stroke="white"
-                strokeWidth={0}
-                style={{ 
-                  filter: "drop-shadow(0 2px 4px rgba(50,100,40,0.4))",
-                }}
-              />
-            ) : (
-              <Home 
-                className="w-7 h-7 text-white" 
-                strokeWidth={2.5}
-                style={{ 
-                  filter: "drop-shadow(0 2px 4px rgba(50,100,40,0.4))",
-                }}
-              />
-            )}
-          </div>
+        {/* Icon */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {isPlayButton ? (
+            <Play 
+              className="w-7 h-7 ml-0.5" 
+              fill="white"
+              stroke="white"
+              strokeWidth={0}
+              style={{ filter: "drop-shadow(0 2px 3px rgba(40,80,30,0.4))" }}
+            />
+          ) : (
+            <Home 
+              className="w-6 h-6 text-white" 
+              strokeWidth={2.5}
+              style={{ filter: "drop-shadow(0 2px 3px rgba(40,80,30,0.4))" }}
+            />
+          )}
         </div>
-        
-        {/* Sparkle particles */}
-        {[...Array(4)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: 4,
-              height: 4,
-              background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 0 8px rgba(255,255,255,0.9)",
-              left: `${25 + (i * 18)}%`,
-              top: `${20 + (i * 12)}%`,
-            }}
-            animate={{
-              y: [-4, 4, -4],
-              opacity: [0.4, 1, 0.4],
-              scale: [0.8, 1.3, 0.8],
-            }}
-            transition={{
-              duration: 1.8 + (i * 0.3),
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.25,
-            }}
-          />
-        ))}
       </div>
+      
+      {/* Sparkles */}
+      {[...Array(3)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: 3,
+            height: 3,
+            background: "white",
+            boxShadow: "0 0 6px rgba(255,255,255,0.9)",
+            left: `${20 + (i * 25)}%`,
+            top: `${15 + (i * 20)}%`,
+          }}
+          animate={{
+            y: [-3, 3, -3],
+            opacity: [0.3, 1, 0.3],
+          }}
+          transition={{
+            duration: 1.6 + (i * 0.3),
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.2,
+          }}
+        />
+      ))}
     </motion.button>
   );
 }
