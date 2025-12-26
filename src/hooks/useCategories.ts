@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 
@@ -31,26 +31,26 @@ export const useCategories = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+
+      setCategories((data || []).map(transformCategory));
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
-
-        if (error) throw error;
-
-        setCategories((data || []).map(transformCategory));
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCategories();
 
     // Subscribe to real-time changes
@@ -70,10 +70,26 @@ export const useCategories = () => {
       )
       .subscribe();
 
+    // Refetch when app comes back to foreground (fixes iOS homescreen app issue)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCategories();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Also refetch on focus (for desktop browsers)
+    const handleFocus = () => {
+      fetchCategories();
+    };
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [fetchCategories]);
 
-  return { categories, loading, error };
+  return { categories, loading, error, refetch: fetchCategories };
 };
