@@ -4,15 +4,18 @@ import {
   FolderOpen, 
   HelpCircle, 
   Users,
-  TrendingUp,
-  Activity
+  Activity,
+  ArrowUpRight,
+  TrendingUp
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+import { NavLink } from 'react-router-dom';
 
 export default function AdminDashboard() {
   const { categories } = useAdminCategories();
@@ -22,7 +25,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      // Get total game sessions from today
       const today = new Date().toISOString().split('T')[0];
       const { count } = await supabase
         .from('game_sessions')
@@ -36,147 +38,203 @@ export default function AdminDashboard() {
 
   const stats = [
     {
-      title: 'სულ კატეგორიები',
+      title: 'კატეგორიები',
       value: categories.length,
       subValue: `${categories.filter(c => c.is_active).length} აქტიური`,
       icon: FolderOpen,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
+      gradient: 'from-blue-500 to-cyan-500',
+      link: '/admin/categories',
     },
     {
-      title: 'სულ კითხვები',
+      title: 'კითხვები',
       value: questions.length,
       subValue: `${questions.filter(q => q.is_active).length} აქტიური`,
       icon: HelpCircle,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
+      gradient: 'from-violet-500 to-purple-500',
+      link: '/admin/questions',
     },
     {
-      title: 'ონლაინ მომხმარებლები',
+      title: 'ონლაინ',
       value: onlineCount,
       subValue: `${awayCount} გაშვებული`,
       icon: Users,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10',
+      gradient: 'from-emerald-500 to-teal-500',
+      link: '/admin/users',
     },
     {
-      title: 'დღევანდელი თამაშები',
+      title: 'დღეს თამაშები',
       value: totalGameSessions,
       subValue: 'სესიები',
       icon: Activity,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/10',
+      gradient: 'from-amber-500 to-orange-500',
+      link: null,
     },
   ];
 
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-6">
-        {/* Header */}
+        {/* Compact Header */}
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <LayoutDashboard className="h-6 w-6 text-primary" />
+          <div className="p-2.5 bg-primary/10 rounded-xl">
+            <LayoutDashboard className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">დეშბორდი</h1>
-            <p className="text-muted-foreground">სტატისტიკა და მიმოხილვა</p>
+            <h1 className="text-xl font-semibold tracking-tight">დეშბორდი</h1>
+            <p className="text-sm text-muted-foreground">მიმოხილვა</p>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <Card key={stat.title}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.subValue}</p>
+        {/* Modern Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {stats.map((stat) => {
+            const content = (
+              <Card className="group relative overflow-hidden transition-all hover:shadow-md">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground">{stat.title}</p>
+                      <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+                      <p className="text-[10px] text-muted-foreground">{stat.subValue}</p>
+                    </div>
+                    <div className={cn(
+                      "p-2 rounded-lg bg-gradient-to-br text-white",
+                      stat.gradient
+                    )}>
+                      <stat.icon className="h-4 w-4" />
+                    </div>
                   </div>
-                  <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {stat.link && (
+                    <ArrowUpRight className="absolute top-2 right-2 h-3 w-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </CardContent>
+              </Card>
+            );
+
+            return stat.link ? (
+              <NavLink key={stat.title} to={stat.link}>
+                {content}
+              </NavLink>
+            ) : (
+              <div key={stat.title}>{content}</div>
+            );
+          })}
         </div>
 
-        {/* Online Users Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-green-500" />
-              ახლა ონლაინ მომხმარებლები
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {onlineUsers.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                ამჟამად ონლაინ მომხმარებლები არ არიან
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {onlineUsers.slice(0, 9).map((user) => (
-                  <div 
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
-                  >
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-bold">
-                        {user.profile?.nickname?.[0]?.toUpperCase() || '?'}
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Online Users */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <h3 className="font-semibold text-sm">ონლაინ მომხმარებლები</h3>
+                </div>
+                <span className="text-xs text-muted-foreground">{onlineCount} ონლაინ</span>
+              </div>
+              
+              {onlineUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-xs">ამჟამად ონლაინ არავინ არ არის</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {onlineUsers.slice(0, 6).map((user) => (
+                    <div 
+                      key={user.id}
+                      className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors"
+                    >
+                      <div className="relative">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                          {user.profile?.nickname?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div 
+                          className={cn(
+                            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card",
+                            user.status === 'online' ? 'bg-emerald-500' : 'bg-amber-500'
+                          )}
+                        />
                       </div>
-                      <div 
-                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${
-                          user.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'
-                        }`}
-                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {user.profile?.nickname || 'უცნობი'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {user.current_page || '/'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {user.profile?.nickname || 'უცნობი'}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {user.current_page || '/'}
-                      </p>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Categories */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-blue-500" />
+                  <h3 className="font-semibold text-sm">კატეგორიები</h3>
+                </div>
+                <NavLink to="/admin/categories" className="text-xs text-primary hover:underline">
+                  ყველა
+                </NavLink>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {categories.slice(0, 6).map((cat) => (
+                  <div 
+                    key={cat.id}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 p-3 rounded-lg text-center transition-all",
+                      cat.is_active ? "bg-muted/50 hover:bg-muted" : "bg-muted/30 opacity-50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br",
+                      cat.color
+                    )}>
+                      {cat.icon}
                     </div>
+                    <span className="text-xs font-medium truncate w-full">{cat.name}</span>
                   </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Recent Categories */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
-              ბოლო კატეგორიები
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {categories.slice(0, 6).map((cat) => (
-                <div 
-                  key={cat.id}
-                  className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-lg text-center"
-                >
-                  <span className="text-3xl">{cat.icon}</span>
-                  <span className="text-sm font-medium truncate w-full">{cat.name}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    cat.is_active 
-                      ? 'bg-green-500/10 text-green-500' 
-                      : 'bg-red-500/10 text-red-500'
-                  }`}>
-                    {cat.is_active ? 'აქტიური' : 'გამორთული'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-500">
+                {categories.filter(c => c.is_active).length}
+              </p>
+              <p className="text-xs text-muted-foreground">აქტიური კატეგორიები</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-violet-500">
+                {questions.filter(q => q.is_active).length}
+              </p>
+              <p className="text-xs text-muted-foreground">აქტიური კითხვები</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-amber-500">
+                {Math.round(questions.length / Math.max(categories.length, 1))}
+              </p>
+              <p className="text-xs text-muted-foreground">საშ. კითხვა/კატეგ.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </ScrollArea>
   );
