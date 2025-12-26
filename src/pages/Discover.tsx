@@ -174,7 +174,7 @@ export default function Discover() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
+                  "flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
                   activeTab === tab.id
                     ? "bg-purple-500 text-white shadow-lg"
                     : "text-slate-600 hover:bg-white/50"
