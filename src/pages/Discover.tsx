@@ -17,7 +17,54 @@ const tabs: { id: CategoryType; label: string }[] = [
   { id: "educational", label: "სასწავლო" },
 ];
 
-// Category Card Component - 3 row layout with progress
+// Helper to extract gradient colors for progress bar
+const getGradientColors = (colorClass: string): string => {
+  // Map common gradient classes to actual CSS gradients
+  const gradientMap: Record<string, string> = {
+    "from-amber-400 to-orange-500": "linear-gradient(90deg, #fbbf24 0%, #f97316 100%)",
+    "from-yellow-400 to-amber-500": "linear-gradient(90deg, #facc15 0%, #f59e0b 100%)",
+    "from-blue-400 to-cyan-500": "linear-gradient(90deg, #60a5fa 0%, #06b6d4 100%)",
+    "from-emerald-400 to-teal-500": "linear-gradient(90deg, #34d399 0%, #14b8a6 100%)",
+    "from-green-400 to-lime-500": "linear-gradient(90deg, #4ade80 0%, #84cc16 100%)",
+    "from-purple-400 to-violet-500": "linear-gradient(90deg, #c084fc 0%, #8b5cf6 100%)",
+    "from-pink-400 to-rose-500": "linear-gradient(90deg, #f472b6 0%, #f43f5e 100%)",
+    "from-indigo-400 to-purple-500": "linear-gradient(90deg, #818cf8 0%, #a855f7 100%)",
+    "from-slate-400 to-zinc-500": "linear-gradient(90deg, #94a3b8 0%, #71717a 100%)",
+    "from-amber-500 to-yellow-600": "linear-gradient(90deg, #f59e0b 0%, #ca8a04 100%)",
+    "from-cyan-400 to-teal-500": "linear-gradient(90deg, #22d3ee 0%, #14b8a6 100%)",
+    "from-blue-500 to-indigo-600": "linear-gradient(90deg, #3b82f6 0%, #4f46e5 100%)",
+    "from-green-500 to-emerald-600": "linear-gradient(90deg, #22c55e 0%, #059669 100%)",
+    "from-red-500 to-rose-600": "linear-gradient(90deg, #ef4444 0%, #e11d48 100%)",
+    "from-stone-400 to-neutral-500": "linear-gradient(90deg, #a8a29e 0%, #737373 100%)",
+    "from-red-400 to-pink-500": "linear-gradient(90deg, #f87171 0%, #ec4899 100%)",
+    "from-fuchsia-400 to-purple-500": "linear-gradient(90deg, #e879f9 0%, #a855f7 100%)",
+    "from-orange-400 to-red-500": "linear-gradient(90deg, #fb923c 0%, #ef4444 100%)",
+    "from-violet-400 to-purple-500": "linear-gradient(90deg, #a78bfa 0%, #a855f7 100%)",
+    "from-blue-400 to-indigo-500": "linear-gradient(90deg, #60a5fa 0%, #6366f1 100%)",
+    "from-rose-400 to-pink-500": "linear-gradient(90deg, #fb7185 0%, #ec4899 100%)",
+    "from-teal-400 to-cyan-500": "linear-gradient(90deg, #2dd4bf 0%, #06b6d4 100%)",
+    "from-lime-400 to-green-500": "linear-gradient(90deg, #a3e635 0%, #22c55e 100%)",
+    "from-orange-500 to-red-600": "linear-gradient(90deg, #f97316 0%, #dc2626 100%)",
+    "from-indigo-400 to-blue-500": "linear-gradient(90deg, #818cf8 0%, #3b82f6 100%)",
+    "from-slate-400 to-gray-500": "linear-gradient(90deg, #94a3b8 0%, #6b7280 100%)",
+    "from-violet-400 to-indigo-500": "linear-gradient(90deg, #a78bfa 0%, #6366f1 100%)",
+    "from-rose-400 to-red-500": "linear-gradient(90deg, #fb7185 0%, #ef4444 100%)",
+    "from-purple-400 to-fuchsia-500": "linear-gradient(90deg, #c084fc 0%, #d946ef 100%)",
+    "from-red-400 to-rose-500": "linear-gradient(90deg, #f87171 0%, #f43f5e 100%)",
+    "from-blue-500 to-cyan-600": "linear-gradient(90deg, #3b82f6 0%, #0891b2 100%)",
+    "from-teal-400 to-green-500": "linear-gradient(90deg, #2dd4bf 0%, #22c55e 100%)",
+    "from-lime-400 to-emerald-500": "linear-gradient(90deg, #a3e635 0%, #10b981 100%)",
+    "from-indigo-500 to-violet-600": "linear-gradient(90deg, #6366f1 0%, #7c3aed 100%)",
+    "from-amber-500 to-stone-600": "linear-gradient(90deg, #f59e0b 0%, #57534e 100%)",
+    "from-green-500 to-teal-600": "linear-gradient(90deg, #22c55e 0%, #0d9488 100%)",
+    "from-zinc-400 to-slate-500": "linear-gradient(90deg, #a1a1aa 0%, #64748b 100%)",
+    "from-cyan-400 to-blue-500": "linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%)",
+    "from-pink-400 to-red-500": "linear-gradient(90deg, #f472b6 0%, #ef4444 100%)",
+  };
+  return gradientMap[colorClass] || "linear-gradient(90deg, #c084fc 0%, #8b5cf6 100%)";
+};
+
+// Category Card Component - clean design without top accent
 function CategoryCard({ 
   category, 
   onClick, 
@@ -28,6 +75,7 @@ function CategoryCard({
   completedLevels: number;
 }) {
   const progressPercent = (completedLevels / category.totalLevels) * 100;
+  const progressGradient = getGradientColors(category.color);
   
   return (
     <motion.button
@@ -42,13 +90,8 @@ function CategoryCard({
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* Gradient accent bar */}
-      <div 
-        className={cn("absolute top-0 left-0 right-0 h-1.5 rounded-full bg-gradient-to-r", category.color)}
-      />
-      
       {/* Row 1: Icon + Title */}
-      <div className="flex items-center gap-4 mt-1">
+      <div className="flex items-center gap-4">
         <div 
           className={cn(
             "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br shrink-0 shadow-md",
@@ -69,19 +112,27 @@ function CategoryCard({
           className="text-xs px-3 py-1.5 rounded-full bg-white/80 text-slate-700 font-semibold shadow-sm flex items-center gap-1"
           style={{ backdropFilter: "blur(4px)" }}
         >
-          <span className="text-purple-600 font-bold">{completedLevels}</span>
+          <span 
+            className="font-bold"
+            style={{ 
+              background: progressGradient,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            {completedLevels}
+          </span>
           <span className="text-slate-400">/</span>
           <span>{category.totalLevels}</span>
           <span className="ml-0.5 text-slate-500">დონე</span>
         </span>
         
-        {/* Progress bar */}
+        {/* Progress bar with category color */}
         <div className="flex-1 h-2 bg-slate-200/60 rounded-full overflow-hidden shadow-inner">
           <motion.div 
             className="h-full rounded-full"
-            style={{
-              background: "linear-gradient(90deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
-            }}
+            style={{ background: progressGradient }}
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
@@ -113,11 +164,11 @@ export default function Discover() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-32">
-      {/* Sky Background - matching other pages */}
+      {/* White radial vignette mask over Spline background */}
       <div 
-        className="fixed inset-0 z-0"
+        className="fixed inset-0 z-[1] pointer-events-none"
         style={{
-          background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 50%, hsl(45 40% 90%) 100%)"
+          background: "radial-gradient(ellipse at center, transparent 0%, transparent 30%, rgba(255,255,255,0.7) 100%)"
         }}
       />
 
@@ -127,7 +178,8 @@ export default function Discover() {
         <div 
           className="sticky top-0 z-20 shrink-0 relative"
           style={{
-            background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 100%)",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.7) 100%)",
+            backdropFilter: "blur(20px)",
           }}
         >
           {/* Header */}
@@ -190,7 +242,7 @@ export default function Discover() {
           <div 
             className="absolute bottom-0 left-0 right-0 h-6 pointer-events-none -mb-6"
             style={{
-              background: "linear-gradient(to bottom, hsl(195 80% 85%) 0%, transparent 100%)"
+              background: "linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, transparent 100%)"
             }}
           />
         </div>
