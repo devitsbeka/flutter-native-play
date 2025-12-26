@@ -14,7 +14,9 @@ import { WaitingForOpponentScreen } from "@/components/team/WaitingForOpponentSc
 import { FriendsList } from "@/components/team/FriendsList";
 import { RecentPlayersList } from "@/components/team/RecentPlayersList";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
+import { ChatModal } from "@/components/team/ChatModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { Friend } from "@/hooks/useFriends";
 import { toast } from "sonner";
 
 function TeamContent() {
@@ -33,6 +35,7 @@ function TeamContent() {
   const { playSound } = useSound();
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [chatFriend, setChatFriend] = useState<Friend | null>(null);
 
   // Handle join code from URL
   useEffect(() => {
@@ -184,6 +187,7 @@ function TeamContent() {
           <FriendsList
             onAddFriendClick={() => setShowAddFriendModal(true)}
             onInviteFriend={handleInviteFriend}
+            onStartChat={(friend) => setChatFriend(friend)}
             roomCode={room?.room_code}
           />
 
@@ -204,6 +208,11 @@ function TeamContent() {
       <AddFriendModal
         isOpen={showAddFriendModal}
         onClose={() => setShowAddFriendModal(false)}
+      />
+      <ChatModal
+        isOpen={!!chatFriend}
+        onClose={() => setChatFriend(null)}
+        friend={chatFriend}
       />
     </div>
   );
