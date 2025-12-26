@@ -53,18 +53,18 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
       >
         {/* Unified white container */}
         <div 
-          className="relative max-w-md mx-auto"
+          className="relative max-w-md mx-auto overflow-visible"
           style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.78) 100%)",
-            borderRadius: "24px",
-            padding: "8px 12px 10px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,0.9)",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%)",
+            borderRadius: "20px",
+            padding: "10px 16px 12px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)",
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            border: "1px solid rgba(255,255,255,0.5)",
+            border: "1px solid rgba(255,255,255,0.6)",
           }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between overflow-visible">
             {/* Explore */}
             <NavButton
               onClick={() => navigate("/discover")}
@@ -84,7 +84,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             </NavButton>
 
             {/* Center Button - Play on home, Home on other pages */}
-            <div className="-mt-10">
+            <div className="-mt-14 overflow-visible">
               <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={isHome}
