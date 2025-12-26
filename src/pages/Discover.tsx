@@ -160,13 +160,15 @@ export default function Discover() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - filled glass container */}
         <div className="px-4 pb-4">
           <div 
-            className="flex gap-1 p-1 rounded-2xl"
+            className="flex gap-1 p-1.5 rounded-2xl"
             style={{
-              background: "rgba(255,255,255,0.5)",
-              backdropFilter: "blur(10px)",
+              background: "rgba(255,255,255,0.7)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255,255,255,0.5)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
             }}
           >
             {tabs.map((tab) => (
