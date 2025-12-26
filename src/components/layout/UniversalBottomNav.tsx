@@ -142,8 +142,9 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
     >
       {/* Outer glow pulse */}
       <motion.div
-        className="absolute -inset-3 rounded-full"
+        className="absolute -inset-3"
         style={{
+          borderRadius: "26px",
           background: "radial-gradient(circle, rgba(80,220,180,0.4) 0%, rgba(120,200,255,0.2) 50%, transparent 70%)",
           filter: "blur(12px)",
         }}
@@ -160,8 +161,9 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
       
       {/* Secondary cyan glow */}
       <motion.div
-        className="absolute -inset-2 rounded-full"
+        className="absolute -inset-2"
         style={{
+          borderRadius: "26px",
           background: "radial-gradient(circle, rgba(0,255,200,0.5) 0%, transparent 60%)",
           filter: "blur(8px)",
         }}
@@ -179,8 +181,9 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
       
       {/* Base shadow */}
       <div 
-        className="absolute inset-0 rounded-full"
+        className="absolute inset-0"
         style={{
+          borderRadius: "26px",
           background: "rgba(60,180,140,0.6)",
           transform: "translateY(6px)",
           boxShadow: "0 8px 25px rgba(80,220,180,0.5)",
@@ -188,10 +191,11 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
         }}
       />
       
-      {/* Main orb */}
+      {/* Main button */}
       <div 
-        className="relative w-20 h-20 rounded-full overflow-hidden"
+        className="relative w-20 h-20 overflow-hidden"
         style={{
+          borderRadius: "26px",
           background: "linear-gradient(160deg, #7EEFC8 0%, #50DCB4 30%, #3CC9A0 60%, #30B898 100%)",
           boxShadow: `
             inset 0 -8px 20px rgba(0,100,80,0.3),
@@ -202,8 +206,9 @@ function GlowingOrbButton({ onClick, isPlayButton }: { onClick: () => void; isPl
       >
         {/* Inner highlight */}
         <div
-          className="absolute top-2 left-3 w-8 h-6 rounded-full"
+          className="absolute top-2 left-3 w-8 h-6"
           style={{
+            borderRadius: "12px",
             background: "radial-gradient(ellipse, rgba(255,255,255,0.6) 0%, transparent 70%)",
             filter: "blur(2px)",
           }}
