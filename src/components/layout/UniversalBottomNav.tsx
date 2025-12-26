@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Home, Play } from "lucide-react";
 import { LottieNavIcon } from "./LottieNavIcon";
 import { t } from "@/lib/i18n";
+import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 
 interface UniversalBottomNavProps {
   onPlayClick?: () => void;
@@ -12,6 +13,7 @@ interface UniversalBottomNavProps {
 export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { pendingChallenges } = usePendingChallenges();
   
   const isHome = location.pathname === "/";
   const isActive = (path: string) => location.pathname === path;
@@ -105,6 +107,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               onClick={onTeamClick || (() => navigate("/team"))}
               isActive={isActive("/team")}
               label={t("nav.sound")}
+              badgeCount={pendingChallenges.length}
             >
               <LottieNavIcon type="team" size={60} />
             </NavButton>
@@ -120,23 +123,41 @@ function NavButton({
   onClick, 
   isActive, 
   label,
-  className = ""
+  className = "",
+  badgeCount = 0,
 }: { 
   children: React.ReactNode;
   onClick: () => void;
   isActive: boolean;
   label: string;
   className?: string;
+  badgeCount?: number;
 }) {
   return (
     <motion.button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 ${className}`}
+      className={`relative flex flex-col items-center gap-1 ${className}`}
       whileHover={{ scale: 1.1, y: -3 }}
       whileTap={{ scale: 0.9 }}
     >
-      <div className="flex items-center justify-center">
+      <div className="relative flex items-center justify-center">
         {children}
+        
+        {/* Badge */}
+        {badgeCount > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 flex items-center justify-center"
+            style={{
+              boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
+            }}
+          >
+            <span className="text-[10px] font-bold text-white">
+              {badgeCount > 9 ? "9+" : badgeCount}
+            </span>
+          </motion.div>
+        )}
       </div>
       <span 
         className={`text-[10px] uppercase tracking-wider font-semibold drop-shadow-sm ${
