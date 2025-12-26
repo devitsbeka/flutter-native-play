@@ -9,6 +9,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Home, RotateCcw, Star, User, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+interface RankedParticipant {
+  user_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  country_code: string | null;
+  score: number;
+  rank: number;
+  isMe: boolean;
+}
 
 export function MultiplayerResultScreen() {
   const navigate = useNavigate();
@@ -16,22 +27,31 @@ export function MultiplayerResultScreen() {
   const { playSound, vibrate } = useSound();
   const { 
     myScore: localMyScore, 
-    opponentScore: localOpponentScore, 
     participants, 
     resetMultiplayer,
     room,
   } = useMultiplayer();
 
-  const opponent = participants.find(p => p.user_id !== user?.id);
-  const myParticipant = participants.find(p => p.user_id === user?.id);
+  // Sort participants by score and assign ranks
+  const rankedParticipants: RankedParticipant[] = [...participants]
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .map((p, index) => ({
+      user_id: p.user_id,
+      nickname: p.nickname,
+      avatar_url: p.avatar_url,
+      country_code: p.country_code,
+      score: p.score || 0,
+      rank: index + 1,
+      isMe: p.user_id === user?.id,
+    }));
 
-  // Use database scores as single source of truth (fallback to local if not available)
+  const myParticipant = rankedParticipants.find(p => p.isMe);
   const myScore = myParticipant?.score ?? localMyScore;
-  const opponentScore = opponent?.score ?? localOpponentScore;
+  const myRank = myParticipant?.rank ?? rankedParticipants.length;
 
-  const isWin = myScore > opponentScore;
-  const isDraw = myScore === opponentScore;
-  const result = isWin ? "გამარჯვება!" : isDraw ? "ფრე" : "წაგება";
+  const isWin = myRank === 1;
+  const isPodium = myRank <= 3;
+  const result = isWin ? "გამარჯვება!" : isPodium ? `${myRank}-ე ადგილი!` : `${myRank}-ე ადგილი`;
 
   const hasUpdatedStats = useRef(false);
 
@@ -65,11 +85,14 @@ export function MultiplayerResultScreen() {
         }
       };
       frame();
-    } else if (!isDraw) {
+    } else if (isPodium) {
+      playSound("game-win");
+      vibrate(100);
+    } else {
       playSound("game-lose");
       vibrate(200);
     }
-  }, [isWin, isDraw, playSound, vibrate]);
+  }, [isWin, isPodium, playSound, vibrate]);
 
   // Update stats
   useEffect(() => {
@@ -88,21 +111,22 @@ export function MultiplayerResultScreen() {
         });
 
         // Save game session
+        const winner = rankedParticipants[0];
         await supabase.from("game_sessions").insert({
           user_id: user.id,
-          opponent_name: opponent?.nickname || "Opponent",
-          opponent_country: opponent?.country_code || "GE",
-          opponent_points: opponentScore,
+          opponent_name: winner.isMe ? rankedParticipants[1]?.nickname || "Opponent" : winner.nickname,
+          opponent_country: winner.isMe ? rankedParticipants[1]?.country_code || "GE" : winner.country_code || "GE",
+          opponent_points: winner.isMe ? rankedParticipants[1]?.score || 0 : winner.score,
           user_score: myScore,
-          opponent_score: opponentScore,
-          status: isWin ? "won" : isDraw ? "draw" : "lost",
+          opponent_score: winner.isMe ? rankedParticipants[1]?.score || 0 : winner.score,
+          status: isWin ? "won" : "lost",
           completed_at: new Date().toISOString(),
         });
       };
 
       updateStats();
     }
-  }, [user, profile, myScore, opponentScore, isWin, isDraw, opponent, room, updateProfile]);
+  }, [user, profile, myScore, isWin, room, updateProfile, rankedParticipants]);
 
   const handleBackToTeam = () => {
     resetMultiplayer();
@@ -111,12 +135,11 @@ export function MultiplayerResultScreen() {
 
   const handlePlayAgain = () => {
     resetMultiplayer();
-    // Stay on team page to create/join another room
     navigate("/team");
   };
 
-  // Get flag emoji
-  const getFlagEmoji = (countryCode: string) => {
+  const getFlagEmoji = (countryCode: string | null) => {
+    if (!countryCode) return "🏳️";
     try {
       const codePoints = countryCode
         .toUpperCase()
@@ -128,17 +151,21 @@ export function MultiplayerResultScreen() {
     }
   };
 
+  // Get podium participants (top 3)
+  const podiumParticipants = rankedParticipants.slice(0, 3);
+  const restParticipants = rankedParticipants.slice(3);
+
   return (
-    <div className="h-[100dvh] flex flex-col bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
-      <div className="flex-1 flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full">
+    <div className="h-[100dvh] flex flex-col bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5] overflow-auto">
+      <div className="flex-1 flex flex-col items-center p-4 max-w-md mx-auto w-full">
         {/* Result Header */}
         <motion.div
           initial={{ scale: 0, y: -20 }}
           animate={{ scale: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 200 }}
           className={cn(
-            "w-24 h-24 rounded-full flex items-center justify-center mb-4",
-            isWin ? "bg-amber-400" : isDraw ? "bg-blue-400" : "bg-slate-400"
+            "w-20 h-20 rounded-full flex items-center justify-center mb-3",
+            isWin ? "bg-amber-400" : isPodium ? "bg-blue-400" : "bg-slate-400"
           )}
           style={{
             boxShadow: isWin 
@@ -147,7 +174,7 @@ export function MultiplayerResultScreen() {
           }}
         >
           <Trophy className={cn(
-            "w-12 h-12",
+            "w-10 h-10",
             isWin ? "text-amber-800" : "text-white"
           )} />
         </motion.div>
@@ -157,7 +184,7 @@ export function MultiplayerResultScreen() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-4xl font-display font-bold text-white mb-2 text-center"
+          className="text-3xl font-display font-bold text-white mb-1 text-center"
         >
           {result}
         </motion.h1>
@@ -168,7 +195,7 @@ export function MultiplayerResultScreen() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex justify-center gap-1 mb-6"
+            className="flex justify-center gap-1 mb-4"
           >
             {[1, 2, 3].map((star) => (
               <motion.div
@@ -177,114 +204,99 @@ export function MultiplayerResultScreen() {
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.3 + star * 0.1, type: "spring" }}
               >
-                <Star className="w-8 h-8 text-amber-400 fill-amber-400" />
+                <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
               </motion.div>
             ))}
           </motion.div>
         )}
 
-        {/* Score Card */}
+        {/* Podium */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="w-full bg-white/95 backdrop-blur-lg rounded-3xl p-5 mb-6 shadow-xl"
+          className="w-full mb-4"
         >
-          <div className="flex items-center justify-between">
-            {/* You */}
-            <div className="text-center flex-1">
-              <div className="relative mx-auto mb-2">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-purple-100 border-3 border-cyan-400 mx-auto shadow-[0_0_15px_rgba(34,211,238,0.4)]">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-purple-600">
-                      <User className="w-8 h-8 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -bottom-1 right-1/2 translate-x-1/2 text-lg">
-                  {getFlagEmoji(profile?.country_code || "GE")}
-                </div>
-              </div>
-              <p className="font-bold text-slate-800 text-sm mb-1 truncate max-w-[100px] mx-auto">
-                {profile?.nickname || "შენ"}
-              </p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.4, type: "spring" }}
-                className={cn(
-                  "text-3xl font-bold",
-                  isWin ? "text-green-500" : isDraw ? "text-blue-500" : "text-slate-600"
-                )}
-              >
-                {myScore}
-              </motion.p>
-            </div>
-
-            {/* VS */}
-            <div className="px-3">
-              <div className="text-2xl font-bold text-slate-300">vs</div>
-            </div>
-
-            {/* Opponent */}
-            <div className="text-center flex-1">
-              <div className="relative mx-auto mb-2">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-purple-100 border-3 border-pink-400 mx-auto shadow-[0_0_15px_rgba(244,114,182,0.4)]">
-                  {opponent?.avatar_url ? (
-                    <img src={opponent.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-pink-600">
-                      <User className="w-8 h-8 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -bottom-1 right-1/2 translate-x-1/2 text-lg">
-                  {getFlagEmoji(opponent?.country_code || "GE")}
-                </div>
-              </div>
-              <p className="font-bold text-slate-800 text-sm mb-1 truncate max-w-[100px] mx-auto">
-                {opponent?.nickname || "მოწინააღმდეგე"}
-              </p>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-                className={cn(
-                  "text-3xl font-bold",
-                  !isWin && !isDraw ? "text-green-500" : "text-slate-600"
-                )}
-              >
-                {opponentScore}
-              </motion.p>
-            </div>
+          <div className="flex items-end justify-center gap-2 h-48">
+            {/* 2nd Place */}
+            {podiumParticipants[1] && (
+              <PodiumSpot participant={podiumParticipants[1]} place={2} getFlagEmoji={getFlagEmoji} />
+            )}
+            
+            {/* 1st Place */}
+            {podiumParticipants[0] && (
+              <PodiumSpot participant={podiumParticipants[0]} place={1} getFlagEmoji={getFlagEmoji} />
+            )}
+            
+            {/* 3rd Place */}
+            {podiumParticipants[2] && (
+              <PodiumSpot participant={podiumParticipants[2]} place={3} getFlagEmoji={getFlagEmoji} />
+            )}
           </div>
-
-          {/* Points Earned */}
-          {myScore > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-center pt-4 mt-4 border-t border-slate-200"
-            >
-              <p className="text-slate-500 text-sm">მიღებული ქულები</p>
-              <div className="flex items-center justify-center gap-2 mt-1">
-                <Crown className="w-5 h-5 text-amber-500 fill-amber-400" />
-                <p className="text-2xl font-bold text-purple-600">+{myScore}</p>
-              </div>
-            </motion.div>
-          )}
         </motion.div>
+
+        {/* Full Rankings */}
+        {restParticipants.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="w-full bg-white/95 backdrop-blur-lg rounded-2xl p-3 mb-4 shadow-xl"
+          >
+            <p className="text-slate-500 text-xs font-medium mb-2 text-center">სრული რანკინგი</p>
+            <div className="space-y-2">
+              {restParticipants.map((p) => (
+                <div
+                  key={p.user_id}
+                  className={cn(
+                    "flex items-center gap-3 p-2 rounded-xl",
+                    p.isMe ? "bg-purple-100" : ""
+                  )}
+                >
+                  <span className="w-6 text-center text-slate-500 font-bold text-sm">
+                    #{p.rank}
+                  </span>
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={p.avatar_url || undefined} />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm">
+                      {p.nickname?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium text-slate-800 text-sm truncate">
+                        {p.isMe ? "შენ" : p.nickname}
+                      </span>
+                      <span className="text-sm">{getFlagEmoji(p.country_code)}</span>
+                    </div>
+                  </div>
+                  <span className="font-bold text-purple-600 text-sm">{p.score}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Points Earned */}
+        {myScore > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-white/20"
+          >
+            <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold">+{myScore} ქულა</span>
+          </motion.div>
+        )}
 
         {/* Category badge */}
         {room?.category_name && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="mb-6 px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm"
+            transition={{ delay: 0.6 }}
+            className="mb-4 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm"
           >
             <span className="text-white/90 text-sm">
               კატეგორია: <strong>{room.category_name}</strong>
@@ -296,8 +308,8 @@ export function MultiplayerResultScreen() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="w-full flex flex-col gap-3"
+          transition={{ delay: 0.7 }}
+          className="w-full flex flex-col gap-3 pb-4"
         >
           <ChunkyButton
             variant="primary"
@@ -321,5 +333,68 @@ export function MultiplayerResultScreen() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// Podium spot component
+function PodiumSpot({ 
+  participant, 
+  place, 
+  getFlagEmoji 
+}: { 
+  participant: RankedParticipant; 
+  place: 1 | 2 | 3;
+  getFlagEmoji: (code: string | null) => string;
+}) {
+  const heights = { 1: "h-28", 2: "h-20", 3: "h-16" };
+  const colors = { 
+    1: "from-amber-400 to-amber-500 border-amber-300", 
+    2: "from-slate-300 to-slate-400 border-slate-200", 
+    3: "from-amber-600 to-amber-700 border-amber-500" 
+  };
+  const avatarSizes = { 1: "w-16 h-16", 2: "w-12 h-12", 3: "w-12 h-12" };
+  const medals = { 1: "🥇", 2: "🥈", 3: "🥉" };
+
+  return (
+    <motion.div
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: place === 1 ? 0.3 : place === 2 ? 0.4 : 0.5 }}
+      className="flex flex-col items-center"
+    >
+      {/* Avatar */}
+      <div className="relative mb-2">
+        <Avatar className={cn(
+          avatarSizes[place],
+          "border-3",
+          participant.isMe ? "border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]" : "border-white/50"
+        )}>
+          <AvatarImage src={participant.avatar_url || undefined} />
+          <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold">
+            {participant.nickname?.charAt(0) || "?"}
+          </AvatarFallback>
+        </Avatar>
+        <div className="absolute -bottom-1 right-1/2 translate-x-1/2 text-sm">
+          {getFlagEmoji(participant.country_code)}
+        </div>
+      </div>
+
+      {/* Name */}
+      <p className="text-white text-xs font-medium truncate max-w-[80px] text-center mb-1">
+        {participant.isMe ? "შენ" : participant.nickname}
+      </p>
+
+      {/* Score */}
+      <p className="text-white/80 text-xs font-bold mb-2">{participant.score}</p>
+
+      {/* Podium block */}
+      <div className={cn(
+        "w-20 rounded-t-xl bg-gradient-to-b border-t-2 flex items-start justify-center pt-2",
+        heights[place],
+        colors[place]
+      )}>
+        <span className="text-2xl">{medals[place]}</span>
+      </div>
+    </motion.div>
   );
 }
