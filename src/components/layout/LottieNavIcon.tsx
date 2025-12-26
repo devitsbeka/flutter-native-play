@@ -26,19 +26,27 @@ export function LottieNavIcon({
 }: LottieNavIconProps) {
   return (
     <div 
-      className={className}
+      className={`rounded-2xl bg-white shadow-sm ${className}`}
       style={{ 
         width: size, 
         height: size,
-        filter: "brightness(0) saturate(100%) invert(28%) sepia(89%) saturate(1640%) hue-rotate(243deg) brightness(88%) contrast(96%)",
+        padding: 8,
       }}
     >
-      <Lottie
-        animationData={animationMap[type]}
-        loop={true}
-        autoplay={true}
-        style={{ width: "100%", height: "100%" }}
-      />
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          filter: "brightness(0) saturate(100%) invert(28%) sepia(89%) saturate(1640%) hue-rotate(243deg) brightness(88%) contrast(96%)",
+        }}
+      >
+        <Lottie
+          animationData={animationMap[type]}
+          loop={true}
+          autoplay={true}
+          style={{ width: "100%", height: "100%" }}
+        />
+      </div>
     </div>
   );
 }
