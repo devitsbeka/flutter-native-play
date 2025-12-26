@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Clock, Gamepad2, Trophy, Sparkles, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, Gamepad2, Trophy, Sparkles, AlertTriangle, X } from "lucide-react";
 import { usePendingChallenges, PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -11,7 +11,7 @@ interface PendingChallengesSectionProps {
 }
 
 export function PendingChallengesSection({ onAcceptChallenge }: PendingChallengesSectionProps) {
-  const { pendingChallenges, loading } = usePendingChallenges();
+  const { pendingChallenges, loading, declineChallenge } = usePendingChallenges();
 
   if (loading) {
     return (
@@ -41,13 +41,16 @@ export function PendingChallengesSection({ onAcceptChallenge }: PendingChallenge
       </div>
 
       <div className="space-y-3">
-        {pendingChallenges.map((challenge) => (
-          <ChallengeCard 
-            key={challenge.id} 
-            challenge={challenge}
-            onAccept={() => onAcceptChallenge(challenge)}
-          />
-        ))}
+        <AnimatePresence mode="popLayout">
+          {pendingChallenges.map((challenge) => (
+            <ChallengeCard 
+              key={challenge.id} 
+              challenge={challenge}
+              onAccept={() => onAcceptChallenge(challenge)}
+              onDecline={() => declineChallenge(challenge.id)}
+            />
+          ))}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
@@ -56,6 +59,7 @@ export function PendingChallengesSection({ onAcceptChallenge }: PendingChallenge
 interface ChallengeCardProps {
   challenge: PendingChallenge;
   onAccept: () => void;
+  onDecline: () => void;
 }
 
 // Hook for live countdown timer
@@ -98,8 +102,9 @@ function useCountdown(expiresAt: string) {
   return timeLeft;
 }
 
-function ChallengeCard({ challenge, onAccept }: ChallengeCardProps) {
+function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
   const { hours, minutes, seconds, isExpired, isUrgent } = useCountdown(challenge.expiresAt);
+  const [isDeclining, setIsDeclining] = useState(false);
 
   const formatTime = () => {
     if (isExpired) return "ვადა ამოიწურა";
@@ -108,6 +113,12 @@ function ChallengeCard({ challenge, onAccept }: ChallengeCardProps) {
       return `${hours}სთ ${minutes}წთ`;
     }
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const handleDecline = async () => {
+    setIsDeclining(true);
+    await onDecline();
+    setIsDeclining(false);
   };
 
   if (isExpired) {
@@ -119,6 +130,7 @@ function ChallengeCard({ challenge, onAccept }: ChallengeCardProps) {
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, x: -100 }}
       className={cn(
         "relative p-4 rounded-2xl backdrop-blur-sm border",
         isUrgent 
@@ -126,6 +138,20 @@ function ChallengeCard({ challenge, onAccept }: ChallengeCardProps) {
           : "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30"
       )}
     >
+      {/* Decline button in top right */}
+      <motion.button
+        onClick={handleDecline}
+        disabled={isDeclining}
+        className={cn(
+          "absolute top-2 right-2 p-1.5 rounded-full transition-colors",
+          "bg-white/10 hover:bg-red-500/30 text-white/60 hover:text-white",
+          isDeclining && "opacity-50 cursor-not-allowed"
+        )}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <X className="w-4 h-4" />
+      </motion.button>
       {/* Glowing effect */}
       <div className={cn(
         "absolute inset-0 rounded-2xl animate-pulse",

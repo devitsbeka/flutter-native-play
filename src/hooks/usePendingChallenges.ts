@@ -150,9 +150,32 @@ export function usePendingChallenges() {
     };
   }, [user, fetchChallenges]);
 
+  // Decline a challenge (cancel the room)
+  const declineChallenge = useCallback(async (challengeId: string) => {
+    try {
+      // Update the game room status to cancelled
+      const { error } = await supabase
+        .from("game_rooms")
+        .update({ status: "cancelled" as const })
+        .eq("id", challengeId);
+
+      if (error) throw error;
+
+      // Remove from local state immediately
+      setPendingChallenges(prev => prev.filter(c => c.id !== challengeId));
+      toast.success("გამოწვევა უარყოფილია");
+      return true;
+    } catch (error) {
+      console.error("Error declining challenge:", error);
+      toast.error("გამოწვევის უარყოფა ვერ მოხერხდა");
+      return false;
+    }
+  }, []);
+
   return {
     pendingChallenges,
     loading,
     refreshChallenges: fetchChallenges,
+    declineChallenge,
   };
 }
