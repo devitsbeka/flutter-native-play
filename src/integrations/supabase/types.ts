@@ -41,6 +41,51 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          category_id: string
+          color: string
+          created_at: string | null
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+          total_levels: number
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+          total_levels?: number
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+          total_levels?: number
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       category_stats: {
         Row: {
           category: string
@@ -378,6 +423,53 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          category_id: string
+          correct_answer: string
+          created_at: string | null
+          difficulty: string
+          id: string
+          incorrect_answers: Json
+          is_active: boolean | null
+          level_number: number | null
+          question_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          correct_answer: string
+          created_at?: string | null
+          difficulty?: string
+          id?: string
+          incorrect_answers?: Json
+          is_active?: boolean | null
+          level_number?: number | null
+          question_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          correct_answer?: string
+          created_at?: string | null
+          difficulty?: string
+          id?: string
+          incorrect_answers?: Json
+          is_active?: boolean | null
+          level_number?: number | null
+          question_text?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_participants: {
         Row: {
           avatar_url: string | null
@@ -664,6 +756,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_presence: {
+        Row: {
+          current_page: string | null
+          id: string
+          last_seen: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          current_page?: string | null
+          id?: string
+          last_seen?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          current_page?: string | null
+          id?: string
+          last_seen?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_rewards: {
         Row: {
           claimed_at: string
@@ -691,14 +807,43 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       generate_room_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       friendship_status: "pending" | "accepted" | "blocked"
       game_type: "realtime" | "async"
       participant_status:
@@ -835,6 +980,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       friendship_status: ["pending", "accepted", "blocked"],
       game_type: ["realtime", "async"],
       participant_status: [
