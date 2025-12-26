@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, User, Lock, Eye, EyeOff, Loader2, Check, ArrowLeft } from "lucide-react";
+import { Sparkles, User, Lock, Eye, EyeOff } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { GameModal } from "@/components/ui/game-modal";
 
 // Confetti celebration effect
 const celebrateConfetti = () => {
@@ -31,31 +31,6 @@ const celebrateConfetti = () => {
   fire(0.1, { spread: 120, startVelocity: 45 });
 };
 
-// Sparkle particles for modal background
-const ModalSparkle = ({ index }: { index: number }) => {
-  const duration = 2 + Math.random() * 2;
-  const delay = Math.random() * 2;
-  const x = Math.random() * 100;
-  const y = Math.random() * 100;
-  
-  return (
-    <motion.div
-      className="absolute w-1 h-1 rounded-full bg-primary/40"
-      style={{ left: `${x}%`, top: `${y}%` }}
-      animate={{
-        opacity: [0, 1, 0],
-        scale: [0.5, 1.2, 0.5],
-      }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-  );
-};
-
 export function SignupOnboardingModal() {
   const { 
     step, 
@@ -74,9 +49,6 @@ export function SignupOnboardingModal() {
   
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  
-  // Sparkles for background
-  const sparkles = Array.from({ length: 20 }, (_, i) => i);
   
   const isOpen = step === "welcome" || step === "username" || step === "password" || step === "creating";
   
@@ -160,262 +132,197 @@ export function SignupOnboardingModal() {
     }
   };
   
-  if (!isOpen) return null;
+  // Determine current step config
+  const getStepConfig = () => {
+    switch (step) {
+      case "welcome":
+        return {
+          icon: "👋",
+          iconEmoji: true,
+          title: t("onboarding.welcomeTitle"),
+          subtitle: t("onboarding.welcomeSubtitle"),
+          primaryLabel: t("onboarding.startAdventure"),
+          primaryIcon: <Sparkles className="w-5 h-5" />,
+          onPrimaryClick: () => setStep("username"),
+          showBack: false,
+        };
+      case "username":
+        return {
+          icon: <User className="w-10 h-10 text-primary" />,
+          title: t("onboarding.chooseUsername"),
+          subtitle: t("onboarding.usernameHint"),
+          primaryLabel: t("common.next"),
+          onPrimaryClick: handleNextFromUsername,
+          primaryDisabled: !username.trim(),
+          showBack: true,
+        };
+      case "password":
+        return {
+          icon: <Lock className="w-10 h-10 text-primary" />,
+          title: t("onboarding.createPassword"),
+          subtitle: t("onboarding.passwordHint"),
+          primaryLabel: t("auth.createAccount"),
+          onPrimaryClick: handleCreateAccount,
+          primaryDisabled: !password || isLoading,
+          showBack: true,
+        };
+      case "creating":
+        return {
+          icon: "⏳",
+          iconEmoji: true,
+          title: t("onboarding.creatingAccount"),
+          subtitle: t("onboarding.almostThere"),
+          showBack: false,
+          hideFooter: true,
+        };
+      default:
+        return null;
+    }
+  };
+  
+  const config = getStepConfig();
+  
+  if (!isOpen || !config) return null;
   
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
-        onClick={() => step !== "creating" && setStep("idle")}
-      >
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-sm overflow-hidden rounded-3xl"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,240,255,0.98) 100%)",
-            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.5)",
-          }}
+    <GameModal
+      isOpen={isOpen}
+      onClose={step !== "creating" ? () => setStep("idle") : undefined}
+      icon={config.iconEmoji ? (
+        <motion.span 
+          className="text-5xl"
+          animate={step === "welcome" ? { 
+            rotate: [0, -10, 10, -10, 0],
+            scale: [1, 1.1, 1],
+          } : step === "creating" ? {
+            rotate: [0, 360],
+          } : {}}
+          transition={step === "creating" ? { duration: 2, repeat: Infinity, ease: "linear" } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
         >
-          {/* Background sparkles */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {sparkles.map((i) => (
-              <ModalSparkle key={i} index={i} />
-            ))}
-          </div>
-          
-          {/* Back button */}
-          {step !== "welcome" && step !== "creating" && (
-            <motion.button
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={handleBack}
-              className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
-            >
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </motion.button>
-          )}
-          
-          {/* Content */}
-          <div className="relative p-8">
-            <AnimatePresence mode="wait">
-              {/* Welcome Step */}
-              {step === "welcome" && (
-                <motion.div
-                  key="welcome"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  <motion.div
-                    className="text-7xl mb-4"
-                    animate={{ 
-                      rotate: [0, -10, 10, -10, 0],
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                  >
-                    👋
-                  </motion.div>
-                  
-                  <h1 className="font-display text-3xl font-bold text-foreground mb-2">
-                    {t("onboarding.welcomeTitle")}
-                  </h1>
-                  
-                  <p className="text-muted-foreground mb-8">
-                    {t("onboarding.welcomeSubtitle")}
-                  </p>
-                  
-                  <ChunkyButton
-                    variant="primary"
-                    size="lg"
-                    onClick={() => setStep("username")}
-                    icon={<Sparkles className="w-5 h-5" />}
-                  >
-                    {t("onboarding.startAdventure")}
-                  </ChunkyButton>
-                </motion.div>
-              )}
-              
-              {/* Username Step */}
-              {step === "username" && (
-                <motion.div
-                  key="username"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex flex-col items-center"
-                >
-                  <motion.div
-                    className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <User className="w-8 h-8 text-primary" />
-                  </motion.div>
-                  
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-2 text-center">
-                    {t("onboarding.chooseUsername")}
-                  </h2>
-                  
-                  <p className="text-sm text-muted-foreground mb-6 text-center">
-                    {t("onboarding.usernameHint")}
-                  </p>
-                  
-                  <div className="w-full mb-6">
-                    <div className="relative">
-                      <input
-                        ref={usernameRef}
-                        type="text"
-                        value={username}
-                        onChange={(e) => {
-                          setUsername(e.target.value);
-                          setErrors({});
-                        }}
-                        onKeyDown={(e) => e.key === "Enter" && handleNextFromUsername()}
-                        placeholder={t("auth.usernamePlaceholder")}
-                        className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-border focus:border-primary outline-none text-lg font-medium text-center transition-colors"
-                        style={{
-                          boxShadow: "0 4px 0 hsl(var(--border))",
-                        }}
-                      />
-                    </div>
-                    {errors.username && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-destructive text-sm mt-2 text-center"
-                      >
-                        {errors.username}
-                      </motion.p>
-                    )}
-                  </div>
-                  
-                  <ChunkyButton
-                    variant="primary"
-                    size="lg"
-                    onClick={handleNextFromUsername}
-                    disabled={!username.trim()}
-                    className="w-full"
-                  >
-                    {t("common.next")}
-                  </ChunkyButton>
-                </motion.div>
-              )}
-              
-              {/* Password Step */}
-              {step === "password" && (
-                <motion.div
-                  key="password"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex flex-col items-center"
-                >
-                  <motion.div
-                    className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Lock className="w-8 h-8 text-primary" />
-                  </motion.div>
-                  
-                  <h2 className="font-display text-2xl font-bold text-foreground mb-2 text-center">
-                    {t("onboarding.createPassword")}
-                  </h2>
-                  
-                  <p className="text-sm text-muted-foreground mb-6 text-center">
-                    {t("onboarding.passwordHint")}
-                  </p>
-                  
-                  <div className="w-full mb-6">
-                    <div className="relative">
-                      <input
-                        ref={passwordRef}
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setErrors({});
-                        }}
-                        onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
-                        placeholder={t("auth.passwordPlaceholder")}
-                        className="w-full px-5 py-4 pr-14 rounded-2xl bg-white border-2 border-border focus:border-primary outline-none text-lg font-medium text-center transition-colors"
-                        style={{
-                          boxShadow: "0 4px 0 hsl(var(--border))",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-destructive text-sm mt-2 text-center"
-                      >
-                        {errors.password}
-                      </motion.p>
-                    )}
-                  </div>
-                  
-                  <ChunkyButton
-                    variant="primary"
-                    size="lg"
-                    onClick={handleCreateAccount}
-                    disabled={!password || isLoading}
-                    className="w-full"
-                  >
-                    {t("auth.createAccount")}
-                  </ChunkyButton>
-                </motion.div>
-              )}
-              
-              {/* Creating Account Step */}
-              {step === "creating" && (
-                <motion.div
-                  key="creating"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center py-8"
-                >
-                  <motion.div
-                    className="relative mb-6"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
-                    <div className="w-20 h-20 rounded-full border-4 border-primary/20 border-t-primary" />
-                  </motion.div>
-                  
-                  <h2 className="font-display text-xl font-bold text-foreground mb-2">
-                    {t("onboarding.creatingAccount")}
-                  </h2>
-                  
-                  <motion.p
-                    className="text-muted-foreground text-sm"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    {t("onboarding.almostThere")}
-                  </motion.p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {config.icon}
+        </motion.span>
+      ) : (
+        <motion.div
+          className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          {config.icon}
         </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      )}
+      title={config.title || ""}
+      subtitle={config.subtitle}
+      showBackButton={config.showBack}
+      onBack={handleBack}
+      primaryLabel={config.primaryLabel}
+      primaryIcon={config.primaryIcon}
+      onPrimaryClick={config.onPrimaryClick}
+      primaryDisabled={config.primaryDisabled}
+      hideFooter={config.hideFooter}
+      hideCloseButton={step === "creating"}
+    >
+      <AnimatePresence mode="wait">
+        {/* Username Input */}
+        {step === "username" && (
+          <motion.div
+            key="username-input"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="w-full"
+          >
+            <div className="relative">
+              <input
+                ref={usernameRef}
+                type="text"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setErrors({});
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleNextFromUsername()}
+                placeholder={t("auth.usernamePlaceholder")}
+                className="w-full px-5 py-4 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-colors"
+                style={{
+                  boxShadow: "0 4px 0 hsl(var(--border))",
+                }}
+              />
+            </div>
+            {errors.username && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-destructive text-sm mt-3 text-center font-medium"
+              >
+                {errors.username}
+              </motion.p>
+            )}
+          </motion.div>
+        )}
+        
+        {/* Password Input */}
+        {step === "password" && (
+          <motion.div
+            key="password-input"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="w-full"
+          >
+            <div className="relative">
+              <input
+                ref={passwordRef}
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrors({});
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
+                placeholder={t("auth.passwordPlaceholder")}
+                className="w-full px-5 py-4 pr-14 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-colors"
+                style={{
+                  boxShadow: "0 4px 0 hsl(var(--border))",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            {errors.password && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-destructive text-sm mt-3 text-center font-medium"
+              >
+                {errors.password}
+              </motion.p>
+            )}
+          </motion.div>
+        )}
+        
+        {/* Creating spinner */}
+        {step === "creating" && (
+          <motion.div
+            key="creating"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center py-4"
+          >
+            <motion.div
+              className="relative"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </GameModal>
   );
 }

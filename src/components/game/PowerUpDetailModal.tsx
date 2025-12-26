@@ -1,7 +1,6 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+import { GameModal } from "@/components/ui/game-modal";
 
 // Power-up assets
 import fiftyFiftyImg from "@/assets/powers/5050.png";
@@ -94,146 +93,93 @@ export function PowerUpDetailModal({ isOpen, onClose, type }: PowerUpDetailModal
   
   const sparkles = Array.from({ length: 12 }, (_, i) => i);
   
-  if (!isOpen) return null;
+  // Custom icon with sparkles and gradient
+  const customIcon = (
+    <motion.div
+      className="relative"
+      initial={{ scale: 0.5, rotate: -10 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
+    >
+      {/* Outer glow */}
+      <motion.div
+        className="absolute inset-[-20px] rounded-full"
+        style={{
+          background: `radial-gradient(circle, ${gradient.glow} 0%, transparent 70%)`,
+        }}
+        animate={{
+          opacity: [0.5, 0.8, 0.5],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
+      
+      {/* Badge container with gradient ring */}
+      <div
+        className="relative w-28 h-28 rounded-full flex items-center justify-center"
+        style={{
+          background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
+          padding: 5,
+        }}
+      >
+        <div
+          className="w-full h-full rounded-full flex items-center justify-center"
+          style={{
+            background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(250,248,255,0.95) 100%)",
+          }}
+        >
+          <motion.img
+            src={imageSrc}
+            alt={type}
+            className="w-16 h-16 object-contain drop-shadow-lg"
+            animate={{
+              y: [0, -3, 0],
+              rotate: [0, 2, -2, 0],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+      </div>
+      
+      {/* Sparkle particles */}
+      {sparkles.map((i) => (
+        <BadgeSparkle key={i} index={i} gradient={gradient} />
+      ))}
+    </motion.div>
+  );
   
   return (
-    <AnimatePresence>
+    <GameModal
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={customIcon}
+      title={
+        <span
+          style={{
+            background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          {t(`powerups.${translationKey}.name`)}
+        </span>
+      }
+      subtitle={t(`powerups.${translationKey}.description`)}
+      primaryLabel={t("common.gotIt")}
+      onPrimaryClick={onClose}
+      variant="primary"
+    >
+      {/* Hint */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
-        onClick={onClose}
+        transition={{ delay: 0.4 }}
+        className="w-full px-4 py-3 rounded-2xl bg-muted/50 border-2 border-border"
       >
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-xs overflow-hidden rounded-3xl"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,0.98) 100%)",
-            boxShadow: `0 25px 50px -12px rgba(0,0,0,0.25), 0 0 60px ${gradient.glow}`,
-          }}
-        >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-muted/80 flex items-center justify-center"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          
-          {/* Content */}
-          <div className="p-8 flex flex-col items-center">
-            {/* Large badge with sparkles */}
-            <motion.div
-              className="relative mb-6"
-              initial={{ scale: 0.5, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
-            >
-              {/* Outer glow */}
-              <motion.div
-                className="absolute inset-[-20px] rounded-full"
-                style={{
-                  background: `radial-gradient(circle, ${gradient.glow} 0%, transparent 70%)`,
-                }}
-                animate={{
-                  opacity: [0.5, 0.8, 0.5],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              
-              {/* Badge container with gradient ring */}
-              <div
-                className="relative w-32 h-32 rounded-full flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
-                  padding: 6,
-                }}
-              >
-                <div
-                  className="w-full h-full rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(250,248,255,0.95) 100%)",
-                  }}
-                >
-                  <motion.img
-                    src={imageSrc}
-                    alt={type}
-                    className="w-20 h-20 object-contain drop-shadow-lg"
-                    animate={{
-                      y: [0, -3, 0],
-                      rotate: [0, 2, -2, 0],
-                    }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </div>
-              </div>
-              
-              {/* Sparkle particles */}
-              {sparkles.map((i) => (
-                <BadgeSparkle key={i} index={i} gradient={gradient} />
-              ))}
-            </motion.div>
-            
-            {/* Title */}
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="font-display text-2xl font-bold text-foreground mb-3"
-              style={{
-                background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              {t(`powerups.${translationKey}.name`)}
-            </motion.h2>
-            
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-center text-muted-foreground mb-2"
-            >
-              {t(`powerups.${translationKey}.description`)}
-            </motion.p>
-            
-            {/* Hint */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-center text-sm text-muted-foreground/70 italic mb-6"
-            >
-              💡 {t(`powerups.${translationKey}.hint`)}
-            </motion.p>
-            
-            {/* Got it button */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="w-full"
-            >
-              <ChunkyButton
-                variant="primary"
-                size="lg"
-                onClick={onClose}
-                className="w-full"
-              >
-                {t("common.gotIt")}
-              </ChunkyButton>
-            </motion.div>
-          </div>
-        </motion.div>
+        <p className="text-center text-sm text-muted-foreground">
+          💡 {t(`powerups.${translationKey}.hint`)}
+        </p>
       </motion.div>
-    </AnimatePresence>
+    </GameModal>
   );
 }
