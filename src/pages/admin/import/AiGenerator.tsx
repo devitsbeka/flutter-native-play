@@ -5,13 +5,34 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, AlertTriangle } from 'lucide-react';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { QuestionPreviewList } from './QuestionPreviewList';
 import { validateQuestion, ParsedQuestion } from '@/hooks/useQuestionParser';
+
+// Normalize text for comparison (lowercase, trim, remove extra spaces)
+function normalizeText(text: string): string {
+  return text.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+// Check if two questions are similar (simple similarity check)
+function areSimilarQuestions(q1: string, q2: string): boolean {
+  const n1 = normalizeText(q1);
+  const n2 = normalizeText(q2);
+  
+  // Exact match
+  if (n1 === n2) return true;
+  
+  // Check if one contains the other (for slight variations)
+  if (n1.length > 20 && n2.length > 20) {
+    if (n1.includes(n2) || n2.includes(n1)) return true;
+  }
+  
+  return false;
+}
 
 export function AiGenerator() {
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -21,6 +42,7 @@ export function AiGenerator() {
   const [generating, setGenerating] = useState(false);
   const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
   const [importing, setImporting] = useState(false);
+  const [duplicatesFound, setDuplicatesFound] = useState(0);
 
   const { categories } = useAdminCategories();
   const { bulkAddQuestions } = useAdminQuestions();
@@ -40,11 +62,22 @@ export function AiGenerator() {
 
     setGenerating(true);
     setParsedQuestions([]);
+    setDuplicatesFound(0);
 
     try {
+      // Fetch existing questions for this category to check duplicates
+      const { data: existingQuestions } = await supabase
+        .from('questions')
+        .select('question_text')
+        .eq('category_id', selectedCategory);
+
+      const existingTexts = (existingQuestions || []).map(q => q.question_text);
+
       // Generate questions in batches of 5
       const allQuestions: ParsedQuestion[] = [];
+      const seenQuestions = new Set<string>();
       const batches = Math.ceil(count / 5);
+      let totalDuplicates = 0;
 
       for (let i = 0; i < batches; i++) {
         const { data, error } = await supabase.functions.invoke('generate-category-trivia', {
@@ -58,8 +91,7 @@ export function AiGenerator() {
         if (error) throw error;
 
         if (data.questions) {
-          const questions = data.questions.map((q: any) => {
-            // Map edge function response fields to expected format
+          for (const q of data.questions) {
             const normalizedQ = {
               question_text: q.question_text || q.question || '',
               correct_answer: q.correct_answer || '',
@@ -67,26 +99,47 @@ export function AiGenerator() {
               difficulty: q.difficulty || difficulty,
               level_number: q.level_number || 1,
             };
+
+            const questionText = normalizedQ.question_text;
+            const normalizedText = normalizeText(questionText);
+
+            // Check for duplicates in existing DB questions
+            const isDuplicateInDb = existingTexts.some(existing => 
+              areSimilarQuestions(existing, questionText)
+            );
+
+            // Check for duplicates in current batch
+            const isDuplicateInBatch = seenQuestions.has(normalizedText);
+
+            if (isDuplicateInDb || isDuplicateInBatch) {
+              totalDuplicates++;
+              continue; // Skip duplicate
+            }
+
+            seenQuestions.add(normalizedText);
+            
             const validation = validateQuestion(normalizedQ);
-            return {
+            allQuestions.push({
               ...normalizedQ,
               ...validation,
-            };
-          });
-          allQuestions.push(...questions);
+            });
+          }
         }
 
-        // Stop if we have enough questions
+        // Stop if we have enough unique questions
         if (allQuestions.length >= count) break;
       }
 
       // Trim to requested count
       const finalQuestions = allQuestions.slice(0, count);
       setParsedQuestions(finalQuestions);
+      setDuplicatesFound(totalDuplicates);
 
       toast({
         title: 'წარმატება',
-        description: `${finalQuestions.length} კითხვა გენერირდა`,
+        description: totalDuplicates > 0 
+          ? `${finalQuestions.length} უნიკალური კითხვა გენერირდა (${totalDuplicates} დუბლიკატი გაფილტრდა)`
+          : `${finalQuestions.length} კითხვა გენერირდა`,
       });
     } catch (err: any) {
       console.error('Error generating questions:', err);
@@ -232,6 +285,12 @@ export function AiGenerator() {
             <CardTitle className="flex items-center justify-between">
               <span>გენერირებული კითხვები ({parsedQuestions.length})</span>
               <div className="flex items-center gap-2 text-sm font-normal">
+                {duplicatesFound > 0 && (
+                  <span className="flex items-center gap-1 text-amber-500">
+                    <AlertTriangle className="h-4 w-4" />
+                    {duplicatesFound} დუბლიკატი გაფილტრდა
+                  </span>
+                )}
                 <span className="text-green-500">✓ {validCount} ვალიდური</span>
                 {invalidCount > 0 && (
                   <span className="text-destructive">✗ {invalidCount} პრობლემური</span>
