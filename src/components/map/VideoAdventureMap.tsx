@@ -99,7 +99,7 @@ export function VideoAdventureMap() {
         </div>
 
         {/* Bottom content - Power-ups bar */}
-        <div className="pb-28">
+        <div className="pb-40">
           <PowerUpsBar onAddClick={handleAddPowerUp} />
         </div>
       </div>
