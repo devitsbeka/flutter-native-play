@@ -55,45 +55,39 @@ function PlayButton3D({ onClick }: { onClick: () => void }) {
   );
 }
 
-// Category Card Component - 3 row layout
+// Category Card Component - 3 row layout (no fill, transparent)
 function CategoryCard({ category, onClick }: { category: Category; onClick: () => void }) {
   return (
     <motion.button
       onClick={onClick}
       className="relative overflow-hidden rounded-2xl p-4 text-left w-full"
-      style={{
-        background: "rgba(255,255,255,0.6)",
-        backdropFilter: "blur(12px)",
-        border: "1px solid rgba(255,255,255,0.5)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.6)",
-      }}
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* Gradient accent */}
+      {/* Gradient accent bar */}
       <div 
-        className={cn("absolute top-0 left-0 right-0 h-1 bg-gradient-to-r", category.color)}
+        className={cn("absolute top-0 left-0 right-0 h-1.5 rounded-full bg-gradient-to-r", category.color)}
       />
       
       {/* Row 1: Icon + Title */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mt-1">
         <div 
           className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br shrink-0",
+            "w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br shrink-0 shadow-md",
             category.color
           )}
         >
           {category.icon}
         </div>
-        <h3 className="font-bold text-slate-800 text-base">{category.name}</h3>
+        <h3 className="font-bold text-slate-800 text-lg">{category.name}</h3>
       </div>
       
       {/* Row 2: Description */}
-      <p className="text-sm text-slate-500 mt-2.5 line-clamp-2">{category.description}</p>
+      <p className="text-sm text-slate-600 mt-3 line-clamp-2">{category.description}</p>
       
       {/* Row 3: Level badge */}
       <div className="mt-3">
-        <span className="text-xs px-3 py-1 rounded-full bg-slate-200/60 text-slate-600 font-medium">
+        <span className="text-xs px-3 py-1.5 rounded-full bg-white/70 text-slate-700 font-semibold shadow-sm">
           {category.totalLevels} დონე
         </span>
       </div>
@@ -201,7 +195,7 @@ export default function Discover() {
 
         {/* Category Grid - increased gap, no fill */}
         <div className="px-4 pb-6 overflow-y-auto scrollbar-hide">
-          <div className="grid grid-cols-1 gap-5">
+          <div className="grid grid-cols-1 gap-8">
             {filteredCategories.map((category, index) => (
               <motion.div
                 key={category.id}
@@ -219,23 +213,23 @@ export default function Discover() {
         </div>
       </div>
 
-      {/* Gradient fade overlay - smooth transition to bottom nav */}
+      {/* Gradient fade overlay - strong white gradient for visibility */}
       <div 
         className="fixed bottom-0 left-0 right-0 pointer-events-none z-10"
         style={{
           height: "220px",
-          background: "linear-gradient(to top, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.2) 60%, transparent 100%)",
+          background: "linear-gradient(to top, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 25%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.1) 70%, transparent 100%)",
         }}
       />
 
       {/* Frosted glass backing layer */}
       <div 
-        className="fixed bottom-0 left-0 right-0 pointer-events-none z-15"
+        className="fixed bottom-0 left-0 right-0 pointer-events-none z-[15]"
         style={{
           height: "120px",
-          backdropFilter: "blur(16px) saturate(180%)",
-          WebkitBackdropFilter: "blur(16px) saturate(180%)",
-          background: "linear-gradient(to top, rgba(255,255,255,0.3) 0%, transparent 100%)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          background: "linear-gradient(to top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 60%, transparent 100%)",
           maskImage: "linear-gradient(to top, black 0%, black 60%, transparent 100%)",
           WebkitMaskImage: "linear-gradient(to top, black 0%, black 60%, transparent 100%)",
         }}
