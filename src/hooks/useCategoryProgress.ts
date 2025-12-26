@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { categories } from "@/data/categories";
 import {
   getGuestProgress,
   saveGuestLevelProgress,
@@ -66,24 +65,17 @@ export function useCategoryProgress() {
 
   // Fetch real progress from database
   const fetchProgress = useCallback(async () => {
-    // Initialize progress for all categories
+    // Initialize empty progress - we'll build it from the data we receive
     const progressByCategory: Record<string, CategoryProgressData> = {};
-    categories.forEach((cat) => {
-      progressByCategory[cat.id] = {
-        categoryId: cat.id,
-        completedLevels: [],
-        currentLevel: 1,
-        totalStars: 0,
-      };
-    });
 
     if (!user) {
       // Load guest progress from localStorage
       const guestProgress = getGuestProgress();
       
       Object.entries(guestProgress).forEach(([categoryId, catProgress]) => {
-        if (progressByCategory[categoryId]) {
-          progressByCategory[categoryId].completedLevels = catProgress.completedLevels.map(
+        progressByCategory[categoryId] = {
+          categoryId,
+          completedLevels: catProgress.completedLevels.map(
             (l: GuestLevelProgress) => ({
               level_number: l.level_number,
               stars_earned: l.stars_earned,
@@ -91,12 +83,13 @@ export function useCategoryProgress() {
               total_questions: l.total_questions,
               completed_at: l.completed_at,
             })
-          );
-          progressByCategory[categoryId].totalStars = catProgress.completedLevels.reduce(
+          ),
+          currentLevel: 1,
+          totalStars: catProgress.completedLevels.reduce(
             (sum: number, l: GuestLevelProgress) => sum + l.stars_earned,
             0
-          );
-        }
+          ),
+        };
       });
 
       // Calculate current level for each category
@@ -405,7 +398,7 @@ export function useCategoryProgress() {
     }
   };
 
-  const getMapLevels = () => {
+  const getMapLevels = (categoriesList?: { id: string; icon: string }[]) => {
     const totalLevels = 30; // Total levels in the map
     
     // Build a map of all completed levels across all categories
@@ -421,11 +414,24 @@ export function useCategoryProgress() {
     // Calculate total completed levels for unlock logic
     const totalCompleted = getTotalProgress();
     
+    // If no categories provided, return basic levels
+    if (!categoriesList || categoriesList.length === 0) {
+      return Array.from({ length: totalLevels }, (_, i) => ({
+        id: i + 1,
+        categoryId: 'unknown',
+        categoryIcon: '📚',
+        isCompleted: false,
+        isUnlocked: i === 0,
+        isCurrent: i === 0,
+        stars: 0,
+      }));
+    }
+    
     return Array.from({ length: totalLevels }, (_, i) => {
       const levelNumber = i + 1;
-      const categoryIndex = i % categories.length;
-      const cat = categories[categoryIndex];
-      const categoryLevelNumber = Math.floor(i / categories.length) + 1;
+      const categoryIndex = i % categoriesList.length;
+      const cat = categoriesList[categoryIndex];
+      const categoryLevelNumber = Math.floor(i / categoriesList.length) + 1;
       
       const key = `${cat.id}-${categoryLevelNumber}`;
       const completedData = allCompletedLevels.get(key);
