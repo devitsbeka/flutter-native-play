@@ -148,91 +148,85 @@ function NavButton({
 }
 
 function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPlayButton: boolean }) {
-  // Shield/badge shape pointing UP with flat bottom
-  const shieldPath = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
+  // Hexagon shape
+  const hexPath = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
   
   return (
     <motion.button
       onClick={onClick}
       className="relative"
-      whileHover={{ scale: 1.08, y: -3 }}
-      whileTap={{ scale: 0.95, y: 2 }}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.92, y: 4 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      style={{ width: 72, height: 82 }}
+      style={{ width: 68, height: 76 }}
     >
-      {/* Outer glow */}
-      <motion.div
-        className="absolute -inset-3"
+      {/* Outer ring/border */}
+      <div
         style={{
-          background: "radial-gradient(circle, rgba(120,200,80,0.6) 0%, rgba(100,180,60,0.3) 50%, transparent 75%)",
-          filter: "blur(10px)",
-        }}
-        animate={{
-          opacity: [0.5, 0.9, 0.5],
-          scale: [0.95, 1.08, 0.95],
-        }}
-        transition={{
-          duration: 2.2,
-          repeat: Infinity,
-          ease: "easeInOut",
+          position: "absolute",
+          inset: -4,
+          background: "linear-gradient(180deg, rgba(180,160,220,0.6) 0%, rgba(140,120,180,0.4) 100%)",
+          clipPath: hexPath,
+          filter: "blur(1px)",
         }}
       />
       
-      {/* Bottom 3D depth layer - darkest */}
+      {/* Bottom 3D depth layer - darkest purple */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          top: 6,
-          background: "linear-gradient(180deg, #3a7d2e 0%, #2d6524 100%)",
-          clipPath: shieldPath,
+          top: 8,
+          background: "linear-gradient(180deg, #4a3a6e 0%, #3d2d5c 50%, #2e2248 100%)",
+          clipPath: hexPath,
         }}
       />
       
-      {/* Middle bevel layer */}
+      {/* Middle bevel layer - medium purple */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 2,
+          top: 4,
+          bottom: 8,
+          background: "linear-gradient(180deg, #6b5a8e 0%, #5a4a7d 100%)",
+          clipPath: hexPath,
+        }}
+      />
+      
+      {/* Main face - gradient purple */}
       <div
         style={{
           position: "absolute",
           inset: 3,
-          top: 3,
-          bottom: 6,
-          background: "linear-gradient(180deg, #4a9e3a 0%, #3d8530 100%)",
-          clipPath: shieldPath,
-        }}
-      />
-      
-      {/* Main face - bright lime */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 4,
           top: 0,
-          bottom: 10,
-          background: "linear-gradient(160deg, #9be065 0%, #7bc842 40%, #6ab838 70%, #5aa830 100%)",
-          clipPath: shieldPath,
+          bottom: 12,
+          background: "linear-gradient(160deg, #9080b8 0%, #7a68a6 30%, #6b5a94 60%, #5d4d86 100%)",
+          clipPath: hexPath,
+          boxShadow: "inset 0 3px 8px rgba(255,255,255,0.25)",
         }}
       >
-        {/* Top shine */}
+        {/* Top shine highlight */}
         <div
           style={{
             position: "absolute",
-            top: 8,
+            top: 6,
             left: "50%",
             transform: "translateX(-50%)",
-            width: "60%",
-            height: 10,
-            background: "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%)",
-            borderRadius: "6px",
+            width: "55%",
+            height: 8,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%)",
+            borderRadius: "4px",
           }}
         />
         
-        {/* Inner radial highlight */}
+        {/* Inner radial glow */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.3) 0%, transparent 55%)",
-            clipPath: shieldPath,
+            background: "radial-gradient(ellipse at 50% 35%, rgba(255,255,255,0.2) 0%, transparent 50%)",
+            clipPath: hexPath,
           }}
         />
         
@@ -240,47 +234,21 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
         <div className="absolute inset-0 flex items-center justify-center">
           {isPlayButton ? (
             <Play 
-              className="w-7 h-7 ml-0.5" 
+              className="w-6 h-6 ml-0.5" 
               fill="white"
               stroke="white"
               strokeWidth={0}
-              style={{ filter: "drop-shadow(0 2px 3px rgba(40,80,30,0.4))" }}
+              style={{ filter: "drop-shadow(0 1px 2px rgba(30,20,50,0.5))" }}
             />
           ) : (
             <Home 
-              className="w-6 h-6 text-white" 
+              className="w-5 h-5 text-white" 
               strokeWidth={2.5}
-              style={{ filter: "drop-shadow(0 2px 3px rgba(40,80,30,0.4))" }}
+              style={{ filter: "drop-shadow(0 1px 2px rgba(30,20,50,0.5))" }}
             />
           )}
         </div>
       </div>
-      
-      {/* Sparkles */}
-      {[...Array(3)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full"
-          style={{
-            width: 3,
-            height: 3,
-            background: "white",
-            boxShadow: "0 0 6px rgba(255,255,255,0.9)",
-            left: `${20 + (i * 25)}%`,
-            top: `${15 + (i * 20)}%`,
-          }}
-          animate={{
-            y: [-3, 3, -3],
-            opacity: [0.3, 1, 0.3],
-          }}
-          transition={{
-            duration: 1.6 + (i * 0.3),
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.2,
-          }}
-        />
-      ))}
     </motion.button>
   );
 }
