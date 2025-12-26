@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Users, Diamond, Play } from "lucide-react";
+import { ArrowLeft, Clock, Users, Diamond } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 
-import { LottieNavIcon } from "@/components/layout/LottieNavIcon";
+import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 
 interface LeaderboardEntry {
   id: string;
@@ -38,47 +38,6 @@ function RankMedal({ rank, size = "md" }: { rank: 1 | 2 | 3; size?: "sm" | "md" 
     <span className={cn("", sizes[size])}>
       {medals[rank]}
     </span>
-  );
-}
-
-// 3D Play button component (same as Index)
-function PlayButton3D({ onClick }: { onClick: () => void }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      className="relative"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95, y: 4 }}
-    >
-      {/* Outer glow */}
-      <div 
-        className="absolute inset-0 rounded-full blur-xl"
-        style={{ 
-          background: "rgba(255,255,255,0.4)",
-          transform: "scale(1.2)",
-        }}
-      />
-      
-      {/* Button base (shadow/depth) */}
-      <div 
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: "linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)",
-          transform: "translateY(4px)",
-        }}
-      />
-      
-      {/* Button face */}
-      <div 
-        className="relative w-20 h-20 rounded-full flex items-center justify-center"
-        style={{
-          background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
-          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
-        }}
-      >
-        <Play className="w-8 h-8 text-white fill-white ml-1" />
-      </div>
-    </motion.button>
   );
 }
 
@@ -417,81 +376,8 @@ export default function Leaderboards() {
         }}
       />
 
-      {/* Bottom Navigation - Liquid Glass Effect */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
-        {/* Glass container with blur */}
-        <motion.div 
-          className="mx-3 mb-4 rounded-3xl overflow-hidden"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.45) 100%)",
-            backdropFilter: "blur(24px) saturate(180%)",
-            WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            border: "1px solid rgba(255,255,255,0.5)",
-            boxShadow: "0 -4px 30px rgba(0,0,0,0.06), inset 0 1px 1px rgba(255,255,255,0.7)",
-          }}
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
-        >
-          <div className="relative px-4 py-3 flex items-end justify-between">
-            {/* Explore */}
-            <motion.button
-              onClick={() => navigate("/discover")}
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <LottieNavIcon type="explore" size={36} />
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Explore</span>
-            </motion.button>
-
-            {/* Map */}
-            <motion.button
-              onClick={() => navigate("/adventure-map")}
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <LottieNavIcon type="map" size={36} />
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Map</span>
-            </motion.button>
-
-            {/* Center Play Button - elevated */}
-            <div className="-mt-6">
-              <PlayButton3D onClick={() => navigate("/game")} />
-            </div>
-
-            {/* Rank - active state */}
-            <motion.button
-              onClick={() => navigate("/leaderboards")}
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-purple-200/60">
-                <LottieNavIcon type="rank" size={36} isActive />
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">Rank</span>
-            </motion.button>
-
-            {/* Headphones/Audio */}
-            <motion.button
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <span className="text-2xl">🎧</span>
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Sound</span>
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
+      {/* Universal Bottom Navigation */}
+      <UniversalBottomNav />
     </div>
   );
 }

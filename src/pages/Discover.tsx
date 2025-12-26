@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Play } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { categories, Category } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
-import { LottieNavIcon } from "@/components/layout/LottieNavIcon";
+import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 
 type CategoryType = "all" | "classic" | "fun" | "educational";
 
@@ -15,42 +15,6 @@ const tabs: { id: CategoryType; label: string }[] = [
   { id: "fun", label: "გართობა" },
   { id: "educational", label: "სასწავლო" },
 ];
-
-// 3D Play button component
-function PlayButton3D({ onClick }: { onClick: () => void }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      className="relative"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95, y: 4 }}
-    >
-      <div 
-        className="absolute inset-0 rounded-full blur-xl"
-        style={{ 
-          background: "rgba(255,255,255,0.4)",
-          transform: "scale(1.2)",
-        }}
-      />
-      <div 
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: "linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)",
-          transform: "translateY(4px)",
-        }}
-      />
-      <div 
-        className="relative w-20 h-20 rounded-full flex items-center justify-center"
-        style={{
-          background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
-          boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)",
-        }}
-      >
-        <Play className="w-8 h-8 text-white fill-white ml-1" />
-      </div>
-    </motion.button>
-  );
-}
 
 // Category Card Component - 3 row layout with progress
 function CategoryCard({ 
@@ -263,73 +227,8 @@ export default function Discover() {
         }}
       />
 
-      {/* Bottom Navigation - Transparent style matching Index page */}
-      <nav className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
-        <motion.div 
-          className="px-6 pb-6 pt-4"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
-        >
-          <div className="relative flex items-end justify-between max-w-md mx-auto">
-            {/* Explore - active */}
-            <motion.button
-              onClick={() => navigate("/discover")}
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center bg-purple-100/50">
-                <LottieNavIcon type="explore" size={52} isActive />
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">აღმოაჩინე</span>
-            </motion.button>
-
-            {/* Map */}
-            <motion.button
-              onClick={() => navigate("/adventure-map")}
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
-                <LottieNavIcon type="map" size={52} />
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">რუკა</span>
-            </motion.button>
-
-            {/* Center Play Button */}
-            <div className="-mt-6">
-              <PlayButton3D onClick={() => navigate("/game")} />
-            </div>
-
-            {/* Rank */}
-            <motion.button
-              onClick={() => navigate("/leaderboards")}
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
-                <LottieNavIcon type="rank" size={52} />
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">რანკი</span>
-            </motion.button>
-
-            {/* Sound */}
-            <motion.button
-              className="flex flex-col items-center gap-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center">
-                <span className="text-4xl">🎧</span>
-              </div>
-              <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">ხმა</span>
-            </motion.button>
-          </div>
-        </motion.div>
-      </nav>
+      {/* Universal Bottom Navigation */}
+      <UniversalBottomNav />
     </div>
   );
 }
