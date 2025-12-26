@@ -195,7 +195,7 @@ export default function Discover() {
 
         {/* Category Grid - increased gap, no fill */}
         <div className="px-4 pb-6 overflow-y-auto scrollbar-hide">
-          <div className="grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 gap-[15px]">
             {filteredCategories.map((category, index) => (
               <motion.div
                 key={category.id}
