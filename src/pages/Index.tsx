@@ -368,48 +368,50 @@ export default function Index() {
                       
                       {/* 3D Chunky Progress bar */}
                       <div 
-                        className="relative h-7 rounded-full overflow-hidden min-w-[300px]"
+                        className="relative h-10 rounded-full overflow-hidden min-w-[300px]"
                         style={{
-                          background: "linear-gradient(180deg, #E8DFF5 0%, #D4C4E8 50%, #C9B8DE 100%)",
-                          boxShadow: "inset 0 3px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.5), 0 4px 0 #B8A5D0",
-                          border: "2px solid rgba(180,160,200,0.4)",
+                          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                          boxShadow: "inset 0 4px 8px rgba(140,120,180,0.2), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                          border: "3px solid rgba(255,255,255,0.9)",
                         }}
                       >
                         {/* Progress fill with 3D depth */}
                         {levelInfo.progress > 0 && (
                           <motion.div 
-                            className="absolute inset-y-0.5 left-0.5 rounded-full overflow-hidden"
+                            className="absolute inset-1 rounded-full overflow-hidden"
                             style={{
-                              background: "linear-gradient(180deg, #C084FC 0%, #A855F7 30%, #9333EA 70%, #7E22CE 100%)",
-                              boxShadow: "inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), 0 0 16px rgba(168,85,247,0.5)",
+                              width: `calc(${levelInfo.progress}% - 8px)`,
+                              background: "linear-gradient(180deg, #C084FC 0%, #A855F7 40%, #9333EA 100%)",
+                              boxShadow: "inset 0 3px 6px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(100,50,180,0.3), 0 0 20px rgba(168,85,247,0.4)",
                             }}
                             initial={{ width: 0 }}
-                            animate={{ width: `calc(${levelInfo.progress}% - 2px)` }}
+                            animate={{ width: `calc(${levelInfo.progress}% - 8px)` }}
                             transition={{ duration: 1, delay: 0.5 }}
                           >
                             {/* Sparkle particles inside filled area */}
-                            {[...Array(8)].map((_, i) => (
+                            {[...Array(6)].map((_, i) => (
                               <motion.div
                                 key={i}
                                 className="absolute rounded-full"
                                 style={{
-                                  width: i % 2 === 0 ? 4 : 3,
-                                  height: i % 2 === 0 ? 4 : 3,
-                                  background: "rgba(255,255,255,0.9)",
-                                  boxShadow: "0 0 6px rgba(255,255,255,0.8)",
-                                  left: `${10 + (i * 11)}%`,
+                                  width: i % 2 === 0 ? 5 : 4,
+                                  height: i % 2 === 0 ? 5 : 4,
+                                  background: "rgba(255,255,255,0.95)",
+                                  boxShadow: "0 0 8px rgba(255,255,255,0.9)",
+                                  left: `${12 + (i * 14)}%`,
                                   top: "50%",
+                                  transform: "translateY(-50%)",
                                 }}
                                 animate={{
-                                  y: [-4, 4, -4],
-                                  opacity: [0.4, 1, 0.4],
-                                  scale: [0.8, 1.2, 0.8],
+                                  y: [-3, 3, -3],
+                                  opacity: [0.5, 1, 0.5],
+                                  scale: [0.9, 1.1, 0.9],
                                 }}
                                 transition={{
-                                  duration: 1.2 + (i * 0.15),
+                                  duration: 1.5 + (i * 0.2),
                                   repeat: Infinity,
                                   ease: "easeInOut",
-                                  delay: i * 0.1,
+                                  delay: i * 0.15,
                                 }}
                               />
                             ))}
@@ -418,26 +420,28 @@ export default function Index() {
                             <motion.div
                               className="absolute inset-0 rounded-full"
                               style={{
-                                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)",
+                                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",
                               }}
                               animate={{
                                 x: ["-100%", "200%"],
                               }}
                               transition={{
-                                duration: 2,
+                                duration: 2.5,
                                 repeat: Infinity,
                                 ease: "easeInOut",
-                                repeatDelay: 1,
+                                repeatDelay: 1.5,
                               }}
                             />
                           </motion.div>
                         )}
+                        
+                        {/* XP text inside bar */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="text-sm font-bold text-gray-600 drop-shadow-sm">
+                            {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                          </span>
+                        </div>
                       </div>
-                      
-                      {/* XP text below bar */}
-                      <span className="text-sm font-bold text-gray-700 drop-shadow-sm">
-                        {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                      </span>
                     </>
                   )}
                 </motion.div>
