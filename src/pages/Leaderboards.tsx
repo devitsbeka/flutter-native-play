@@ -92,13 +92,7 @@ export default function Leaderboards() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-28">
-      {/* Sky Background - matching Index page */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 50%, hsl(45 40% 90%) 100%)"
-        }}
-      />
+      {/* Background handled by GlobalSplineBackground */}
 
       {/* Content */}
       <div className="relative z-10">
@@ -107,11 +101,11 @@ export default function Leaderboards() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/")}
-              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
+              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/20"
             >
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
+              <ArrowLeft className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-xl font-display font-bold text-slate-800">
+            <h1 className="text-xl font-display font-bold text-white drop-shadow-lg">
               რეიტინგი
             </h1>
           </div>
@@ -119,14 +113,14 @@ export default function Leaderboards() {
 
         {/* Filter Tabs */}
         <div className="px-4 py-3">
-          <div className="flex gap-1 p-1 rounded-2xl bg-white/50 backdrop-blur-sm">
+          <div className="flex gap-1 p-1 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
             <button
               onClick={() => setTimeFilter("weekly")}
               className={cn(
                 "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
                 timeFilter === "weekly"
                   ? "bg-purple-500 text-white shadow-lg"
-                  : "text-slate-600 hover:bg-white/50"
+                  : "text-white/70 hover:bg-white/10"
               )}
             >
               ყოველკვირეული
@@ -137,7 +131,7 @@ export default function Leaderboards() {
                 "flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all",
                 timeFilter === "all"
                   ? "bg-purple-500 text-white shadow-lg"
-                  : "text-slate-600 hover:bg-white/50"
+                  : "text-white/70 hover:bg-white/10"
               )}
             >
               სულ
@@ -197,10 +191,10 @@ export default function Leaderboards() {
                     </div>
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-slate-700 mb-0.5 truncate max-w-[80px] text-center">
+                <span className="text-sm font-semibold text-white mb-0.5 truncate max-w-[80px] text-center drop-shadow">
                   {topThree[1]?.nickname || "---"}
                 </span>
-                <div className="flex items-center gap-1 text-emerald-600">
+                <div className="flex items-center gap-1 text-emerald-400">
                   <Diamond className="w-3 h-3 fill-current" />
                   <span className="text-sm font-bold">{(topThree[1]?.total_points || 0).toLocaleString()}</span>
                 </div>
@@ -236,10 +230,10 @@ export default function Leaderboards() {
                     </div>
                   )}
                 </div>
-                <span className="text-base font-bold text-slate-800 mb-0.5 truncate max-w-[90px] text-center">
+                <span className="text-base font-bold text-white mb-0.5 truncate max-w-[90px] text-center drop-shadow-lg">
                   {topThree[0]?.nickname || "---"}
                 </span>
-                <div className="flex items-center gap-1 text-emerald-600">
+                <div className="flex items-center gap-1 text-emerald-400">
                   <Diamond className="w-3.5 h-3.5 fill-current" />
                   <span className="text-base font-bold">{(topThree[0]?.total_points || 0).toLocaleString()}</span>
                 </div>
@@ -270,10 +264,10 @@ export default function Leaderboards() {
                     </div>
                   </div>
                 </div>
-                <span className="text-xs font-semibold text-slate-700 mb-0.5 truncate max-w-[70px] text-center">
+                <span className="text-xs font-semibold text-white mb-0.5 truncate max-w-[70px] text-center drop-shadow">
                   {topThree[2]?.nickname || "---"}
                 </span>
-                <div className="flex items-center gap-1 text-emerald-600">
+                <div className="flex items-center gap-1 text-emerald-400">
                   <Diamond className="w-3 h-3 fill-current" />
                   <span className="text-xs font-bold">{(topThree[2]?.total_points || 0).toLocaleString()}</span>
                 </div>
@@ -285,25 +279,25 @@ export default function Leaderboards() {
         {/* Divider with "Top Ranking" label */}
         <div className="px-4 pb-3">
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-400/50 to-transparent" />
-            <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            <span className="text-xs font-semibold text-white/80 flex items-center gap-1">
               ◆ ტოპ რეიტინგი ◆
             </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-400/50 to-transparent" />
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           </div>
         </div>
 
         {/* List Section */}
         <div className="px-4">
           {loading ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-white/70">
               იტვირთება...
             </div>
           ) : entries.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🏆</div>
-              <h3 className="text-lg font-bold text-slate-800 mb-2">ჯერ მოთამაშეები არ არიან!</h3>
-              <p className="text-slate-500">
+              <h3 className="text-lg font-bold text-white mb-2">ჯერ მოთამაშეები არ არიან!</h3>
+              <p className="text-white/60">
                 ითამაშე რომ გამოჩნდე რეიტინგში
               </p>
             </div>
@@ -323,8 +317,8 @@ export default function Leaderboards() {
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-2xl",
                       isCurrentUser 
-                        ? "bg-purple-100/80 border border-purple-300" 
-                        : "bg-white/60 backdrop-blur-sm"
+                        ? "bg-purple-500/30 border border-purple-400/50 backdrop-blur-md" 
+                        : "bg-white/10 backdrop-blur-md border border-white/10"
                     )}
                   >
                     {/* Avatar */}
@@ -341,12 +335,12 @@ export default function Leaderboards() {
                     <div className="flex-1 min-w-0">
                       <p className={cn(
                         "font-semibold text-sm truncate",
-                        isCurrentUser ? "text-purple-700" : "text-slate-700"
+                        isCurrentUser ? "text-purple-200" : "text-white"
                       )}>
                         {entry.nickname}
                         {isCurrentUser && " (შენ)"}
                       </p>
-                      <div className="flex items-center gap-1 text-emerald-600">
+                      <div className="flex items-center gap-1 text-emerald-400">
                         <Diamond className="w-3 h-3 fill-current" />
                         <span className="text-sm font-bold">{entry.total_points.toLocaleString()}</span>
                       </div>
@@ -356,7 +350,7 @@ export default function Leaderboards() {
                     {isTopThree ? (
                       <RankMedal rank={position as 1 | 2 | 3} size="sm" />
                     ) : (
-                      <span className="text-sm font-bold text-slate-500 w-8 text-center">
+                      <span className="text-sm font-bold text-white/50 w-8 text-center">
                         #{position}
                       </span>
                     )}
@@ -372,7 +366,7 @@ export default function Leaderboards() {
       <div 
         className="fixed bottom-0 left-0 right-0 h-40 pointer-events-none z-10"
         style={{
-          background: "linear-gradient(to top, hsl(45 40% 88%) 0%, hsl(45 40% 88% / 0.8) 30%, transparent 100%)",
+          background: "linear-gradient(to top, rgba(20, 20, 35, 0.95) 0%, rgba(20, 20, 35, 0.6) 40%, transparent 100%)",
         }}
       />
 

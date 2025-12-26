@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { SPLINE_BLOB_URL, isSplineLoaded } from "@/components/game/SplinePreloader";
 
 // Pages where the Spline background should be visible
-const SPLINE_PAGES = ["/", "/game", "/discover"];
+const SPLINE_PAGES = ["/", "/game", "/discover", "/leaderboards"];
 
 // White sparkle particle - more prominent
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
