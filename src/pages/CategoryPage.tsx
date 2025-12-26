@@ -1,12 +1,14 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Lock, Play, LogIn } from "lucide-react";
+import { ArrowLeft, Star, Lock, Play, LogIn, Clock } from "lucide-react";
 import { getCategoryById } from "@/data/categories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
+import { ComingSoonModal } from "@/components/game/ComingSoonModal";
+import { useQuestionAvailability } from "@/hooks/useQuestionAvailability";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback } from "react";
 
@@ -15,9 +17,12 @@ export default function CategoryPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
+  const { hasEnoughQuestions, loading: availabilityLoading } = useQuestionAvailability();
 
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
   const category = getCategoryById(categoryId || "");
   const currentLevel = getCategoryProgress(categoryId || "") || 1;
@@ -66,6 +71,14 @@ export default function CategoryPage() {
   const handleLevelClick = (level: number, isUnlocked: boolean) => {
     if (!isUnlocked) return;
     
+    // Check if level has enough questions
+    const hasQuestions = hasEnoughQuestions(categoryId || "", level);
+    if (!hasQuestions) {
+      setSelectedLevel(level);
+      setShowComingSoon(true);
+      return;
+    }
+    
     if (!user) {
       toast.info("შედით სისტემაში პროგრესის შესანახად!", {
         description: "თქვენი შედეგები შეინახება სისტემაში შესვლის შემდეგ.",
@@ -84,8 +97,9 @@ export default function CategoryPage() {
     const isUnlocked = level <= currentLevel;
     const isCurrent = level === currentLevel;
     const stars = getLevelStars(categoryId || "", level);
+    const hasQuestions = !availabilityLoading && hasEnoughQuestions(categoryId || "", level);
     
-    return { level, isCompleted: completed, isUnlocked, isCurrent, stars };
+    return { level, isCompleted: completed, isUnlocked, isCurrent, stars, hasQuestions };
   });
 
   return (
@@ -96,6 +110,14 @@ export default function CategoryPage() {
         unlockedLevel={unlockedLevel || 1}
         categoryIcon={category.icon}
         onComplete={handleUnlockComplete}
+      />
+
+      {/* Coming Soon Modal */}
+      <ComingSoonModal
+        isOpen={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+        categoryName={category.name}
+        levelNumber={selectedLevel || undefined}
       />
 
       <div className="min-h-screen bg-background">
@@ -141,7 +163,7 @@ export default function CategoryPage() {
             )}
           </div>
 
-          {loading ? (
+          {loading || availabilityLoading ? (
             <div className="grid grid-cols-4 gap-3">
               {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="aspect-square rounded-2xl" />
@@ -149,9 +171,10 @@ export default function CategoryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-4 gap-3">
-              {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => {
+              {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars, hasQuestions }) => {
                 // Check if this level was just unlocked
                 const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
+                const isComingSoon = isUnlocked && !hasQuestions && !isCompleted;
                 
                 return (
                   <motion.button
@@ -164,12 +187,14 @@ export default function CategoryPage() {
                     animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
                     transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
                     className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
-                      isCurrent 
+                      isCurrent && !isComingSoon
                         ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
                         : ""
                     } ${
                       !isUnlocked
                         ? "bg-muted opacity-50 cursor-not-allowed"
+                        : isComingSoon
+                        ? "bg-gradient-to-br from-amber-400 to-orange-500"
                         : isCompleted
                         ? "bg-success"
                         : `bg-gradient-to-br ${category.color}`
@@ -182,6 +207,11 @@ export default function CategoryPage() {
                   >
                     {!isUnlocked ? (
                       <Lock className="h-5 w-5 text-muted-foreground" />
+                    ) : isComingSoon ? (
+                      <>
+                        <Clock className="h-5 w-5 text-white mb-0.5" />
+                        <span className="text-[10px] font-bold text-white/90">მალე</span>
+                      </>
                     ) : (
                       <>
                         <span className="font-bold text-white text-lg">{level}</span>
@@ -202,13 +232,24 @@ export default function CategoryPage() {
                       </>
                     )}
 
-                    {isCurrent && isUnlocked && (
+                    {isCurrent && isUnlocked && !isComingSoon && (
                       <motion.div
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
                         className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
                       >
                         <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
+                      </motion.div>
+                    )}
+
+                    {/* Coming soon indicator badge */}
+                    {isComingSoon && (
+                      <motion.div
+                        animate={{ rotate: [-5, 5, -5] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px]"
+                      >
+                        🏗️
                       </motion.div>
                     )}
                   </motion.button>
