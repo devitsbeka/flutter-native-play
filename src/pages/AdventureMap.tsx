@@ -3,9 +3,7 @@ import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 import { IslandAdventureMap } from "@/components/map/IslandAdventureMap";
 import { t } from "@/lib/i18n";
-import iconCompass from "@/assets/icons/icon-compass.png";
-import iconMap3d from "@/assets/icons/icon-map-3d.png";
-import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
+import { LottieNavIcon } from "@/components/layout/LottieNavIcon";
 
 export default function AdventureMap() {
   const navigate = useNavigate();
@@ -50,7 +48,7 @@ export default function AdventureMap() {
               whileTap={{ scale: 0.9 }}
             >
               <div className="flex items-center justify-center">
-                <img src={iconCompass} alt="Explore" className="w-[52px] h-[52px] object-contain" />
+                <LottieNavIcon type="explore" size={52} />
               </div>
               <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">{t("nav.explore")}</span>
             </motion.button>
@@ -62,7 +60,7 @@ export default function AdventureMap() {
               whileTap={{ scale: 0.9 }}
             >
               <div className="flex items-center justify-center">
-                <img src={iconMap3d} alt="Map" className="w-[52px] h-[52px] object-contain" />
+                <LottieNavIcon type="map" size={52} isActive />
               </div>
               <span className="text-[10px] uppercase tracking-wider text-primary font-bold drop-shadow-sm">{t("nav.map")}</span>
             </motion.button>
@@ -120,7 +118,7 @@ export default function AdventureMap() {
               whileTap={{ scale: 0.9 }}
             >
               <div className="flex items-center justify-center">
-                <img src={iconTrophy3d} alt="Rank" className="w-[52px] h-[52px] object-contain" />
+                <LottieNavIcon type="rank" size={52} />
               </div>
               <span className="text-[10px] uppercase tracking-wider text-foreground/80 font-semibold drop-shadow-sm">{t("nav.rank")}</span>
             </motion.button>

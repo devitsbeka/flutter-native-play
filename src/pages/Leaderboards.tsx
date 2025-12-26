@@ -7,10 +7,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 
-// Bottom nav icons
-import iconCompass from "@/assets/icons/icon-compass.png";
-import iconMap3d from "@/assets/icons/icon-map-3d.png";
-import iconTrophy3d from "@/assets/icons/icon-trophy-3d.png";
+import { LottieNavIcon } from "@/components/layout/LottieNavIcon";
 
 interface LeaderboardEntry {
   id: string;
@@ -445,7 +442,7 @@ export default function Leaderboards() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <img src={iconCompass} alt="Explore" className="w-9 h-9 object-contain" />
+                <LottieNavIcon type="explore" size={36} />
               </div>
               <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Explore</span>
             </motion.button>
@@ -458,7 +455,7 @@ export default function Leaderboards() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/40">
-                <img src={iconMap3d} alt="Map" className="w-9 h-9 object-contain" />
+                <LottieNavIcon type="map" size={36} />
               </div>
               <span className="text-[9px] uppercase tracking-wider text-slate-700 font-medium">Map</span>
             </motion.button>
@@ -476,7 +473,7 @@ export default function Leaderboards() {
               whileTap={{ scale: 0.95 }}
             >
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-purple-200/60">
-                <img src={iconTrophy3d} alt="Rank" className="w-9 h-9 object-contain" />
+                <LottieNavIcon type="rank" size={36} isActive />
               </div>
               <span className="text-[9px] uppercase tracking-wider text-purple-600 font-semibold">Rank</span>
             </motion.button>
