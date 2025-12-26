@@ -26,7 +26,7 @@ export function LottieNavIcon({
 }: LottieNavIconProps) {
   return (
     <div 
-      className={`rounded-2xl bg-white shadow-sm ${className}`}
+      className={`${className}`}
       style={{ 
         width: size, 
         height: size,
