@@ -490,7 +490,6 @@ export default function Index() {
         {/* Universal Bottom Navigation */}
         <UniversalBottomNav 
           onPlayClick={handlePlayClick} 
-          onTeamClick={() => setIsSoundModalOpen(true)} 
         />
       </div>
     </>
