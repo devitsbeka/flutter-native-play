@@ -445,12 +445,39 @@ export default function Index() {
                           </motion.div>
                         )}
                         
-                        {/* XP text inside bar */}
+                        {/* XP text - dual layer for contrast */}
+                        {/* Dark text layer (visible on grey background) */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="text-sm font-bold text-gray-600 drop-shadow-sm">
+                          <span className="text-sm font-bold text-gray-700 drop-shadow-sm">
                             {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                           </span>
                         </div>
+                        
+                        {/* White text layer - clipped to purple fill width */}
+                        <motion.div 
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+                          style={{ 
+                            width: `${levelInfo.progress}%`,
+                            minWidth: 0
+                          }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${levelInfo.progress}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        >
+                          <span 
+                            className="text-sm font-bold text-white drop-shadow-md whitespace-nowrap"
+                            style={{ 
+                              width: '100%',
+                              position: 'absolute',
+                              left: 0,
+                              right: 0,
+                              textAlign: 'center',
+                              minWidth: 300
+                            }}
+                          >
+                            {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
+                          </span>
+                        </motion.div>
                       </div>
                     </>
                   )}
