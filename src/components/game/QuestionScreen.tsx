@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
+import { useSound } from "@/contexts/SoundContext";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
@@ -9,6 +10,7 @@ import { Check, X, Crown, Zap } from "lucide-react";
 type AnswerState = "idle" | "selected" | "revealed";
 
 export function QuestionScreen() {
+  const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
   const { 
     questions, 
     currentQuestionIndex, 
@@ -30,6 +32,12 @@ export function QuestionScreen() {
     playerTimerBonus,
     opponentFrozen,
   } = useGame();
+
+  // Start background music when game starts
+  useEffect(() => {
+    startBackgroundMusic();
+    return () => stopBackgroundMusic();
+  }, [startBackgroundMusic, stopBackgroundMusic]);
 
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -68,8 +76,28 @@ export function QuestionScreen() {
 
   const handleUsePowerUp = useCallback((type: PowerUpType) => {
     if (answerState !== "idle") return;
+    
+    // Play power-up specific sound
+    switch (type) {
+      case "fifty-fifty":
+        playSound("power-up-5050");
+        break;
+      case "freeze":
+        playSound("power-up-freeze");
+        break;
+      case "replace":
+        playSound("power-up-replace");
+        break;
+      case "time-drain":
+        playSound("power-up-time-drain");
+        break;
+      default:
+        playSound("power-up");
+    }
+    vibrate([30, 20, 30]);
+    
     usePowerUp(type);
-  }, [answerState, usePowerUp]);
+  }, [answerState, usePowerUp, playSound, vibrate]);
 
   // Timer
   useEffect(() => {

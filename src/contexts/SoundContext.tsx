@@ -14,7 +14,11 @@ export type SoundEffect =
   | "button-click"
   | "level-up"
   | "reward"
-  | "power-up";
+  | "power-up"
+  | "power-up-5050"
+  | "power-up-freeze"
+  | "power-up-replace"
+  | "power-up-time-drain";
 
 interface SoundContextType {
   musicEnabled: boolean;
@@ -29,6 +33,11 @@ interface SoundContextType {
   // Helper functions
   playSound: (soundId: SoundEffect) => void;
   vibrate: (pattern?: number | number[]) => void;
+  
+  // Background music
+  startBackgroundMusic: () => void;
+  stopBackgroundMusic: () => void;
+  isPlayingMusic: boolean;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -182,7 +191,7 @@ function createSynthSound(
     }
 
     case "power-up": {
-      // Power-up whoosh
+      // Generic power-up whoosh
       const osc = audioContext.createOscillator();
       osc.type = "sine";
       osc.frequency.setValueAtTime(200, now);
@@ -192,7 +201,163 @@ function createSynthSound(
       osc.stop(now + 0.25);
       break;
     }
+
+    case "power-up-5050": {
+      // 50/50 - Two quick "elimination" sounds
+      gainNode.gain.value = volume * 0.25;
+      [800, 400].forEach((freq, i) => {
+        const osc = audioContext.createOscillator();
+        osc.type = "square";
+        osc.frequency.value = freq;
+        const localGain = audioContext.createGain();
+        localGain.gain.setValueAtTime(volume * 0.2, now + i * 0.15);
+        localGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.12);
+        osc.connect(localGain);
+        localGain.connect(audioContext.destination);
+        osc.start(now + i * 0.15);
+        osc.stop(now + i * 0.15 + 0.12);
+      });
+      break;
+    }
+
+    case "power-up-freeze": {
+      // Freeze - Icy crystalline sound with shimmer
+      gainNode.gain.value = volume * 0.2;
+      [2000, 2400, 2800, 3200].forEach((freq, i) => {
+        const osc = audioContext.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        const localGain = audioContext.createGain();
+        localGain.gain.setValueAtTime(volume * 0.15, now + i * 0.03);
+        localGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.03 + 0.4);
+        osc.connect(localGain);
+        localGain.connect(audioContext.destination);
+        osc.start(now + i * 0.03);
+        osc.stop(now + i * 0.03 + 0.4);
+      });
+      // Add a low rumble
+      const rumble = audioContext.createOscillator();
+      rumble.type = "sine";
+      rumble.frequency.value = 80;
+      const rumbleGain = audioContext.createGain();
+      rumbleGain.gain.setValueAtTime(volume * 0.1, now);
+      rumbleGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      rumble.connect(rumbleGain);
+      rumbleGain.connect(audioContext.destination);
+      rumble.start(now);
+      rumble.stop(now + 0.5);
+      break;
+    }
+
+    case "power-up-replace": {
+      // Replace - Swap/shuffle sound
+      gainNode.gain.value = volume * 0.2;
+      // Descending then ascending - like cards shuffling
+      [600, 500, 400, 500, 600, 800].forEach((freq, i) => {
+        const osc = audioContext.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        const localGain = audioContext.createGain();
+        localGain.gain.setValueAtTime(volume * 0.15, now + i * 0.04);
+        localGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.04 + 0.08);
+        osc.connect(localGain);
+        localGain.connect(audioContext.destination);
+        osc.start(now + i * 0.04);
+        osc.stop(now + i * 0.04 + 0.1);
+      });
+      break;
+    }
+
+    case "power-up-time-drain": {
+      // Time Drain - Dramatic descending whoosh
+      gainNode.gain.value = volume * 0.2;
+      const drainOsc = audioContext.createOscillator();
+      drainOsc.type = "sawtooth";
+      drainOsc.frequency.setValueAtTime(1000, now);
+      drainOsc.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+      const drainGain = audioContext.createGain();
+      drainGain.gain.setValueAtTime(volume * 0.15, now);
+      drainGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      drainOsc.connect(drainGain);
+      drainGain.connect(audioContext.destination);
+      drainOsc.start(now);
+      drainOsc.stop(now + 0.5);
+      break;
+    }
   }
+}
+
+// Generate looping background music using Web Audio API
+function createBackgroundMusic(
+  audioContext: AudioContext,
+  volume: number
+): { gainNode: GainNode; oscillators: OscillatorNode[] } {
+  const masterGain = audioContext.createGain();
+  masterGain.gain.value = volume * 0.15;
+  masterGain.connect(audioContext.destination);
+
+  const oscillators: OscillatorNode[] = [];
+
+  // Create a simple ambient pad with multiple oscillators
+  const baseFrequencies = [130.81, 164.81, 196.00, 261.63]; // C major chord
+  
+  baseFrequencies.forEach((freq, i) => {
+    const osc = audioContext.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+
+    // Add subtle vibrato
+    const lfo = audioContext.createOscillator();
+    lfo.type = "sine";
+    lfo.frequency.value = 0.5 + i * 0.1;
+    
+    const lfoGain = audioContext.createGain();
+    lfoGain.gain.value = 2;
+    
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    // Individual gain for layering
+    const oscGain = audioContext.createGain();
+    oscGain.gain.value = 0.25;
+    
+    osc.connect(oscGain);
+    oscGain.connect(masterGain);
+
+    lfo.start();
+    osc.start();
+    
+    oscillators.push(osc);
+  });
+
+  // Add a gentle bass pulse
+  const bassOsc = audioContext.createOscillator();
+  bassOsc.type = "sine";
+  bassOsc.frequency.value = 65.41; // Low C
+  
+  const bassGain = audioContext.createGain();
+  bassGain.gain.value = 0.3;
+  
+  // Subtle pulsing
+  const pulseLfo = audioContext.createOscillator();
+  pulseLfo.type = "sine";
+  pulseLfo.frequency.value = 0.25;
+  
+  const pulseGain = audioContext.createGain();
+  pulseGain.gain.value = 0.1;
+  
+  pulseLfo.connect(pulseGain);
+  pulseGain.connect(bassGain.gain);
+  
+  bassOsc.connect(bassGain);
+  bassGain.connect(masterGain);
+  
+  pulseLfo.start();
+  bassOsc.start();
+  
+  oscillators.push(bassOsc);
+
+  return { gainNode: masterGain, oscillators };
 }
 
 export function SoundProvider({ children }: { children: ReactNode }) {
@@ -210,7 +375,9 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     return defaultSettings;
   });
 
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const musicRef = useRef<{ gainNode: GainNode; oscillators: OscillatorNode[] } | null>(null);
 
   // Initialize AudioContext on first user interaction
   useEffect(() => {
@@ -241,6 +408,24 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(SOUND_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
 
+  // Stop music when music is disabled
+  useEffect(() => {
+    if (!settings.musicEnabled && musicRef.current) {
+      musicRef.current.oscillators.forEach(osc => {
+        try { osc.stop(); } catch {}
+      });
+      musicRef.current = null;
+      setIsPlayingMusic(false);
+    }
+  }, [settings.musicEnabled]);
+
+  // Update music volume when volume changes
+  useEffect(() => {
+    if (musicRef.current) {
+      musicRef.current.gainNode.gain.value = settings.volume * 0.15;
+    }
+  }, [settings.volume]);
+
   const setMusicEnabled = useCallback((enabled: boolean) => {
     setSettings((prev) => ({ ...prev, musicEnabled: enabled }));
   }, []);
@@ -255,6 +440,59 @@ export function SoundProvider({ children }: { children: ReactNode }) {
 
   const setVolume = useCallback((volume: number) => {
     setSettings((prev) => ({ ...prev, volume: Math.max(0, Math.min(1, volume)) }));
+  }, []);
+
+  // Start background music
+  const startBackgroundMusic = useCallback(() => {
+    if (!settings.musicEnabled || isPlayingMusic) return;
+    
+    // Initialize AudioContext if needed
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+
+    const audioContext = audioContextRef.current;
+    
+    // Resume AudioContext if suspended
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+
+    try {
+      // Stop any existing music
+      if (musicRef.current) {
+        musicRef.current.oscillators.forEach(osc => {
+          try { osc.stop(); } catch {}
+        });
+      }
+
+      musicRef.current = createBackgroundMusic(audioContext, settings.volume);
+      setIsPlayingMusic(true);
+    } catch (error) {
+      console.error("Error starting background music:", error);
+    }
+  }, [settings.musicEnabled, settings.volume, isPlayingMusic]);
+
+  // Stop background music
+  const stopBackgroundMusic = useCallback(() => {
+    if (musicRef.current) {
+      // Fade out gracefully
+      const fadeTime = 0.5;
+      musicRef.current.gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        (audioContextRef.current?.currentTime || 0) + fadeTime
+      );
+      
+      setTimeout(() => {
+        if (musicRef.current) {
+          musicRef.current.oscillators.forEach(osc => {
+            try { osc.stop(); } catch {}
+          });
+          musicRef.current = null;
+        }
+        setIsPlayingMusic(false);
+      }, fadeTime * 1000);
+    }
   }, []);
 
   // Play sound effect using Web Audio API
@@ -295,6 +533,17 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     [settings.vibrationEnabled]
   );
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (musicRef.current) {
+        musicRef.current.oscillators.forEach(osc => {
+          try { osc.stop(); } catch {}
+        });
+      }
+    };
+  }, []);
+
   return (
     <SoundContext.Provider
       value={{
@@ -308,6 +557,9 @@ export function SoundProvider({ children }: { children: ReactNode }) {
         setVolume,
         playSound,
         vibrate,
+        startBackgroundMusic,
+        stopBackgroundMusic,
+        isPlayingMusic,
       }}
     >
       {children}

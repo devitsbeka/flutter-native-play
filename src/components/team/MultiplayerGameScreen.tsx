@@ -11,7 +11,7 @@ type AnswerState = "idle" | "selected" | "revealed";
 
 export function MultiplayerGameScreen() {
   const { user, profile } = useAuth();
-  const { playSound, vibrate } = useSound();
+  const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
   const {
     questions,
     currentQuestionIndex,
@@ -26,6 +26,12 @@ export function MultiplayerGameScreen() {
     opponentAnswer,
     participants,
   } = useMultiplayer();
+
+  // Start background music when game starts
+  useEffect(() => {
+    startBackgroundMusic();
+    return () => stopBackgroundMusic();
+  }, [startBackgroundMusic, stopBackgroundMusic]);
 
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
