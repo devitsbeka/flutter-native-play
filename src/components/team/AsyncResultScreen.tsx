@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, Trophy, ArrowRight, Home, Bell } from "lucide-react";
+import { Clock, Trophy, ArrowRight, Home, Bell, RotateCcw, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -18,18 +18,25 @@ interface AsyncResultScreenProps {
   myScore: number;
   isChallenger: boolean;
   opponentCompleted: boolean;
+  roomCategoryId?: string;
+  roomCategoryName?: string;
+  opponentUserId?: string;
 }
 
 export function AsyncResultScreen({ 
   challengerInfo, 
   myScore, 
   isChallenger,
-  opponentCompleted 
+  opponentCompleted,
+  roomCategoryId,
+  roomCategoryName,
+  opponentUserId,
 }: AsyncResultScreenProps) {
   const navigate = useNavigate();
-  const { resetMultiplayer } = useMultiplayer();
+  const { resetMultiplayer, createChallengeRoom } = useMultiplayer();
   const { playSound, vibrate } = useSound();
   const hasPlayedSound = useRef(false);
+  const [isRematchLoading, setIsRematchLoading] = useState(false);
 
   useEffect(() => {
     if (hasPlayedSound.current) return;
@@ -76,6 +83,34 @@ export function AsyncResultScreen({
   const handleSendReminder = () => {
     toast.success("შეხსენება გაიგზავნა!");
     // In a real implementation, this would send a push notification
+  };
+
+  const handleRematch = async () => {
+    if (!opponentUserId || !roomCategoryId || !roomCategoryName) {
+      toast.error("რემატჩი ვერ მოხერხდა");
+      return;
+    }
+
+    setIsRematchLoading(true);
+    try {
+      const success = await createChallengeRoom(
+        opponentUserId,
+        roomCategoryId,
+        roomCategoryName,
+        false // async rematch
+      );
+
+      if (success) {
+        toast.success("რემატჩის გამოწვევა გაიგზავნა!");
+        resetMultiplayer();
+        navigate("/team");
+      }
+    } catch (error) {
+      console.error("Rematch error:", error);
+      toast.error("რემატჩი ვერ მოხერხდა");
+    } finally {
+      setIsRematchLoading(false);
+    }
   };
 
   const handleBackToTeam = () => {
@@ -256,6 +291,19 @@ export function AsyncResultScreen({
 
           {/* Actions */}
           <div className="space-y-3">
+            {/* Rematch Button */}
+            {opponentUserId && roomCategoryId && roomCategoryName && (
+              <ChunkyButton
+                variant="secondary"
+                className="w-full"
+                onClick={handleRematch}
+                disabled={isRematchLoading}
+                icon={isRematchLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RotateCcw className="w-5 h-5" />}
+              >
+                {isRematchLoading ? "იგზავნება..." : "რემატჩი"}
+              </ChunkyButton>
+            )}
+            
             <ChunkyButton
               variant="primary"
               className="w-full"
