@@ -167,24 +167,24 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
         }}
       />
       
-      {/* Bottom 3D depth layer - darkest teal */}
+      {/* Bottom 3D depth layer - lighter mint-teal */}
       <div
         className="absolute rounded-full"
         style={{
           inset: 0,
           top: 6,
-          background: "linear-gradient(180deg, #1E8563 0%, #166A50 50%, #0F5A42 100%)",
+          background: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
         }}
       />
       
-      {/* Middle bevel layer - medium teal */}
+      {/* Middle bevel layer - light mint */}
       <div
         className="absolute rounded-full"
         style={{
           inset: 3,
           top: 4,
           bottom: 8,
-          background: "linear-gradient(180deg, #2DB888 0%, #259F72 100%)",
+          background: "linear-gradient(180deg, #7EECC5 0%, #6ADDB5 100%)",
         }}
       />
       
@@ -228,18 +228,21 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
         ))}
         
         {/* Icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+        >
           {isPlayButton ? (
             <Play 
               className="w-8 h-8 ml-1" 
-              fill="#1a3d2e"
-              stroke="#1a3d2e"
+              fill="#ffffff"
+              stroke="#ffffff"
               strokeWidth={0}
             />
           ) : (
             <Home 
               className="w-7 h-7" 
-              color="#1a3d2e"
+              color="#ffffff"
               strokeWidth={2.5}
             />
           )}
