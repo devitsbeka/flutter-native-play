@@ -29,6 +29,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminCategories from "./pages/admin/Categories";
 import AdminQuestions from "./pages/admin/Questions";
 import AdminOnlineUsers from "./pages/admin/OnlineUsers";
+import AdminImport from "./pages/admin/Import";
 
 const App = () => (
   <AuthProvider>
@@ -63,6 +64,7 @@ const App = () => (
                 <Route index element={<AdminDashboard />} />
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="questions" element={<AdminQuestions />} />
+                <Route path="import" element={<AdminImport />} />
                 <Route path="users" element={<AdminOnlineUsers />} />
               </Route>
               <Route path="*" element={<NotFound />} />
