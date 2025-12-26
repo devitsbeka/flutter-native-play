@@ -12,6 +12,7 @@ import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetailModal";
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
 import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
+import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -381,7 +382,7 @@ export default function Index() {
         {/* ===== CENTER: AVATAR WITH ARC BADGES ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <motion.div 
-            className="flex flex-col items-center w-full max-w-[280px]"
+            className="flex flex-col items-center w-full max-w-[360px]"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
@@ -389,21 +390,21 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar container - simple transparent PNG display */}
+            {/* Avatar container with floating animation */}
             <motion.div 
               className="relative"
               animate={isRefreshing ? {
                 rotateY: [0, 360],
                 y: [0, -10, 0],
               } : { 
-                y: [0, -5, 0],
+                y: [0, -8, 0],
                 rotateY: 0,
               }}
               transition={isRefreshing ? {
                 rotateY: { duration: 0.8, ease: "easeInOut" },
                 y: { duration: 0.4, ease: "easeOut" },
               } : { 
-                duration: 3, 
+                duration: 4, 
                 repeat: Infinity, 
                 ease: "easeInOut" 
               }}
@@ -412,47 +413,27 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
-              {/* Avatar image - circular display with gradient background */}
-              <div className="w-[280px] h-[280px] relative flex items-center justify-center" data-walkthrough="avatar">
-                {/* Gradient background circle */}
-                <div 
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: "linear-gradient(145deg, #4a5568 0%, #2d3748 50%, #1a202c 100%)",
-                  }}
-                />
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="Avatar" 
-                    className="w-full h-full object-cover rounded-full border-4 border-white/20 shadow-2xl relative z-10"
-                    style={{
-                      backfaceVisibility: "hidden",
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full border-4 border-white/20 flex items-center justify-center relative z-10">
-                    <span className="text-7xl">🎮</span>
-                  </div>
-                )}
+              {/* Avatar Circle Component */}
+              <div data-walkthrough="avatar">
+                <AvatarCircle avatarUrl={profile?.avatar_url} size={320} />
               </div>
                 
               {/* Power badges in curved arc at top of avatar */}
               <div 
                 className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" 
-                style={{ marginTop: -80 }}
+                style={{ marginTop: -60 }}
                 data-walkthrough="powerups"
               >
                 {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
                   // True curved arc using calculated positions
                   const totalBadges = 5;
-                  const arcSpan = 130; // flatter curve
-                  const startAngle = -65; // start position
+                  const arcSpan = 140; // slightly wider curve
+                  const startAngle = -70; // start position
                   const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                  const radius = 140; // wider horizontal spread
+                  const radius = 160; // wider radius to match bigger circle
                   const radians = (angle * Math.PI) / 180;
                   const x = Math.sin(radians) * radius;
-                  const y = -Math.cos(radians) * radius + radius; // offset so top of arc is at 0
+                  const y = -Math.cos(radians) * radius + radius;
                   
                   return (
                     <motion.div
@@ -464,7 +445,7 @@ export default function Index() {
                       style={{ 
                         left: "50%",
                         top: 0,
-                        marginLeft: -24, // half badge size
+                        marginLeft: -24,
                       }}
                     >
                       <PowerUpBadge 
