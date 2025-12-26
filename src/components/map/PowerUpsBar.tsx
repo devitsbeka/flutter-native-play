@@ -61,7 +61,7 @@ export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
     >
       {/* Title */}
       <h3 
-        className="text-center font-display text-lg mb-4"
+        className="text-left font-display text-lg mb-4"
         style={{ color: "#7C3AED" }}
       >
         შენი ძალები
@@ -69,12 +69,8 @@ export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
       
       {/* Power-ups row */}
       <div 
-        className="flex items-center justify-center gap-4 p-4 rounded-2xl"
-        style={{
-          background: "rgba(255, 255, 255, 0.85)",
-          backdropFilter: "blur(20px)",
-          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.08)",
-        }}
+        className="flex items-center justify-center gap-4 p-4"
+        style={{ marginTop: "-10px" }}
       >
         {powers.map((power, index) => (
           <motion.div
@@ -119,14 +115,14 @@ export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.9 }}
           onClick={onAddClick}
-          className="w-14 h-14 rounded-full flex items-center justify-center"
+          className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200"
           style={{
-            background: "linear-gradient(135deg, #22C55E, #16A34A)",
-            boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)",
+            background: "rgba(255, 255, 255, 0.9)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
           }}
           whileTap={{ scale: 0.95 }}
         >
-          <Plus className="w-7 h-7 text-white" />
+          <Plus className="w-7 h-7 text-gray-500" />
         </motion.button>
       </div>
     </motion.div>
