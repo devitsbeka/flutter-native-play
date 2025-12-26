@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { categories, Category } from "@/data/categories";
+import { Category } from "@/data/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 
@@ -95,6 +96,7 @@ export default function Discover() {
   const [activeTab, setActiveTab] = useState<CategoryType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
 
   // Filter categories by tab and search
@@ -198,27 +200,35 @@ export default function Discover() {
           className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-32 scroll-smooth"
           style={{ scrollBehavior: "smooth" }}
         >
-          {/* Category Count - scrolls with content */}
-          <p className="text-sm text-slate-600 py-3">
-            <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
-          </p>
-          
-          <div className="grid grid-cols-1 gap-[15px]">
-            {filteredCategories.map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-              >
-                <CategoryCard 
-                  category={category} 
-                  onClick={() => handleCategoryClick(category)}
-                  completedLevels={progress[category.id]?.completedLevels?.length || 0}
-                />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+          ) : (
+            <>
+              {/* Category Count - scrolls with content */}
+              <p className="text-sm text-slate-600 py-3">
+                <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
+              </p>
+              
+              <div className="grid grid-cols-1 gap-[15px]">
+                {filteredCategories.map((category, index) => (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <CategoryCard 
+                      category={category} 
+                      onClick={() => handleCategoryClick(category)}
+                      completedLevels={progress[category.id]?.completedLevels?.length || 0}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
