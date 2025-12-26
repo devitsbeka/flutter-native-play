@@ -49,45 +49,10 @@ async function pollForResult(orderId: string, maxAttempts = 60): Promise<string>
       throw new Error(data.body.error || "Operation failed");
     }
 
-    // Wait 2 seconds before next poll
     await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   throw new Error("Operation timed out");
-}
-
-async function removeBackground(imageUrl: string): Promise<string> {
-  console.log("Starting background removal for:", imageUrl.substring(0, 100));
-  
-  const response = await fetch("https://api.lightxeditor.com/external/api/v1/remove-background", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": LIGHTX_API_KEY!,
-    },
-    body: JSON.stringify({
-      imageUrl: imageUrl,
-    }),
-  });
-
-  const data = await response.json();
-  console.log("LightX remove-bg response:", JSON.stringify(data));
-
-  if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
-    throw new Error(`LightX remove-bg API error: ${data.message || JSON.stringify(data)}`);
-  }
-
-  const orderId = data.body?.orderId || data.orderId;
-  if (!orderId) {
-    throw new Error(`No orderId in remove-bg response: ${JSON.stringify(data)}`);
-  }
-
-  console.log("Background removal orderId:", orderId);
-
-  const resultUrl = await pollForResult(orderId);
-  console.log("Background removed successfully:", resultUrl);
-
-  return resultUrl;
 }
 
 serve(async (req) => {
@@ -108,7 +73,7 @@ serve(async (req) => {
 
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
 
-    // Step 1: Generate avatar with prompt only (no style image)
+    // Single API call: Generate 3D avatar
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
@@ -117,7 +82,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         imageUrl: imageUrl,
-        textPrompt: "High quality 3D cartoon avatar, Disney Pixar animation style, friendly welcoming expression, soft studio lighting, vibrant colors, detailed facial features, smooth skin texture, expressive eyes, full head and shoulders visible with extra space around head, centered composition",
+        textPrompt: "High quality 3D cartoon avatar, Disney Pixar animation style, friendly welcoming expression, soft studio lighting, vibrant colors, detailed facial features, smooth skin texture, expressive eyes, centered face composition",
         styleStrength: 50,
       }),
     });
@@ -136,20 +101,13 @@ serve(async (req) => {
     
     console.log("Got orderId:", orderId);
 
-    // Poll for the avatar generation result
     const avatarUrl = await pollForResult(orderId);
     console.log("Avatar generated successfully:", avatarUrl);
-
-    // Step 2: Remove background
-    console.log("Step 2: Removing background...");
-    const finalAvatarUrl = await removeBackground(avatarUrl);
-    console.log("Final avatar with transparent background:", finalAvatarUrl);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        avatarUrl: finalAvatarUrl,
-        originalAvatarUrl: avatarUrl,
+        avatarUrl: avatarUrl,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
