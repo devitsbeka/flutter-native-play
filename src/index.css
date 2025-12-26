@@ -279,4 +279,34 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.25),
       inset 0 -1px 0 hsl(0 0% 0% / 0.2);
   }
+
+  /* Hide mobile video controls - universal iOS/Safari/Android fix */
+  video::-webkit-media-controls {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+  video::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+  video::-webkit-media-controls-play-button {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+  video::-webkit-media-controls-panel {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+  video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+  video::-webkit-media-controls-enclosure {
+    display: none !important;
+    -webkit-appearance: none;
+  }
+  video::--webkit-media-controls-container {
+    display: none !important;
+    -webkit-appearance: none;
+  }
 }

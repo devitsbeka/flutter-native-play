@@ -51,6 +51,66 @@ export function VideoAdventureMap() {
     fetchProfile();
   }, [user]);
 
+  // Unlock videos on first user interaction (iOS requirement)
+  useEffect(() => {
+    const unlockVideos = () => {
+      [videoDefaultRef, videoBRef, videoCRef].forEach(ref => {
+        const video = ref.current;
+        if (video) {
+          video.play().then(() => {
+            if (ref !== videoDefaultRef) video.pause();
+          }).catch(() => {});
+        }
+      });
+    };
+    
+    document.addEventListener('touchstart', unlockVideos, { once: true });
+    document.addEventListener('click', unlockVideos, { once: true });
+    
+    return () => {
+      document.removeEventListener('touchstart', unlockVideos);
+      document.removeEventListener('click', unlockVideos);
+    };
+  }, []);
+
+  // Resume video when app comes back to foreground
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const currentVideo = 
+          currentPhase === "default" ? videoDefaultRef.current :
+          currentPhase === "video-b" ? videoBRef.current :
+          videoCRef.current;
+        
+        if (currentVideo && currentVideo.paused) {
+          currentVideo.currentTime = currentVideo.currentTime; // Force re-sync
+          currentVideo.play().catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also handle page focus for additional coverage
+    const handleFocus = () => {
+      const currentVideo = 
+        currentPhase === "default" ? videoDefaultRef.current :
+        currentPhase === "video-b" ? videoBRef.current :
+        videoCRef.current;
+      
+      if (currentVideo && currentVideo.paused) {
+        currentVideo.play().catch(() => {});
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [currentPhase]);
+
   // Preload and prepare videos
   useEffect(() => {
     const videoB = videoBRef.current;
@@ -121,6 +181,8 @@ export function VideoAdventureMap() {
           transitioningRef.current = false;
         });
       }).catch(() => {
+        // Fallback: switch anyway if play fails
+        setCurrentPhase(newPhase);
         transitioningRef.current = false;
       });
     });
@@ -134,29 +196,41 @@ export function VideoAdventureMap() {
     }
   }, [videosReady.default]);
 
-  // Pre-buffer next video when approaching end
-  const handleTimeUpdate = useCallback((video: HTMLVideoElement, nextVideo: HTMLVideoElement) => {
-    if (video.duration && video.currentTime > video.duration - 0.3) {
-      // Pre-seek and decode next video
-      nextVideo.currentTime = 0;
-      nextVideo.play().then(() => nextVideo.pause()).catch(() => {});
-    }
-  }, []);
-
+  // Pre-buffer Video C when Video B reaches 50% - and use timeupdate for transition
   useEffect(() => {
     const videoB = videoBRef.current;
     const videoC = videoCRef.current;
 
     if (!videoB || !videoC) return;
 
-    const handleBTimeUpdate = () => handleTimeUpdate(videoB, videoC);
+    let preBuffered = false;
+
+    const handleBTimeUpdate = () => {
+      if (!videoB.duration) return;
+      
+      // Pre-buffer Video C when B is at 50%
+      if (videoB.currentTime > videoB.duration * 0.5 && !preBuffered) {
+        preBuffered = true;
+        videoC.currentTime = 0;
+        videoC.load();
+        // Pre-warm by playing briefly
+        videoC.play().then(() => videoC.pause()).catch(() => {});
+      }
+      
+      // Transition 100ms before end (more buffer than 50ms)
+      if (videoB.currentTime >= videoB.duration - 0.1 && !transitioningRef.current) {
+        if (videoC.readyState >= 3) { // HAVE_FUTURE_DATA
+          transitionToPhase("video-c");
+        }
+      }
+    };
     
     videoB.addEventListener('timeupdate', handleBTimeUpdate);
     
     return () => {
       videoB.removeEventListener('timeupdate', handleBTimeUpdate);
     };
-  }, [handleTimeUpdate]);
+  }, [transitionToPhase]);
 
   const handleBack = () => {
     navigate(-1);
@@ -172,14 +246,31 @@ export function VideoAdventureMap() {
     transitionToPhase("video-b");
   };
 
-  // Handle video B ended - transition to video C
+  // Fallback: Handle video B ended - transition to video C
   const handleVideoBEnded = () => {
-    transitionToPhase("video-c");
+    if (!transitioningRef.current) {
+      transitionToPhase("video-c");
+    }
   };
 
   // Handle video C ended - transition back to default
   const handleVideoCEnded = () => {
     transitionToPhase("default");
+  };
+
+  // Common video attributes for iOS/Safari/mobile compatibility
+  const videoAttributes = {
+    muted: true,
+    playsInline: true,
+    preload: "auto" as const,
+    disablePictureInPicture: true,
+    disableRemotePlayback: true,
+    controls: false,
+    // iOS specific attributes
+    "webkit-playsinline": "true",
+    "x5-playsinline": "true",
+    "x5-video-player-type": "h5",
+    "x5-video-player-fullscreen": "false",
   };
 
   return (
@@ -191,9 +282,7 @@ export function VideoAdventureMap() {
           ref={videoDefaultRef}
           autoPlay
           loop
-          muted
-          playsInline
-          preload="auto"
+          {...videoAttributes}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ 
             zIndex: 0,
@@ -207,9 +296,7 @@ export function VideoAdventureMap() {
         {/* Video B (plays once) */}
         <video
           ref={videoBRef}
-          muted
-          playsInline
-          preload="auto"
+          {...videoAttributes}
           onEnded={handleVideoBEnded}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ 
@@ -224,9 +311,7 @@ export function VideoAdventureMap() {
         {/* Video C (plays once) */}
         <video
           ref={videoCRef}
-          muted
-          playsInline
-          preload="auto"
+          {...videoAttributes}
           onEnded={handleVideoCEnded}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ 
