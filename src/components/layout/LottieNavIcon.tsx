@@ -30,7 +30,7 @@ export function LottieNavIcon({
       style={{ 
         width: size, 
         height: size,
-        padding: 4,
+        padding: 0,
       }}
     >
       <div
