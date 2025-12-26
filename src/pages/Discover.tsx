@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { Category } from "@/data/categories";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { supabase } from "@/integrations/supabase/client";
 
 type CategoryType = "all" | "classic" | "fun" | "educational";
 
@@ -157,9 +158,23 @@ export default function Discover() {
   const [activeTab, setActiveTab] = useState<CategoryType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
   const navigate = useNavigate();
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
+
+  // Fetch total questions count
+  useEffect(() => {
+    const fetchTotalQuestions = async () => {
+      const { count } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+      
+      setTotalQuestions(count);
+    };
+    fetchTotalQuestions();
+  }, []);
 
   // Filter categories by tab and search
   const filteredCategories = categories.filter((category) => {
@@ -329,9 +344,15 @@ export default function Discover() {
             </div>
           ) : (
             <>
-              {/* Category Count - scrolls with content */}
+              {/* Category & Questions Count - scrolls with content */}
               <p className="text-sm text-slate-600 py-3">
                 <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
+                {totalQuestions !== null && (
+                  <>
+                    <span className="mx-2 text-slate-400">•</span>
+                    <span className="font-bold text-slate-800">{totalQuestions.toLocaleString('ka-GE')}</span> კითხვა
+                  </>
+                )}
               </p>
               
               <div className="grid grid-cols-1 gap-[15px]">
