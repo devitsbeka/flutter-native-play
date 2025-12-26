@@ -73,7 +73,11 @@ serve(async (req) => {
 
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
 
-    // Single API call: Generate 3D avatar with text prompt only
+    // Single API call: Generate 3D avatar with style image and text prompt
+    // Use a 3D Pixar-style avatar as the style reference
+    // This is a publicly accessible placeholder image in the same style we want
+    const styleImageUrl = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=512&h=512&fit=crop";
+    
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
@@ -82,6 +86,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         imageUrl: imageUrl,
+        styleImageUrl: styleImageUrl,
         textPrompt: "High quality 3D cartoon avatar, Disney Pixar animation style, friendly welcoming expression, soft studio lighting, vibrant colors, detailed facial features, smooth skin texture, expressive eyes, centered face composition",
       }),
     });
