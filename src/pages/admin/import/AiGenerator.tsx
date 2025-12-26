@@ -10,8 +10,8 @@ import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { QuestionPreviewList } from './QuestionPreviewList';
-import { validateQuestion, ParsedQuestion } from '@/hooks/useQuestionParser';
+import { QuestionPreviewList, SelectableParsedQuestion } from './QuestionPreviewList';
+import { validateQuestion } from '@/hooks/useQuestionParser';
 
 // Normalize text for comparison (lowercase, trim, remove extra spaces)
 function normalizeText(text: string): string {
@@ -40,7 +40,7 @@ export function AiGenerator() {
   const [count, setCount] = useState(10);
   const [topic, setTopic] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
+  const [parsedQuestions, setParsedQuestions] = useState<SelectableParsedQuestion[]>([]);
   const [importing, setImporting] = useState(false);
   const [duplicatesFound, setDuplicatesFound] = useState(0);
 
@@ -74,7 +74,7 @@ export function AiGenerator() {
       const existingTexts = (existingQuestions || []).map(q => q.question_text);
 
       // Generate questions in batches of 5
-      const allQuestions: ParsedQuestion[] = [];
+      const allQuestions: SelectableParsedQuestion[] = [];
       const seenQuestions = new Set<string>();
       const batches = Math.ceil(count / 5);
       let totalDuplicates = 0;
@@ -122,6 +122,7 @@ export function AiGenerator() {
             allQuestions.push({
               ...normalizedQ,
               ...validation,
+              selected: true, // Auto-select valid questions
             });
           }
         }
@@ -163,11 +164,11 @@ export function AiGenerator() {
       return;
     }
 
-    const validQuestions = parsedQuestions.filter((q) => q.isValid);
-    if (validQuestions.length === 0) {
+    const selectedQuestions = parsedQuestions.filter((q) => q.isValid && q.selected);
+    if (selectedQuestions.length === 0) {
       toast({
         title: 'შეცდომა',
-        description: 'ვალიდური კითხვები არ მოიძებნა',
+        description: 'გთხოვთ აირჩიოთ კითხვები იმპორტისთვის',
         variant: 'destructive',
       });
       return;
@@ -175,7 +176,7 @@ export function AiGenerator() {
 
     setImporting(true);
     try {
-      const questionsToImport = validQuestions.map((q) => ({
+      const questionsToImport = selectedQuestions.map((q) => ({
         category_id: selectedCategory,
         question_text: q.question_text,
         correct_answer: q.correct_answer,
@@ -195,7 +196,22 @@ export function AiGenerator() {
   };
 
   const validCount = parsedQuestions.filter((q) => q.isValid).length;
+  const selectedCount = parsedQuestions.filter((q) => q.isValid && q.selected).length;
   const invalidCount = parsedQuestions.length - validCount;
+
+  const handleSelectionChange = (index: number, selected: boolean) => {
+    setParsedQuestions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], selected };
+      return updated;
+    });
+  };
+
+  const handleSelectAll = (selected: boolean) => {
+    setParsedQuestions(prev => 
+      prev.map(q => q.isValid ? { ...q, selected } : q)
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -302,7 +318,7 @@ export function AiGenerator() {
             <div className="flex gap-3">
               <Button
                 onClick={handleImport}
-                disabled={importing || validCount === 0}
+                disabled={importing || selectedCount === 0}
                 className="flex-1"
               >
                 {importing ? (
@@ -311,7 +327,7 @@ export function AiGenerator() {
                     იმპორტი...
                   </>
                 ) : (
-                  `${validCount} კითხვის იმპორტი`
+                  `${selectedCount} კითხვის იმპორტი`
                 )}
               </Button>
               <Button variant="outline" onClick={() => setParsedQuestions([])}>
@@ -319,7 +335,12 @@ export function AiGenerator() {
               </Button>
             </div>
 
-            <QuestionPreviewList questions={parsedQuestions} />
+            <QuestionPreviewList 
+              questions={parsedQuestions} 
+              showSelection={true}
+              onSelectionChange={handleSelectionChange}
+              onSelectAll={handleSelectAll}
+            />
           </CardContent>
         </Card>
       )}
