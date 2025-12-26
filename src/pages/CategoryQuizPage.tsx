@@ -302,7 +302,15 @@ export default function CategoryQuizPage() {
             navigate("/auth");
           }}
         />
-        <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
+        {/* Back button */}
+        <button
+          onClick={() => navigate(`/category/${categoryId}`)}
+          className="absolute top-4 left-4 z-20 p-2.5 rounded-full bg-foreground/10 backdrop-blur-sm hover:bg-foreground/20 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
