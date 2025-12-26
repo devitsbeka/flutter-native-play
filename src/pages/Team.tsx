@@ -11,6 +11,7 @@ import { RoomLobby } from "@/components/team/RoomLobby";
 import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
 import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScreen";
 import { WaitingForOpponentScreen } from "@/components/team/WaitingForOpponentScreen";
+import { AsyncResultScreen } from "@/components/team/AsyncResultScreen";
 import { FriendsList } from "@/components/team/FriendsList";
 import { RecentPlayersList } from "@/components/team/RecentPlayersList";
 import { RecentRoomsSection } from "@/components/team/RecentRoomsSection";
@@ -33,6 +34,9 @@ function TeamContent() {
   const { 
     phase, 
     room,
+    myScore,
+    asyncChallengerInfo,
+    asyncOpponentCompleted,
     showCreateModal, 
     setShowCreateModal, 
     showJoinModal, 
@@ -128,6 +132,19 @@ function TeamContent() {
   // Show result screen
   if (phase === "match-result") {
     return <MultiplayerResultScreen />;
+  }
+
+  // Show async result screen
+  if (phase === "async-result") {
+    const isChallenger = room?.host_user_id === user?.id;
+    return (
+      <AsyncResultScreen
+        challengerInfo={asyncChallengerInfo || undefined}
+        myScore={myScore}
+        isChallenger={isChallenger}
+        opponentCompleted={asyncOpponentCompleted}
+      />
+    );
   }
 
   // Show lobby if in room
