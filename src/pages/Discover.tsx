@@ -120,72 +120,81 @@ export default function Discover() {
       />
 
       {/* Content */}
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="px-4 pt-4 pb-3 safe-top">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/")}
-              className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
-            >
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
-            </button>
-            <h1 className="text-xl font-display font-bold text-slate-800">
-              აღმოაჩინე
-            </h1>
-          </div>
-        </header>
-
-        {/* Search Bar */}
-        <div className="px-4 pb-3">
-          <div 
-            className="relative rounded-2xl overflow-hidden"
-            style={{
-              background: "rgba(255,255,255,0.6)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,255,255,0.5)",
-            }}
-          >
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="მოძებნე კატეგორია..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Tabs - transparent container */}
-        <div className="px-4 pb-4">
-          <div className="flex gap-1 p-1.5 rounded-2xl">
-            {tabs.map((tab) => (
+      <div className="relative z-10 flex flex-col h-screen">
+        {/* Sticky Header Container */}
+        <div 
+          className="sticky top-0 z-20 shrink-0"
+          style={{
+            background: "linear-gradient(180deg, hsl(195 85% 75%) 0%, hsl(195 80% 85%) 100%)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+          }}
+        >
+          {/* Header */}
+          <header className="px-4 pt-4 pb-3 safe-top">
+            <div className="flex items-center gap-3">
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
-                  activeTab === tab.id
-                    ? "bg-purple-500 text-white shadow-lg"
-                    : "text-slate-600 hover:bg-white/50"
-                )}
+                onClick={() => navigate("/")}
+                className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
               >
-                {tab.label}
+                <ArrowLeft className="w-5 h-5 text-slate-600" />
               </button>
-            ))}
+              <h1 className="text-xl font-display font-bold text-slate-800">
+                აღმოაჩინე
+              </h1>
+            </div>
+          </header>
+
+          {/* Search Bar */}
+          <div className="px-4 pb-3">
+            <div 
+              className="relative rounded-2xl overflow-hidden"
+              style={{
+                background: "rgba(255,255,255,0.6)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.5)",
+              }}
+            >
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="მოძებნე კატეგორია..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Tabs - transparent container */}
+          <div className="px-4 pb-4">
+            <div className="flex gap-1 p-1.5 rounded-2xl">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
+                    activeTab === tab.id
+                      ? "bg-purple-500 text-white shadow-lg"
+                      : "text-slate-600 hover:bg-white/50"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category Count */}
+          <div className="px-4 pb-3">
+            <p className="text-sm text-slate-600">
+              <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
+            </p>
           </div>
         </div>
 
-        {/* Category Count */}
-        <div className="px-4 pb-3">
-          <p className="text-sm text-slate-600">
-            <span className="font-bold text-slate-800">{filteredCategories.length}</span> კატეგორია
-          </p>
-        </div>
-
-        {/* Category Grid - increased gap, no fill */}
-        <div className="px-4 pb-6 overflow-y-auto scrollbar-hide">
+        {/* Category Grid - scrollable area */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-32">
           <div className="grid grid-cols-1 gap-[15px]">
             {filteredCategories.map((category, index) => (
               <motion.div
