@@ -136,7 +136,8 @@ function NavButton({
   return (
     <motion.button
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-1 ${className}`}
+      className={`relative flex flex-col items-center gap-0 ${className}`}
+      style={{ marginTop: -5 }}
       whileHover={{ scale: 1.1, y: -3 }}
       whileTap={{ scale: 0.9 }}
     >
@@ -163,7 +164,7 @@ function NavButton({
         className={`text-[10px] uppercase tracking-wider font-semibold drop-shadow-sm ${
           isActive ? "text-primary font-bold" : "text-foreground/80"
         }`}
-        style={{ marginTop: -8 }}
+        style={{ marginTop: -12 }}
       >
         {label}
       </span>
