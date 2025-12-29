@@ -12,16 +12,6 @@ export interface TriviaQuestion {
   imageUrl?: string;
 }
 
-// Georgian categories for the game
-const georgianCategories = [
-  { id: "general", name: "ზოგადი ცოდნა" },
-  { id: "geography", name: "გეოგრაფია" },
-  { id: "history", name: "ისტორია" },
-  { id: "science", name: "მეცნიერება" },
-  { id: "culture", name: "კულტურა" },
-  { id: "sports", name: "სპორტი" },
-];
-
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -62,35 +52,58 @@ export function useTrivia() {
     setImagesReady(false);
 
     try {
-      // Select category
-      const selectedCategory = category 
-        ? georgianCategories.find(c => c.id === category) || georgianCategories[0]
-        : georgianCategories[Math.floor(Math.random() * georgianCategories.length)];
-
       setPreparationProgress(10);
-
-      // ============ DB-FIRST: Try to fetch from database first ============
-      // First, get the category UUID from the category_id string
-      const { data: categoryData } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('category_id', selectedCategory.id)
-        .single();
 
       let dbQuestions: any[] = [];
       let dbError: any = null;
 
-      if (categoryData) {
+      if (category) {
+        // Fetch from specific category
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('category_id', category)
+          .maybeSingle();
+
+        if (categoryData) {
+          const result = await supabase
+            .from('questions')
+            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id')
+            .eq('is_active', true)
+            .eq('category_id', categoryData.id)
+            .gte('level_number', level)
+            .lte('level_number', level + 2)
+            .limit(amount + 5);
+          
+          dbQuestions = (result.data || []).map(q => ({
+            ...q,
+            categoryName: categoryData.name
+          }));
+          dbError = result.error;
+        }
+      } else {
+        // Random mix mode - fetch from ALL active categories
         const result = await supabase
           .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id')
+          .select(`
+            id, 
+            question_text, 
+            correct_answer, 
+            incorrect_answers, 
+            difficulty, 
+            level_number,
+            categories!inner(name)
+          `)
           .eq('is_active', true)
-          .eq('category_id', categoryData.id)
-          .gte('level_number', level)
-          .lte('level_number', level + 2)
-          .limit(amount + 5);
+          .limit(50); // Fetch more to get a good random mix
         
-        dbQuestions = result.data || [];
+        if (result.data) {
+          // Shuffle and pick random questions
+          dbQuestions = shuffleArray(result.data).slice(0, amount + 5).map(q => ({
+            ...q,
+            categoryName: (q.categories as any)?.name || 'ზოგადი'
+          }));
+        }
         dbError = result.error;
       }
 
@@ -99,12 +112,11 @@ export function useTrivia() {
       let formattedQuestions: TriviaQuestion[] = [];
       const allHashes = new Set([...askedQuestionHashes, ...excludeHashes]);
 
-      // If we have enough DB questions, use them
-      if (!dbError && dbQuestions && dbQuestions.length >= amount) {
-        console.log(`Found ${dbQuestions.length} questions in database for ${selectedCategory.id}`);
+      if (!dbError && dbQuestions && dbQuestions.length > 0) {
+        console.log(`Found ${dbQuestions.length} questions${category ? ` for ${category}` : ' from all categories'}`);
         
         formattedQuestions = dbQuestions
-          .map((q: any, index: number) => {
+          .map((q: any) => {
             const incorrectAnswers = Array.isArray(q.incorrect_answers) 
               ? q.incorrect_answers 
               : JSON.parse(q.incorrect_answers || '[]');
@@ -113,7 +125,7 @@ export function useTrivia() {
 
             return {
               id: q.id,
-              category: selectedCategory.name,
+              category: q.categoryName,
               difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
               question: q.question_text,
               correctAnswer: q.correct_answer,
@@ -128,12 +140,11 @@ export function useTrivia() {
         setPreparationProgress(80);
       }
 
-      // No AI fallback - only use database questions
       if (formattedQuestions.length < amount) {
-        console.warn(`Not enough questions in database (${formattedQuestions.length}/${amount}) for category ${selectedCategory.id}`);
+        console.warn(`Not enough questions (${formattedQuestions.length}/${amount})`);
         
         if (formattedQuestions.length === 0) {
-          throw new Error("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
+          throw new Error("კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
         }
       }
 
