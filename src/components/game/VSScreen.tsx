@@ -3,9 +3,10 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { getCountryFlag } from "@/data/opponents";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { AvatarCircle } from "@/components/home/AvatarCircle";
 
 // Countdown overlay component
 const CountdownOverlay = ({ count }: { count: number | string }) => (
@@ -59,6 +60,138 @@ const CountdownOverlay = ({ count }: { count: number | string }) => (
   </motion.div>
 );
 
+// Player info card with frosted glass
+const PlayerInfoCard = ({
+  name,
+  flag,
+  points,
+  wins,
+  losses,
+  isPlayer = false,
+}: {
+  name: string;
+  flag: string;
+  points: number;
+  wins: number;
+  losses: number;
+  isPlayer?: boolean;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: isPlayer ? 20 : -20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.4, duration: 0.4 }}
+    className="flex flex-col items-center gap-2"
+  >
+    {/* Name with flag */}
+    <div
+      className="px-5 py-2 rounded-full flex items-center gap-2"
+      style={{
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(12px)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+      }}
+    >
+      {isPlayer ? (
+        <>
+          <span className="text-xl">{flag}</span>
+          <span className="font-bold text-lg text-foreground">{name}</span>
+        </>
+      ) : (
+        <>
+          <span className="font-bold text-lg text-foreground">{name}</span>
+          <span className="text-xl">{flag}</span>
+        </>
+      )}
+    </div>
+
+    {/* Stats row */}
+    <div className="flex items-center gap-2">
+      {/* Points badge */}
+      <div
+        className="px-3 py-1.5 rounded-full flex items-center gap-1.5"
+        style={{
+          background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
+          border: "1px solid rgba(255,215,0,0.4)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <Crown className="w-3.5 h-3.5 text-amber-500" fill="currentColor" />
+        <span className="text-sm font-bold text-amber-600">
+          {points.toLocaleString()}
+        </span>
+      </div>
+
+      {/* W/L record */}
+      <div
+        className="px-3 py-1.5 rounded-full text-sm font-semibold"
+        style={{
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <span className="text-emerald-600">{wins}W</span>
+        <span className="text-muted-foreground mx-1">/</span>
+        <span className="text-rose-500">{losses}L</span>
+      </div>
+    </div>
+  </motion.div>
+);
+
+// Curved power-ups arc component
+const PowerUpsArc = ({
+  powerUps,
+  isInverted = false,
+  disabled = false,
+  avatarSize,
+  powerUpCounts,
+}: {
+  powerUps: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain">;
+  isInverted?: boolean;
+  disabled?: boolean;
+  avatarSize: number;
+  powerUpCounts?: Record<string, number | undefined>;
+}) => {
+  const arcRadius = avatarSize * 0.62;
+  // Player: arc above (angles go from -200 to -340 for top arc)
+  // Opponent: arc below (angles go from 20 to 160 for bottom arc)
+  const startAngle = isInverted ? 25 : -205;
+  const endAngle = isInverted ? 155 : -335;
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {powerUps.map((type, index) => {
+        const totalItems = powerUps.length;
+        const angleRange = endAngle - startAngle;
+        const angle = startAngle + (angleRange / (totalItems - 1 || 1)) * index;
+        const radian = (angle * Math.PI) / 180;
+        const x = Math.cos(radian) * arcRadius;
+        const y = Math.sin(radian) * arcRadius;
+
+        return (
+          <motion.div
+            key={`${type}-${index}`}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: disabled ? 0.5 : 1, scale: 1 }}
+            transition={{ delay: 0.6 + index * 0.08, duration: 0.3, type: "spring" }}
+            className="absolute pointer-events-auto"
+            style={{
+              transform: `translate(${x}px, ${y}px)`,
+              filter: disabled ? "grayscale(50%)" : "none",
+            }}
+          >
+            <PowerUpBadge 
+              type={type} 
+              size="sm" 
+              disabled={disabled}
+              count={powerUpCounts?.[type]}
+            />
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+};
+
 export function VSScreen() {
   const { opponent, startMatch, playerPowerUps, opponentPowerUps } = useGame();
   const { profile } = useAuth();
@@ -68,7 +201,7 @@ export function VSScreen() {
   const [isCountingDown, setIsCountingDown] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowVS(true), 500);
+    const timer = setTimeout(() => setShowVS(true), 400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -95,12 +228,25 @@ export function VSScreen() {
     }, 3200);
   }, [isCountingDown, startMatch]);
 
-  // Memoize opponent stats to prevent recalculation on every render
+  // Memoize opponent stats
   const opponentStats = useMemo(() => {
     const wins = Math.floor((opponent?.points || 0) / 500);
     const games = wins + Math.floor(Math.random() * 10) + 5;
-    return { wins, games };
+    return { wins, losses: games - wins };
   }, [opponent?.points]);
+
+  // Power-up counts
+  const playerPowerUpCounts = useMemo(() => {
+    const counts: Record<string, number | undefined> = {};
+    playerPowerUps.forEach(p => { counts[p.type] = p.available; });
+    return counts;
+  }, [playerPowerUps]);
+
+  const opponentPowerUpCounts = useMemo(() => {
+    const counts: Record<string, number | undefined> = {};
+    opponentPowerUps.forEach(p => { counts[p.type] = p.available; });
+    return counts;
+  }, [opponentPowerUps]);
 
   if (!opponent) return null;
 
@@ -110,148 +256,100 @@ export function VSScreen() {
   
   const powerTypes: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
 
+  // Avatar sizes
+  const playerAvatarSize = 160;
+  const opponentAvatarSize = 145;
+
   return (
     <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden">
-      {/* Transparent - Spline shows through from GlobalSplineBackground */}
-      
+      {/* Vignette overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[5]"
+        style={{
+          background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.3) 100%)",
+        }}
+      />
+
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 relative z-30 shrink-0">
+      <motion.div 
+        className="flex items-center justify-between px-4 pt-4 pb-2 relative z-30 shrink-0"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <motion.button 
           onClick={() => navigate("/")}
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          className="w-10 h-10 rounded-full flex items-center justify-center"
           whileTap={{ scale: 0.95 }}
           style={{ 
-            background: "rgba(255,255,255,0.85)",
-            backdropFilter: "blur(10px)",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)" 
+            background: "rgba(255,255,255,0.95)",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
           }}
         >
-          <ChevronLeft className="w-5 h-5 text-gray-700" />
+          <ChevronLeft className="w-5 h-5 text-foreground" />
         </motion.button>
         
         <motion.div 
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          className="flex items-center gap-1.5 rounded-full px-4 py-2"
           style={{
-            background: "rgba(255,255,255,0.9)",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+            background: "rgba(255,255,255,0.95)",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
           }}
         >
-          <span className="text-lg">👑</span>
-          <span className="text-gray-800 font-bold">20</span>
+          <Crown className="w-5 h-5 text-amber-500" fill="currentColor" />
+          <span className="text-foreground font-bold">20</span>
         </motion.div>
-      </div>
+      </motion.div>
 
-      {/* Main Content - Equal sections */}
-      <div className="flex-1 flex flex-col relative z-10 min-h-0 px-3">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative z-10 min-h-0 px-4">
         
-        {/* === PLAYER SECTION (Top 40%) === */}
-        <div className="h-[38%] flex items-center justify-center relative">
-          {/* Player Power-ups - Absolute left */}
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 z-20">
-            {powerTypes.slice(0, 3).map((type, index) => (
-              <motion.div
-                key={`player-${type}`}
-                initial={{ scale: 0, x: -30 }}
-                animate={{ scale: 1, x: 0 }}
-                transition={{ delay: 0.5 + index * 0.06, type: "spring", stiffness: 200 }}
-              >
-                <PowerUpBadge 
-                  type={type}
-                  size="sm" 
-                  index={index} 
-                  count={playerPowerUps.find(p => p.type === type)?.available} 
-                />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Player Avatar + Info */}
-          <div className="flex flex-col items-center">
-            {/* Large Avatar with glow and fade masks */}
-            <motion.div
-              className="relative"
-              initial={{ scale: 1.5, opacity: 0, y: -30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 12 }}
-            >
-              {/* Cyan glow behind avatar */}
-              <div 
-                className="absolute inset-0 blur-3xl pointer-events-none -z-10"
-                style={{ 
-                  background: "radial-gradient(circle, rgba(0,255,255,0.5) 0%, transparent 60%)",
-                  transform: "scale(2.5)",
-                }}
+        {/* === PLAYER SECTION === */}
+        <motion.div 
+          className="flex-1 flex flex-col items-center justify-center relative"
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Avatar with curved power-ups arc above */}
+          <div 
+            className="relative" 
+            style={{ width: playerAvatarSize + 80, height: playerAvatarSize + 40 }}
+          >
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <PowerUpsArc
+                powerUps={powerTypes}
+                isInverted={false}
+                avatarSize={playerAvatarSize}
+                powerUpCounts={playerPowerUpCounts}
               />
-              
-              {/* Avatar container - larger, no mask */}
-              <div className="relative w-44 h-44 sm:w-56 sm:h-56">
-                {profile?.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt="You" 
-                    className="w-full h-full object-contain"
-                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
-                  />
-                ) : (
-                  <div 
-                    className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
-                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
-                  >
-                    👤
-                  </div>
-                )}
-              </div>
-            </motion.div>
-            
-            {/* Player info */}
-            <motion.div 
-              className="flex items-center gap-2 -mt-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <span className="text-xl drop-shadow-lg">{getCountryFlag(profile?.country_code || "US")}</span>
-              <span 
-                className="font-bold text-lg text-white"
-                style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
-              >
-                YOU
-              </span>
-            </motion.div>
-            
-            {/* Points + W/L */}
-            <motion.div 
-              className="flex items-center gap-2 mt-0.5"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div 
-                className="flex items-center gap-1 rounded-full px-2.5 py-0.5"
-                style={{ background: "rgba(255,255,255,0.9)", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }}
-              >
-                <span className="text-xs">👑</span>
-                <span className="text-purple-700 font-bold text-xs">{playerPoints.toLocaleString()}</span>
-              </div>
-              <span className="text-[11px] text-white/90 font-medium" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-                {playerWins}W/{playerGames - playerWins}L
-              </span>
-            </motion.div>
+              <AvatarCircle avatarUrl={profile?.avatar_url} size={playerAvatarSize} />
+            </div>
           </div>
-        </div>
 
-        {/* === VS DIVIDER (Fixed height) === */}
-        <div className="h-14 flex items-center justify-center relative shrink-0">
+          {/* Player info card */}
+          <div className="mt-3">
+            <PlayerInfoCard
+              name="YOU"
+              flag={getCountryFlag(profile?.country_code || "US")}
+              points={playerPoints}
+              wins={playerWins}
+              losses={playerGames - playerWins}
+              isPlayer
+            />
+          </div>
+        </motion.div>
+
+        {/* === VS DIVIDER === */}
+        <div className="h-16 flex items-center justify-center relative shrink-0 my-1">
           {/* Gold line */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
             <defs>
               <linearGradient id="goldLineVS" x1="0%" y1="50%" x2="100%" y2="50%">
                 <stop offset="0%" stopColor="transparent" />
-                <stop offset="10%" stopColor="#FFE55C" />
+                <stop offset="15%" stopColor="#FFE55C" />
                 <stop offset="50%" stopColor="#FFD700" />
-                <stop offset="90%" stopColor="#E6A800" />
+                <stop offset="85%" stopColor="#E6A800" />
                 <stop offset="100%" stopColor="transparent" />
               </linearGradient>
               <filter id="glowVS" x="-20%" y="-100%" width="140%" height="300%">
@@ -266,147 +364,107 @@ export function VSScreen() {
               x1="0%" y1="50%" 
               x2="100%" y2="50%" 
               stroke="url(#goldLineVS)" 
-              strokeWidth="5"
+              strokeWidth="4"
               filter="url(#glowVS)"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             />
           </svg>
           
-          {/* VS Text */}
+          {/* VS Badge */}
           <AnimatePresence>
             {showVS && (
-              <motion.span 
-                className="relative z-10 font-display text-4xl sm:text-5xl font-black"
+              <motion.div
                 initial={{ scale: 2.5, opacity: 0, rotate: -15 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ duration: 0.35, type: "spring", stiffness: 150, damping: 12 }}
-                style={{
-                  background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #E6A800 70%, #CC8800 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0 3px 0 #8B6914) drop-shadow(0 0 20px rgba(255,215,0,0.6))",
-                }}
+                transition={{ duration: 0.4, type: "spring", stiffness: 150, damping: 12 }}
+                className="relative z-10"
               >
-                VS
-              </motion.span>
+                <motion.div
+                  animate={{
+                    boxShadow: [
+                      "0 0 20px rgba(255,215,0,0.4)",
+                      "0 0 35px rgba(255,215,0,0.6)",
+                      "0 0 20px rgba(255,215,0,0.4)",
+                    ],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(145deg, #FFE55C 0%, #FFD700 40%, #E6A800 100%)",
+                    border: "3px solid rgba(255,255,255,0.5)",
+                    boxShadow: "0 4px 0 #8B6914",
+                  }}
+                >
+                  <span
+                    className="text-xl font-black"
+                    style={{
+                      color: "#5C4A00",
+                      textShadow: "0 1px 0 rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    VS
+                  </span>
+                </motion.div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* === OPPONENT SECTION (Bottom 40%) === */}
-        <div className="h-[38%] flex items-center justify-center relative">
-          {/* Opponent Avatar + Info */}
-          <div className="flex flex-col items-center">
-            {/* Points + W/L */}
-            <motion.div 
-              className="flex items-center gap-2 mb-0.5"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div 
-                className="flex items-center gap-1 rounded-full px-2.5 py-0.5"
-                style={{ background: "rgba(255,255,255,0.9)", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }}
-              >
-                <span className="text-xs">👑</span>
-                <span className="text-purple-700 font-bold text-xs">{opponent.points.toLocaleString()}</span>
-              </div>
-              <span className="text-[11px] text-white/90 font-medium" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-                {opponentStats.wins}W/{opponentStats.games - opponentStats.wins}L
-              </span>
-            </motion.div>
-            
-            {/* Opponent info */}
-            <motion.div 
-              className="flex items-center gap-2 mb-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <span 
-                className="font-bold text-lg text-white"
-                style={{ fontFamily: "'TASolivare', sans-serif", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
-              >
-                {opponent.name.toUpperCase()}
-              </span>
-              <span className="text-xl drop-shadow-lg">{getCountryFlag(opponent.countryCode)}</span>
-            </motion.div>
+        {/* === OPPONENT SECTION === */}
+        <motion.div 
+          className="flex-1 flex flex-col items-center justify-center relative"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          {/* Opponent info card */}
+          <div className="mb-3">
+            <PlayerInfoCard
+              name={opponent.name.toUpperCase()}
+              flag={getCountryFlag(opponent.countryCode)}
+              points={opponent.points}
+              wins={opponentStats.wins}
+              losses={opponentStats.losses}
+            />
+          </div>
 
-            {/* Large Avatar with glow and fade masks */}
-            <motion.div
-              className="relative"
-              initial={{ scale: 1.5, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1, type: "spring", stiffness: 100, damping: 12 }}
-            >
-              {/* Magenta glow behind avatar */}
-              <div 
-                className="absolute inset-0 blur-3xl pointer-events-none -z-10"
-                style={{ 
-                  background: "radial-gradient(circle, rgba(255,0,200,0.4) 0%, transparent 60%)",
-                  transform: "scale(2.5)",
-                }}
+          {/* Avatar with curved power-ups arc below */}
+          <div 
+            className="relative" 
+            style={{ width: opponentAvatarSize + 80, height: opponentAvatarSize + 40 }}
+          >
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <AvatarCircle avatarUrl={opponent.avatarUrl} size={opponentAvatarSize} />
+              <PowerUpsArc
+                powerUps={powerTypes}
+                isInverted={true}
+                disabled={true}
+                avatarSize={opponentAvatarSize}
+                powerUpCounts={opponentPowerUpCounts}
               />
-              
-              {/* Avatar container - larger, no mask */}
-              <div className="relative w-44 h-44 sm:w-56 sm:h-56">
-                {opponent.avatarUrl ? (
-                  <img 
-                    src={opponent.avatarUrl} 
-                    alt={opponent.name} 
-                    className="w-full h-full object-contain"
-                    style={{ filter: "drop-shadow(0 8px 25px rgba(0,0,0,0.4))" }}
-                  />
-                ) : (
-                  <div 
-                    className="w-full h-full flex items-center justify-center text-7xl sm:text-8xl"
-                    style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}
-                  >
-                    🤖
-                  </div>
-                )}
-              </div>
-            </motion.div>
+            </div>
           </div>
-
-          {/* Opponent Power-ups - Absolute right */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-60 z-20">
-            {powerTypes.slice(0, 3).map((type, index) => (
-              <motion.div
-                key={`opponent-${type}`}
-                initial={{ scale: 0, x: 30 }}
-                animate={{ scale: 1, x: 0 }}
-                transition={{ delay: 0.6 + index * 0.06, type: "spring", stiffness: 200 }}
-              >
-                <PowerUpBadge 
-                  type={type}
-                  size="sm" 
-                  index={index + 4} 
-                  count={opponentPowerUps.find(p => p.type === type)?.available} 
-                  disabled
-                />
-              </motion.div>
-            ))}
-          </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Bottom Button */}
-      <div className="px-4 pb-4 pt-2 relative z-20 shrink-0">
+      <motion.div 
+        className="px-5 pb-6 pt-3 relative z-20 shrink-0"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.4 }}
+      >
         <motion.button
           onClick={handleStartCountdown}
           disabled={isCountingDown}
-          className="relative w-full py-3 rounded-xl font-bold text-lg tracking-widest uppercase overflow-hidden disabled:opacity-70"
-          initial={{ y: 40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
+          className="relative w-full py-4 rounded-2xl font-bold text-lg tracking-widest uppercase overflow-hidden disabled:opacity-70"
           whileHover={{ scale: isCountingDown ? 1 : 1.02 }}
           whileTap={{ scale: isCountingDown ? 1 : 0.98 }}
           style={{
             background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 20%, #E6A800 80%, #CC8800 100%)",
-            boxShadow: "0 5px 0 #8B6914, 0 6px 20px rgba(0,0,0,0.2)",
+            boxShadow: "0 6px 0 #8B6914, 0 8px 25px rgba(0,0,0,0.2)",
             color: "#5C4A00",
           }}
         >
@@ -415,9 +473,9 @@ export function VSScreen() {
             animate={{ x: ["-100%", "200%"] }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
           />
-          <span className="relative z-10">NEXT</span>
+          <span className="relative z-10">{isCountingDown ? "GET READY..." : "NEXT"}</span>
         </motion.button>
-      </div>
+      </motion.div>
 
       {/* Countdown Overlay */}
       <AnimatePresence>
