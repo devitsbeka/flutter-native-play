@@ -94,11 +94,11 @@ const PlayerInfoCard = ({
       {isPlayer ? (
         <>
           <span className="text-xl">{flag}</span>
-          <span className="font-bold text-lg text-foreground">{name}</span>
+          <span className="font-bold text-lg" style={{ color: "#1a1a2e" }}>{name}</span>
         </>
       ) : (
         <>
-          <span className="font-bold text-lg text-foreground">{name}</span>
+          <span className="font-bold text-lg" style={{ color: "#1a1a2e" }}>{name}</span>
           <span className="text-xl">{flag}</span>
         </>
       )}
