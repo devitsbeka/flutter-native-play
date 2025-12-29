@@ -110,13 +110,17 @@ const PlayerInfoCard = ({
       <div
         className="px-3 py-1.5 rounded-full flex items-center gap-1.5"
         style={{
-          background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
-          border: "1px solid rgba(255,215,0,0.4)",
+          background: "linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,165,0,0.25) 100%)",
+          border: "1px solid rgba(255,215,0,0.5)",
           backdropFilter: "blur(8px)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}
       >
-        <Crown className="w-3.5 h-3.5 text-amber-500" fill="currentColor" />
-        <span className="text-sm font-bold text-amber-600">
+        <Crown className="w-3.5 h-3.5 text-amber-600" fill="currentColor" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
+        <span 
+          className="text-sm font-bold"
+          style={{ color: "#b45309", textShadow: "0 1px 2px rgba(255,255,255,0.5)" }}
+        >
           {points.toLocaleString()}
         </span>
       </div>
@@ -125,13 +129,14 @@ const PlayerInfoCard = ({
       <div
         className="px-3 py-1.5 rounded-full text-sm font-semibold"
         style={{
-          background: "rgba(255,255,255,0.85)",
+          background: "rgba(255,255,255,0.9)",
           backdropFilter: "blur(8px)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         }}
       >
-        <span className="text-emerald-600">{wins}W</span>
-        <span className="text-muted-foreground mx-1">/</span>
-        <span className="text-rose-500">{losses}L</span>
+        <span style={{ color: "#059669", textShadow: "0 1px 1px rgba(255,255,255,0.6)" }}>{wins}W</span>
+        <span style={{ color: "#6b7280" }} className="mx-1">/</span>
+        <span style={{ color: "#e11d48", textShadow: "0 1px 1px rgba(255,255,255,0.6)" }}>{losses}L</span>
       </div>
     </div>
   </motion.div>
