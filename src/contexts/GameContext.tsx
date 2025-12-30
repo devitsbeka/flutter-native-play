@@ -108,9 +108,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Generate opponent while starting to fetch questions
     const opponent = generateFakeOpponent();
     
-    // Start fetching Georgian questions immediately in background
-    // Pass level 1 and random category - the hook will select from Georgian categories
-    const questionsPromise = fetchQuestions(5, undefined, 1);
+    // Start fetching 6 questions (one from each random category) for VS mode
+    const questionsPromise = fetchQuestions(6, undefined, 1, [], true);
     
     // Matchmaking screen lasts ~5 seconds for the interactive experience
     await new Promise(resolve => setTimeout(resolve, 5000));

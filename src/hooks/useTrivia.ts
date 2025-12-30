@@ -41,10 +41,11 @@ export function useTrivia() {
   const [askedQuestionHashes, setAskedQuestionHashes] = useState<Set<string>>(new Set());
 
   const fetchQuestions = useCallback(async (
-    amount: number = 5,
+    amount: number = 6,
     category?: string,
     level: number = 1,
-    excludeHashes: string[] = []
+    excludeHashes: string[] = [],
+    mixFromCategories: boolean = true // New param: pick one from each random category
   ) => {
     setLoading(true);
     setError(null);
@@ -81,8 +82,40 @@ export function useTrivia() {
           }));
           dbError = result.error;
         }
+      } else if (mixFromCategories) {
+        // VS Mode: Pick one question from each of 6 random categories
+        const { data: categories } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('is_active', true);
+        
+        if (categories && categories.length > 0) {
+          // Shuffle and pick 6 random categories
+          const randomCategories = shuffleArray(categories).slice(0, amount);
+          
+          setPreparationProgress(20);
+          
+          // Fetch one random question from each category
+          const questionPromises = randomCategories.map(async (cat) => {
+            const { data } = await supabase
+              .from('questions')
+              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id')
+              .eq('is_active', true)
+              .eq('category_id', cat.id)
+              .limit(10);
+            
+            if (data && data.length > 0) {
+              const randomQ = data[Math.floor(Math.random() * data.length)];
+              return { ...randomQ, categoryName: cat.name };
+            }
+            return null;
+          });
+          
+          const results = await Promise.all(questionPromises);
+          dbQuestions = results.filter(q => q !== null);
+        }
       } else {
-        // Random mix mode - fetch from ALL active categories
+        // Legacy random mix mode - fetch from ALL active categories
         const result = await supabase
           .from('questions')
           .select(`
@@ -95,10 +128,9 @@ export function useTrivia() {
             categories!inner(name)
           `)
           .eq('is_active', true)
-          .limit(50); // Fetch more to get a good random mix
+          .limit(50);
         
         if (result.data) {
-          // Shuffle and pick random questions
           dbQuestions = shuffleArray(result.data).slice(0, amount + 5).map(q => ({
             ...q,
             categoryName: (q.categories as any)?.name || 'ზოგადი'
