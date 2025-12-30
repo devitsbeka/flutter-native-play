@@ -54,6 +54,7 @@ export function QuestionScreen() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
   const [questionResults, setQuestionResults] = useState<(boolean | null)[]>([]);
+  const [timedOut, setTimedOut] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -70,6 +71,7 @@ export function QuestionScreen() {
       setAnswerState("idle");
       setSelectedAnswer(null);
       setTimeRemaining(timePerQuestion + playerTimerBonus);
+      setTimedOut(false);
     } else if (phase === "question-result") {
       setAnswerState("revealed");
       // Record result for current question
@@ -86,13 +88,17 @@ export function QuestionScreen() {
     setAnswerState("idle");
     setSelectedAnswer(null);
     setTimeRemaining(timePerQuestion);
+    setTimedOut(false);
   }, [currentQuestionIndex, timePerQuestion]);
 
-  const handleAnswer = useCallback((answer: string) => {
+  const handleAnswer = useCallback((answer: string, isTimeout = false) => {
     if (answerState !== "idle") return;
-    setSelectedAnswer(answer);
+    if (isTimeout) {
+      setTimedOut(true);
+    }
+    setSelectedAnswer(answer || null);
     setAnswerState("selected");
-    answerQuestion(answer, timeRemaining);
+    answerQuestion(answer, isTimeout ? 0 : timeRemaining);
   }, [answerState, answerQuestion, timeRemaining]);
 
   const handleNext = useCallback(() => {
@@ -123,14 +129,15 @@ export function QuestionScreen() {
     usePowerUp(type);
   }, [answerState, usePowerUp, playSound, vibrate]);
 
-  // Timer
+  // Timer - use ref to avoid stale closure issues
   useEffect(() => {
     if (answerState !== "idle") return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 0.1) {
-          handleAnswer("");
+          // Schedule timeout handling outside of state update
+          setTimeout(() => handleAnswer("", true), 0);
           return 0;
         }
         return prev - 0.1;
@@ -349,7 +356,7 @@ export function QuestionScreen() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: visibleIndex * 0.05 }}
-                onClick={() => handleAnswer(answer)}
+                onClick={() => handleAnswer(answer, false)}
                 disabled={answerState !== "idle"}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-2xl text-left relative border-2",
@@ -405,17 +412,27 @@ export function QuestionScreen() {
               exit={{ opacity: 0 }}
               className={cn(
                 "py-2 px-4 rounded-xl flex items-center justify-center gap-2 mb-3",
-                lastAnswerCorrect ? "bg-emerald-500/20" : "bg-rose-500/20"
+                lastAnswerCorrect ? "bg-emerald-500/20" : timedOut ? "bg-amber-500/20" : "bg-rose-500/20"
               )}
             >
               <div className={cn(
                 "w-6 h-6 rounded-full flex items-center justify-center",
-                lastAnswerCorrect ? "bg-emerald-500" : "bg-rose-500"
+                lastAnswerCorrect ? "bg-emerald-500" : timedOut ? "bg-amber-500" : "bg-rose-500"
               )}>
-                {lastAnswerCorrect ? <Check className="w-4 h-4 text-white" /> : <X className="w-4 h-4 text-white" />}
+                {lastAnswerCorrect ? (
+                  <Check className="w-4 h-4 text-white" />
+                ) : timedOut ? (
+                  <span className="text-white text-xs">⏱</span>
+                ) : (
+                  <X className="w-4 h-4 text-white" />
+                )}
               </div>
               <span className="text-white font-bold">
-                {lastAnswerCorrect ? `+${lastPointsEarned} ქულა!` : "არასწორია!"}
+                {lastAnswerCorrect 
+                  ? `+${lastPointsEarned} ქულა!` 
+                  : timedOut 
+                    ? "დრო ამოიწურა!" 
+                    : "არასწორია!"}
               </span>
             </motion.div>
           )}
