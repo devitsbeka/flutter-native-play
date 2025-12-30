@@ -53,8 +53,16 @@ export function QuestionScreen() {
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
+  const [questionResults, setQuestionResults] = useState<(boolean | null)[]>([]);
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  // Initialize question results array
+  useEffect(() => {
+    if (questions.length > 0 && questionResults.length === 0) {
+      setQuestionResults(new Array(questions.length).fill(null));
+    }
+  }, [questions.length, questionResults.length]);
 
   // Sync state with phase changes
   useEffect(() => {
@@ -64,8 +72,14 @@ export function QuestionScreen() {
       setTimeRemaining(timePerQuestion + playerTimerBonus);
     } else if (phase === "question-result") {
       setAnswerState("revealed");
+      // Record result for current question
+      setQuestionResults(prev => {
+        const updated = [...prev];
+        updated[currentQuestionIndex] = lastAnswerCorrect ?? false;
+        return updated;
+      });
     }
-  }, [phase, timePerQuestion, playerTimerBonus]);
+  }, [phase, timePerQuestion, playerTimerBonus, currentQuestionIndex, lastAnswerCorrect]);
 
   // Reset on question change
   useEffect(() => {
@@ -165,30 +179,29 @@ export function QuestionScreen() {
       </div>
 
       {/* Header with VS avatars and scores */}
-      <div className="px-4 py-3 flex items-center justify-between">
-        {/* Player */}
+      <div className="px-4 py-2 flex items-center justify-between">
+        {/* Player - avatar with points below */}
         <div className="flex flex-col items-center gap-1">
           <AvatarCircle
             avatarUrl={profile?.avatar_url || undefined}
             size={56}
           />
-          <span className="text-white text-xs font-medium truncate max-w-[70px]">
-            {profile?.nickname || user?.email?.split("@")[0] || "შენ"}
-          </span>
+          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full">
+            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold text-xs">{userScore}</span>
+          </div>
         </div>
 
-        {/* VS + Scores */}
+        {/* VS center with names */}
         <div className="flex flex-col items-center gap-1">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
-              <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span className="text-white font-bold text-sm">{userScore}</span>
-            </div>
-            <span className="text-white/80 text-xs font-bold">VS</span>
-            <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
-              <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span className="text-white font-bold text-sm">{opponentScore}</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-white/90 text-xs font-medium truncate max-w-[60px]">
+              {profile?.nickname || user?.email?.split("@")[0] || "შენ"}
+            </span>
+            <span className="text-white/60 text-xs font-bold">VS</span>
+            <span className="text-white/90 text-xs font-medium truncate max-w-[60px]">
+              {opponent?.name || "AI"}
+            </span>
           </div>
           {/* Timer display */}
           <div 
@@ -201,7 +214,7 @@ export function QuestionScreen() {
           </div>
         </div>
 
-        {/* Opponent */}
+        {/* Opponent - avatar with points below */}
         <div className="flex flex-col items-center gap-1">
           <div className="relative">
             <AvatarCircle
@@ -218,20 +231,21 @@ export function QuestionScreen() {
               </motion.div>
             )}
           </div>
-          <span className="text-white text-xs font-medium truncate max-w-[70px]">
-            {opponent?.name || "AI ოპონენტი"}
-          </span>
+          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full">
+            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold text-xs">{opponentScore}</span>
+          </div>
         </div>
       </div>
 
-      {/* Power-ups bar */}
+      {/* Power-ups bar - same size as avatars */}
       <div className="px-4 py-2">
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-2">
           {playerPowerUps.map((powerUp, index) => (
             <PowerUpBadge
               key={powerUp.type}
               type={powerUp.type}
-              size="md"
+              size="avatar"
               index={index}
               count={powerUp.available}
               disabled={powerUp.available <= 0 || answerState !== "idle"}
@@ -244,44 +258,45 @@ export function QuestionScreen() {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
-        {/* Question card */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 mb-3 flex-shrink-0 relative shadow-lg dark:shadow-black/30">
-          {/* Question number badge */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#4ECDC4] dark:bg-emerald-500 border-4 border-white dark:border-slate-800 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">{currentQuestionIndex + 1}</span>
-          </div>
-
-          {/* Category badge with icon */}
+        {/* Question card - elegant redesign */}
+        <div className="bg-slate-800/90 dark:bg-slate-800 rounded-2xl p-5 mb-3 flex-shrink-0 relative shadow-xl border border-white/10">
+          {/* Category icon only - circular */}
           {currentQuestion.category && (
-            <div className="text-center mb-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full">
-                <span className="text-sm">{currentQuestion.categoryIcon || "📚"}</span>
-                {currentQuestion.category}
-              </span>
+            <div className="flex justify-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xl">{currentQuestion.categoryIcon || "📚"}</span>
+              </div>
             </div>
           )}
 
           {/* Question text */}
-          <p className="text-[#2A5A5A] dark:text-white text-xl font-bold text-center leading-snug mt-2">
+          <p className="text-white text-xl font-bold text-center leading-relaxed">
             {currentQuestion.question}
           </p>
         </div>
 
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-2 mb-3">
-          {questions.map((_, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                "w-2.5 h-2.5 rounded-full transition-all",
-                idx === currentQuestionIndex 
-                  ? "bg-white scale-125" 
-                  : idx < currentQuestionIndex 
-                    ? "bg-white/80" 
-                    : "bg-white/30"
-              )}
-            />
-          ))}
+        {/* Progress bars - color coded */}
+        <div className="flex items-center justify-center gap-1.5 mb-3">
+          {questions.map((_, idx) => {
+            const result = questionResults[idx];
+            const isCurrent = idx === currentQuestionIndex;
+            
+            return (
+              <div
+                key={idx}
+                className={cn(
+                  "h-[6px] rounded-full transition-all flex-1 max-w-[32px]",
+                  isCurrent 
+                    ? "bg-white ring-2 ring-white/50" 
+                    : result === true 
+                      ? "bg-emerald-500" 
+                      : result === false 
+                        ? "bg-rose-500" 
+                        : "bg-white/30"
+                )}
+              />
+            );
+          })}
         </div>
 
         {/* Answer buttons */}
