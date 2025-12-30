@@ -221,10 +221,11 @@ export function QuestionScreen() {
             <span className="text-white text-sm font-bold">{currentQuestionIndex + 1}</span>
           </div>
 
-          {/* Category badge */}
+          {/* Category badge with icon */}
           {currentQuestion.category && (
             <div className="text-center mb-2 mt-2">
-              <span className="text-xs text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 font-medium px-3 py-1 bg-slate-100 rounded-full">
+                <span className="text-sm">{currentQuestion.categoryIcon || "📚"}</span>
                 {currentQuestion.category}
               </span>
             </div>
