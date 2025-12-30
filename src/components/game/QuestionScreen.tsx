@@ -140,13 +140,13 @@ export function QuestionScreen() {
   });
 
   return (
-    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#4ECDC4] to-[#44B8AD]">
+    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#4ECDC4] to-[#44B8AD] dark:from-slate-900 dark:to-slate-800">
       {/* Safe area top bar with back and theme toggle */}
       <div className="pt-[env(safe-area-inset-top,12px)] px-4 flex items-center justify-between">
         {/* Back button */}
         <button
           onClick={() => navigate("/")}
-          className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
+          className="w-10 h-10 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center"
         >
           <ChevronLeft className="w-6 h-6 text-white" />
         </button>
@@ -154,7 +154,7 @@ export function QuestionScreen() {
         {/* Theme switcher */}
         <button
           onClick={toggleTheme}
-          className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
+          className="w-10 h-10 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center"
         >
           {theme === "dark" ? (
             <Sun className="w-5 h-5 text-white" />
@@ -180,21 +180,20 @@ export function QuestionScreen() {
         {/* VS + Scores */}
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full">
+            <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
               <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
               <span className="text-white font-bold text-sm">{userScore}</span>
             </div>
             <span className="text-white/80 text-xs font-bold">VS</span>
-            <div className="flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full">
+            <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
               <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
               <span className="text-white font-bold text-sm">{opponentScore}</span>
             </div>
           </div>
           {/* Timer display */}
           <div 
-            className="px-3 py-0.5 rounded-full text-xs font-bold"
+            className="px-3 py-0.5 rounded-full text-xs font-bold bg-black/20 dark:bg-black/40"
             style={{
-              background: "rgba(0,0,0,0.2)",
               color: timerPercentage > 50 ? "white" : timerPercentage > 25 ? "#fbbf24" : "#ef4444"
             }}
           >
@@ -246,16 +245,16 @@ export function QuestionScreen() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
         {/* Question card */}
-        <div className="bg-white rounded-3xl p-5 mb-3 flex-shrink-0 relative shadow-lg">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 mb-3 flex-shrink-0 relative shadow-lg dark:shadow-black/30">
           {/* Question number badge */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#4ECDC4] border-4 border-white flex items-center justify-center">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#4ECDC4] dark:bg-emerald-500 border-4 border-white dark:border-slate-800 flex items-center justify-center">
             <span className="text-white text-sm font-bold">{currentQuestionIndex + 1}</span>
           </div>
 
           {/* Category badge with icon */}
           {currentQuestion.category && (
             <div className="text-center mb-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 font-medium px-3 py-1 bg-slate-100 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full">
                 <span className="text-sm">{currentQuestion.categoryIcon || "📚"}</span>
                 {currentQuestion.category}
               </span>
@@ -263,7 +262,7 @@ export function QuestionScreen() {
           )}
 
           {/* Question text */}
-          <p className="text-[#2A5A5A] text-xl font-bold text-center leading-snug mt-2">
+          <p className="text-[#2A5A5A] dark:text-white text-xl font-bold text-center leading-snug mt-2">
             {currentQuestion.question}
           </p>
         </div>
@@ -293,12 +292,14 @@ export function QuestionScreen() {
             const isCorrect = answer === currentQuestion.correctAnswer;
             const isOpponentAnswer = isRevealed && lastOpponentAnswer === answer;
 
-            let buttonBg = "bg-white";
-            let letterBg = "bg-[#7DD3FC]";
+            // Dark mode aware button styles
+            const isDark = theme === "dark";
+            let buttonBg = isDark ? "bg-slate-700" : "bg-white";
+            let letterBg = isDark ? "bg-sky-500" : "bg-[#7DD3FC]";
             let letterText = "text-white";
-            let answerText = "text-[#2A2550]";
-            let borderColor = "border-[#7DD3FC]";
-            let shadow = "shadow-[0_4px_0_0_#CBD5E1]";
+            let answerText = isDark ? "text-white" : "text-[#2A2550]";
+            let borderColor = isDark ? "border-sky-500" : "border-[#7DD3FC]";
+            let shadow = isDark ? "shadow-[0_4px_0_0_#1e293b]" : "shadow-[0_4px_0_0_#CBD5E1]";
 
             if (answerState !== "idle") {
               if (isRevealed) {
