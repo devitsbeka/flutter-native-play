@@ -113,7 +113,7 @@ export function MatchResultScreen() {
         newLevel={newLevel}
         previousLevel={previousLevel}
       />
-      <div className="h-full flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full">
+      <div className="h-full flex flex-col items-center justify-center p-4 max-w-md mx-auto w-full relative z-50">
       {/* Result Header */}
       <motion.div
         initial={{ scale: 0, y: -20 }}
