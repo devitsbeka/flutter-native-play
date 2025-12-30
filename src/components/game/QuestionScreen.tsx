@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
-import { Check, X, Crown, ChevronLeft, Sun, Moon, Zap } from "lucide-react";
+import { Check, X, Crown, ChevronLeft, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type AnswerState = "idle" | "selected" | "revealed";
@@ -82,6 +82,16 @@ export function QuestionScreen() {
       });
     }
   }, [phase, timePerQuestion, playerTimerBonus, currentQuestionIndex, lastAnswerCorrect]);
+
+  // Auto-advance on timeout after showing result
+  useEffect(() => {
+    if (phase === "question-result" && timedOut) {
+      const timer = setTimeout(() => {
+        nextQuestion();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, timedOut, nextQuestion]);
 
   // Reset on question change
   useEffect(() => {
@@ -162,8 +172,25 @@ export function QuestionScreen() {
 
   return (
     <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#9B8AC4] to-[#8B7AB8] dark:from-slate-900 dark:to-slate-800">
-      {/* Safe area spacer */}
-      <div className="pt-[env(safe-area-inset-top,8px)]" />
+      {/* Safe area + top bar with back and theme toggle */}
+      <div className="pt-[env(safe-area-inset-top,8px)] mt-1 mb-1 px-4 flex items-center justify-between">
+        <button
+          onClick={() => navigate("/")}
+          className="w-9 h-9 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center"
+        >
+          <ChevronLeft className="w-5 h-5 text-white" />
+        </button>
+        <button
+          onClick={toggleTheme}
+          className="w-9 h-9 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 text-white" />
+          ) : (
+            <Moon className="w-4 h-4 text-white" />
+          )}
+        </button>
+      </div>
 
       {/* Header row - avatars with scores inline */}
       <div className="px-4 py-2 flex items-center justify-between">
@@ -171,50 +198,49 @@ export function QuestionScreen() {
         <div className="flex items-center gap-2">
           <AvatarCircle
             avatarUrl={profile?.avatar_url || undefined}
-            size={44}
+            size={40}
           />
-          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
-            <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold text-sm">{userScore}</span>
+          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full">
+            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold text-xs">{userScore}</span>
           </div>
         </div>
 
         {/* VS center */}
         <span className="text-white/70 text-sm font-medium">vs</span>
 
-        {/* Opponent - score + avatar + lightning */}
+        {/* Opponent - score + avatar */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
-            <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold text-sm">{opponentScore}</span>
+          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full">
+            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold text-xs">{opponentScore}</span>
           </div>
           <div className="relative">
             <AvatarCircle
               avatarUrl={opponent?.avatarUrl}
-              size={44}
+              size={40}
             />
             {opponentFrozen && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-blue-400 rounded-full flex items-center justify-center"
+                className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full flex items-center justify-center"
               >
-                <span className="text-xs">❄️</span>
+                <span className="text-[10px]">❄️</span>
               </motion.div>
             )}
           </div>
-          <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
         </div>
       </div>
 
-      {/* Power-ups bar */}
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-center gap-3">
+      {/* Power-ups bar - 32px size */}
+      <div className="px-4 py-2">
+        <div className="flex items-center justify-center gap-2">
           {playerPowerUps.map((powerUp, index) => (
             <PowerUpBadge
               key={powerUp.type}
               type={powerUp.type}
-              size="lg"
+              size="sm"
               index={index}
               count={powerUp.available}
               disabled={powerUp.available <= 0 || answerState !== "idle"}
@@ -239,18 +265,6 @@ export function QuestionScreen() {
           />
         </div>
 
-        {/* Opponent indicator with cursor */}
-        <div className="flex justify-center mb-3">
-          <div className="relative">
-            <svg width="24" height="24" viewBox="0 0 24 24" className="text-emerald-400 -mb-1">
-              <path fill="currentColor" d="M4 4l16 8-8 4-2 8-6-20z"/>
-            </svg>
-            <div className="absolute left-6 top-2 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded">
-              {opponent?.name || "Bot"}
-            </div>
-          </div>
-        </div>
-
         {/* Question text */}
         <p className="text-white text-xl font-bold text-center leading-relaxed">
           {currentQuestion.question}
@@ -259,7 +273,7 @@ export function QuestionScreen() {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
-        {/* Answer buttons */}
+        {/* Answer buttons - 3D chunky style */}
         <div className="flex-1 flex flex-col gap-3 min-h-0">
           {visibleAnswers.map((answer, visibleIndex) => {
             const originalIndex = currentQuestion.allAnswers.indexOf(answer);
@@ -267,14 +281,17 @@ export function QuestionScreen() {
             const isCorrect = answer === currentQuestion.correctAnswer;
             const isOpponentAnswer = isRevealed && lastOpponentAnswer === answer;
 
-            // Light theme: white cards with light blue letters, Dark theme: slate cards
+            // 3D chunky button styles
             const isDark = theme === "dark";
             let buttonBg = isDark ? "bg-slate-700" : "bg-white";
             let letterBg = isDark ? "bg-sky-500" : "bg-[#7DD3FC]";
             let letterText = "text-white";
             let answerText = isDark ? "text-white" : "text-slate-700";
-            let borderStyle = "border-transparent";
-            let shadow = isDark ? "shadow-md" : "shadow-[0_2px_8px_rgba(0,0,0,0.08)]";
+            let shadow = isDark 
+              ? "shadow-[0_4px_0_0_#334155]" 
+              : "shadow-[0_4px_0_0_#d1d5db]";
+            let hoverTransform = "hover:translate-y-[2px] hover:shadow-[0_2px_0_0_#d1d5db]";
+            let activeTransform = "active:translate-y-[4px] active:shadow-none";
 
             if (answerState !== "idle") {
               if (isRevealed) {
@@ -283,23 +300,26 @@ export function QuestionScreen() {
                   letterBg = "bg-white";
                   letterText = "text-emerald-500";
                   answerText = "text-white";
-                  borderStyle = "border-emerald-400";
                   shadow = "shadow-[0_4px_0_0_#059669]";
+                  hoverTransform = "";
+                  activeTransform = "";
                 } else if (isThisSelected && !isCorrect) {
                   buttonBg = "bg-rose-500";
                   letterBg = "bg-white";
                   letterText = "text-rose-500";
                   answerText = "text-white";
-                  borderStyle = "border-rose-400";
-                  shadow = "shadow-[0_4px_0_0_#DC2626]";
+                  shadow = "shadow-[0_4px_0_0_#be123c]";
+                  hoverTransform = "";
+                  activeTransform = "";
                 }
               } else if (isThisSelected) {
                 buttonBg = "bg-[#7DD3FC]";
                 letterBg = "bg-white";
                 letterText = "text-[#7DD3FC]";
                 answerText = "text-white";
-                borderStyle = "border-sky-400";
-                shadow = "shadow-[0_4px_0_0_#38BDF8]";
+                shadow = "shadow-[0_4px_0_0_#0ea5e9]";
+                hoverTransform = "";
+                activeTransform = "";
               }
             }
 
@@ -312,11 +332,12 @@ export function QuestionScreen() {
                 onClick={() => handleAnswer(answer, false)}
                 disabled={answerState !== "idle"}
                 className={cn(
-                  "flex items-center gap-4 p-4 rounded-2xl text-left relative border",
-                  "disabled:cursor-not-allowed min-h-[64px]",
+                  "flex items-center gap-4 p-3 rounded-2xl text-left relative",
+                  "disabled:cursor-not-allowed min-h-[60px] transition-all duration-100",
                   buttonBg,
-                  borderStyle,
-                  shadow
+                  shadow,
+                  hoverTransform,
+                  activeTransform
                 )}
               >
                 <span className={cn(

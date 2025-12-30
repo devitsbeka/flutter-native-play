@@ -13,7 +13,7 @@ export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
 
 interface PowerUpBadgeProps {
   type: PowerUpType | "add-power";
-  size?: "sm" | "md" | "lg" | "avatar";
+  size?: "xs" | "sm" | "md" | "lg" | "avatar";
   index?: number;
   disabled?: boolean;
   used?: boolean;
@@ -40,10 +40,11 @@ const ringGradients: Record<PowerUpType | "add-power", { from: string; to: strin
 };
 
 const sizeConfig = {
-  sm: { outer: 58, inner: 38 },
+  xs: { outer: 32, inner: 20 },
+  sm: { outer: 48, inner: 30 },
   md: { outer: 69, inner: 45 },
   lg: { outer: 88, inner: 58 },
-  avatar: { outer: 56, inner: 36 }, // Match avatar size
+  avatar: { outer: 56, inner: 36 },
 };
 
 export function PowerUpBadge({
