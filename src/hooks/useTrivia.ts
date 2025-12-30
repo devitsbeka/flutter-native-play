@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface TriviaQuestion {
   id: string;
   category: string;
+  categoryIcon?: string;
   difficulty: "easy" | "medium" | "hard";
   question: string;
   correctAnswer: string;
@@ -62,7 +63,7 @@ export function useTrivia() {
         // Fetch from specific category
         const { data: categoryData } = await supabase
           .from('categories')
-          .select('id, name')
+          .select('id, name, icon')
           .eq('category_id', category)
           .maybeSingle();
 
@@ -78,7 +79,8 @@ export function useTrivia() {
           
           dbQuestions = (result.data || []).map(q => ({
             ...q,
-            categoryName: categoryData.name
+            categoryName: categoryData.name,
+            categoryIcon: categoryData.icon
           }));
           dbError = result.error;
         }
@@ -86,7 +88,7 @@ export function useTrivia() {
         // VS Mode: Pick one question from each of 6 random categories
         const { data: categories } = await supabase
           .from('categories')
-          .select('id, name')
+          .select('id, name, icon')
           .eq('is_active', true);
         
         if (categories && categories.length > 0) {
@@ -106,7 +108,7 @@ export function useTrivia() {
             
             if (data && data.length > 0) {
               const randomQ = data[Math.floor(Math.random() * data.length)];
-              return { ...randomQ, categoryName: cat.name };
+              return { ...randomQ, categoryName: cat.name, categoryIcon: cat.icon };
             }
             return null;
           });
@@ -125,7 +127,7 @@ export function useTrivia() {
             incorrect_answers, 
             difficulty, 
             level_number,
-            categories!inner(name)
+            categories!inner(name, icon)
           `)
           .eq('is_active', true)
           .limit(50);
@@ -133,7 +135,8 @@ export function useTrivia() {
         if (result.data) {
           dbQuestions = shuffleArray(result.data).slice(0, amount + 5).map(q => ({
             ...q,
-            categoryName: (q.categories as any)?.name || 'ზოგადი'
+            categoryName: (q.categories as any)?.name || 'ზოგადი',
+            categoryIcon: (q.categories as any)?.icon || '📚'
           }));
         }
         dbError = result.error;
@@ -158,6 +161,7 @@ export function useTrivia() {
             return {
               id: q.id,
               category: q.categoryName,
+              categoryIcon: q.categoryIcon || '📚',
               difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
               question: q.question_text,
               correctAnswer: q.correct_answer,
