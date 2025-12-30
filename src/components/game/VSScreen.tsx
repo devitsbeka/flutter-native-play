@@ -213,18 +213,6 @@ export function VSScreen() {
     }, 3200);
   }, [isCountingDown, startMatch]);
 
-  // Power-up counts
-  const playerPowerUpCounts = useMemo(() => {
-    const counts: Record<string, number | undefined> = {};
-    playerPowerUps.forEach(p => { counts[p.type] = p.available; });
-    return counts;
-  }, [playerPowerUps]);
-
-  const opponentPowerUpCounts = useMemo(() => {
-    const counts: Record<string, number | undefined> = {};
-    opponentPowerUps.forEach(p => { counts[p.type] = p.available; });
-    return counts;
-  }, [opponentPowerUps]);
 
   if (!opponent) return null;
 
@@ -292,11 +280,10 @@ export function VSScreen() {
             style={{ width: playerAvatarSize + 80, height: playerAvatarSize + 40 }}
           >
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <PowerUpsArc
+            <PowerUpsArc
                 powerUps={powerTypes}
                 isInverted={false}
                 avatarSize={playerAvatarSize}
-                powerUpCounts={playerPowerUpCounts}
               />
               <AvatarCircle avatarUrl={profile?.avatar_url} size={playerAvatarSize} />
             </div>
@@ -421,7 +408,6 @@ export function VSScreen() {
                 isInverted={true}
                 disabled={true}
                 avatarSize={opponentAvatarSize}
-                powerUpCounts={opponentPowerUpCounts}
               />
             </div>
           </div>
