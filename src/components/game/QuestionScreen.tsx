@@ -142,7 +142,7 @@ export function QuestionScreen() {
   return (
     <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#4ECDC4] to-[#44B8AD] dark:from-slate-900 dark:to-slate-800">
       {/* Safe area top bar with back and theme toggle */}
-      <div className="pt-[env(safe-area-inset-top,12px)] px-4 flex items-center justify-between">
+      <div className="pt-[calc(env(safe-area-inset-top,12px)+5px)] pb-[5px] px-4 flex items-center justify-between">
         {/* Back button */}
         <button
           onClick={() => navigate("/")}
