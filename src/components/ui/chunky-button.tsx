@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "success" | "danger" | "ghost" | "purple";
   size?: "sm" | "md" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -11,6 +11,7 @@ interface ChunkyButtonProps {
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
   onClick?: () => void;
+  style?: React.CSSProperties;
 }
 
 const variantStyles = {
@@ -44,6 +45,12 @@ const variantStyles = {
     shadow: "shadow-[0_6px_0_0_hsl(var(--border))]",
     pressed: "shadow-[0_2px_0_0_hsl(var(--border))]",
   },
+  purple: {
+    face: "text-white",
+    depth: "bg-purple-900",
+    shadow: "shadow-[0_6px_0_0_#4C1D95]",
+    pressed: "shadow-[0_2px_0_0_#4C1D95]",
+  },
 };
 
 const sizeStyles = {
@@ -54,7 +61,7 @@ const sizeStyles = {
 };
 
 export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProps>(
-  ({ className, variant = "primary", size = "md", children, icon, disabled, type = "button", onClick }, ref) => {
+  ({ className, variant = "primary", size = "md", children, icon, disabled, type = "button", onClick, style }, ref) => {
     const [isPressed, setIsPressed] = React.useState(false);
     const styles = variantStyles[variant];
 
@@ -73,6 +80,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
         )}
         style={{
           transform: isPressed ? "translateY(4px)" : "translateY(0px)",
+          ...style,
         }}
         whileHover={{ scale: disabled ? 1 : 1.02 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
