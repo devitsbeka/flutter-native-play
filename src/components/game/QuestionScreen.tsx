@@ -3,17 +3,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
-import { Check, X, Crown } from "lucide-react";
+import { Check, X, Crown, ChevronLeft, Sun, Moon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 type AnswerState = "idle" | "selected" | "revealed";
 
 export function QuestionScreen() {
   const { user, profile } = useAuth();
   const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
+  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const { 
     questions, 
     currentQuestionIndex, 
@@ -35,6 +39,10 @@ export function QuestionScreen() {
     playerTimerBonus,
     opponentFrozen,
   } = useGame();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   // Start background music when game starts
   useEffect(() => {
@@ -133,6 +141,29 @@ export function QuestionScreen() {
 
   return (
     <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#4ECDC4] to-[#44B8AD]">
+      {/* Safe area top bar with back and theme toggle */}
+      <div className="pt-[env(safe-area-inset-top,12px)] px-4 flex items-center justify-between">
+        {/* Back button */}
+        <button
+          onClick={() => navigate("/")}
+          className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
+        >
+          <ChevronLeft className="w-6 h-6 text-white" />
+        </button>
+
+        {/* Theme switcher */}
+        <button
+          onClick={toggleTheme}
+          className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-5 h-5 text-white" />
+          ) : (
+            <Moon className="w-5 h-5 text-white" />
+          )}
+        </button>
+      </div>
+
       {/* Header with VS avatars and scores */}
       <div className="px-4 py-3 flex items-center justify-between">
         {/* Player */}
