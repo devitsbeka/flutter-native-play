@@ -1,15 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
-import { Check, X, Crown, Zap } from "lucide-react";
+import { AvatarCircle } from "@/components/home/AvatarCircle";
+import { Check, X, Crown } from "lucide-react";
 
 type AnswerState = "idle" | "selected" | "revealed";
 
 export function QuestionScreen() {
+  const { user, profile } = useAuth();
   const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
   const { 
     questions, 
@@ -77,7 +80,6 @@ export function QuestionScreen() {
   const handleUsePowerUp = useCallback((type: PowerUpType) => {
     if (answerState !== "idle") return;
     
-    // Play power-up specific sound
     switch (type) {
       case "fifty-fifty":
         playSound("power-up-5050");
@@ -130,36 +132,52 @@ export function QuestionScreen() {
   });
 
   return (
-    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
-      {/* Header with avatars and scores */}
+    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#4ECDC4] to-[#44B8AD]">
+      {/* Header with VS avatars and scores */}
       <div className="px-4 py-3 flex items-center justify-between">
         {/* Player */}
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-[#5B4BC4] flex items-center justify-center border-2 border-white/30">
-            <span className="text-xl">😊</span>
+        <div className="flex flex-col items-center gap-1">
+          <AvatarCircle
+            avatarUrl={profile?.avatar_url || undefined}
+            size={56}
+          />
+          <span className="text-white text-xs font-medium truncate max-w-[70px]">
+            {profile?.nickname || user?.email?.split("@")[0] || "შენ"}
+          </span>
+        </div>
+
+        {/* VS + Scores */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full">
+              <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+              <span className="text-white font-bold text-sm">{userScore}</span>
+            </div>
+            <span className="text-white/80 text-xs font-bold">VS</span>
+            <div className="flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full">
+              <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
+              <span className="text-white font-bold text-sm">{opponentScore}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full">
-            <Crown className="w-3 h-3 text-quiz-yellow fill-quiz-yellow" />
-            <span className="text-white font-bold text-sm">{userScore}</span>
+          {/* Timer display */}
+          <div 
+            className="px-3 py-0.5 rounded-full text-xs font-bold"
+            style={{
+              background: "rgba(0,0,0,0.2)",
+              color: timerPercentage > 50 ? "white" : timerPercentage > 25 ? "#fbbf24" : "#ef4444"
+            }}
+          >
+            {Math.ceil(timeRemaining)}წმ
           </div>
         </div>
 
-        {/* VS indicator */}
-        <span className="text-white/60 text-sm font-medium">vs</span>
-
         {/* Opponent */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full">
-            <Crown className="w-3 h-3 text-quiz-yellow fill-quiz-yellow" />
-            <span className="text-white font-bold text-sm">{opponentScore}</span>
-          </div>
+        <div className="flex flex-col items-center gap-1">
           <div className="relative">
-            <div className={cn(
-              "w-10 h-10 rounded-full bg-[#5B4BC4] flex items-center justify-center border-2",
-              opponentFrozen ? "border-blue-400" : "border-white/30"
-            )}>
-              <span className="text-xl">{opponent?.avatarEmoji || "🤖"}</span>
-            </div>
+            <AvatarCircle
+              avatarUrl={opponent?.avatarUrl}
+              size={56}
+            />
             {opponentFrozen && (
               <motion.div
                 initial={{ scale: 0 }}
@@ -170,7 +188,9 @@ export function QuestionScreen() {
               </motion.div>
             )}
           </div>
-          <Zap className="w-4 h-4 text-quiz-yellow fill-quiz-yellow" />
+          <span className="text-white text-xs font-medium truncate max-w-[70px]">
+            {opponent?.name || "AI ოპონენტი"}
+          </span>
         </div>
       </div>
 
@@ -195,55 +215,45 @@ export function QuestionScreen() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
         {/* Question card */}
-        <div className="bg-[#5B4BC4] rounded-3xl p-5 mb-4 flex-shrink-0 relative">
-          {/* Timer progress */}
-          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-4">
-            <motion.div
-              className={cn(
-                "h-full rounded-full",
-                isRevealed ? "bg-success" :
-                timerPercentage > 50 ? "bg-white" : 
-                timerPercentage > 25 ? "bg-quiz-yellow" : "bg-destructive"
-              )}
-              style={{ width: isRevealed ? "100%" : `${timerPercentage}%` }}
-              transition={{ duration: 0.1 }}
-            />
+        <div className="bg-white rounded-3xl p-5 mb-3 flex-shrink-0 relative shadow-lg">
+          {/* Question number badge */}
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#4ECDC4] border-4 border-white flex items-center justify-center">
+            <span className="text-white text-sm font-bold">{currentQuestionIndex + 1}</span>
           </div>
 
-          {/* Result banner - absolute positioned to prevent layout shift */}
-          <div className="h-12 mb-2">
-            <AnimatePresence>
-              {isRevealed && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={cn(
-                    "py-2 px-4 rounded-xl flex items-center justify-center gap-2",
-                    lastAnswerCorrect ? "bg-success/20" : "bg-destructive/20"
-                  )}
-                >
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center",
-                    lastAnswerCorrect ? "bg-success" : "bg-destructive"
-                  )}>
-                    {lastAnswerCorrect ? <Check className="w-4 h-4 text-white" /> : <X className="w-4 h-4 text-white" />}
-                  </div>
-                  <span className="text-white font-bold">
-                    {lastAnswerCorrect ? `+${lastPointsEarned} ქულა!` : "არასწორია!"}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Category badge */}
+          {currentQuestion.category && (
+            <div className="text-center mb-2 mt-2">
+              <span className="text-xs text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-full">
+                {currentQuestion.category}
+              </span>
+            </div>
+          )}
 
           {/* Question text */}
-          <p className="text-white text-2xl font-bold italic text-center leading-snug">
+          <p className="text-[#2A5A5A] text-xl font-bold text-center leading-snug mt-2">
             {currentQuestion.question}
           </p>
         </div>
 
-        {/* Answer buttons - fixed height container */}
+        {/* Progress dots */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          {questions.map((_, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "w-2.5 h-2.5 rounded-full transition-all",
+                idx === currentQuestionIndex 
+                  ? "bg-white scale-125" 
+                  : idx < currentQuestionIndex 
+                    ? "bg-white/80" 
+                    : "bg-white/30"
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Answer buttons */}
         <div className="flex-1 flex flex-col gap-3 min-h-0">
           {visibleAnswers.map((answer, visibleIndex) => {
             const originalIndex = currentQuestion.allAnswers.indexOf(answer);
@@ -255,21 +265,24 @@ export function QuestionScreen() {
             let letterBg = "bg-[#7DD3FC]";
             let letterText = "text-white";
             let answerText = "text-[#2A2550]";
+            let borderColor = "border-[#7DD3FC]";
             let shadow = "shadow-[0_4px_0_0_#CBD5E1]";
 
             if (answerState !== "idle") {
               if (isRevealed) {
                 if (isCorrect) {
-                  buttonBg = "bg-success";
+                  buttonBg = "bg-emerald-500";
                   letterBg = "bg-white";
-                  letterText = "text-success";
+                  letterText = "text-emerald-500";
                   answerText = "text-white";
-                  shadow = "shadow-[0_4px_0_0_#16A34A]";
+                  borderColor = "border-emerald-400";
+                  shadow = "shadow-[0_4px_0_0_#059669]";
                 } else if (isThisSelected && !isCorrect) {
-                  buttonBg = "bg-destructive";
+                  buttonBg = "bg-rose-500";
                   letterBg = "bg-white";
-                  letterText = "text-destructive";
+                  letterText = "text-rose-500";
                   answerText = "text-white";
+                  borderColor = "border-rose-400";
                   shadow = "shadow-[0_4px_0_0_#DC2626]";
                 }
               } else if (isThisSelected) {
@@ -277,6 +290,7 @@ export function QuestionScreen() {
                 letterBg = "bg-white";
                 letterText = "text-[#7DD3FC]";
                 answerText = "text-white";
+                borderColor = "border-sky-400";
                 shadow = "shadow-[0_4px_0_0_#38BDF8]";
               }
             }
@@ -290,9 +304,10 @@ export function QuestionScreen() {
                 onClick={() => handleAnswer(answer)}
                 disabled={answerState !== "idle"}
                 className={cn(
-                  "flex items-center gap-4 p-4 rounded-2xl text-left relative",
+                  "flex items-center gap-4 p-4 rounded-2xl text-left relative border-2",
                   "disabled:cursor-not-allowed h-16",
                   buttonBg,
+                  borderColor,
                   shadow
                 )}
               >
@@ -313,14 +328,19 @@ export function QuestionScreen() {
                   {answer}
                 </span>
 
+                {/* Show opponent avatar if they chose this answer */}
                 {isOpponentAnswer && (
                   <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-lg border-2",
+                    "w-8 h-8 rounded-full flex items-center justify-center text-lg border-2 overflow-hidden",
                     lastOpponentCorrect 
-                      ? "bg-success/20 border-success" 
-                      : "bg-destructive/20 border-destructive"
+                      ? "border-emerald-500" 
+                      : "border-rose-500"
                   )}>
-                    {opponent?.avatarEmoji || "🤖"}
+                    {opponent?.avatarUrl ? (
+                      <img src={opponent.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{opponent?.avatarEmoji || "🤖"}</span>
+                    )}
                   </div>
                 )}
               </motion.button>
@@ -328,8 +348,33 @@ export function QuestionScreen() {
           })}
         </div>
 
-        {/* Next Button - always reserve space to prevent jumping */}
-        <div className="mt-4 flex-shrink-0 h-14">
+        {/* Result banner - show above button when revealed */}
+        <AnimatePresence>
+          {isRevealed && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className={cn(
+                "py-2 px-4 rounded-xl flex items-center justify-center gap-2 mb-3",
+                lastAnswerCorrect ? "bg-emerald-500/20" : "bg-rose-500/20"
+              )}
+            >
+              <div className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center",
+                lastAnswerCorrect ? "bg-emerald-500" : "bg-rose-500"
+              )}>
+                {lastAnswerCorrect ? <Check className="w-4 h-4 text-white" /> : <X className="w-4 h-4 text-white" />}
+              </div>
+              <span className="text-white font-bold">
+                {lastAnswerCorrect ? `+${lastPointsEarned} ქულა!` : "არასწორია!"}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Next Button */}
+        <div className="flex-shrink-0 h-14">
           <div className={cn(
             "transition-opacity duration-200",
             isRevealed ? "opacity-100" : "opacity-0 pointer-events-none"
