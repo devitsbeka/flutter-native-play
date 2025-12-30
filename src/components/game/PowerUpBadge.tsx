@@ -13,7 +13,7 @@ export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
 
 interface PowerUpBadgeProps {
   type: PowerUpType | "add-power";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "avatar";
   index?: number;
   disabled?: boolean;
   used?: boolean;
@@ -43,6 +43,7 @@ const sizeConfig = {
   sm: { outer: 58, inner: 38 },
   md: { outer: 69, inner: 45 },
   lg: { outer: 88, inner: 58 },
+  avatar: { outer: 56, inner: 36 }, // Match avatar size
 };
 
 export function PowerUpBadge({
