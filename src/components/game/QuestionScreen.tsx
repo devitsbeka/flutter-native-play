@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
