@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
-import { Check, X, Crown, ChevronLeft, Sun, Moon } from "lucide-react";
+import { Check, X, Crown, ChevronLeft, Sun, Moon, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 type AnswerState = "idle" | "selected" | "revealed";
@@ -161,72 +161,37 @@ export function QuestionScreen() {
   });
 
   return (
-    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#4ECDC4] to-[#44B8AD] dark:from-slate-900 dark:to-slate-800">
-      {/* Safe area top bar with back and theme toggle */}
-      <div className="pt-[env(safe-area-inset-top,12px)] mt-1.5 mb-1.5 px-4 flex items-center justify-between">
-        {/* Back button */}
-        <button
-          onClick={() => navigate("/")}
-          className="w-10 h-10 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center"
-        >
-          <ChevronLeft className="w-6 h-6 text-white" />
-        </button>
+    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#9B8AC4] to-[#8B7AB8] dark:from-slate-900 dark:to-slate-800">
+      {/* Safe area spacer */}
+      <div className="pt-[env(safe-area-inset-top,8px)]" />
 
-        {/* Theme switcher */}
-        <button
-          onClick={toggleTheme}
-          className="w-10 h-10 rounded-full bg-white/20 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5 text-white" />
-          ) : (
-            <Moon className="w-5 h-5 text-white" />
-          )}
-        </button>
-      </div>
-
-      {/* Header with VS avatars and scores */}
+      {/* Header row - avatars with scores inline */}
       <div className="px-4 py-2 flex items-center justify-between">
-        {/* Player - avatar with points below */}
-        <div className="flex flex-col items-center gap-1">
+        {/* Player - avatar + score */}
+        <div className="flex items-center gap-2">
           <AvatarCircle
             avatarUrl={profile?.avatar_url || undefined}
-            size={56}
+            size={44}
           />
-          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full">
-            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold text-xs">{userScore}</span>
+          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
+            <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold text-sm">{userScore}</span>
           </div>
         </div>
 
-        {/* VS center with names */}
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex items-center gap-2">
-            <span className="text-white/90 text-xs font-medium truncate max-w-[60px]">
-              {profile?.nickname || user?.email?.split("@")[0] || "შენ"}
-            </span>
-            <span className="text-white/60 text-xs font-bold">VS</span>
-            <span className="text-white/90 text-xs font-medium truncate max-w-[60px]">
-              {opponent?.name || "AI"}
-            </span>
-          </div>
-          {/* Timer display */}
-          <div 
-            className="px-3 py-0.5 rounded-full text-xs font-bold bg-black/20 dark:bg-black/40"
-            style={{
-              color: timerPercentage > 50 ? "white" : timerPercentage > 25 ? "#fbbf24" : "#ef4444"
-            }}
-          >
-            {Math.ceil(timeRemaining)}წმ
-          </div>
-        </div>
+        {/* VS center */}
+        <span className="text-white/70 text-sm font-medium">vs</span>
 
-        {/* Opponent - avatar with points below */}
-        <div className="flex flex-col items-center gap-1">
+        {/* Opponent - score + avatar + lightning */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2.5 py-1 rounded-full">
+            <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <span className="text-white font-bold text-sm">{opponentScore}</span>
+          </div>
           <div className="relative">
             <AvatarCircle
               avatarUrl={opponent?.avatarUrl}
-              size={56}
+              size={44}
             />
             {opponentFrozen && (
               <motion.div
@@ -238,21 +203,18 @@ export function QuestionScreen() {
               </motion.div>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-white/20 dark:bg-white/10 px-2 py-0.5 rounded-full">
-            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold text-xs">{opponentScore}</span>
-          </div>
+          <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
         </div>
       </div>
 
-      {/* Power-ups bar - same size as avatars */}
-      <div className="px-4 py-2">
-        <div className="flex items-center justify-center gap-2">
+      {/* Power-ups bar */}
+      <div className="px-4 py-3">
+        <div className="flex items-center justify-center gap-3">
           {playerPowerUps.map((powerUp, index) => (
             <PowerUpBadge
               key={powerUp.type}
               type={powerUp.type}
-              size="avatar"
+              size="lg"
               index={index}
               count={powerUp.available}
               disabled={powerUp.available <= 0 || answerState !== "idle"}
@@ -263,49 +225,40 @@ export function QuestionScreen() {
         </div>
       </div>
 
+      {/* Question card - purple themed */}
+      <div className="mx-4 mb-4 bg-[#7B6BA8] dark:bg-slate-800 rounded-3xl p-5 relative shadow-lg">
+        {/* Timer progress bar */}
+        <div className="mb-4 h-2 bg-white/30 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{
+              background: timerPercentage > 50 ? "white" : timerPercentage > 25 ? "#fbbf24" : "#ef4444",
+              width: `${timerPercentage}%`,
+            }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
+
+        {/* Opponent indicator with cursor */}
+        <div className="flex justify-center mb-3">
+          <div className="relative">
+            <svg width="24" height="24" viewBox="0 0 24 24" className="text-emerald-400 -mb-1">
+              <path fill="currentColor" d="M4 4l16 8-8 4-2 8-6-20z"/>
+            </svg>
+            <div className="absolute left-6 top-2 bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded">
+              {opponent?.name || "Bot"}
+            </div>
+          </div>
+        </div>
+
+        {/* Question text */}
+        <p className="text-white text-xl font-bold text-center leading-relaxed">
+          {currentQuestion.question}
+        </p>
+      </div>
+
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
-        {/* Question card - elegant redesign */}
-        <div className="bg-slate-800/90 dark:bg-slate-800 rounded-2xl p-5 mb-3 flex-shrink-0 relative shadow-xl border border-white/10">
-          {/* Category icon only - circular */}
-          {currentQuestion.category && (
-            <div className="flex justify-center mb-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xl">{currentQuestion.categoryIcon || "📚"}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Question text */}
-          <p className="text-white text-xl font-bold text-center leading-relaxed">
-            {currentQuestion.question}
-          </p>
-        </div>
-
-        {/* Progress bars - color coded */}
-        <div className="flex items-center justify-center gap-1.5 mb-3">
-          {questions.map((_, idx) => {
-            const result = questionResults[idx];
-            const isCurrent = idx === currentQuestionIndex;
-            
-            return (
-              <div
-                key={idx}
-                className={cn(
-                  "h-[6px] rounded-full transition-all flex-1 max-w-[32px]",
-                  isCurrent 
-                    ? "bg-white ring-2 ring-white/50" 
-                    : result === true 
-                      ? "bg-emerald-500" 
-                      : result === false 
-                        ? "bg-rose-500" 
-                        : "bg-white/30"
-                )}
-              />
-            );
-          })}
-        </div>
-
         {/* Answer buttons */}
         <div className="flex-1 flex flex-col gap-3 min-h-0">
           {visibleAnswers.map((answer, visibleIndex) => {
@@ -314,14 +267,14 @@ export function QuestionScreen() {
             const isCorrect = answer === currentQuestion.correctAnswer;
             const isOpponentAnswer = isRevealed && lastOpponentAnswer === answer;
 
-            // Dark mode aware button styles
+            // Light theme: white cards with light blue letters, Dark theme: slate cards
             const isDark = theme === "dark";
             let buttonBg = isDark ? "bg-slate-700" : "bg-white";
             let letterBg = isDark ? "bg-sky-500" : "bg-[#7DD3FC]";
             let letterText = "text-white";
-            let answerText = isDark ? "text-white" : "text-[#2A2550]";
-            let borderColor = isDark ? "border-sky-500" : "border-[#7DD3FC]";
-            let shadow = isDark ? "shadow-[0_4px_0_0_#1e293b]" : "shadow-[0_4px_0_0_#CBD5E1]";
+            let answerText = isDark ? "text-white" : "text-slate-700";
+            let borderStyle = "border-transparent";
+            let shadow = isDark ? "shadow-md" : "shadow-[0_2px_8px_rgba(0,0,0,0.08)]";
 
             if (answerState !== "idle") {
               if (isRevealed) {
@@ -330,14 +283,14 @@ export function QuestionScreen() {
                   letterBg = "bg-white";
                   letterText = "text-emerald-500";
                   answerText = "text-white";
-                  borderColor = "border-emerald-400";
+                  borderStyle = "border-emerald-400";
                   shadow = "shadow-[0_4px_0_0_#059669]";
                 } else if (isThisSelected && !isCorrect) {
                   buttonBg = "bg-rose-500";
                   letterBg = "bg-white";
                   letterText = "text-rose-500";
                   answerText = "text-white";
-                  borderColor = "border-rose-400";
+                  borderStyle = "border-rose-400";
                   shadow = "shadow-[0_4px_0_0_#DC2626]";
                 }
               } else if (isThisSelected) {
@@ -345,7 +298,7 @@ export function QuestionScreen() {
                 letterBg = "bg-white";
                 letterText = "text-[#7DD3FC]";
                 answerText = "text-white";
-                borderColor = "border-sky-400";
+                borderStyle = "border-sky-400";
                 shadow = "shadow-[0_4px_0_0_#38BDF8]";
               }
             }
@@ -353,21 +306,21 @@ export function QuestionScreen() {
             return (
               <motion.button
                 key={`${currentQuestionIndex}-${originalIndex}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: visibleIndex * 0.05 }}
                 onClick={() => handleAnswer(answer, false)}
                 disabled={answerState !== "idle"}
                 className={cn(
-                  "flex items-center gap-4 p-4 rounded-2xl text-left relative border-2",
-                  "disabled:cursor-not-allowed h-16",
+                  "flex items-center gap-4 p-4 rounded-2xl text-left relative border",
+                  "disabled:cursor-not-allowed min-h-[64px]",
                   buttonBg,
-                  borderColor,
+                  borderStyle,
                   shadow
                 )}
               >
                 <span className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0",
+                  "w-11 h-11 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0",
                   letterBg,
                   letterText
                 )}>
@@ -379,7 +332,7 @@ export function QuestionScreen() {
                     `${letters[originalIndex]}:`
                   )}
                 </span>
-                <span className={cn("flex-1 font-bold text-lg", answerText)}>
+                <span className={cn("flex-1 font-semibold text-base", answerText)}>
                   {answer}
                 </span>
 
