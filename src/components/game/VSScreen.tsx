@@ -7,6 +7,7 @@ import { ChevronLeft, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 // Countdown overlay component
 const CountdownOverlay = ({ count }: { count: number | string }) => (
@@ -60,85 +61,66 @@ const CountdownOverlay = ({ count }: { count: number | string }) => (
   </motion.div>
 );
 
-// Player info card with frosted glass
-const PlayerInfoCard = ({
+// Ribbon-style name label component
+const NameRibbon = ({
   name,
   flag,
-  points,
-  wins,
-  losses,
   isPlayer = false,
 }: {
   name: string;
   flag: string;
-  points: number;
-  wins: number;
-  losses: number;
   isPlayer?: boolean;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: isPlayer ? 20 : -20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.4, duration: 0.4 }}
-    className="flex flex-col items-center gap-2"
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 0.3, duration: 0.4 }}
+    className="relative"
   >
-    {/* Name with flag */}
     <div
       className="px-5 py-2 rounded-full flex items-center gap-2"
       style={{
-        background: "rgba(255,255,255,0.92)",
+        background: "rgba(255,255,255,0.95)",
         backdropFilter: "blur(12px)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8)",
       }}
     >
       {isPlayer ? (
         <>
-          <span className="text-xl">{flag}</span>
-          <span className="font-bold text-lg" style={{ color: "#1a1a2e" }}>{name}</span>
+          <span className="text-lg">{flag}</span>
+          <span className="font-bold text-base uppercase tracking-wide" style={{ color: "#1a1a2e" }}>{name}</span>
         </>
       ) : (
         <>
-          <span className="font-bold text-lg" style={{ color: "#1a1a2e" }}>{name}</span>
-          <span className="text-xl">{flag}</span>
+          <span className="font-bold text-base uppercase tracking-wide" style={{ color: "#1a1a2e" }}>{name}</span>
+          <span className="text-lg">{flag}</span>
         </>
       )}
     </div>
+  </motion.div>
+);
 
-    {/* Stats row */}
-    <div className="flex items-center gap-2">
-      {/* Points badge */}
-      <div
-        className="px-3 py-1.5 rounded-full flex items-center gap-1.5"
-        style={{
-          background: "linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,165,0,0.25) 100%)",
-          border: "1px solid rgba(255,215,0,0.5)",
-          backdropFilter: "blur(8px)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        }}
-      >
-        <Crown className="w-3.5 h-3.5 text-amber-600" fill="currentColor" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
-        <span 
-          className="text-sm font-bold"
-          style={{ color: "#b45309", textShadow: "0 1px 2px rgba(255,255,255,0.5)" }}
-        >
-          {points.toLocaleString()}
-        </span>
-      </div>
-
-      {/* W/L record */}
-      <div
-        className="px-3 py-1.5 rounded-full text-sm font-semibold"
-        style={{
-          background: "rgba(255,255,255,0.9)",
-          backdropFilter: "blur(8px)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        }}
-      >
-        <span style={{ color: "#059669", textShadow: "0 1px 1px rgba(255,255,255,0.6)" }}>{wins}W</span>
-        <span style={{ color: "#6b7280" }} className="mx-1">/</span>
-        <span style={{ color: "#e11d48", textShadow: "0 1px 1px rgba(255,255,255,0.6)" }}>{losses}L</span>
-      </div>
-    </div>
+// Crown points badge component
+const CrownBadge = ({ points }: { points: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.4, duration: 0.3 }}
+    className="px-4 py-1.5 rounded-full flex items-center gap-2"
+    style={{
+      background: "linear-gradient(135deg, rgba(255,215,0,0.35) 0%, rgba(255,165,0,0.28) 100%)",
+      border: "1px solid rgba(255,215,0,0.55)",
+      backdropFilter: "blur(8px)",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+    }}
+  >
+    <Crown className="w-4 h-4 text-amber-600" fill="currentColor" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
+    <span 
+      className="text-sm font-bold"
+      style={{ color: "#b45309", textShadow: "0 1px 2px rgba(255,255,255,0.5)" }}
+    >
+      {points.toLocaleString()}
+    </span>
   </motion.div>
 );
 
@@ -157,8 +139,6 @@ const PowerUpsArc = ({
   powerUpCounts?: Record<string, number | undefined>;
 }) => {
   const arcRadius = avatarSize * 0.62;
-  // Player: arc above (angles go from -200 to -340 for top arc)
-  // Opponent: arc below (angles go from 20 to 160 for bottom arc)
   const startAngle = isInverted ? 25 : -205;
   const endAngle = isInverted ? 155 : -335;
 
@@ -233,13 +213,6 @@ export function VSScreen() {
     }, 3200);
   }, [isCountingDown, startMatch]);
 
-  // Memoize opponent stats
-  const opponentStats = useMemo(() => {
-    const wins = Math.floor((opponent?.points || 0) / 500);
-    const games = wins + Math.floor(Math.random() * 10) + 5;
-    return { wins, losses: games - wins };
-  }, [opponent?.points]);
-
   // Power-up counts
   const playerPowerUpCounts = useMemo(() => {
     const counts: Record<string, number | undefined> = {};
@@ -256,14 +229,11 @@ export function VSScreen() {
   if (!opponent) return null;
 
   const playerPoints = profile?.total_points || 0;
-  const playerWins = profile?.games_won || 0;
-  const playerGames = profile?.games_played || 0;
-  
   const powerTypes: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
 
   // Avatar sizes
-  const playerAvatarSize = 160;
-  const opponentAvatarSize = 145;
+  const playerAvatarSize = 150;
+  const opponentAvatarSize = 140;
 
   return (
     <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden">
@@ -291,7 +261,7 @@ export function VSScreen() {
             boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
           }}
         >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+          <ChevronLeft className="w-5 h-5 text-slate-700" />
         </motion.button>
         
         <motion.div 
@@ -302,7 +272,7 @@ export function VSScreen() {
           }}
         >
           <Crown className="w-5 h-5 text-amber-500" fill="currentColor" />
-          <span className="text-foreground font-bold">20</span>
+          <span className="text-slate-700 font-bold">20</span>
         </motion.div>
       </motion.div>
 
@@ -332,21 +302,23 @@ export function VSScreen() {
             </div>
           </div>
 
-          {/* Player info card */}
-          <div className="mt-3">
-            <PlayerInfoCard
-              name="YOU"
+          {/* Name ribbon directly below avatar */}
+          <div className="mt-2">
+            <NameRibbon
+              name="შენ"
               flag={getCountryFlag(profile?.country_code || "US")}
-              points={playerPoints}
-              wins={playerWins}
-              losses={playerGames - playerWins}
               isPlayer
             />
+          </div>
+
+          {/* Crown + points badge */}
+          <div className="mt-2">
+            <CrownBadge points={playerPoints} />
           </div>
         </motion.div>
 
         {/* === VS DIVIDER === */}
-        <div className="h-16 flex items-center justify-center relative shrink-0 my-1">
+        <div className="h-14 flex items-center justify-center relative shrink-0 my-1">
           {/* Gold line */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
             <defs>
@@ -417,21 +389,23 @@ export function VSScreen() {
           </AnimatePresence>
         </div>
 
-        {/* === OPPONENT SECTION === */}
+        {/* === OPPONENT SECTION (flipped layout) === */}
         <motion.div 
           className="flex-1 flex flex-col items-center justify-center relative"
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
         >
-          {/* Opponent info card */}
-          <div className="mb-3">
-            <PlayerInfoCard
-              name={opponent.name.toUpperCase()}
+          {/* Crown + points badge (top) */}
+          <div className="mb-2">
+            <CrownBadge points={opponent.points} />
+          </div>
+
+          {/* Name ribbon above avatar */}
+          <div className="mb-2">
+            <NameRibbon
+              name={opponent.name}
               flag={getCountryFlag(opponent.countryCode)}
-              points={opponent.points}
-              wins={opponentStats.wins}
-              losses={opponentStats.losses}
             />
           </div>
 
@@ -454,32 +428,25 @@ export function VSScreen() {
         </motion.div>
       </div>
 
-      {/* Bottom Button */}
+      {/* Bottom Button - Purple 3D Chunky */}
       <motion.div 
         className="px-5 pb-6 pt-3 relative z-20 shrink-0"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.4 }}
       >
-        <motion.button
+        <ChunkyButton
+          variant="purple"
+          size="xl"
           onClick={handleStartCountdown}
           disabled={isCountingDown}
-          className="relative w-full py-4 rounded-2xl font-bold text-lg tracking-widest uppercase overflow-hidden disabled:opacity-70"
-          whileHover={{ scale: isCountingDown ? 1 : 1.02 }}
-          whileTap={{ scale: isCountingDown ? 1 : 0.98 }}
+          className="w-full tracking-widest uppercase"
           style={{
-            background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 20%, #E6A800 80%, #CC8800 100%)",
-            boxShadow: "0 6px 0 #8B6914, 0 8px 25px rgba(0,0,0,0.2)",
-            color: "#5C4A00",
+            background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 20%, #7C3AED 80%, #6D28D9 100%)",
           }}
         >
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            animate={{ x: ["-100%", "200%"] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-          />
-          <span className="relative z-10">{isCountingDown ? "GET READY..." : "NEXT"}</span>
-        </motion.button>
+          {isCountingDown ? "მოემზადე..." : "შემდეგი"}
+        </ChunkyButton>
       </motion.div>
 
       {/* Countdown Overlay */}
