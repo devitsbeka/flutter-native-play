@@ -133,7 +133,7 @@ export default function Discover() {
         {/* Content above mask */}
         <div className="relative z-10">
           {/* Search Bar + Tabs Container */}
-          <div className="sticky top-0 z-20 backdrop-blur-md" style={{ paddingLeft: 20, paddingRight: 20 }}>
+          <div className="sticky top-0 z-20 backdrop-blur-md" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 8 }}>
             {/* Search Bar */}
             <div className="pt-4">
               <div
@@ -155,7 +155,7 @@ export default function Discover() {
             </div>
 
             {/* Icon Tabs */}
-            <div className="flex overflow-x-auto scrollbar-hide py-2" style={{ scrollbarWidth: "none", marginLeft: -20, marginRight: -20, paddingLeft: 20 }}>
+            <div className="flex overflow-x-auto scrollbar-hide pt-4 pb-2" style={{ scrollbarWidth: "none", marginLeft: -20, marginRight: -20, paddingLeft: 20 }}>
               {tabs.map((tab) => (
                 <IconTab
                   key={tab.id}
