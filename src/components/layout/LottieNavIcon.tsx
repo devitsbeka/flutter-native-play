@@ -37,7 +37,7 @@ export function LottieNavIcon({
         style={{
           width: "100%",
           height: "100%",
-          filter: "brightness(0) saturate(100%) invert(40%) sepia(15%) saturate(1000%) hue-rotate(220deg) brightness(95%) contrast(90%)",
+          filter: "brightness(0) saturate(100%) invert(54%) sepia(45%) saturate(1000%) hue-rotate(210deg) brightness(92%) contrast(88%)",
         }}
       >
         <Lottie
