@@ -9,6 +9,7 @@ interface AirbnbCategoryCardProps {
   icon: string;
   color: string;
   description?: string;
+  categoryType?: string;
   progress?: number;
   totalLevels?: number;
   badge?: string;
@@ -42,6 +43,7 @@ export function AirbnbCategoryCard({
   name,
   icon,
   color,
+  categoryType,
   progress = 0,
   totalLevels = 20,
   badge,
@@ -123,6 +125,7 @@ export function AirbnbCategoryCard({
         >
           <DynamicIcon
             category={name}
+            categoryType={categoryType}
             size={64}
             className="drop-shadow-lg filter brightness-110"
           />

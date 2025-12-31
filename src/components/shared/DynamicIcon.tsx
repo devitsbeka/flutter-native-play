@@ -11,10 +11,18 @@ interface DynamicIconProps {
   keywords?: string[];
   questionText?: string;
   category?: string;
+  categoryType?: string; // classic, fun, educational - for type-based fallbacks
   fallbackEmoji?: string; // Legacy prop - will be ignored
   size?: number;
   className?: string;
 }
+
+// Type-based fallback icon slugs
+const TYPE_FALLBACK_ICONS: Record<string, string> = {
+  classic: 'scroll',
+  fun: 'star',
+  educational: 'lightbulb',
+};
 
 // Track failed icons to avoid retrying them
 const failedIconUrls = new Set<string>();
@@ -23,7 +31,8 @@ export function DynamicIcon({
   slug, 
   keywords, 
   questionText,
-  category, 
+  category,
+  categoryType,
   fallbackEmoji, // Ignored - we use icons only
   size = 64,
   className 
@@ -97,9 +106,18 @@ export function DynamicIcon({
       if (url && !failedIconUrls.has(url)) return url;
     }
 
+    // Priority 8: Type-based fallback icon (classic=scroll, fun=star, educational=lightbulb)
+    if (categoryType) {
+      const fallbackSlug = TYPE_FALLBACK_ICONS[categoryType.toLowerCase()];
+      if (fallbackSlug) {
+        const url = getIconBySlug(fallbackSlug);
+        if (url && !failedIconUrls.has(url)) return url;
+      }
+    }
+
     // NO RANDOM FALLBACK - return null and show neutral icon
     return null;
-  }, [slug, keywords, questionText, category, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, aiData, retryCount]);
+  }, [slug, keywords, questionText, category, categoryType, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, aiData, retryCount]);
 
   // Reset error state when iconUrl changes
   React.useEffect(() => {
