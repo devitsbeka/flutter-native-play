@@ -1,26 +1,23 @@
 import { motion } from "framer-motion";
 import { PowerUpBadge, PowerUpType } from "@/components/game/PowerUpBadge";
+import { useUserPowerUps, PowerUpType as UserPowerUpType } from "@/hooks/useUserPowerUps";
 
 interface PowerUpsBarProps {
-  powerUps?: Record<string, number>;
   onAddClick?: () => void;
 }
 
 // Map from our internal IDs to PowerUpBadge types
-const typeMap: Record<string, PowerUpType> = {
+const typeMap: Record<UserPowerUpType, PowerUpType> = {
   "5050": "fifty-fifty",
   "freeze": "freeze",
   "replace": "replace",
   "time-drain": "time-drain",
 };
 
-export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
-  const powers = [
-    { id: "5050", quantity: powerUps["5050"] ?? 0 },
-    { id: "freeze", quantity: powerUps["freeze"] ?? 0 },
-    { id: "replace", quantity: powerUps["replace"] ?? 3 },
-    { id: "time-drain", quantity: powerUps["time-drain"] ?? 2 },
-  ];
+const powerUpOrder: UserPowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
+
+export function PowerUpsBar({ onAddClick }: PowerUpsBarProps) {
+  const { powerUps, isLoading } = useUserPowerUps();
 
   return (
     <motion.div
@@ -42,14 +39,14 @@ export function PowerUpsBar({ powerUps = {}, onAddClick }: PowerUpsBarProps) {
         className="flex items-center justify-center gap-3"
         style={{ marginTop: "30px" }}
       >
-        {powers.map((power, index) => (
+        {powerUpOrder.map((id, index) => (
           <PowerUpBadge
-            key={power.id}
-            type={typeMap[power.id]}
+            key={id}
+            type={typeMap[id]}
             size="sm"
             index={index}
-            count={power.quantity}
-            disabled={power.quantity === 0}
+            count={isLoading ? 0 : powerUps[id]}
+            disabled={powerUps[id] === 0}
           />
         ))}
         
