@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Settings } from "lucide-react";
 import { LevelCircle } from "./LevelCircle";
 import { PowerUpsBar } from "./PowerUpsBar";
+import { PowerUpShopModal } from "./PowerUpShopModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { MAP_VIDEOS } from "@/components/game/VideoPreloader";
@@ -16,6 +17,7 @@ export function VideoAdventureMap() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<VideoPhase>("default");
+  const [showPowerUpShop, setShowPowerUpShop] = useState(false);
   const [videosReady, setVideosReady] = useState({ default: false, b: false, c: false });
   
   // Refs for all three video elements
@@ -237,7 +239,7 @@ export function VideoAdventureMap() {
   };
 
   const handleAddPowerUp = () => {
-    console.log("Open power-up shop");
+    setShowPowerUpShop(true);
   };
 
   // Trigger video sequence when level circle is clicked
@@ -369,6 +371,12 @@ export function VideoAdventureMap() {
           <PowerUpsBar onAddClick={handleAddPowerUp} />
         </div>
       </div>
+
+      {/* Power-up Shop Modal */}
+      <PowerUpShopModal 
+        isOpen={showPowerUpShop} 
+        onClose={() => setShowPowerUpShop(false)} 
+      />
     </div>
   );
 }
