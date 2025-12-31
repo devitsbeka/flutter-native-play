@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { HelpCircle } from "lucide-react";
 
 interface DynamicIconProps {
-  categoryId?: string; // ASCII category_id from database - primary lookup
-  slug?: string; // Direct icon slug
+  categoryId?: string; // ASCII category_id from database - fallback lookup
+  slug?: string; // Direct icon slug (highest priority) - from icon_slug column
   size?: number;
   className?: string;
 }
@@ -33,7 +33,19 @@ export function DynamicIcon({
       setIsLoading(true);
       setImageError(false);
 
-      // Priority 1: Try cached category icon
+      // Priority 1: Direct slug (from database icon_slug column)
+      if (slug) {
+        const directUrl = `${ICON_STORAGE_URL}/${slug}.png`;
+        if (!failedIconUrls.has(directUrl)) {
+          if (!cancelled) {
+            setIconUrl(directUrl);
+            setIsLoading(false);
+          }
+          return;
+        }
+      }
+
+      // Priority 2: Try cached category icon (from keyword resolver)
       if (categoryId) {
         const cachedUrl = getCachedCategoryIcon(categoryId);
         if (cachedUrl && !failedIconUrls.has(cachedUrl)) {
@@ -49,18 +61,6 @@ export function DynamicIcon({
         if (resolved[categoryId] && !failedIconUrls.has(resolved[categoryId])) {
           if (!cancelled) {
             setIconUrl(resolved[categoryId]);
-            setIsLoading(false);
-          }
-          return;
-        }
-      }
-
-      // Priority 2: Direct slug lookup
-      if (slug) {
-        const directUrl = `${ICON_STORAGE_URL}/${slug}.png`;
-        if (!failedIconUrls.has(directUrl)) {
-          if (!cancelled) {
-            setIconUrl(directUrl);
             setIsLoading(false);
           }
           return;

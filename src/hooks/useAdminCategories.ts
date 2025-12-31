@@ -7,6 +7,7 @@ export interface AdminCategory {
   category_id: string;
   name: string;
   icon: string;
+  icon_slug?: string | null;
   color: string;
   description: string | null;
   total_levels: number;

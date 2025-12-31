@@ -6,6 +6,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 interface AirbnbCategoryCardProps {
   id: string;
   categoryId?: string; // ASCII category_id like 'world_history' for icon lookup
+  iconSlug?: string | null; // Direct icon slug from database (highest priority)
   name: string;
   icon: string;
   color: string;
@@ -42,6 +43,7 @@ const getGradientColors = (colorClass: string): { from: string; to: string } => 
 export function AirbnbCategoryCard({
   id,
   categoryId,
+  iconSlug,
   name,
   icon,
   color,
@@ -126,6 +128,7 @@ export function AirbnbCategoryCard({
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         >
           <DynamicIcon
+            slug={iconSlug || undefined}
             categoryId={categoryId}
             size={64}
             className="drop-shadow-lg filter brightness-110"

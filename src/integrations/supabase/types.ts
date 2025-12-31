@@ -48,6 +48,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           icon: string
+          icon_slug: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           icon?: string
+          icon_slug?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -78,6 +80,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           icon?: string
+          icon_slug?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
