@@ -78,7 +78,14 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="w-full max-w-md mx-4"
           >
-            <div className="rounded-3xl overflow-hidden">
+            <div 
+              className="rounded-3xl overflow-hidden"
+              style={{
+                background: "rgba(30, 20, 60, 0.95)",
+                backdropFilter: "blur(20px)",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+              }}
+            >
               {/* Header */}
               <div className="relative px-6 pt-5 pb-3">
                 <button
@@ -140,7 +147,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                       >
                         <PowerUpBadge
                           type={info.type === "5050" ? "fifty-fifty" : info.type}
-                          size="md"
+                          size="sm"
                           count={count}
                           disabled={count === 0}
                         />
