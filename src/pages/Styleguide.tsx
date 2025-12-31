@@ -11,6 +11,7 @@ import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizPowerUpButton, PowerUpType } from "@/components/ui/quiz-power-up-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
+import { QuizGameScreen } from "@/components/game/QuizGameScreen";
 
 const georgianLabels = ["ა", "ბ", "გ", "დ"];
 
@@ -121,8 +122,11 @@ const Styleguide = () => {
       </div>
 
       <div className="max-w-4xl mx-auto">
-        <Tabs defaultValue="buttons" className="w-full">
+        <Tabs defaultValue="game-screen" className="w-full">
           <TabsList className="mb-8 bg-white/10">
+            <TabsTrigger value="game-screen" className="data-[state=active]:bg-white/20 text-white">
+              Game Screen
+            </TabsTrigger>
             <TabsTrigger value="buttons" className="data-[state=active]:bg-white/20 text-white">
               Buttons
             </TabsTrigger>
@@ -133,6 +137,21 @@ const Styleguide = () => {
               Colors
             </TabsTrigger>
           </TabsList>
+
+          {/* GAME SCREEN TAB */}
+          <TabsContent value="game-screen" className="space-y-6">
+            <section>
+              <h2 className="text-xl font-bold text-white mb-6 border-b border-white/20 pb-2">
+                Complete Quiz Game Screen
+              </h2>
+              <p className="text-white/60 text-sm mb-4">
+                Interactive demo of the complete quiz game experience. Answer questions, use power-ups, and compete!
+              </p>
+              <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ maxHeight: "700px" }}>
+                <QuizGameScreen onBack={() => navigate(-1)} />
+              </div>
+            </section>
+          </TabsContent>
 
           {/* BUTTONS TAB */}
           <TabsContent value="buttons" className="space-y-12">
