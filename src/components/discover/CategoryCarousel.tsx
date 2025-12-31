@@ -9,6 +9,7 @@ interface Category {
   color: string;
   description?: string;
   image_url?: string;
+  type?: string;
 }
 
 interface CategoryCarouselProps {
@@ -72,6 +73,7 @@ export function CategoryCarousel({
               icon={category.icon}
               color={category.color}
               description={category.description}
+              categoryType={category.type}
               progress={progress[category.id] || 0}
               totalLevels={20}
               badge={getBadge?.(category, index)}
