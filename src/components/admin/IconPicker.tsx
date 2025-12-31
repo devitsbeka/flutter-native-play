@@ -3,12 +3,14 @@ import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface IconItem {
   slug: string;
   title: string;
   tags: string[];
   category: string;
+  icon_url: string | null;
 }
 
 interface IconPickerProps {
@@ -22,15 +24,27 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     async function loadIcons() {
       try {
-        const response = await fetch('/data/icon-library-meta.json');
-        if (response.ok) {
-          const data = await response.json();
-          setIcons(data.items || []);
-        }
+        // Get total count
+        const { count } = await supabase
+          .from('icon_library')
+          .select('*', { count: 'exact', head: true });
+        
+        setTotalCount(count || 0);
+
+        // Load first 100 icons
+        const { data, error } = await supabase
+          .from('icon_library')
+          .select('slug, title, tags, category, icon_url')
+          .order('title')
+          .limit(100);
+
+        if (error) throw error;
+        setIcons(data || []);
       } catch (error) {
         console.error('Failed to load icons:', error);
       } finally {
@@ -40,20 +54,37 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     loadIcons();
   }, []);
 
-  const filteredIcons = useMemo(() => {
-    if (!search.trim()) {
-      // Show first 100 icons when no search
-      return icons.slice(0, 100);
+  // Search icons from database when search term changes
+  const searchIcons = async (term: string) => {
+    if (!term.trim()) {
+      // Reset to first 100 when search is cleared
+      const { data } = await supabase
+        .from('icon_library')
+        .select('slug, title, tags, category, icon_url')
+        .order('title')
+        .limit(100);
+      setIcons(data || []);
+      return;
     }
+
+    const { data } = await supabase
+      .from('icon_library')
+      .select('slug, title, tags, category, icon_url')
+      .or(`slug.ilike.%${term}%,title.ilike.%${term}%,category.ilike.%${term}%`)
+      .order('title')
+      .limit(100);
     
-    const term = search.toLowerCase();
-    return icons.filter(icon => 
-      icon.slug.includes(term) ||
-      icon.title.toLowerCase().includes(term) ||
-      icon.tags?.some(tag => tag.toLowerCase().includes(term)) ||
-      icon.category?.toLowerCase().includes(term)
-    ).slice(0, 100);
-  }, [icons, search]);
+    setIcons(data || []);
+  };
+
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      searchIcons(search);
+    }, 300);
+    return () => clearTimeout(debounce);
+  }, [search]);
+
+  const filteredIcons = icons;
 
   if (loading) {
     return (
@@ -126,7 +157,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       </ScrollArea>
       
       <p className="text-xs text-muted-foreground">
-        {icons.length.toLocaleString()} აიკონი ხელმისაწვდომია • ნაჩვენებია {filteredIcons.length}
+        {totalCount.toLocaleString()} აიკონი ხელმისაწვდომია • ნაჩვენებია {filteredIcons.length}
       </p>
     </div>
   );
