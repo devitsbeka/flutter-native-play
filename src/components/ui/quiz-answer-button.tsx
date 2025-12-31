@@ -62,7 +62,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
     const styles = stateStyles[state];
     const [isPressed, setIsPressed] = React.useState(false);
 
-    const depthHeight = 6;
+    const depthHeight = 8;
 
     return (
       <motion.button
@@ -77,7 +77,11 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: disabled ? 1 : 1.02 }}
-        transition={{ duration: 0.2 }}
+        whileTap={{ scale: disabled ? 1 : 0.98 }}
+        transition={{ 
+          duration: 0.2,
+          scale: { type: "spring", stiffness: 400, damping: 17 }
+        }}
         className={cn(
           "relative w-full rounded-2xl font-bold text-xl",
           "disabled:opacity-50 disabled:cursor-not-allowed",
