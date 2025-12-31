@@ -1,7 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { AlarmClock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AlarmClock } from "lucide-react";
 
 export type QuizQuestionCardState = "default" | "loading";
 
@@ -13,31 +13,31 @@ interface QuizQuestionCardProps {
   className?: string;
 }
 
-const difficultyLabels = {
-  easy: "ᲛᲐᲠᲢᲘᲕᲘ",
-  medium: "ᲡᲐᲨᲣᲐᲚᲝ",
-  hard: "ᲠᲗᲣᲚᲘ",
+const difficultyLabels: Record<string, string> = {
+  easy: "მარტივი",
+  medium: "საშუალო",
+  hard: "რთული",
 };
 
-const difficultyColors = {
-  easy: "text-emerald-500",
-  medium: "text-[#FF7F25]",
-  hard: "text-red-500",
+const difficultyColors: Record<string, { bg: string; text: string }> = {
+  easy: { bg: "rgba(57, 203, 166, 0.2)", text: "#1E9A7F" },
+  medium: { bg: "rgba(242, 200, 96, 0.2)", text: "#B8860B" },
+  hard: { bg: "rgba(255, 92, 92, 0.2)", text: "#B83A3A" },
 };
 
-// Truncate question text with dynamic font sizing
-const getQuestionStyles = (text: string) => {
-  const len = text.length;
-  if (len > 100) return { fontSize: "16px", lineClamp: 3 };
-  if (len > 80) return { fontSize: "18px", lineClamp: 3 };
+// Dynamic font sizing based on question length
+function getQuestionStyles(text: string) {
+  const length = text.length;
+  if (length > 120) return { fontSize: "16px", lineClamp: 4 };
+  if (length > 80) return { fontSize: "18px", lineClamp: 3 };
   return { fontSize: "20px", lineClamp: 3 };
-};
+}
 
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(
   (
     {
-      questionText = "What is the question?",
-      timeRemaining = 10,
+      questionText = "Loading question...",
+      timeRemaining = 15,
       difficulty = "medium",
       state = "default",
       className,
@@ -46,78 +46,94 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
   ) => {
     const isLoading = state === "loading";
     const questionStyles = getQuestionStyles(questionText);
-
-    // Truncate text if too long
-    const displayText =
-      questionText.length > 120
-        ? questionText.substring(0, 117) + "..."
-        : questionText;
+    const diffStyle = difficultyColors[difficulty] || difficultyColors.medium;
+    
+    // Timer color based on time remaining
+    const getTimerColor = () => {
+      if (timeRemaining <= 5) return "#FF5C5C";
+      if (timeRemaining <= 10) return "#F2C860";
+      return "#CD5C3A";
+    };
 
     return (
       <motion.div
         ref={ref}
         className={cn(
-          "w-full max-w-[320px] bg-white/95 rounded-[20px] p-4 shadow-lg",
+          "relative w-full rounded-3xl overflow-hidden",
           className
         )}
-        initial={{ opacity: 0, y: 10 }}
+        style={{
+          backgroundColor: "#F5F4FF",
+          border: "3px solid #C9C6FF",
+          boxShadow: "0 4px 0 #9C99E8",
+        }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        {/* Timer and Difficulty Row */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Top row: Timer + Difficulty */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
           {/* Timer */}
-          <div className="flex items-center gap-1.5">
-            {isLoading ? (
-              <div className="h-5 w-12 bg-muted rounded animate-pulse" />
-            ) : (
-              <>
-                <AlarmClock className="w-5 h-5 text-[#CD5C3A]" />
-                <span className="text-base font-bold text-[#CD5C3A] font-['TA_Solivare']">
-                  {timeRemaining}
-                </span>
-              </>
-            )}
-          </div>
+          {isLoading ? (
+            <div className="h-8 w-16 bg-[#E5E4FF] rounded-lg animate-pulse" />
+          ) : (
+            <motion.div 
+              className="flex items-center gap-1.5"
+              key={timeRemaining}
+              animate={timeRemaining <= 5 ? { scale: [1, 1.1, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <AlarmClock 
+                className="w-5 h-5" 
+                style={{ color: getTimerColor() }}
+              />
+              <span 
+                className="text-xl font-bold"
+                style={{ color: getTimerColor() }}
+              >
+                {timeRemaining}
+              </span>
+            </motion.div>
+          )}
 
           {/* Difficulty Badge */}
           {isLoading ? (
-            <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-7 w-20 bg-[#E5E4FF] rounded-full animate-pulse" />
           ) : (
-            <span
-              className={cn(
-                "text-sm font-bold font-['TA_Solivare'] tracking-wide",
-                difficultyColors[difficulty]
-              )}
+            <div
+              className="px-3 py-1 rounded-full text-sm font-semibold uppercase"
+              style={{
+                backgroundColor: diffStyle.bg,
+                color: diffStyle.text,
+              }}
             >
               {difficultyLabels[difficulty]}
-            </span>
+            </div>
           )}
         </div>
 
         {/* Question Text */}
-        <div className="w-full">
+        <div className="px-4 pb-5 pt-2">
           {isLoading ? (
             <div className="space-y-2">
-              <div className="h-5 bg-muted rounded animate-pulse" />
-              <div className="h-5 bg-muted rounded animate-pulse w-3/4 mx-auto" />
+              <div className="h-5 w-full bg-[#E5E4FF] rounded animate-pulse" />
+              <div className="h-5 w-3/4 bg-[#E5E4FF] rounded animate-pulse" />
             </div>
           ) : (
-            <motion.p
-              className="font-bold text-[#514F7F] text-center font-['Google_Sans'] leading-snug"
+            <p
+              className="text-center font-medium leading-relaxed"
               style={{
+                color: "#514F7F",
                 fontSize: questionStyles.fontSize,
                 display: "-webkit-box",
                 WebkitLineClamp: questionStyles.lineClamp,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
+                minHeight: "3.5em",
               }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
             >
-              {displayText}
-            </motion.p>
+              {questionText}
+            </p>
           )}
         </div>
       </motion.div>

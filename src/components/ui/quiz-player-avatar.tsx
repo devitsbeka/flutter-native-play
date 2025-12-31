@@ -17,50 +17,57 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
     const isLoading = state === "loading";
 
     const borderColors: Record<QuizPlayerAvatarState, string> = {
-      default: "border-[#83F7DA]",
-      active: "border-[#83F7DA]",
-      correct: "border-emerald-400",
-      wrong: "border-red-400",
-      loading: "border-muted",
+      default: "#9C99E8",
+      active: "#83F7DA",
+      correct: "#39CBA6",
+      wrong: "#FF5C5C",
+      loading: "#9C99E8",
     };
 
-    const scoreColors: Record<QuizPlayerAvatarState, string> = {
-      default: position === "left" ? "text-[#F2C860]" : "text-[#F2FFFB]",
-      active: position === "left" ? "text-[#F2C860]" : "text-[#F2FFFB]",
-      correct: "text-emerald-400",
-      wrong: "text-red-400",
-      loading: "text-muted",
+    const shadowColors: Record<QuizPlayerAvatarState, string> = {
+      default: "#5957A7",
+      active: "#1E9A7F",
+      correct: "#1E9A7F",
+      wrong: "#B83A3A",
+      loading: "#5957A7",
+    };
+
+    const scoreColors: Record<"left" | "right", string> = {
+      left: "#F2C860",
+      right: "#F2FFFB",
     };
 
     return (
       <motion.div
         ref={ref}
-        className={cn("flex flex-col items-center gap-1", className)}
+        className={cn("flex flex-col items-center gap-2", className)}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {/* Avatar Container with 3D effect */}
-        <div className="relative">
-          {/* Outer border/shadow container */}
+        <div className="relative" style={{ width: 68, height: 68 }}>
+          {/* 3D Depth shadow */}
           <div
-            className="w-[58px] h-[55px] rounded-[18px] bg-[#F2F2F2]"
+            className="absolute inset-0 rounded-[20px]"
             style={{
-              boxShadow: "0 0 0 3.63px #5957A7",
+              backgroundColor: shadowColors[state],
+              transform: "translateY(4px)",
             }}
           />
           
-          {/* Avatar image overlay */}
+          {/* Main avatar container */}
           <motion.div
-            className={cn(
-              "absolute inset-0 w-[58px] h-[58px] rounded-[18px] border-[2.83px] overflow-hidden",
-              borderColors[state]
-            )}
+            className="relative w-full h-full rounded-[20px] overflow-hidden"
+            style={{
+              border: `3px solid ${borderColors[state]}`,
+              backgroundColor: "#F5F4FF",
+            }}
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
           >
             {isLoading ? (
-              <div className="w-full h-full bg-muted animate-pulse" />
+              <div className="w-full h-full bg-[#E5E4FF] animate-pulse" />
             ) : (
               <img
                 src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=player"}
@@ -73,15 +80,16 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
 
         {/* Score */}
         {isLoading ? (
-          <div className="h-5 w-10 bg-muted rounded animate-pulse" />
+          <div className="h-7 w-12 bg-white/20 rounded animate-pulse" />
         ) : (
           <motion.span
-            className={cn(
-              "text-xl font-bold font-['Baloo']",
-              scoreColors[state]
-            )}
+            className="text-2xl font-bold"
+            style={{ 
+              color: scoreColors[position],
+              textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            }}
             key={score}
-            initial={{ scale: 1.2 }}
+            initial={{ scale: 1.3 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 500, damping: 15 }}
           >
