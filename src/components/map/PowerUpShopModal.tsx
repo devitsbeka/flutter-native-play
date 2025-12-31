@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift, Star, Sparkles } from "lucide-react";
+import { X, Gift, Star } from "lucide-react";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
+import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 
 interface PowerUpShopModalProps {
@@ -39,31 +41,46 @@ const POWER_UP_INFO: PowerUpInfo[] = [
 
 export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   const { powerUps, isLoading } = useUserPowerUps();
+  const [selectedType, setSelectedType] = useState<PowerUpType>("5050");
+  const [animationKey, setAnimationKey] = useState(0);
+
+  // Restart animation when switching power-ups
+  const handleSelectPowerUp = (type: PowerUpType) => {
+    setSelectedType(type);
+    setAnimationKey((prev) => prev + 1);
+  };
+
+  // Auto-loop animation every 4 seconds
+  useEffect(() => {
+    if (!isOpen) return;
+    const interval = setInterval(() => {
+      setAnimationKey((prev) => prev + 1);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isOpen, selectedType]);
+
+  const selectedInfo = POWER_UP_INFO.find((p) => p.type === selectedType)!;
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-end justify-center pb-24"
+        >
+          {/* Modal Card - no backdrop, map visible */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={onClose}
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
+            className="w-full max-w-md mx-4"
           >
-            <div className="bg-gradient-to-b from-[#1a1a2e] to-[#16213e] rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-b from-[#1a1a2e]/95 to-[#16213e]/95 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
               {/* Header */}
-              <div className="relative px-6 pt-6 pb-4">
+              <div className="relative px-6 pt-5 pb-3">
                 <button
                   onClick={onClose}
                   className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -72,84 +89,101 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                 </button>
 
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-3">
-                    <Sparkles className="w-8 h-8 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-display text-white mb-1">
+                  <h2 className="text-xl font-display text-white">
                     ⚡ ძალები
                   </h2>
-                  <p className="text-white/60 text-sm">
+                  <p className="text-white/50 text-sm">
                     შენი სუპერ ძალები
                   </p>
                 </div>
               </div>
 
-              {/* Power-ups Grid */}
-              <div className="px-6 pb-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {POWER_UP_INFO.map((info, index) => (
-                    <motion.div
-                      key={info.type}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-white/5 rounded-2xl p-4 border border-white/10"
-                    >
-                      <div className="flex flex-col items-center text-center">
+              {/* Demo Preview Area */}
+              <div className="px-4">
+                <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
+                  <PowerUpDemoPreview
+                    type={selectedType}
+                    animationKey={animationKey}
+                  />
+                </div>
+                
+                {/* Description */}
+                <motion.p
+                  key={selectedType}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center text-white/70 text-sm mt-3 mb-4"
+                >
+                  <span className="font-semibold text-white">{selectedInfo.name}</span>
+                  {" — "}
+                  {selectedInfo.description}
+                </motion.p>
+              </div>
+
+              {/* Power-up Selector Buttons */}
+              <div className="px-4 pb-4">
+                <div className="flex justify-center gap-3">
+                  {POWER_UP_INFO.map((info) => {
+                    const isSelected = selectedType === info.type;
+                    const count = isLoading ? 0 : powerUps[info.type];
+                    
+                    return (
+                      <motion.button
+                        key={info.type}
+                        onClick={() => handleSelectPowerUp(info.type)}
+                        whileTap={{ scale: 0.95 }}
+                        className={`relative p-2 rounded-2xl transition-all ${
+                          isSelected
+                            ? "bg-white/15 ring-2 ring-white/30"
+                            : "bg-white/5 hover:bg-white/10"
+                        }`}
+                      >
                         <PowerUpBadge
                           type={info.type === "5050" ? "fifty-fifty" : info.type}
                           size="md"
-                          count={isLoading ? 0 : powerUps[info.type]}
-                          disabled={powerUps[info.type] === 0}
+                          count={count}
+                          disabled={count === 0}
                         />
-                        <h3 className="text-white font-medium mt-2 text-sm">
-                          {info.name}
-                        </h3>
-                        <p className="text-white/50 text-xs mt-1 leading-tight">
-                          {info.description}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
+                        
+                        {/* Selection indicator */}
+                        {isSelected && (
+                          <motion.div
+                            layoutId="selector"
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white"
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* How to get more */}
-              <div className="px-6 pb-6">
-                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl p-4 border border-amber-500/20">
-                  <h3 className="text-amber-400 font-medium text-sm mb-2 flex items-center gap-2">
-                    <Gift className="w-4 h-4" />
+              <div className="px-4 pb-4">
+                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl p-3 border border-amber-500/20">
+                  <h3 className="text-amber-400 font-medium text-xs mb-1.5 flex items-center gap-2">
+                    <Gift className="w-3.5 h-3.5" />
                     როგორ მივიღო მეტი?
                   </h3>
-                  <ul className="space-y-1.5 text-white/60 text-xs">
-                    <li className="flex items-center gap-2">
+                  <div className="flex flex-wrap gap-2 text-white/60 text-xs">
+                    <span className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-amber-400" />
                       ყოველდღიური ჯილდოები
-                    </li>
-                    <li className="flex items-center gap-2">
+                    </span>
+                    <span className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-amber-400" />
                       დონის ამაღლება
-                    </li>
-                    <li className="flex items-center gap-2">
+                    </span>
+                    <span className="flex items-center gap-1">
                       <Star className="w-3 h-3 text-amber-400" />
                       მატჩების მოგება
-                    </li>
-                  </ul>
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              {/* Close Button */}
-              <div className="px-6 pb-6">
-                <button
-                  onClick={onClose}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:from-purple-500 hover:to-pink-500 transition-all"
-                >
-                  დახურვა
-                </button>
               </div>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
