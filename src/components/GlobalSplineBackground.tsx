@@ -1,12 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { SPLINE_BLOB_URL, isSplineLoaded } from "@/components/game/SplinePreloader";
 
-// Pages where the Spline background should be visible
-const SPLINE_PAGES = ["/", "/game", "/discover", "/leaderboards"];
+// Pages where the background should be visible
+const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile"];
 
-// White sparkle particle - more prominent
+// White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
   <motion.div
     className="absolute rounded-full pointer-events-none"
@@ -32,14 +31,40 @@ const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: numbe
   />
 );
 
+// Floating orb particle - larger, slower moving
+const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number; y: number; size: number; duration: number }) => (
+  <motion.div
+    className="absolute rounded-full pointer-events-none"
+    style={{
+      left: `${x}%`,
+      top: `${y}%`,
+      width: size,
+      height: size,
+      background: "radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 50%, transparent 70%)",
+      filter: "blur(1px)",
+    }}
+    animate={{
+      y: [0, -30, 0, 20, 0],
+      x: [0, 15, 0, -15, 0],
+      scale: [1, 1.1, 1, 0.95, 1],
+      opacity: [0.3, 0.5, 0.3, 0.4, 0.3],
+    }}
+    transition={{
+      duration,
+      delay,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  />
+);
+
 export function GlobalSplineBackground() {
   const location = useLocation();
-  const [ready, setReady] = useState(isSplineLoaded());
   
-  // Check if current page should show Spline
-  const shouldShow = SPLINE_PAGES.includes(location.pathname);
+  // Check if current page should show background
+  const shouldShow = BACKGROUND_PAGES.some(page => location.pathname.startsWith(page) || location.pathname === page);
   
-  // Generate more sparkle particles - 80 particles for dense effect
+  // Generate sparkle particles - 80 particles for dense effect
   const sparkles = useMemo(() => 
     Array.from({ length: 80 }, (_, i) => ({
       id: i,
@@ -50,42 +75,54 @@ export function GlobalSplineBackground() {
     })), []
   );
   
-  useEffect(() => {
-    if (isSplineLoaded()) {
-      setReady(true);
-      return;
-    }
-    const timer = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+  // Generate floating orbs - larger ambient particles
+  const orbs = useMemo(() => 
+    Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      delay: Math.random() * 5,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: 40 + Math.random() * 80,
+      duration: 8 + Math.random() * 6,
+    })), []
+  );
 
   return (
     <>
-      {/* Gradient fallback - always present to prevent black flash */}
+      {/* Solid color background - #7E7BDC */}
       <div 
         className="fixed inset-0 pointer-events-none transition-opacity duration-500"
         style={{
-          background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)",
+          background: "#7E7BDC",
           opacity: shouldShow ? 1 : 0,
           zIndex: -30,
         }}
       />
       
-      {/* Global Spline iframe - stays mounted, visibility controlled by opacity */}
-      <iframe 
-        src={SPLINE_BLOB_URL}
-        frameBorder="0" 
-        className="fixed inset-0 w-full h-full pointer-events-none transition-opacity duration-300"
-        style={{ 
-          opacity: shouldShow && ready ? 1 : 0,
-          zIndex: -20,
-        }}
-        title="Global Background"
-        loading="eager"
-      />
+      {/* Subtle gradient overlay for depth */}
+      {shouldShow && (
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.1) 100%)",
+            zIndex: -25,
+          }}
+        />
+      )}
       
+      {/* Floating orb particles - ambient background movement */}
+      {shouldShow && (
+        <div 
+          className="fixed inset-0 overflow-hidden pointer-events-none"
+          style={{ zIndex: -15 }}
+        >
+          {orbs.map((orb) => (
+            <FloatingOrb key={orb.id} {...orb} />
+          ))}
+        </div>
+      )}
       
-      {/* White sparkle particles */}
+      {/* White sparkle particles - rising effect */}
       {shouldShow && (
         <div 
           className="fixed inset-0 overflow-hidden pointer-events-none"

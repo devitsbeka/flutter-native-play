@@ -6,7 +6,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { SplashScreen } from "@/components/SplashScreen";
-import { SplinePreloader } from "@/components/game/SplinePreloader";
 import { VideoPreloader } from "@/components/game/VideoPreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { AdminRoute } from "@/components/admin/AdminRoute";
@@ -40,13 +39,10 @@ const App = () => (
       <SoundProvider>
         <SplashScreen>
           <TooltipProvider>
-            {/* Preload Spline animations in background */}
-            <SplinePreloader />
-            
             {/* Preload all map videos in background */}
             <VideoPreloader />
             
-            {/* Global persistent Spline background - never unmounts */}
+            {/* Global persistent background with particles */}
             <GlobalSplineBackground />
             
             <Toaster />
