@@ -31,6 +31,7 @@ import ContentManager from "./pages/admin/ContentManager";
 import AdminOnlineUsers from "./pages/admin/OnlineUsers";
 import AdminImport from "./pages/admin/Import";
 import DuplicateScanner from "./pages/admin/DuplicateScanner";
+import Styleguide from "./pages/Styleguide";
 
 const App = () => (
   <AuthProvider>
@@ -71,6 +72,7 @@ const App = () => (
                 <Route path="users" element={<AdminOnlineUsers />} />
                 <Route path="duplicates" element={<DuplicateScanner />} />
               </Route>
+              <Route path="/styleguide" element={<Styleguide />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
