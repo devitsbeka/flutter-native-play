@@ -83,7 +83,7 @@ export function AirbnbCategoryCard({
       onClick={onClick}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      className="flex-shrink-0 w-40 text-left"
+      className="flex-shrink-0 w-full text-left"
     >
       {/* Animated Gradient + Particle Area */}
       <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden">

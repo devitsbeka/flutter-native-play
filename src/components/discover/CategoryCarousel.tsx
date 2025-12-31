@@ -68,7 +68,7 @@ export function CategoryCarousel({
         style={{ scrollbarWidth: "none", msOverflowStyle: "none", paddingLeft: "20px", paddingRight: "16px" }}
       >
         {categories.map((category, index) => (
-          <div key={category.id} className="flex-shrink-0">
+          <div key={category.id} className="flex-shrink-0 w-40">
             <AirbnbCategoryCard
               id={category.id}
               categoryId={category.category_id || category.id}
