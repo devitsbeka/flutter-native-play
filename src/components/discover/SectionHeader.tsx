@@ -8,7 +8,7 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps) {
   return (
-    <div className="flex items-start justify-between px-4 mb-3">
+    <div className="flex items-start justify-between px-5 mb-3">
       <div className="flex-1">
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         {subtitle && (
