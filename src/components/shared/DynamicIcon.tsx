@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { getCachedCategoryIcon } from "@/hooks/useCategoryIconResolver";
+import { getCachedCategoryIcon, preloadCategoryIcons } from "@/hooks/useCategoryIconResolver";
 import { cn } from "@/lib/utils";
 import { HelpCircle } from "lucide-react";
 
@@ -22,32 +22,64 @@ export function DynamicIcon({
   size = 64,
   className 
 }: DynamicIconProps) {
+  const [iconUrl, setIconUrl] = React.useState<string | null>(null);
   const [imageError, setImageError] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const iconUrl = React.useMemo(() => {
-    // Priority 1: Cached category icon (resolved from keywords search)
-    if (categoryId) {
-      const cachedUrl = getCachedCategoryIcon(categoryId);
-      if (cachedUrl && !failedIconUrls.has(cachedUrl)) {
-        return cachedUrl;
-      }
-    }
-
-    // Priority 2: Direct slug lookup
-    if (slug) {
-      const directUrl = `${ICON_STORAGE_URL}/${slug}.png`;
-      if (!failedIconUrls.has(directUrl)) {
-        return directUrl;
-      }
-    }
-
-    return null;
-  }, [categoryId, slug]);
-
-  // Reset error when URL changes
   React.useEffect(() => {
-    setImageError(false);
-  }, [iconUrl]);
+    let cancelled = false;
+
+    async function resolveIcon() {
+      setIsLoading(true);
+      setImageError(false);
+
+      // Priority 1: Try cached category icon
+      if (categoryId) {
+        const cachedUrl = getCachedCategoryIcon(categoryId);
+        if (cachedUrl && !failedIconUrls.has(cachedUrl)) {
+          if (!cancelled) {
+            setIconUrl(cachedUrl);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // If not cached, try to preload just this category
+        const resolved = await preloadCategoryIcons([categoryId]);
+        if (resolved[categoryId] && !failedIconUrls.has(resolved[categoryId])) {
+          if (!cancelled) {
+            setIconUrl(resolved[categoryId]);
+            setIsLoading(false);
+          }
+          return;
+        }
+      }
+
+      // Priority 2: Direct slug lookup
+      if (slug) {
+        const directUrl = `${ICON_STORAGE_URL}/${slug}.png`;
+        if (!failedIconUrls.has(directUrl)) {
+          if (!cancelled) {
+            setIconUrl(directUrl);
+            setIsLoading(false);
+          }
+          return;
+        }
+      }
+
+      // No icon found
+      if (!cancelled) {
+        setIconUrl(null);
+        setIsLoading(false);
+      }
+    }
+
+    resolveIcon();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId, slug]);
 
   const handleImageError = React.useCallback(() => {
     if (iconUrl) {
@@ -56,8 +88,8 @@ export function DynamicIcon({
     setImageError(true);
   }, [iconUrl]);
 
-  // Show placeholder if no icon
-  if (!iconUrl || imageError) {
+  // Show placeholder if loading, no icon, or error
+  if (isLoading || !iconUrl || imageError) {
     return (
       <div 
         className={cn("flex items-center justify-center rounded-xl bg-white/20", className)}
