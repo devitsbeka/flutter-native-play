@@ -1,6 +1,4 @@
 import { useGame } from "@/contexts/GameContext";
-import { HomeScreen } from "./HomeScreen";
-import { MatchmakingScreen } from "./MatchmakingScreen";
 import { VSScreen } from "./VSScreen";
 import { QuizGameScreenProd } from "./QuizGameScreenProd";
 import { MatchResultScreen } from "./MatchResultScreen";
@@ -12,14 +10,12 @@ export function GameContainer() {
   // Use stable key for question-related phases to prevent unmount/remount
   const getStableKey = () => {
     if (phase === "playing" || phase === "question-result") return "question-flow";
-    if (phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") return "blob-flow";
+    if (phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") return "vs-flow";
     return phase;
   };
 
   return (
     <div className="w-full h-full relative">
-      {/* Background comes from GlobalSplineBackground in App.tsx - no local iframe needed */}
-      
       <AnimatePresence mode="wait">
         <motion.div
           key={getStableKey()}
@@ -29,8 +25,8 @@ export function GameContainer() {
           transition={{ duration: 0.1 }}
           className="w-full h-full"
         >
-          {(phase === "home" || phase === "matchmaking" || phase === "preparing") && <MatchmakingScreen />}
-          {phase === "vs-screen" && <VSScreen />}
+          {/* Combined VS Screen handles matchmaking + vs-screen phases */}
+          {(phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") && <VSScreen />}
           {(phase === "playing" || phase === "question-result") && <QuizGameScreenProd />}
           {phase === "match-result" && <MatchResultScreen />}
         </motion.div>

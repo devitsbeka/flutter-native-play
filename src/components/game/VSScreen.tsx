@@ -1,11 +1,46 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
-import { PowerUpBadge } from "@/components/game/PowerUpBadge";
-import { ChevronLeft, Crown, Plus } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
-import { AvatarCircle } from "@/components/home/AvatarCircle";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { getCountryFlag, countries } from "@/data/opponents";
+import { calculateLevel } from "@/utils/levelCalculation";
+
+import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
+import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
+import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
+import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
+import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
+import botAvatar6 from "@/assets/avatars/bot-avatar-6.png";
+import botAvatar7 from "@/assets/avatars/bot-avatar-7.png";
+import botAvatar8 from "@/assets/avatars/bot-avatar-8.png";
+import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
+import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
+
+// Slot machine avatars for cycling effect
+const slotAvatars = [
+  botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
+  botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10
+];
+
+// Background pattern shapes
+const PatternShape = ({ delay, x, y, rotation, type }: { delay: number; x: number; y: number; rotation: number; type: string }) => (
+  <motion.div
+    className="absolute text-white/[0.07] font-bold pointer-events-none select-none"
+    style={{
+      left: `${x}%`,
+      top: `${y}%`,
+      fontSize: type.length === 1 ? '48px' : '32px',
+      transform: `rotate(${rotation}deg)`,
+    }}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: delay * 0.1, duration: 0.5 }}
+  >
+    {type}
+  </motion.div>
+);
 
 // Countdown overlay component
 const CountdownOverlay = ({ count }: { count: number | string }) => (
@@ -59,116 +94,140 @@ const CountdownOverlay = ({ count }: { count: number | string }) => (
   </motion.div>
 );
 
-// Level and Score badge component
-const LevelScoreBadge = ({ level, score }: { level: number; score: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.3, duration: 0.3 }}
-    className="px-5 py-2.5 rounded-full flex items-center gap-3"
-    style={{
-      background: "linear-gradient(135deg, #3B3B5C 0%, #2D2D4A 100%)",
-      boxShadow: "0 4px 15px rgba(0,0,0,0.25)",
-    }}
-  >
-    <div className="flex items-center gap-1.5">
-      <span className="text-lg">🏁</span>
-      <span className="text-white font-bold text-sm tracking-wide">LEVEL: {level}</span>
-    </div>
-    <div className="w-px h-4 bg-white/30" />
-    <div className="flex items-center gap-1.5">
-      <Crown className="w-4 h-4 text-yellow-400" fill="currentColor" />
-      <span className="text-yellow-400 font-bold text-sm">{score.toLocaleString()}</span>
-    </div>
-  </motion.div>
-);
-
-// Power-ups horizontal row component
-const PowerUpsRow = ({
-  powerUps,
-  disabled = false,
-  showAddButton = false,
-}: {
-  powerUps: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain">;
-  disabled?: boolean;
-  showAddButton?: boolean;
-}) => (
+// Square avatar with mint border
+const SquareAvatar = ({ avatarUrl, size = 160, isSearching = false }: { avatarUrl?: string | null; size?: number; isSearching?: boolean }) => (
   <motion.div 
-    className="flex items-center justify-center gap-3"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.5, duration: 0.4 }}
+    className="relative"
+    animate={isSearching ? { scale: [1, 1.02, 1] } : {}}
+    transition={{ duration: 1.5, repeat: isSearching ? Infinity : 0 }}
   >
-    {powerUps.map((type, index) => (
-      <motion.div
-        key={`${type}-${index}`}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: disabled ? 0.6 : 1, scale: 1 }}
-        transition={{ delay: 0.6 + index * 0.08, duration: 0.3, type: "spring" }}
-        style={{ filter: disabled ? "grayscale(30%)" : "none" }}
-      >
-        <PowerUpBadge type={type} size="md" disabled={disabled} />
-      </motion.div>
-    ))}
-    {showAddButton && (
-      <motion.button
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.9, duration: 0.3, type: "spring" }}
-        className="w-12 h-12 rounded-xl flex items-center justify-center"
-        style={{
-          background: "linear-gradient(135deg, #4ADE80 0%, #22C55E 100%)",
-          boxShadow: "0 4px 0 #16A34A, 0 6px 20px rgba(34,197,94,0.4)",
+    {/* Mint/Cyan border */}
+    <div 
+      className="rounded-3xl p-1.5"
+      style={{
+        background: "linear-gradient(135deg, #5EEAD4 0%, #2DD4BF 50%, #14B8A6 100%)",
+        boxShadow: "0 8px 30px rgba(45, 212, 191, 0.35)",
+      }}
+    >
+      <div 
+        className="rounded-2xl overflow-hidden flex items-center justify-center"
+        style={{ 
+          width: size, 
+          height: size,
+          background: "#94a3b8",
         }}
-        whileTap={{ scale: 0.95 }}
       >
-        <Plus className="w-6 h-6 text-white" strokeWidth={3} />
-      </motion.button>
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center">
+            <span className="text-5xl">?</span>
+          </div>
+        )}
+      </div>
+    </div>
+    
+    {/* Spinning ring during search */}
+    {isSearching && (
+      <motion.div
+        className="absolute inset-[-6px] rounded-3xl border-2 border-dashed border-white/40"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      />
     )}
   </motion.div>
 );
 
-// Rainbow border avatar wrapper
-const RainbowAvatar = ({ avatarUrl, size }: { avatarUrl?: string | null; size: number }) => (
-  <div 
-    className="relative rounded-full p-1.5"
-    style={{
-      background: "conic-gradient(from 0deg, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #3b82f6, #8b5cf6, #ec4899, #ef4444)",
-      boxShadow: "0 8px 30px rgba(139, 92, 246, 0.3)",
-    }}
-  >
-    <div 
-      className="rounded-full overflow-hidden flex items-center justify-center"
-      style={{ 
-        width: size - 12, 
-        height: size - 12,
-        background: "#e5e7eb",
-      }}
-    >
-      {avatarUrl ? (
-        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-violet-400 to-purple-600" />
-      )}
-    </div>
-  </div>
-);
+type SlotPhase = "searching" | "slowing" | "found";
 
 export function VSScreen() {
-  const { opponent, startMatch } = useGame();
+  const { opponent, startMatch, phase } = useGame();
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [showVS, setShowVS] = useState(false);
   const [countdown, setCountdown] = useState<number | string | null>(null);
   const [isCountingDown, setIsCountingDown] = useState(false);
+  
+  // Slot machine state
+  const [slotPhase, setSlotPhase] = useState<SlotPhase>("searching");
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setShowVS(true), 400);
-    return () => clearTimeout(timer);
+  // Generate pattern shapes
+  const patternShapes = useMemo(() => {
+    const shapes = ['A', 'X', 'O', '△', '□', 'M', 'V', '♦', '+', 'Y', 'Z', 'K'];
+    return Array.from({ length: 35 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      rotation: Math.random() * 360,
+      type: shapes[Math.floor(Math.random() * shapes.length)],
+      delay: i,
+    }));
   }, []);
 
+  // Player data
+  const playerPoints = profile?.total_points || 3212;
+  const playerLevelInfo = calculateLevel(playerPoints);
+  const opponentPoints = opponent?.points || 3212;
+  const opponentLevelInfo = calculateLevel(opponentPoints);
+
+  // Slot machine cycling effect
+  useEffect(() => {
+    if (phase !== "matchmaking" && phase !== "preparing" && phase !== "vs-screen") return;
+    if (slotPhase === "found") return;
+
+    let cycleCount = 0;
+    const maxCycles = 35;
+    
+    const getDelay = (count: number): number => {
+      if (count < 20) return 80;
+      if (count < 25) return 150;
+      if (count < 28) return 250;
+      if (count < 31) return 400;
+      if (count < 33) return 600;
+      return 800;
+    };
+
+    const cycleSlot = () => {
+      cycleCount++;
+      
+      const randomAvatar = slotAvatars[Math.floor(Math.random() * slotAvatars.length)];
+      setCurrentAvatar(randomAvatar);
+
+      if (cycleCount < 20) {
+        setSlotPhase("searching");
+      } else if (cycleCount < maxCycles) {
+        setSlotPhase("slowing");
+      }
+
+      if (cycleCount < maxCycles) {
+        intervalRef.current = setTimeout(cycleSlot, getDelay(cycleCount));
+      } else {
+        setSlotPhase("found");
+        if (opponent) {
+          setCurrentAvatar(opponent.avatarUrl);
+        }
+      }
+    };
+
+    intervalRef.current = setTimeout(cycleSlot, 500);
+
+    return () => {
+      if (intervalRef.current) {
+        clearTimeout(intervalRef.current);
+      }
+    };
+  }, [phase, opponent]);
+
+  // Update to final opponent when found
+  useEffect(() => {
+    if (slotPhase === "found" && opponent) {
+      setCurrentAvatar(opponent.avatarUrl);
+    }
+  }, [slotPhase, opponent]);
+
   const handleStartCountdown = useCallback(() => {
-    if (isCountingDown) return;
+    if (isCountingDown || slotPhase !== "found") return;
     setIsCountingDown(true);
     setCountdown(3);
     
@@ -188,19 +247,32 @@ export function VSScreen() {
       setIsCountingDown(false);
       startMatch();
     }, 3200);
-  }, [isCountingDown, startMatch]);
+  }, [isCountingDown, startMatch, slotPhase]);
 
-  if (!opponent) return null;
+  // Auto-start countdown when opponent found
+  useEffect(() => {
+    if (slotPhase === "found" && !isCountingDown) {
+      const timer = setTimeout(() => {
+        handleStartCountdown();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [slotPhase, isCountingDown, handleStartCountdown]);
 
-  const powerTypes: Array<"fifty-fifty" | "freeze" | "replace" | "time-drain"> = ["fifty-fifty", "freeze", "replace", "time-drain"];
-  const avatarSize = 160;
-  const playerLevel = 10;
-  const opponentLevel = 10;
-  const playerScore = 1301;
-  const opponentScore = 1301;
+  const avatarSize = 150;
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col relative overflow-hidden">
+    <div 
+      className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
+      style={{ background: "#7E7BDC" }}
+    >
+      {/* Pattern Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {patternShapes.map((shape) => (
+          <PatternShape key={shape.id} {...shape} />
+        ))}
+      </div>
+
       {/* Header */}
       <motion.div 
         className="flex items-center justify-between px-4 pt-4 pb-2 relative z-30 shrink-0"
@@ -213,135 +285,147 @@ export function VSScreen() {
           className="p-2"
           whileTap={{ scale: 0.95 }}
         >
-          <ChevronLeft className="w-7 h-7 text-slate-800" strokeWidth={2.5} />
+          <ArrowLeft className="w-6 h-6 text-white/80" strokeWidth={2} />
         </motion.button>
         
-        <motion.div className="flex items-center gap-1">
-          <Crown className="w-6 h-6 text-amber-500" fill="currentColor" />
-          <span className="text-slate-800 font-bold text-lg">20</span>
-        </motion.div>
+        <motion.button className="p-2" whileTap={{ scale: 0.95 }}>
+          <HelpCircle className="w-6 h-6 text-white/80" strokeWidth={2} />
+        </motion.button>
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col relative z-10 min-h-0 px-4">
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-4 -mt-8">
         
-        {/* === OPPONENT SECTION (Top) === */}
+        {/* === PLAYER SECTION (Top - You) === */}
         <motion.div 
-          className="flex flex-col items-center pt-2"
-          initial={{ opacity: 0, y: -30 }}
+          className="flex flex-col items-center"
+          initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Opponent Power-ups Row */}
-          <PowerUpsRow powerUps={powerTypes} disabled />
+          {/* Player Avatar */}
+          <SquareAvatar avatarUrl={profile?.avatar_url} size={avatarSize} />
 
-          {/* Opponent Avatar with rainbow border */}
-          <div className="mt-4">
-            <RainbowAvatar avatarUrl={opponent.avatarUrl} size={avatarSize} />
-          </div>
-
-          {/* Opponent Level/Score Badge */}
-          <div className="mt-3">
-            <LevelScoreBadge level={opponentLevel} score={opponentScore} />
-          </div>
-
-          {/* Opponent Name */}
-          <motion.h2
+          {/* Player Score & Level */}
+          <motion.div
+            className="mt-4 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mt-3 text-2xl font-black text-white uppercase tracking-wider"
-            style={{
-              fontFamily: "'TASolivare', sans-serif",
-              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            }}
+            transition={{ delay: 0.2 }}
           >
-            PLAYER 1
-          </motion.h2>
-        </motion.div>
+            <span className="text-white/90 text-2xl font-bold">
+              {playerPoints.toLocaleString()}
+            </span>
+            <span className="text-white/60 text-xl ml-2">
+              (Lvl.{playerLevelInfo.level})
+            </span>
+          </motion.div>
 
-        {/* === VS TEXT === */}
-        <div className="flex items-center justify-center py-3 shrink-0">
-          <AnimatePresence>
-            {showVS && (
-              <motion.span
-                initial={{ scale: 2.5, opacity: 0, rotate: -15 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ duration: 0.4, type: "spring", stiffness: 150, damping: 12 }}
-                className="text-4xl font-black italic"
-                style={{
-                  fontFamily: "'TASolivare', sans-serif",
-                  background: "linear-gradient(180deg, #FFE55C 0%, #FFD700 50%, #F59E0B 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0 3px 0 #B45309)",
-                }}
-              >
-                VS
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* === PLAYER SECTION (Bottom) === */}
-        <motion.div 
-          className="flex flex-col items-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-        >
           {/* Player Name */}
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mb-3 text-2xl font-black text-white uppercase tracking-wider"
+            transition={{ delay: 0.3 }}
+            className="mt-1 text-3xl font-black tracking-wide"
+            style={{
+              fontFamily: "'TASolivare', sans-serif",
+              color: "#86EFAC",
+              textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
+            }}
+          >
+            შენ
+          </motion.h2>
+        </motion.div>
+
+        {/* === VS BADGE === */}
+        <motion.div 
+          className="my-6"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 15 }}
+        >
+          {/* 3D VS Platform */}
+          <div className="relative">
+            {/* Platform base */}
+            <div 
+              className="w-32 h-8 rounded-full mx-auto"
+              style={{
+                background: "linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)",
+                transform: "perspective(200px) rotateX(60deg)",
+                boxShadow: "0 10px 30px rgba(124, 58, 237, 0.4)",
+              }}
+            />
+            
+            {/* VS Text */}
+            <motion.div
+              className="absolute -top-10 left-1/2 -translate-x-1/2"
+              animate={{ 
+                y: [0, -5, 0],
+                rotateY: [0, 5, 0, -5, 0],
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <span 
+                className="text-6xl font-black italic"
+                style={{
+                  fontFamily: "'TASolivare', sans-serif",
+                  background: "linear-gradient(180deg, #FDE047 0%, #FACC15 30%, #EAB308 70%, #CA8A04 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  filter: "drop-shadow(0 4px 0 #92400E) drop-shadow(0 6px 20px rgba(250, 204, 21, 0.5))",
+                  letterSpacing: "-2px",
+                }}
+              >
+                VS
+              </span>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* === OPPONENT SECTION (Bottom) === */}
+        <motion.div 
+          className="flex flex-col items-center"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {/* Opponent Name */}
+          <motion.h2
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mb-1 text-2xl font-black text-white uppercase tracking-wider"
             style={{
               fontFamily: "'TASolivare', sans-serif",
               textShadow: "0 2px 10px rgba(0,0,0,0.3)",
             }}
           >
-            YOU
+            {slotPhase === "found" && opponent ? opponent.name : "..."}
           </motion.h2>
 
-          {/* Player Avatar with rainbow border */}
-          <RainbowAvatar avatarUrl={profile?.avatar_url} size={avatarSize} />
+          {/* Opponent Score & Level */}
+          <motion.div
+            className="mb-4 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: slotPhase === "found" ? 1 : 0.5 }}
+            transition={{ delay: 0.4 }}
+          >
+            <span className="text-white/90 text-2xl font-bold">
+              {slotPhase === "found" ? opponentPoints.toLocaleString() : "???"}
+            </span>
+            <span className="text-white/60 text-xl ml-2">
+              (Lvl.{slotPhase === "found" ? opponentLevelInfo.level : "?"})
+            </span>
+          </motion.div>
 
-          {/* Player Level/Score Badge */}
-          <div className="mt-3">
-            <LevelScoreBadge level={playerLevel} score={playerScore} />
-          </div>
-
-          {/* Player Power-ups Row with Add button */}
-          <div className="mt-4">
-            <PowerUpsRow powerUps={powerTypes} showAddButton />
-          </div>
+          {/* Opponent Avatar */}
+          <SquareAvatar 
+            avatarUrl={currentAvatar} 
+            size={avatarSize} 
+            isSearching={slotPhase !== "found"}
+          />
         </motion.div>
       </div>
-
-      {/* Bottom PLAY Button - Lavender style */}
-      <motion.div 
-        className="px-5 pb-6 pt-4 relative z-20 shrink-0"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.4 }}
-      >
-        <motion.button
-          onClick={handleStartCountdown}
-          disabled={isCountingDown}
-          whileTap={{ scale: 0.98 }}
-          className="w-full py-4 rounded-full text-xl font-black uppercase tracking-widest transition-all"
-          style={{
-            fontFamily: "'TASolivare', sans-serif",
-            background: "linear-gradient(180deg, #C4B5FD 0%, #A78BFA 50%, #8B5CF6 100%)",
-            color: "#3B2D6B",
-            boxShadow: "0 6px 0 #6D28D9, 0 8px 25px rgba(139, 92, 246, 0.4)",
-            textShadow: "0 1px 0 rgba(255,255,255,0.3)",
-          }}
-        >
-          {isCountingDown ? "GET READY..." : "PLAY"}
-        </motion.button>
-      </motion.div>
 
       {/* Countdown Overlay */}
       <AnimatePresence>
