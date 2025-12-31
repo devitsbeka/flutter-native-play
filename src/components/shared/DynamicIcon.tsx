@@ -50,31 +50,32 @@ export function DynamicIcon({
     enabled: !!questionText && isLoaded,
   });
 
-  const iconUrl = React.useMemo(() => {
-    if (!isLoaded) {
-      return null;
-    }
-    
-    // Priority 1: Direct slug lookup
-    if (slug) {
-      const url = getIconBySlug(slug);
-      if (url && !failedIconUrls.has(url)) return url;
-    }
+  // Storage base URL for direct icon access
+  const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
-    // Priority 2: Direct category ID lookup (MOST RELIABLE - uses ASCII category_id)
+  const iconUrl = React.useMemo(() => {
+    // Priority 1: Direct category ID lookup - ALWAYS use direct URL (fastest, most reliable)
     if (categoryId) {
       const iconSlug = CATEGORY_ID_TO_ICON[categoryId];
       if (iconSlug) {
-        const url = getIconBySlug(iconSlug);
-        if (url && !failedIconUrls.has(url)) {
-          return url;
-        }
-        // If getIconBySlug returns null, build URL directly as fallback
-        const directUrl = `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${iconSlug}.png`;
+        const directUrl = `${ICON_STORAGE_URL}/${iconSlug}.png`;
         if (!failedIconUrls.has(directUrl)) {
           return directUrl;
         }
       }
+    }
+
+    // Priority 2: Direct slug lookup with direct URL
+    if (slug) {
+      const directUrl = `${ICON_STORAGE_URL}/${slug}.png`;
+      if (!failedIconUrls.has(directUrl)) {
+        return directUrl;
+      }
+    }
+
+    // For remaining priorities, wait for library to load
+    if (!isLoaded) {
+      return null;
     }
 
     // Priority 3: Category icon slug from Georgian name mapping
