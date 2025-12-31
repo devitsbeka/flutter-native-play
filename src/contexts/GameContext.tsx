@@ -127,7 +127,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Start background icon preloading immediately - don't await
     // Icons will be cached by the time user clicks "Start"
     preloadQuestionIcons(
-      questions.map(q => ({ question: q.question, category: q.category }))
+      questions.map(q => ({ question: q.question, category: q.categoryId || q.category }))
     );
     
     setState(prev => ({
