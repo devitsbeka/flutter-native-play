@@ -310,6 +310,42 @@ export type Database = {
         }
         Relationships: []
       }
+      icon_library: {
+        Row: {
+          category: string
+          created_at: string | null
+          file_name: string
+          icon_url: string | null
+          id: string
+          slug: string
+          tags: string[]
+          title: string
+          volume: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          file_name: string
+          icon_url?: string | null
+          id?: string
+          slug: string
+          tags?: string[]
+          title: string
+          volume?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          file_name?: string
+          icon_url?: string | null
+          id?: string
+          slug?: string
+          tags?: string[]
+          title?: string
+          volume?: number | null
+        }
+        Relationships: []
+      }
       level_positions: {
         Row: {
           created_at: string

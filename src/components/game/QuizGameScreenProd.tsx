@@ -250,10 +250,11 @@ export function QuizGameScreenProd() {
 
       {/* Question Card with Floating Category Icon */}
       <div className="relative px-4 mt-2 flex-shrink-0">
-        {/* Floating Category Icon */}
+        {/* Floating Category Icon - Uses dynamic icon lookup */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-[70px] z-10">
           <QuizCategoryIcon
-            imageUrl={popcornIcon}
+            questionText={currentQuestion.question}
+            categoryId={currentQuestion.category}
             size={120}
             state="default"
           />
