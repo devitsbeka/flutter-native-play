@@ -10,8 +10,8 @@ export function IconTab({ label, isActive, onClick }: IconTabProps) {
       onClick={onClick}
       className={`px-4 py-2 rounded-full transition-all whitespace-nowrap ${
         isActive 
-          ? "bg-white/80 text-slate-800 font-semibold shadow-sm" 
-          : "text-white/80 hover:text-white font-medium"
+          ? "bg-white/90 text-slate-700 font-semibold" 
+          : "text-white/70 hover:text-white/90 font-medium"
       }`}
     >
       {label}
