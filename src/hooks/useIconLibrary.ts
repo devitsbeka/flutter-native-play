@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { GEORGIAN_CATEGORY_SLUGS } from '@/data/categoryIconMap';
 
 interface IconItem {
   title: string;
@@ -333,8 +334,15 @@ export function useIconLibrary() {
     return icon ? getIconUrl(icon.file_name) : null;
   }, [iconIndex]);
 
-  const getIconForCategory = useCallback((categoryId: string): string | null => {
-    const slugs = CATEGORY_ICON_MAP[categoryId.toLowerCase()] || [];
+  const getIconForCategory = useCallback((categoryIdOrName: string): string | null => {
+    // First check if it's a Georgian category name and convert to English slug
+    let categoryKey = categoryIdOrName.toLowerCase();
+    const englishSlug = GEORGIAN_CATEGORY_SLUGS[categoryIdOrName];
+    if (englishSlug) {
+      categoryKey = englishSlug;
+    }
+    
+    const slugs = CATEGORY_ICON_MAP[categoryKey] || [];
     
     // First try exact match
     for (const slug of slugs) {

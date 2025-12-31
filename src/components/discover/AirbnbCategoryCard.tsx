@@ -122,7 +122,7 @@ export function AirbnbCategoryCard({
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         >
           <DynamicIcon
-            category={id}
+            category={name}
             size={64}
             className="drop-shadow-lg filter brightness-110"
           />

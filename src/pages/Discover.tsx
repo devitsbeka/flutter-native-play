@@ -125,8 +125,8 @@ export default function Discover() {
   return (
     <PageTransition>
       <div className="min-h-screen pb-24">
-        {/* Light mask overlay for Spline background */}
-        <div className="fixed inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/60 pointer-events-none z-0" />
+      {/* Subtle overlay for depth - keeping purple background visible */}
+      <div className="fixed inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/10 pointer-events-none z-0" />
 
         {/* Content above mask */}
         <div className="relative z-10">
