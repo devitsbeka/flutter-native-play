@@ -145,9 +145,12 @@ const QuizGameScreen = ({
 
   const handleAnswer = useCallback((selectedIndex: number) => {
     if (isAnswering || isLoading || gameEnded) return;
+    
+    const question = questions[currentQuestionIndex];
+    if (!question) return;
 
     setIsAnswering(true);
-    const isCorrect = selectedIndex === currentQuestion.correctIndex;
+    const isCorrect = selectedIndex === question.correctIndex;
 
     // Set loading state for selected answer
     if (selectedIndex >= 0) {
@@ -163,7 +166,7 @@ const QuizGameScreen = ({
       // Update answer button states
       setAnswerStates((prev) => {
         const newStates = prev.map((_, i) => {
-          if (i === currentQuestion.correctIndex) return "correct";
+          if (i === question.correctIndex) return "correct";
           if (i === selectedIndex && !isCorrect) return "wrong";
           return "default";
         }) as QuizAnswerState[];
@@ -214,16 +217,17 @@ const QuizGameScreen = ({
   }, [currentQuestion, isAnswering, isLoading, gameEnded, isLastQuestion, timeRemaining, playerScores, players, onGameEnd]);
 
   const handlePowerUp = (type: PowerUpType) => {
-    if (powerUpCounts[type] <= 0 || isAnswering) return;
+    const question = questions[currentQuestionIndex];
+    if (powerUpCounts[type] <= 0 || isAnswering || !question) return;
 
     setPowerUpCounts((prev) => ({ ...prev, [type]: prev[type] - 1 }));
 
     switch (type) {
       case "5050":
         // Remove 2 wrong answers
-        const wrongIndices = currentQuestion.answers
+        const wrongIndices = question.answers
           .map((_, i) => i)
-          .filter((i) => i !== currentQuestion.correctIndex);
+          .filter((i) => i !== question.correctIndex);
         const toRemove = wrongIndices.slice(0, 2);
         setAnswerStates((prev) => {
           const newStates = [...prev] as QuizAnswerState[];
@@ -239,7 +243,7 @@ const QuizGameScreen = ({
         // Highlight correct answer briefly
         setAnswerStates((prev) => {
           const newStates = [...prev] as QuizAnswerState[];
-          newStates[currentQuestion.correctIndex] = "selected";
+          newStates[question.correctIndex] = "selected";
           return newStates;
         });
         setTimeout(() => {
