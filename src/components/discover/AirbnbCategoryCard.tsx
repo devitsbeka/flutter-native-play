@@ -5,6 +5,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface AirbnbCategoryCardProps {
   id: string;
+  categoryId?: string; // ASCII category_id like 'world_history' for icon lookup
   name: string;
   icon: string;
   color: string;
@@ -40,6 +41,7 @@ const getGradientColors = (colorClass: string): { from: string; to: string } => 
 
 export function AirbnbCategoryCard({
   id,
+  categoryId,
   name,
   icon,
   color,
@@ -125,7 +127,7 @@ export function AirbnbCategoryCard({
         >
           <DynamicIcon
             category={name}
-            categoryId={id}
+            categoryId={categoryId}
             categoryType={categoryType}
             size={64}
             className="drop-shadow-lg filter brightness-110"
