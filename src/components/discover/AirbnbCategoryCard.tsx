@@ -175,7 +175,7 @@ export function AirbnbCategoryCard({
       </h3>
 
       {/* Subtitle - Progress */}
-      <p className="text-xs text-white/80 font-medium">
+      <p className="text-xs font-medium" style={{ color: '#FFB230' }}>
         {progress}/{totalLevels} დონე
       </p>
     </motion.button>
