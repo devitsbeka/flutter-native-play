@@ -14,7 +14,6 @@ interface QuizCategoryIconProps {
 const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>(
   ({ imageUrl, size = 140, state = "default", className }, ref) => {
     const isLoading = state === "loading";
-    const borderRadius = Math.round(size * 0.13); // ~18px for 140px size
 
     return (
       <motion.div
@@ -25,42 +24,31 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        {/* 3D depth shadow */}
-        <div
-          className="absolute inset-0"
-          style={{ 
-            borderRadius,
-            backgroundColor: "#5957A7",
-            transform: "translateY(5px)",
-          }}
-        />
-
-        {/* Main container */}
-        <div 
-          className="relative w-full h-full overflow-hidden"
-          style={{
-            borderRadius,
-            border: "3px solid #9C99E8",
-            backgroundColor: "#F5F4FF",
-          }}
-        >
-          {isLoading ? (
-            <div className="w-full h-full bg-[#E5E4FF] animate-pulse" />
-          ) : imageUrl ? (
-            <motion.img
-              src={imageUrl}
-              alt="Category"
-              className="w-full h-full object-cover"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#EDECFF] to-[#D8D6FF] flex items-center justify-center">
-              <span className="text-4xl">❓</span>
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div 
+            className="w-full h-full rounded-2xl bg-white/20 animate-pulse"
+            style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" }}
+          />
+        ) : imageUrl ? (
+          <motion.img
+            src={imageUrl}
+            alt="Category"
+            className="w-full h-full object-contain"
+            style={{ 
+              filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          />
+        ) : (
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" }}
+          >
+            <span className="text-5xl">🍿</span>
+          </div>
+        )}
       </motion.div>
     );
   }

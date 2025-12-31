@@ -9,8 +9,8 @@ import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
+import { QuizNextButton } from "@/components/ui/quiz-next-button";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
-import categoryPlaceholder from "@/assets/placeholders/category-placeholder.webp";
 
 // Bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -18,6 +18,9 @@ import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
 import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
 import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
 import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
+
+// Popcorn icon for category
+import popcornIcon from "@/assets/icons/icon-compass.png";
 
 const botAvatars = [botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5];
 
@@ -211,7 +214,7 @@ export function QuizGameScreenProd() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -223,8 +226,8 @@ export function QuizGameScreenProd() {
         </button>
       </div>
 
-      {/* Players Row with Category Icon */}
-      <div className="flex items-start justify-between px-4 mb-4">
+      {/* Players Row */}
+      <div className="flex items-start justify-between px-4 flex-shrink-0">
         {/* Player (Left) */}
         <QuizPlayerAvatar
           avatarUrl={opponent?.avatarUrl}
@@ -233,14 +236,8 @@ export function QuizGameScreenProd() {
           state={getPlayerState()}
         />
 
-        {/* Category Icon (Center) */}
-        <div className="flex-1 flex justify-center -mt-2">
-          <QuizCategoryIcon
-            imageUrl={categoryPlaceholder}
-            size={140}
-            state="default"
-          />
-        </div>
+        {/* Spacer for centered icon */}
+        <div className="flex-1" />
 
         {/* Opponent (Right) */}
         <QuizPlayerAvatar
@@ -251,8 +248,17 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Question Card */}
-      <div className="px-4 mb-4">
+      {/* Question Card with Floating Category Icon */}
+      <div className="relative px-4 mt-2 flex-shrink-0">
+        {/* Floating Category Icon */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-[70px] z-10">
+          <QuizCategoryIcon
+            imageUrl={popcornIcon}
+            size={120}
+            state="default"
+          />
+        </div>
+
         <QuizQuestionCard
           questionText={truncateText(currentQuestion.question, MAX_QUESTION_CHARS)}
           timeRemaining={timeRemaining}
@@ -262,7 +268,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center my-3 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -270,8 +276,8 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Answer Buttons */}
-      <div className="flex-1 px-4 space-y-3 overflow-y-auto pb-2">
+      {/* Answer Buttons - No Scroll */}
+      <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
@@ -284,6 +290,7 @@ export function QuizGameScreenProd() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0"
               >
                 <QuizAnswerButton
                   label={ANSWER_LABELS[index]}
@@ -297,34 +304,40 @@ export function QuizGameScreenProd() {
             );
           })}
         </AnimatePresence>
-
-        {/* Next/Results Button */}
-        <AnimatePresence>
-          {answerRevealed && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ delay: 0.3 }}
-            >
-              <QuizAnswerButton
-                text={isLastQuestion ? "შედეგები" : "შემდეგი კითხვა"}
-                state="next"
-                onClick={handleNext}
-                showLabel={false}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Power-up Bar */}
-      <div className="px-4 pb-4 pt-2">
+      {/* Bottom Area - Power-ups OR Next Button */}
+      <div className="px-4 pb-4 pt-2 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
-          <QuizPowerUpBar
-            powerUps={powerUpsForUI}
-            onPowerUpClick={handleUsePowerUp}
-          />
+          <AnimatePresence mode="wait">
+            {answerRevealed ? (
+              <motion.div
+                key="next-button"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <QuizNextButton
+                  text={isLastQuestion ? "შედეგები" : "შემდეგი კითხვა"}
+                  duration={3000}
+                  onClick={handleNext}
+                  autoClickEnabled={true}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="power-ups"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <QuizPowerUpBar
+                  powerUps={powerUpsForUI}
+                  onPowerUpClick={handleUsePowerUp}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

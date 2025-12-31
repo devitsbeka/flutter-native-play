@@ -48,12 +48,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     const questionStyles = getQuestionStyles(questionText);
     const diffStyle = difficultyColors[difficulty] || difficultyColors.medium;
     
-    // Timer color based on time remaining
-    const getTimerColor = () => {
-      if (timeRemaining <= 5) return "#FF5C5C";
-      if (timeRemaining <= 10) return "#F2C860";
-      return "#CD5C3A";
-    };
+    // Timer color - always dark red
+    const timerColor = "#8B2E2E";
 
     return (
       <motion.div
@@ -85,11 +81,11 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             >
               <AlarmClock 
                 className="w-5 h-5" 
-                style={{ color: getTimerColor() }}
+                style={{ color: timerColor }}
               />
               <span 
                 className="text-xl font-bold"
-                style={{ color: getTimerColor() }}
+                style={{ color: timerColor }}
               >
                 {timeRemaining}
               </span>
