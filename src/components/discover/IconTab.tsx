@@ -1,34 +1,20 @@
-import { motion } from "framer-motion";
-
 interface IconTabProps {
-  icon: string;
   label: string;
   isActive: boolean;
   onClick: () => void;
 }
 
-export function IconTab({ icon, label, isActive, onClick }: IconTabProps) {
+export function IconTab({ label, isActive, onClick }: IconTabProps) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1 px-4 py-2 relative min-w-[64px]"
+      className={`px-4 py-2 rounded-full transition-all whitespace-nowrap ${
+        isActive 
+          ? "bg-white/80 text-slate-800 font-semibold shadow-sm" 
+          : "text-white/80 hover:text-white font-medium"
+      }`}
     >
-      <span className="text-2xl">{icon}</span>
-      <span 
-        className={`text-xs transition-colors ${
-          isActive 
-            ? "text-foreground font-medium" 
-            : "text-muted-foreground"
-        }`}
-      >
-        {label}
-      </span>
-      {isActive && (
-        <motion.div
-          layoutId="activeTab"
-          className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full"
-        />
-      )}
+      {label}
     </button>
   );
 }
