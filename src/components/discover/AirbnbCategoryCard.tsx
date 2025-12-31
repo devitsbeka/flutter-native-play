@@ -143,7 +143,7 @@ export function AirbnbCategoryCard({
         {/* Heart/Favorite Button */}
         <button
           onClick={onFavoriteClick}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors"
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
@@ -154,8 +154,8 @@ export function AirbnbCategoryCard({
 
         {/* Badge */}
         {badge && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-sm shadow-sm">
-            <span className="text-[10px] font-semibold text-slate-700">
+          <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center">
+            <span className="text-[10px] font-semibold text-slate-700 leading-none">
               {badge}
             </span>
           </div>
@@ -170,12 +170,12 @@ export function AirbnbCategoryCard({
       </div>
 
       {/* Title */}
-      <h3 className="mt-2 font-medium text-foreground text-sm line-clamp-1">
+      <h3 className="mt-2 font-semibold text-slate-800 text-sm line-clamp-1">
         {name}
       </h3>
 
       {/* Subtitle - Progress */}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-slate-600 font-medium">
         {progress}/{totalLevels} დონე
       </p>
     </motion.button>
