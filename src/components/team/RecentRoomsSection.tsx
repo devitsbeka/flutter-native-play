@@ -3,7 +3,11 @@ import { MoreVertical, MessageCircle } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export function RecentRoomsSection() {
+interface RecentRoomsSectionProps {
+  onViewAll?: () => void;
+}
+
+export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
   const { rooms, loading } = useRecentRooms(10);
 
   if (loading) {
@@ -32,7 +36,7 @@ export function RecentRoomsSection() {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-white/80">ბოლო თამაშები</span>
-        <button className="text-sm font-medium text-orange-400">ყველა</button>
+        <button onClick={onViewAll} className="text-sm font-medium text-orange-400">ყველა</button>
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
