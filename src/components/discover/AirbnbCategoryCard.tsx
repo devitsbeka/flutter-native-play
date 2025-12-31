@@ -1,17 +1,6 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
-
-// Import category images
-import historyImg from "@/assets/categories/history.jpg";
-import geographyImg from "@/assets/categories/geography.jpg";
-import scienceImg from "@/assets/categories/science.jpg";
-import moviesImg from "@/assets/categories/movies.jpg";
-import musicImg from "@/assets/categories/music.jpg";
-import sportsImg from "@/assets/categories/sports.jpg";
-import literatureImg from "@/assets/categories/literature.jpg";
-import artImg from "@/assets/categories/art.jpg";
-import foodImg from "@/assets/categories/food.jpg";
-import technologyImg from "@/assets/categories/technology.jpg";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -28,39 +17,23 @@ interface AirbnbCategoryCardProps {
   onClick?: () => void;
 }
 
-// Map category names to images
-const getCategoryImage = (name: string): string | null => {
-  const lowerName = name.toLowerCase();
-  if (lowerName.includes("ისტორია") || lowerName.includes("history")) return historyImg;
-  if (lowerName.includes("გეოგრაფია") || lowerName.includes("geography")) return geographyImg;
-  if (lowerName.includes("მეცნიერება") || lowerName.includes("science")) return scienceImg;
-  if (lowerName.includes("ფილმ") || lowerName.includes("movie") || lowerName.includes("კინო")) return moviesImg;
-  if (lowerName.includes("მუსიკა") || lowerName.includes("music")) return musicImg;
-  if (lowerName.includes("სპორტ") || lowerName.includes("sport")) return sportsImg;
-  if (lowerName.includes("ლიტერატურა") || lowerName.includes("წიგნ") || lowerName.includes("literature") || lowerName.includes("book")) return literatureImg;
-  if (lowerName.includes("ხელოვნება") || lowerName.includes("art") || lowerName.includes("კულტურა")) return artImg;
-  if (lowerName.includes("საკვები") || lowerName.includes("food") || lowerName.includes("კულინარია") || lowerName.includes("სამზარეულო")) return foodImg;
-  if (lowerName.includes("ტექნოლოგი") || lowerName.includes("technology") || lowerName.includes("კომპიუტერ")) return technologyImg;
-  return null;
-};
-
 // Convert Tailwind gradient class to actual colors
 const getGradientColors = (colorClass: string): { from: string; to: string } => {
   const colorMap: Record<string, { from: string; to: string }> = {
-    "from-amber-400 to-orange-500": { from: "#fbbf24", to: "#f97316" },
-    "from-blue-400 to-indigo-500": { from: "#60a5fa", to: "#6366f1" },
-    "from-emerald-400 to-teal-500": { from: "#34d399", to: "#14b8a6" },
-    "from-purple-400 to-pink-500": { from: "#c084fc", to: "#ec4899" },
-    "from-rose-400 to-red-500": { from: "#fb7185", to: "#ef4444" },
-    "from-cyan-400 to-blue-500": { from: "#22d3ee", to: "#3b82f6" },
-    "from-yellow-400 to-amber-500": { from: "#facc15", to: "#f59e0b" },
-    "from-green-400 to-emerald-500": { from: "#4ade80", to: "#10b981" },
-    "from-pink-400 to-rose-500": { from: "#f472b6", to: "#f43f5e" },
-    "from-indigo-400 to-purple-500": { from: "#818cf8", to: "#a855f7" },
-    "from-teal-400 to-cyan-500": { from: "#2dd4bf", to: "#06b6d4" },
-    "from-orange-400 to-red-500": { from: "#fb923c", to: "#ef4444" },
+    "from-amber-400 to-orange-500": { from: "hsl(270 60% 70%)", to: "hsl(180 60% 50%)" },
+    "from-blue-400 to-indigo-500": { from: "hsl(260 70% 65%)", to: "hsl(190 70% 45%)" },
+    "from-emerald-400 to-teal-500": { from: "hsl(165 60% 50%)", to: "hsl(270 50% 60%)" },
+    "from-purple-400 to-pink-500": { from: "hsl(270 70% 65%)", to: "hsl(200 60% 50%)" },
+    "from-rose-400 to-red-500": { from: "hsl(280 60% 60%)", to: "hsl(175 60% 45%)" },
+    "from-cyan-400 to-blue-500": { from: "hsl(185 70% 50%)", to: "hsl(265 60% 60%)" },
+    "from-yellow-400 to-amber-500": { from: "hsl(275 55% 65%)", to: "hsl(180 55% 50%)" },
+    "from-green-400 to-emerald-500": { from: "hsl(170 60% 45%)", to: "hsl(260 55% 55%)" },
+    "from-pink-400 to-rose-500": { from: "hsl(280 65% 65%)", to: "hsl(190 60% 50%)" },
+    "from-indigo-400 to-purple-500": { from: "hsl(255 65% 60%)", to: "hsl(175 55% 45%)" },
+    "from-teal-400 to-cyan-500": { from: "hsl(180 65% 50%)", to: "hsl(270 55% 60%)" },
+    "from-orange-400 to-red-500": { from: "hsl(265 60% 65%)", to: "hsl(185 60% 45%)" },
   };
-  return colorMap[colorClass] || { from: "#8b5cf6", to: "#06b6d4" };
+  return colorMap[colorClass] || { from: "hsl(270 60% 60%)", to: "hsl(175 55% 50%)" };
 };
 
 export function AirbnbCategoryCard({
@@ -70,14 +43,27 @@ export function AirbnbCategoryCard({
   progress = 0,
   totalLevels = 20,
   badge,
-  imageUrl,
   isFavorite = false,
   onFavoriteClick,
   onClick,
 }: AirbnbCategoryCardProps) {
   const colors = getGradientColors(color);
   const isCompleted = progress >= totalLevels;
-  const categoryImage = imageUrl || getCategoryImage(name);
+
+  // Generate floating particles
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        id: i,
+        size: 3 + Math.random() * 5,
+        x: 5 + Math.random() * 90,
+        y: 5 + Math.random() * 90,
+        delay: Math.random() * 3,
+        duration: 4 + Math.random() * 3,
+        drift: -15 + Math.random() * 30,
+      })),
+    []
+  );
 
   return (
     <motion.button
@@ -86,44 +72,76 @@ export function AirbnbCategoryCard({
       whileTap={{ scale: 0.98 }}
       className="flex-shrink-0 w-40 text-left"
     >
-      {/* Image Area */}
-      <div 
-        className="relative w-full aspect-[4/3] rounded-xl overflow-hidden"
-        style={!categoryImage ? {
-          background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
-        } : undefined}
-      >
-        {/* Category Image or Gradient with Icon */}
-        {categoryImage ? (
-          <img 
-            src={categoryImage} 
-            alt={name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl drop-shadow-lg">{icon}</span>
-          </div>
-        )}
+      {/* Animated Gradient + Particle Area */}
+      <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden">
+        {/* Gradient Background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+          }}
+        />
+
+        {/* Subtle inner glow */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/20" />
+
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {particles.map((particle) => (
+            <motion.div
+              key={particle.id}
+              className="absolute rounded-full bg-white/50"
+              style={{
+                width: particle.size,
+                height: particle.size,
+                left: `${particle.x}%`,
+                top: `${particle.y}%`,
+              }}
+              animate={{
+                y: [0, -25, 0],
+                x: [0, particle.drift, 0],
+                opacity: [0.3, 0.7, 0.3],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: particle.duration,
+                delay: particle.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Large Centered Emoji with Float Animation */}
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <span className="text-5xl drop-shadow-lg filter brightness-110">
+            {icon}
+          </span>
+        </motion.div>
 
         {/* Heart/Favorite Button */}
         <button
           onClick={onFavoriteClick}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
         >
-          <Heart 
+          <Heart
             className={`w-4 h-4 transition-colors ${
-              isFavorite 
-                ? "fill-red-500 text-red-500" 
-                : "text-foreground/70"
-            }`} 
+              isFavorite ? "fill-red-500 text-red-500" : "text-foreground/70"
+            }`}
           />
         </button>
 
         {/* Badge */}
         {badge && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-background/90 backdrop-blur-sm">
-            <span className="text-[10px] font-medium text-foreground">{badge}</span>
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm">
+            <span className="text-[10px] font-medium text-foreground">
+              {badge}
+            </span>
           </div>
         )}
 

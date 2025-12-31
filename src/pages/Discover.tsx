@@ -124,11 +124,16 @@ export default function Discover() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-24">
-        {/* Search Bar */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm px-4 pt-4 pb-2">
-          <div
-            className={`flex items-center gap-3 bg-muted rounded-full px-4 py-3 transition-all ${
+      <div className="min-h-screen pb-24">
+        {/* Light mask overlay for Spline background */}
+        <div className="fixed inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white/80 pointer-events-none z-0" />
+
+        {/* Content above mask */}
+        <div className="relative z-10">
+          {/* Search Bar */}
+          <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-lg px-5 pt-4 pb-2">
+            <div
+              className={`flex items-center gap-3 bg-white/60 border border-white/40 rounded-full px-4 py-3 transition-all ${
               isSearchFocused ? "ring-2 ring-foreground/20" : ""
             }`}
           >
@@ -145,9 +150,9 @@ export default function Discover() {
           </div>
         </div>
 
-        {/* Icon Tabs */}
-        <div className="sticky top-[72px] z-10 bg-background border-b border-border">
-          <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+          {/* Icon Tabs */}
+          <div className="sticky top-[72px] z-10 bg-white/70 backdrop-blur-md border-b border-white/30">
+            <div className="flex overflow-x-auto scrollbar-hide pl-1" style={{ scrollbarWidth: "none" }}>
             {tabs.map((tab) => (
               <IconTab
                 key={tab.id}
@@ -322,6 +327,7 @@ export default function Discover() {
               )}
             </section>
           )}
+          </div>
         </div>
 
         <UniversalBottomNav />
