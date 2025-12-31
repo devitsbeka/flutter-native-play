@@ -78,7 +78,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="w-full max-w-md mx-4"
           >
-            <div className="bg-gradient-to-b from-[#1a1a2e]/95 to-[#16213e]/95 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+            <div className="rounded-3xl overflow-hidden">
               {/* Header */}
               <div className="relative px-6 pt-5 pb-3">
                 <button
@@ -100,7 +100,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
 
               {/* Demo Preview Area */}
               <div className="px-4">
-                <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
+                <div className="rounded-2xl overflow-hidden">
                   <PowerUpDemoPreview
                     type={selectedType}
                     animationKey={animationKey}
