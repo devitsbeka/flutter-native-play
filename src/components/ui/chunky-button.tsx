@@ -46,10 +46,10 @@ const variantStyles = {
     pressed: "shadow-[0_2px_0_0_hsl(var(--border))]",
   },
   purple: {
-    face: "text-white",
-    depth: "bg-purple-900",
-    shadow: "shadow-[0_6px_0_0_#4C1D95]",
-    pressed: "shadow-[0_2px_0_0_#4C1D95]",
+    face: "bg-[#3D3D5C] text-white",
+    depth: "bg-[#2D2D4C]",
+    shadow: "shadow-[0_6px_0_0_#1D1D3C]",
+    pressed: "shadow-[0_2px_0_0_#1D1D3C]",
   },
 };
 

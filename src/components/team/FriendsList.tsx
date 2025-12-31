@@ -187,84 +187,77 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ delay: index * 0.05 }}
-      className={`flex-shrink-0 w-40 flex flex-col items-center p-4 rounded-2xl backdrop-blur-sm ${
-        friend.isOnline 
-          ? "bg-white/15 border-2 border-green-500/30" 
-          : "bg-white/10 border border-white/10"
-      }`}
+      className="flex-shrink-0 w-56 p-4 rounded-2xl bg-white/90"
     >
-      {/* Three dots menu - top right */}
-      <div className="w-full flex justify-end mb-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <motion.button
-              className="p-1 rounded-lg text-white/60 hover:text-white"
-              whileTap={{ scale: 0.95 }}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </motion.button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-purple-900/95 border-purple-500/30 backdrop-blur-lg">
-            <DropdownMenuItem 
-              onClick={onRemove}
-              className="text-red-400 focus:text-red-300 focus:bg-red-500/20 cursor-pointer"
-            >
-              <UserMinus className="w-4 h-4 mr-2" />
-              წაშლა
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Large Avatar */}
-      <div className="relative mb-3">
-        <Avatar className={`w-16 h-16 border-2 ${friend.isOnline ? "border-green-400/50" : "border-white/30"}`}>
-          <AvatarImage src={friend.avatarUrl || undefined} />
-          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl font-bold">
-            {friend.nickname.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        {/* Online indicator dot */}
-        <motion.div 
-          className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-purple-900 ${
-            friend.isOnline ? "bg-green-400" : "bg-gray-400"
-          }`}
-          animate={friend.isOnline ? { 
-            scale: [1, 1.2, 1],
-          } : {}}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      </div>
-
-      {/* Name and Flag */}
-      <div className="text-center mb-3 w-full">
-        <div className="flex items-center justify-center gap-1.5">
-          <p className="font-bold text-white text-sm uppercase tracking-wide truncate max-w-[90px]">
-            {friend.nickname}
-          </p>
+      {/* Row with avatar left, content right */}
+      <div className="flex gap-3">
+        {/* Avatar with purple ring and online dot */}
+        <div className="relative flex-shrink-0">
+          <Avatar className="w-14 h-14 ring-2 ring-purple-400">
+            <AvatarImage src={friend.avatarUrl || undefined} />
+            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
+              {friend.nickname.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <motion.div 
+            className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${
+              friend.isOnline ? "bg-green-400" : "bg-gray-400"
+            }`}
+            animate={friend.isOnline ? { scale: [1, 1.2, 1] } : {}}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </div>
+        
+        {/* Name, flag, country */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-gray-800 text-sm uppercase truncate">
+              {friend.nickname}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-1 rounded-lg text-gray-400 hover:text-gray-600">
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-purple-900/95 border-purple-500/30 backdrop-blur-lg">
+                <DropdownMenuItem 
+                  onClick={onRemove}
+                  className="text-red-400 focus:text-red-300 focus:bg-red-500/20 cursor-pointer"
+                >
+                  <UserMinus className="w-4 h-4 mr-2" />
+                  წაშლა
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {friend.countryCode && (
-            <span className="text-sm">{getCountryFlag(friend.countryCode)}</span>
+            <div className="flex items-center gap-1.5 text-sm text-gray-600 mt-0.5">
+              <span>{getCountryFlag(friend.countryCode)}</span>
+              <span>{friend.countryCode.toUpperCase()}</span>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Action Buttons - side by side */}
-      <div className="flex items-center gap-2 w-full">
+      
+      {/* Buttons row at bottom */}
+      <div className="flex gap-2 mt-3">
         <motion.button
           onClick={onQuickPlay}
-          className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-bold transition-colors bg-orange-500 text-white"
+          className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-sm font-bold bg-orange-500 text-white"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <span>+ თამაში</span>
+          + თამაში
         </motion.button>
 
         <motion.button
           onClick={onChat}
-          className="flex items-center justify-center px-3 py-2 rounded-xl bg-white/20 text-white text-xs font-medium"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-200 text-gray-700 text-sm font-medium"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+          <MessageCircle className="w-4 h-4" />
           ჩატი
         </motion.button>
       </div>
