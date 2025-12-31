@@ -1,0 +1,80 @@
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
+
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description?: string;
+}
+
+interface CategoryCarouselProps {
+  categories: Category[];
+  progress: Record<string, number>;
+  onCategoryClick: (categoryId: string) => void;
+  getBadge?: (category: Category, index: number) => string | undefined;
+}
+
+export function CategoryCarousel({
+  categories,
+  progress,
+  onCategoryClick,
+  getBadge,
+}: CategoryCarouselProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = 180;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  if (categories.length === 0) return null;
+
+  return (
+    <div className="relative group">
+      {/* Scroll Buttons - Hidden on mobile, visible on hover for desktop */}
+      <button
+        onClick={() => scroll("left")}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => scroll("right")}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+
+      {/* Scrollable Container */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2 snap-x snap-mandatory"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {categories.map((category, index) => (
+          <div key={category.id} className="snap-start">
+            <AirbnbCategoryCard
+              id={category.id}
+              name={category.name}
+              icon={category.icon}
+              color={category.color}
+              description={category.description}
+              progress={progress[category.id] || 0}
+              totalLevels={20}
+              badge={getBadge?.(category, index)}
+              onClick={() => onCategoryClick(category.id)}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
