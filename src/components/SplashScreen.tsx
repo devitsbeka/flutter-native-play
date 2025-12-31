@@ -3,6 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import splashBackground from '@/assets/splash-background.png';
 import logoImage from '@/assets/logo-worldquizzes.png';
 import { onVideosLoaded, areVideosLoaded } from '@/components/game/VideoPreloader';
+import { CATEGORY_ID_TO_ICON } from '@/data/categoryIconMap';
+
+// Generate icon URLs for all 45 categories
+const getCategoryIconUrls = (): string[] => {
+  const baseUrl = '/icons/3d-fluency/';
+  return Object.values(CATEGORY_ID_TO_ICON).map(slug => `${baseUrl}${slug}.png`);
+};
 
 interface SplashScreenProps {
   children: ReactNode;
@@ -12,9 +19,10 @@ export function SplashScreen({ children }: SplashScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [iconsLoaded, setIconsLoaded] = useState(false);
   const [videosReady, setVideosReady] = useState(areVideosLoaded());
 
-  // Preload images before starting the loading animation
+  // Preload splash images before starting the loading animation
   useEffect(() => {
     const bgImage = new Image();
     const logoImg = new Image();
@@ -33,6 +41,34 @@ export function SplashScreen({ children }: SplashScreenProps) {
     logoImg.src = logoImage;
   }, []);
 
+  // Preload all 45 category icons during splash
+  useEffect(() => {
+    const iconUrls = getCategoryIconUrls();
+    let loadedCount = 0;
+    const totalIcons = iconUrls.length;
+
+    const checkComplete = () => {
+      loadedCount++;
+      if (loadedCount >= totalIcons) {
+        setIconsLoaded(true);
+      }
+    };
+
+    iconUrls.forEach(url => {
+      const img = new Image();
+      img.onload = checkComplete;
+      img.onerror = checkComplete; // Don't block on failed icons
+      img.src = url;
+    });
+
+    // Fallback timeout - don't block forever on icons
+    const timeout = setTimeout(() => {
+      setIconsLoaded(true);
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
   // Listen for video preloading completion
   useEffect(() => {
     if (areVideosLoaded()) {
@@ -46,7 +82,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
   }, []);
 
   // Start progress animation only after images are loaded
-  // Complete only after both images AND videos are ready
+  // Complete only after images, icons, AND videos are ready
   useEffect(() => {
     if (!imagesLoaded) return;
 
@@ -59,8 +95,8 @@ export function SplashScreen({ children }: SplashScreenProps) {
         const next = prev + increment;
         if (next >= 100) {
           clearInterval(timer);
-          // Only finish loading when videos are also ready
-          if (videosReady) {
+          // Only finish loading when videos and icons are also ready
+          if (videosReady && iconsLoaded) {
             setTimeout(() => setIsLoading(false), 400);
           }
           return 100;
@@ -70,14 +106,14 @@ export function SplashScreen({ children }: SplashScreenProps) {
     }, interval);
 
     return () => clearInterval(timer);
-  }, [imagesLoaded, videosReady]);
+  }, [imagesLoaded, videosReady, iconsLoaded]);
 
-  // Handle case where progress finishes before videos
+  // Handle case where progress finishes before videos/icons
   useEffect(() => {
-    if (progress >= 100 && videosReady && isLoading) {
+    if (progress >= 100 && videosReady && iconsLoaded && isLoading) {
       setTimeout(() => setIsLoading(false), 400);
     }
-  }, [progress, videosReady, isLoading]);
+  }, [progress, videosReady, iconsLoaded, isLoading]);
 
   return (
     <>
