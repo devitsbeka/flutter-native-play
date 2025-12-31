@@ -39,25 +39,25 @@ export function DynamicIcon({
       if (url && !failedIconUrls.has(url)) return url;
     }
     
-    // Priority 2: Category icon slug from mapping
+    // Priority 2: Question text analysis FIRST (most relevant to actual question)
+    if (questionText) {
+      const match = findIconForQuestion(questionText, category);
+      if (match && match.matchScore > 15 && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
+    }
+    
+    // Priority 3: Keywords search
+    if (keywords && keywords.length > 0) {
+      const match = findIcon(keywords, category);
+      if (match && match.matchScore > 15 && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
+    }
+    
+    // Priority 4: Category icon slug from mapping
     if (category) {
       const categorySlug = getCategoryIconSlug(category);
       if (categorySlug) {
         const url = getIconBySlug(categorySlug);
         if (url && !failedIconUrls.has(url)) return url;
       }
-    }
-    
-    // Priority 3: Question text analysis
-    if (questionText) {
-      const match = findIconForQuestion(questionText, category);
-      if (match && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
-    }
-    
-    // Priority 4: Keywords search
-    if (keywords && keywords.length > 0) {
-      const match = findIcon(keywords, category);
-      if (match && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
     }
     
     // Priority 5: Category default from useIconLibrary

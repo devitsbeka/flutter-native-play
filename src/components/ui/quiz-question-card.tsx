@@ -25,12 +25,14 @@ const difficultyColors: Record<string, { bg: string; text: string }> = {
   hard: { bg: "rgba(255, 92, 92, 0.2)", text: "#B83A3A" },
 };
 
-// Dynamic font sizing based on question length
+// Dynamic font sizing based on question length - NO CLAMPING
 function getQuestionStyles(text: string) {
   const length = text.length;
-  if (length > 120) return { fontSize: "16px", lineClamp: 4 };
-  if (length > 80) return { fontSize: "18px", lineClamp: 3 };
-  return { fontSize: "20px", lineClamp: 3 };
+  if (length > 200) return { fontSize: "14px" };
+  if (length > 150) return { fontSize: "15px" };
+  if (length > 100) return { fontSize: "16px" };
+  if (length > 60) return { fontSize: "18px" };
+  return { fontSize: "20px" };
 }
 
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(
@@ -121,11 +123,6 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
               style={{
                 color: "#514F7F",
                 fontSize: questionStyles.fontSize,
-                display: "-webkit-box",
-                WebkitLineClamp: questionStyles.lineClamp,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                minHeight: "3.5em",
               }}
             >
               {questionText}

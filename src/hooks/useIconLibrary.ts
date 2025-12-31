@@ -78,32 +78,107 @@ const CATEGORY_ICON_MAP: Record<string, string[]> = {
   'fashion': ['dress', 'shirt', 'shoe', 'handbag', 'fashion', 'style'],
 };
 
-// Common Georgian words to English mappings for better matching
+// Extended Georgian keyword mappings for better question-to-icon matching
 const GEORGIAN_KEYWORD_MAP: Record<string, string[]> = {
+  // Common question words
+  'რა': ['question', 'what'],
+  'სად': ['location', 'where', 'place'],
+  'როდის': ['time', 'when', 'calendar'],
+  'ვინ': ['person', 'who', 'user'],
+  'რამდენი': ['number', 'count', 'calculator'],
+  'რომელი': ['which', 'select', 'choice'],
+  
+  // Space & Astronomy
+  'თანამგზავრი': ['moon', 'satellite', 'orbit', 'space'],
+  'მთვარე': ['moon', 'lunar', 'crescent'],
+  'მზე': ['sun', 'solar', 'star'],
+  'პლანეტა': ['planet', 'globe', 'earth', 'saturn'],
+  'დედამიწა': ['earth', 'globe', 'planet', 'world'],
+  'კოსმოსი': ['space', 'rocket', 'astronaut', 'galaxy'],
+  'ვარსკვლავი': ['star', 'sparkle', 'constellation'],
+  'გალაქტიკა': ['galaxy', 'milky-way', 'space'],
+  'ბუნებრივი': ['natural', 'nature', 'organic'],
+  
+  // Social Media & Technology
+  'ინსტაგრამი': ['instagram', 'camera', 'social', 'photo'],
+  'ფეისბუქი': ['facebook', 'social', 'network'],
+  'ტვიტერი': ['twitter', 'bird', 'social'],
+  'სნეპჩატი': ['snapchat', 'ghost', 'camera', 'social'],
+  'იუთუბი': ['youtube', 'video', 'play', 'streaming'],
+  'ტიკტოკი': ['tiktok', 'music', 'video', 'social'],
+  'სოციალური': ['social', 'network', 'share', 'users'],
+  'აპლიკაცია': ['app', 'smartphone', 'mobile'],
+  'ინტერნეტი': ['internet', 'globe', 'network', 'wifi'],
+  'სტორი': ['story', 'instagram', 'camera', 'social'],
+  'ფუნქცია': ['feature', 'function', 'app', 'tool'],
+  
+  // Countries & Geography
   'საქართველო': ['georgia', 'country', 'flag', 'wine'],
   'თბილისი': ['city', 'capital', 'building', 'bridge'],
+  'ქვეყანა': ['country', 'flag', 'globe', 'map'],
+  'დედაქალაქი': ['capital', 'city', 'building', 'landmark'],
   'მთა': ['mountain', 'peak', 'landscape', 'climbing'],
   'ზღვა': ['sea', 'ocean', 'water', 'wave', 'beach'],
+  'მდინარე': ['river', 'water', 'stream'],
+  'კონტინენტი': ['continent', 'globe', 'map', 'world'],
+  'ევროპა': ['europe', 'eu', 'map'],
+  'აზია': ['asia', 'map', 'globe'],
+  'აფრიკა': ['africa', 'map', 'safari'],
+  'ამერიკა': ['america', 'usa', 'flag', 'statue'],
+  
+  // Culture & History
   'ისტორია': ['history', 'ancient', 'scroll', 'castle'],
   'კულტურა': ['culture', 'art', 'tradition', 'dance'],
-  'სპორტი': ['sport', 'ball', 'trophy', 'athlete'],
-  'მეცნიერება': ['science', 'atom', 'laboratory', 'research'],
-  'მუსიკა': ['music', 'instrument', 'note', 'guitar'],
-  'ხელოვნება': ['art', 'painting', 'brush', 'gallery'],
-  'ლიტერატურა': ['book', 'writing', 'pen', 'library'],
-  'კინო': ['movie', 'film', 'camera', 'cinema'],
-  'საკვები': ['food', 'cooking', 'restaurant', 'chef'],
-  'ფეხბურთი': ['soccer-ball', 'football', 'goal', 'player'],
-  'რაგბი': ['rugby', 'ball', 'sports', 'player'],
-  'ოლიმპიადა': ['olympics', 'medal', 'trophy', 'athlete'],
-  'ღვინო': ['wine', 'grape', 'bottle', 'glass'],
-  'ეკლესია': ['church', 'cross', 'religion', 'building'],
   'მეფე': ['king', 'crown', 'throne', 'castle'],
   'დედოფალი': ['queen', 'crown', 'throne', 'castle'],
   'ომი': ['war', 'sword', 'battle', 'knight'],
+  'იმპერია': ['empire', 'crown', 'castle', 'kingdom'],
+  'რევოლუცია': ['revolution', 'flag', 'fist', 'protest'],
+  
+  // Arts & Entertainment
+  'ხელოვნება': ['art', 'painting', 'brush', 'gallery'],
   'მხატვარი': ['artist', 'painting', 'brush', 'canvas'],
+  'ლიტერატურა': ['book', 'writing', 'pen', 'library'],
   'პოეტი': ['poet', 'pen', 'book', 'writing'],
   'მწერალი': ['writer', 'pen', 'book', 'writing'],
+  'კინო': ['movie', 'film', 'camera', 'cinema'],
+  'ფილმი': ['film', 'movie', 'camera', 'clapperboard'],
+  'სერიალი': ['tv', 'series', 'television', 'streaming'],
+  'მსახიობი': ['actor', 'theater', 'mask', 'stage'],
+  'რეჟისორი': ['director', 'camera', 'clapperboard', 'film'],
+  'მომღერალი': ['singer', 'microphone', 'music', 'note'],
+  'მუსიკა': ['music', 'instrument', 'note', 'guitar'],
+  
+  // Sports
+  'სპორტი': ['sport', 'ball', 'trophy', 'athlete'],
+  'ფეხბურთი': ['soccer-ball', 'football', 'goal', 'player'],
+  'კალათბურთი': ['basketball', 'ball', 'hoop'],
+  'ტენისი': ['tennis', 'racket', 'ball'],
+  'ჩოგბურთი': ['tennis', 'racket', 'ball'],
+  'რაგბი': ['rugby', 'ball', 'sports', 'player'],
+  'ოლიმპიადა': ['olympics', 'medal', 'trophy', 'athlete'],
+  
+  // Science
+  'მეცნიერება': ['science', 'atom', 'laboratory', 'research'],
+  'ქიმია': ['chemistry', 'flask', 'atom', 'molecule'],
+  'ფიზიკა': ['physics', 'atom', 'magnet', 'wave'],
+  'ბიოლოგია': ['biology', 'dna', 'cell', 'microscope'],
+  'მათემატიკა': ['math', 'calculator', 'numbers', 'formula'],
+  'ელემენტი': ['element', 'atom', 'periodic', 'molecule'],
+  
+  // Animals
+  'ცხოველი': ['animal', 'paw', 'wildlife'],
+  'ძაღლი': ['dog', 'puppy', 'pet'],
+  'კატა': ['cat', 'kitten', 'pet'],
+  'ფრინველი': ['bird', 'feather', 'wing'],
+  'თევზი': ['fish', 'ocean', 'aquarium'],
+  'ლომი': ['lion', 'crown', 'king'],
+  'სპილო': ['elephant', 'trunk', 'safari'],
+  
+  // Food & Cuisine
+  'საკვები': ['food', 'cooking', 'restaurant', 'chef'],
+  'ღვინო': ['wine', 'grape', 'bottle', 'glass'],
+  'ეკლესია': ['church', 'cross', 'religion', 'building'],
 };
 
 // Build the icon URL from filename
