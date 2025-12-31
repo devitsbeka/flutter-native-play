@@ -5,46 +5,49 @@ import { QuizAnswerButton } from "@/components/ui/quiz-answer-button";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Star, Target, ArrowLeft } from "lucide-react";
+import { Trophy, Target, HelpCircle, ArrowLeft } from "lucide-react";
 import confetti from "canvas-confetti";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
-// Clean avatar component with winner badge
-const ResultAvatar = ({ 
+// Player card component for clean display
+const PlayerCard = ({ 
   avatarUrl, 
-  isWinner,
   name,
   score,
-  size = 90 
+  isWinner,
+  showWinnerBadge 
 }: { 
   avatarUrl?: string | null; 
-  isWinner?: boolean;
   name: string;
   score: number;
-  size?: number;
+  isWinner: boolean;
+  showWinnerBadge: boolean;
 }) => (
   <motion.div 
-    className="flex flex-col items-center"
+    className="flex flex-col items-center relative"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    {/* Winner Badge - clean label, no emoji */}
-    {isWinner && (
+    {/* Winner Badge - positioned above avatar */}
+    {showWinnerBadge && (
       <motion.div
         initial={{ scale: 0, y: 10 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ delay: 0.6, type: "spring" }}
-        className="mb-2 px-3 py-1 rounded-full flex items-center gap-1"
-        style={{
-          background: "linear-gradient(135deg, #FDE047 0%, #FACC15 100%)",
-          boxShadow: "0 4px 12px rgba(250, 204, 21, 0.4)",
-        }}
+        className="absolute -top-7 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap"
       >
-        <Trophy className="w-3 h-3 text-amber-800" />
-        <span className="text-xs font-bold text-amber-800">გამარჯვებული</span>
+        <div 
+          className="px-2.5 py-1 rounded-full flex items-center gap-1"
+          style={{
+            background: "linear-gradient(135deg, #FDE047 0%, #FACC15 100%)",
+            boxShadow: "0 4px 12px rgba(250, 204, 21, 0.4)",
+          }}
+        >
+          <Trophy className="w-3 h-3 text-amber-800" />
+          <span className="text-[10px] font-bold text-amber-800">გამარჯვებული</span>
+        </div>
       </motion.div>
     )}
     
@@ -54,28 +57,25 @@ const ResultAvatar = ({
       style={{
         background: isWinner 
           ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
-          : "linear-gradient(135deg, #B9B6FF 0%, #7E7ADB 100%)",
+          : "#B9B6FF",
         boxShadow: isWinner 
           ? "0 8px 24px rgba(250, 204, 21, 0.4)"
-          : "0 6px 20px rgba(126, 122, 219, 0.3)",
+          : "0 4px 12px rgba(185, 182, 255, 0.3)",
       }}
     >
-      <div 
-        className="rounded-xl overflow-hidden flex items-center justify-center bg-slate-200"
-        style={{ width: size, height: size }}
-      >
+      <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-200">
         {avatarUrl ? (
           <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center">
-            <span className="text-3xl text-slate-600">👤</span>
+            <span className="text-2xl text-slate-600">👤</span>
           </div>
         )}
       </div>
     </div>
     
     {/* Name */}
-    <p className="mt-3 font-bold text-slate-700 text-sm truncate max-w-[100px]">
+    <p className="mt-2 font-semibold text-slate-700 text-sm truncate max-w-[90px]">
       {name}
     </p>
     
@@ -86,7 +86,7 @@ const ResultAvatar = ({
       transition={{ delay: 0.5, type: "spring" }}
       className="text-3xl font-black"
       style={{ 
-        color: isWinner ? "#7C5CFC" : "#64748B",
+        color: isWinner ? "#5EDAD0" : "#374151",
       }}
     >
       {score}
@@ -188,12 +188,33 @@ export function MatchResultScreen() {
     }
   }, [user, profile, userScore, opponentScore, isWin, isDraw, opponent, updateProfile]);
 
-  // Get result icon based on outcome
-  const getResultIcon = () => {
-    if (isWin) return "trophy";
-    if (isDraw) return "target";
-    return "frown";
+  // Get result icon and colors based on outcome
+  const getResultConfig = () => {
+    if (isWin) {
+      return {
+        icon: <Trophy className="w-16 h-16 text-amber-800" />,
+        bg: "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
+        shadow: "0 12px 40px rgba(250, 204, 21, 0.5)",
+        text: "გამარჯვება!",
+      };
+    }
+    if (isDraw) {
+      return {
+        icon: <Target className="w-16 h-16 text-white" />,
+        bg: "linear-gradient(135deg, #94A3B8 0%, #64748B 100%)",
+        shadow: "0 12px 30px rgba(100, 116, 139, 0.3)",
+        text: "ფრე",
+      };
+    }
+    return {
+      icon: <HelpCircle className="w-16 h-16 text-white" />,
+      bg: "linear-gradient(135deg, #FB7185 0%, #F43F5E 100%)",
+      shadow: "0 12px 30px rgba(244, 63, 94, 0.3)",
+      text: "წაგება",
+    };
   };
+
+  const resultConfig = getResultConfig();
 
   return (
     <>
@@ -207,33 +228,9 @@ export function MatchResultScreen() {
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
         style={{ 
-          background: "linear-gradient(180deg, #7E7ADB 0%, #9B97E8 50%, #B9B6FF 100%)",
+          background: "linear-gradient(180deg, #F5F5F7 0%, #FFFFFF 100%)",
         }}
       >
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-3 h-3 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                background: "rgba(255,255,255,0.3)",
-              }}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: 4 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
-
         {/* Header */}
         <motion.div 
           className="flex items-center px-4 pt-4 pb-2 relative z-30 shrink-0"
@@ -242,45 +239,34 @@ export function MatchResultScreen() {
         >
           <motion.button 
             onClick={handleBackToHome}
-            className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm"
+            className="p-3 rounded-2xl bg-white shadow-lg"
             whileTap={{ scale: 0.95 }}
+            style={{
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+            }}
           >
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
           </motion.button>
         </motion.div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center px-6 pt-4 relative z-10">
+        <div className="flex-1 flex flex-col items-center px-6 pt-6 relative z-10">
           
-          {/* Result Icon - using DynamicIcon for beautiful display */}
+          {/* Result Icon */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="mb-2"
+            className="mb-4"
           >
             <div 
-              className="w-28 h-28 rounded-full flex items-center justify-center"
+              className="w-32 h-32 rounded-full flex items-center justify-center"
               style={{
-                background: isWin 
-                  ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
-                  : isDraw 
-                    ? "linear-gradient(135deg, #94A3B8 0%, #64748B 100%)"
-                    : "linear-gradient(135deg, #FB7185 0%, #F43F5E 100%)",
-                boxShadow: isWin
-                  ? "0 12px 40px rgba(250, 204, 21, 0.5)"
-                  : isDraw
-                    ? "0 12px 30px rgba(100, 116, 139, 0.3)"
-                    : "0 12px 30px rgba(244, 63, 94, 0.3)",
+                background: resultConfig.bg,
+                boxShadow: resultConfig.shadow,
               }}
             >
-              {isWin ? (
-                <Trophy className="w-14 h-14 text-amber-800" />
-              ) : isDraw ? (
-                <Target className="w-14 h-14 text-white" />
-              ) : (
-                <DynamicIcon slug="frown" size={56} className="opacity-90" />
-              )}
+              {resultConfig.icon}
             </div>
           </motion.div>
 
@@ -289,58 +275,37 @@ export function MatchResultScreen() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-4xl font-black mb-1"
+            className="text-4xl font-black mb-6"
             style={{
               fontFamily: "'TASolivare', sans-serif",
-              color: "#FFFFFF",
-              textShadow: isWin 
-                ? "0 4px 0 rgba(146, 64, 14, 0.3), 0 0 30px rgba(250, 204, 21, 0.4)"
-                : "0 4px 0 rgba(0,0,0,0.2)",
+              color: "#7E7ADB",
             }}
           >
-            {isWin ? "გამარჯვება!" : isDraw ? "ფრე" : "წაგება"}
+            {resultConfig.text}
           </motion.h1>
-
-          {/* Stars for win */}
-          <AnimatePresence>
-            {isWin && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-center gap-2 mb-4"
-              >
-                {[1, 2, 3].map((star) => (
-                  <motion.div
-                    key={star}
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ delay: 0.3 + star * 0.15, type: "spring" }}
-                  >
-                    <Star className="w-7 h-7 text-yellow-300 fill-yellow-300 drop-shadow-lg" />
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Score Card */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="w-full max-w-sm bg-white/95 backdrop-blur-lg rounded-3xl p-6 shadow-2xl"
+            className="w-full max-w-sm bg-white rounded-3xl p-6"
+            style={{
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
+            }}
           >
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between pt-4">
               {/* Player */}
-              <ResultAvatar 
+              <PlayerCard 
                 avatarUrl={profile?.avatar_url} 
-                isWinner={isWin}
                 name={profile?.nickname || "შენ"}
                 score={userScore}
+                isWinner={isWin}
+                showWinnerBadge={isWin}
               />
 
               {/* VS Divider */}
-              <div className="flex flex-col items-center justify-center h-full pt-12">
+              <div className="flex flex-col items-center justify-center h-full pt-8">
                 <span 
                   className="text-2xl font-black"
                   style={{
@@ -353,29 +318,33 @@ export function MatchResultScreen() {
               </div>
 
               {/* Opponent */}
-              <ResultAvatar 
+              <PlayerCard 
                 avatarUrl={opponent?.avatarUrl} 
-                isWinner={!isWin && !isDraw}
                 name={opponent?.name || "მოწინააღმდეგე"}
                 score={opponentScore}
+                isWinner={!isWin && !isDraw}
+                showWinnerBadge={!isWin && !isDraw}
               />
             </div>
 
             {/* Points Earned */}
-            {userScore > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="text-center pt-4 mt-4 border-t border-slate-200"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="text-center pt-5 mt-5 border-t border-slate-100"
+            >
+              <p className="text-slate-400 text-sm mb-1">მიღებული ქულები</p>
+              <p 
+                className="text-3xl font-black"
+                style={{ color: "#5EDAD0" }}
               >
-                <p className="text-slate-500 text-sm">მიღებული ქულები</p>
-                <p className="text-2xl font-black" style={{ color: "#7C5CFC" }}>+{userScore}</p>
-              </motion.div>
-            )}
+                +{userScore}
+              </p>
+            </motion.div>
           </motion.div>
 
-          {/* Action Buttons - Using Quiz Answer Buttons */}
+          {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
