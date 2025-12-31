@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Timer } from "lucide-react";
 
-export type QuizAnswerState = "default" | "selected" | "correct" | "wrong" | "next" | "loading";
+export type QuizAnswerState = "default" | "selected" | "correct" | "wrong" | "next" | "loading" | "disabled";
 
 interface QuizAnswerButtonProps {
   state?: QuizAnswerState;
@@ -15,7 +15,7 @@ interface QuizAnswerButtonProps {
   className?: string;
 }
 
-const stateStyles: Record<Exclude<QuizAnswerState, "loading">, {
+const stateStyles: Record<Exclude<QuizAnswerState, "loading" | "disabled">, {
   faceBg: string;
   borderColor: string;
   depthColor: string;
@@ -61,7 +61,9 @@ const stateStyles: Record<Exclude<QuizAnswerState, "loading">, {
 const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonProps>(
   ({ state = "default", label = "ა", text, onClick, disabled = false, showLabel = true, className }, ref) => {
     const isLoading = state === "loading";
-    const styles = stateStyles[isLoading ? "default" : state];
+    const isDisabledState = state === "disabled";
+    const styleKey = (isLoading || isDisabledState) ? "default" : state;
+    const styles = stateStyles[styleKey];
     const [isPressed, setIsPressed] = React.useState(false);
 
     const depthHeight = 8;
@@ -88,6 +90,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           "relative w-full rounded-2xl font-bold text-xl",
           "disabled:cursor-not-allowed",
           isLoading && "cursor-wait",
+          isDisabledState && "opacity-40 cursor-not-allowed",
           className
         )}
         style={{
