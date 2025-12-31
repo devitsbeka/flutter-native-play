@@ -366,10 +366,12 @@ export function VideoAdventureMap() {
           )}
         </div>
 
-        {/* Bottom content - Power-ups bar */}
-        <div className="pb-[155px]">
-          <PowerUpsBar onAddClick={handleAddPowerUp} />
-        </div>
+        {/* Bottom content - Power-ups bar (hidden when modal open) */}
+        {!showPowerUpShop && (
+          <div className="pb-[155px]">
+            <PowerUpsBar onAddClick={handleAddPowerUp} />
+          </div>
+        )}
       </div>
 
       {/* Power-up Shop Modal */}
