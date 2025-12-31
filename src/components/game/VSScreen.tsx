@@ -3,9 +3,9 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { getCountryFlag, countries } from "@/data/opponents";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -42,60 +42,8 @@ const PatternShape = ({ delay, x, y, rotation, type }: { delay: number; x: numbe
   </motion.div>
 );
 
-// Countdown overlay component
-const CountdownOverlay = ({ count }: { count: number | string }) => (
-  <motion.div 
-    className="fixed inset-0 z-50 flex items-center justify-center"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-  >
-    <motion.div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-    
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={count}
-        className="relative z-10"
-        initial={{ scale: 3, opacity: 0, rotate: -10 }}
-        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-        exit={{ scale: 0.5, opacity: 0, rotate: 10 }}
-        transition={{ duration: 0.3, type: "spring", stiffness: 200, damping: 15 }}
-      >
-        <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: count === "GO!" 
-              ? "radial-gradient(circle, rgba(34,197,94,0.6) 0%, transparent 70%)"
-              : "radial-gradient(circle, rgba(255,215,0,0.6) 0%, transparent 70%)",
-            transform: "scale(3)",
-          }}
-          animate={{ scale: [2.5, 3.5, 2.5], opacity: [0.8, 0.4, 0.8] }}
-          transition={{ duration: 0.5, repeat: Infinity }}
-        />
-        
-        <span 
-          className="text-8xl font-black"
-          style={{
-            fontFamily: "'TASolivare', sans-serif",
-            background: count === "GO!" 
-              ? "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)"
-              : "linear-gradient(180deg, #FFE55C 0%, #FFD700 30%, #E6A800 70%, #CC8800 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            filter: count === "GO!"
-              ? "drop-shadow(0 4px 0 #166534) drop-shadow(0 0 30px rgba(34,197,94,0.8))"
-              : "drop-shadow(0 4px 0 #8B6914) drop-shadow(0 0 30px rgba(255,215,0,0.8))",
-          }}
-        >
-          {count}
-        </span>
-      </motion.div>
-    </AnimatePresence>
-  </motion.div>
-);
-
 // Square avatar with mint border
-const SquareAvatar = ({ avatarUrl, size = 160, isSearching = false }: { avatarUrl?: string | null; size?: number; isSearching?: boolean }) => (
+const SquareAvatar = ({ avatarUrl, size = 120, isSearching = false }: { avatarUrl?: string | null; size?: number; isSearching?: boolean }) => (
   <motion.div 
     className="relative"
     animate={isSearching ? { scale: [1, 1.02, 1] } : {}}
@@ -121,7 +69,7 @@ const SquareAvatar = ({ avatarUrl, size = 160, isSearching = false }: { avatarUr
           <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center">
-            <span className="text-5xl">?</span>
+            <span className="text-4xl">?</span>
           </div>
         )}
       </div>
@@ -138,14 +86,12 @@ const SquareAvatar = ({ avatarUrl, size = 160, isSearching = false }: { avatarUr
   </motion.div>
 );
 
-type SlotPhase = "searching" | "slowing" | "found";
+type SlotPhase = "searching" | "slowing" | "found" | "ready";
 
 export function VSScreen() {
   const { opponent, startMatch, phase } = useGame();
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [countdown, setCountdown] = useState<number | string | null>(null);
-  const [isCountingDown, setIsCountingDown] = useState(false);
   
   // Slot machine state
   const [slotPhase, setSlotPhase] = useState<SlotPhase>("searching");
@@ -171,21 +117,20 @@ export function VSScreen() {
   const opponentPoints = opponent?.points || 3212;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
-  // Slot machine cycling effect
+  // Slot machine cycling effect - faster timing for 4s total
   useEffect(() => {
     if (phase !== "matchmaking" && phase !== "preparing" && phase !== "vs-screen") return;
-    if (slotPhase === "found") return;
+    if (slotPhase === "found" || slotPhase === "ready") return;
 
     let cycleCount = 0;
-    const maxCycles = 35;
+    const maxCycles = 20; // Reduced from 35
     
     const getDelay = (count: number): number => {
-      if (count < 20) return 80;
-      if (count < 25) return 150;
-      if (count < 28) return 250;
-      if (count < 31) return 400;
-      if (count < 33) return 600;
-      return 800;
+      if (count < 10) return 60;
+      if (count < 14) return 120;
+      if (count < 17) return 200;
+      if (count < 19) return 350;
+      return 500;
     };
 
     const cycleSlot = () => {
@@ -194,7 +139,7 @@ export function VSScreen() {
       const randomAvatar = slotAvatars[Math.floor(Math.random() * slotAvatars.length)];
       setCurrentAvatar(randomAvatar);
 
-      if (cycleCount < 20) {
+      if (cycleCount < 10) {
         setSlotPhase("searching");
       } else if (cycleCount < maxCycles) {
         setSlotPhase("slowing");
@@ -210,7 +155,7 @@ export function VSScreen() {
       }
     };
 
-    intervalRef.current = setTimeout(cycleSlot, 500);
+    intervalRef.current = setTimeout(cycleSlot, 300);
 
     return () => {
       if (intervalRef.current) {
@@ -226,40 +171,22 @@ export function VSScreen() {
     }
   }, [slotPhase, opponent]);
 
-  const handleStartCountdown = useCallback(() => {
-    if (isCountingDown || slotPhase !== "found") return;
-    setIsCountingDown(true);
-    setCountdown(3);
-    
-    const sequence = [
-      { value: 3, delay: 0 },
-      { value: 2, delay: 800 },
-      { value: 1, delay: 1600 },
-      { value: "GO!", delay: 2400 },
-    ];
-    
-    sequence.forEach(({ value, delay }) => {
-      setTimeout(() => setCountdown(value), delay);
-    });
-    
-    setTimeout(() => {
-      setCountdown(null);
-      setIsCountingDown(false);
-      startMatch();
-    }, 3200);
-  }, [isCountingDown, startMatch, slotPhase]);
-
-  // Auto-start countdown when opponent found
+  // Transition to ready state after found
   useEffect(() => {
-    if (slotPhase === "found" && !isCountingDown) {
+    if (slotPhase === "found") {
       const timer = setTimeout(() => {
-        handleStartCountdown();
-      }, 1500);
+        setSlotPhase("ready");
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [slotPhase, isCountingDown, handleStartCountdown]);
+  }, [slotPhase]);
 
-  const avatarSize = 150;
+  const handleStart = () => {
+    startMatch();
+  };
+
+  const avatarSize = 120;
+  const isReady = slotPhase === "ready";
 
   return (
     <div 
@@ -294,143 +221,135 @@ export function VSScreen() {
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-4 -mt-8">
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-4">
         
-        {/* === PLAYER SECTION (Top - You) === */}
-        <motion.div 
-          className="flex flex-col items-center"
-          initial={{ opacity: 0, y: -40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <motion.div
+          className="flex flex-col items-center w-full"
+          animate={{ gap: isReady ? 24 : 48 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
         >
-          {/* Player Avatar */}
-          <SquareAvatar avatarUrl={profile?.avatar_url} size={avatarSize} />
-
-          {/* Player Score & Level */}
-          <motion.div
-            className="mt-4 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <span className="text-white/90 text-2xl font-bold">
-              {playerPoints.toLocaleString()}
-            </span>
-            <span className="text-white/60 text-xl ml-2">
-              (Lvl.{playerLevelInfo.level})
-            </span>
-          </motion.div>
-
-          {/* Player Name */}
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-1 text-3xl font-black tracking-wide"
-            style={{
-              fontFamily: "'TASolivare', sans-serif",
-              color: "#86EFAC",
-              textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
+          {/* === PLAYER SECTION (Top - You) === */}
+          <motion.div 
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, y: -40 }}
+            animate={{ 
+              opacity: 1, 
+              y: isReady ? 20 : 0,
             }}
+            transition={{ duration: 0.5, type: "spring", stiffness: 200, damping: 25 }}
           >
-            შენ
-          </motion.h2>
-        </motion.div>
+            {/* Player Avatar */}
+            <SquareAvatar avatarUrl={profile?.avatar_url} size={avatarSize} />
 
-        {/* === VS BADGE === */}
-        <motion.div 
-          className="my-6"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 15 }}
-        >
-          {/* 3D VS Platform */}
-          <div className="relative">
-            {/* Platform base */}
-            <div 
-              className="w-32 h-8 rounded-full mx-auto"
-              style={{
-                background: "linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%)",
-                transform: "perspective(200px) rotateX(60deg)",
-                boxShadow: "0 10px 30px rgba(124, 58, 237, 0.4)",
-              }}
-            />
-            
-            {/* VS Text */}
+            {/* Player Score & Level */}
             <motion.div
-              className="absolute -top-10 left-1/2 -translate-x-1/2"
-              animate={{ 
-                y: [0, -5, 0],
-                rotateY: [0, 5, 0, -5, 0],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="mt-3 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
             >
-              <span 
-                className="text-6xl font-black italic"
-                style={{
-                  fontFamily: "'TASolivare', sans-serif",
-                  background: "linear-gradient(180deg, #FDE047 0%, #FACC15 30%, #EAB308 70%, #CA8A04 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0 4px 0 #92400E) drop-shadow(0 6px 20px rgba(250, 204, 21, 0.5))",
-                  letterSpacing: "-2px",
-                }}
-              >
-                VS
+              <span className="text-white/90 text-xl font-bold">
+                {playerPoints.toLocaleString()}
+              </span>
+              <span className="text-white/60 text-lg ml-2">
+                (Lvl.{playerLevelInfo.level})
               </span>
             </motion.div>
-          </div>
-        </motion.div>
 
-        {/* === OPPONENT SECTION (Bottom) === */}
-        <motion.div 
-          className="flex flex-col items-center"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          {/* Opponent Name */}
-          <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mb-1 text-2xl font-black text-white uppercase tracking-wider"
-            style={{
-              fontFamily: "'TASolivare', sans-serif",
-              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            }}
-          >
-            {slotPhase === "found" && opponent ? opponent.name : "..."}
-          </motion.h2>
-
-          {/* Opponent Score & Level */}
-          <motion.div
-            className="mb-4 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: slotPhase === "found" ? 1 : 0.5 }}
-            transition={{ delay: 0.4 }}
-          >
-            <span className="text-white/90 text-2xl font-bold">
-              {slotPhase === "found" ? opponentPoints.toLocaleString() : "???"}
-            </span>
-            <span className="text-white/60 text-xl ml-2">
-              (Lvl.{slotPhase === "found" ? opponentLevelInfo.level : "?"})
-            </span>
+            {/* Player Name */}
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-1 text-2xl font-black tracking-wide"
+              style={{
+                fontFamily: "'TASolivare', sans-serif",
+                color: "#86EFAC",
+                textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
+              }}
+            >
+              შენ
+            </motion.h2>
           </motion.div>
 
-          {/* Opponent Avatar */}
-          <SquareAvatar 
-            avatarUrl={currentAvatar} 
-            size={avatarSize} 
-            isSearching={slotPhase !== "found"}
+          {/* Simple divider line */}
+          <motion.div
+            className="w-24 h-0.5 bg-white/30 rounded-full"
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
           />
-        </motion.div>
-      </div>
 
-      {/* Countdown Overlay */}
-      <AnimatePresence>
-        {countdown !== null && <CountdownOverlay count={countdown} />}
-      </AnimatePresence>
+          {/* === OPPONENT SECTION (Bottom) === */}
+          <motion.div 
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ 
+              opacity: 1, 
+              y: isReady ? -20 : 0,
+            }}
+            transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 200, damping: 25 }}
+          >
+            {/* Opponent Name */}
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mb-1 text-xl font-black text-white uppercase tracking-wider"
+              style={{
+                fontFamily: "'TASolivare', sans-serif",
+                textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              }}
+            >
+              {slotPhase === "found" || slotPhase === "ready" ? opponent?.name : "..."}
+            </motion.h2>
+
+            {/* Opponent Score & Level */}
+            <motion.div
+              className="mb-3 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: slotPhase === "found" || slotPhase === "ready" ? 1 : 0.5 }}
+              transition={{ delay: 0.4 }}
+            >
+              <span className="text-white/90 text-xl font-bold">
+                {slotPhase === "found" || slotPhase === "ready" ? opponentPoints.toLocaleString() : "???"}
+              </span>
+              <span className="text-white/60 text-lg ml-2">
+                (Lvl.{slotPhase === "found" || slotPhase === "ready" ? opponentLevelInfo.level : "?"})
+              </span>
+            </motion.div>
+
+            {/* Opponent Avatar */}
+            <SquareAvatar 
+              avatarUrl={currentAvatar} 
+              size={avatarSize} 
+              isSearching={slotPhase !== "found" && slotPhase !== "ready"}
+            />
+          </motion.div>
+        </motion.div>
+
+        {/* Start Button - appears when ready */}
+        <AnimatePresence>
+          {isReady && (
+            <motion.div
+              className="mt-8 w-full max-w-xs"
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+              <ChunkyButton
+                variant="success"
+                size="lg"
+                className="w-full"
+                onClick={handleStart}
+              >
+                START
+              </ChunkyButton>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
