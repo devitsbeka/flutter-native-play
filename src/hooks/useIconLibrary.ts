@@ -1,14 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback } from 'react';
 
 interface IconItem {
-  id: string;
   title: string;
   file_name: string;
   slug: string;
   category: string;
   tags: string[];
-  icon_url: string;
 }
 
 interface IconMatch {
@@ -18,62 +15,80 @@ interface IconMatch {
   matchScore: number;
 }
 
-// In-memory cache for icons
+// In-memory cache for icons (loaded from local JSON for speed)
 let iconCache: IconItem[] | null = null;
 let cachePromise: Promise<IconItem[]> | null = null;
 
 // Category to icon slug mappings for instant lookups
 const CATEGORY_ICON_MAP: Record<string, string[]> = {
   'geography': ['globe', 'world', 'map', 'earth', 'compass'],
-  'science': ['microscope', 'atom', 'laboratory', 'science', 'chemistry'],
-  'sports': ['soccer', 'football', 'basketball', 'trophy', 'medal'],
-  'history': ['scroll', 'castle', 'crown', 'ancient', 'museum'],
-  'art': ['palette', 'painting', 'brush', 'art', 'canvas'],
-  'music': ['music', 'guitar', 'piano', 'musical', 'headphones'],
-  'literature': ['book', 'library', 'reading', 'novel', 'writing'],
-  'movies': ['movie', 'film', 'cinema', 'camera', 'clapperboard'],
-  'technology': ['computer', 'laptop', 'phone', 'tech', 'robot'],
-  'food': ['food', 'restaurant', 'cooking', 'chef', 'cuisine'],
-  'nature': ['tree', 'forest', 'nature', 'flower', 'leaf'],
-  'animals': ['animal', 'wildlife', 'zoo', 'pet', 'creature'],
+  'science': ['microscope', 'atom', 'laboratory', 'science', 'chemistry', 'test-tube'],
+  'sports': ['soccer-ball', 'football', 'basketball', 'trophy', 'medal', 'tennis'],
+  'history': ['scroll', 'castle', 'crown', 'ancient', 'museum', 'knight'],
+  'world_history': ['scroll', 'castle', 'crown', 'ancient', 'museum', 'knight'],
+  'georgian_history': ['scroll', 'castle', 'crown', 'flag', 'wine', 'church'],
+  'art': ['palette', 'painting', 'brush', 'art', 'canvas', 'easel'],
+  'music': ['music', 'guitar', 'piano', 'musical-note', 'headphones', 'microphone'],
+  'literature': ['book', 'library', 'reading', 'novel', 'writing', 'pen'],
+  'georgian_literature': ['book', 'library', 'reading', 'novel', 'writing', 'pen'],
+  'movies': ['movie', 'film', 'cinema', 'camera', 'clapperboard', 'popcorn'],
+  'technology': ['computer', 'laptop', 'phone', 'tech', 'robot', 'chip'],
+  'food': ['food', 'restaurant', 'cooking', 'chef', 'cuisine', 'pizza'],
+  'nature': ['tree', 'forest', 'nature', 'flower', 'leaf', 'mountain'],
+  'animals': ['animal', 'wildlife', 'zoo', 'pet', 'dog', 'cat', 'lion'],
 };
 
-// Common Georgian words to English mappings
+// Common Georgian words to English mappings for better matching
 const GEORGIAN_KEYWORD_MAP: Record<string, string[]> = {
-  'საქართველო': ['georgia', 'country', 'flag'],
-  'თბილისი': ['city', 'capital', 'building'],
-  'მთა': ['mountain', 'peak', 'landscape'],
-  'ზღვა': ['sea', 'ocean', 'water', 'wave'],
-  'ისტორია': ['history', 'ancient', 'scroll'],
-  'კულტურა': ['culture', 'art', 'tradition'],
-  'სპორტი': ['sport', 'ball', 'trophy'],
-  'მეცნიერება': ['science', 'atom', 'laboratory'],
-  'მუსიკა': ['music', 'instrument', 'note'],
-  'ხელოვნება': ['art', 'painting', 'brush'],
-  'ლიტერატურა': ['book', 'writing', 'pen'],
-  'კინო': ['movie', 'film', 'camera'],
-  'საკვები': ['food', 'cooking', 'restaurant'],
+  'საქართველო': ['georgia', 'country', 'flag', 'wine'],
+  'თბილისი': ['city', 'capital', 'building', 'bridge'],
+  'მთა': ['mountain', 'peak', 'landscape', 'climbing'],
+  'ზღვა': ['sea', 'ocean', 'water', 'wave', 'beach'],
+  'ისტორია': ['history', 'ancient', 'scroll', 'castle'],
+  'კულტურა': ['culture', 'art', 'tradition', 'dance'],
+  'სპორტი': ['sport', 'ball', 'trophy', 'athlete'],
+  'მეცნიერება': ['science', 'atom', 'laboratory', 'research'],
+  'მუსიკა': ['music', 'instrument', 'note', 'guitar'],
+  'ხელოვნება': ['art', 'painting', 'brush', 'gallery'],
+  'ლიტერატურა': ['book', 'writing', 'pen', 'library'],
+  'კინო': ['movie', 'film', 'camera', 'cinema'],
+  'საკვები': ['food', 'cooking', 'restaurant', 'chef'],
+  'ფეხბურთი': ['soccer-ball', 'football', 'goal', 'player'],
+  'რაგბი': ['rugby', 'ball', 'sports', 'player'],
+  'ოლიმპიადა': ['olympics', 'medal', 'trophy', 'athlete'],
+  'ღვინო': ['wine', 'grape', 'bottle', 'glass'],
+  'ეკლესია': ['church', 'cross', 'religion', 'building'],
+  'მეფე': ['king', 'crown', 'throne', 'castle'],
+  'დედოფალი': ['queen', 'crown', 'throne', 'castle'],
+  'ომი': ['war', 'sword', 'battle', 'knight'],
+  'მხატვარი': ['artist', 'painting', 'brush', 'canvas'],
+  'პოეტი': ['poet', 'pen', 'book', 'writing'],
+  'მწერალი': ['writer', 'pen', 'book', 'writing'],
 };
 
+// Build the icon URL from filename
+function getIconUrl(fileName: string): string {
+  return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${fileName}`;
+}
+
+// Load icons from local JSON file (much faster than database)
 async function loadIconIndex(): Promise<IconItem[]> {
   if (iconCache) return iconCache;
   
   if (cachePromise) return cachePromise;
   
   cachePromise = (async () => {
-    console.log('Loading icon library...');
-    const { data, error } = await supabase
-      .from('icon_library')
-      .select('id, title, file_name, slug, category, tags, icon_url');
-    
-    if (error) {
-      console.error('Failed to load icon library:', error);
+    try {
+      const response = await fetch('/data/icon-library-meta.json');
+      const data = await response.json();
+      
+      iconCache = data.items || [];
+      console.log(`[IconLibrary] Loaded ${iconCache.length} icons from local JSON`);
+      return iconCache;
+    } catch (error) {
+      console.error('[IconLibrary] Failed to load icon library:', error);
       return [];
     }
-    
-    iconCache = data || [];
-    console.log(`Loaded ${iconCache.length} icons into cache`);
-    return iconCache;
   })();
   
   return cachePromise;
@@ -182,7 +197,7 @@ export function useIconLibrary() {
       return {
         slug: bestMatch.slug,
         title: bestMatch.title,
-        iconUrl: bestMatch.icon_url,
+        iconUrl: getIconUrl(bestMatch.file_name),
         matchScore: bestScore,
       };
     }
@@ -200,15 +215,45 @@ export function useIconLibrary() {
 
   const getIconBySlug = useCallback((slug: string): string | null => {
     const icon = iconIndex.find(i => i.slug === slug);
-    return icon?.icon_url || null;
+    return icon ? getIconUrl(icon.file_name) : null;
   }, [iconIndex]);
 
   const getIconForCategory = useCallback((categoryId: string): string | null => {
     const slugs = CATEGORY_ICON_MAP[categoryId.toLowerCase()] || [];
     for (const slug of slugs) {
       const icon = iconIndex.find(i => i.slug === slug);
-      if (icon) return icon.icon_url;
+      if (icon) return getIconUrl(icon.file_name);
     }
+    return null;
+  }, [iconIndex]);
+
+  // Get a random icon from the category (used as fallback when main icon fails)
+  const getRandomIconForCategory = useCallback((categoryId: string, seed: number = 0): string | null => {
+    // Filter icons that might match the category
+    const categoryKey = categoryId.toLowerCase();
+    const categoryKeywords = CATEGORY_ICON_MAP[categoryKey] || [];
+    
+    // Try to find icons matching category keywords
+    const matchingIcons = iconIndex.filter(icon => {
+      const slugMatch = categoryKeywords.some(kw => icon.slug.includes(kw));
+      const tagMatch = icon.tags.some(tag => 
+        categoryKeywords.some(kw => tag.toLowerCase().includes(kw))
+      );
+      return slugMatch || tagMatch;
+    });
+    
+    if (matchingIcons.length > 0) {
+      // Use seed to get different icon each retry
+      const index = seed % matchingIcons.length;
+      return getIconUrl(matchingIcons[index].file_name);
+    }
+    
+    // Last resort: just pick any icon based on seed
+    if (iconIndex.length > 0) {
+      const index = (seed * 137) % iconIndex.length; // 137 is prime for better distribution
+      return getIconUrl(iconIndex[index].file_name);
+    }
+    
     return null;
   }, [iconIndex]);
 
@@ -217,6 +262,7 @@ export function useIconLibrary() {
     findIconForQuestion,
     getIconBySlug, 
     getIconForCategory,
+    getRandomIconForCategory,
     isLoaded: !isLoading && iconIndex.length > 0,
     iconCount: iconIndex.length,
   };
