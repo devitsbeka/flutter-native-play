@@ -1,8 +1,9 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Timer } from "lucide-react";
 
-export type QuizAnswerState = "default" | "selected" | "correct" | "wrong" | "next";
+export type QuizAnswerState = "default" | "selected" | "correct" | "wrong" | "next" | "loading";
 
 interface QuizAnswerButtonProps {
   state?: QuizAnswerState;
@@ -14,7 +15,7 @@ interface QuizAnswerButtonProps {
   className?: string;
 }
 
-const stateStyles: Record<QuizAnswerState, {
+const stateStyles: Record<Exclude<QuizAnswerState, "loading">, {
   faceBg: string;
   borderColor: string;
   depthColor: string;
@@ -59,7 +60,8 @@ const stateStyles: Record<QuizAnswerState, {
 
 const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonProps>(
   ({ state = "default", label = "ა", text, onClick, disabled = false, showLabel = true, className }, ref) => {
-    const styles = stateStyles[state];
+    const isLoading = state === "loading";
+    const styles = stateStyles[isLoading ? "default" : state];
     const [isPressed, setIsPressed] = React.useState(false);
 
     const depthHeight = 8;
@@ -68,7 +70,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
       <motion.button
         ref={ref}
         onClick={onClick}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         onMouseDown={() => setIsPressed(true)}
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
@@ -76,16 +78,16 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         onTouchEnd={() => setIsPressed(false)}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: disabled ? 1 : 1.02 }}
-        whileTap={{ scale: disabled ? 1 : 0.98 }}
+        whileHover={{ scale: disabled || isLoading ? 1 : 1.02 }}
+        whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}
         transition={{ 
           duration: 0.2,
           scale: { type: "spring", stiffness: 400, damping: 17 }
         }}
         className={cn(
           "relative w-full rounded-2xl font-bold text-xl",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          "active:scale-[0.98]",
+          "disabled:cursor-not-allowed",
+          isLoading && "cursor-wait",
           className
         )}
         style={{
@@ -112,7 +114,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
             boxShadow: `inset 0 3px 0 rgba(255,255,255,0.35)`,
           }}
         >
-          {/* Label Badge */}
+          {/* Label Badge or Timer */}
           {showLabel && state !== "next" && (
             <div
               className="flex items-center justify-center w-14 h-10 ml-4 rounded-xl font-bold text-lg"
@@ -121,11 +123,15 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
                 color: styles.textColor,
               }}
             >
-              {label}:
+              {isLoading ? (
+                <Timer className="w-5 h-5 animate-pulse" />
+              ) : (
+                <>{label}:</>
+              )}
             </div>
           )}
           
-          {/* Text */}
+          {/* Text or Skeleton */}
           <span
             className={cn(
               "flex-1 px-4",
@@ -133,7 +139,19 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
             )}
             style={{ color: styles.textColor }}
           >
-            {text}
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div 
+                  className="h-5 rounded-md animate-pulse"
+                  style={{ 
+                    width: "60%",
+                    background: "rgba(126, 122, 219, 0.3)"
+                  }} 
+                />
+              </div>
+            ) : (
+              text
+            )}
           </span>
         </div>
       </motion.button>

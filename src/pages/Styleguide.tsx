@@ -26,12 +26,31 @@ const colorPalette = [
 const Styleguide = () => {
   const navigate = useNavigate();
   const [interactiveState, setInteractiveState] = useState<QuizAnswerState>("default");
+  const [demoState, setDemoState] = useState<QuizAnswerState>("default");
 
   const cycleState = () => {
     const states: QuizAnswerState[] = ["default", "selected", "correct", "wrong", "next"];
     const currentIndex = states.indexOf(interactiveState);
     const nextIndex = (currentIndex + 1) % states.length;
     setInteractiveState(states[nextIndex]);
+  };
+
+  const handleAnswerClick = () => {
+    if (demoState !== "default") return;
+    
+    // Set to loading state
+    setDemoState("loading");
+    
+    // After 1 second, show result (random correct or wrong)
+    setTimeout(() => {
+      const isCorrect = Math.random() > 0.5;
+      setDemoState(isCorrect ? "correct" : "wrong");
+      
+      // After 1.5 seconds, reset to default
+      setTimeout(() => {
+        setDemoState("default");
+      }, 1500);
+    }, 1000);
   };
 
   return (
@@ -55,11 +74,12 @@ const Styleguide = () => {
           </h2>
           <div className="space-y-4">
             <div>
-              <p className="text-white/60 text-sm mb-2">Default State</p>
+              <p className="text-white/60 text-sm mb-2">Default State (Click to test loading → result flow)</p>
               <QuizAnswerButton
-                state="default"
+                state={demoState}
                 label={georgianLabels[0]}
-                text="პასუხი (Default)"
+                text={demoState === "loading" ? "" : demoState === "correct" ? "სწორია! ✓" : demoState === "wrong" ? "არასწორია ✗" : "პასუხი (Default)"}
+                onClick={handleAnswerClick}
               />
             </div>
             <div>
