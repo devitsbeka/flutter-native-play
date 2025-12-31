@@ -7,6 +7,7 @@ export interface DatabaseCategory {
   category_id: string;
   name: string;
   icon: string;
+  icon_slug?: string | null;
   color: string;
   description: string | null;
   total_levels: number;
@@ -16,10 +17,11 @@ export interface DatabaseCategory {
 }
 
 // Transform database category to app Category format
-const transformCategory = (dbCat: DatabaseCategory): Category => ({
+const transformCategory = (dbCat: DatabaseCategory): Category & { icon_slug?: string | null } => ({
   id: dbCat.category_id,
   name: dbCat.name,
   icon: dbCat.icon,
+  icon_slug: dbCat.icon_slug,
   color: dbCat.color,
   description: dbCat.description || '',
   totalLevels: dbCat.total_levels,

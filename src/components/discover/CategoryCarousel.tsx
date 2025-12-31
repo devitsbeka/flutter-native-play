@@ -7,6 +7,7 @@ interface Category {
   category_id?: string; // ASCII slug like 'world_history'
   name: string;
   icon: string;
+  icon_slug?: string | null; // Direct icon slug from database
   color: string;
   description?: string;
   image_url?: string;
@@ -70,7 +71,8 @@ export function CategoryCarousel({
           <div key={category.id} className="flex-shrink-0">
             <AirbnbCategoryCard
               id={category.id}
-              categoryId={category.category_id}
+              categoryId={category.category_id || category.id}
+              iconSlug={category.icon_slug}
               name={category.name}
               icon={category.icon}
               color={category.color}

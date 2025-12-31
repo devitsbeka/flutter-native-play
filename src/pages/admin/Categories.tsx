@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAdminCategories, AdminCategory } from '@/hooks/useAdminCategories';
 import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview';
+import { IconPicker } from '@/components/admin/IconPicker';
 import { cn } from '@/lib/utils';
 
 const CATEGORY_TYPES = [
@@ -77,6 +79,7 @@ export default function AdminCategories() {
     category_id: '',
     name: '',
     icon: '📚',
+    icon_slug: '',
     color: 'from-blue-400 to-cyan-500',
     description: '',
     total_levels: 20,
@@ -90,6 +93,7 @@ export default function AdminCategories() {
       category_id: '',
       name: '',
       icon: '📚',
+      icon_slug: '',
       color: 'from-blue-400 to-cyan-500',
       description: '',
       total_levels: 20,
@@ -110,6 +114,7 @@ export default function AdminCategories() {
       category_id: category.category_id,
       name: category.name,
       icon: category.icon,
+      icon_slug: (category as any).icon_slug || '',
       color: category.color,
       description: category.description || '',
       total_levels: category.total_levels,
@@ -312,21 +317,35 @@ export default function AdminCategories() {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">აიკონი</Label>
-                  <div className="flex flex-wrap gap-1 p-2 border rounded-lg max-h-24 overflow-y-auto">
-                    {EMOJI_OPTIONS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, icon: emoji })}
-                        className={cn(
-                          "text-xl p-1 rounded hover:bg-muted transition-colors",
-                          formData.icon === emoji && "bg-primary/20 ring-2 ring-primary"
-                        )}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
+                  <Tabs defaultValue={formData.icon_slug ? "library" : "emoji"} className="w-full">
+                    <TabsList className="w-full grid grid-cols-2">
+                      <TabsTrigger value="emoji">ემოჯი</TabsTrigger>
+                      <TabsTrigger value="library">ბიბლიოთეკა (9K)</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="emoji" className="mt-2">
+                      <div className="flex flex-wrap gap-1 p-2 border rounded-lg max-h-24 overflow-y-auto">
+                        {EMOJI_OPTIONS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, icon: emoji, icon_slug: '' })}
+                            className={cn(
+                              "text-xl p-1 rounded hover:bg-muted transition-colors",
+                              formData.icon === emoji && !formData.icon_slug && "bg-primary/20 ring-2 ring-primary"
+                            )}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="library" className="mt-2">
+                      <IconPicker
+                        value={formData.icon_slug}
+                        onChange={(slug) => setFormData({ ...formData, icon_slug: slug })}
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </div>
 
                 <div className="space-y-1.5">
