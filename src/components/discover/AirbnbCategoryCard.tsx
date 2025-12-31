@@ -147,7 +147,7 @@ export function AirbnbCategoryCard({
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
-              isFavorite ? "fill-red-500 text-red-500" : "text-foreground/70"
+              isFavorite ? "fill-red-500 text-red-500" : "text-slate-600"
             }`}
           />
         </button>
@@ -170,12 +170,12 @@ export function AirbnbCategoryCard({
       </div>
 
       {/* Title */}
-      <h3 className="mt-2 font-semibold text-slate-800 text-sm line-clamp-1">
+      <h3 className="mt-2 font-semibold text-white text-sm line-clamp-1 drop-shadow-sm">
         {name}
       </h3>
 
       {/* Subtitle - Progress */}
-      <p className="text-xs text-slate-600 font-medium">
+      <p className="text-xs text-white/80 font-medium">
         {progress}/{totalLevels} დონე
       </p>
     </motion.button>

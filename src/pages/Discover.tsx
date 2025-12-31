@@ -12,10 +12,11 @@ import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { PageTransition } from "@/components/shared/PageTransition";
 
 const tabs = [
-  { id: "all", label: "ყველა", icon: "🏠" },
-  { id: "classic", label: "კლასიკური", icon: "🏛️" },
-  { id: "fun", label: "გართობა", icon: "🎈" },
-  { id: "educational", label: "სასწავლო", icon: "📚" },
+  { id: "all", label: "ყველა" },
+  { id: "favorites", label: "ფავორიტები" },
+  { id: "classic", label: "კლასიკური" },
+  { id: "fun", label: "გართობა" },
+  { id: "educational", label: "სასწავლო" },
 ];
 
 export default function Discover() {
@@ -156,7 +157,6 @@ export default function Discover() {
               {tabs.map((tab) => (
                 <IconTab
                   key={tab.id}
-                  icon={tab.icon}
                   label={tab.label}
                   isActive={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -305,6 +305,25 @@ export default function Discover() {
                 </section>
               )}
             </div>
+          ) : activeTab === "favorites" ? (
+            /* Favorites Tab */
+            <section>
+              <SectionHeader title="ფავორიტები" />
+              <CategoryCarousel
+                categories={favoriteCategories}
+                progress={progressMap}
+                favorites={favorites}
+                onCategoryClick={handleCategoryClick}
+                onFavoriteToggle={toggleFavorite}
+              />
+              {favoriteCategories.length === 0 && (
+                <div className="text-center py-12 px-4">
+                  <p className="text-white/70">
+                    ჯერ არაფერი დაგიმატებია ფავორიტებში
+                  </p>
+                </div>
+              )}
+            </section>
           ) : (
             /* Filtered by Tab */
             <section>
@@ -320,7 +339,7 @@ export default function Discover() {
               />
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12 px-4">
-                  <p className="text-muted-foreground">
+                  <p className="text-white/70">
                     ამ კატეგორიაში ჯერ არაფერია
                   </p>
                 </div>
