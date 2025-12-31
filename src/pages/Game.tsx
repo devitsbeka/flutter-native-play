@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameProvider, useGame } from "@/contexts/GameContext";
 import { GameContainer } from "@/components/game/GameContainer";
-import { SplineGlobe } from "@/components/home/SplineGlobe";
 import { ArrowLeft } from "lucide-react";
 
 function GameContent() {
@@ -16,14 +15,11 @@ function GameContent() {
     }
   }, [phase, startMatchmaking]);
 
-  // Phases that have their own full-screen background (no SplineGlobe, no overlay, no padding)
+  // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result";
 
   return (
     <div className="h-screen w-full flex flex-col relative overflow-hidden bg-transparent">
-      {/* Spline Background - only show for match-result phase */}
-      {!hasOwnBackground && <SplineGlobe />}
-      
       {/* White Radial Mask - only show for match-result phase */}
       {!hasOwnBackground && (
         <div 
