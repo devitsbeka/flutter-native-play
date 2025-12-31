@@ -4,14 +4,16 @@ import { ArrowLeft, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuizPlayerAvatar, QuizPlayerAvatarState } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
+import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { PowerUpType } from "@/components/ui/quiz-power-up-button";
+import categoryPlaceholder from "@/assets/placeholders/category-placeholder.webp";
 
 interface Question {
   id: string;
-  imageUrl?: string;
+  categoryImageUrl?: string;
   questionText: string;
   answers: string[];
   correctIndex: number;
@@ -38,7 +40,7 @@ const georgianLabels = ["ა", "ბ", "გ", "დ"];
 const defaultQuestions: Question[] = [
   {
     id: "1",
-    imageUrl: "https://images.unsplash.com/photo-1568702846914-96b305d2uh38?w=400&h=400&fit=crop",
+    categoryImageUrl: categoryPlaceholder,
     questionText: "Who was the last pharaoh of Egypt, known for her beauty?",
     answers: ["Cleopatra", "Nefertiti", "Hatshepsut", "Nefertari"],
     correctIndex: 0,
@@ -46,7 +48,7 @@ const defaultQuestions: Question[] = [
   },
   {
     id: "2",
-    imageUrl: "https://images.unsplash.com/photo-1564399580075-5dfe19c205f3?w=400&h=400&fit=crop",
+    categoryImageUrl: categoryPlaceholder,
     questionText: "What is the largest planet in our solar system?",
     answers: ["Saturn", "Jupiter", "Neptune", "Uranus"],
     correctIndex: 1,
@@ -54,7 +56,7 @@ const defaultQuestions: Question[] = [
   },
   {
     id: "3",
-    imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=400&fit=crop",
+    categoryImageUrl: categoryPlaceholder,
     questionText: "Which country has the longest coastline?",
     answers: ["Russia", "Australia", "Canada", "Indonesia"],
     correctIndex: 2,
@@ -62,6 +64,7 @@ const defaultQuestions: Question[] = [
   },
   {
     id: "4",
+    categoryImageUrl: categoryPlaceholder,
     questionText: "What year did the Berlin Wall fall?",
     answers: ["1987", "1988", "1989", "1990"],
     correctIndex: 2,
@@ -69,7 +72,7 @@ const defaultQuestions: Question[] = [
   },
   {
     id: "5",
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    categoryImageUrl: categoryPlaceholder,
     questionText: "Who painted the Mona Lisa?",
     answers: ["Michelangelo", "Raphael", "Leonardo da Vinci", "Donatello"],
     correctIndex: 2,
@@ -77,6 +80,7 @@ const defaultQuestions: Question[] = [
   },
   {
     id: "6",
+    categoryImageUrl: categoryPlaceholder,
     questionText: "What is the chemical symbol for gold?",
     answers: ["Go", "Gd", "Au", "Ag"],
     correctIndex: 2,
@@ -290,8 +294,8 @@ const QuizGameScreen = ({
 
       {/* Main Game Area */}
       <div className="flex-1 flex flex-col items-center px-6 pb-4">
-        {/* Players + Question Image Row */}
-        <div className="w-full flex items-start justify-between mb-4">
+        {/* Players + Category Icon Row */}
+        <div className="w-full flex items-center justify-between mb-4">
           {/* Left Player */}
           <QuizPlayerAvatar
             avatarUrl={players[0].avatarUrl}
@@ -300,20 +304,18 @@ const QuizGameScreen = ({
             state={playerStates[0]}
           />
 
-          {/* Question Card */}
+          {/* Category Icon */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentQuestionIndex}
-              initial={{ opacity: 0, scale: 0.95 }}
+              key={`category-${currentQuestionIndex}`}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
             >
-              <QuizQuestionCard
-                imageUrl={currentQuestion?.imageUrl}
-                questionText={currentQuestion?.questionText || ""}
-                timeRemaining={timeRemaining}
-                difficulty={currentQuestion?.difficulty || "medium"}
+              <QuizCategoryIcon
+                imageUrl={currentQuestion?.categoryImageUrl || categoryPlaceholder}
+                size={120}
                 state={isLoading ? "loading" : "default"}
               />
             </motion.div>
@@ -327,6 +329,25 @@ const QuizGameScreen = ({
             state={playerStates[1]}
           />
         </div>
+
+        {/* Question Card */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentQuestionIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex justify-center mb-4"
+          >
+            <QuizQuestionCard
+              questionText={currentQuestion?.questionText || ""}
+              timeRemaining={timeRemaining}
+              difficulty={currentQuestion?.difficulty || "medium"}
+              state={isLoading ? "loading" : "default"}
+            />
+          </motion.div>
+        </AnimatePresence>
 
         {/* Progress Dots */}
         <div className="mb-6">
