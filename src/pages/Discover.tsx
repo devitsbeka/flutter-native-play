@@ -131,29 +131,30 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* Search Bar */}
-          <div className="sticky top-0 z-20 backdrop-blur-md pt-4 pb-2" style={{ paddingLeft: 20, paddingRight: 20 }}>
-            <div
-              className={`flex items-center gap-3 bg-white/50 border border-white/40 rounded-full px-4 py-3 transition-all shadow-sm ${
-                isSearchFocused ? "ring-2 ring-foreground/20" : ""
-              }`}
-            >
-              <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                placeholder="მოძებნე კატეგორია..."
-                className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
-              />
+          {/* Search Bar + Tabs Container */}
+          <div className="sticky top-0 z-20 backdrop-blur-md" style={{ paddingLeft: 20, paddingRight: 20 }}>
+            {/* Search Bar */}
+            <div className="pt-4">
+              <div
+                className={`flex items-center gap-3 bg-white/50 border border-white/40 rounded-full px-4 py-3 transition-all shadow-sm ${
+                  isSearchFocused ? "ring-2 ring-foreground/20" : ""
+                }`}
+              >
+                <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  placeholder="მოძებნე კატეგორია..."
+                  className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Icon Tabs */}
-          <div className="sticky top-[72px] z-10 backdrop-blur-md border-b border-white/20">
-            <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: "none", paddingLeft: 20 }}>
+            {/* Icon Tabs */}
+            <div className="flex overflow-x-auto scrollbar-hide py-2" style={{ scrollbarWidth: "none", marginLeft: -20, marginRight: -20, paddingLeft: 20 }}>
               {tabs.map((tab) => (
                 <IconTab
                   key={tab.id}
