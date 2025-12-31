@@ -48,7 +48,16 @@ export function DynamicIcon({
       if (url && !failedIconUrls.has(url)) return url;
     }
 
-    // Priority 2: AI-generated slugs (most accurate for translated questions)
+    // Priority 2: Category icon slug from mapping (MOVED UP - most reliable for category cards)
+    if (category) {
+      const categorySlug = getCategoryIconSlug(category);
+      if (categorySlug) {
+        const url = getIconBySlug(categorySlug);
+        if (url && !failedIconUrls.has(url)) return url;
+      }
+    }
+
+    // Priority 3: AI-generated slugs (most accurate for translated questions)
     if (aiData?.slugs && aiData.slugs.length > 0) {
       for (const aiSlug of aiData.slugs) {
         const url = getIconBySlug(aiSlug);
@@ -58,7 +67,7 @@ export function DynamicIcon({
       }
     }
 
-    // Priority 3: AI-generated keywords search
+    // Priority 4: AI-generated keywords search
     if (aiData?.keywords && aiData.keywords.length > 0) {
       const match = findIcon(aiData.keywords, category);
       if (match && match.matchScore > 25 && !failedIconUrls.has(match.iconUrl)) {
@@ -66,7 +75,7 @@ export function DynamicIcon({
       }
     }
 
-    // Priority 4: Question text analysis (local, fast)
+    // Priority 5: Question text analysis (local, fast)
     if (questionText) {
       const match = findIconForQuestion(questionText, category);
       if (match && match.matchScore > 20 && !failedIconUrls.has(match.iconUrl)) {
@@ -74,7 +83,7 @@ export function DynamicIcon({
       }
     }
     
-    // Priority 5: Provided keywords search
+    // Priority 6: Provided keywords search
     if (keywords && keywords.length > 0) {
       const match = findIcon(keywords, category);
       if (match && match.matchScore > 20 && !failedIconUrls.has(match.iconUrl)) {
@@ -82,16 +91,7 @@ export function DynamicIcon({
       }
     }
     
-    // Priority 6: Category icon slug from mapping
-    if (category) {
-      const categorySlug = getCategoryIconSlug(category);
-      if (categorySlug) {
-        const url = getIconBySlug(categorySlug);
-        if (url && !failedIconUrls.has(url)) return url;
-      }
-    }
-    
-    // Priority 7: Category default from useIconLibrary
+    // Priority 7: Category default from useIconLibrary (uses CATEGORY_ICON_MAP)
     if (category) {
       const url = getIconForCategory(category);
       if (url && !failedIconUrls.has(url)) return url;

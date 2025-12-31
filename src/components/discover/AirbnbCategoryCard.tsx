@@ -142,8 +142,8 @@ export function AirbnbCategoryCard({
 
         {/* Badge */}
         {badge && (
-          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm">
-            <span className="text-[10px] font-medium text-foreground">
+          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-sm shadow-sm">
+            <span className="text-[10px] font-semibold text-slate-700">
               {badge}
             </span>
           </div>
