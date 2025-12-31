@@ -37,14 +37,14 @@ function FiftyFiftyDemo() {
           initial={{ opacity: 1 }}
           animate={{ opacity: 0.3 }}
           transition={{ delay: 0.8, duration: 0.4 }}
-          className="flex-1 p-3 rounded-xl bg-white/5 border border-white/10 text-center text-white/50 line-through"
+          className="flex-1 p-3 text-center text-white/50 line-through drop-shadow-lg"
         >
           ლონდონი
         </motion.div>
         <motion.div
-          animate={{ boxShadow: ["0 0 0 rgba(251,191,36,0)", "0 0 15px rgba(251,191,36,0.4)"] }}
+          animate={{ textShadow: ["0 0 0 rgba(251,191,36,0)", "0 0 20px rgba(251,191,36,0.8)"] }}
           transition={{ delay: 1, duration: 0.5 }}
-          className="flex-1 p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-center text-white font-medium"
+          className="flex-1 p-3 text-center text-amber-400 font-medium drop-shadow-lg"
         >
           პარიზი ✓
         </motion.div>
@@ -53,7 +53,7 @@ function FiftyFiftyDemo() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="text-amber-400 text-sm"
+        className="text-amber-400 text-sm drop-shadow-lg"
       >
         2 პასუხი წაიშალა
       </motion.p>
@@ -67,23 +67,23 @@ function FreezeDemo() {
       <motion.div
         animate={{ filter: ["brightness(1)", "brightness(1.3) saturate(0.3)"] }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="relative w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center"
+        className="relative flex items-center justify-center"
       >
-        <span className="text-2xl">🤖</span>
+        <span className="text-4xl drop-shadow-lg">🤖</span>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
           className="absolute -top-1 -right-1"
         >
-          <Snowflake className="w-5 h-5 text-cyan-400" />
+          <Snowflake className="w-6 h-6 text-cyan-400 drop-shadow-lg" />
         </motion.div>
       </motion.div>
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.9 }}
-        className="text-cyan-400 text-sm"
+        className="text-cyan-400 text-sm drop-shadow-lg"
       >
         ❄️ გაყინულია 5 წმ
       </motion.p>
@@ -94,12 +94,12 @@ function FreezeDemo() {
 function ReplaceDemo() {
   return (
     <div className="flex flex-col items-center gap-3 px-6">
-      <motion.div className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-center overflow-hidden">
+      <motion.div className="w-full p-3 text-center overflow-hidden relative">
         <motion.span
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}
           transition={{ delay: 0.6, duration: 0.3 }}
-          className="text-white/50 absolute"
+          className="text-white/50 absolute left-1/2 -translate-x-1/2 drop-shadow-lg"
         >
           ბერლინი
         </motion.span>
@@ -107,7 +107,7 @@ function ReplaceDemo() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.3 }}
-          className="text-emerald-400 font-medium"
+          className="text-emerald-400 font-medium drop-shadow-lg"
         >
           რომი ✓
         </motion.span>
@@ -116,7 +116,7 @@ function ReplaceDemo() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="text-emerald-400 text-sm"
+        className="text-emerald-400 text-sm drop-shadow-lg"
       >
         🔄 პასუხი შეიცვალა
       </motion.p>
@@ -128,13 +128,13 @@ function TimeDrainDemo() {
   return (
     <div className="flex flex-col items-center gap-4 px-6">
       <motion.div
-        animate={{ boxShadow: ["0 0 0 rgba(168,85,247,0)", "0 0 20px rgba(168,85,247,0.5)"] }}
+        animate={{ textShadow: ["0 0 0 rgba(168,85,247,0)", "0 0 20px rgba(168,85,247,0.8)"] }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="w-16 h-16 rounded-full bg-purple-600/30 flex items-center justify-center border-2 border-purple-400/50"
+        className="flex items-center justify-center gap-1"
       >
-        <Clock className="w-6 h-6 text-purple-300 mr-1" />
+        <Clock className="w-8 h-8 text-purple-400 drop-shadow-lg" />
         <motion.span
-          className="text-xl font-bold text-white font-mono"
+          className="text-2xl font-bold text-white font-mono relative drop-shadow-lg"
         >
           <motion.span
             initial={{ opacity: 1 }}
@@ -157,7 +157,7 @@ function TimeDrainDemo() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="text-purple-400 text-sm"
+        className="text-purple-400 text-sm drop-shadow-lg"
       >
         ⏱️ +3 წამი
       </motion.p>
