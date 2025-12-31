@@ -162,27 +162,21 @@ export default function CategoryPage() {
         levelNumber={selectedLevel || undefined}
       />
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         {/* Header */}
-        <div 
-          className="px-5 pb-10 pt-12"
-          style={{ 
-            background: `linear-gradient(135deg, ${pastelColors.base}, ${pastelColors.accent})` 
-          }}
-        >
+        <div className="px-5 pb-10 pt-12">
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/50 backdrop-blur-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm"
             >
-              <ArrowLeft className="h-5 w-5 text-foreground" />
+              <ArrowLeft className="h-5 w-5 text-white" />
             </button>
           </div>
 
           <div className="text-center">
             <div 
-              className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/50 backdrop-blur-sm"
-              style={{ boxShadow: "inset 0 -4px 0 0 hsl(0 0% 0% / 0.1)" }}
+              className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-lg"
             >
               <DynamicIcon
                 slug={(category as any).icon_slug || undefined}
@@ -191,15 +185,15 @@ export default function CategoryPage() {
                 className="drop-shadow-lg"
               />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">{category.name}</h1>
-            <p className="text-foreground/70">{category.description}</p>
+            <h1 className="text-2xl font-bold text-white">{category.name}</h1>
+            <p className="text-white/80">{category.description}</p>
           </div>
         </div>
 
         {/* Content */}
-        <div className="relative -mt-4 rounded-t-3xl bg-background px-5 pt-6 pb-8">
+        <div className="relative -mt-4 rounded-t-3xl bg-[#1a1a2e] px-5 pt-6 pb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">
+            <h2 className="text-lg font-bold text-white">
               აირჩიე დონე
             </h2>
             {!user && (

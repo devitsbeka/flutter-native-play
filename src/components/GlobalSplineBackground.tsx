@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 // Pages where the background should be visible
-const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile"];
+const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile", "/category"];
 
 // White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
