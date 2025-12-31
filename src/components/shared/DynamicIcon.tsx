@@ -51,7 +51,9 @@ export function DynamicIcon({
   });
 
   const iconUrl = React.useMemo(() => {
-    if (!isLoaded) return null;
+    if (!isLoaded) {
+      return null;
+    }
     
     // Priority 1: Direct slug lookup
     if (slug) {
@@ -64,7 +66,14 @@ export function DynamicIcon({
       const iconSlug = CATEGORY_ID_TO_ICON[categoryId];
       if (iconSlug) {
         const url = getIconBySlug(iconSlug);
-        if (url && !failedIconUrls.has(url)) return url;
+        if (url && !failedIconUrls.has(url)) {
+          return url;
+        }
+        // If getIconBySlug returns null, build URL directly as fallback
+        const directUrl = `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${iconSlug}.png`;
+        if (!failedIconUrls.has(directUrl)) {
+          return directUrl;
+        }
       }
     }
 
