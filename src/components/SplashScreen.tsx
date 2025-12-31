@@ -5,9 +5,9 @@ import logoImage from '@/assets/logo-worldquizzes.png';
 import { onVideosLoaded, areVideosLoaded } from '@/components/game/VideoPreloader';
 import { CATEGORY_ID_TO_ICON } from '@/data/categoryIconMap';
 
-// Generate icon URLs for all 45 categories
+// Generate icon URLs for all 45 categories using correct Supabase Storage URL
 const getCategoryIconUrls = (): string[] => {
-  const baseUrl = '/icons/3d-fluency/';
+  const baseUrl = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/';
   return Object.values(CATEGORY_ID_TO_ICON).map(slug => `${baseUrl}${slug}.png`);
 };
 
