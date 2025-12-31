@@ -12,7 +12,7 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
       <div className="flex-1">
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+          <p className="text-sm mt-0.5" style={{ color: '#524E9F' }}>{subtitle}</p>
         )}
       </div>
       {onSeeAll && (
