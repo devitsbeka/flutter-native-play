@@ -1,12 +1,11 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Timer } from "lucide-react";
+import { AlarmClock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type QuizQuestionCardState = "default" | "loading";
 
 interface QuizQuestionCardProps {
-  imageUrl?: string;
   questionText?: string;
   timeRemaining?: number;
   difficulty?: "easy" | "medium" | "hard";
@@ -15,9 +14,9 @@ interface QuizQuestionCardProps {
 }
 
 const difficultyLabels = {
-  easy: "EASY",
-  medium: "MEDIUM",
-  hard: "HARD",
+  easy: "ᲛᲐᲠᲢᲘᲕᲘ",
+  medium: "ᲡᲐᲨᲣᲐᲚᲝ",
+  hard: "ᲠᲗᲣᲚᲘ",
 };
 
 const difficultyColors = {
@@ -26,10 +25,17 @@ const difficultyColors = {
   hard: "text-red-500",
 };
 
+// Truncate question text with dynamic font sizing
+const getQuestionStyles = (text: string) => {
+  const len = text.length;
+  if (len > 100) return { fontSize: "16px", lineClamp: 3 };
+  if (len > 80) return { fontSize: "18px", lineClamp: 3 };
+  return { fontSize: "20px", lineClamp: 3 };
+};
+
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(
   (
     {
-      imageUrl,
       questionText = "What is the question?",
       timeRemaining = 10,
       difficulty = "medium",
@@ -39,44 +45,35 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     ref
   ) => {
     const isLoading = state === "loading";
+    const questionStyles = getQuestionStyles(questionText);
+
+    // Truncate text if too long
+    const displayText =
+      questionText.length > 120
+        ? questionText.substring(0, 117) + "..."
+        : questionText;
 
     return (
       <motion.div
         ref={ref}
-        className={cn("flex flex-col items-center gap-4", className)}
-        initial={{ opacity: 0, y: 20 }}
+        className={cn(
+          "w-full max-w-[320px] bg-white/95 rounded-[20px] p-4 shadow-lg",
+          className
+        )}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        {/* Question Image */}
-        {imageUrl && (
-          <motion.div
-            className="w-[196px] h-[196px] rounded-[18px] overflow-hidden"
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            {isLoading ? (
-              <div className="w-full h-full bg-muted animate-pulse" />
-            ) : (
-              <img
-                src={imageUrl}
-                alt="Question"
-                className="w-full h-full object-cover"
-              />
-            )}
-          </motion.div>
-        )}
-
         {/* Timer and Difficulty Row */}
-        <div className="flex items-center justify-between w-full max-w-[320px]">
+        <div className="flex items-center justify-between mb-3">
           {/* Timer */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {isLoading ? (
               <div className="h-5 w-12 bg-muted rounded animate-pulse" />
             ) : (
               <>
-                <Timer className="w-5 h-5 text-[#CD5C3A] rotate-180" />
-                <span className="text-sm font-bold text-[#CD5C3A] font-['TA_Solivare']">
+                <AlarmClock className="w-5 h-5 text-[#CD5C3A]" />
+                <span className="text-base font-bold text-[#CD5C3A] font-['TA_Solivare']">
                   {timeRemaining}
                 </span>
               </>
@@ -89,7 +86,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           ) : (
             <span
               className={cn(
-                "text-sm font-bold font-['TA_Solivare']",
+                "text-sm font-bold font-['TA_Solivare'] tracking-wide",
                 difficultyColors[difficulty]
               )}
             >
@@ -99,20 +96,27 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         </div>
 
         {/* Question Text */}
-        <div className="w-full max-w-[320px]">
+        <div className="w-full">
           {isLoading ? (
             <div className="space-y-2">
-              <div className="h-6 bg-muted rounded animate-pulse" />
-              <div className="h-6 bg-muted rounded animate-pulse w-3/4 mx-auto" />
+              <div className="h-5 bg-muted rounded animate-pulse" />
+              <div className="h-5 bg-muted rounded animate-pulse w-3/4 mx-auto" />
             </div>
           ) : (
             <motion.p
-              className="text-xl font-bold text-[#514F7F] text-center font-['Google_Sans']"
+              className="font-bold text-[#514F7F] text-center font-['Google_Sans'] leading-snug"
+              style={{
+                fontSize: questionStyles.fontSize,
+                display: "-webkit-box",
+                WebkitLineClamp: questionStyles.lineClamp,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.1 }}
             >
-              {questionText}
+              {displayText}
             </motion.p>
           )}
         </div>

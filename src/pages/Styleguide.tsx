@@ -316,7 +316,6 @@ const Styleguide = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="p-8 bg-[#7E7ADB] rounded-2xl">
                   <QuizQuestionCard
-                    imageUrl="https://images.unsplash.com/photo-1568702846914-96b305d2uj38?w=400&h=400&fit=crop"
                     questionText="Who was the last pharaoh of Egypt, known for her beauty?"
                     timeRemaining={10}
                     difficulty="medium"
@@ -326,7 +325,6 @@ const Styleguide = () => {
 
                 <div className="p-8 bg-[#7E7ADB] rounded-2xl">
                   <QuizQuestionCard
-                    imageUrl=""
                     questionText=""
                     timeRemaining={0}
                     difficulty="easy"
