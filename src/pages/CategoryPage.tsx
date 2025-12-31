@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Lock, Play, LogIn, Clock } from "lucide-react";
-import { getCategoryById } from "@/data/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -10,13 +10,40 @@ import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
 import { ComingSoonModal } from "@/components/game/ComingSoonModal";
 import { useQuestionAvailability } from "@/hooks/useQuestionAvailability";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { toast } from "sonner";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+
+// Pastel color palettes for consistent styling with Discover page
+const PASTEL_PALETTES = [
+  { base: '#E8F5E9', accent: '#C8E6C9', highlight: '#A5D6A7' },
+  { base: '#E3F2FD', accent: '#BBDEFB', highlight: '#90CAF9' },
+  { base: '#FFF3E0', accent: '#FFE0B2', highlight: '#FFCC80' },
+  { base: '#FCE4EC', accent: '#F8BBD9', highlight: '#F48FB1' },
+  { base: '#F3E5F5', accent: '#E1BEE7', highlight: '#CE93D8' },
+  { base: '#E0F7FA', accent: '#B2EBF2', highlight: '#80DEEA' },
+  { base: '#FFF8E1', accent: '#FFECB3', highlight: '#FFD54F' },
+  { base: '#EFEBE9', accent: '#D7CCC8', highlight: '#BCAAA4' },
+  { base: '#E8EAF6', accent: '#C5CAE9', highlight: '#9FA8DA' },
+  { base: '#F1F8E9', accent: '#DCEDC8', highlight: '#C5E1A5' },
+];
+
+const getPastelColors = (id: string) => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    const char = id.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const index = Math.abs(hash) % PASTEL_PALETTES.length;
+  return PASTEL_PALETTES[index];
+};
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { hasEnoughQuestions, loading: availabilityLoading } = useQuestionAvailability();
 
@@ -25,8 +52,14 @@ export default function CategoryPage() {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
-  const category = getCategoryById(categoryId || "");
+  // Find category from database
+  const category = useMemo(() => 
+    categories.find(c => c.id === categoryId),
+    [categories, categoryId]
+  );
+  
   const currentLevel = getCategoryProgress(categoryId || "") || 1;
+  const pastelColors = useMemo(() => getPastelColors(categoryId || ""), [categoryId]);
 
   // Check for unlock animation on mount
   useEffect(() => {
@@ -55,6 +88,14 @@ export default function CategoryPage() {
     // Refetch progress to ensure UI is updated
     refetch();
   }, [refetch]);
+
+  if (categoriesLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Skeleton className="h-12 w-48" />
+      </div>
+    );
+  }
 
   if (!category) {
     return (
@@ -124,26 +165,34 @@ export default function CategoryPage() {
       <div className="min-h-screen bg-background">
         {/* Header */}
         <div 
-          className={`bg-gradient-to-br ${category.color} px-5 pb-10 pt-12`}
+          className="px-5 pb-10 pt-12"
+          style={{ 
+            background: `linear-gradient(135deg, ${pastelColors.base}, ${pastelColors.accent})` 
+          }}
         >
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/50 backdrop-blur-sm"
             >
-              <ArrowLeft className="h-5 w-5 text-white" />
+              <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
           </div>
 
           <div className="text-center">
             <div 
-              className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 text-5xl backdrop-blur-sm"
-              style={{ boxShadow: "inset 0 -4px 0 0 hsl(0 0% 0% / 0.15)" }}
+              className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/50 backdrop-blur-sm"
+              style={{ boxShadow: "inset 0 -4px 0 0 hsl(0 0% 0% / 0.1)" }}
             >
-              {category.icon}
+              <DynamicIcon
+                slug={(category as any).icon_slug || undefined}
+                categoryId={category.id}
+                size={56}
+                className="drop-shadow-lg"
+              />
             </div>
-            <h1 className="text-2xl font-bold text-white">{category.name}</h1>
-            <p className="text-white/80">{category.description}</p>
+            <h1 className="text-2xl font-bold text-foreground">{category.name}</h1>
+            <p className="text-foreground/70">{category.description}</p>
           </div>
         </div>
 
@@ -195,15 +244,19 @@ export default function CategoryPage() {
                       !isUnlocked
                         ? "bg-muted opacity-50 cursor-not-allowed"
                         : isComingSoon
-                        ? "bg-gradient-to-br from-amber-400 to-orange-500"
+                        ? ""
                         : isCompleted
                         ? "bg-success"
-                        : `bg-gradient-to-br ${category.color}`
+                        : ""
                     }`}
                     style={{
                       boxShadow: isUnlocked 
                         ? "0 4px 0 0 hsl(0 0% 0% / 0.15)"
                         : "0 2px 0 0 hsl(var(--border))",
+                      ...(!isUnlocked || isCompleted ? {} : isComingSoon 
+                        ? { background: `linear-gradient(135deg, #FFA726, #FF7043)` }
+                        : { background: `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})` }
+                      ),
                     }}
                   >
                     {!isUnlocked ? (
