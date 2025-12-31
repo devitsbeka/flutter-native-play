@@ -4,6 +4,7 @@ import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 
 interface Category {
   id: string;
+  category_id?: string; // ASCII slug like 'world_history'
   name: string;
   icon: string;
   color: string;
@@ -69,6 +70,7 @@ export function CategoryCarousel({
           <div key={category.id} className="flex-shrink-0">
             <AirbnbCategoryCard
               id={category.id}
+              categoryId={category.category_id}
               name={category.name}
               icon={category.icon}
               color={category.color}
