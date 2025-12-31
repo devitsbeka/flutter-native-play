@@ -3,17 +3,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { Gamepad2 } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
-// Georgian category options
+// Georgian category options with category IDs
 const categories = [
-  { id: "general", name: "ზოგადი ცოდნა", emoji: "🧠" },
-  { id: "geography", name: "გეოგრაფია", emoji: "🌍" },
-  { id: "history", name: "ისტორია", emoji: "📜" },
-  { id: "science", name: "მეცნიერება", emoji: "🔬" },
-  { id: "sports", name: "სპორტი", emoji: "⚽" },
-  { id: "culture", name: "კულტურა", emoji: "🎭" },
-  { id: "georgian-history", name: "საქართველოს ისტორია", emoji: "🇬🇪" },
-  { id: "georgian-cuisine", name: "ქართული სამზარეულო", emoji: "🍷" },
+  { id: "general", name: "ზოგადი ცოდნა" },
+  { id: "geography", name: "გეოგრაფია" },
+  { id: "world_history", name: "ისტორია" },
+  { id: "science", name: "მეცნიერება" },
+  { id: "sports", name: "სპორტი" },
+  { id: "art", name: "კულტურა" },
+  { id: "georgian_history", name: "საქართველოს ისტორია" },
+  { id: "georgian_cuisine", name: "ქართული სამზარეულო" },
 ];
 
 interface CreateRoomModalProps {
@@ -58,7 +59,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center gap-2">
-                <span className="text-xl">{category.emoji}</span>
+                <DynamicIcon category={category.id} size={24} />
                 <span className="text-sm font-medium text-foreground line-clamp-1">
                   {category.name}
                 </span>

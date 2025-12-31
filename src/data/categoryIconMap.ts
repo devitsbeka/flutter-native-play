@@ -2,57 +2,70 @@
 // These are used for instant lookups without keyword matching
 
 export const CATEGORY_ICON_SLUGS: Record<string, string> = {
-  // Classic categories
-  'georgia': 'globe',
+  // Classic/Educational
+  'geography': 'globe',
   'world_history': 'scroll',
-  'geography': 'compass',
+  'georgian_history': 'scroll',
   'science': 'microscope',
   'sports': 'trophy',
   
-  // Fun categories
+  // Fun/Entertainment
   'movies': 'clapperboard',
-  'tv_shows': 'television',
-  'music': 'headphones',
+  'tv_series': 'television',
+  'music': 'guitar',
   'video_games': 'gamepad',
   'celebrities': 'star',
-  'memes': 'smile',
+  'memes_internet': 'emoji',
+  'anime_manga': 'ninja',
+  'pop_culture': 'smartphone',
+  'social_media': 'smartphone',
+  'fun_facts': 'lightbulb',
   
-  // Educational categories
+  // Educational/Academic
   'literature': 'book',
+  'georgian_literature': 'book',
   'art': 'palette',
   'technology': 'laptop',
   'nature': 'tree',
   'space': 'rocket',
-  'mythology': 'crown',
+  'animals': 'lion',
+  'math': 'calculator',
+  'physics': 'atom',
+  'chemistry': 'flask',
+  'biology': 'dna',
+  'astronomy': 'telescope',
+  'geology': 'rock',
+  'ecology': 'recycle',
+  'medicine': 'stethoscope',
+  'psychology': 'brain',
+  'philosophy': 'thinker',
+  'economics': 'money',
+  'politics': 'capitol',
+  'languages': 'speech-bubble',
+  'archaeology': 'fossil',
+  'architecture': 'building',
+  'military_history': 'sword',
+  'religion_mythology': 'church',
+  'myths_reality': 'magnifying-glass',
+  
+  // Georgian Culture
+  'georgian_culture': 'wine',
+  'georgian_cuisine': 'wine',
+  'world_cuisine': 'chef-hat',
+  
+  // Tech & Innovation
+  'programming': 'code',
+  'robotics_ai': 'robot',
+  'fashion': 'dress',
 };
 
-// Fallback emojis for categories (used when no icon is found)
-export const CATEGORY_FALLBACK_EMOJIS: Record<string, string> = {
-  'georgia': '🇬🇪',
-  'world_history': '📜',
-  'geography': '🌍',
-  'science': '🔬',
-  'sports': '🏆',
-  'movies': '🎬',
-  'tv_shows': '📺',
-  'music': '🎵',
-  'video_games': '🎮',
-  'celebrities': '⭐',
-  'memes': '😂',
-  'literature': '📚',
-  'art': '🎨',
-  'technology': '💻',
-  'nature': '🌿',
-  'space': '🚀',
-  'mythology': '👑',
-};
-
-// Get the fallback emoji for a category
-export function getCategoryFallbackEmoji(categoryId: string): string {
-  return CATEGORY_FALLBACK_EMOJIS[categoryId] || '❓';
-}
-
-// Get the preferred icon slug for a category
+// Get the preferred icon slug for a category - NO EMOJI FALLBACKS
 export function getCategoryIconSlug(categoryId: string): string | null {
   return CATEGORY_ICON_SLUGS[categoryId] || null;
+}
+
+// Legacy function - returns empty string to force icon lookup
+export function getCategoryFallbackEmoji(categoryId: string): string {
+  // Return empty string - we want icons, not emojis
+  return '';
 }

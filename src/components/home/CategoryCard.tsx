@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface CategoryCardProps {
+  id?: string;
   name: string;
   icon: string;
   description: string;
@@ -38,8 +40,8 @@ const getGradient = (index: number) => {
 };
 
 export function CategoryCard({
+  id,
   name,
-  icon,
   progress,
   totalLevels,
   isLocked = false,
@@ -69,9 +71,11 @@ export function CategoryCard({
           {isLocked ? (
             <Lock className="h-14 w-14 text-white/80 drop-shadow-lg" />
           ) : (
-            <span className="relative z-10 text-6xl drop-shadow-lg">
-              {icon}
-            </span>
+            <DynamicIcon
+              category={id}
+              size={56}
+              className="drop-shadow-lg"
+            />
           )}
 
           {/* Completed badge */}
@@ -93,20 +97,20 @@ export function CategoryCard({
           <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-amber-200">
             {/* Coin cost */}
             <div className="flex items-center gap-1" title="მონეტები">
-              <span className="text-base">🪙</span>
+              <DynamicIcon slug="coin" size={18} />
               <span className="font-bold text-amber-700 text-xs">{coinCost}</span>
             </div>
 
             {/* Question count */}
             <div className="flex items-center gap-1" title="კითხვები">
-              <span className="text-base">📝</span>
+              <DynamicIcon slug="notebook" size={18} />
               <span className="font-bold text-amber-700 text-xs">{questionCount}</span>
             </div>
 
             {/* Progress */}
             {!isLocked && (
               <div className="flex items-center gap-1" title="პროგრესი">
-                <span className="text-base">⭐</span>
+                <DynamicIcon slug="star" size={18} />
                 <span className={`font-bold text-xs ${isCompleted ? "text-emerald-600" : "text-amber-700"}`}>
                   {progress}/{totalLevels}
                 </span>

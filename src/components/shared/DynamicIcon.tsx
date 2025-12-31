@@ -2,13 +2,14 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import { cn } from "@/lib/utils";
+import { getCategoryIconSlug } from "@/data/categoryIconMap";
 
 interface DynamicIconProps {
   slug?: string;
   keywords?: string[];
   questionText?: string;
   category?: string;
-  fallbackEmoji?: string;
+  fallbackEmoji?: string; // Legacy prop - will be ignored
   size?: number;
   className?: string;
 }
@@ -21,11 +22,11 @@ export function DynamicIcon({
   keywords, 
   questionText,
   category, 
-  fallbackEmoji = "❓",
+  fallbackEmoji, // Ignored - we use icons only
   size = 64,
   className 
 }: DynamicIconProps) {
-  const { findIcon, findIconForQuestion, getIconBySlug, getIconForCategory, isLoaded, getRandomIconForCategory } = useIconLibrary();
+  const { findIcon, findIconForQuestion, getIconBySlug, getIconForCategory, isLoaded, getRandomIconForCategory, iconCount } = useIconLibrary();
   const [imageError, setImageError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
 
@@ -38,32 +39,47 @@ export function DynamicIcon({
       if (url && !failedIconUrls.has(url)) return url;
     }
     
-    // Priority 2: Question text analysis
+    // Priority 2: Category icon slug from mapping
+    if (category) {
+      const categorySlug = getCategoryIconSlug(category);
+      if (categorySlug) {
+        const url = getIconBySlug(categorySlug);
+        if (url && !failedIconUrls.has(url)) return url;
+      }
+    }
+    
+    // Priority 3: Question text analysis
     if (questionText) {
       const match = findIconForQuestion(questionText, category);
       if (match && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
     }
     
-    // Priority 3: Keywords search
+    // Priority 4: Keywords search
     if (keywords && keywords.length > 0) {
       const match = findIcon(keywords, category);
       if (match && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
     }
     
-    // Priority 4: Category default
+    // Priority 5: Category default from useIconLibrary
     if (category) {
       const url = getIconForCategory(category);
       if (url && !failedIconUrls.has(url)) return url;
     }
 
-    // Priority 5: Random icon from category (when others failed)
-    if (category && retryCount > 0) {
+    // Priority 6: Random icon from category (when others failed)
+    if (category) {
       const url = getRandomIconForCategory(category, retryCount);
       if (url && !failedIconUrls.has(url)) return url;
     }
     
+    // Priority 7: Just get ANY icon as absolute last resort
+    if (iconCount > 0) {
+      const url = getRandomIconForCategory('general', retryCount + 100);
+      if (url && !failedIconUrls.has(url)) return url;
+    }
+    
     return null;
-  }, [slug, keywords, questionText, category, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, getRandomIconForCategory, retryCount]);
+  }, [slug, keywords, questionText, category, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, getRandomIconForCategory, retryCount, iconCount]);
 
   // Reset error state when iconUrl changes
   React.useEffect(() => {
@@ -74,23 +90,36 @@ export function DynamicIcon({
     if (iconUrl) {
       failedIconUrls.add(iconUrl);
     }
-    // Try up to 3 different icons before giving up
-    if (retryCount < 3) {
+    // Try up to 5 different icons before giving up
+    if (retryCount < 5) {
       setRetryCount(prev => prev + 1);
     } else {
       setImageError(true);
     }
   }, [iconUrl, retryCount]);
 
-  // Show fallback emoji if no icon found or all retries exhausted
+  // Show loading placeholder while icons load
+  if (!isLoaded) {
+    return (
+      <div 
+        className={cn("flex items-center justify-center rounded-xl bg-white/10 animate-pulse", className)}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
+  // Show simple placeholder if absolutely no icon found (should be rare with 9000+ icons)
   if (!iconUrl || imageError) {
     return (
-      <span 
-        className={cn("flex items-center justify-center", className)}
-        style={{ width: size, height: size, fontSize: size * 0.6 }}
+      <div 
+        className={cn("flex items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10", className)}
+        style={{ width: size, height: size }}
       >
-        {fallbackEmoji}
-      </span>
+        <div 
+          className="rounded-full bg-primary/30"
+          style={{ width: size * 0.4, height: size * 0.4 }}
+        />
+      </div>
     );
   }
 
