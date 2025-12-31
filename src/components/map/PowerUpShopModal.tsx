@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift, Star } from "lucide-react";
+import { X } from "lucide-react";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
@@ -158,29 +158,6 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                 </div>
               </div>
 
-              {/* How to get more */}
-              <div className="px-4 pb-4">
-                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-2xl p-3 border border-amber-500/20">
-                  <h3 className="text-amber-400 font-medium text-xs mb-1.5 flex items-center gap-2">
-                    <Gift className="w-3.5 h-3.5" />
-                    როგორ მივიღო მეტი?
-                  </h3>
-                  <div className="flex flex-wrap gap-2 text-white/60 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-amber-400" />
-                      ყოველდღიური ჯილდოები
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-amber-400" />
-                      დონის ამაღლება
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-amber-400" />
-                      მატჩების მოგება
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           </motion.div>
         </motion.div>
