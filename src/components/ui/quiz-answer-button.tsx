@@ -105,6 +105,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
             background: styles.faceBg,
             borderColor: styles.borderColor,
             transform: `translateY(${isPressed ? 4 : 0}px)`,
+            boxShadow: `inset 0 3px 0 rgba(255,255,255,0.35)`,
           }}
         >
           {/* Label Badge */}
