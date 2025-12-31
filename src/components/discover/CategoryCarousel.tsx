@@ -61,11 +61,11 @@ export function CategoryCarousel({
       {/* Scrollable Container */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pl-5 pr-4 pb-2 snap-x snap-mandatory"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", paddingLeft: "20px", paddingRight: "16px" }}
       >
         {categories.map((category, index) => (
-          <div key={category.id} className="snap-start">
+          <div key={category.id} className="flex-shrink-0">
             <AirbnbCategoryCard
               id={category.id}
               name={category.name}
