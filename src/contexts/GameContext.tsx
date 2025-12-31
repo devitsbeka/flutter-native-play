@@ -111,8 +111,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Start fetching 6 questions (one from each random category) for VS mode
     const questionsPromise = fetchQuestions(6, undefined, 1, [], true);
     
-    // Matchmaking screen lasts ~5 seconds for the interactive experience
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Matchmaking screen lasts ~2 seconds for the interactive experience
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     setState(prev => ({ 
       ...prev, 
