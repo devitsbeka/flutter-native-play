@@ -9,6 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { IconTab } from "@/components/discover/IconTab";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
+import { CategoryGrid } from "@/components/discover/CategoryGrid";
 import { PageTransition } from "@/components/shared/PageTransition";
 
 const tabs = [
@@ -307,10 +308,10 @@ export default function Discover() {
               )}
             </div>
           ) : activeTab === "favorites" ? (
-            /* Favorites Tab */
+            /* Favorites Tab - Grid Layout */
             <section>
               <SectionHeader title="ფავორიტები" />
-              <CategoryCarousel
+              <CategoryGrid
                 categories={favoriteCategories}
                 progress={progressMap}
                 favorites={favorites}
@@ -326,12 +327,12 @@ export default function Discover() {
               )}
             </section>
           ) : (
-            /* Filtered by Tab */
+            /* Filtered by Tab - Grid Layout */
             <section>
               <SectionHeader
                 title={tabs.find((t) => t.id === activeTab)?.label || ""}
               />
-              <CategoryCarousel
+              <CategoryGrid
                 categories={filteredCategories}
                 progress={progressMap}
                 favorites={favorites}
