@@ -19,23 +19,24 @@ interface IconMatch {
 let iconCache: IconItem[] | null = null;
 let cachePromise: Promise<IconItem[]> | null = null;
 
-// Category to icon slug mappings for instant lookups
+// Category to icon slug mappings for instant lookups (using actual slugs from library)
 const CATEGORY_ICON_MAP: Record<string, string[]> = {
-  'geography': ['globe', 'world', 'map', 'earth', 'compass'],
-  'science': ['microscope', 'atom', 'laboratory', 'science', 'chemistry', 'test-tube'],
-  'sports': ['soccer-ball', 'football', 'basketball', 'trophy', 'medal', 'tennis'],
-  'history': ['scroll', 'castle', 'crown', 'ancient', 'museum', 'knight'],
-  'world_history': ['scroll', 'castle', 'crown', 'ancient', 'museum', 'knight'],
-  'georgian_history': ['scroll', 'castle', 'crown', 'flag', 'wine', 'church'],
-  'art': ['palette', 'painting', 'brush', 'art', 'canvas', 'easel'],
-  'music': ['music', 'guitar', 'piano', 'musical-note', 'headphones', 'microphone'],
-  'literature': ['book', 'library', 'reading', 'novel', 'writing', 'pen'],
-  'georgian_literature': ['book', 'library', 'reading', 'novel', 'writing', 'pen'],
-  'movies': ['movie', 'film', 'cinema', 'camera', 'clapperboard', 'popcorn'],
-  'technology': ['computer', 'laptop', 'phone', 'tech', 'robot', 'chip'],
-  'food': ['food', 'restaurant', 'cooking', 'chef', 'cuisine', 'pizza'],
-  'nature': ['tree', 'forest', 'nature', 'flower', 'leaf', 'mountain'],
-  'animals': ['animal', 'wildlife', 'zoo', 'pet', 'dog', 'cat', 'lion'],
+  'geography': ['globe', 'globe-earth', 'earth', 'map', 'compass', 'world-map'],
+  'science': ['microscope', 'atom', 'test-tube', 'chemistry', 'laboratory', 'dna'],
+  'sports': ['trophy', 'basic-soccer-ball', 'basketball', 'volleyball', 'baseball', 'tennis-ball'],
+  'history': ['scroll', 'castle', 'crown', 'knight', 'ancient-scroll', 'museum'],
+  'world_history': ['scroll', 'castle', 'crown', 'knight', 'ancient-scroll', 'silk-road-map'],
+  'georgian_history': ['scroll', 'castle', 'crown', 'wine-bottle', 'church', 'flag'],
+  'art': ['paint-palette', 'easel', 'brush', 'canvas', 'painting', 'art-supplies'],
+  'music': ['guitar', 'piano', 'headphones', 'microphone', 'musical-note', 'violin'],
+  'literature': ['book', 'bookshelf', 'notebook', 'pen', 'scroll', 'quill'],
+  'georgian_literature': ['book', 'bookshelf', 'notebook', 'pen', 'scroll', 'quill'],
+  'movies': ['clapperboard', 'film-reel', 'camera', 'movie-camera', 'cinema', 'popcorn'],
+  'technology': ['computer', 'laptop', 'smartphone', 'robot', 'chip', 'circuit'],
+  'food': ['chef-hat', 'pizza', 'cooking-pot', 'restaurant', 'fork-knife', 'burger'],
+  'nature': ['tree', 'flower', 'leaf', 'mountain', 'forest', 'sun'],
+  'animals': ['lion', 'elephant', 'dog', 'cat', 'bird', 'fish'],
+  'mathematics': ['calculator', 'compass', 'ruler', 'protractor', 'graph', 'abacus'],
 };
 
 // Common Georgian words to English mappings for better matching
@@ -220,10 +221,25 @@ export function useIconLibrary() {
 
   const getIconForCategory = useCallback((categoryId: string): string | null => {
     const slugs = CATEGORY_ICON_MAP[categoryId.toLowerCase()] || [];
+    
+    // First try exact match
     for (const slug of slugs) {
       const icon = iconIndex.find(i => i.slug === slug);
       if (icon) return getIconUrl(icon.file_name);
     }
+    
+    // Then try partial match (slug contains keyword)
+    for (const slug of slugs) {
+      const icon = iconIndex.find(i => i.slug.includes(slug) || slug.includes(i.slug));
+      if (icon) return getIconUrl(icon.file_name);
+    }
+    
+    // Finally try tag match
+    for (const slug of slugs) {
+      const icon = iconIndex.find(i => i.tags.some(tag => tag.toLowerCase().includes(slug)));
+      if (icon) return getIconUrl(icon.file_name);
+    }
+    
     return null;
   }, [iconIndex]);
 
