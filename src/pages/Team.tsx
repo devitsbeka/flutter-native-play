@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Users } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -222,11 +222,25 @@ function TeamContent() {
           </motion.button>
         </div>
 
-        {/* Recent Rooms Section */}
+        {/* Friends Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <FriendsList
+            onAddFriendClick={() => setShowAddFriendModal(true)}
+            onQuickPlay={handleQuickPlay}
+            onStartChat={(friend) => setChatFriend(friend)}
+          />
+        </motion.div>
+
+        {/* Recent Rooms Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
           className="mb-6"
         >
           <RecentRoomsSection onViewAll={() => setShowAllRoomsModal(true)} />
@@ -236,26 +250,19 @@ function TeamContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
+          transition={{ delay: 0.14 }}
           className="mb-6"
         >
           <PendingChallengesSection onAcceptChallenge={handleAcceptChallenge} />
         </motion.div>
 
-        {/* Friends Section */}
+        {/* Recent Players Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="space-y-6"
+          transition={{ delay: 0.16 }}
+          className="mb-6"
         >
-          <FriendsList
-            onAddFriendClick={() => setShowAddFriendModal(true)}
-            onQuickPlay={handleQuickPlay}
-            onStartChat={(friend) => setChatFriend(friend)}
-          />
-
-          {/* Recent Players Section */}
           <RecentPlayersList onViewAll={() => setShowAllPlayersModal(true)} />
         </motion.div>
       </div>
@@ -311,14 +318,13 @@ function TeamContent() {
         className="fixed bottom-6 left-4 right-4 z-20"
       >
         <ChunkyButton
-          variant="primary"
+          variant="purple"
           size="lg"
           className="w-full"
           onClick={() => {
             playSound("button-click");
             setShowCreateModal(true);
           }}
-          icon={<Plus className="w-5 h-5" />}
         >
           + თამაშის შექმნა
         </ChunkyButton>

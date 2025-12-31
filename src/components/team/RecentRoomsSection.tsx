@@ -62,14 +62,14 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex-shrink-0 w-44 p-4 rounded-2xl backdrop-blur-sm bg-white/10 border border-white/10"
+      className="flex-shrink-0 w-48 p-4 rounded-2xl bg-white/90"
     >
       {/* Header with squad name and more button */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-white font-bold text-sm uppercase tracking-wide">
+        <span className="text-gray-800 font-bold text-sm uppercase tracking-wide">
           {squadName}
         </span>
-        <button className="p-1 text-white/60 hover:text-white">
+        <button className="p-1 text-gray-400 hover:text-gray-600">
           <MoreVertical className="w-4 h-4" />
         </button>
       </div>
@@ -80,7 +80,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
           {room.participants.slice(0, 4).map((p, i) => (
             <Avatar 
               key={p.user_id} 
-              className="w-8 h-8 border-2 border-[#1a1a2e]"
+              className="w-8 h-8 border-2 border-white ring-1 ring-purple-300"
               style={{ zIndex: 4 - i }}
             >
               <AvatarImage src={p.avatar_url || undefined} />
@@ -91,7 +91,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
           ))}
           {room.participants.length > 4 && (
             <div 
-              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs text-white font-medium border-2 border-[#1a1a2e]"
+              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium border-2 border-white"
               style={{ zIndex: 0 }}
             >
               +{room.participants.length - 4}
@@ -103,7 +103,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
       {/* Action Buttons */}
       <div className="flex items-center gap-2">
         <motion.button
-          className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white"
+          className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-sm font-bold bg-orange-500 text-white"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -111,10 +111,11 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
         </motion.button>
 
         <motion.button
-          className="flex items-center justify-center px-3 py-2 rounded-xl bg-white/20 text-white text-xs font-medium"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gray-200 text-gray-700 text-sm font-medium"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+          <MessageCircle className="w-4 h-4" />
           ჩატი
         </motion.button>
       </div>
