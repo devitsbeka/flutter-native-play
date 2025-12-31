@@ -59,7 +59,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center gap-2">
-                <DynamicIcon category={category.id} size={24} />
+                <DynamicIcon categoryId={category.id} size={24} />
                 <span className="text-sm font-medium text-foreground line-clamp-1">
                   {category.name}
                 </span>
