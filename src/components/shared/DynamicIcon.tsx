@@ -1,8 +1,10 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
+import { useAIIcon } from "@/hooks/useAIIcon";
 import { cn } from "@/lib/utils";
 import { getCategoryIconSlug } from "@/data/categoryIconMap";
+import { HelpCircle } from "lucide-react";
 
 interface DynamicIconProps {
   slug?: string;
@@ -26,9 +28,16 @@ export function DynamicIcon({
   size = 64,
   className 
 }: DynamicIconProps) {
-  const { findIcon, findIconForQuestion, getIconBySlug, getIconForCategory, isLoaded, getRandomIconForCategory, iconCount } = useIconLibrary();
+  const { findIcon, findIconForQuestion, getIconBySlug, getIconForCategory, isLoaded, iconCount } = useIconLibrary();
   const [imageError, setImageError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
+
+  // Use AI for icon matching when we have a question
+  const { aiData, isLoading: aiLoading } = useAIIcon({
+    questionText,
+    category,
+    enabled: !!questionText && isLoaded,
+  });
 
   const iconUrl = React.useMemo(() => {
     if (!isLoaded) return null;
@@ -38,20 +47,42 @@ export function DynamicIcon({
       const url = getIconBySlug(slug);
       if (url && !failedIconUrls.has(url)) return url;
     }
-    
-    // Priority 2: Question text analysis FIRST (most relevant to actual question)
+
+    // Priority 2: AI-generated slugs (most accurate for translated questions)
+    if (aiData?.slugs && aiData.slugs.length > 0) {
+      for (const aiSlug of aiData.slugs) {
+        const url = getIconBySlug(aiSlug);
+        if (url && !failedIconUrls.has(url)) {
+          return url;
+        }
+      }
+    }
+
+    // Priority 3: AI-generated keywords search
+    if (aiData?.keywords && aiData.keywords.length > 0) {
+      const match = findIcon(aiData.keywords, category);
+      if (match && match.matchScore > 25 && !failedIconUrls.has(match.iconUrl)) {
+        return match.iconUrl;
+      }
+    }
+
+    // Priority 4: Question text analysis (local, fast)
     if (questionText) {
       const match = findIconForQuestion(questionText, category);
-      if (match && match.matchScore > 15 && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
+      if (match && match.matchScore > 20 && !failedIconUrls.has(match.iconUrl)) {
+        return match.iconUrl;
+      }
     }
     
-    // Priority 3: Keywords search
+    // Priority 5: Provided keywords search
     if (keywords && keywords.length > 0) {
       const match = findIcon(keywords, category);
-      if (match && match.matchScore > 15 && !failedIconUrls.has(match.iconUrl)) return match.iconUrl;
+      if (match && match.matchScore > 20 && !failedIconUrls.has(match.iconUrl)) {
+        return match.iconUrl;
+      }
     }
     
-    // Priority 4: Category icon slug from mapping
+    // Priority 6: Category icon slug from mapping
     if (category) {
       const categorySlug = getCategoryIconSlug(category);
       if (categorySlug) {
@@ -60,26 +91,15 @@ export function DynamicIcon({
       }
     }
     
-    // Priority 5: Category default from useIconLibrary
+    // Priority 7: Category default from useIconLibrary
     if (category) {
       const url = getIconForCategory(category);
       if (url && !failedIconUrls.has(url)) return url;
     }
 
-    // Priority 6: Random icon from category (when others failed)
-    if (category) {
-      const url = getRandomIconForCategory(category, retryCount);
-      if (url && !failedIconUrls.has(url)) return url;
-    }
-    
-    // Priority 7: Just get ANY icon as absolute last resort
-    if (iconCount > 0) {
-      const url = getRandomIconForCategory('general', retryCount + 100);
-      if (url && !failedIconUrls.has(url)) return url;
-    }
-    
+    // NO RANDOM FALLBACK - return null and show neutral icon
     return null;
-  }, [slug, keywords, questionText, category, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, getRandomIconForCategory, retryCount, iconCount]);
+  }, [slug, keywords, questionText, category, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, aiData, retryCount]);
 
   // Reset error state when iconUrl changes
   React.useEffect(() => {
@@ -90,16 +110,16 @@ export function DynamicIcon({
     if (iconUrl) {
       failedIconUrls.add(iconUrl);
     }
-    // Try up to 5 different icons before giving up
-    if (retryCount < 5) {
+    // Try triggering a re-render to get next priority icon
+    if (retryCount < 3) {
       setRetryCount(prev => prev + 1);
     } else {
       setImageError(true);
     }
   }, [iconUrl, retryCount]);
 
-  // Show loading placeholder while icons load
-  if (!isLoaded) {
+  // Show loading placeholder while icons load or AI is analyzing
+  if (!isLoaded || (aiLoading && !iconUrl)) {
     return (
       <div 
         className={cn("flex items-center justify-center rounded-xl bg-white/10 animate-pulse", className)}
@@ -108,16 +128,16 @@ export function DynamicIcon({
     );
   }
 
-  // Show simple placeholder if absolutely no icon found (should be rare with 9000+ icons)
+  // Show neutral question mark icon if no match found - NEVER show random wrong icon
   if (!iconUrl || imageError) {
     return (
       <div 
         className={cn("flex items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10", className)}
         style={{ width: size, height: size }}
       >
-        <div 
-          className="rounded-full bg-primary/30"
-          style={{ width: size * 0.4, height: size * 0.4 }}
+        <HelpCircle 
+          className="text-primary/60"
+          style={{ width: size * 0.5, height: size * 0.5 }}
         />
       </div>
     );

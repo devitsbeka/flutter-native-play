@@ -39,3 +39,6 @@ verify_jwt = false
 
 [functions.import-icon-metadata]
 verify_jwt = false
+
+[functions.analyze-question-icon]
+verify_jwt = false
