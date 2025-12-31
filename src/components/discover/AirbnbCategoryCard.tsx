@@ -21,23 +21,28 @@ interface AirbnbCategoryCardProps {
   onClick?: () => void;
 }
 
-// Convert Tailwind gradient class to actual colors
-const getGradientColors = (colorClass: string): { from: string; to: string } => {
-  const colorMap: Record<string, { from: string; to: string }> = {
-    "from-amber-400 to-orange-500": { from: "hsl(270 60% 70%)", to: "hsl(180 60% 50%)" },
-    "from-blue-400 to-indigo-500": { from: "hsl(260 70% 65%)", to: "hsl(190 70% 45%)" },
-    "from-emerald-400 to-teal-500": { from: "hsl(165 60% 50%)", to: "hsl(270 50% 60%)" },
-    "from-purple-400 to-pink-500": { from: "hsl(270 70% 65%)", to: "hsl(200 60% 50%)" },
-    "from-rose-400 to-red-500": { from: "hsl(280 60% 60%)", to: "hsl(175 60% 45%)" },
-    "from-cyan-400 to-blue-500": { from: "hsl(185 70% 50%)", to: "hsl(265 60% 60%)" },
-    "from-yellow-400 to-amber-500": { from: "hsl(275 55% 65%)", to: "hsl(180 55% 50%)" },
-    "from-green-400 to-emerald-500": { from: "hsl(170 60% 45%)", to: "hsl(260 55% 55%)" },
-    "from-pink-400 to-rose-500": { from: "hsl(280 65% 65%)", to: "hsl(190 60% 50%)" },
-    "from-indigo-400 to-purple-500": { from: "hsl(255 65% 60%)", to: "hsl(175 55% 45%)" },
-    "from-teal-400 to-cyan-500": { from: "hsl(180 65% 50%)", to: "hsl(270 55% 60%)" },
-    "from-orange-400 to-red-500": { from: "hsl(265 60% 65%)", to: "hsl(185 60% 45%)" },
-  };
-  return colorMap[colorClass] || { from: "hsl(270 60% 60%)", to: "hsl(175 55% 50%)" };
+// Pastel color palette for category cards - light whitish with soft color hints
+const PASTEL_PALETTES = [
+  { base: "hsl(200 70% 85%)", accent: "hsl(180 50% 75%)" },  // Soft sky blue / teal
+  { base: "hsl(280 50% 88%)", accent: "hsl(260 40% 80%)" },  // Lavender / purple
+  { base: "hsl(160 50% 85%)", accent: "hsl(140 40% 78%)" },  // Mint / seafoam
+  { base: "hsl(340 50% 88%)", accent: "hsl(320 40% 82%)" },  // Soft pink / rose
+  { base: "hsl(40 60% 88%)", accent: "hsl(25 50% 82%)" },    // Cream / peach
+  { base: "hsl(220 55% 87%)", accent: "hsl(240 45% 82%)" },  // Soft blue / periwinkle
+  { base: "hsl(120 40% 86%)", accent: "hsl(100 35% 80%)" },  // Sage / lime
+  { base: "hsl(15 60% 88%)", accent: "hsl(0 45% 85%)" },     // Peach / coral
+  { base: "hsl(190 55% 85%)", accent: "hsl(170 45% 78%)" },  // Aqua / cyan
+  { base: "hsl(300 40% 88%)", accent: "hsl(280 35% 82%)" },  // Light magenta / orchid
+];
+
+// Generate consistent pastel colors based on category id
+const getPastelColors = (id: string): { base: string; accent: string } => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % PASTEL_PALETTES.length;
+  return PASTEL_PALETTES[index];
 };
 
 export function AirbnbCategoryCard({
@@ -55,7 +60,7 @@ export function AirbnbCategoryCard({
   onFavoriteClick,
   onClick,
 }: AirbnbCategoryCardProps) {
-  const colors = getGradientColors(color);
+  const pastel = getPastelColors(id);
   const isCompleted = progress >= totalLevels;
 
   // Generate floating particles
@@ -82,11 +87,11 @@ export function AirbnbCategoryCard({
     >
       {/* Animated Gradient + Particle Area */}
       <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden">
-        {/* Gradient Background */}
+        {/* Pastel Gradient Background */}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+            background: `linear-gradient(135deg, ${pastel.base}, ${pastel.accent})`,
           }}
         />
 
