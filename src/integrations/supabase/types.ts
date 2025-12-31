@@ -49,6 +49,7 @@ export type Database = {
           description: string | null
           icon: string
           id: string
+          image_url: string | null
           is_active: boolean | null
           name: string
           sort_order: number | null
@@ -63,6 +64,7 @@ export type Database = {
           description?: string | null
           icon?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           sort_order?: number | null
@@ -77,6 +79,7 @@ export type Database = {
           description?: string | null
           icon?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           sort_order?: number | null
@@ -668,6 +671,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_level_progress: {
         Row: {

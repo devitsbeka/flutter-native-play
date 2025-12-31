@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
 import { ComingSoonModal } from "@/components/game/ComingSoonModal";
 import { useQuestionAvailability } from "@/hooks/useQuestionAvailability";
+import { PageTransition } from "@/components/shared/PageTransition";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback } from "react";
 
@@ -103,7 +104,7 @@ export default function CategoryPage() {
   });
 
   return (
-    <>
+    <PageTransition>
       {/* Level Unlock Animation */}
       <LevelUnlockAnimation
         isVisible={showUnlockAnimation}
@@ -127,7 +128,7 @@ export default function CategoryPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate(-1)}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm"
             >
               <ArrowLeft className="h-5 w-5 text-white" />
@@ -259,6 +260,6 @@ export default function CategoryPage() {
           )}
         </div>
       </div>
-    </>
+    </PageTransition>
   );
 }
