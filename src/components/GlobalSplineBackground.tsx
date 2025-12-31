@@ -89,11 +89,11 @@ export function GlobalSplineBackground() {
 
   return (
     <>
-      {/* Lighter purple background */}
+      {/* Very light purple/lavender background */}
       <div 
         className="fixed inset-0 pointer-events-none transition-opacity duration-500"
         style={{
-          background: "#C4C2F0",
+          background: "#E8E6F8",
           opacity: shouldShow ? 1 : 0,
           zIndex: -30,
         }}
