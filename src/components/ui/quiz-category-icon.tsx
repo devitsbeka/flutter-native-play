@@ -48,8 +48,7 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
         ) : (
           <DynamicIcon
             slug={iconSlug}
-            questionText={questionText}
-            category={categoryId}
+            categoryId={categoryId}
             size={size}
           />
         )}

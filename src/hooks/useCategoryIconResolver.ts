@@ -1,0 +1,165 @@
+import { useEffect, useState, useCallback } from 'react';
+import { getCategoryKeywords } from '@/data/categoryIconKeywords';
+
+const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
+const CACHE_KEY = 'category_icons_cache_v2';
+
+// In-memory cache for instant access
+let memoryCache: Record<string, string> = {};
+let iconIndex: Array<{ slug: string; tags: string[]; title: string }> = [];
+let indexLoaded = false;
+
+// Load icon index from JSON
+async function loadIconIndex(): Promise<void> {
+  if (indexLoaded) return;
+  
+  try {
+    const response = await fetch('/data/icon-library-meta.json');
+    if (response.ok) {
+      const data = await response.json();
+      iconIndex = data.icons || [];
+      indexLoaded = true;
+      console.log(`[IconResolver] Loaded ${iconIndex.length} icons`);
+    }
+  } catch (error) {
+    console.error('[IconResolver] Failed to load icon index:', error);
+  }
+}
+
+// Search for icon by keyword
+function findIconByKeyword(keyword: string): string | null {
+  const lowerKeyword = keyword.toLowerCase();
+  
+  // Priority 1: Exact slug match
+  const exactMatch = iconIndex.find(icon => icon.slug === lowerKeyword);
+  if (exactMatch) {
+    return `${ICON_STORAGE_URL}/${exactMatch.slug}.png`;
+  }
+  
+  // Priority 2: Slug contains keyword
+  const slugContains = iconIndex.find(icon => icon.slug.includes(lowerKeyword));
+  if (slugContains) {
+    return `${ICON_STORAGE_URL}/${slugContains.slug}.png`;
+  }
+  
+  // Priority 3: Tag match
+  const tagMatch = iconIndex.find(icon => 
+    icon.tags?.some(tag => tag.toLowerCase().includes(lowerKeyword))
+  );
+  if (tagMatch) {
+    return `${ICON_STORAGE_URL}/${tagMatch.slug}.png`;
+  }
+  
+  // Priority 4: Title contains keyword
+  const titleMatch = iconIndex.find(icon => 
+    icon.title?.toLowerCase().includes(lowerKeyword)
+  );
+  if (titleMatch) {
+    return `${ICON_STORAGE_URL}/${titleMatch.slug}.png`;
+  }
+  
+  return null;
+}
+
+// Resolve icon for a category using keywords
+function resolveCategoryIcon(categoryId: string): string | null {
+  const keywords = getCategoryKeywords(categoryId);
+  
+  for (const keyword of keywords) {
+    const iconUrl = findIconByKeyword(keyword);
+    if (iconUrl) {
+      console.log(`[IconResolver] ${categoryId} -> "${keyword}" -> found`);
+      return iconUrl;
+    }
+  }
+  
+  console.warn(`[IconResolver] No icon found for ${categoryId} with keywords:`, keywords);
+  return null;
+}
+
+// Load cache from localStorage
+function loadCache(): Record<string, string> {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      memoryCache = parsed;
+      return parsed;
+    }
+  } catch (error) {
+    console.error('[IconResolver] Failed to load cache:', error);
+  }
+  return {};
+}
+
+// Save cache to localStorage
+function saveCache(cache: Record<string, string>): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    memoryCache = cache;
+  } catch (error) {
+    console.error('[IconResolver] Failed to save cache:', error);
+  }
+}
+
+// Preload and resolve all category icons
+export async function preloadCategoryIcons(categoryIds: string[]): Promise<Record<string, string>> {
+  await loadIconIndex();
+  
+  const cache = loadCache();
+  const resolved: Record<string, string> = { ...cache };
+  let updated = false;
+  
+  for (const categoryId of categoryIds) {
+    if (!resolved[categoryId]) {
+      const iconUrl = resolveCategoryIcon(categoryId);
+      if (iconUrl) {
+        resolved[categoryId] = iconUrl;
+        updated = true;
+      }
+    }
+  }
+  
+  if (updated) {
+    saveCache(resolved);
+  }
+  
+  // Preload images in background
+  const urls = Object.values(resolved);
+  urls.forEach(url => {
+    const img = new Image();
+    img.src = url;
+  });
+  
+  console.log(`[IconResolver] Resolved ${Object.keys(resolved).length} category icons`);
+  return resolved;
+}
+
+// Get cached icon URL for a category (synchronous, for render)
+export function getCachedCategoryIcon(categoryId: string): string | null {
+  return memoryCache[categoryId] || null;
+}
+
+// React hook for category icons
+export function useCategoryIconResolver(categoryIds: string[]) {
+  const [iconMap, setIconMap] = useState<Record<string, string>>(memoryCache);
+  const [isLoading, setIsLoading] = useState(!indexLoaded);
+  
+  useEffect(() => {
+    if (categoryIds.length === 0) return;
+    
+    preloadCategoryIcons(categoryIds).then(resolved => {
+      setIconMap(resolved);
+      setIsLoading(false);
+    });
+  }, [categoryIds.join(',')]);
+  
+  const getIcon = useCallback((categoryId: string): string | null => {
+    return iconMap[categoryId] || null;
+  }, [iconMap]);
+  
+  return { iconMap, getIcon, isLoading };
+}
+
+// Initialize cache on module load
+loadCache();

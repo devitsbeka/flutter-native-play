@@ -72,7 +72,7 @@ export function CategoryCard({
             <Lock className="h-14 w-14 text-white/80 drop-shadow-lg" />
           ) : (
             <DynamicIcon
-              category={id}
+              categoryId={id}
               size={56}
               className="drop-shadow-lg"
             />

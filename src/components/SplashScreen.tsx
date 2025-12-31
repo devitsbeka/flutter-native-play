@@ -3,13 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import splashBackground from '@/assets/splash-background.png';
 import logoImage from '@/assets/logo-worldquizzes.png';
 import { onVideosLoaded, areVideosLoaded } from '@/components/game/VideoPreloader';
-import { CATEGORY_ID_TO_ICON } from '@/data/categoryIconMap';
-
-// Generate icon URLs for all 45 categories using correct Supabase Storage URL
-const getCategoryIconUrls = (): string[] => {
-  const baseUrl = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/';
-  return Object.values(CATEGORY_ID_TO_ICON).map(slug => `${baseUrl}${slug}.png`);
-};
+import { preloadCategoryIcons } from '@/hooks/useCategoryIconResolver';
+import { CATEGORY_ICON_KEYWORDS } from '@/data/categoryIconKeywords';
 
 interface SplashScreenProps {
   children: ReactNode;
@@ -41,30 +36,22 @@ export function SplashScreen({ children }: SplashScreenProps) {
     logoImg.src = logoImage;
   }, []);
 
-  // Preload all 45 category icons during splash
+  // Preload all category icons using the resolver (searches 9k library)
   useEffect(() => {
-    const iconUrls = getCategoryIconUrls();
-    let loadedCount = 0;
-    const totalIcons = iconUrls.length;
-
-    const checkComplete = () => {
-      loadedCount++;
-      if (loadedCount >= totalIcons) {
+    const categoryIds = Object.keys(CATEGORY_ICON_KEYWORDS);
+    
+    preloadCategoryIcons(categoryIds)
+      .then(() => {
         setIconsLoaded(true);
-      }
-    };
+      })
+      .catch(() => {
+        setIconsLoaded(true); // Don't block on errors
+      });
 
-    iconUrls.forEach(url => {
-      const img = new Image();
-      img.onload = checkComplete;
-      img.onerror = checkComplete; // Don't block on failed icons
-      img.src = url;
-    });
-
-    // Fallback timeout - don't block forever on icons
+    // Fallback timeout
     const timeout = setTimeout(() => {
       setIconsLoaded(true);
-    }, 2000);
+    }, 3000);
 
     return () => clearTimeout(timeout);
   }, []);
