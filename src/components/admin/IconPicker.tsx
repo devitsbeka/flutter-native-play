@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Loader2, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { IconUploader } from './IconUploader';
 
 interface IconItem {
   slug: string;
@@ -25,6 +27,21 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [totalCount, setTotalCount] = useState(0);
+  const [showUploader, setShowUploader] = useState(false);
+
+  const refreshIcons = async () => {
+    const { count } = await supabase
+      .from('icon_library')
+      .select('*', { count: 'exact', head: true });
+    setTotalCount(count || 0);
+
+    const { data } = await supabase
+      .from('icon_library')
+      .select('slug, title, tags, category, icon_url')
+      .order('title')
+      .limit(100);
+    setIcons(data || []);
+  };
 
   useEffect(() => {
     async function loadIcons() {
@@ -109,6 +126,30 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             <p className="text-xs text-muted-foreground">არჩეული აიკონი</p>
           </div>
         </div>
+      )}
+
+      {/* Upload section */}
+      {showUploader ? (
+        <div className="border rounded-lg p-3 bg-muted/30">
+          <IconUploader 
+            onSuccess={(slug) => {
+              setShowUploader(false);
+              refreshIcons();
+              onChange(slug);
+            }}
+            onClose={() => setShowUploader(false)}
+          />
+        </div>
+      ) : (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full" 
+          onClick={() => setShowUploader(true)}
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          ახალი აიკონის ატვირთვა
+        </Button>
       )}
 
       {/* Search */}
