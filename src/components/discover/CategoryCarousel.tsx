@@ -8,19 +8,24 @@ interface Category {
   icon: string;
   color: string;
   description?: string;
+  image_url?: string;
 }
 
 interface CategoryCarouselProps {
   categories: Category[];
   progress: Record<string, number>;
+  favorites: Set<string>;
   onCategoryClick: (categoryId: string) => void;
+  onFavoriteToggle: (categoryId: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
 }
 
 export function CategoryCarousel({
   categories,
   progress,
+  favorites,
   onCategoryClick,
+  onFavoriteToggle,
   getBadge,
 }: CategoryCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -70,6 +75,12 @@ export function CategoryCarousel({
               progress={progress[category.id] || 0}
               totalLevels={20}
               badge={getBadge?.(category, index)}
+              imageUrl={category.image_url}
+              isFavorite={favorites.has(category.id)}
+              onFavoriteClick={(e) => {
+                e.stopPropagation();
+                onFavoriteToggle(category.id);
+              }}
               onClick={() => onCategoryClick(category.id)}
             />
           </div>

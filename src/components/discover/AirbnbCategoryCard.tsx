@@ -1,6 +1,17 @@
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
-import { useState } from "react";
+
+// Import category images
+import historyImg from "@/assets/categories/history.jpg";
+import geographyImg from "@/assets/categories/geography.jpg";
+import scienceImg from "@/assets/categories/science.jpg";
+import moviesImg from "@/assets/categories/movies.jpg";
+import musicImg from "@/assets/categories/music.jpg";
+import sportsImg from "@/assets/categories/sports.jpg";
+import literatureImg from "@/assets/categories/literature.jpg";
+import artImg from "@/assets/categories/art.jpg";
+import foodImg from "@/assets/categories/food.jpg";
+import technologyImg from "@/assets/categories/technology.jpg";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -11,8 +22,27 @@ interface AirbnbCategoryCardProps {
   progress?: number;
   totalLevels?: number;
   badge?: string;
+  imageUrl?: string;
+  isFavorite?: boolean;
+  onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
 }
+
+// Map category names to images
+const getCategoryImage = (name: string): string | null => {
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes("ისტორია") || lowerName.includes("history")) return historyImg;
+  if (lowerName.includes("გეოგრაფია") || lowerName.includes("geography")) return geographyImg;
+  if (lowerName.includes("მეცნიერება") || lowerName.includes("science")) return scienceImg;
+  if (lowerName.includes("ფილმ") || lowerName.includes("movie") || lowerName.includes("კინო")) return moviesImg;
+  if (lowerName.includes("მუსიკა") || lowerName.includes("music")) return musicImg;
+  if (lowerName.includes("სპორტ") || lowerName.includes("sport")) return sportsImg;
+  if (lowerName.includes("ლიტერატურა") || lowerName.includes("წიგნ") || lowerName.includes("literature") || lowerName.includes("book")) return literatureImg;
+  if (lowerName.includes("ხელოვნება") || lowerName.includes("art") || lowerName.includes("კულტურა")) return artImg;
+  if (lowerName.includes("საკვები") || lowerName.includes("food") || lowerName.includes("კულინარია") || lowerName.includes("სამზარეულო")) return foodImg;
+  if (lowerName.includes("ტექნოლოგი") || lowerName.includes("technology") || lowerName.includes("კომპიუტერ")) return technologyImg;
+  return null;
+};
 
 // Convert Tailwind gradient class to actual colors
 const getGradientColors = (colorClass: string): { from: string; to: string } => {
@@ -30,28 +60,24 @@ const getGradientColors = (colorClass: string): { from: string; to: string } => 
     "from-teal-400 to-cyan-500": { from: "#2dd4bf", to: "#06b6d4" },
     "from-orange-400 to-red-500": { from: "#fb923c", to: "#ef4444" },
   };
-  return colorMap[colorClass] || { from: "#60a5fa", to: "#6366f1" };
+  return colorMap[colorClass] || { from: "#8b5cf6", to: "#06b6d4" };
 };
 
 export function AirbnbCategoryCard({
-  id,
   name,
   icon,
   color,
-  description,
   progress = 0,
   totalLevels = 20,
   badge,
+  imageUrl,
+  isFavorite = false,
+  onFavoriteClick,
   onClick,
 }: AirbnbCategoryCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
   const colors = getGradientColors(color);
   const isCompleted = progress >= totalLevels;
-
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsFavorite(!isFavorite);
-  };
+  const categoryImage = imageUrl || getCategoryImage(name);
 
   return (
     <motion.button
@@ -63,18 +89,26 @@ export function AirbnbCategoryCard({
       {/* Image Area */}
       <div 
         className="relative w-full aspect-[4/3] rounded-xl overflow-hidden"
-        style={{
+        style={!categoryImage ? {
           background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
-        }}
+        } : undefined}
       >
-        {/* Large Emoji Icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-5xl drop-shadow-lg">{icon}</span>
-        </div>
+        {/* Category Image or Gradient with Icon */}
+        {categoryImage ? (
+          <img 
+            src={categoryImage} 
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-5xl drop-shadow-lg">{icon}</span>
+          </div>
+        )}
 
         {/* Heart/Favorite Button */}
         <button
-          onClick={handleFavoriteClick}
+          onClick={onFavoriteClick}
           className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
         >
           <Heart 

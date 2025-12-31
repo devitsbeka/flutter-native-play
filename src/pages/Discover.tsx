@@ -1,13 +1,15 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
+import { useFavorites } from "@/hooks/useFavorites";
 import { IconTab } from "@/components/discover/IconTab";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 const tabs = [
   { id: "all", label: "ყველა", icon: "🏠" },
@@ -18,12 +20,14 @@ const tabs = [
 
 export default function Discover() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
+  const { favorites, toggleFavorite } = useFavorites();
 
   // Transform progress to simple number map
   const progressMap = useMemo(() => {
@@ -66,6 +70,12 @@ export default function Discover() {
   const educationalCategories = useMemo(
     () => categories.filter((cat) => cat.type === "educational"),
     [categories]
+  );
+
+  // Get favorite categories
+  const favoriteCategories = useMemo(
+    () => categories.filter((cat) => favorites.has(cat.id)),
+    [categories, favorites]
   );
 
   // Get popular categories (first 6 from mixed types)
@@ -113,178 +123,209 @@ export default function Discover() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Search Bar */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm px-4 pt-4 pb-2">
-        <div
-          className={`flex items-center gap-3 bg-muted rounded-full px-4 py-3 transition-all ${
-            isSearchFocused ? "ring-2 ring-foreground/20" : ""
-          }`}
-        >
-          <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            placeholder="მოძებნე კატეგორია..."
-            className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Icon Tabs */}
-      <div className="sticky top-[72px] z-10 bg-background border-b border-border">
-        <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-          {tabs.map((tab) => (
-            <IconTab
-              key={tab.id}
-              icon={tab.icon}
-              label={tab.label}
-              isActive={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+    <PageTransition>
+      <div className="min-h-screen bg-background pb-24">
+        {/* Search Bar */}
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm px-4 pt-4 pb-2">
+          <div
+            className={`flex items-center gap-3 bg-muted rounded-full px-4 py-3 transition-all ${
+              isSearchFocused ? "ring-2 ring-foreground/20" : ""
+            }`}
+          >
+            <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              placeholder="მოძებნე კატეგორია..."
+              className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
             />
-          ))}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="py-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
           </div>
-        ) : isSearching ? (
-          /* Search Results */
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="search-results"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
+        </div>
+
+        {/* Icon Tabs */}
+        <div className="sticky top-[72px] z-10 bg-background border-b border-border">
+          <div className="flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {tabs.map((tab) => (
+              <IconTab
+                key={tab.id}
+                icon={tab.icon}
+                label={tab.label}
+                isActive={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="py-4">
+          {loading ? (
+            <div className="flex items-center justify-center h-48">
+              <div className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
+            </div>
+          ) : isSearching ? (
+            /* Search Results */
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="search-results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <SectionHeader
+                  title={`ძებნის შედეგები (${filteredCategories.length})`}
+                />
+                <CategoryCarousel
+                  categories={filteredCategories}
+                  progress={progressMap}
+                  favorites={favorites}
+                  onCategoryClick={handleCategoryClick}
+                  onFavoriteToggle={toggleFavorite}
+                />
+                {filteredCategories.length === 0 && (
+                  <div className="text-center py-12 px-4">
+                    <p className="text-muted-foreground">
+                      არაფერი მოიძებნა "{searchQuery}"
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          ) : activeTab === "all" ? (
+            /* All Categories - Show Sections */
+            <div className="space-y-6">
+              {/* Favorites */}
+              {favoriteCategories.length > 0 && (
+                <section>
+                  <SectionHeader
+                    title="ჩემი ფავორიტები"
+                    subtitle="შენს მიერ არჩეული"
+                  />
+                  <CategoryCarousel
+                    categories={favoriteCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+
+              {/* Recently Viewed */}
+              {recentlyViewed.length > 0 && (
+                <section>
+                  <SectionHeader
+                    title="ბოლოს ნანახი"
+                  />
+                  <CategoryCarousel
+                    categories={recentlyViewed as any[]}
+                    progress={progressMap}
+                    favorites={favorites}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+
+              {/* Popular */}
+              <section>
+                <SectionHeader
+                  title="პოპულარული"
+                  subtitle="ყველაზე ხშირად თამაშობენ"
+                />
+                <CategoryCarousel
+                  categories={popularCategories}
+                  progress={progressMap}
+                  favorites={favorites}
+                  onCategoryClick={handleCategoryClick}
+                  onFavoriteToggle={toggleFavorite}
+                  getBadge={getBadge}
+                />
+              </section>
+
+              {/* Classic */}
+              {classicCategories.length > 0 && (
+                <section>
+                  <SectionHeader
+                    title="კლასიკური ტრივია"
+                    subtitle="ისტორია, გეოგრაფია, მეცნიერება"
+                    onSeeAll={() => setActiveTab("classic")}
+                  />
+                  <CategoryCarousel
+                    categories={classicCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+
+              {/* Fun */}
+              {funCategories.length > 0 && (
+                <section>
+                  <SectionHeader
+                    title="გართობა"
+                    subtitle="ფილმები, მუსიკა, სპორტი"
+                    onSeeAll={() => setActiveTab("fun")}
+                  />
+                  <CategoryCarousel
+                    categories={funCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+
+              {/* Educational */}
+              {educationalCategories.length > 0 && (
+                <section>
+                  <SectionHeader
+                    title="სასწავლო"
+                    subtitle="ენები, ლიტერატურა, ხელოვნება"
+                    onSeeAll={() => setActiveTab("educational")}
+                  />
+                  <CategoryCarousel
+                    categories={educationalCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+            </div>
+          ) : (
+            /* Filtered by Tab */
+            <section>
               <SectionHeader
-                title={`ძებნის შედეგები (${filteredCategories.length})`}
+                title={tabs.find((t) => t.id === activeTab)?.label || ""}
               />
               <CategoryCarousel
                 categories={filteredCategories}
                 progress={progressMap}
+                favorites={favorites}
                 onCategoryClick={handleCategoryClick}
+                onFavoriteToggle={toggleFavorite}
               />
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12 px-4">
                   <p className="text-muted-foreground">
-                    არაფერი მოიძებნა "{searchQuery}"
+                    ამ კატეგორიაში ჯერ არაფერია
                   </p>
                 </div>
               )}
-            </motion.div>
-          </AnimatePresence>
-        ) : activeTab === "all" ? (
-          /* All Categories - Show Sections */
-          <div className="space-y-6">
-            {/* Recently Viewed */}
-            {recentlyViewed.length > 0 && (
-              <section>
-                <SectionHeader
-                  title="ბოლოს ნანახი"
-                  onSeeAll={() => {}}
-                />
-                <CategoryCarousel
-                  categories={recentlyViewed as any[]}
-                  progress={progressMap}
-                  onCategoryClick={handleCategoryClick}
-                />
-              </section>
-            )}
-
-            {/* Popular */}
-            <section>
-              <SectionHeader
-                title="პოპულარული"
-                subtitle="ყველაზე ხშირად თამაშობენ"
-                onSeeAll={() => {}}
-              />
-              <CategoryCarousel
-                categories={popularCategories}
-                progress={progressMap}
-                onCategoryClick={handleCategoryClick}
-                getBadge={getBadge}
-              />
             </section>
+          )}
+        </div>
 
-            {/* Classic */}
-            {classicCategories.length > 0 && (
-              <section>
-                <SectionHeader
-                  title="კლასიკური ტრივია"
-                  subtitle="ისტორია, გეოგრაფია, მეცნიერება"
-                  onSeeAll={() => setActiveTab("classic")}
-                />
-                <CategoryCarousel
-                  categories={classicCategories}
-                  progress={progressMap}
-                  onCategoryClick={handleCategoryClick}
-                />
-              </section>
-            )}
-
-            {/* Fun */}
-            {funCategories.length > 0 && (
-              <section>
-                <SectionHeader
-                  title="გართობა"
-                  subtitle="ფილმები, მუსიკა, სპორტი"
-                  onSeeAll={() => setActiveTab("fun")}
-                />
-                <CategoryCarousel
-                  categories={funCategories}
-                  progress={progressMap}
-                  onCategoryClick={handleCategoryClick}
-                />
-              </section>
-            )}
-
-            {/* Educational */}
-            {educationalCategories.length > 0 && (
-              <section>
-                <SectionHeader
-                  title="სასწავლო"
-                  subtitle="ენები, ლიტერატურა, ხელოვნება"
-                  onSeeAll={() => setActiveTab("educational")}
-                />
-                <CategoryCarousel
-                  categories={educationalCategories}
-                  progress={progressMap}
-                  onCategoryClick={handleCategoryClick}
-                />
-              </section>
-            )}
-          </div>
-        ) : (
-          /* Filtered by Tab */
-          <section>
-            <SectionHeader
-              title={tabs.find((t) => t.id === activeTab)?.label || ""}
-            />
-            <CategoryCarousel
-              categories={filteredCategories}
-              progress={progressMap}
-              onCategoryClick={handleCategoryClick}
-            />
-            {filteredCategories.length === 0 && (
-              <div className="text-center py-12 px-4">
-                <p className="text-muted-foreground">
-                  ამ კატეგორიაში ჯერ არაფერია
-                </p>
-              </div>
-            )}
-          </section>
-        )}
+        <UniversalBottomNav />
       </div>
-
-      <UniversalBottomNav />
-    </div>
+    </PageTransition>
   );
 }
