@@ -22,37 +22,37 @@ const stateStyles: Record<QuizAnswerState, {
   labelBg?: string;
 }> = {
   default: {
-    faceBg: "linear-gradient(180deg, #D9D8FF 0%, #ABABE3 100%)",
-    borderColor: "#7E7ADB",
+    faceBg: "#D9D8FF",
+    borderColor: "#B9B6FF",
     depthColor: "#6A69B4",
     textColor: "#514F7F",
     labelBg: "rgba(126, 122, 219, 0.2)",
   },
   selected: {
     faceBg: "#EDECFF",
-    borderColor: "#B9B6FF",
-    depthColor: "#A4A0FF",
+    borderColor: "#C9C7FF",
+    depthColor: "#7A78C9",
     textColor: "#514F7F",
     labelBg: "rgba(185, 182, 255, 0.3)",
   },
   correct: {
     faceBg: "#83F7DA",
-    borderColor: "#39CBA6",
-    depthColor: "#2CB08F",
-    textColor: "#514F7F",
+    borderColor: "#5EDAD0",
+    depthColor: "#1E9A7F",
+    textColor: "#1A5C4B",
     labelBg: "rgba(57, 203, 166, 0.25)",
   },
   wrong: {
     faceBg: "#FF7575",
-    borderColor: "#EF4343",
-    depthColor: "#FF6868",
+    borderColor: "#FF5C5C",
+    depthColor: "#B83A3A",
     textColor: "#FFFFFF",
     labelBg: "rgba(255, 255, 255, 0.25)",
   },
   next: {
     faceBg: "#EDECFF",
-    borderColor: "#B9B6FF",
-    depthColor: "#A4A0FF",
+    borderColor: "#C9C7FF",
+    depthColor: "#7A78C9",
     textColor: "#46447E",
   },
 };
@@ -105,7 +105,6 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
             background: styles.faceBg,
             borderColor: styles.borderColor,
             transform: `translateY(${isPressed ? 4 : 0}px)`,
-            boxShadow: `inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.05)`,
           }}
         >
           {/* Label Badge */}
