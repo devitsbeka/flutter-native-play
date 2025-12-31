@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, KeyRound, Users, DoorOpen } from "lucide-react";
+import { ArrowLeft, Plus, KeyRound, Users } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -185,7 +185,7 @@ function TeamContent() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-24">
+    <div className="min-h-screen relative overflow-hidden pb-28">
       {/* Background */}
       <div 
         className="fixed inset-0 z-0"
@@ -202,54 +202,19 @@ function TeamContent() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">უკან</span>
+            <ArrowLeft className="w-5 h-5" />
           </motion.button>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm"
+          <motion.button
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white text-lg font-bold"
           >
-            <DoorOpen className="w-5 h-5 text-white" />
-            <span className="font-display text-white font-bold">ოთახები</span>
-          </motion.div>
+            ?
+          </motion.button>
         </div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-3 mb-6"
-        >
-          <ChunkyButton
-            variant="primary"
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              playSound("button-click");
-              setShowCreateModal(true);
-            }}
-            icon={<Plus className="w-5 h-5" />}
-          >
-            შექმნა
-          </ChunkyButton>
-
-          <ChunkyButton
-            variant="secondary"
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              playSound("button-click");
-              setShowJoinModal(true);
-            }}
-            icon={<KeyRound className="w-5 h-5" />}
-          >
-            შესვლა
-          </ChunkyButton>
-        </motion.div>
 
         {/* Recent Rooms Section */}
         <motion.div
@@ -320,6 +285,26 @@ function TeamContent() {
         onStartChallenge={handleStartChallenge}
         isLoading={isCreatingChallenge}
       />
+
+      {/* Fixed Bottom Create Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="fixed bottom-6 left-4 right-4 z-20"
+      >
+        <ChunkyButton
+          variant="primary"
+          size="lg"
+          className="w-full"
+          onClick={() => {
+            playSound("button-click");
+            setShowCreateModal(true);
+          }}
+          icon={<Plus className="w-5 h-5" />}
+        >
+          + თამაშის შექმნა
+        </ChunkyButton>
+      </motion.div>
     </div>
   );
 }

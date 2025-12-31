@@ -59,10 +59,15 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-3">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="animate-pulse rounded-2xl bg-white/10 aspect-square" />
-        ))}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-white/80">მეგობრები</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex-shrink-0 w-40 h-48 animate-pulse rounded-2xl bg-white/10" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -91,29 +96,19 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
       )}
 
       {/* Friends List Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 text-white/80">
-          <Users className="w-4 h-4" />
-          <span className="text-sm font-medium">მეგობრები ({friends.length})</span>
-          {friends.some(f => f.isOnline) && (
-            <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 text-xs">
-              {friends.filter(f => f.isOnline).length} ონლაინ
-            </span>
-          )}
-        </div>
-        
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-white/80">მეგობრები</span>
         <motion.button
           onClick={onAddFriendClick}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/20 text-white text-xs"
+          className="text-sm font-medium text-orange-400"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <UserPlus className="w-3 h-3" />
-          დამატება
+          + დამატება
         </motion.button>
       </div>
 
-      {/* Friends Grid */}
+      {/* Friends Horizontal Scroll */}
       {friends.length === 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
@@ -132,13 +127,14 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
           </ChunkyButton>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           <AnimatePresence>
             {/* Sort online friends first */}
-            {[...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).map((friend) => (
+            {[...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).map((friend, index) => (
               <FriendCard
                 key={friend.id}
                 friend={friend}
+                index={index}
                 onQuickPlay={() => onQuickPlay(friend)}
                 onChat={() => onStartChat?.(friend)}
                 onRemove={() => setFriendToRemove(friend)}
@@ -178,98 +174,98 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
 
 interface FriendCardProps {
   friend: Friend;
+  index: number;
   onQuickPlay: () => void;
   onChat: () => void;
   onRemove: () => void;
 }
 
-function FriendCard({ friend, onQuickPlay, onChat, onRemove }: FriendCardProps) {
+function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCardProps) {
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className={`relative flex flex-col items-center p-4 rounded-2xl backdrop-blur-sm transition-colors ${
+      transition={{ delay: index * 0.05 }}
+      className={`flex-shrink-0 w-40 flex flex-col items-center p-4 rounded-2xl backdrop-blur-sm ${
         friend.isOnline 
-          ? "bg-white/15 border-2 border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.15)]" 
+          ? "bg-white/15 border-2 border-green-500/30" 
           : "bg-white/10 border border-white/10"
       }`}
     >
       {/* Three dots menu - top right */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <motion.button
-            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/10 text-white/60 hover:text-white hover:bg-white/20"
-            whileTap={{ scale: 0.95 }}
-          >
-            <MoreVertical className="w-4 h-4" />
-          </motion.button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-purple-900/95 border-purple-500/30 backdrop-blur-lg">
-          <DropdownMenuItem 
-            onClick={onRemove}
-            className="text-red-400 focus:text-red-300 focus:bg-red-500/20 cursor-pointer"
-          >
-            <UserMinus className="w-4 h-4 mr-2" />
-            წაშლა
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="w-full flex justify-end mb-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              className="p-1 rounded-lg text-white/60 hover:text-white"
+              whileTap={{ scale: 0.95 }}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-purple-900/95 border-purple-500/30 backdrop-blur-lg">
+            <DropdownMenuItem 
+              onClick={onRemove}
+              className="text-red-400 focus:text-red-300 focus:bg-red-500/20 cursor-pointer"
+            >
+              <UserMinus className="w-4 h-4 mr-2" />
+              წაშლა
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Large Avatar */}
       <div className="relative mb-3">
-        <Avatar className={`w-20 h-20 border-3 ${friend.isOnline ? "border-green-400/50" : "border-white/30"}`}>
+        <Avatar className={`w-16 h-16 border-2 ${friend.isOnline ? "border-green-400/50" : "border-white/30"}`}>
           <AvatarImage src={friend.avatarUrl || undefined} />
-          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-2xl font-bold">
+          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl font-bold">
             {friend.nickname.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        {/* Online indicator dot with pulse animation */}
+        {/* Online indicator dot */}
         <motion.div 
           className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-purple-900 ${
             friend.isOnline ? "bg-green-400" : "bg-gray-400"
           }`}
           animate={friend.isOnline ? { 
             scale: [1, 1.2, 1],
-            boxShadow: ["0 0 0 0 rgba(74, 222, 128, 0.4)", "0 0 0 4px rgba(74, 222, 128, 0)", "0 0 0 0 rgba(74, 222, 128, 0.4)"]
           } : {}}
           transition={{ duration: 2, repeat: Infinity }}
         />
       </div>
 
-      {/* Name and Status */}
+      {/* Name and Flag */}
       <div className="text-center mb-3 w-full">
         <div className="flex items-center justify-center gap-1.5">
-          <p className="font-medium text-white truncate max-w-[100px]">{friend.nickname}</p>
+          <p className="font-bold text-white text-sm uppercase tracking-wide truncate max-w-[90px]">
+            {friend.nickname}
+          </p>
           {friend.countryCode && (
             <span className="text-sm">{getCountryFlag(friend.countryCode)}</span>
           )}
         </div>
-        <p className={`text-xs ${friend.isOnline ? "text-green-300" : "text-white/50"}`}>
-          {friend.isOnline ? "ონლაინ" : "ოფლაინ"}
-        </p>
       </div>
 
-      {/* Quick Action Buttons */}
+      {/* Action Buttons - side by side */}
       <div className="flex items-center gap-2 w-full">
         <motion.button
           onClick={onQuickPlay}
-          className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-medium transition-colors bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+          className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-bold transition-colors bg-orange-500 text-white"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Gamepad2 className="w-3.5 h-3.5" />
-          თამაში
+          <span>+ თამაში</span>
         </motion.button>
 
         <motion.button
           onClick={onChat}
-          className="flex items-center justify-center p-2 rounded-xl bg-white/15 text-white/80 hover:bg-white/25 hover:text-white transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center justify-center px-3 py-2 rounded-xl bg-white/20 text-white text-xs font-medium"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <MessageCircle className="w-4 h-4" />
+          ჩატი
         </motion.button>
       </div>
     </motion.div>
