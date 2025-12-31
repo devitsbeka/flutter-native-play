@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
+import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 
 export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
@@ -122,6 +123,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     
     // Wait for questions to finish loading
     const questions = await questionsPromise;
+    
+    // Start background icon preloading immediately - don't await
+    // Icons will be cached by the time user clicks "Start"
+    preloadQuestionIcons(
+      questions.map(q => ({ question: q.question, category: q.category }))
+    );
     
     setState(prev => ({
       ...prev,

@@ -170,21 +170,35 @@ export function useAIIcon({ questionText, category, enabled = true }: UseAIIconO
   return { aiData, isLoading, isFromCache };
 }
 
-// Utility to preload AI data for multiple questions
-export async function preloadAIIcons(questions: Array<{ text: string; category?: string }>): Promise<void> {
-  const uncached = questions.filter(q => {
-    const hash = hashQuestion(q.text + (q.category || ''));
-    return !getCachedResult(hash);
-  });
-
-  // Fetch in parallel with a small delay to avoid rate limiting
-  await Promise.all(
-    uncached.map((q, i) => 
-      new Promise<void>(resolve => {
-        setTimeout(() => {
-          fetchAIIconData(q.text, q.category).then(() => resolve());
-        }, i * 100); // 100ms delay between requests
-      })
-    )
-  );
+// Utility to preload AI icon data for questions during matchmaking
+// This runs in background so icons are ready when user starts playing
+export async function preloadQuestionIcons(
+  questions: Array<{ question: string; category?: string }>
+): Promise<void> {
+  if (!questions || questions.length === 0) return;
+  
+  console.log(`[IconPreload] Starting background preload for ${questions.length} questions`);
+  
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
+    const questionHash = hashQuestion(q.question + (q.category || ''));
+    
+    // Skip if already cached
+    if (getCachedResult(questionHash)) {
+      console.log(`[IconPreload] Q${i + 1} already cached, skipping`);
+      continue;
+    }
+    
+    // Small delay between requests to avoid rate limiting (50ms)
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    // Fire and forget - don't block on individual requests
+    fetchAIIconData(q.question, q.category)
+      .then(() => console.log(`[IconPreload] Q${i + 1} analyzed`))
+      .catch(() => console.log(`[IconPreload] Q${i + 1} failed, will retry on display`));
+  }
+  
+  console.log(`[IconPreload] Background preload initiated for all questions`);
 }
