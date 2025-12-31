@@ -17,9 +17,14 @@ async function loadIconIndex(): Promise<void> {
     const response = await fetch('/data/icon-library-meta.json');
     if (response.ok) {
       const data = await response.json();
-      iconIndex = data.icons || [];
+      // JSON uses "items" not "icons"
+      iconIndex = (data.items || []).map((item: any) => ({
+        slug: item.slug,
+        tags: item.tags || [],
+        title: item.title || ''
+      }));
       indexLoaded = true;
-      console.log(`[IconResolver] Loaded ${iconIndex.length} icons`);
+      console.log(`[IconResolver] Loaded ${iconIndex.length} icons from library`);
     }
   } catch (error) {
     console.error('[IconResolver] Failed to load icon index:', error);

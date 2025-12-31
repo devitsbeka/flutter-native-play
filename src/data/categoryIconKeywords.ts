@@ -1,60 +1,60 @@
-// AI-generated icon keywords for each category, sorted by relevance (temperature)
-// These are used to search the 9k icon library for matching icons
+// Icon keywords for each category - matched to actual slugs in icon-library-meta.json
+// These are searched in order until a match is found in the 9k icon library
 
 export const CATEGORY_ICON_KEYWORDS: Record<string, string[]> = {
-  // Classic (15)
-  'georgian_history': ['scroll', 'castle', 'crown', 'shield', 'sword'],
-  'world_history': ['scroll', 'globe', 'book', 'map', 'compass'],
+  // Classic (15) - using actual slugs from library
+  'georgian_history': ['scroll', 'castle', 'crown', 'medieval', 'kingdom'],
+  'world_history': ['globe', 'book', 'scroll', 'ancient', 'history'],
   'geography': ['globe', 'earth', 'map', 'compass', 'world'],
-  'science': ['microscope', 'atom', 'flask', 'beaker', 'lab'],
+  'science': ['microscope', 'flask', 'beaker', 'laboratory', 'chemistry'],
   'sports': ['trophy', 'medal', 'soccer', 'football', 'basketball'],
-  'georgian_literature': ['book', 'quill', 'scroll', 'pen', 'library'],
-  'art': ['palette', 'brush', 'easel', 'paint', 'canvas'],
-  'religion_mythology': ['church', 'cross', 'temple', 'pray', 'angel'],
-  'philosophy': ['brain', 'think', 'lightbulb', 'book', 'owl'],
-  'archaeology': ['fossil', 'bone', 'dig', 'pyramid', 'ancient'],
-  'languages': ['speech', 'bubble', 'translate', 'abc', 'language'],
-  'politics': ['capitol', 'building', 'gavel', 'vote', 'government'],
-  'economics': ['money', 'dollar', 'coin', 'chart', 'bank'],
-  'military_history': ['sword', 'shield', 'tank', 'medal', 'cannon'],
+  'georgian_literature': ['book', 'quill', 'pen', 'notebook', 'library'],
+  'art': ['palette', 'brush', 'easel', 'painting', 'canvas'],
+  'religion_mythology': ['church', 'temple', 'cross', 'angel', 'pray'],
+  'philosophy': ['brain', 'lightbulb', 'book', 'owl', 'think'],
+  'archaeology': ['fossil', 'pyramid', 'ancient', 'dig', 'bone'],
+  'languages': ['speech', 'bubble', 'translate', 'book', 'alphabet'],
+  'politics': ['capitol', 'government', 'gavel', 'vote', 'flag'],
+  'economics': ['money', 'coin', 'bank', 'chart', 'dollar'],
+  'military_history': ['sword', 'shield', 'tank', 'cannon', 'army'],
   'architecture': ['building', 'house', 'tower', 'bridge', 'column'],
   
-  // Fun (15)
-  'movies': ['clapperboard', 'film', 'camera', 'movie', 'popcorn'],
-  'music': ['guitar', 'music', 'note', 'headphones', 'microphone'],
-  'georgian_cuisine': ['wine', 'grape', 'bread', 'food', 'pot'],
-  'animals': ['lion', 'paw', 'dog', 'cat', 'animal'],
-  'pop_culture': ['star', 'phone', 'selfie', 'trend', 'viral'],
-  'tv_series': ['television', 'tv', 'screen', 'remote', 'couch'],
+  // Fun (15) - using actual slugs from library
+  'movies': ['clapperboard', 'film', 'camera', 'popcorn', 'cinema'],
+  'music': ['guitar', 'piano', 'music', 'headphones', 'microphone'],
+  'georgian_cuisine': ['wine', 'grape', 'bread', 'khinkali', 'pot'],
+  'animals': ['lion', 'dog', 'cat', 'paw', 'animal'],
+  'pop_culture': ['star', 'phone', 'selfie', 'camera', 'sparkle'],
+  'tv_series': ['television', 'tv', 'remote', 'screen', 'couch'],
   'video_games': ['gamepad', 'controller', 'joystick', 'game', 'console'],
-  'anime_manga': ['ninja', 'samurai', 'dragon', 'katana', 'anime'],
-  'social_media': ['phone', 'like', 'share', 'hashtag', 'follow'],
+  'anime_manga': ['ninja', 'samurai', 'dragon', 'katana', 'mask'],
+  'social_media': ['phone', 'like', 'heart', 'share', 'hashtag'],
   'fashion': ['dress', 'shirt', 'shoe', 'handbag', 'hat'],
-  'fun_facts': ['lightbulb', 'star', 'sparkle', 'magic', 'wow'],
-  'myths_reality': ['magnifier', 'detective', 'question', 'mystery', 'search'],
-  'world_cuisine': ['chef', 'cook', 'food', 'restaurant', 'fork'],
-  'celebrities': ['star', 'vip', 'crown', 'camera', 'fame'],
-  'memes_internet': ['emoji', 'laugh', 'lol', 'meme', 'viral'],
+  'fun_facts': ['lightbulb', 'sparkle', 'star', 'magic', 'question'],
+  'myths_reality': ['magnifier', 'detective', 'search', 'mystery', 'question'],
+  'world_cuisine': ['chef', 'fork', 'restaurant', 'pot', 'food'],
+  'celebrities': ['star', 'crown', 'camera', 'vip', 'trophy'],
+  'memes_internet': ['emoji', 'laugh', 'phone', 'computer', 'viral'],
   
-  // Educational (15)
-  'astronomy': ['telescope', 'star', 'planet', 'moon', 'rocket'],
+  // Educational (15) - using actual slugs from library
+  'astronomy': ['telescope', 'planet', 'moon', 'star', 'rocket'],
   'biology': ['dna', 'cell', 'leaf', 'heart', 'microscope'],
   'nature': ['tree', 'leaf', 'flower', 'mountain', 'forest'],
   'geology': ['rock', 'gem', 'crystal', 'diamond', 'stone'],
-  'ecology': ['recycle', 'earth', 'leaf', 'green', 'plant'],
-  'space': ['rocket', 'astronaut', 'planet', 'satellite', 'ufo'],
-  'math': ['calculator', 'plus', 'formula', 'pi', 'number'],
-  'medicine': ['stethoscope', 'heart', 'pill', 'doctor', 'hospital'],
-  'programming': ['code', 'terminal', 'laptop', 'developer', 'bug'],
-  'robotics_ai': ['robot', 'ai', 'chip', 'circuit', 'android'],
-  'technology': ['laptop', 'computer', 'chip', 'phone', 'gadget'],
+  'ecology': ['recycle', 'earth', 'leaf', 'plant', 'green'],
+  'space': ['rocket', 'astronaut', 'planet', 'satellite', 'moon'],
+  'math': ['calculator', 'formula', 'plus', 'number', 'pi'],
+  'medicine': ['stethoscope', 'heart', 'pill', 'hospital', 'doctor'],
+  'programming': ['code', 'terminal', 'laptop', 'computer', 'developer'],
+  'robotics_ai': ['robot', 'chip', 'circuit', 'android', 'ai'],
+  'technology': ['laptop', 'computer', 'phone', 'chip', 'gadget'],
   'physics': ['atom', 'magnet', 'energy', 'wave', 'electron'],
-  'psychology': ['brain', 'mind', 'head', 'think', 'emotion'],
-  'georgian_culture': ['wine', 'dance', 'music', 'grape', 'tradition'],
-  'chemistry': ['beaker', 'flask', 'atom', 'molecule', 'test'],
+  'psychology': ['brain', 'head', 'mind', 'think', 'emotion'],
+  'georgian_culture': ['wine', 'dance', 'grape', 'music', 'tradition'],
+  'chemistry': ['beaker', 'flask', 'atom', 'molecule', 'test-tube'],
 };
 
 // Get keywords for a category
 export function getCategoryKeywords(categoryId: string): string[] {
-  return CATEGORY_ICON_KEYWORDS[categoryId] || ['question', 'quiz', 'trivia', 'game', 'play'];
+  return CATEGORY_ICON_KEYWORDS[categoryId] || ['question', 'quiz', 'book', 'game', 'star'];
 }
