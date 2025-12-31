@@ -12,8 +12,9 @@ interface QuizCategoryIconProps {
 }
 
 const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>(
-  ({ imageUrl, size = 120, state = "default", className }, ref) => {
+  ({ imageUrl, size = 140, state = "default", className }, ref) => {
     const isLoading = state === "loading";
+    const borderRadius = Math.round(size * 0.13); // ~18px for 140px size
 
     return (
       <motion.div
@@ -26,14 +27,25 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
       >
         {/* 3D depth shadow */}
         <div
-          className="absolute inset-0 rounded-[18px] bg-[#5957A7]"
-          style={{ transform: "translateY(4px)" }}
+          className="absolute inset-0"
+          style={{ 
+            borderRadius,
+            backgroundColor: "#5957A7",
+            transform: "translateY(5px)",
+          }}
         />
 
         {/* Main container */}
-        <div className="relative w-full h-full rounded-[18px] overflow-hidden border-[3px] border-[#9C99E8] bg-[#F5F4FF]">
+        <div 
+          className="relative w-full h-full overflow-hidden"
+          style={{
+            borderRadius,
+            border: "3px solid #9C99E8",
+            backgroundColor: "#F5F4FF",
+          }}
+        >
           {isLoading ? (
-            <div className="w-full h-full bg-muted animate-pulse" />
+            <div className="w-full h-full bg-[#E5E4FF] animate-pulse" />
           ) : imageUrl ? (
             <motion.img
               src={imageUrl}

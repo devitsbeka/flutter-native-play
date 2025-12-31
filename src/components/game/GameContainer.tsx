@@ -2,7 +2,7 @@ import { useGame } from "@/contexts/GameContext";
 import { HomeScreen } from "./HomeScreen";
 import { MatchmakingScreen } from "./MatchmakingScreen";
 import { VSScreen } from "./VSScreen";
-import { QuestionScreen } from "./QuestionScreen";
+import { QuizGameScreenProd } from "./QuizGameScreenProd";
 import { MatchResultScreen } from "./MatchResultScreen";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -31,7 +31,7 @@ export function GameContainer() {
         >
           {(phase === "home" || phase === "matchmaking" || phase === "preparing") && <MatchmakingScreen />}
           {phase === "vs-screen" && <VSScreen />}
-          {(phase === "playing" || phase === "question-result") && <QuestionScreen />}
+          {(phase === "playing" || phase === "question-result") && <QuizGameScreenProd />}
           {phase === "match-result" && <MatchResultScreen />}
         </motion.div>
       </AnimatePresence>
