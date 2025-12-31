@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { getCategoryFallbackEmoji } from "@/data/categoryIconMap";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -37,6 +39,7 @@ const getGradientColors = (colorClass: string): { from: string; to: string } => 
 };
 
 export function AirbnbCategoryCard({
+  id,
   name,
   icon,
   color,
@@ -49,6 +52,7 @@ export function AirbnbCategoryCard({
 }: AirbnbCategoryCardProps) {
   const colors = getGradientColors(color);
   const isCompleted = progress >= totalLevels;
+  const fallbackEmoji = getCategoryFallbackEmoji(id) || icon;
 
   // Generate floating particles
   const particles = useMemo(
@@ -113,15 +117,18 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Large Centered Emoji with Float Animation */}
+        {/* Large Centered Icon with Float Animation */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center"
           animate={{ y: [0, -4, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-5xl drop-shadow-lg filter brightness-110">
-            {icon}
-          </span>
+          <DynamicIcon
+            category={id}
+            fallbackEmoji={fallbackEmoji}
+            size={64}
+            className="drop-shadow-lg filter brightness-110"
+          />
         </motion.div>
 
         {/* Heart/Favorite Button */}
