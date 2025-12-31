@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +53,7 @@ import { useAdminCategories, AdminCategory } from '@/hooks/useAdminCategories';
 import { useAdminQuestions, AdminQuestion } from '@/hooks/useAdminQuestions';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview';
+import { IconPicker } from '@/components/admin/IconPicker';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTIES = [
@@ -105,6 +107,7 @@ export default function ContentManager() {
     category_id: '',
     name: '',
     icon: '📚',
+    icon_slug: '',
     color: 'from-blue-400 to-cyan-500',
     description: '',
     total_levels: 20,
@@ -171,6 +174,7 @@ export default function ContentManager() {
       category_id: '',
       name: '',
       icon: '📚',
+      icon_slug: '',
       color: 'from-blue-400 to-cyan-500',
       description: '',
       total_levels: 20,
@@ -187,6 +191,7 @@ export default function ContentManager() {
       category_id: category.category_id,
       name: category.name,
       icon: category.icon,
+      icon_slug: category.icon_slug || '',
       color: category.color,
       description: category.description || '',
       total_levels: category.total_levels,
@@ -709,21 +714,35 @@ export default function ContentManager() {
 
             <div className="space-y-1.5">
               <Label className="text-xs">აიკონი</Label>
-              <div className="flex flex-wrap gap-1 p-2 border rounded-lg">
-                {EMOJI_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setCategoryForm({ ...categoryForm, icon: emoji })}
-                    className={cn(
-                      "text-lg p-1 rounded hover:bg-muted transition-colors",
-                      categoryForm.icon === emoji && "bg-primary/20 ring-2 ring-primary"
-                    )}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
+              <Tabs defaultValue={categoryForm.icon_slug ? "library" : "emoji"} className="w-full">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="emoji">ემოჯი</TabsTrigger>
+                  <TabsTrigger value="library">ბიბლიოთეკა (9K)</TabsTrigger>
+                </TabsList>
+                <TabsContent value="emoji" className="mt-2">
+                  <div className="flex flex-wrap gap-1 p-2 border rounded-lg">
+                    {EMOJI_OPTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setCategoryForm({ ...categoryForm, icon: emoji, icon_slug: '' })}
+                        className={cn(
+                          "text-lg p-1 rounded hover:bg-muted transition-colors",
+                          categoryForm.icon === emoji && !categoryForm.icon_slug && "bg-primary/20 ring-2 ring-primary"
+                        )}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+                <TabsContent value="library" className="mt-2">
+                  <IconPicker
+                    value={categoryForm.icon_slug}
+                    onChange={(slug) => setCategoryForm({ ...categoryForm, icon_slug: slug })}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
 
             <div className="space-y-1.5">
