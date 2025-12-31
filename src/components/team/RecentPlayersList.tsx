@@ -2,7 +2,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRecentPlayers } from "@/hooks/useRecentPlayers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export function RecentPlayersList() {
+interface RecentPlayersListProps {
+  onViewAll?: () => void;
+}
+
+export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
   const { recentPlayers, loading } = useRecentPlayers();
 
   if (loading) {
@@ -28,7 +32,7 @@ export function RecentPlayersList() {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-white/80">ბოლო მოთამაშეები</span>
-        <button className="text-sm font-medium text-orange-400">ყველა</button>
+        <button onClick={onViewAll} className="text-sm font-medium text-orange-400">ყველა</button>
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">

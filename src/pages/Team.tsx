@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, KeyRound, Users } from "lucide-react";
+import { ArrowLeft, Plus, Users } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -19,13 +19,15 @@ import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChatModal } from "@/components/team/ChatModal";
 import { GameInviteModal } from "@/components/team/GameInviteModal";
 import { QuickPlayModal } from "@/components/team/QuickPlayModal";
+import { HelpModal } from "@/components/team/HelpModal";
+import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
+import { AllRecentPlayersModal } from "@/components/team/AllRecentPlayersModal";
 import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Category } from "@/data/categories";
-import { toast } from "sonner";
 
 function TeamContent() {
   const navigate = useNavigate();
@@ -53,6 +55,9 @@ function TeamContent() {
   } = useGameInvitations();
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showAllRoomsModal, setShowAllRoomsModal] = useState(false);
+  const [showAllPlayersModal, setShowAllPlayersModal] = useState(false);
   const [chatFriend, setChatFriend] = useState<Friend | null>(null);
   const [quickPlayFriend, setQuickPlayFriend] = useState<Friend | null>(null);
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
@@ -163,7 +168,7 @@ function TeamContent() {
         <div 
           className="fixed inset-0 z-0"
           style={{
-            background: "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
+            background: "#7E7BDC"
           }}
         />
         <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-8">
@@ -190,7 +195,7 @@ function TeamContent() {
       <div 
         className="fixed inset-0 z-0"
         style={{
-          background: "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
+          background: "#7E7BDC"
         }}
       />
 
@@ -210,6 +215,7 @@ function TeamContent() {
           <motion.button
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
+            onClick={() => setShowHelpModal(true)}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white text-lg font-bold"
           >
             ?
@@ -223,7 +229,7 @@ function TeamContent() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <RecentRoomsSection />
+          <RecentRoomsSection onViewAll={() => setShowAllRoomsModal(true)} />
         </motion.div>
 
         {/* Pending Challenges Section */}
@@ -250,7 +256,7 @@ function TeamContent() {
           />
 
           {/* Recent Players Section */}
-          <RecentPlayersList />
+          <RecentPlayersList onViewAll={() => setShowAllPlayersModal(true)} />
         </motion.div>
       </div>
 
@@ -284,6 +290,18 @@ function TeamContent() {
         friend={quickPlayFriend}
         onStartChallenge={handleStartChallenge}
         isLoading={isCreatingChallenge}
+      />
+      <HelpModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+      />
+      <AllRecentRoomsModal
+        isOpen={showAllRoomsModal}
+        onClose={() => setShowAllRoomsModal(false)}
+      />
+      <AllRecentPlayersModal
+        isOpen={showAllPlayersModal}
+        onClose={() => setShowAllPlayersModal(false)}
       />
 
       {/* Fixed Bottom Create Button */}
