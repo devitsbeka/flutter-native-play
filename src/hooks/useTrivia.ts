@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface TriviaQuestion {
   id: string;
-  category: string;
+  category: string;      // Display name (Georgian)
+  categoryId?: string;   // Database category_id for icon lookup
   categoryIcon?: string;
   difficulty: "easy" | "medium" | "hard";
   question: string;
@@ -63,7 +64,7 @@ export function useTrivia() {
         // Fetch from specific category
         const { data: categoryData } = await supabase
           .from('categories')
-          .select('id, name, icon')
+          .select('id, name, icon, category_id')
           .eq('category_id', category)
           .maybeSingle();
 
@@ -80,7 +81,8 @@ export function useTrivia() {
           dbQuestions = (result.data || []).map(q => ({
             ...q,
             categoryName: categoryData.name,
-            categoryIcon: categoryData.icon
+            categoryIcon: categoryData.icon,
+            categorySlug: categoryData.category_id  // The actual category_id for icon lookup
           }));
           dbError = result.error;
         }
@@ -88,7 +90,7 @@ export function useTrivia() {
         // VS Mode: Pick one question from each of 6 random categories
         const { data: categories } = await supabase
           .from('categories')
-          .select('id, name, icon')
+          .select('id, name, icon, category_id')
           .eq('is_active', true);
         
         if (categories && categories.length > 0) {
@@ -108,7 +110,12 @@ export function useTrivia() {
             
             if (data && data.length > 0) {
               const randomQ = data[Math.floor(Math.random() * data.length)];
-              return { ...randomQ, categoryName: cat.name, categoryIcon: cat.icon };
+              return { 
+                ...randomQ, 
+                categoryName: cat.name, 
+                categoryIcon: cat.icon,
+                categorySlug: cat.category_id  // The actual category_id for icon lookup
+              };
             }
             return null;
           });
@@ -161,6 +168,7 @@ export function useTrivia() {
             return {
               id: q.id,
               category: q.categoryName,
+              categoryId: q.categorySlug || '',  // Pass the actual category_id for icon lookup
               categoryIcon: q.categoryIcon || '📚',
               difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
               question: q.question_text,
