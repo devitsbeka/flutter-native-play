@@ -1,6 +1,61 @@
-// Direct mapping from app category IDs to icon library slugs
-// These are used for instant lookups without keyword matching
+// Direct mapping from category_id (from database) to icon library slugs
+// This is the most reliable mapping - uses ASCII category IDs
 
+// PRIMARY MAPPING: category_id → icon slug (45 total)
+export const CATEGORY_ID_TO_ICON: Record<string, string> = {
+  // Classic (15)
+  'archaeology': 'fossil',
+  'architecture': 'building',
+  'geography': 'globe',
+  'economics': 'money',
+  'languages': 'book',
+  'science': 'microscope',
+  'world_history': 'scroll',
+  'politics': 'building',
+  'religion_mythology': 'church',
+  'military_history': 'sword',
+  'georgian_history': 'scroll',
+  'sports': 'trophy',
+  'philosophy': 'book',
+  'georgian_literature': 'book',
+  'art': 'artist-palette',
+  
+  // Educational (15)
+  'astronomy': 'telescope',
+  'biology': 'dna',
+  'nature': 'tree',
+  'geology': 'rock',
+  'ecology': 'recycle',
+  'space': 'rocket',
+  'math': 'calculator',
+  'medicine': 'stethoscope',
+  'programming': 'code',
+  'robotics_ai': 'robot',
+  'technology': 'laptop',
+  'physics': 'atom',
+  'psychology': 'brain',
+  'georgian_culture': 'glass-of-red-wine',
+  'chemistry': 'beaker',
+  
+  // Fun (15)
+  'anime_manga': 'ninja',
+  'video_games': 'game-controller',
+  'movies': 'movie-clapperboard',
+  'memes_internet': 'emoji-pin',
+  'myths_reality': 'magnifying-glass',
+  'fashion': 'dress',
+  'world_cuisine': 'chef',
+  'music': 'guitar',
+  'pop_culture': 'smartphone',
+  'fun_facts': 'lightbulb',
+  'tv_series': 'television',
+  'social_media': 'smartphone',
+  'georgian_cuisine': 'glass-of-red-wine',
+  'celebrities': 'star',
+  'animals': 'lion',
+};
+
+// Legacy mapping (kept for backward compatibility)
 export const CATEGORY_ICON_SLUGS: Record<string, string> = {
   // Classic/Educational
   'geography': 'globe',

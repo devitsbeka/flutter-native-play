@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import { useAIIcon } from "@/hooks/useAIIcon";
 import { cn } from "@/lib/utils";
-import { getCategoryIconSlug } from "@/data/categoryIconMap";
+import { getCategoryIconSlug, CATEGORY_ID_TO_ICON } from "@/data/categoryIconMap";
 import { HelpCircle } from "lucide-react";
 
 interface DynamicIconProps {
@@ -11,6 +11,7 @@ interface DynamicIconProps {
   keywords?: string[];
   questionText?: string;
   category?: string;
+  categoryId?: string; // ASCII category_id from database - most reliable for category cards
   categoryType?: string; // classic, fun, educational - for type-based fallbacks
   fallbackEmoji?: string; // Legacy prop - will be ignored
   size?: number;
@@ -32,6 +33,7 @@ export function DynamicIcon({
   keywords, 
   questionText,
   category,
+  categoryId,
   categoryType,
   fallbackEmoji, // Ignored - we use icons only
   size = 64,
@@ -57,7 +59,16 @@ export function DynamicIcon({
       if (url && !failedIconUrls.has(url)) return url;
     }
 
-    // Priority 2: Category icon slug from mapping (MOVED UP - most reliable for category cards)
+    // Priority 2: Direct category ID lookup (MOST RELIABLE - uses ASCII category_id)
+    if (categoryId) {
+      const iconSlug = CATEGORY_ID_TO_ICON[categoryId];
+      if (iconSlug) {
+        const url = getIconBySlug(iconSlug);
+        if (url && !failedIconUrls.has(url)) return url;
+      }
+    }
+
+    // Priority 3: Category icon slug from Georgian name mapping
     if (category) {
       const categorySlug = getCategoryIconSlug(category);
       if (categorySlug) {
@@ -117,7 +128,7 @@ export function DynamicIcon({
 
     // NO RANDOM FALLBACK - return null and show neutral icon
     return null;
-  }, [slug, keywords, questionText, category, categoryType, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, aiData, retryCount]);
+  }, [slug, keywords, questionText, category, categoryId, categoryType, isLoaded, getIconBySlug, findIconForQuestion, findIcon, getIconForCategory, aiData, retryCount]);
 
   // Reset error state when iconUrl changes
   React.useEffect(() => {
