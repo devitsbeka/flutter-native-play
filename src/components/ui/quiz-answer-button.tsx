@@ -109,7 +109,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         
         {/* Main Face */}
         <div
-          className="relative flex items-center h-[66px] rounded-2xl border-[3px] transition-transform duration-100"
+          className="relative flex items-center min-h-[66px] py-3 rounded-2xl border-[3px] transition-transform duration-100"
           style={{
             background: styles.faceBg,
             borderColor: styles.borderColor,
@@ -134,10 +134,10 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
             </div>
           )}
           
-          {/* Text or Skeleton */}
+          {/* Text - allow wrapping for long answers */}
           <span
             className={cn(
-              "flex-1 px-3 truncate",
+              "flex-1 px-3 leading-tight",
               state === "next" ? "text-center" : "text-left"
             )}
             style={{ color: styles.textColor }}

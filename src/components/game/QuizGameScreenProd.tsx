@@ -34,15 +34,7 @@ const DIFFICULTY_MAP: Record<string, "easy" | "medium" | "hard"> = {
   hard: "hard",
 };
 
-// Max character limits
-const MAX_QUESTION_CHARS = 150;
-const MAX_ANSWER_CHARS = 60;
-
-// Truncate text helper
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength - 3) + "...";
-}
+// Removed text truncation - show full question and answer text
 
 export function QuizGameScreenProd() {
   const navigate = useNavigate();
@@ -261,7 +253,7 @@ export function QuizGameScreenProd() {
         </div>
 
         <QuizQuestionCard
-          questionText={truncateText(currentQuestion.question, MAX_QUESTION_CHARS)}
+          questionText={currentQuestion.question}
           timeRemaining={timeRemaining}
           difficulty={DIFFICULTY_MAP[currentQuestion.difficulty] || "medium"}
           state="default"
@@ -295,7 +287,7 @@ export function QuizGameScreenProd() {
               >
                 <QuizAnswerButton
                   label={ANSWER_LABELS[index]}
-                  text={truncateText(answer, MAX_ANSWER_CHARS)}
+                  text={answer}
                   state={getAnswerState(answer)}
                   onClick={() => handleAnswer(answer)}
                   disabled={answerRevealed}
