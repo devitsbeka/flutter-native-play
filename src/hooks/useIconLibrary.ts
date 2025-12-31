@@ -19,24 +19,63 @@ interface IconMatch {
 let iconCache: IconItem[] | null = null;
 let cachePromise: Promise<IconItem[]> | null = null;
 
-// Category to icon slug mappings for instant lookups (using actual slugs from library)
+// Complete category to icon slug mappings for all app categories
 const CATEGORY_ICON_MAP: Record<string, string[]> = {
-  'geography': ['globe', 'globe-earth', 'earth', 'map', 'compass', 'world-map'],
-  'science': ['microscope', 'atom', 'test-tube', 'chemistry', 'laboratory', 'dna'],
-  'sports': ['trophy', 'basic-soccer-ball', 'basketball', 'volleyball', 'baseball', 'tennis-ball'],
-  'history': ['scroll', 'castle', 'crown', 'knight', 'ancient-scroll', 'museum'],
-  'world_history': ['scroll', 'castle', 'crown', 'knight', 'ancient-scroll', 'silk-road-map'],
-  'georgian_history': ['scroll', 'castle', 'crown', 'wine-bottle', 'church', 'flag'],
-  'art': ['paint-palette', 'easel', 'brush', 'canvas', 'painting', 'art-supplies'],
+  // Classic/Educational
+  'geography': ['globe', 'globe-earth', 'world-map', 'map', 'compass', 'earth'],
+  'world_history': ['scroll', 'silk-road-map', 'papyrus-scroll', 'magic-scroll', 'castle', 'crown'],
+  'georgian_history': ['scroll', 'castle', 'crown', 'church', 'wine', 'flag'],
+  'science': ['microscope', 'electron-microscope', 'vintage-microscope', 'atom', 'laboratory', 'test-tube'],
+  'sports': ['trophy', 'champions-league-trophy', 'motorsport-trophy', 'soccer-ball', 'basketball', 'football'],
+  
+  // Fun/Entertainment
+  'movies': ['clapperboard', 'film-reel', 'movie-camera', 'cinema', 'popcorn', 'camera'],
+  'tv_series': ['television', 'tv', 'remote-control', 'couch', 'streaming', 'screen'],
   'music': ['guitar', 'piano', 'headphones', 'microphone', 'musical-note', 'violin'],
-  'literature': ['book', 'bookshelf', 'notebook', 'pen', 'scroll', 'quill'],
-  'georgian_literature': ['book', 'bookshelf', 'notebook', 'pen', 'scroll', 'quill'],
-  'movies': ['clapperboard', 'film-reel', 'camera', 'movie-camera', 'cinema', 'popcorn'],
-  'technology': ['computer', 'laptop', 'smartphone', 'robot', 'chip', 'circuit'],
-  'food': ['chef-hat', 'pizza', 'cooking-pot', 'restaurant', 'fork-knife', 'burger'],
-  'nature': ['tree', 'flower', 'leaf', 'mountain', 'forest', 'sun'],
-  'animals': ['lion', 'elephant', 'dog', 'cat', 'bird', 'fish'],
-  'mathematics': ['calculator', 'compass', 'ruler', 'protractor', 'graph', 'abacus'],
+  'video_games': ['gamepad', 'controller', 'joystick', 'arcade', 'console', 'gaming'],
+  'celebrities': ['star', 'vip', 'red-carpet', 'celebrity', 'fame', 'spotlight'],
+  'memes_internet': ['emoji', 'smile', 'laugh', 'viral', 'trending', 'internet'],
+  'anime_manga': ['anime', 'manga', 'japanese', 'cartoon', 'cosplay', 'ninja'],
+  'pop_culture': ['smartphone', 'trending', 'viral', 'influencer', 'social-media', 'hashtag'],
+  'social_media': ['smartphone', 'instagram', 'twitter', 'facebook', 'tiktok', 'hashtag'],
+  'fun_facts': ['lightbulb', 'brain', 'mind-blown', 'surprise', 'trivia', 'question-mark'],
+  
+  // Educational/Academic
+  'literature': ['book', 'bookshelf', 'library', 'notebook', 'pen', 'quill'],
+  'georgian_literature': ['book', 'quill', 'scroll', 'pen', 'inkwell', 'manuscript'],
+  'art': ['palette', 'paint-palette', 'easel', 'brush', 'canvas', 'painting'],
+  'technology': ['laptop', 'computer', 'smartphone', 'chip', 'circuit', 'robot'],
+  'nature': ['tree', 'flower', 'leaf', 'mountain', 'forest', 'green-earth'],
+  'space': ['rocket', 'astronaut', 'planet', 'satellite', 'galaxy', 'telescope'],
+  'animals': ['lion', 'african-lion', 'elephant', 'african-elephant', 'tiger', 'bear'],
+  'math': ['calculator', 'abacus', 'ruler', 'protractor', 'graph', 'equation'],
+  'physics': ['atom', 'magnet', 'pendulum', 'wave', 'energy', 'electron'],
+  'chemistry': ['flask', 'beaker', 'test-tube', 'molecule', 'periodic-table', 'experiment'],
+  'biology': ['dna', 'cell', 'microscope', 'bacteria', 'gene', 'evolution'],
+  'astronomy': ['telescope', 'planet', 'star', 'constellation', 'observatory', 'comet'],
+  'geology': ['rock', 'crystal', 'volcano', 'mineral', 'fossil', 'diamond'],
+  'ecology': ['recycle', 'green-earth', 'leaf', 'sustainable', 'environment', 'eco'],
+  'medicine': ['stethoscope', 'hospital', 'doctor', 'nurse', 'pill', 'syringe'],
+  'psychology': ['brain', 'mind', 'therapy', 'thought', 'emotion', 'psychology'],
+  'philosophy': ['thinker', 'brain', 'book', 'wisdom', 'ancient', 'scroll'],
+  'economics': ['money', 'coin', 'chart', 'bank', 'dollar', 'stock'],
+  'politics': ['capitol', 'parliament', 'vote', 'democracy', 'government', 'flag'],
+  'languages': ['speech-bubble', 'translate', 'globe', 'alphabet', 'dictionary', 'language'],
+  'archaeology': ['fossil', 'artifact', 'ancient', 'dig', 'ruins', 'pottery'],
+  'architecture': ['building', 'blueprint', 'skyscraper', 'house', 'column', 'dome'],
+  'military_history': ['sword', 'shield', 'tank', 'cannon', 'helmet', 'battle'],
+  'religion_mythology': ['church', 'temple', 'cross', 'angel', 'mythology', 'god'],
+  'myths_reality': ['magnifying-glass', 'detective', 'mystery', 'truth', 'fact', 'myth'],
+  
+  // Georgian Culture
+  'georgian_culture': ['wine', 'grape', 'dance', 'traditional', 'folk', 'costume'],
+  'georgian_cuisine': ['khachapuri', 'wine', 'khinkali', 'cooking', 'food', 'restaurant'],
+  'world_cuisine': ['chef-hat', 'pizza', 'sushi', 'burger', 'cooking-pot', 'restaurant'],
+  
+  // Tech & Innovation
+  'programming': ['code', 'developer', 'programmer', 'terminal', 'computer', 'binary'],
+  'robotics_ai': ['robot', 'ai', 'artificial-intelligence', 'machine', 'android', 'cyborg'],
+  'fashion': ['dress', 'shirt', 'shoe', 'handbag', 'fashion', 'style'],
 };
 
 // Common Georgian words to English mappings for better matching

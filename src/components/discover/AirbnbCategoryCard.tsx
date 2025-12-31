@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { getCategoryFallbackEmoji } from "@/data/categoryIconMap";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -52,7 +51,6 @@ export function AirbnbCategoryCard({
 }: AirbnbCategoryCardProps) {
   const colors = getGradientColors(color);
   const isCompleted = progress >= totalLevels;
-  const fallbackEmoji = getCategoryFallbackEmoji(id) || icon;
 
   // Generate floating particles
   const particles = useMemo(
@@ -125,7 +123,6 @@ export function AirbnbCategoryCard({
         >
           <DynamicIcon
             category={id}
-            fallbackEmoji={fallbackEmoji}
             size={64}
             className="drop-shadow-lg filter brightness-110"
           />
