@@ -93,7 +93,7 @@ export function GlobalSplineBackground() {
       <div 
         className="fixed inset-0 pointer-events-none transition-opacity duration-500"
         style={{
-          background: "#E8E6F8",
+          background: "#7E7BDC",
           opacity: shouldShow ? 1 : 0,
           zIndex: -30,
         }}
