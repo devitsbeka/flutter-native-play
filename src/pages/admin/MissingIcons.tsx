@@ -28,9 +28,15 @@ export default function MissingIcons() {
   const checkIconExists = async (fileName: string): Promise<boolean> => {
     try {
       const response = await fetch(`${STORAGE_BASE_URL}${fileName}`, {
-        method: 'HEAD',
+        method: 'GET',
+        cache: 'no-store',
       });
-      return response.ok;
+      // Check if it's actually an image by looking at content-type
+      const contentType = response.headers.get('content-type');
+      if (!response.ok || !contentType?.startsWith('image/')) {
+        return false;
+      }
+      return true;
     } catch {
       return false;
     }
