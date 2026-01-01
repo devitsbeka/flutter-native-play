@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -16,9 +16,26 @@ interface LeaderboardEntry {
 export function useCategoryLeaderboard(categoryId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const isMountedRef = useRef(true);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced invalidation to prevent rapid re-renders
+  const invalidateQueries = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      if (isMountedRef.current && categoryId) {
+        queryClient.invalidateQueries({ queryKey: ["category-leaderboard", categoryId] });
+        queryClient.invalidateQueries({ queryKey: ["user-category-rank", categoryId] });
+      }
+    }, 500);
+  }, [categoryId, queryClient]);
 
   // Subscribe to real-time updates
   useEffect(() => {
+    isMountedRef.current = true;
+    
     if (!categoryId) return;
 
     const channel = supabase
@@ -26,24 +43,26 @@ export function useCategoryLeaderboard(categoryId: string | undefined) {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'user_level_progress',
           filter: `category_id=eq.${categoryId}`,
         },
         (payload) => {
           console.log('Leaderboard update received:', payload);
-          // Invalidate and refetch leaderboard data
-          queryClient.invalidateQueries({ queryKey: ["category-leaderboard", categoryId] });
-          queryClient.invalidateQueries({ queryKey: ["user-category-rank", categoryId] });
+          invalidateQueries();
         }
       )
       .subscribe();
 
     return () => {
+      isMountedRef.current = false;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
       supabase.removeChannel(channel);
     };
-  }, [categoryId, queryClient]);
+  }, [categoryId, invalidateQueries]);
 
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ["category-leaderboard", categoryId],
