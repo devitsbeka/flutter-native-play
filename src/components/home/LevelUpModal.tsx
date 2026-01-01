@@ -1,9 +1,7 @@
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Star, Gift } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getLevelRewards } from "@/utils/levelCalculation";
-import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -15,32 +13,15 @@ interface LevelUpModalProps {
   previousLevel: number;
 }
 
+// PURELY PRESENTATIONAL - rewards are credited in MatchResultScreen
 export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: LevelUpModalProps) {
   const rewards = getLevelRewards(newLevel);
-  const { addCurrency } = useCurrency();
 
-  // Calculate level-up coins and gems
+  // Calculate level-up coins and gems for DISPLAY ONLY
   const levelUpCoins = newLevel * REWARDS.LEVEL_UP_COINS_PER_LEVEL;
   const levelUpGems = newLevel >= REWARDS.LEVEL_UP_GEMS_THRESHOLD && newLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
     ? Math.floor(newLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD) 
     : 0;
-
-  const hasClaimedRewards = useRef(false);
-
-  useEffect(() => {
-    if (isOpen && !hasClaimedRewards.current) {
-      hasClaimedRewards.current = true;
-      // Credit level-up rewards
-      addCurrency(levelUpCoins, levelUpGems);
-    }
-  }, [isOpen, levelUpCoins, levelUpGems, addCurrency]);
-
-  // Reset ref when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      hasClaimedRewards.current = false;
-    }
-  }, [isOpen]);
 
   return (
     <GameModal

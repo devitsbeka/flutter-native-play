@@ -4,12 +4,13 @@ import { X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "./chunky-button";
 
-// Sparkle particle for background decoration
-const ModalSparkle = ({ index }: { index: number }) => {
-  const duration = 2 + Math.random() * 2;
-  const delay = Math.random() * 2;
-  const x = Math.random() * 100;
-  const y = Math.random() * 100;
+// Sparkle particle for background decoration - memoized to prevent re-renders
+const ModalSparkle = React.memo(({ index }: { index: number }) => {
+  // Use index-based deterministic values instead of random
+  const duration = 2 + (index % 3);
+  const delay = (index * 0.3) % 2;
+  const x = (index * 17) % 100;
+  const y = (index * 23) % 100;
   
   return (
     <motion.div
@@ -31,18 +32,21 @@ const ModalSparkle = ({ index }: { index: number }) => {
       }}
     />
   );
-};
+});
 
-// Floating decorative stars
-const FloatingStar = ({ index }: { index: number }) => {
+// Floating decorative stars - memoized with deterministic values
+const FloatingStar = React.memo(({ index }: { index: number }) => {
   const side = index % 2 === 0 ? "left" : "right";
   const topOffset = 10 + (index * 15) % 60;
+  // Use index-based deterministic offset instead of random
+  const sideOffset = 5 + (index * 7) % 10;
+  const animDuration = 2 + (index % 2);
   
   return (
     <motion.div
       className="absolute text-2xl pointer-events-none"
       style={{
-        [side]: `${5 + Math.random() * 10}%`,
+        [side]: `${sideOffset}%`,
         top: `${topOffset}%`,
       }}
       animate={{
@@ -51,7 +55,7 @@ const FloatingStar = ({ index }: { index: number }) => {
         scale: [1, 1.1, 1],
       }}
       transition={{
-        duration: 2 + Math.random(),
+        duration: animDuration,
         delay: index * 0.3,
         repeat: Infinity,
         ease: "easeInOut",
@@ -60,7 +64,7 @@ const FloatingStar = ({ index }: { index: number }) => {
       ✨
     </motion.div>
   );
-};
+});
 
 export type GameModalVariant = "primary" | "success" | "gold" | "info";
 

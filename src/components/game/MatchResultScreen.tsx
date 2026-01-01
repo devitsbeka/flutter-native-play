@@ -199,12 +199,29 @@ export function MatchResultScreen() {
     }
   }, [isWin, isLose, playSound]);
 
+  // Capture initial profile data at mount to prevent re-triggers
+  const initialProfileRef = useRef(profile);
+  const initialUserRef = useRef(user);
+  
+  // Update refs only on mount
   useEffect(() => {
-    if (user && profile && !hasCheckedLevelUp.current) {
+    if (profile && !initialProfileRef.current) {
+      initialProfileRef.current = profile;
+    }
+    if (user && !initialUserRef.current) {
+      initialUserRef.current = user;
+    }
+  }, [profile, user]);
+
+  useEffect(() => {
+    const currentUser = initialUserRef.current || user;
+    const currentProfile = initialProfileRef.current || profile;
+    
+    if (currentUser && currentProfile && !hasCheckedLevelUp.current) {
       hasCheckedLevelUp.current = true;
       
       const updateStats = async () => {
-        const oldPoints = profile.total_points || 0;
+        const oldPoints = currentProfile.total_points || 0;
         const newPoints = oldPoints + userScore;
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
@@ -223,18 +240,32 @@ export function MatchResultScreen() {
         // Add coins
         await addCoins(earnedCoins);
 
+        // Calculate level-up rewards upfront (instead of in modal)
+        let levelUpCoins = 0;
+        let levelUpGems = 0;
+        if (newLevelInfo.level > oldLevelInfo.level) {
+          const { LEVEL_UP_COINS_PER_LEVEL, LEVEL_UP_GEMS_THRESHOLD } = REWARDS;
+          levelUpCoins = newLevelInfo.level * LEVEL_UP_COINS_PER_LEVEL;
+          levelUpGems = newLevelInfo.level >= LEVEL_UP_GEMS_THRESHOLD && newLevelInfo.level % LEVEL_UP_GEMS_THRESHOLD === 0 
+            ? Math.floor(newLevelInfo.level / LEVEL_UP_GEMS_THRESHOLD) 
+            : 0;
+        }
+
         await updateProfile({
           total_points: newPoints,
-          games_played: (profile.games_played || 0) + 1,
-          games_won: isWin ? (profile.games_won || 0) + 1 : profile.games_won,
-          current_streak: isWin ? (profile.current_streak || 0) + 1 : 0,
+          games_played: (currentProfile.games_played || 0) + 1,
+          games_won: isWin ? (currentProfile.games_won || 0) + 1 : currentProfile.games_won,
+          current_streak: isWin ? (currentProfile.current_streak || 0) + 1 : 0,
           best_streak: isWin 
-            ? Math.max(profile.best_streak || 0, (profile.current_streak || 0) + 1)
-            : profile.best_streak,
+            ? Math.max(currentProfile.best_streak || 0, (currentProfile.current_streak || 0) + 1)
+            : currentProfile.best_streak,
+          // Add level-up rewards here in a single transaction
+          coins: (currentProfile.coins || 0) + levelUpCoins,
+          gems: (currentProfile.gems || 0) + levelUpGems,
         });
 
         await supabase.from("game_sessions").insert({
-          user_id: user.id,
+          user_id: currentUser.id,
           opponent_name: opponent?.name || "Unknown",
           opponent_country: opponent?.countryCode || "US",
           opponent_points: opponent?.points || 0,
@@ -247,15 +278,20 @@ export function MatchResultScreen() {
         if (newLevelInfo.level > oldLevelInfo.level) {
           setPreviousLevel(oldLevelInfo.level);
           setNewLevel(newLevelInfo.level);
-          setTimeout(() => {
-            setShowLevelUp(true);
-          }, isWin ? 1500 : 500);
+          // Use requestAnimationFrame for smoother timing
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              setShowLevelUp(true);
+            }, isWin ? 1500 : 500);
+          });
         }
       };
 
       updateStats();
     }
-  }, [user, profile, userScore, opponentScore, isWin, isDraw, opponent, updateProfile, addCoins]);
+  // Only depend on user.id to prevent re-runs when profile changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Calculate user level
   const userLevel = calculateLevel(profile?.total_points || 0).level;

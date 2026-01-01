@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,6 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Track local updates to prevent duplicate realtime updates
+  const lastLocalUpdateRef = useRef<number>(0);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -99,6 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
+          // Skip if we just did a local update (prevents race condition)
+          if (Date.now() - lastLocalUpdateRef.current < 2000) {
+            console.log('Skipping realtime update - local update in progress');
+            return;
+          }
+          
           console.log('Profile updated via realtime:', payload);
           if (payload.new) {
             setProfile(payload.new as Profile);
@@ -177,6 +186,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error("Not authenticated") };
+
+    // Mark as local update to prevent realtime from overwriting
+    lastLocalUpdateRef.current = Date.now();
 
     const { data, error } = await supabase
       .from("profiles")
