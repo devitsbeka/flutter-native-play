@@ -31,6 +31,7 @@ import AdminOnlineUsers from "./pages/admin/OnlineUsers";
 import AdminImport from "./pages/admin/Import";
 import DuplicateScanner from "./pages/admin/DuplicateScanner";
 import IconLibraryAdmin from "./pages/admin/IconLibrary";
+import QuestionTools from "./pages/admin/QuestionTools";
 import Styleguide from "./pages/Styleguide";
 
 const App = () => (
@@ -69,6 +70,7 @@ const App = () => (
                 <Route path="users" element={<AdminOnlineUsers />} />
                 <Route path="duplicates" element={<DuplicateScanner />} />
                 <Route path="icons" element={<IconLibraryAdmin />} />
+                <Route path="tools" element={<QuestionTools />} />
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="*" element={<NotFound />} />
