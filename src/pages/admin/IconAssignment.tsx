@@ -137,7 +137,7 @@ export default function IconAssignment() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       {/* Header with Stats */}
       <div className="border-b border-border/50 bg-card/30 p-4">
         <div className="flex items-center justify-between">
@@ -169,9 +169,9 @@ export default function IconAssignment() {
       </div>
 
       {/* Main Content - Two Panel Layout */}
-      <div className="grid flex-1 grid-cols-2 gap-0 overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-0">
         {/* Left Panel - Questions */}
-        <div className="flex flex-col border-r border-border/50">
+        <div className="flex min-h-0 flex-col border-r border-border/50">
           {/* Question Filters */}
           <div className="space-y-3 border-b border-border/30 p-3">
             <div className="relative">
@@ -288,7 +288,7 @@ export default function IconAssignment() {
         </div>
 
         {/* Right Panel - Icon Picker */}
-        <div className="flex flex-col bg-muted/20">
+        <div className="flex min-h-0 flex-col bg-muted/20">
           {/* Selected Question Preview */}
           {selectedQuestion && (
             <div className="border-b border-border/30 p-4 bg-card/50">
