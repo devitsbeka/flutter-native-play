@@ -63,59 +63,72 @@ export function PowerUpBadge({
   const gradientId = `gradient-${type}-${index}`;
 
   return (
-    <motion.button
-      initial={{ scale: 0, opacity: 0, rotate: -15 }}
-      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+    <motion.div
+      // Piano wave idle animation wrapper
+      animate={!disabled && !used ? {
+        y: [0, -4, 0],
+      } : {}}
       transition={{
-        type: "spring",
-        stiffness: 500,
-        damping: 20,
-        delay: index * 0.06,
+        duration: 1.8,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: index * 0.12,
+        repeatDelay: 2,
       }}
-      whileTap={{ scale: 0.9 }}
-      whileHover={{ scale: 1.1 }}
-      onClick={onClick}
-      disabled={disabled || used}
-      style={{ width: outer, height: outer }}
-      className={cn(
-        "relative flex items-center justify-center transition-all",
-        disabled && "grayscale opacity-60 cursor-not-allowed",
-        used && "grayscale opacity-50",
-        className
-      )}
     >
-      {/* SVG Ring matching exact design specs */}
-      <svg 
-        width={outer} 
-        height={outer} 
-        viewBox={`0 0 ${outer} ${outer}`} 
-        fill="none" 
-        className="absolute inset-0"
+      <motion.button
+        initial={{ scale: 0, opacity: 0, rotate: -15 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 500,
+          damping: 20,
+          delay: index * 0.06,
+        }}
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.1, y: -3 }}
+        onClick={onClick}
+        disabled={disabled || used}
+        style={{ width: outer, height: outer }}
+        className={cn(
+          "relative flex items-center justify-center transition-all",
+          disabled && "grayscale opacity-60 cursor-not-allowed",
+          used && "grayscale opacity-50",
+          className
+        )}
       >
-        {/* Background fill circle */}
-        <circle 
-          cx={outer / 2} 
-          cy={outer / 2} 
-          r={outer / 2} 
-          fill={gradient.fill}
-        />
-        {/* Gradient stroke ring - 7px at 60% opacity */}
-        <circle 
-          cx={outer / 2} 
-          cy={outer / 2} 
-          r={(outer / 2) - 3.5} 
-          stroke={`url(#${gradientId})`}
-          strokeOpacity="0.6"
-          strokeWidth="7"
-          fill="none"
-        />
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
-            <stop stopColor={gradient.from} />
-            <stop offset="1" stopColor={gradient.to} />
-          </linearGradient>
-        </defs>
-      </svg>
+        {/* SVG Ring matching exact design specs */}
+        <svg 
+          width={outer} 
+          height={outer} 
+          viewBox={`0 0 ${outer} ${outer}`} 
+          fill="none" 
+          className="absolute inset-0"
+        >
+          {/* Background fill circle */}
+          <circle 
+            cx={outer / 2} 
+            cy={outer / 2} 
+            r={outer / 2} 
+            fill={gradient.fill}
+          />
+          {/* Gradient stroke ring - 7px at 60% opacity */}
+          <circle 
+            cx={outer / 2} 
+            cy={outer / 2} 
+            r={(outer / 2) - 3.5} 
+            stroke={`url(#${gradientId})`}
+            strokeOpacity="0.6"
+            strokeWidth="7"
+            fill="none"
+          />
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
+              <stop stopColor={gradient.from} />
+              <stop offset="1" stopColor={gradient.to} />
+            </linearGradient>
+          </defs>
+        </svg>
       
       {/* Inner icon */}
       <div 
@@ -152,6 +165,7 @@ export function PowerUpBadge({
           </div>
         </motion.div>
       )}
-    </motion.button>
+      </motion.button>
+    </motion.div>
   );
 }
