@@ -33,6 +33,7 @@ import DuplicateScanner from "./pages/admin/DuplicateScanner";
 import IconLibraryAdmin from "./pages/admin/IconLibrary";
 import QuestionTools from "./pages/admin/QuestionTools";
 import IconAssignment from "./pages/admin/IconAssignment";
+import MissingIcons from "./pages/admin/MissingIcons";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="icons" element={<IconLibraryAdmin />} />
                 <Route path="tools" element={<QuestionTools />} />
                 <Route path="icon-assign" element={<IconAssignment />} />
+                <Route path="missing-icons" element={<MissingIcons />} />
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="*" element={<NotFound />} />

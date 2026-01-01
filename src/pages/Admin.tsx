@@ -10,7 +10,8 @@ import {
   Search,
   Sparkles,
   Wrench,
-  ImageIcon
+  ImageIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,11 @@ const navItems = [
     to: '/admin/icon-assign', 
     icon: ImageIcon, 
     label: 'აიკონები' 
+  },
+  { 
+    to: '/admin/missing-icons', 
+    icon: AlertTriangle, 
+    label: 'გამოტოვებული' 
   },
   { 
     to: '/admin/users', 
