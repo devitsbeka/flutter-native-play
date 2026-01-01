@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Bell, Gift } from "lucide-react";
+import { Bell, Gift, Menu } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
@@ -219,7 +219,7 @@ export default function Index() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsSideMenuOpen(true)}
             >
-              <span className="w-5 h-5 flex items-center justify-center text-base">🍔</span>
+              <Menu className="w-5 h-5 text-gray-600" />
               <span className="text-sm font-bold text-gray-700" style={{ fontFamily: "'Google Sans', sans-serif" }}>ᲛᲔᲜᲘᲣ</span>
             </motion.button>
             
