@@ -59,13 +59,13 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 
           {/* Center Play Button - floats above */}
           <div className="relative flex flex-col items-center justify-center" style={{ width: 72 }}>
-            <div className="absolute" style={{ bottom: 20 }}>
+            <div className="absolute" style={{ bottom: 6 }}>
               <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={isHome}
               />
             </div>
-            <span 
+            <span
               className="text-gray-700 mt-auto"
               style={{ 
                 fontSize: 12, 
