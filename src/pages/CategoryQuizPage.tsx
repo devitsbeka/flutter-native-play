@@ -315,7 +315,69 @@ export default function CategoryQuizPage() {
   };
 
   const currentQuestion = questions[currentQuestionIndex];
-  const stars = Math.min(3, Math.floor((score / questions.length) * 4));
+  const stars = Math.min(3, Math.floor((score / Math.max(questions.length, 1)) * 4));
+
+  // Georgian answer labels
+  const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
+  
+  // Difficulty labels and colors (same as QuizGameScreenProd)
+  const DIFFICULTY_LABELS: Record<string, string> = {
+    easy: "მარტივი",
+    medium: "საშუალო",
+    hard: "რთული",
+  };
+
+  const DIFFICULTY_COLORS: Record<string, string> = {
+    easy: "bg-success",
+    medium: "bg-warning",
+    hard: "bg-destructive",
+  };
+  
+  const difficultyKey = currentQuestion?.difficulty || "easy";
+
+  // Get answer button state (same logic as QuizGameScreenProd) - MUST be before early returns
+  const getAnswerState = useCallback(
+    (answer: string): QuizAnswerState => {
+      if (!isAnswered) {
+        return "default";
+      }
+
+      const isCorrect = answer === currentQuestion?.correct_answer;
+      const isSelected = answer === selectedAnswer;
+
+      if (isCorrect) return "correct";
+      if (isSelected && !isCorrect) return "wrong";
+      return "default";
+    },
+    [isAnswered, currentQuestion, selectedAnswer]
+  );
+
+  // Build progress results for dots (same as QuizGameScreenProd) - MUST be before early returns
+  const progressResults = useMemo(() => {
+    const results: ("correct" | "wrong" | null)[] = [];
+    for (let i = 0; i < questions.length; i++) {
+      if (i < currentQuestionIndex) {
+        results.push(i < score ? "correct" : "wrong");
+      } else if (i === currentQuestionIndex && isAnswered) {
+        results.push(selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong");
+      } else {
+        results.push(null);
+      }
+    }
+    return results;
+  }, [questions.length, currentQuestionIndex, isAnswered, selectedAnswer, currentQuestion, score]);
+
+  // Get player avatar state - MUST be before early returns
+  const getPlayerState = useCallback(() => {
+    if (!isAnswered) return "active";
+    return selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong";
+  }, [isAnswered, selectedAnswer, currentQuestion]);
+
+  // Get opponent avatar state (simulated) - MUST be before early returns
+  const getOpponentState = useCallback(() => {
+    if (!isAnswered) return "default";
+    return Math.random() > 0.4 ? "correct" : "wrong";
+  }, [isAnswered, currentQuestionIndex]);
 
   if (loading) {
     return (
@@ -467,72 +529,6 @@ export default function CategoryQuizPage() {
       </>
     );
   }
-
-  // Georgian answer labels
-  const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
-  
-  // Difficulty labels and colors (same as QuizGameScreenProd)
-  const DIFFICULTY_LABELS: Record<string, string> = {
-    easy: "მარტივი",
-    medium: "საშუალო",
-    hard: "რთული",
-  };
-
-  const DIFFICULTY_COLORS: Record<string, string> = {
-    easy: "bg-success",
-    medium: "bg-warning",
-    hard: "bg-destructive",
-  };
-  
-  const difficultyKey = currentQuestion?.difficulty || "easy";
-
-  // Get answer button state (same logic as QuizGameScreenProd)
-  const getAnswerState = useCallback(
-    (answer: string): QuizAnswerState => {
-      if (!isAnswered) {
-        return "default";
-      }
-
-      const isCorrect = answer === currentQuestion?.correct_answer;
-      const isSelected = answer === selectedAnswer;
-
-      if (isCorrect) return "correct";
-      if (isSelected && !isCorrect) return "wrong";
-      return "default";
-    },
-    [isAnswered, currentQuestion, selectedAnswer]
-  );
-
-  // Build progress results for dots (same as QuizGameScreenProd)
-  const progressResults = useMemo(() => {
-    const results: ("correct" | "wrong" | null)[] = [];
-    for (let i = 0; i < questions.length; i++) {
-      if (i < currentQuestionIndex) {
-        // Previous questions - we need to check if they were correct
-        // For simplicity, mark as answered based on score progression
-        results.push(i < score ? "correct" : "wrong");
-      } else if (i === currentQuestionIndex && isAnswered) {
-        results.push(selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong");
-      } else {
-        results.push(null);
-      }
-    }
-    return results;
-  }, [questions.length, currentQuestionIndex, isAnswered, selectedAnswer, currentQuestion, score]);
-
-  // Get player avatar state
-  const getPlayerState = useCallback(() => {
-    if (!isAnswered) return "active";
-    return selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong";
-  }, [isAnswered, selectedAnswer, currentQuestion]);
-
-  // Get opponent avatar state (simulated)
-  const getOpponentState = useCallback(() => {
-    if (!isAnswered) return "default";
-    // Simulate opponent getting ~60% right
-    return Math.random() > 0.4 ? "correct" : "wrong";
-  }, [isAnswered, currentQuestionIndex]);
-
   return (
     <div className="w-full h-screen flex flex-col bg-[#7E7ADB] overflow-hidden">
       {/* Safe area padding for notched phones */}
