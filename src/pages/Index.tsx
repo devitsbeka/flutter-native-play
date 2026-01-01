@@ -439,47 +439,27 @@ export default function Index() {
                         </motion.div>
                       </div>
                       
-                      {/* Power badges in curved arc below progress bar */}
+                      {/* Power badges in a row below progress bar */}
                       <div 
-                        className="relative w-full flex justify-center mt-4 pointer-events-auto" 
+                        className="flex items-center justify-center gap-2 mt-4 pointer-events-auto" 
                         data-walkthrough="powerups"
                       >
-                        <div className="relative" style={{ width: 300, height: 60 }}>
-                          {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
-                            // Inverted curved arc (smile shape) below progress bar
-                            const totalBadges = 5;
-                            const arcSpan = 100; // curve span in degrees
-                            const startAngle = -50; // start position
-                            const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                            const radius = 120; // radius for the arc
-                            const radians = (angle * Math.PI) / 180;
-                            const badgeWidth = 48;
-                            const x = Math.sin(radians) * radius - badgeWidth / 2;
-                            const y = Math.cos(radians) * radius - radius + 20; // inverted: positive y goes down
-                            
-                            return (
-                              <motion.div
-                                key={type}
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1, x, y }}
-                                transition={{ delay: 0.4 + index * 0.08, type: "spring", stiffness: 200 }}
-                                className="absolute"
-                                style={{ 
-                                  left: "50%",
-                                  top: 0,
-                                }}
-                              >
-                                <PowerUpBadge 
-                                  type={type} 
-                                  size="sm" 
-                                  index={index} 
-                                  count={type === "add-power" ? undefined : 3}
-                                  onClick={() => setSelectedPowerUp(type)}
-                                />
-                              </motion.div>
-                            );
-                          })}
-                        </div>
+                        {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => (
+                          <motion.div
+                            key={type}
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.4 + index * 0.08, type: "spring", stiffness: 200 }}
+                          >
+                            <PowerUpBadge 
+                              type={type} 
+                              size="sm" 
+                              index={index} 
+                              count={type === "add-power" ? undefined : 3}
+                              onClick={() => setSelectedPowerUp(type)}
+                            />
+                          </motion.div>
+                        ))}
                       </div>
                     </>
                   )}
