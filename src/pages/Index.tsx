@@ -16,6 +16,7 @@ import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
+import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
@@ -337,7 +338,7 @@ export default function Index() {
                   }}
                 >
                   <img 
-                    src="https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/shield.png"
+                    src={adFreeIcon}
                     alt="Ad-Free"
                     className="w-8 h-8 object-contain mx-auto drop-shadow-sm"
                   />

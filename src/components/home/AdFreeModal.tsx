@@ -1,13 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 
 interface AdFreeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const SHIELD_ICON_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/shield.png";
 
 const benefits = [
   "No ads while playing",
@@ -36,7 +35,7 @@ export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100%-32px)] max-w-sm"
           >
             <div 
               className="relative rounded-3xl overflow-hidden"
@@ -71,7 +70,7 @@ export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
                     }}
                   >
                     <img 
-                      src={SHIELD_ICON_URL} 
+                      src={adFreeIcon} 
                       alt="Ad-Free" 
                       className="w-20 h-20 object-contain drop-shadow-lg"
                     />
