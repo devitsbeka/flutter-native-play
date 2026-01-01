@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Target, ArrowLeft, Crown } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
-import { GameLoseModal } from "@/components/game/GameLoseModal";
+
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -164,7 +164,7 @@ export function MatchResultScreen() {
 
   // Level up detection
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [showLoseModal, setShowLoseModal] = useState(false);
+  
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
   const [coinsEarned, setCoinsEarned] = useState(0);
@@ -177,7 +177,6 @@ export function MatchResultScreen() {
   };
 
   const handlePlayAgain = () => {
-    setShowLoseModal(false);
     startMatchmaking();
   };
 
@@ -190,8 +189,6 @@ export function MatchResultScreen() {
       playSound("game-win"); // Victory sound
     } else if (isLose) {
       playSound("game-lose"); // Lose sound
-      // Show lose modal after a short delay
-      setTimeout(() => setShowLoseModal(true), 800);
     }
   }, [isWin, isLose, playSound]);
 
@@ -288,16 +285,6 @@ export function MatchResultScreen() {
         previousLevel={previousLevel}
       />
 
-      <GameLoseModal
-        isOpen={showLoseModal}
-        onClose={() => setShowLoseModal(false)}
-        onPlayAgain={handlePlayAgain}
-        userScore={userScore}
-        opponentScore={opponentScore}
-        opponentName={opponent?.name || "მოწინააღმდეგე"}
-        opponentAvatarUrl={opponent?.avatarUrl}
-        coinsEarned={coinsEarned}
-      />
       
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
