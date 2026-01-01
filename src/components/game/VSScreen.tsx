@@ -188,6 +188,7 @@ export function VSScreen() {
             score={playerPoints}
             position="left"
             state="active"
+            size="large"
           />
           
           {/* VS Badge in center */}
@@ -215,6 +216,7 @@ export function VSScreen() {
             score={opponentPointsDisplay}
             position="right"
             state={isMatchFound ? "default" : "loading"}
+            size="large"
           />
         </motion.div>
 
