@@ -102,7 +102,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         )}
 
         {/* Question Text */}
-        <div className="px-5 py-4">
+        <div className={cn(
+          "px-5 py-4",
+          (timerSeconds !== undefined || difficultyLabel) && "pt-10"
+        )}>
           {isLoading ? (
             <div className="space-y-2">
               <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
