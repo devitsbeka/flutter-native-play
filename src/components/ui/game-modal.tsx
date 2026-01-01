@@ -150,7 +150,7 @@ export function GameModal({
             exit={{ scale: 0.85, opacity: 0, y: 40 }}
             transition={{ type: "spring", stiffness: 400, damping: 30, duration: 0.15 }}
             onClick={(e) => e.stopPropagation()}
-            className={cn("relative w-full max-w-sm", className)}
+            className={cn("relative w-full max-w-sm mb-20", className)}
           >
             {/* Main content container - Whitish 3D chunky style */}
             <div 

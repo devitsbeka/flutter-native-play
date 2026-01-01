@@ -21,27 +21,6 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalPro
       subtitle={levelInfo.isMaxLevel ? "✨ მაქსიმალური დონე!" : undefined}
       showSparkles
     >
-      {/* Level Badge */}
-      <motion.div
-        className="flex justify-center mb-4"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.1, type: "spring" }}
-      >
-        <div 
-          className="w-20 h-20 rounded-full flex items-center justify-center"
-          style={{
-            background: "linear-gradient(180deg, hsl(195 80% 85%) 0%, hsl(195 70% 70%) 100%)",
-            boxShadow: "0 6px 0 hsl(195 70% 50%), inset 0 2px 4px rgba(255,255,255,0.5)",
-            border: "3px solid hsl(195 70% 60%)",
-          }}
-        >
-          <span className="text-3xl font-display font-bold text-slate-800">
-            {levelInfo.level}
-          </span>
-        </div>
-      </motion.div>
-
       {/* XP Progress */}
       <div 
         className="rounded-2xl p-4 mb-4"
