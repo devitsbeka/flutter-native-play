@@ -9,7 +9,8 @@ import {
   Upload,
   Search,
   Sparkles,
-  Wrench
+  Wrench,
+  ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,11 @@ const navItems = [
     to: '/admin/duplicates', 
     icon: Search, 
     label: 'დუბლიკატები' 
+  },
+  { 
+    to: '/admin/icon-assign', 
+    icon: ImageIcon, 
+    label: 'აიკონები' 
   },
   { 
     to: '/admin/users', 
