@@ -55,11 +55,19 @@ export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
           {Array.from({ length: 6 }).map((_, i) => (
             <motion.div
               key={i}
-              className={`w-10 h-12 rounded-xl flex items-center justify-center text-xl font-bold border-2 transition-colors ${
-                code[i] 
-                  ? "bg-primary/10 border-primary text-foreground" 
-                  : "bg-muted/50 border-border text-muted-foreground"
-              }`}
+              className="w-10 h-12 rounded-xl flex items-center justify-center text-xl font-bold"
+              style={{
+                background: code[i] 
+                  ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                  : "#F9FAFB",
+                border: code[i] 
+                  ? "2px solid #A78BFA"
+                  : "2px solid #E5E7EB",
+                boxShadow: code[i]
+                  ? "0 3px 0 #C4B5FD"
+                  : "0 2px 0 #E5E7EB",
+                color: code[i] ? "#5B21B6" : "#9CA3AF",
+              }}
               animate={code.length === i ? { scale: [1, 1.05, 1] } : {}}
               transition={{ duration: 0.3, repeat: code.length === i ? Infinity : 0 }}
             >
@@ -76,9 +84,13 @@ export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
                 <motion.button
                   key={key}
                   onClick={() => handleKeyPress(key)}
-                  className="w-10 h-10 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-bold text-sm flex items-center justify-center"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
+                  className="w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center text-gray-800"
+                  style={{
+                    background: "#F3F4F6",
+                    boxShadow: "0 3px 0 #D1D5DB",
+                  }}
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.95, y: 2, boxShadow: "0 1px 0 #D1D5DB" }}
                   disabled={code.length >= 6}
                 >
                   {key}
@@ -87,9 +99,13 @@ export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
               {rowIndex === keys.length - 1 && (
                 <motion.button
                   onClick={handleDelete}
-                  className="w-10 h-10 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold text-sm flex items-center justify-center"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
+                  className="w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center text-red-600"
+                  style={{
+                    background: "linear-gradient(180deg, #FEE2E2 0%, #FECACA 100%)",
+                    boxShadow: "0 3px 0 #F87171",
+                  }}
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.95, y: 2, boxShadow: "0 1px 0 #F87171" }}
                 >
                   <Delete className="w-5 h-5" />
                 </motion.button>

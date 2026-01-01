@@ -46,18 +46,21 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalPro
       <div 
         className="rounded-2xl p-4 mb-4"
         style={{
-          background: "hsl(var(--muted))",
-          border: "2px solid hsl(var(--border))",
-          boxShadow: "0 3px 0 hsl(var(--border))",
+          background: "#F9FAFB",
+          border: "2px solid #E5E7EB",
+          boxShadow: "0 3px 0 #E5E7EB",
         }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">XP პროგრესი</span>
-          <span className="text-sm font-bold text-foreground">
+          <span className="text-sm font-medium text-gray-500">XP პროგრესი</span>
+          <span className="text-sm font-bold text-gray-800">
             {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel}
           </span>
         </div>
-        <div className="h-3 bg-background rounded-full overflow-hidden">
+        <div 
+          className="h-3 rounded-full overflow-hidden"
+          style={{ background: "#E5E7EB" }}
+        >
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-blue-400 to-cyan-400"
             initial={{ width: 0 }}
@@ -65,7 +68,7 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalPro
             transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">
+        <p className="text-xs text-gray-500 mt-2 text-center">
           {levelInfo.isMaxLevel
             ? "შენ მიაღწიე მაქსიმალურ დონეს! 🎉"
             : `დარჩა ${levelInfo.xpNeededForNextLevel - levelInfo.xpInCurrentLevel} XP შემდეგ დონემდე`}
@@ -97,29 +100,29 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalPro
             boxShadow: "0 3px 0 rgba(251,191,36,0.15)",
           }}
         >
-          <h3 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
             <span>🎁</span>
             დონე {levelInfo.level + 1}-ის ჯილდოები
           </h3>
           <div className="space-y-1.5">
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <p className="text-sm text-gray-600 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
               +{nextLevelRewards.xpBonus} XP ბონუსი
             </p>
             {nextLevelRewards.powerUps > 0 && (
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <p className="text-sm text-gray-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400" />
                 +{nextLevelRewards.powerUps} Power-Ups
               </p>
             )}
             {nextLevelRewards.spinTickets > 0 && (
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <p className="text-sm text-gray-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400" />
                 +{nextLevelRewards.spinTickets} Spin Tickets
               </p>
             )}
             {nextLevelRewards.specialRewards.map((reward, i) => (
-              <p key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+              <p key={i} className="text-sm text-gray-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-purple-400" />
                 {reward}
               </p>

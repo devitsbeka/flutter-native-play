@@ -51,7 +51,7 @@ export function CompletedLevelModal({
               className={`w-10 h-10 ${
                 star <= stats.starsEarned 
                   ? "text-yellow-400 fill-yellow-400 drop-shadow-lg" 
-                  : "text-muted-foreground/30"
+                  : "text-gray-300"
               }`}
               style={{
                 filter: star <= stats.starsEarned ? "drop-shadow(0 2px 4px rgba(251,191,36,0.4))" : undefined,
@@ -96,8 +96,12 @@ export function CompletedLevelModal({
       <div className="flex gap-2">
         <button
           onClick={onClose}
-          className="flex-1 py-3 rounded-xl bg-muted text-foreground font-semibold border-2 border-border"
-          style={{ boxShadow: "0 4px 0 hsl(var(--border))" }}
+          className="flex-1 py-3 rounded-xl font-semibold text-gray-700"
+          style={{ 
+            background: "#F3F4F6",
+            boxShadow: "0 4px 0 #D1D5DB",
+            border: "2px solid #E5E7EB",
+          }}
         >
           Close
         </button>

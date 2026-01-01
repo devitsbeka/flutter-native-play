@@ -271,7 +271,7 @@ export function DailyRewardsModal({
           {todayReward.gems && (
             <FlyingCurrency type="gems" amount={todayReward.gems} isActive={showFlyingGems} />
           )}
-          <p className="text-muted-foreground text-sm">
+          <p className="text-gray-500 text-sm">
             {t("dailyRewards.comeBackTomorrow")}
           </p>
         </div>

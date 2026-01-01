@@ -41,7 +41,7 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
       showSparkles
     >
       <div className="space-y-3 mt-2">
-        <p className="text-sm text-muted-foreground text-center mb-4">
+        <p className="text-sm text-gray-500 text-center mb-4">
           კატეგორია
         </p>
         
@@ -50,17 +50,24 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
             <motion.button
               key={category.id}
               onClick={() => setSelectedCategory(category)}
-              className={`relative p-3 rounded-xl text-left transition-all ${
-                selectedCategory.id === category.id
-                  ? "bg-primary/10 border-2 border-primary"
-                  : "bg-muted/50 border-2 border-transparent hover:bg-muted"
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="relative p-3 rounded-xl text-left transition-all"
+              style={{
+                background: selectedCategory.id === category.id
+                  ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                  : "#F9FAFB",
+                border: selectedCategory.id === category.id
+                  ? "2px solid #A78BFA"
+                  : "2px solid #E5E7EB",
+                boxShadow: selectedCategory.id === category.id
+                  ? "0 3px 0 #C4B5FD"
+                  : "0 2px 0 #E5E7EB",
+              }}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.98, y: 1 }}
             >
               <div className="flex items-center gap-2">
                 <DynamicIcon categoryId={category.id} size={24} />
-                <span className="text-sm font-medium text-foreground line-clamp-1">
+                <span className="text-sm font-medium text-gray-800 line-clamp-1">
                   {category.name}
                 </span>
               </div>

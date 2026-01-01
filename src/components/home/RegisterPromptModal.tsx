@@ -65,7 +65,7 @@ export function RegisterPromptModal({
           transition={{ delay: 0.1 }}
         >
           <Shield className="h-5 w-5 text-green-600 shrink-0" />
-          <p className="text-sm font-medium text-foreground">პროგრესი შენახული იქნება სამუდამოდ</p>
+          <p className="text-sm font-medium text-gray-800">პროგრესი შენახული იქნება სამუდამოდ</p>
         </motion.div>
         <motion.div 
           className="flex items-center gap-3 rounded-xl p-3"
@@ -79,7 +79,7 @@ export function RegisterPromptModal({
           transition={{ delay: 0.15 }}
         >
           <Trophy className="h-5 w-5 text-primary shrink-0" />
-          <p className="text-sm font-medium text-foreground">მონაწილეობა ლიდერბორდში</p>
+          <p className="text-sm font-medium text-gray-800">მონაწილეობა ლიდერბორდში</p>
         </motion.div>
       </div>
 

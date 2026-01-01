@@ -54,19 +54,19 @@ export function PointsModal({
         }}
       >
         <motion.p
-          className="text-4xl font-display font-bold text-amber-600 dark:text-amber-400"
+          className="text-4xl font-display font-bold text-amber-600"
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", delay: 0.1 }}
         >
           {totalPoints.toLocaleString()}
         </motion.p>
-        <p className="text-sm font-medium text-amber-700 dark:text-amber-300">სულ XP</p>
+        <p className="text-sm font-medium text-amber-700">სულ XP</p>
       </div>
 
       {/* XP Sources */}
       <div className="space-y-2 mb-4">
-        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <TrendingUp className="w-4 h-4" />
           XP წყაროები
         </h3>
@@ -91,18 +91,21 @@ export function PointsModal({
       <div 
         className="rounded-xl p-4"
         style={{
-          background: "hsl(var(--muted))",
-          border: "2px solid hsl(var(--border))",
-          boxShadow: "0 3px 0 hsl(var(--border))",
+          background: "#F9FAFB",
+          border: "2px solid #E5E7EB",
+          boxShadow: "0 3px 0 #E5E7EB",
         }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">შემდეგი ეტაპი</span>
-          <span className="text-sm font-bold text-foreground">
+          <span className="text-sm font-medium text-gray-500">შემდეგი ეტაპი</span>
+          <span className="text-sm font-bold text-gray-800">
             {totalPoints.toLocaleString()} / {nextMilestone.toLocaleString()}
           </span>
         </div>
-        <div className="h-3 bg-background rounded-full overflow-hidden">
+        <div 
+          className="h-3 rounded-full overflow-hidden"
+          style={{ background: "#E5E7EB" }}
+        >
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-400"
             initial={{ width: 0 }}
@@ -110,7 +113,7 @@ export function PointsModal({
             transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">
+        <p className="text-xs text-gray-500 mt-2 text-center">
           🏆 {nextMilestone.toLocaleString()} XP-ზე ოქროს ბეჯი!
         </p>
       </div>
