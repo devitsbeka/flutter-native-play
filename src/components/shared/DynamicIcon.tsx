@@ -14,8 +14,27 @@ interface DynamicIconProps {
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
-// Track failed icons to avoid retrying
-const failedIconUrls = new Set<string>();
+// Track failed icons with timestamps to allow retry after 30 seconds
+const failedIconUrls = new Map<string, number>();
+const RETRY_DELAY_MS = 30000;
+
+// Stable hash function for consistent random seeds
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
+// Check if URL should be retried (failed but retry delay passed)
+function shouldRetryUrl(url: string): boolean {
+  const failedAt = failedIconUrls.get(url);
+  if (!failedAt) return true;
+  return Date.now() - failedAt > RETRY_DELAY_MS;
+}
 
 export function DynamicIcon({ 
   categoryId,
@@ -25,7 +44,15 @@ export function DynamicIcon({
   hideIfEmpty = false
 }: DynamicIconProps) {
   const [imageError, setImageError] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
+  const maxRetries = 2;
+  
   const { findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
+
+  // Use stable seed based on categoryId for consistent fallback icons
+  const stableSeed = React.useMemo(() => {
+    return categoryId ? hashString(categoryId) : 0;
+  }, [categoryId]);
 
   // Resolve icon URL using the icon library
   const iconUrl = React.useMemo(() => {
@@ -40,14 +67,14 @@ export function DynamicIcon({
       for (const s of slugs) {
         // Try exact slug match first
         const exactUrl = getIconBySlug(s);
-        if (exactUrl && !failedIconUrls.has(exactUrl)) {
+        if (exactUrl && shouldRetryUrl(exactUrl)) {
           return exactUrl;
         }
       }
       
       // Try searching by slugs as keywords
       const match = findIcon(slugs);
-      if (match && !failedIconUrls.has(match.iconUrl)) {
+      if (match && shouldRetryUrl(match.iconUrl)) {
         return match.iconUrl;
       }
     }
@@ -55,35 +82,51 @@ export function DynamicIcon({
     // Priority 2: Try category-based lookup
     if (categoryId) {
       const categoryUrl = getIconForCategory(categoryId);
-      if (categoryUrl && !failedIconUrls.has(categoryUrl)) {
+      if (categoryUrl && shouldRetryUrl(categoryUrl)) {
         return categoryUrl;
       }
     }
     
-    // Priority 3: Random icon from category as final fallback
-    // Use categoryId or a generic seed
-    const fallbackUrl = getRandomIconForCategory(categoryId || 'general', Date.now() % 1000);
-    if (fallbackUrl && !failedIconUrls.has(fallbackUrl)) {
+    // Priority 3: Random icon from category as final fallback (with stable seed)
+    const fallbackUrl = getRandomIconForCategory(categoryId || 'general', stableSeed);
+    if (fallbackUrl && shouldRetryUrl(fallbackUrl)) {
       return fallbackUrl;
     }
 
     return null;
-  }, [slug, categoryId, isLoaded, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
+  }, [slug, categoryId, isLoaded, stableSeed, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
 
   // Reset error when URL changes
   React.useEffect(() => {
     setImageError(false);
+    setRetryCount(0);
   }, [iconUrl]);
 
   const handleImageError = React.useCallback(() => {
-    if (iconUrl) {
-      failedIconUrls.add(iconUrl);
+    if (retryCount < maxRetries) {
+      // Retry by incrementing count (triggers re-render with same URL)
+      setRetryCount(prev => prev + 1);
+    } else {
+      // After max retries, mark as failed with timestamp
+      if (iconUrl) {
+        failedIconUrls.set(iconUrl, Date.now());
+      }
+      setImageError(true);
     }
-    setImageError(true);
-  }, [iconUrl]);
+  }, [iconUrl, retryCount]);
 
-  // Show nothing if hideIfEmpty and no icon found
-  if (!isLoaded || !iconUrl || imageError) {
+  // Show skeleton while loading
+  if (!isLoaded) {
+    return (
+      <div 
+        className={cn("animate-pulse rounded-xl bg-white/20", className)}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
+  // Show fallback icon if no URL or image error
+  if (!iconUrl || imageError) {
     if (hideIfEmpty) {
       return null;
     }
@@ -102,6 +145,7 @@ export function DynamicIcon({
 
   return (
     <motion.img
+      key={`${iconUrl}-${retryCount}`} // Force new img element on retry
       src={iconUrl}
       alt="Category icon"
       width={size}
