@@ -173,7 +173,7 @@ export function VSScreen() {
       </motion.div>
 
       {/* Main Content - Vertical VS Layout */}
-      <div className="flex-1 flex flex-col items-center justify-start pt-8 relative z-10 px-6 gap-2">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center pt-2 sm:pt-6 relative z-10 px-6 gap-1 sm:gap-2">
         
         {/* Player Section - Top */}
         <motion.div 
@@ -206,12 +206,12 @@ export function VSScreen() {
 
         {/* VS Badge - Center */}
         <motion.div 
-          className="py-4"
+          className="py-2 sm:py-4"
           animate={!isMatchFound ? { scale: [1, 1.15, 1] } : { scale: 1 }}
           transition={{ duration: 1.2, repeat: !isMatchFound ? Infinity : 0, ease: "easeInOut" }}
         >
           <span 
-            className="text-6xl font-black text-white"
+            className="text-4xl sm:text-6xl font-black text-white"
             style={{ 
               textShadow: "0 6px 30px rgba(0,0,0,0.4)",
               fontFamily: "'TASolivare', sans-serif",
@@ -252,7 +252,7 @@ export function VSScreen() {
       </div>
 
       {/* Button Section - Fixed at bottom */}
-      <div className="w-full max-w-sm mx-auto pb-8 pt-6 px-6 relative z-10">
+      <div className="w-full max-w-sm mx-auto pb-4 sm:pb-8 pt-4 px-6 relative z-10">
         <motion.div
           className="w-full"
           initial={{ opacity: 0, y: 20 }}
