@@ -213,51 +213,52 @@ export function GameModal({
               
               {/* Header with icon badge */}
               <div className="relative pt-8 pb-4 px-6 text-center">
-                {/* Icon badge */}
-                {(icon || iconEmoji) && (
-                  <motion.div
-                    className="relative mx-auto mb-3"
-                    initial={{ scale: 0, rotate: -20 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", delay: 0.1, stiffness: 300 }}
+        {/* Icon badge */}
+        {(icon || iconEmoji) && (
+          <motion.div
+            className="relative mx-auto mb-3 flex items-center justify-center"
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", delay: 0.1, stiffness: 300 }}
+          >
+            {iconEmoji ? (
+              <>
+                {/* Subtle glow ring - only for emoji icons */}
+                <motion.div
+                  className="absolute inset-0 rounded-full blur-lg"
+                  style={{
+                    background: "radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, transparent 70%)",
+                  }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                
+                {/* Default badge container - only for emoji icons */}
+                <div 
+                  className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                    boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+                  }}
+                >
+                  <motion.span 
+                    className="text-4xl"
+                    animate={{ 
+                      rotate: [-5, 5, -5],
+                      y: [0, -3, 0],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
-                    {/* Subtle glow ring */}
-                    <motion.div
-                      className="absolute inset-0 rounded-full blur-lg"
-                      style={{
-                        background: "radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, transparent 70%)",
-                      }}
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    
-                    {/* Icon container - 3D chunky badge */}
-                    <div 
-                      className="relative w-20 h-20 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
-                        boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
-                      }}
-                    >
-                      {iconEmoji ? (
-                        <motion.span 
-                          className="text-4xl"
-                          animate={{ 
-                            rotate: [-5, 5, -5],
-                            y: [0, -3, 0],
-                          }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          {iconEmoji}
-                        </motion.span>
-                      ) : (
-                        <div className="text-purple-600">
-                          {icon}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
+                    {iconEmoji}
+                  </motion.span>
+                </div>
+              </>
+            ) : (
+              // Custom icon - render directly, let it handle its own styling
+              icon
+            )}
+          </motion.div>
+        )}
                 
                 {/* Title - Dark text */}
                 <motion.h2 
