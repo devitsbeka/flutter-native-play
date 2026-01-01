@@ -46,7 +46,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={() => navigate("/discover")}
             isActive={isActive("/discover")}
             icon={Compass}
-            label="Explore"
+            label="აღმოჩენა"
           />
 
           {/* Map */}
@@ -54,7 +54,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={() => navigate("/adventure-map")}
             isActive={isActive("/adventure-map")}
             icon={Map}
-            label="Map"
+            label="რუკა"
           />
 
           {/* Center Play Button - floats above, overlapping nav bar */}
@@ -72,7 +72,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={() => navigate("/leaderboards")}
             isActive={isActive("/leaderboards")}
             icon={Trophy}
-            label="Rank"
+            label="რანგი"
           />
 
           {/* Team */}
@@ -80,7 +80,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={onTeamClick || (() => navigate("/team"))}
             isActive={isActive("/team")}
             icon={Headphones}
-            label="Team"
+            label="გუნდი"
             badgeCount={pendingChallenges.length}
           />
         </div>
@@ -135,9 +135,9 @@ function NavButton({
       
       {/* Label */}
       <span 
-        className="text-gray-800 font-medium mt-0.5"
+        className="text-gray-900 font-medium mt-0.5"
         style={{ 
-          fontSize: 14, 
+          fontSize: 13, 
           fontFamily: "'Google Sans', sans-serif",
           opacity: isActive ? 1 : 0.5,
         }}
