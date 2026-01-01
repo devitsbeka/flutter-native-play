@@ -172,17 +172,16 @@ export function VSScreen() {
         </motion.button>
       </motion.div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center relative z-10 px-6">
+      {/* Main Content - Vertical VS Layout */}
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6 gap-4">
         
-        {/* Players Row - Side by side at top */}
+        {/* Player Section - Top */}
         <motion.div 
-          className="w-full flex items-start justify-between px-4 pt-4"
-          initial={{ opacity: 0, y: -20 }}
+          className="flex flex-col items-center gap-2"
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Player Avatar */}
           <QuizPlayerAvatar
             avatarUrl={profile?.avatar_url}
             score={playerPoints}
@@ -190,27 +189,45 @@ export function VSScreen() {
             state="active"
             size="large"
           />
-          
-          {/* VS Badge in center */}
-          <div className="flex-1 flex items-center justify-center pt-4">
-            <motion.div
-              className="relative"
-              animate={!isMatchFound ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-              transition={{ duration: 1.5, repeat: !isMatchFound ? Infinity : 0 }}
-            >
-              <span 
-                className="text-4xl font-black text-white"
-                style={{ 
-                  textShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                  fontFamily: "'TASolivare', sans-serif",
-                }}
-              >
-                VS
-              </span>
-            </motion.div>
-          </div>
-          
-          {/* Opponent Avatar */}
+          <h2
+            className="text-2xl font-black tracking-wide"
+            style={{
+              fontFamily: "'TASolivare', sans-serif",
+              color: "#86EFAC",
+              textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
+            }}
+          >
+            შენ
+          </h2>
+          <p className="text-white/70 text-sm">
+            Lvl.{playerLevelInfo.level}
+          </p>
+        </motion.div>
+
+        {/* VS Badge - Center */}
+        <motion.div 
+          className="py-6"
+          animate={!isMatchFound ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+          transition={{ duration: 1.2, repeat: !isMatchFound ? Infinity : 0, ease: "easeInOut" }}
+        >
+          <span 
+            className="text-6xl font-black text-white"
+            style={{ 
+              textShadow: "0 6px 30px rgba(0,0,0,0.4)",
+              fontFamily: "'TASolivare', sans-serif",
+            }}
+          >
+            VS
+          </span>
+        </motion.div>
+
+        {/* Opponent Section - Bottom */}
+        <motion.div 
+          className="flex flex-col items-center gap-2"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
           <QuizPlayerAvatar
             avatarUrl={currentAvatar || undefined}
             score={opponentPointsDisplay}
@@ -218,100 +235,41 @@ export function VSScreen() {
             state={isMatchFound ? "default" : "loading"}
             size="large"
           />
-        </motion.div>
-
-        {/* Player Names & Levels Section */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 w-full">
-          
-          {/* Player Info */}
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <h2
-              className="text-2xl font-black tracking-wide"
-              style={{
-                fontFamily: "'TASolivare', sans-serif",
-                color: "#86EFAC",
-                textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
-              }}
-            >
-              შენ
-            </h2>
-            <p className="text-white/70 text-sm mt-1">
-              Lvl.{playerLevelInfo.level}
-            </p>
-          </motion.div>
-
-          {/* Animated dots divider */}
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                className="w-2 h-2 rounded-full bg-white/50"
-                animate={!isMatchFound ? { 
-                  opacity: [0.3, 1, 0.3],
-                  scale: [0.8, 1.2, 0.8],
-                } : { opacity: 1, scale: 1 }}
-                transition={{
-                  duration: 1,
-                  repeat: !isMatchFound ? Infinity : 0,
-                  delay: i * 0.2,
-                }}
-              />
-            ))}
-          </motion.div>
-
-          {/* Opponent Info */}
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h2
-              className="text-2xl font-black tracking-wide"
-              style={{
-                fontFamily: "'TASolivare', sans-serif",
-                color: "#FFFFFF",
-                textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-              }}
-            >
-              {opponentName}
-            </h2>
-            <p className="text-white/70 text-sm mt-1">
-              {opponentLevelDisplay}
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Button Section - Fixed at bottom */}
-        <div className="w-full max-w-sm pb-8">
-          <motion.div
-            className="w-full"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ 
-              opacity: isMatchFound ? 1 : 0,
-              y: isMatchFound ? 0 : 20,
+          <h2
+            className="text-2xl font-black tracking-wide"
+            style={{
+              fontFamily: "'TASolivare', sans-serif",
+              color: "#FFFFFF",
+              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
             }}
-            transition={{ duration: 0.3 }}
           >
-            <QuizAnswerButton
-              state="next"
-              text="დაწყება"
-              onClick={handleStart}
-              showLabel={false}
-              disabled={!isMatchFound}
-            />
-          </motion.div>
-        </div>
+            {opponentName}
+          </h2>
+          <p className="text-white/70 text-sm">
+            {opponentLevelDisplay}
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Button Section - Fixed at bottom */}
+      <div className="w-full max-w-sm mx-auto pb-8 px-6 relative z-10">
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: isMatchFound ? 1 : 0,
+            y: isMatchFound ? 0 : 20,
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          <QuizAnswerButton
+            state="next"
+            text="დაწყება"
+            onClick={handleStart}
+            showLabel={false}
+            disabled={!isMatchFound}
+          />
+        </motion.div>
       </div>
     </div>
   );
