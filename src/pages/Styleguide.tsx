@@ -317,8 +317,9 @@ const Styleguide = () => {
                 <div className="p-8 bg-[#7E7ADB] rounded-2xl">
                   <QuizQuestionCard
                     questionText="Who was the last pharaoh of Egypt, known for her beauty?"
-                    timeRemaining={10}
-                    difficulty="medium"
+                    progressPercent={65}
+                    questionNumber={3}
+                    totalQuestions={5}
                     state="default"
                   />
                 </div>
@@ -326,8 +327,7 @@ const Styleguide = () => {
                 <div className="p-8 bg-[#7E7ADB] rounded-2xl">
                   <QuizQuestionCard
                     questionText=""
-                    timeRemaining={0}
-                    difficulty="easy"
+                    progressPercent={0}
                     state="loading"
                   />
                 </div>

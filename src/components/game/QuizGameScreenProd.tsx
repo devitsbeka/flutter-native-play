@@ -254,8 +254,9 @@ export function QuizGameScreenProd() {
 
         <QuizQuestionCard
           questionText={currentQuestion.question}
-          timeRemaining={timeRemaining}
-          difficulty={DIFFICULTY_MAP[currentQuestion.difficulty] || "medium"}
+          progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
+          questionNumber={currentQuestionIndex + 1}
+          totalQuestions={questions.length}
           state="default"
         />
       </div>

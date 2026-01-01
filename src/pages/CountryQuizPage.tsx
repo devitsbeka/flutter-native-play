@@ -280,88 +280,116 @@ export default function CountryQuizPage() {
     );
   }
 
+  // Answer letter labels
+  const answerLabels = ["A", "B", "C", "D"];
+  const progressPercent = ((currentIndex + (selectedAnswer !== null ? 1 : 0)) / questions.length) * 100;
+
   // Quiz screen
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
       {/* Header */}
-      <div className="gradient-purple px-6 pt-12 pb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={() => navigate(`/country/${countryCode}`)}
-            className="p-2 rounded-full bg-primary-foreground/10"
-          >
-            <ArrowLeft className="w-5 h-5 text-primary-foreground" />
-          </button>
-          <div className="flex-1">
-            <p className="text-primary-foreground/70 text-sm">
-              {country.emoji} {country.name}
-            </p>
-            <h1 className="text-lg font-bold text-primary-foreground">
-              {category.emoji} {category.name}
-            </h1>
+      <div className="flex items-center justify-between px-4 py-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <button
+          onClick={() => navigate(`/country/${countryCode}`)}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-white/70">{country.emoji}</span>
+          <span className="text-white font-semibold">{category.name}</span>
+        </div>
+
+        <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full">
+          <Clock className={`w-4 h-4 ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`} />
+          <span className={`font-bold ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`}>
+            {timeRemaining}
+          </span>
+        </div>
+      </div>
+
+      {/* Score and Progress */}
+      <div className="flex items-center justify-between px-4 mb-2">
+        <div className="text-white font-bold">{score} pts</div>
+        <div className="text-white/70 text-sm">{currentIndex + 1}/{questions.length}</div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 px-4 pb-6 flex flex-col">
+        {/* Question Card */}
+        <div 
+          className="rounded-3xl overflow-hidden mb-4"
+          style={{
+            backgroundColor: "#6B5FA8",
+            boxShadow: "0 6px 0 #4A4080",
+          }}
+        >
+          {/* Progress bar */}
+          <div className="h-2 bg-white/20 w-full">
+            <motion.div
+              className="h-full rounded-r-full"
+              style={{
+                background: "linear-gradient(90deg, #F5A623 0%, #F7C948 100%)",
+              }}
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.3 }}
+            />
           </div>
-          <div className="text-right">
-            <p className="text-primary-foreground font-bold">{score} pts</p>
-            <p className="text-primary-foreground/70 text-sm">
-              {currentIndex + 1}/{questions.length}
+          
+          <div className="px-5 py-5">
+            <p className="text-center font-semibold leading-relaxed text-white text-lg">
+              {currentQuestion?.question}
             </p>
           </div>
         </div>
 
         {/* Progress dots */}
-        <div className="flex gap-2 justify-center">
+        <div className="flex justify-center gap-2 mb-4">
           {questions.map((_, i) => (
             <div
               key={i}
               className={cn(
-                "w-2 h-2 rounded-full transition-all",
-                i === currentIndex
-                  ? "bg-primary-foreground w-4"
-                  : i < currentIndex
-                  ? "bg-primary-foreground/70"
-                  : "bg-primary-foreground/30"
+                "w-2.5 h-2.5 rounded-full transition-all",
+                i < currentIndex
+                  ? "bg-white"
+                  : i === currentIndex
+                  ? "bg-white scale-125"
+                  : "bg-white/40"
               )}
             />
           ))}
         </div>
-      </div>
 
-      {/* Question Area */}
-      <div className="flex-1 p-6 flex flex-col">
-        {/* Timer / Result indicator */}
-        <div className="flex justify-center mb-6">
-          {selectedAnswer === null ? (
-            <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold",
-              timeRemaining <= 5 ? "bg-destructive text-destructive-foreground" : "bg-secondary text-foreground"
-            )}>
-              {timeRemaining}
-            </div>
-          ) : (
-            <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center",
-              isCorrect ? "bg-success" : "bg-destructive"
-            )}>
-              {isCorrect ? (
-                <Check className="w-8 h-8 text-success-foreground" />
-              ) : (
-                <X className="w-8 h-8 text-destructive-foreground" />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Question */}
-        <h2 className="text-xl font-bold text-foreground text-center mb-8">
-          {currentQuestion?.question}
-        </h2>
-
-        {/* Answers */}
-        <div className="space-y-3 flex-1">
+        {/* Answer Buttons */}
+        <div className="space-y-2 flex-1">
           {currentQuestion?.allAnswers?.map((answer, i) => {
             const isSelected = selectedAnswer === answer;
             const isCorrectAnswer = answer === currentQuestion.correct_answer;
             const showResult = selectedAnswer !== null;
+
+            let bgColor = "#FFFFFF";
+            let depthColor = "#CBD5E1";
+            let textColor = "#2A2550";
+            let labelBg = "#7DD3FC";
+            let labelText = "#FFFFFF";
+
+            if (showResult) {
+              if (isCorrectAnswer) {
+                bgColor = "#4ADE80";
+                depthColor = "#22C55E";
+                textColor = "#FFFFFF";
+                labelBg = "#FFFFFF";
+                labelText = "#22C55E";
+              } else if (isSelected && !isCorrectAnswer) {
+                bgColor = "#EF4444";
+                depthColor = "#DC2626";
+                textColor = "#FFFFFF";
+                labelBg = "#FFFFFF";
+                labelText = "#EF4444";
+              }
+            }
 
             return (
               <motion.button
@@ -371,28 +399,35 @@ export default function CountryQuizPage() {
                 transition={{ delay: i * 0.1 }}
                 onClick={() => handleAnswer(answer)}
                 disabled={selectedAnswer !== null}
-                className={cn(
-                  "w-full p-4 rounded-2xl border-2 text-left font-medium transition-all",
-                  showResult
-                    ? isCorrectAnswer
-                      ? "bg-success/20 border-success text-foreground"
-                      : isSelected
-                      ? "bg-destructive/20 border-destructive text-foreground"
-                      : "bg-card border-border text-muted-foreground"
-                    : "bg-card border-border hover:border-primary text-foreground"
-                )}
+                className="w-full rounded-2xl text-left font-bold text-lg disabled:cursor-not-allowed relative"
+                style={{ marginBottom: 4 }}
               >
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-sm">
-                    {String.fromCharCode(65 + i)}
+                {/* Depth layer */}
+                <div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{ background: depthColor, transform: "translateY(4px)" }}
+                />
+                
+                {/* Main face */}
+                <div
+                  className="relative flex items-center min-h-[56px] py-3 rounded-2xl"
+                  style={{ background: bgColor }}
+                >
+                  <div
+                    className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base"
+                    style={{ background: labelBg, color: labelText }}
+                  >
+                    {showResult && isCorrectAnswer ? (
+                      <Check className="w-5 h-5" />
+                    ) : showResult && isSelected && !isCorrectAnswer ? (
+                      <X className="w-5 h-5" />
+                    ) : (
+                      answerLabels[i]
+                    )}
+                  </div>
+                  <span className="flex-1 px-3" style={{ color: textColor }}>
+                    {answer}
                   </span>
-                  <span className="flex-1">{answer}</span>
-                  {showResult && isCorrectAnswer && (
-                    <Check className="w-5 h-5 text-success" />
-                  )}
-                  {showResult && isSelected && !isCorrectAnswer && (
-                    <X className="w-5 h-5 text-destructive" />
-                  )}
                 </div>
               </motion.button>
             );
@@ -402,19 +437,31 @@ export default function CountryQuizPage() {
         {/* Next Button */}
         <AnimatePresence>
           {selectedAnswer !== null && (
-            <motion.div
+            <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="mt-6"
+              onClick={handleNext}
+              className="mt-4 w-full rounded-2xl font-bold text-lg relative"
+              style={{ marginBottom: 4 }}
             >
-              <ChunkyButton onClick={handleNext} className="w-full">
+              <div
+                className="absolute inset-0 rounded-2xl"
+                style={{ background: "#22C55E", transform: "translateY(4px)" }}
+              />
+              <div
+                className="relative flex items-center justify-center min-h-[56px] py-3 rounded-2xl text-white"
+                style={{ background: "#4ADE80" }}
+              >
                 {currentIndex < questions.length - 1 ? "Next Question" : "See Results"}
-              </ChunkyButton>
-            </motion.div>
+              </div>
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Safe area bottom padding */}
+      <div className="pb-[env(safe-area-inset-bottom)]" />
     </div>
   );
 }
