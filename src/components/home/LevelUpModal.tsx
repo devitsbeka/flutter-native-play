@@ -31,43 +31,36 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       // Credit level-up rewards
       addCurrency(levelUpCoins, levelUpGems);
 
-      const duration = 3000;
-      const end = Date.now() + duration;
-
       const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
 
-      const frame = () => {
+      // Single burst of confetti - much lighter on GPU
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { x: 0.5, y: 0.4 },
+        colors,
+        zIndex: 9999,
+      });
+
+      // Small side bursts after a short delay
+      setTimeout(() => {
         confetti({
-          particleCount: 6,
+          particleCount: 30,
           angle: 60,
-          spread: 80,
+          spread: 55,
           origin: { x: 0, y: 0.6 },
           colors,
           zIndex: 9999,
         });
         confetti({
-          particleCount: 6,
+          particleCount: 30,
           angle: 120,
-          spread: 80,
+          spread: 55,
           origin: { x: 1, y: 0.6 },
           colors,
           zIndex: 9999,
         });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      
-      confetti({
-        particleCount: 100,
-        spread: 100,
-        origin: { x: 0.5, y: 0.4 },
-        colors,
-        zIndex: 9999,
-      });
-      
-      frame();
+      }, 300);
     }
   }, [isOpen, addCurrency, levelUpCoins, levelUpGems]);
 
