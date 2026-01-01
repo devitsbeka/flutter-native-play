@@ -508,7 +508,7 @@ export default function CategoryQuizPage() {
         </div>
         
         {/* Category Icon - Large, centered */}
-        <div className="flex-1 flex justify-center -mt-2">
+        <div className="flex-1 flex justify-center" style={{ marginTop: "38px" }}>
           <span className="drop-shadow-xl" style={{ fontSize: "6rem" }}>{category?.icon || "🎯"}</span>
         </div>
         
@@ -543,7 +543,7 @@ export default function CategoryQuizPage() {
                 boxShadow: "0 4px 0 #CBD5E1",
               }}
             >
-              <div className="px-4 py-3">
+              <div className="px-4 py-3" style={{ marginTop: "-30px" }}>
                 {/* Timer and Difficulty inside card */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
