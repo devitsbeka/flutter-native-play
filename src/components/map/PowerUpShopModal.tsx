@@ -5,10 +5,13 @@ import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useSound } from "@/contexts/SoundContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { REWARDS } from "@/config/rewardConfig";
+import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 
 interface PowerUpShopModalProps {
   isOpen: boolean;
@@ -49,10 +52,13 @@ const POWER_UP_PRICES: Record<PowerUpType, number> = REWARDS.POWER_UP_PRICES as 
 export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   const { powerUps, isLoading, addPowerUp } = useUserPowerUps();
   const { coins, spendCoins, canAffordCoins } = useCurrency();
+  const { playSound, vibrate } = useSound();
   const [selectedType, setSelectedType] = useState<PowerUpType>("5050");
   const [animationKey, setAnimationKey] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [purchasedAmount, setPurchasedAmount] = useState(0);
 
   // Restart animation when switching power-ups
   const handleSelectPowerUp = (type: PowerUpType) => {
@@ -74,6 +80,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   useEffect(() => {
     if (isOpen) {
       setQuantity(1);
+      setShowSuccess(false);
     }
   }, [isOpen]);
 
@@ -89,6 +96,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   const handlePurchase = async () => {
     if (!canAfford) {
       toast.error("არ გაქვს საკმარისი მონეტა!");
+      playSound("wrong-answer");
       return;
     }
 
@@ -103,11 +111,33 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
 
       // Add power-ups
       await addPowerUp(selectedType, quantity);
-      toast.success(`შეძენილია ${quantity}x ${selectedInfo.name}!`);
-      onClose();
+      
+      // Success feedback
+      playSound("reward");
+      vibrate([50, 30, 50]);
+      setPurchasedAmount(quantity);
+      setShowSuccess(true);
+      
+      // Confetti celebration
+      confetti({
+        particleCount: 60,
+        spread: 50,
+        origin: { y: 0.6, x: 0.5 },
+        colors: ["#7C5CFC", "#A855F7", "#FFD700", "#22C55E"],
+        zIndex: 9999,
+      });
+      
+      toast.success(`შეძენილია ${quantity}x ${selectedInfo.name}! ⚡`);
+      
+      // Close after short delay
+      setTimeout(() => {
+        onClose();
+        setShowSuccess(false);
+      }, 1500);
     } catch (error) {
       console.error("Purchase failed:", error);
       toast.error("შეძენა ვერ მოხერხდა");
+      playSound("wrong-answer");
     } finally {
       setIsPurchasing(false);
     }

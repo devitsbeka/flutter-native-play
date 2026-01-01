@@ -5,9 +5,11 @@ import { t } from "@/lib/i18n";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useSound } from "@/contexts/SoundContext";
 import { REWARDS } from "@/config/rewardConfig";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
+import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 
 interface DailyRewardsModalProps {
   isOpen: boolean;
@@ -156,23 +158,38 @@ export function DailyRewardsModal({
   onClaim,
 }: DailyRewardsModalProps) {
   const { addCurrency } = useCurrency();
+  const { playSound, vibrate } = useSound();
   const [claimedToday, setClaimedToday] = useState(false);
+  const [showFlyingCoins, setShowFlyingCoins] = useState(false);
+  const [showFlyingGems, setShowFlyingGems] = useState(false);
   
   // Calculate which day the user is on (1-7, then resets)
   const currentDay = ((currentStreak - 1) % 7) + 1;
+  const todayReward = dailyRewards[currentDay - 1];
   
   const handleClaim = async () => {
     setClaimedToday(true);
     celebrateClaim();
     
+    // Play success sound and vibrate
+    playSound("reward");
+    vibrate([50, 30, 50]);
+    
+    // Trigger flying currency animations
+    setShowFlyingCoins(true);
+    if (todayReward.gems) {
+      setTimeout(() => setShowFlyingGems(true), 200);
+    }
+    
     // Credit the coins and gems from today's reward
-    const todayReward = dailyRewards[currentDay - 1];
     await addCurrency(todayReward.coins, todayReward.gems || 0);
     
     onClaim?.();
     
-    // Close after celebration
+    // Reset flying animations and close
     setTimeout(() => {
+      setShowFlyingCoins(false);
+      setShowFlyingGems(false);
       onClose();
     }, 1500);
   };
@@ -249,6 +266,11 @@ export function DailyRewardsModal({
         />
       ) : (
         <div className="text-center py-2">
+          {/* Flying Currency Animations */}
+          <FlyingCurrency type="coins" amount={todayReward.coins} isActive={showFlyingCoins} />
+          {todayReward.gems && (
+            <FlyingCurrency type="gems" amount={todayReward.gems} isActive={showFlyingGems} />
+          )}
           <p className="text-muted-foreground text-sm">
             {t("dailyRewards.comeBackTomorrow")}
           </p>
