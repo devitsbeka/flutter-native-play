@@ -171,17 +171,33 @@ export function AirbnbCategoryCard({
             <span className="text-white text-xs">✓</span>
           </div>
         )}
+
+        {/* Progress Bar at Bottom of Container */}
+        <div className={`absolute left-3 right-3 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
+          <div className="flex items-center gap-2">
+            {/* Progress Bar Track */}
+            <div className={`flex-1 rounded-full bg-white/30 backdrop-blur-sm overflow-hidden ${isFull ? 'h-2.5' : 'h-2'}`}>
+              {/* Progress Fill */}
+              <div 
+                className="h-full rounded-full transition-all duration-300"
+                style={{ 
+                  width: `${(progress / totalLevels) * 100}%`,
+                  backgroundColor: '#FFB230'
+                }}
+              />
+            </div>
+            {/* Progress Text */}
+            <span className={`font-semibold text-white drop-shadow-md whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}>
+              {progress}/{totalLevels}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Title */}
       <h3 className={`mt-2 font-semibold text-white line-clamp-1 drop-shadow-sm ${isFull ? 'text-lg' : 'text-sm'}`}>
         {name}
       </h3>
-
-      {/* Subtitle - Progress */}
-      <p className={`font-medium ${isFull ? 'text-sm' : 'text-xs'}`} style={{ color: '#FFB230' }}>
-        {progress}/{totalLevels} დონე
-      </p>
     </motion.button>
   );
 }
