@@ -187,7 +187,7 @@ export function VSScreen() {
             score={playerPoints}
             position="left"
             state="active"
-            size="large"
+            size="xlarge"
           />
           <h2
             className="text-2xl font-black tracking-wide"
@@ -233,7 +233,7 @@ export function VSScreen() {
             score={opponentPointsDisplay}
             position="right"
             state={isMatchFound ? "default" : "loading"}
-            size="large"
+            size="xlarge"
           />
           <h2
             className="text-2xl font-black tracking-wide"
