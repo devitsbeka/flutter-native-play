@@ -28,33 +28,45 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
       <div className="relative overflow-visible">
-        {/* Elegant curved wave SVG */}
+        {/* Elegant curved wave SVG - extended down to overlap */}
         <svg 
           className="absolute left-0 right-0 w-full pointer-events-none"
-          style={{ bottom: "100%", height: 50 }}
-          viewBox="0 0 400 50" 
+          style={{ bottom: "calc(100% - 8px)", height: 55 }}
+          viewBox="0 0 400 55" 
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="navCurveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#F8F6FC" stopOpacity="0.4" />
-              <stop offset="40%" stopColor="#F8F6FC" stopOpacity="0.85" />
+              <stop offset="0%" stopColor="#F8F6FC" stopOpacity="0" />
+              <stop offset="30%" stopColor="#F8F6FC" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="#F8F6FC" stopOpacity="0.95" />
               <stop offset="100%" stopColor="#F8F6FC" />
             </linearGradient>
           </defs>
-          {/* Smooth bezier curve wave */}
+          {/* Smooth bezier curve wave - extends to bottom */}
           <path 
-            d="M0,50 L0,35 C80,50 150,15 200,20 C250,25 320,50 400,35 L400,50 Z" 
+            d="M0,55 L0,30 C80,48 150,12 200,18 C250,24 320,48 400,30 L400,55 Z" 
             fill="url(#navCurveGradient)"
           />
           {/* Top highlight stroke */}
           <path 
-            d="M0,35 C80,50 150,15 200,20 C250,25 320,50 400,35" 
+            d="M0,30 C80,48 150,12 200,18 C250,24 320,48 400,30" 
             fill="none"
-            stroke="rgba(255,255,255,0.7)"
-            strokeWidth="2"
+            stroke="rgba(255,255,255,0.6)"
+            strokeWidth="1.5"
           />
         </svg>
+        
+        {/* Blur transition layer at the junction */}
+        <div 
+          className="absolute left-0 right-0 pointer-events-none"
+          style={{
+            top: -4,
+            height: 12,
+            background: "linear-gradient(180deg, transparent 0%, #F8F6FC 100%)",
+            filter: "blur(4px)",
+          }}
+        />
         
         {/* Main container */}
         <div 
