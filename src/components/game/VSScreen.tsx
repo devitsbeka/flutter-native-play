@@ -193,11 +193,11 @@ export function VSScreen() {
             className="text-2xl font-black tracking-wide"
             style={{
               fontFamily: "'TASolivare', sans-serif",
-              color: "#86EFAC",
-              textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
+              color: "#FFFFFF",
+              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
             }}
           >
-            შენ
+            {profile?.nickname || "შენ"}
           </h2>
           <p className="text-white/70 text-sm">
             Lvl.{playerLevelInfo.level}
