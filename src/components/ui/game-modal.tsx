@@ -5,17 +5,11 @@ import { cn } from "@/lib/utils";
 import { ChunkyButton } from "./chunky-button";
 
 // Sparkle particle for background decoration
-const ModalSparkle = ({ index, color = "primary" }: { index: number; color?: "primary" | "gold" | "green" }) => {
+const ModalSparkle = ({ index }: { index: number }) => {
   const duration = 2 + Math.random() * 2;
   const delay = Math.random() * 2;
   const x = Math.random() * 100;
   const y = Math.random() * 100;
-  
-  const colorMap = {
-    primary: "rgba(147, 51, 234, 0.5)",
-    gold: "rgba(251, 191, 36, 0.5)",
-    green: "rgba(34, 197, 94, 0.5)",
-  };
   
   return (
     <motion.div
@@ -23,7 +17,7 @@ const ModalSparkle = ({ index, color = "primary" }: { index: number; color?: "pr
       style={{ 
         left: `${x}%`, 
         top: `${y}%`,
-        background: `radial-gradient(circle, ${colorMap[color]} 0%, transparent 70%)`,
+        background: "radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)",
       }}
       animate={{
         opacity: [0, 1, 0],
@@ -96,38 +90,6 @@ interface GameModalProps {
   onSecondaryClick?: () => void;
 }
 
-const variantStyles: Record<GameModalVariant, {
-  border: string;
-  headerGradient: string;
-  iconGradient: string;
-  sparkleColor: "primary" | "gold" | "green";
-}> = {
-  primary: {
-    border: "from-purple-500 via-pink-500 to-purple-500",
-    headerGradient: "from-purple-100 to-pink-50",
-    iconGradient: "from-purple-500 to-pink-500",
-    sparkleColor: "primary",
-  },
-  success: {
-    border: "from-green-400 via-emerald-400 to-green-400",
-    headerGradient: "from-green-100 to-emerald-50",
-    iconGradient: "from-green-400 to-emerald-500",
-    sparkleColor: "green",
-  },
-  gold: {
-    border: "from-amber-400 via-yellow-300 to-amber-400",
-    headerGradient: "from-amber-100 to-yellow-50",
-    iconGradient: "from-amber-400 to-yellow-500",
-    sparkleColor: "gold",
-  },
-  info: {
-    border: "from-blue-400 via-cyan-400 to-blue-400",
-    headerGradient: "from-blue-100 to-cyan-50",
-    iconGradient: "from-blue-400 to-cyan-500",
-    sparkleColor: "primary",
-  },
-};
-
 export function GameModal({
   isOpen,
   onClose,
@@ -152,7 +114,6 @@ export function GameModal({
   secondaryLabel,
   onSecondaryClick,
 }: GameModalProps) {
-  const styles = variantStyles[variant];
   const sparkles = Array.from({ length: 12 }, (_, i) => i);
   const stars = Array.from({ length: 4 }, (_, i) => i);
   
@@ -164,7 +125,7 @@ export function GameModal({
       primaryIcon={primaryIcon}
       secondaryLabel={secondaryLabel}
       onSecondary={onSecondaryClick}
-      primaryVariant={variant === "success" ? "success" : "primary"}
+      primaryVariant="success"
       isLoading={primaryDisabled}
     />
   ) : null);
@@ -189,27 +150,19 @@ export function GameModal({
             onClick={(e) => e.stopPropagation()}
             className={cn("relative w-full max-w-sm", className)}
           >
-            {/* Outer glow */}
-            <div className={cn(
-              "absolute -inset-1 rounded-[28px] bg-gradient-to-r opacity-60 blur-md",
-              styles.border
-            )} />
-            
-            {/* Thick gradient border frame */}
-            <div className={cn(
-              "absolute inset-0 rounded-[26px] p-[4px] bg-gradient-to-b",
-              styles.border
-            )}>
-              <div className="w-full h-full rounded-[22px] bg-card" />
-            </div>
-            
-            {/* Main content container */}
-            <div className="relative rounded-[22px] overflow-hidden bg-card">
+            {/* Main content container - Unified purple background */}
+            <div 
+              className="relative rounded-3xl overflow-hidden"
+              style={{
+                background: "#7E7BDC",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+              }}
+            >
               {/* Background sparkles */}
               {showSparkles && (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                   {sparkles.map((i) => (
-                    <ModalSparkle key={i} index={i} color={styles.sparkleColor} />
+                    <ModalSparkle key={i} index={i} />
                   ))}
                 </div>
               )}
@@ -227,41 +180,32 @@ export function GameModal({
               {showBackButton && onBack && (
                 <motion.button
                   onClick={onBack}
-                  className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-muted flex items-center justify-center"
-                  style={{
-                    boxShadow: "0 3px 0 0 hsl(var(--border))",
-                  }}
+                  className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95, y: 2 }}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
                 </motion.button>
               )}
               
-              {/* Close button - 3D chunky style */}
+              {/* Close button - Dark circular style */}
               {!hideCloseButton && onClose && (
                 <motion.button
                   onClick={handleClose}
-                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-muted flex items-center justify-center"
-                  style={{
-                    boxShadow: "0 3px 0 0 hsl(var(--border))",
-                  }}
+                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <X className="w-4 h-4 text-muted-foreground" />
+                  <X className="w-4 h-4 text-white" />
                 </motion.button>
               )}
               
               {/* Header with icon badge */}
-              <div className={cn(
-                "relative pt-8 pb-4 px-6 text-center bg-gradient-to-b",
-                styles.headerGradient
-              )}>
+              <div className="relative pt-8 pb-4 px-6 text-center">
                 {/* Icon badge */}
                 {(icon || iconEmoji) && (
                   <motion.div
@@ -272,22 +216,16 @@ export function GameModal({
                   >
                     {/* Glow ring */}
                     <motion.div
-                      className={cn(
-                        "absolute inset-0 rounded-full bg-gradient-to-r opacity-40 blur-lg",
-                        styles.border
-                      )}
+                      className="absolute inset-0 rounded-full bg-white/20 blur-lg"
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
                     
                     {/* Icon container */}
                     <div 
-                      className={cn(
-                        "relative w-20 h-20 rounded-full flex items-center justify-center bg-gradient-to-b",
-                        styles.iconGradient
-                      )}
+                      className="relative w-20 h-20 rounded-full flex items-center justify-center bg-white/25"
                       style={{
-                        boxShadow: "0 6px 0 0 rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.3)",
+                        boxShadow: "0 6px 0 0 rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.3)",
                       }}
                     >
                       {iconEmoji ? (
@@ -312,7 +250,7 @@ export function GameModal({
                 
                 {/* Title */}
                 <motion.h2 
-                  className="font-display text-2xl font-bold text-foreground"
+                  className="font-display text-2xl font-bold text-white"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
@@ -323,7 +261,7 @@ export function GameModal({
                 {/* Subtitle */}
                 {subtitle && (
                   <motion.p 
-                    className="text-sm text-muted-foreground mt-1"
+                    className="text-sm text-white/70 mt-1"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
@@ -381,7 +319,7 @@ export function GameModalFooter({
   secondaryLabel,
   onSecondary,
   primaryIcon,
-  primaryVariant = "primary",
+  primaryVariant = "success",
   isLoading = false,
 }: GameModalFooterProps) {
   return (
@@ -400,7 +338,7 @@ export function GameModalFooter({
       {secondaryLabel && onSecondary && (
         <button
           onClick={onSecondary}
-          className="w-full text-center text-sm text-muted-foreground py-2 hover:text-foreground transition-colors"
+          className="w-full text-center text-sm text-white/70 py-2 hover:text-white transition-colors"
         >
           {secondaryLabel}
         </button>
@@ -422,17 +360,17 @@ export function GameModalStat({ icon, value, label, highlight }: GameModalStatPr
     <div className={cn(
       "rounded-2xl p-3 text-center",
       highlight 
-        ? "bg-gradient-to-br from-amber-100 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30" 
-        : "bg-muted/50"
+        ? "bg-amber-400/30" 
+        : "bg-white/15"
     )}>
-      <div className="flex justify-center mb-1">{icon}</div>
+      <div className="flex justify-center mb-1 text-white">{icon}</div>
       <p className={cn(
         "text-lg font-bold",
-        highlight ? "text-amber-600 dark:text-amber-400" : "text-foreground"
+        highlight ? "text-amber-200" : "text-white"
       )}>
         {value}
       </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-white/70">{label}</p>
     </div>
   );
 }
@@ -447,12 +385,12 @@ interface GameModalInfoRowProps {
 
 export function GameModalInfoRow({ icon, label, value, color }: GameModalInfoRowProps) {
   return (
-    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-xl">
+    <div className="flex items-center justify-between p-2.5 bg-white/15 rounded-xl">
       <div className="flex items-center gap-2">
-        <span className={color}>{icon}</span>
-        <span className="text-sm text-foreground">{label}</span>
+        <span className={color || "text-white"}>{icon}</span>
+        <span className="text-sm text-white">{label}</span>
       </div>
-      <span className="text-sm font-bold text-foreground">{value}</span>
+      <span className="text-sm font-bold text-white">{value}</span>
     </div>
   );
 }

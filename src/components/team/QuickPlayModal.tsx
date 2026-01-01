@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gamepad2, Clock, Users, Zap } from "lucide-react";
+import { X, Gamepad2, Clock, Zap } from "lucide-react";
 import { Friend } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -44,7 +44,7 @@ export function QuickPlayModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/70 z-[100]"
           />
 
           {/* Modal */}
@@ -52,25 +52,31 @@ export function QuickPlayModal({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed inset-x-4 top-[10%] bottom-[10%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md z-50 flex flex-col"
+            className="fixed inset-x-4 top-[8%] bottom-[8%] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:max-w-md z-[100] flex flex-col"
           >
-            <div className="relative flex-1 flex flex-col rounded-3xl bg-gradient-to-b from-purple-900/95 to-purple-950/95 backdrop-blur-xl border-2 border-purple-500/30 shadow-[0_0_50px_rgba(139,92,246,0.3)] overflow-hidden">
+            <div 
+              className="rounded-3xl relative flex-1 flex flex-col overflow-hidden"
+              style={{
+                background: "#7E7BDC",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+              }}
+            >
               {/* Close button */}
               <motion.button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 hover:text-white z-10"
+                className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 text-white" />
               </motion.button>
 
               {/* Header with Friend Info */}
               <div className="p-6 pb-4 text-center border-b border-white/10">
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <Avatar className="w-16 h-16 border-3 border-purple-400/50">
+                  <Avatar className="w-16 h-16 ring-2 ring-white/30">
                     <AvatarImage src={friend.avatarUrl || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl font-bold">
+                    <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
                       {friend.nickname.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -125,8 +131,8 @@ export function QuickPlayModal({
                     }}
                     className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-colors ${
                       categoryType === type
-                        ? "bg-white/20 text-white"
-                        : "bg-white/5 text-white/60 hover:bg-white/10"
+                        ? "bg-white/25 text-white"
+                        : "bg-white/10 text-white/60 hover:bg-white/15"
                     }`}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -145,8 +151,8 @@ export function QuickPlayModal({
                       onClick={() => setSelectedCategory(category)}
                       className={`p-3 rounded-xl text-left transition-all ${
                         selectedCategory?.id === category.id
-                          ? "bg-white/20 ring-2 ring-purple-400"
-                          : "bg-white/5 hover:bg-white/10"
+                          ? "bg-white/25 ring-2 ring-white/40"
+                          : "bg-white/10 hover:bg-white/15"
                       }`}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -160,7 +166,7 @@ export function QuickPlayModal({
               {/* Footer Actions */}
               <div className="p-4 border-t border-white/10">
                 <ChunkyButton
-                  variant="primary"
+                  variant="success"
                   size="lg"
                   className="w-full"
                   onClick={handleStartChallenge}
