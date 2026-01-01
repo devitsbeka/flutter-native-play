@@ -1,7 +1,10 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Menu, HelpCircle } from "lucide-react";
+import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
+import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
+import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
@@ -19,7 +22,7 @@ import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthr
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
-import { AdventureQuickActions } from "@/components/map/AdventureQuickActions";
+
 import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -298,73 +301,9 @@ export default function Index() {
           </div>
         </header>
 
-        {/* ===== CURRENCY ROW ===== */}
-        <motion.div 
-          className="relative z-20 flex items-center justify-center gap-2 px-4 py-3"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          {/* Coins */}
-          <motion.div 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
-            style={{
-              background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FCD34D 100%)",
-              boxShadow: "inset 0 2px 4px rgba(251,191,36,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #D97706, 0 4px 8px rgba(0,0,0,0.15)",
-              border: "2px solid rgba(255,255,255,0.8)",
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsGemShopOpen(true)}
-          >
-            <img src={coinIcon} alt="Coins" className="w-5 h-5" />
-            <span className="text-sm font-bold text-amber-900">{coins.toLocaleString()}</span>
-          </motion.div>
-
-          {/* Gems */}
-          <motion.div 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
-            style={{
-              background: "linear-gradient(180deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
-              boxShadow: "inset 0 2px 4px rgba(139,92,246,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #7C3AED, 0 4px 8px rgba(0,0,0,0.15)",
-              border: "2px solid rgba(255,255,255,0.8)",
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsGemShopOpen(true)}
-          >
-            <img src={gemIcon} alt="Gems" className="w-5 h-5" />
-            <span className="text-sm font-bold text-purple-900">{gems.toLocaleString()}</span>
-          </motion.div>
-
-          {/* XP */}
-          <motion.div 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-            style={{
-              background: "linear-gradient(180deg, #BBF7D0 0%, #86EFAC 50%, #4ADE80 100%)",
-              boxShadow: "inset 0 2px 4px rgba(34,197,94,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #16A34A, 0 4px 8px rgba(0,0,0,0.15)",
-              border: "2px solid rgba(255,255,255,0.8)",
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <img src={xpIcon} alt="XP" className="w-5 h-5" />
-            <span className="text-sm font-bold text-green-900">{(profile?.total_points || 0).toLocaleString()}</span>
-          </motion.div>
-        </motion.div>
-
-        {/* ===== QUICK ACTIONS ===== */}
-        <div className="relative z-20 px-4 py-1">
-          <AdventureQuickActions
-            onGiftsClick={() => setIsDailyRewardsOpen(true)}
-            onMissionsClick={() => setShowMissionsModal(true)}
-            onChestClick={() => setIsChestModalOpen(true)}
-            onHelpClick={() => setShowHelpModal(true)}
-          />
-        </div>
 
         {/* ===== CENTER: AVATAR WITH ARC BADGES ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -230 }}>
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -180 }}>
           <motion.div 
             className="flex flex-col items-center w-full max-w-[360px]"
             initial={{ scale: 0.8, opacity: 0 }}
@@ -397,6 +336,50 @@ export default function Index() {
                 transformStyle: "preserve-3d",
               }}
             >
+              {/* LEFT SIDE - Two circular action buttons */}
+              <div className="absolute left-0 top-1/2 -translate-x-[calc(100%+12px)] -translate-y-1/2 flex flex-col gap-3 pointer-events-auto z-30">
+                {/* Gift button */}
+                <motion.button
+                  onClick={() => setIsDailyRewardsOpen(true)}
+                  className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                    border: "2px solid rgba(255,255,255,0.9)",
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src={giftBottleIcon} alt="Gift" className="w-8 h-8 object-contain" />
+                  <motion.div 
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ 
+                      background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
+                      boxShadow: "0 2px 4px rgba(239,68,68,0.4)"
+                    }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <span className="text-white text-[10px] font-bold">1</span>
+                  </motion.div>
+                </motion.button>
+
+                {/* Mission button */}
+                <motion.button
+                  onClick={() => setShowMissionsModal(true)}
+                  className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                    border: "2px solid rgba(255,255,255,0.9)",
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src={missionCrystalIcon} alt="Missions" className="w-8 h-8 object-contain" />
+                </motion.button>
+              </div>
+
               {/* Avatar Circle Component - clickable to open modal */}
               <div 
                 data-walkthrough="avatar" 
@@ -405,7 +388,40 @@ export default function Index() {
               >
                 <AvatarCircle avatarUrl={profile?.avatar_url} size={292} />
               </div>
-                
+
+              {/* RIGHT SIDE - Two circular action buttons */}
+              <div className="absolute right-0 top-1/2 translate-x-[calc(100%+12px)] -translate-y-1/2 flex flex-col gap-3 pointer-events-auto z-30">
+                {/* Chest button */}
+                <motion.button
+                  onClick={() => setIsChestModalOpen(true)}
+                  className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                    border: "2px solid rgba(255,255,255,0.9)",
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <img src={chestBoxIcon} alt="Chest" className="w-8 h-8 object-contain" />
+                </motion.button>
+
+                {/* Help button */}
+                <motion.button
+                  onClick={() => setShowHelpModal(true)}
+                  className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                    border: "2px solid rgba(255,255,255,0.9)",
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <HelpCircle className="w-6 h-6" style={{ color: "#7C3AED" }} />
+                </motion.button>
+              </div>
+
             
               {/* User info & XP bar - positioned below avatar */}
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+16px)] z-20 pointer-events-auto">
@@ -437,7 +453,57 @@ export default function Index() {
                           }}
                         >
                           Lv. {levelInfo.level}
-                        </div>
+                      </div>
+                      
+                      {/* Currency Row - Above XP bar */}
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        {/* Coins */}
+                        <motion.div 
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+                          style={{
+                            background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FCD34D 100%)",
+                            boxShadow: "inset 0 2px 4px rgba(251,191,36,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #D97706, 0 4px 8px rgba(0,0,0,0.15)",
+                            border: "2px solid rgba(255,255,255,0.8)",
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsGemShopOpen(true)}
+                        >
+                          <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+                          <span className="text-sm font-bold text-amber-900">{coins.toLocaleString()}</span>
+                        </motion.div>
+
+                        {/* Gems */}
+                        <motion.div 
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+                          style={{
+                            background: "linear-gradient(180deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
+                            boxShadow: "inset 0 2px 4px rgba(139,92,246,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #7C3AED, 0 4px 8px rgba(0,0,0,0.15)",
+                            border: "2px solid rgba(255,255,255,0.8)",
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsGemShopOpen(true)}
+                        >
+                          <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+                          <span className="text-sm font-bold text-purple-900">{gems.toLocaleString()}</span>
+                        </motion.div>
+
+                        {/* XP */}
+                        <motion.div 
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                          style={{
+                            background: "linear-gradient(180deg, #BBF7D0 0%, #86EFAC 50%, #4ADE80 100%)",
+                            boxShadow: "inset 0 2px 4px rgba(34,197,94,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #16A34A, 0 4px 8px rgba(0,0,0,0.15)",
+                            border: "2px solid rgba(255,255,255,0.8)",
+                          }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <img src={xpIcon} alt="XP" className="w-5 h-5" />
+                          <span className="text-sm font-bold text-green-900">{(profile?.total_points || 0).toLocaleString()}</span>
+                        </motion.div>
+                      </div>
                       </div>
                       
                       {/* 3D Chunky Progress bar */}
