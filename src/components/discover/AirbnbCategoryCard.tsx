@@ -135,7 +135,7 @@ export function AirbnbCategoryCard({
           <DynamicIcon
             slug={iconSlug || undefined}
             categoryId={categoryId}
-            size={64}
+            size={84}
             className="drop-shadow-lg filter brightness-110"
           />
         </motion.div>
