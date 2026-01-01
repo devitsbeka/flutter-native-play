@@ -31,10 +31,12 @@ const menuItems = [
   { icon: iconEvents, label: "ივენთები", onClick: "events" },
   { icon: iconPass, label: "ტრივია პასი", onClick: "pass" },
   { icon: iconNotifications, label: "შეტყობინებები", onClick: "notifications" },
-  { icon: iconSettings, label: "პარამეტრები", onClick: "settings" },
-  { icon: iconHelp, label: "დახმარება", onClick: "help" },
-  { icon: iconPrivacy, label: "კონფიდენციალურობა", onClick: "privacy" },
-  { icon: iconLogout, label: "გამოსვლა", onClick: "logout" },
+];
+
+const bottomLinks = [
+  { label: "პარამეტრები", onClick: "settings" },
+  { label: "დახმარება", onClick: "help" },
+  { label: "კონფიდენციალურობა", onClick: "privacy" },
 ];
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
@@ -68,10 +70,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     navigate("/");
   };
 
-  // Filter out logout for non-authenticated users
-  const visibleItems = user 
-    ? menuItems 
-    : menuItems.filter(item => item.onClick !== "logout");
+  // Grid items only (first 5), bottom links separate
+  const visibleGridItems = menuItems;
 
   return (
     <>
@@ -145,21 +145,17 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 )}
               </div>
 
-              {/* 3x3 Grid Menu */}
-              <div className="p-4">
+              {/* Grid Menu */}
+              <div className="p-4 pb-2">
                 <div className="grid grid-cols-3 gap-3">
-                  {visibleItems.map((item, index) => (
+                  {visibleGridItems.map((item, index) => (
                     <motion.button
                       key={item.label}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => handleItemClick(item.onClick)}
-                      className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl transition-all hover:scale-105 active:scale-95 ${
-                        item.onClick === "logout" 
-                          ? "bg-destructive/10 hover:bg-destructive/20" 
-                          : "bg-muted/50 hover:bg-muted"
-                      }`}
+                      className="relative flex flex-col items-center gap-2 p-4 rounded-2xl transition-all hover:scale-105 active:scale-95 bg-muted/50 hover:bg-muted"
                     >
                       {/* Badge */}
                       {item.badge && (
@@ -178,15 +174,34 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       </div>
                       
                       {/* Label */}
-                      <span className={`text-xs font-medium text-center leading-tight ${
-                        item.onClick === "logout" 
-                          ? "text-destructive" 
-                          : "text-foreground"
-                      }`}>
+                      <span className="text-xs font-medium text-center leading-tight text-foreground">
                         {item.label}
                       </span>
                     </motion.button>
                   ))}
+                </div>
+              </div>
+
+              {/* Bottom Text Links */}
+              <div className="px-4 pb-4 pt-2 border-t border-border mt-2">
+                <div className="flex flex-col gap-1">
+                  {bottomLinks.map((link) => (
+                    <button
+                      key={link.label}
+                      onClick={() => handleItemClick(link.onClick)}
+                      className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </button>
+                  ))}
+                  {user && (
+                    <button
+                      onClick={handleSignOut}
+                      className="text-left py-2 px-1 text-sm text-destructive hover:text-destructive/80 transition-colors"
+                    >
+                      გამოსვლა
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
