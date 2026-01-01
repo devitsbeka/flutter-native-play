@@ -4,10 +4,12 @@ import { Gift } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import { useRewards } from "@/hooks/useRewards";
+import { useSound } from "@/contexts/SoundContext";
 import { toast } from "sonner";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 
 interface ChestRewardModalProps {
   isOpen: boolean;
@@ -23,7 +25,10 @@ const rewards = [
 
 export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalProps) {
   const { recordChestReward } = useRewards();
+  const { playSound, vibrate } = useSound();
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showFlyingCoins, setShowFlyingCoins] = useState(false);
+  const [showFlyingGems, setShowFlyingGems] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,12 +48,20 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     if (isClaiming) return;
     setIsClaiming(true);
 
+    // Play success sound and vibrate
+    playSound("reward");
+    vibrate([50, 30, 50, 30, 50]);
+
     confetti({
       particleCount: 150,
       spread: 100,
       origin: { y: 0.5 },
       zIndex: 9999,
     });
+
+    // Trigger flying currency animations
+    setShowFlyingCoins(true);
+    setTimeout(() => setShowFlyingGems(true), 300);
 
     const result = await recordChestReward(
       rewards.map(r => ({ type: r.type, value: r.value, label: r.label }))
@@ -57,6 +70,12 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     if (result.success) {
       toast.success("ჯილდოები მიღებულია! 🎉");
     }
+
+    // Reset flying animations
+    setTimeout(() => {
+      setShowFlyingCoins(false);
+      setShowFlyingGems(false);
+    }, 1500);
 
     setIsClaiming(false);
     onClaim(result.newPoints);
@@ -111,6 +130,10 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
         primaryIcon={<Gift className="w-5 h-5" />}
         isLoading={isClaiming}
       />
+
+      {/* Flying Currency Animations */}
+      <FlyingCurrency type="coins" amount={REWARDS.CHEST_COINS} isActive={showFlyingCoins} />
+      <FlyingCurrency type="gems" amount={REWARDS.CHEST_GEMS} isActive={showFlyingGems} />
     </GameModal>
   );
 }

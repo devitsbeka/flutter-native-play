@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { useRewards } from "@/hooks/useRewards";
+import { useSound } from "@/contexts/SoundContext";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 
 interface LuckySpinModalProps {
   isOpen: boolean;
@@ -27,10 +30,12 @@ const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
 
 export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
   const { dailySpinInfo, loading, recordSpinReward, refreshSpinInfo } = useRewards();
+  const { playSound, vibrate } = useSound();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showFlyingCurrency, setShowFlyingCurrency] = useState(false);
 
   // Refresh spin info when modal opens
   useEffect(() => {
@@ -62,6 +67,27 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
       const winningIndex = (WHEEL_SEGMENTS.length - randomSegment) % WHEEL_SEGMENTS.length;
       const wonSegment = WHEEL_SEGMENTS[winningIndex];
       setResult(wonSegment);
+
+      // Play success sound and vibrate
+      if (soundEnabled) {
+        playSound("reward");
+      }
+      vibrate([100, 50, 100]);
+
+      // Confetti celebration
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.5 },
+        colors: ["#FFD700", "#A855F7", "#22C55E", "#F97316"],
+        zIndex: 9999,
+      });
+
+      // Trigger flying currency animation
+      if (wonSegment.type === "coins" || wonSegment.type === "gems") {
+        setShowFlyingCurrency(true);
+        setTimeout(() => setShowFlyingCurrency(false), 1500);
+      }
 
       // Record the reward to database
       const success = await recordSpinReward({
@@ -277,6 +303,15 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               </AnimatePresence>
 
               {/* Footer */}
+              {/* Flying Currency Animation */}
+              {result && (result.type === "coins" || result.type === "gems") && (
+                <FlyingCurrency 
+                  type={result.type as "coins" | "gems"} 
+                  amount={result.value} 
+                  isActive={showFlyingCurrency} 
+                />
+              )}
+
               {result ? (
                 <ChunkyButton
                   variant="success"
@@ -289,7 +324,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               ) : (
                 <div className="text-center">
                   <span className="text-white/70 text-sm">
-                    {loading ? "იტვირთება..." : 
+                    {loading ? "იტვირთება..." :
                       dailySpinInfo.canSpin 
                         ? `${dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed} უფასო სპინი დარჩა`
                         : "ხვალ დაბრუნდი მეტი სპინებისთვის!"
