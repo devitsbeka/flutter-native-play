@@ -259,7 +259,7 @@ export default function Index() {
         </header>
 
         {/* ===== CENTER: AVATAR WITH ARC BADGES ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -100 }}>
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -140 }}>
           <motion.div 
             className="flex flex-col items-center w-full max-w-[360px]"
             initial={{ scale: 0.8, opacity: 0 }}
