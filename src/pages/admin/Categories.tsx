@@ -7,8 +7,11 @@ import {
   Trash2,
   ToggleLeft,
   ToggleRight,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,6 +77,7 @@ export default function AdminCategories() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
   const [saving, setSaving] = useState(false);
+  const [iconSlugError, setIconSlugError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     category_id: '',
@@ -88,6 +92,24 @@ export default function AdminCategories() {
     sort_order: 0,
   });
 
+  // Validate icon_slug exists in the icon_library
+  const validateIconSlug = async (slug: string): Promise<boolean> => {
+    if (!slug.trim()) return true; // Empty is valid (will use emoji fallback)
+    
+    const { data, error } = await supabase
+      .from('icon_library')
+      .select('slug')
+      .eq('slug', slug)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error validating icon slug:', error);
+      return false;
+    }
+    
+    return !!data;
+  };
+
   const resetForm = () => {
     setFormData({
       category_id: '',
@@ -101,6 +123,7 @@ export default function AdminCategories() {
       is_active: true,
       sort_order: 0,
     });
+    setIconSlugError(null);
   };
 
   const openAddDialog = () => {
@@ -127,6 +150,19 @@ export default function AdminCategories() {
   };
 
   const handleSave = async () => {
+    // Validate icon_slug if provided
+    if (formData.icon_slug.trim()) {
+      setIconSlugError(null);
+      const isValid = await validateIconSlug(formData.icon_slug);
+      if (!isValid) {
+        setIconSlugError(`აიკონი "${formData.icon_slug}" არ მოიძებნა ბიბლიოთეკაში`);
+        toast.error('აიკონი ვერ მოიძებნა', {
+          description: `"${formData.icon_slug}" არ არსებობს აიკონების ბიბლიოთეკაში. გთხოვთ აირჩიოთ სხვა აიკონი.`
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       if (editingCategory) {
@@ -342,8 +378,17 @@ export default function AdminCategories() {
                     <TabsContent value="library" className="mt-2">
                       <IconPicker
                         value={formData.icon_slug}
-                        onChange={(slug) => setFormData({ ...formData, icon_slug: slug })}
+                        onChange={(slug) => {
+                          setFormData({ ...formData, icon_slug: slug });
+                          setIconSlugError(null); // Clear error when user selects from picker
+                        }}
                       />
+                      {iconSlugError && (
+                        <div className="flex items-center gap-2 mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded-lg">
+                          <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                          <p className="text-xs text-destructive">{iconSlugError}</p>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </div>
