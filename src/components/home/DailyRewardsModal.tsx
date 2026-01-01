@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Sparkles, Check, Lock, Flame } from "lucide-react";
+import { Sparkles, Check, Lock, Flame } from "lucide-react";
+import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { GameModal } from "@/components/ui/game-modal";
@@ -220,7 +221,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
       animate={{ rotate: [-5, 5, -5], y: [0, -2, 0] }}
       transition={{ duration: 2, repeat: Infinity }}
     >
-      <Gift className="w-8 h-8 text-amber-600" />
+      <img src={giftBottleIcon} alt="" className="w-10 h-10 object-contain" />
     </motion.div>
   );
 
