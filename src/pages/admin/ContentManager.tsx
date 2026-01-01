@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   FolderOpen, 
   Plus, 
@@ -57,6 +57,7 @@ import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview'
 import { IconPicker } from '@/components/admin/IconPicker';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const DIFFICULTIES = [
   { value: 'easy', label: 'ადვილი', color: 'bg-emerald-500' },
@@ -90,6 +91,39 @@ export default function ContentManager() {
   // Selection state
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  
+  // Category question counts (fetched separately)
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [countsLoading, setCountsLoading] = useState(true);
+  
+  // Fetch question counts per category
+  const fetchQuestionCounts = useCallback(async () => {
+    if (categories.length === 0) return;
+    
+    setCountsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('category_id')
+        .eq('is_active', true);
+      
+      if (error) throw error;
+      
+      const counts: Record<string, number> = {};
+      (data || []).forEach(q => {
+        counts[q.category_id] = (counts[q.category_id] || 0) + 1;
+      });
+      setQuestionCounts(counts);
+    } catch (err) {
+      console.error('Error fetching question counts:', err);
+    } finally {
+      setCountsLoading(false);
+    }
+  }, [categories.length]);
+  
+  useEffect(() => {
+    fetchQuestionCounts();
+  }, [fetchQuestionCounts]);
   
   // Use hook with selected category for server-side filtering
   const { 
@@ -174,8 +208,6 @@ export default function ContentManager() {
   const showingFrom = totalCount > 0 ? page * pageSize + 1 : 0;
   const showingTo = Math.min((page + 1) * pageSize, totalCount);
 
-  // Placeholder for question counts (now using totalCount from selected category)
-  const questionCounts: Record<string, number> = {};
 
   // Category handlers
   const openAddCategory = () => {
