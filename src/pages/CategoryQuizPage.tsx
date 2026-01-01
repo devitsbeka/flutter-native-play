@@ -80,6 +80,38 @@ export default function CategoryQuizPage() {
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
+  const previousLevelId = useRef(levelId);
+
+  // Reset state when levelId changes (navigating to next level)
+  useEffect(() => {
+    if (previousLevelId.current !== levelId) {
+      previousLevelId.current = levelId;
+      hasFetched.current = false;
+      hasSaved.current = false;
+      setQuestions([]);
+      setCurrentQuestionIndex(0);
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+      setScore(0);
+      setLoading(true);
+      setError(null);
+      setTimeRemaining(15);
+      setShowResults(false);
+      setIsSaving(false);
+      setSavedStars(0);
+      setPointsEarned(0);
+      setUnlockedLevel(null);
+      setQuestionIds([]);
+      setNewProfileLevel(0);
+      setPreviousProfileLevel(0);
+      setLevelUpRewardsCredited(false);
+      setHiddenAnswers([]);
+      setUsedPowerUpsThisQuestion(new Set());
+      setTimerBonus(0);
+      setOpponentScore(0);
+      setPlayerScore(0);
+    }
+  }, [levelId]);
 
   // Store database category with icon_slug
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null } | null>(null);
