@@ -256,11 +256,12 @@ export function QuizGameScreenProd() {
         {/* 3D Icon - Absolute positioned on top of question card */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20 w-32 h-32">
           <DynamicIcon 
-            // Priority: question icon_slug > category icon_slug > AI suggestion > category fallback
-            slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug || aiData?.slugs?.join(',') || undefined}
+            // Priority: question icon_slug > category icon_slug > category fallback (no placeholder)
+            slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
             categoryId={currentQuestion.categoryId}
             size={128}
             className="drop-shadow-lg"
+            hideIfEmpty={true}
           />
         </div>
         

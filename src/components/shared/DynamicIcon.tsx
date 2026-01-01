@@ -9,6 +9,7 @@ interface DynamicIconProps {
   slug?: string; // Direct icon slug (highest priority) - from icon_slug column
   size?: number;
   className?: string;
+  hideIfEmpty?: boolean; // Don't render anything if no icon found
 }
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
@@ -20,7 +21,8 @@ export function DynamicIcon({
   categoryId,
   slug,
   size = 64,
-  className 
+  className,
+  hideIfEmpty = false
 }: DynamicIconProps) {
   const [imageError, setImageError] = React.useState(false);
   const { findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
@@ -80,8 +82,11 @@ export function DynamicIcon({
     setImageError(true);
   }, [iconUrl]);
 
-  // Show placeholder if loading, no icon, or error
+  // Show nothing if hideIfEmpty and no icon found
   if (!isLoaded || !iconUrl || imageError) {
+    if (hideIfEmpty) {
+      return null;
+    }
     return (
       <div 
         className={cn("flex items-center justify-center rounded-xl bg-white/20", className)}
