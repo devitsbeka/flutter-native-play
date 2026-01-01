@@ -316,7 +316,7 @@ export default function Index() {
                     <>
                       {/* Name, Flag, Level row */}
                       <div className="flex items-center justify-center gap-3">
-                        <span className="text-2xl font-display font-bold text-white drop-shadow-md">
+                        <span className="font-display font-bold text-white drop-shadow-md" style={{ fontSize: 32 }}>
                           {profile?.nickname || t("game.guest")}
                         </span>
                         {profile?.country_code && (
