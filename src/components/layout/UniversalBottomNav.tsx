@@ -57,24 +57,14 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             label="Map"
           />
 
-          {/* Center Play Button - floats above */}
-          <div className="relative flex flex-col items-center justify-center" style={{ width: 72 }}>
-            <div className="absolute" style={{ bottom: 6 }}>
+          {/* Center Play Button - floats above, overlapping nav bar */}
+          <div className="relative flex flex-col items-center justify-center" style={{ width: 72, height: 48 }}>
+            <div className="absolute" style={{ bottom: 24 }}>
               <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={isHome}
               />
             </div>
-            <span
-              className="text-gray-700 mt-auto"
-              style={{ 
-                fontSize: 12, 
-                fontFamily: "'Google Sans', sans-serif",
-                opacity: 0.7,
-              }}
-            >
-              {isHome ? "Play" : "Home"}
-            </span>
           </div>
 
           {/* Rank */}
