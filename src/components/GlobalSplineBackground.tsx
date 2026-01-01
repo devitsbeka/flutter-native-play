@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile", "/category"];
 
 // Pages where particles should be disabled for performance
-const NO_PARTICLES_PAGES = ["/"];
+const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/team"];
 
 // White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
