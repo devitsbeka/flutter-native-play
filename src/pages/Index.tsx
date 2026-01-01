@@ -239,6 +239,9 @@ export default function Index() {
                 <Bell className="w-5 h-5 text-gray-700" />
               </motion.button>
               
+              {/* Divider */}
+              <div className="w-px h-4 bg-gray-200" />
+              
               {/* Gift icon with red dot */}
               <motion.button
                 className="relative p-1"
