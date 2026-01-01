@@ -27,11 +27,7 @@ interface SideMenuDrawerProps {
 }
 
 const menuItems = [
-  { icon: iconMissions, label: "მისიები", onClick: "missions", badge: "3" },
   { icon: iconAvatar, label: "AI Avatar", onClick: "avatar", badge: "ახალი" },
-  { icon: iconEvents, label: "ივენთები", onClick: "events" },
-  { icon: iconPass, label: "ტრივია პასი", onClick: "pass" },
-  { icon: iconNotifications, label: "შეტყობინებები", onClick: "notifications" },
 ];
 
 const bottomLinks = [
@@ -155,7 +151,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
 
               {/* Grid Menu */}
               <div className="p-4 pb-2">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="flex justify-center">
                   {visibleGridItems.map((item, index) => (
                     <motion.button
                       key={item.label}

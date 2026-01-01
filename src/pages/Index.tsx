@@ -247,6 +247,16 @@ export default function Index() {
                 border: "3px solid rgba(255,255,255,0.9)",
               }}
             >
+              {/* Ad-Free button */}
+              <motion.button
+                className="relative p-1"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsAdFreeModalOpen(true)}
+              >
+                <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
+              </motion.button>
+              
               {/* Bell icon */}
               <motion.button
                 className="relative p-1"
@@ -301,60 +311,6 @@ export default function Index() {
                 onClick={() => user && setIsAvatarModalOpen(true)}
               >
                 <AvatarCircle avatarUrl={profile?.avatar_url} size={292} />
-                
-                {/* Ad-Free Button - Top Left of Avatar */}
-                <motion.button
-                  className="absolute pointer-events-auto"
-                  style={{
-                    top: 15,
-                    left: 15,
-                    width: 52,
-                    height: 52,
-                    borderRadius: "50%",
-                    background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                    boxShadow: "inset 0 3px 6px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
-                    border: "3px solid rgba(255,255,255,0.95)",
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsAdFreeModalOpen(true);
-                  }}
-                >
-                  <img 
-                    src={adFreeIcon}
-                    alt="Ad-Free"
-                    className="w-10 h-10 object-contain mx-auto drop-shadow-sm"
-                  />
-                </motion.button>
-                
-                {/* Gem Shop Button - Top Right of Avatar */}
-                <motion.button
-                  className="absolute pointer-events-auto"
-                  style={{
-                    top: 15,
-                    right: 15,
-                    width: 52,
-                    height: 52,
-                    borderRadius: "50%",
-                    background: "linear-gradient(180deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
-                    boxShadow: "inset 0 3px 6px rgba(139,92,246,0.2), inset 0 -2px 4px rgba(255,255,255,0.6), 0 4px 0 #7C3AED, 0 6px 12px rgba(139,92,246,0.3)",
-                    border: "3px solid rgba(255,255,255,0.95)",
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsGemShopOpen(true);
-                  }}
-                >
-                  <img 
-                    src={gemIcon}
-                    alt="Gem Shop"
-                    className="w-9 h-9 object-contain mx-auto drop-shadow-sm"
-                  />
-                </motion.button>
               </div>
                 
             
