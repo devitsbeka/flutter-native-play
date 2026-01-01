@@ -54,24 +54,22 @@ const PlayerCard = ({
   score,
   level,
   isWinner,
-  earnedPoints,
 }: { 
   avatarUrl?: string | null; 
   name: string;
   score: number;
   level: number;
   isWinner: boolean;
-  earnedPoints?: number;
 }) => (
   <motion.div 
-    className="flex flex-col items-center"
+    className="flex flex-col items-center w-[120px]"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    {/* Avatar wrapper with crown inside for proper centering */}
-    <div className="relative">
-      {/* Crown for winner - now properly centered on avatar */}
+    {/* Avatar wrapper with fixed width for consistent crown/badge centering */}
+    <div className="relative w-[88px] flex justify-center">
+      {/* Crown for winner - centered on avatar container */}
       {isWinner && (
         <motion.div
           initial={{ scale: 0, y: 10 }}
@@ -84,9 +82,9 @@ const PlayerCard = ({
         </motion.div>
       )}
       
-      {/* Avatar with border */}
+      {/* Avatar with border - fixed dimensions */}
       <div 
-        className="rounded-2xl p-1"
+        className="rounded-2xl p-1 w-[88px] h-[88px] flex items-center justify-center"
         style={{
           background: isWinner 
             ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
@@ -107,7 +105,7 @@ const PlayerCard = ({
         </div>
       </div>
 
-      {/* Winner label - half overlapping bottom of avatar */}
+      {/* Winner label - centered below avatar container */}
       {isWinner && (
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
@@ -129,12 +127,12 @@ const PlayerCard = ({
       )}
     </div>
     
-    {/* Name - increased margin */}
-    <p className="mt-4 font-semibold text-white truncate max-w-[120px]" style={{ fontSize: "22px" }}>
+    {/* Name - centered below avatar section */}
+    <p className="mt-5 font-semibold text-white truncate max-w-[120px] text-center" style={{ fontSize: "22px" }}>
       {name}
     </p>
     
-    {/* Score with Level below - added margin */}
+    {/* Score with Level below */}
     <motion.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
@@ -394,7 +392,6 @@ export function MatchResultScreen() {
               score={userScore}
               level={userLevel}
               isWinner={isWin}
-              earnedPoints={isWin ? userScore : undefined}
             />
 
             {/* Opponent */}
@@ -404,7 +401,6 @@ export function MatchResultScreen() {
               score={opponentScore}
               level={opponentLevel}
               isWinner={!isWin && !isDraw}
-              earnedPoints={!isWin && !isDraw ? opponentScore : undefined}
             />
           </motion.div>
         </div>
