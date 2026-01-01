@@ -340,7 +340,7 @@ export default function Index() {
                   <img 
                     src={adFreeIcon}
                     alt="Ad-Free"
-                    className="w-8 h-8 object-contain mx-auto drop-shadow-sm"
+                    className="w-10 h-10 object-contain mx-auto drop-shadow-sm"
                   />
                 </motion.button>
               </div>
