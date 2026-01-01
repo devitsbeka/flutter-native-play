@@ -54,6 +54,7 @@ import { useAdminQuestions, AdminQuestion } from '@/hooks/useAdminQuestions';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview';
 import { IconPicker } from '@/components/admin/IconPicker';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTIES = [
@@ -338,7 +339,12 @@ export default function ContentManager() {
                   !category.is_active && "opacity-50"
                 )}
               >
-                <span className="text-base">{category.icon}</span>
+                <DynamicIcon 
+                  slug={category.icon_slug || undefined}
+                  categoryId={category.category_id}
+                  size={24}
+                  className="shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{category.name}</p>
                   <p className={cn(
@@ -404,7 +410,11 @@ export default function ContentManager() {
             <div className="flex items-center gap-2">
               {selectedCategory && (
                 <>
-                  <span className="text-sm">{selectedCategory.icon}</span>
+                  <DynamicIcon 
+                    slug={selectedCategory.icon_slug || undefined}
+                    categoryId={selectedCategory.category_id}
+                    size={20}
+                  />
                   <span className="text-xs font-semibold truncate">{selectedCategory.name}</span>
                 </>
               )}
@@ -462,12 +472,17 @@ export default function ContentManager() {
                     <div className="flex items-center gap-1 mt-1">
                       {!selectedCategoryId && cat && (
                         <span className={cn(
-                          "text-[9px] px-1 py-0.5 rounded",
+                          "text-[9px] px-1 py-0.5 rounded flex items-center",
                           selectedQuestionId === question.id 
                             ? "bg-primary-foreground/20" 
                             : "bg-muted"
                         )}>
-                          {cat.icon}
+                          <DynamicIcon 
+                            slug={cat.icon_slug || undefined}
+                            categoryId={cat.category_id}
+                            size={14}
+                            hideIfEmpty={true}
+                          />
                         </span>
                       )}
                       <span className={cn(
