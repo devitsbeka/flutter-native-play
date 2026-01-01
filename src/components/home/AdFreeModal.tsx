@@ -35,10 +35,10 @@ export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[calc(100%-32px)] max-w-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div 
-              className="relative rounded-3xl overflow-hidden"
+              className="relative rounded-3xl overflow-hidden w-full max-w-sm"
               style={{
                 background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
                 boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 8px 0 #D8D0E8, 0 12px 32px rgba(0,0,0,0.2)",
