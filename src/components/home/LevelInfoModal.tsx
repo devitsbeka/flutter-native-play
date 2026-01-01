@@ -1,15 +1,17 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Gift } from "lucide-react";
+import { TrendingUp, Gift, Play } from "lucide-react";
 import { GameModal, GameModalStat } from "@/components/ui/game-modal";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 import { LevelInfo, getLevelRewards } from "@/utils/levelCalculation";
 
 interface LevelInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
   levelInfo: LevelInfo;
+  onContinue?: () => void;
 }
 
-export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalProps) {
+export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: LevelInfoModalProps) {
   const nextLevelRewards = getLevelRewards(levelInfo.level + 1);
 
   return (
@@ -21,6 +23,20 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo }: LevelInfoModalPro
       subtitle={levelInfo.isMaxLevel ? "✨ მაქსიმალური დონე!" : undefined}
       showSparkles
     >
+      {/* Continue Playing Button */}
+      {onContinue && !levelInfo.isMaxLevel && (
+        <div className="mb-4">
+          <ChunkyButton
+            variant="primary"
+            size="md"
+            onClick={onContinue}
+            icon={<Play className="w-5 h-5" />}
+            className="w-full"
+          >
+            თამაშის გაგრძელება
+          </ChunkyButton>
+        </div>
+      )}
       {/* XP Progress */}
       <div 
         className="rounded-2xl p-4 mb-4"

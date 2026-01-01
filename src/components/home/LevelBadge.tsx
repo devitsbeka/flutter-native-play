@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelInfoModal } from "./LevelInfoModal";
 
@@ -8,6 +9,7 @@ interface LevelBadgeProps {
 }
 
 export function LevelBadge({ totalPoints }: LevelBadgeProps) {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const levelInfo = calculateLevel(totalPoints);
   const progressPercent = levelInfo.progress;
@@ -111,6 +113,10 @@ export function LevelBadge({ totalPoints }: LevelBadgeProps) {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         levelInfo={levelInfo}
+        onContinue={() => {
+          setShowModal(false);
+          navigate("/game");
+        }}
       />
     </>
   );
