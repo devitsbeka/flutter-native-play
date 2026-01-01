@@ -20,19 +20,22 @@ function HelpItem({ icon, title, description, gradient, index }: HelpItemProps) 
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.1 + index * 0.1 }}
-      className="flex items-start gap-3 p-3 rounded-xl"
-      style={{ background: "rgba(255, 255, 255, 0.5)" }}
+      transition={{ delay: 0.1 + index * 0.08 }}
+      className="flex gap-3 p-2.5 rounded-xl"
+      style={{ 
+        background: "#F9FAFB",
+        boxShadow: "0 2px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
+      }}
     >
       <div 
-        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: gradient }}
       >
         {icon}
       </div>
-      <div className="flex-1">
-        <h4 className="font-bold text-foreground text-sm">{title}</h4>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-semibold text-gray-800 text-sm leading-tight">{title}</h4>
+        <p className="text-xs text-gray-500 mt-0.5 leading-snug">{description}</p>
       </div>
     </motion.div>
   );
@@ -82,7 +85,7 @@ export function AdventureHelpModal({ isOpen, onClose }: AdventureHelpModalProps)
       primaryLabel="გასაგებია"
       onPrimaryClick={onClose}
     >
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {helpItems.map((item, index) => (
           <HelpItem
             key={index}
