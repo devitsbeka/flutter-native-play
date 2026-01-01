@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, Check, X } from "lucide-react";
+import { ArrowLeft, HelpCircle, ChevronRight } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,12 @@ import { toast } from "sonner";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
+import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useSessionQuestions } from "@/hooks/useSessionQuestions";
 import confetti from "canvas-confetti";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
+import { calculateLevel } from "@/utils/levelCalculation";
 
 // Import shared quiz UI components
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
@@ -31,12 +34,13 @@ import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
 const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
 
 interface TriviaQuestion {
+  id: string;
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
   difficulty: "easy" | "medium" | "hard";
   allAnswers?: string[];
-  icon_slug?: string | null; // Question-specific icon
+  icon_slug?: string | null;
 }
 
 export default function CategoryQuizPage() {
@@ -58,6 +62,11 @@ export default function CategoryQuizPage() {
   const [savedStars, setSavedStars] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+  const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [newProfileLevel, setNewProfileLevel] = useState(0);
+  const [previousProfileLevel, setPreviousProfileLevel] = useState(0);
+  const [questionIds, setQuestionIds] = useState<string[]>([]);
   
   // Power-up state
   const { powerUps, usePowerUp: consumePowerUp } = useUserPowerUps();
@@ -71,6 +80,9 @@ export default function CategoryQuizPage() {
   // Store database category with icon_slug
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null } | null>(null);
   const category = getCategoryById(categoryId || "");
+  
+  // Session question tracking to prevent repetition
+  const { getAskedQuestionIds, markQuestionsAsAsked, clearAskedQuestions, shouldResetPool } = useSessionQuestions(categoryId || "");
   
   // Mock opponent data
   const opponent = useMemo(() => ({
@@ -143,15 +155,39 @@ export default function CategoryQuizPage() {
         // Store the database category for icon rendering
         setDbCategory(categoryData);
 
-        // Fetch questions from database - include icon_slug
-        const { data: dbQuestions, error: dbError } = await supabase
+        // Get previously asked question IDs to exclude
+        let askedIds = getAskedQuestionIds();
+        
+        // First, check total available questions for this level range
+        const { count: totalCount } = await supabase
+          .from('questions')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .eq('category_id', categoryData.id)
+          .gte('level_number', levelNumber)
+          .lte('level_number', levelNumber + 2);
+        
+        // Reset pool if we've used most questions
+        if (totalCount && shouldResetPool(totalCount)) {
+          clearAskedQuestions();
+          askedIds = [];
+        }
+
+        // Build query excluding asked questions
+        let query = supabase
           .from('questions')
           .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
           .eq('is_active', true)
           .eq('category_id', categoryData.id)
           .gte('level_number', levelNumber)
-          .lte('level_number', levelNumber + 2)
-          .limit(10);
+          .lte('level_number', levelNumber + 2);
+        
+        // Exclude previously asked questions if any
+        if (askedIds.length > 0) {
+          query = query.not('id', 'in', `(${askedIds.join(',')})`);
+        }
+        
+        const { data: dbQuestions, error: dbError } = await query.limit(15);
 
         if (dbError) {
           console.error("Questions fetch error:", dbError);
@@ -159,45 +195,77 @@ export default function CategoryQuizPage() {
           return;
         }
 
+        // If no new questions available, reset and try again
         if (!dbQuestions || dbQuestions.length === 0) {
+          if (askedIds.length > 0) {
+            clearAskedQuestions();
+            // Retry without exclusions
+            const { data: retryQuestions } = await supabase
+              .from('questions')
+              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
+              .eq('is_active', true)
+              .eq('category_id', categoryData.id)
+              .gte('level_number', levelNumber)
+              .lte('level_number', levelNumber + 2)
+              .limit(15);
+            
+            if (!retryQuestions || retryQuestions.length === 0) {
+              setError("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
+              return;
+            }
+            // Use retry questions
+            processAndSetQuestions(retryQuestions, categoryData);
+            return;
+          }
           setError("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
           return;
         }
-
-        // Filter and process questions
-        const processedQuestions = dbQuestions
-          .map((q: any) => {
-            const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-              ? q.incorrect_answers 
-              : JSON.parse(q.incorrect_answers || '[]');
-            
-            return {
-              question: q.question_text,
-              correct_answer: q.correct_answer,
-              incorrect_answers: incorrectAnswers,
-              difficulty: q.difficulty as "easy" | "medium" | "hard",
-              allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
-              icon_slug: q.icon_slug,
-            };
-          })
-          // Filter out questions/answers that are too long for viewport
-          .filter((q) => {
-            if (q.question.length > QUESTION_MAX_LENGTH) return false;
-            if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
-            if (q.incorrect_answers.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
-            return true;
-          });
-
-        // Shuffle and take 5 questions
-        const shuffledDbQuestions = shuffleArray(processedQuestions).slice(0, 5);
-
-        setQuestions(shuffledDbQuestions);
+        
+        processAndSetQuestions(dbQuestions, categoryData);
       } catch (err) {
         console.error("Unexpected error:", err);
         setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");
       } finally {
         setLoading(false);
       }
+    };
+    
+    const processAndSetQuestions = (dbQuestions: any[], categoryData: any) => {
+      // Store the database category for icon rendering
+      setDbCategory(categoryData);
+      
+      // Filter and process questions
+      const processedQuestions = dbQuestions
+        .map((q: any) => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers 
+            : JSON.parse(q.incorrect_answers || '[]');
+          
+          return {
+            id: q.id,
+            question: q.question_text,
+            correct_answer: q.correct_answer,
+            incorrect_answers: incorrectAnswers,
+            difficulty: q.difficulty as "easy" | "medium" | "hard",
+            allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
+            icon_slug: q.icon_slug,
+          };
+        })
+        // Filter out questions/answers that are too long for viewport
+        .filter((q) => {
+          if (q.question.length > QUESTION_MAX_LENGTH) return false;
+          if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
+          if (q.incorrect_answers.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
+          return true;
+        });
+
+      // Shuffle and take 5 questions
+      const shuffledDbQuestions = shuffleArray(processedQuestions).slice(0, 5);
+      
+      // Store question IDs to mark as asked after quiz
+      setQuestionIds(shuffledDbQuestions.map(q => q.id));
+      setQuestions(shuffledDbQuestions);
+      setLoading(false);
     };
 
     fetchQuestions();
@@ -234,6 +302,15 @@ export default function CategoryQuizPage() {
     setIsSaving(true);
     const levelNumber = parseInt(levelId);
     
+    // Mark questions as asked to prevent repetition
+    if (questionIds.length > 0) {
+      markQuestionsAsAsked(questionIds);
+    }
+    
+    // Store previous profile level to detect level-ups
+    const previousLevel = profile?.total_points ? calculateLevel(profile.total_points).level : 1;
+    setPreviousProfileLevel(previousLevel);
+    
     const result = await updateLevelProgress(categoryId, levelNumber, score, questions.length);
     
     if (result.success) {
@@ -243,6 +320,7 @@ export default function CategoryQuizPage() {
       
       // Store unlock info for animation on category page
       if (result.unlockedLevel) {
+        setUnlockedLevel(result.unlockedLevel);
         sessionStorage.setItem(
           `level_unlocked_${categoryId}`,
           JSON.stringify({
@@ -252,11 +330,25 @@ export default function CategoryQuizPage() {
         );
       }
       
+      // Check for profile level-up (XP-based overall level)
+      if (user && profile) {
+        const newTotalPoints = (profile.total_points || 0) + earned;
+        const newLevel = calculateLevel(newTotalPoints).level;
+        if (newLevel > previousLevel) {
+          setNewProfileLevel(newLevel);
+          // Show level-up modal after a short delay
+          setTimeout(() => setShowLevelUpModal(true), 1000);
+        }
+      }
+      
       // Big confetti burst for passing (unlocks next level)
       if (result.stars >= 1) {
+        // Extra confetti for perfect score
+        const particleCount = score === questions.length ? 200 : 150;
+        
         // First burst
         confetti({
-          particleCount: 150,
+          particleCount,
           spread: 100,
           origin: { y: 0.5, x: 0.5 },
         });
@@ -275,9 +367,22 @@ export default function CategoryQuizPage() {
           });
         }, 250);
         
-        toast.success("🎉 დონე გავლილია! შემდეგი დონე გახსნილია!", {
-          description: `+${earned} ქულა მიღებულია!`,
-        });
+        // Extra burst for perfect score
+        if (score === questions.length) {
+          setTimeout(() => {
+            confetti({
+              particleCount: 100,
+              spread: 120,
+              origin: { y: 0.4, x: 0.5 },
+              colors: ['#FFD700', '#FFA500', '#FF6347'],
+            });
+          }, 500);
+        }
+        
+        toast.success(
+          score === questions.length ? "🏆 იდეალური შედეგი!" : "🎉 დონე გავლილია!", 
+          { description: `+${earned} ქულა მიღებულია!` }
+        );
       } else {
         toast.info("სცადე თავიდან შემდეგი დონის გასახსნელად!");
       }
@@ -530,6 +635,7 @@ export default function CategoryQuizPage() {
   if (showResults) {
     const displayStars = isSaving ? stars : savedStars || stars;
     const passed = displayStars >= 1;
+    const isPerfect = score === questions.length;
     
     return (
       <>
@@ -540,6 +646,12 @@ export default function CategoryQuizPage() {
             setShowRegisterPrompt(false);
             navigate("/auth");
           }}
+        />
+        <LevelUpModal
+          isOpen={showLevelUpModal}
+          onClose={() => setShowLevelUpModal(false)}
+          newLevel={newProfileLevel}
+          previousLevel={previousProfileLevel}
         />
         <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
         {/* Back button */}
@@ -553,52 +665,46 @@ export default function CategoryQuizPage() {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
+          className="text-center max-w-sm w-full"
         >
-          <div className="text-6xl mb-4">
-            {score === questions.length ? "🏆" : score >= questions.length / 2 ? "🎉" : "💪"}
-          </div>
+          {/* Result emoji with animation */}
+          <motion.div 
+            className="text-7xl mb-4"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+          >
+            {isPerfect ? "🏆" : passed ? "🎉" : "💪"}
+          </motion.div>
+          
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            {score === questions.length ? "იდეალური!" : score >= questions.length / 2 ? "შესანიშნავია!" : "გააგრძელე ვარჯიში!"}
+            {isPerfect ? "იდეალური!" : passed ? "შესანიშნავია!" : "გააგრძელე ვარჯიში!"}
           </h2>
           <p className="text-muted-foreground mb-2">
             სწორი პასუხი: {score} / {questions.length}
           </p>
           
-          {/* Points earned */}
+          {/* Points earned with animation */}
           {pointsEarned > 0 && (
             <motion.p 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="text-lg font-bold text-primary mb-2"
+              initial={{ scale: 0, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ delay: 0.3, type: "spring" }}
+              className="text-xl font-bold text-primary mb-3"
             >
               +{pointsEarned} ქულა!
             </motion.p>
           )}
           
-          {/* Level unlocked message */}
-          {passed && !isSaving && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mb-4"
-            >
-              <span className="inline-flex items-center gap-2 rounded-full bg-success/20 text-success px-4 py-2 font-semibold">
-                🔓 შემდეგი დონე გახსნილია!
-              </span>
-            </motion.div>
-          )}
-          
-          {/* Stars */}
-          <div className="flex justify-center gap-2 mb-6">
+          {/* Stars with enhanced animation */}
+          <div className="flex justify-center gap-3 mb-6">
             {[...Array(3)].map((_, i) => (
               <motion.span
                 key={i}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: i * 0.2 }}
-                className={`text-4xl ${i < displayStars ? "" : "opacity-30"}`}
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.4 + i * 0.15, type: "spring", stiffness: 300 }}
+                className={`text-5xl ${i < displayStars ? "drop-shadow-lg" : "opacity-30 grayscale"}`}
               >
                 ⭐
               </motion.span>
@@ -610,15 +716,39 @@ export default function CategoryQuizPage() {
           )}
 
           <div className="space-y-3">
+            {/* Primary action: Continue to next level if passed */}
+            {passed && unlockedLevel && !isSaving && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <ChunkyButton 
+                  variant="primary"
+                  onClick={() => navigate(`/play/${categoryId}/${unlockedLevel}`)}
+                  icon={<ChevronRight className="w-5 h-5" />}
+                  className="w-full"
+                >
+                  შემდეგი დონე: {unlockedLevel}
+                </ChunkyButton>
+              </motion.div>
+            )}
+            
+            {/* Secondary action: Go to category map */}
             <ChunkyButton 
+              variant={passed && unlockedLevel ? "secondary" : "primary"}
               onClick={() => navigate(`/category/${categoryId}`)}
               disabled={isSaving}
+              className="w-full"
             >
-              გაგრძელება
+              {passed && unlockedLevel ? "რუკაზე დაბრუნება" : "გაგრძელება"}
             </ChunkyButton>
+            
+            {/* Retry option */}
             <ChunkyButton 
               variant="ghost" 
               disabled={isSaving}
+              className="w-full"
               onClick={() => {
                 hasFetched.current = false;
                 hasSaved.current = false;
@@ -629,6 +759,8 @@ export default function CategoryQuizPage() {
                 setLoading(true);
                 setSavedStars(0);
                 setPointsEarned(0);
+                setUnlockedLevel(null);
+                setQuestionIds([]);
               }}
             >
               თავიდან თამაში
