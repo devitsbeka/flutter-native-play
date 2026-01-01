@@ -177,12 +177,17 @@ export function AirbnbCategoryCard({
           <div className="flex items-center gap-2">
             {/* Progress Bar Track */}
             <div className={`flex-1 rounded-full bg-white/30 backdrop-blur-sm overflow-hidden ${isFull ? 'h-2.5' : 'h-2'}`}>
-              {/* Progress Fill */}
-              <div 
-                className="h-full rounded-full transition-all duration-300"
+              {/* Progress Fill with animation */}
+              <motion.div 
+                className="h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${(progress / totalLevels) * 100}%` }}
+                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                 style={{ 
-                  width: `${(progress / totalLevels) * 100}%`,
-                  backgroundColor: '#FFB230'
+                  backgroundColor: '#FFB230',
+                  boxShadow: progress / totalLevels >= 0.8 
+                    ? '0 0 12px 2px rgba(255, 178, 48, 0.6), 0 0 20px 4px rgba(255, 178, 48, 0.3)' 
+                    : 'none'
                 }}
               />
             </div>
