@@ -67,6 +67,8 @@ export default function CategoryQuizPage() {
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
 
+  // Store database category with icon_slug
+  const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null } | null>(null);
   const category = getCategoryById(categoryId || "");
   
   // Mock opponent data
@@ -119,10 +121,10 @@ export default function CategoryQuizPage() {
       try {
         const levelNumber = parseInt(levelId || "1");
         
-        // First, get the category UUID from the category_id string
+        // First, get the category UUID and icon_slug from the category_id string
         const { data: categoryData, error: categoryError } = await supabase
           .from('categories')
-          .select('id, name')
+          .select('id, name, icon_slug')
           .eq('category_id', categoryId)
           .maybeSingle();
 
@@ -136,6 +138,9 @@ export default function CategoryQuizPage() {
           setError("კატეგორია ვერ მოიძებნა.");
           return;
         }
+
+        // Store the database category for icon rendering
+        setDbCategory(categoryData);
 
         // Fetch questions from database
         const { data: dbQuestions, error: dbError } = await supabase
@@ -664,7 +669,7 @@ export default function CategoryQuizPage() {
         {/* Category Icon - Between Players */}
         <div className="flex-1 flex justify-center items-start pt-4">
           <DynamicIcon 
-            slug={category?.icon_slug}
+            slug={dbCategory?.icon_slug || undefined}
             categoryId={categoryId}
             size={80}
             className="drop-shadow-lg"
