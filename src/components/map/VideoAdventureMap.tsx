@@ -449,6 +449,10 @@ export function VideoAdventureMap() {
         isOpen={showLevelModal}
         onClose={() => setShowLevelModal(false)}
         levelInfo={calculateLevel(totalPoints)}
+        onContinue={() => {
+          setShowLevelModal(false);
+          navigate("/game");
+        }}
       />
 
       <AdventureHelpModal
