@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GEORGIAN_CATEGORY_SLUGS } from '@/data/categoryIconMap';
+import { supabase } from '@/integrations/supabase/client';
 
 interface IconItem {
   title: string;
@@ -284,13 +285,36 @@ function scoreMatch(icon: IconItem, keywords: string[], category?: string): numb
 
 export function useIconLibrary() {
   const [iconIndex, setIconIndex] = useState<IconItem[]>([]);
+  const [dbIcons, setDbIcons] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
+  // Load local JSON icons
   useEffect(() => {
     loadIconIndex().then(icons => {
       setIconIndex(icons);
       setIsLoading(false);
     });
+  }, []);
+
+  // Load recently uploaded icons from database (for icons not in local JSON)
+  useEffect(() => {
+    supabase
+      .from('icon_library')
+      .select('slug, icon_url')
+      .order('created_at', { ascending: false })
+      .limit(200)
+      .then(({ data, error }) => {
+        if (data && !error) {
+          const iconMap: Record<string, string> = {};
+          data.forEach(icon => {
+            if (icon.slug && icon.icon_url) {
+              iconMap[icon.slug] = icon.icon_url;
+            }
+          });
+          setDbIcons(iconMap);
+          console.log(`[IconLibrary] Loaded ${Object.keys(iconMap).length} icons from database`);
+        }
+      });
   }, []);
 
   const findIcon = useCallback((
@@ -331,9 +355,15 @@ export function useIconLibrary() {
   }, [findIcon]);
 
   const getIconBySlug = useCallback((slug: string): string | null => {
+    // First check database icons (recently uploaded)
+    if (dbIcons[slug]) {
+      return dbIcons[slug];
+    }
+    
+    // Fall back to local JSON
     const icon = iconIndex.find(i => i.slug === slug);
     return icon ? getIconUrl(icon.file_name) : null;
-  }, [iconIndex]);
+  }, [iconIndex, dbIcons]);
 
   const getIconForCategory = useCallback((categoryIdOrName: string): string | null => {
     // First check if it's a Georgian category name and convert to English slug
