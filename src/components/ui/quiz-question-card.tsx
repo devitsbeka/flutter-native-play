@@ -11,6 +11,8 @@ interface QuizQuestionCardProps {
   progressPercent?: number;
   state?: QuizQuestionCardState;
   className?: string;
+  difficultyLabel?: string;
+  difficultyColor?: string;
 }
 
 // Dynamic font sizing based on question length
@@ -32,6 +34,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       progressPercent = 0,
       state = "default",
       className,
+      difficultyLabel,
+      difficultyColor,
     },
     ref
   ) => {
@@ -53,6 +57,19 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
+        {/* Difficulty badge - top right corner */}
+        {difficultyLabel && (
+          <div className="absolute top-3 right-3 z-10">
+            <span 
+              className={cn(
+                "px-2 py-0.5 rounded-full text-white text-[10px] font-bold",
+                difficultyColor
+              )}
+            >
+              {difficultyLabel}
+            </span>
+          </div>
+        )}
         {/* Question counter (optional) */}
         {questionNumber && totalQuestions && (
           <div className="flex justify-center pt-4">

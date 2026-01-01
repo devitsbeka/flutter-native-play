@@ -255,19 +255,12 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Timer + Difficulty Badge Row */}
-      <div className="flex flex-col items-center gap-2 py-3 flex-shrink-0">
+      {/* Timer Row */}
+      <div className="flex justify-center py-3 flex-shrink-0">
         <TimerBadge 
           seconds={timeRemaining} 
           maxSeconds={timePerQuestion + playerTimerBonus} 
         />
-        <span 
-          className={`px-3 py-1 rounded-full text-white text-xs font-bold ${
-            DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium
-          }`}
-        >
-          {DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
-        </span>
       </div>
 
       {/* Question Card */}
@@ -276,6 +269,8 @@ export function QuizGameScreenProd() {
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
           state="default"
+          difficultyLabel={DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
+          difficultyColor={DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}
         />
       </div>
 
