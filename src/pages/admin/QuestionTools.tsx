@@ -125,15 +125,16 @@ export default function QuestionTools() {
   }, [iconCategoryId]);
 
   // Batch Icon Assignment Function
-  const startIconAssignment = async () => {
+  const startIconAssignment = async (testMode = false) => {
     setIsPaused(false);
     setBatchResults([]);
+    const targetCount = testMode ? 10 : iconStats.withoutIcons;
     setIconProgress({
-      total: iconStats.withoutIcons,
+      total: targetCount,
       processed: 0,
       assigned: 0,
       failed: 0,
-      remaining: iconStats.withoutIcons,
+      remaining: targetCount,
       status: 'running',
       batchNumber: 0
     });
@@ -150,7 +151,10 @@ export default function QuestionTools() {
         
         // Call batch function
         const { data, error } = await supabase.functions.invoke('batch-assign-icons', {
-          body: { categoryId: iconCategoryId === 'all' ? null : iconCategoryId }
+          body: { 
+            categoryId: iconCategoryId === 'all' ? null : iconCategoryId,
+            testMode 
+          }
         });
 
         if (error) {
@@ -163,7 +167,7 @@ export default function QuestionTools() {
           break;
         }
 
-        if (data.done || data.remaining === 0) {
+        if (data.done || data.remaining === 0 || testMode) {
           shouldContinue = false;
         }
 
@@ -173,18 +177,18 @@ export default function QuestionTools() {
         // Calculate estimated time
         const elapsed = (Date.now() - startTime) / 1000;
         const rate = totalProcessed / elapsed; // questions per second
-        const remaining = data.remaining || 0;
+        const remaining = testMode ? 0 : (data.remaining || 0);
         const estimatedSeconds = rate > 0 ? remaining / rate : 0;
         const estimatedTime = estimatedSeconds > 60 
           ? `~${Math.ceil(estimatedSeconds / 60)} წუთი` 
           : `~${Math.ceil(estimatedSeconds)} წამი`;
 
         setIconProgress({
-          total: iconStats.withoutIcons,
+          total: testMode ? totalProcessed : iconStats.withoutIcons,
           processed: totalProcessed,
           assigned: totalAssigned,
           failed: totalProcessed - totalAssigned,
-          remaining: remaining,
+          remaining: testMode ? 0 : remaining,
           status: shouldContinue ? 'running' : 'completed',
           batchNumber: batchNum,
           estimatedTimeRemaining: shouldContinue ? estimatedTime : undefined,
@@ -213,7 +217,7 @@ export default function QuestionTools() {
       if (!isPaused) {
         setIconProgress(prev => ({ ...prev, status: 'completed' }));
         toast({
-          title: 'აიკონების მინიჭება დასრულდა! 🎉',
+          title: testMode ? 'ტესტი დასრულდა! ✅' : 'აიკონების მინიჭება დასრულდა! 🎉',
           description: `დამუშავდა ${totalProcessed} კითხვა, მინიჭდა ${totalAssigned} აიკონი`,
         });
       }
@@ -407,10 +411,20 @@ export default function QuestionTools() {
 
                   <div className="flex gap-2">
                     {iconProgress.status === 'idle' && (
-                      <Button onClick={startIconAssignment} disabled={iconStats.withoutIcons === 0}>
-                        <Play className="h-4 w-4 mr-2" />
-                        დაწყება ({iconStats.withoutIcons})
-                      </Button>
+                      <>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => startIconAssignment(true)} 
+                          disabled={iconStats.withoutIcons === 0}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          ტესტი (10)
+                        </Button>
+                        <Button onClick={() => startIconAssignment(false)} disabled={iconStats.withoutIcons === 0}>
+                          <Play className="h-4 w-4 mr-2" />
+                          ყველა ({iconStats.withoutIcons})
+                        </Button>
+                      </>
                     )}
                     {iconProgress.status === 'running' && (
                       <Button variant="outline" onClick={pauseIconAssignment}>

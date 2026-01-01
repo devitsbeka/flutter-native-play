@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const BATCH_SIZE = 50;
+const TEST_BATCH_SIZE = 10;
 const PARALLEL_LIMIT = 5;
 
 interface Question {
@@ -157,7 +158,8 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId } = await req.json();
+    const { categoryId, testMode } = await req.json();
+    const batchSize = testMode ? TEST_BATCH_SIZE : BATCH_SIZE;
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -178,7 +180,7 @@ serve(async (req) => {
       `)
       .or('icon_slug.is.null,icon_slug.eq.')
       .eq('is_active', true)
-      .limit(BATCH_SIZE);
+      .limit(batchSize);
 
     if (categoryId && categoryId !== 'all') {
       query = query.eq('category_id', categoryId);
