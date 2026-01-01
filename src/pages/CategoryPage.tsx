@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Lock, Play, LogIn, Clock } from "lucide-react";
+import { ArrowLeft, Star, Lock, Play, LogIn, Clock, Trophy, Map } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,7 @@ import { ComingSoonModal } from "@/components/game/ComingSoonModal";
 import { useQuestionAvailability } from "@/hooks/useQuestionAvailability";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { CategoryLeaderboard } from "@/components/category/CategoryLeaderboard";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
@@ -39,6 +40,8 @@ const getPastelColors = (id: string) => {
   return PASTEL_PALETTES[index];
 };
 
+type TabType = "leaderboard" | "map";
+
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
@@ -47,6 +50,7 @@ export default function CategoryPage() {
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { hasEnoughQuestions, loading: availabilityLoading } = useQuestionAvailability();
 
+  const [activeTab, setActiveTab] = useState<TabType>("leaderboard");
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -88,6 +92,27 @@ export default function CategoryPage() {
     // Refetch progress to ensure UI is updated
     refetch();
   }, [refetch]);
+
+  const handlePlayFromLeaderboard = () => {
+    // Start from current level
+    const hasQuestions = hasEnoughQuestions(categoryId || "", currentLevel);
+    if (!hasQuestions) {
+      setSelectedLevel(currentLevel);
+      setShowComingSoon(true);
+      return;
+    }
+    
+    if (!user) {
+      toast.info("შედით სისტემაში პროგრესის შესანახად!", {
+        description: "თქვენი შედეგები შეინახება სისტემაში შესვლის შემდეგ.",
+        action: {
+          label: "შესვლა",
+          onClick: () => navigate("/auth"),
+        },
+      });
+    }
+    navigate(`/play/${categoryId}/${currentLevel}`);
+  };
 
   if (categoriesLoading) {
     return (
@@ -162,9 +187,9 @@ export default function CategoryPage() {
         levelNumber={selectedLevel || undefined}
       />
 
-      <div className="min-h-screen">
+      <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <div className="px-5 pb-10 pt-12">
+        <div className="px-5 pb-6 pt-12">
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate(-1)}
@@ -172,6 +197,15 @@ export default function CategoryPage() {
             >
               <ArrowLeft className="h-5 w-5 text-white" />
             </button>
+            {!user && (
+              <button
+                onClick={() => navigate("/auth")}
+                className="flex items-center gap-1.5 text-sm text-white font-medium bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              >
+                <LogIn className="h-4 w-4" />
+                შესვლა
+              </button>
+            )}
           </div>
 
           <div className="text-center">
@@ -190,120 +224,149 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="relative -mt-4 rounded-t-3xl bg-[#1a1a2e] px-5 pt-6 pb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white">
-              აირჩიე დონე
-            </h2>
-            {!user && (
-              <button
-                onClick={() => navigate("/auth")}
-                className="flex items-center gap-1.5 text-sm text-primary font-medium"
-              >
-                <LogIn className="h-4 w-4" />
-                შესვლა
-              </button>
-            )}
+        {/* Tabs */}
+        <div className="px-5 mb-4">
+          <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-full p-1">
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+                activeTab === "leaderboard"
+                  ? "bg-white text-slate-800 shadow-md"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              <Trophy className="h-4 w-4" />
+              ლიდერბორდი
+            </button>
+            <button
+              onClick={() => setActiveTab("map")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+                activeTab === "map"
+                  ? "bg-white text-slate-800 shadow-md"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              რუკა
+            </button>
           </div>
+        </div>
 
-          {loading || availabilityLoading ? (
-            <div className="grid grid-cols-4 gap-3">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square rounded-2xl" />
-              ))}
-            </div>
+        {/* Content */}
+        <div className="flex-1 relative rounded-t-3xl bg-[#1a1a2e] px-5 pt-6 pb-8 overflow-hidden">
+          {activeTab === "leaderboard" ? (
+            <CategoryLeaderboard
+              categoryId={categoryId || ""}
+              categoryName={category.name}
+              onPlay={handlePlayFromLeaderboard}
+            />
           ) : (
-            <div className="grid grid-cols-4 gap-3">
-              {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars, hasQuestions }) => {
-                // Check if this level was just unlocked
-                const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
-                const isComingSoon = isUnlocked && !hasQuestions && !isCompleted;
-                
-                return (
-                  <motion.button
-                    key={level}
-                    onClick={() => handleLevelClick(level, isUnlocked)}
-                    disabled={!isUnlocked}
-                    whileHover={isUnlocked ? { scale: 1.05 } : undefined}
-                    whileTap={isUnlocked ? { scale: 0.95 } : undefined}
-                    initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
-                    animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
-                    transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
-                    className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
-                      isCurrent && !isComingSoon
-                        ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
-                        : ""
-                    } ${
-                      !isUnlocked
-                        ? "bg-muted opacity-50 cursor-not-allowed"
-                        : isComingSoon
-                        ? ""
-                        : isCompleted
-                        ? "bg-success"
-                        : ""
-                    }`}
-                    style={{
-                      boxShadow: isUnlocked 
-                        ? "0 4px 0 0 hsl(0 0% 0% / 0.15)"
-                        : "0 2px 0 0 hsl(var(--border))",
-                      ...(!isUnlocked || isCompleted ? {} : isComingSoon 
-                        ? { background: `linear-gradient(135deg, #FFA726, #FF7043)` }
-                        : { background: `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})` }
-                      ),
-                    }}
-                  >
-                    {!isUnlocked ? (
-                      <Lock className="h-5 w-5 text-muted-foreground" />
-                    ) : isComingSoon ? (
-                      <>
-                        <Clock className="h-5 w-5 text-white mb-0.5" />
-                        <span className="text-[10px] font-bold text-white/90">მალე</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-bold text-white text-lg">{level}</span>
-                        {isCompleted && (
-                          <div className="flex gap-0.5 mt-1">
-                            {[...Array(3)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-3 w-3 ${
-                                  i < stars
-                                    ? "fill-amber-300 text-amber-300"
-                                    : "fill-white/30 text-white/30"
-                                }`}
-                              />
-                            ))}
-                          </div>
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white">
+                  აირჩიე დონე
+                </h2>
+              </div>
+
+              {loading || availabilityLoading ? (
+                <div className="grid grid-cols-4 gap-3">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-square rounded-2xl" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-3">
+                  {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars, hasQuestions }) => {
+                    // Check if this level was just unlocked
+                    const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
+                    const isComingSoon = isUnlocked && !hasQuestions && !isCompleted;
+                    
+                    return (
+                      <motion.button
+                        key={level}
+                        onClick={() => handleLevelClick(level, isUnlocked)}
+                        disabled={!isUnlocked}
+                        whileHover={isUnlocked ? { scale: 1.05 } : undefined}
+                        whileTap={isUnlocked ? { scale: 0.95 } : undefined}
+                        initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
+                        animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
+                        transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
+                        className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
+                          isCurrent && !isComingSoon
+                            ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
+                            : ""
+                        } ${
+                          !isUnlocked
+                            ? "bg-muted opacity-50 cursor-not-allowed"
+                            : isComingSoon
+                            ? ""
+                            : isCompleted
+                            ? "bg-success"
+                            : ""
+                        }`}
+                        style={{
+                          boxShadow: isUnlocked 
+                            ? "0 4px 0 0 hsl(0 0% 0% / 0.15)"
+                            : "0 2px 0 0 hsl(var(--border))",
+                          ...(!isUnlocked || isCompleted ? {} : isComingSoon 
+                            ? { background: `linear-gradient(135deg, #FFA726, #FF7043)` }
+                            : { background: `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})` }
+                          ),
+                        }}
+                      >
+                        {!isUnlocked ? (
+                          <Lock className="h-5 w-5 text-muted-foreground" />
+                        ) : isComingSoon ? (
+                          <>
+                            <Clock className="h-5 w-5 text-white mb-0.5" />
+                            <span className="text-[10px] font-bold text-white/90">მალე</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-bold text-white text-lg">{level}</span>
+                            {isCompleted && (
+                              <div className="flex gap-0.5 mt-1">
+                                {[...Array(3)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-3 w-3 ${
+                                      i < stars
+                                        ? "fill-amber-300 text-amber-300"
+                                        : "fill-white/30 text-white/30"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </>
                         )}
-                      </>
-                    )}
 
-                    {isCurrent && isUnlocked && !isComingSoon && (
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
-                      >
-                        <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
-                      </motion.div>
-                    )}
+                        {isCurrent && isUnlocked && !isComingSoon && (
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
+                          >
+                            <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
+                          </motion.div>
+                        )}
 
-                    {/* Coming soon indicator badge */}
-                    {isComingSoon && (
-                      <motion.div
-                        animate={{ rotate: [-5, 5, -5] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px]"
-                      >
-                        🏗️
-                      </motion.div>
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
+                        {/* Coming soon indicator badge */}
+                        {isComingSoon && (
+                          <motion.div
+                            animate={{ rotate: [-5, 5, -5] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px]"
+                          >
+                            🏗️
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

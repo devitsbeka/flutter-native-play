@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      category_leaderboard: {
+        Row: {
+          best_streak: number
+          category_id: string
+          created_at: string
+          games_played: number
+          id: string
+          total_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number
+          category_id: string
+          created_at?: string
+          games_played?: number
+          id?: string
+          total_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_streak?: number
+          category_id?: string
+          created_at?: string
+          games_played?: number
+          id?: string
+          total_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       category_stats: {
         Row: {
           category: string
