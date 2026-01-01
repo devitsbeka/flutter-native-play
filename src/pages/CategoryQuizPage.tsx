@@ -480,53 +480,53 @@ export default function CategoryQuizPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
-      {/* Compact Header Row */}
-      <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+40px)]">
-        {/* Back Button + Player Avatar */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 text-white" />
-          </button>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-lg border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
-              <img 
-                src={profile?.avatar_url || "/placeholder.svg"} 
-                alt="Player"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-white font-bold text-sm mt-1">{playerScore}</span>
-          </div>
-        </div>
-        
-        {/* Opponent Avatar + Help */}
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 rounded-lg border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
-              <img 
-                src={opponent.avatar} 
-                alt="Opponent"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-white font-bold text-sm mt-1">{opponentScore}</span>
-          </div>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-            <HelpCircle className="w-4 h-4 text-white" />
-          </button>
-        </div>
+      {/* Top Navigation Row - Back and Help buttons */}
+      <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2"
+        >
+          <ArrowLeft className="w-6 h-6 text-white" />
+        </button>
+        <button className="p-2">
+          <HelpCircle className="w-6 h-6 text-white" />
+        </button>
       </div>
 
-      {/* Category Icon - Overlapping Question Card, no container */}
-      <div className="flex justify-center -mb-12 z-20 relative">
-        <span className="drop-shadow-lg" style={{ fontSize: "4.5rem" }}>{category?.icon || "🎯"}</span>
+      {/* Avatars + Category Icon Row */}
+      <div className="flex items-start justify-between px-4 -mt-2">
+        {/* Player Avatar + Score */}
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-xl border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
+            <img 
+              src={profile?.avatar_url || "/placeholder.svg"} 
+              alt="Player"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-white font-bold text-lg mt-1">{playerScore}</span>
+        </div>
+        
+        {/* Category Icon - Large, centered */}
+        <div className="flex-1 flex justify-center -mt-2">
+          <span className="drop-shadow-xl" style={{ fontSize: "6rem" }}>{category?.icon || "🎯"}</span>
+        </div>
+        
+        {/* Opponent Avatar + Score */}
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-xl border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
+            <img 
+              src={opponent.avatar} 
+              alt="Opponent"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-white font-bold text-lg mt-1">{opponentScore}</span>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-3 pb-4 pt-6 flex flex-col">
+      <div className="flex-1 px-3 pb-4 flex flex-col -mt-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestionIndex}
@@ -537,7 +537,7 @@ export default function CategoryQuizPage() {
           >
             {/* Question Card - White background */}
             <div 
-              className="rounded-2xl overflow-hidden mb-3 pt-8"
+              className="rounded-2xl overflow-hidden mb-3 pt-12"
               style={{
                 backgroundColor: "#FFFFFF",
                 boxShadow: "0 4px 0 #CBD5E1",
@@ -545,21 +545,21 @@ export default function CategoryQuizPage() {
             >
               <div className="px-4 py-3">
                 {/* Timer and Difficulty inside card */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1 bg-[#F0EEFF] px-2 py-0.5 rounded-full">
-                    <Clock className={`w-3 h-3 ${timeRemaining <= 5 ? "text-red-400" : "text-[#5B4FA3]"}`} />
-                    <span className={`font-bold text-xs ${timeRemaining <= 5 ? "text-red-400" : "text-[#5B4FA3]"}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xl">⏰</span>
+                    <span className="font-bold text-lg text-[#4ADE80]">
                       {timeRemaining}
                     </span>
                   </div>
                   <div 
-                    className="px-2 py-0.5 rounded-full text-white font-semibold text-[10px]"
+                    className="px-3 py-1 rounded-full text-white font-semibold text-xs"
                     style={{ backgroundColor: diffBadge.color }}
                   >
                     {diffBadge.text}
                   </div>
                 </div>
-                <p className="text-center font-semibold leading-snug text-[#2A2550] text-base pb-3">
+                <p className="text-center font-semibold leading-snug text-[#2A2550] text-lg pb-3">
                   {currentQuestion?.question}
                 </p>
               </div>
