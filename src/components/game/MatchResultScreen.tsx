@@ -6,13 +6,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Target, ArrowLeft, Crown } from "lucide-react";
+import { Target, ArrowLeft, Crown } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { GameLoseModal } from "@/components/game/GameLoseModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import trophyWinIcon from "@/assets/icons/trophy-win.png";
 
 // Floating trophy animation component
 const FloatingTrophy = () => (
@@ -42,9 +43,7 @@ const FloatingTrophy = () => (
         transform: "scale(1.5)",
       }}
     />
-    <div className="w-24 h-24 flex items-center justify-center relative">
-      <Trophy className="w-16 h-16 text-yellow-400 fill-yellow-400 drop-shadow-lg" />
-    </div>
+    <img src={trophyWinIcon} alt="Victory" className="w-24 h-24 object-contain relative drop-shadow-lg" />
   </motion.div>
 );
 
@@ -65,58 +64,61 @@ const PlayerCard = ({
   earnedPoints?: number;
 }) => (
   <motion.div 
-    className="flex flex-col items-center relative"
+    className="flex flex-col items-center"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    {/* Crown for winner */}
-    {isWinner && (
-      <motion.div
-        initial={{ scale: 0, y: 10 }}
-        animate={{ scale: 1, y: 0 }}
-        transition={{ delay: 0.6, type: "spring" }}
-        className="absolute -top-7 left-1/2 -translate-x-1/2 z-10"
-        style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" }}
+    {/* Avatar wrapper with crown inside for proper centering */}
+    <div className="relative">
+      {/* Crown for winner - now properly centered on avatar */}
+      {isWinner && (
+        <motion.div
+          initial={{ scale: 0, y: 10 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ delay: 0.6, type: "spring" }}
+          className="absolute -top-8 left-1/2 -translate-x-1/2 z-10"
+          style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" }}
+        >
+          <Crown className="w-10 h-10 text-yellow-400 fill-yellow-400" />
+        </motion.div>
+      )}
+      
+      {/* Avatar with border */}
+      <div 
+        className="rounded-2xl p-1"
+        style={{
+          background: isWinner 
+            ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
+            : "rgba(255, 255, 255, 0.3)",
+          boxShadow: isWinner 
+            ? "0 8px 24px rgba(250, 204, 21, 0.4)"
+            : "0 4px 12px rgba(255, 255, 255, 0.2)",
+        }}
       >
-        <Crown className="w-10 h-10 text-yellow-400 fill-yellow-400" />
-      </motion.div>
-    )}
-    
-    {/* Avatar with border */}
-    <div 
-      className="rounded-2xl p-1"
-      style={{
-        background: isWinner 
-          ? "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
-          : "rgba(255, 255, 255, 0.3)",
-        boxShadow: isWinner 
-          ? "0 8px 24px rgba(250, 204, 21, 0.4)"
-          : "0 4px 12px rgba(255, 255, 255, 0.2)",
-      }}
-    >
-      <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/20">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-white/30 flex items-center justify-center">
-            <span className="text-2xl">👤</span>
-          </div>
-        )}
+        <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/20">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-white/30 flex items-center justify-center">
+              <span className="text-2xl">👤</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
     
-    {/* Name */}
-    <p className="mt-2 font-semibold text-white truncate max-w-[120px]" style={{ fontSize: "22px" }}>
+    {/* Name - increased margin */}
+    <p className="mt-4 font-semibold text-white truncate max-w-[120px]" style={{ fontSize: "22px" }}>
       {name}
     </p>
     
-    {/* Score with Level below */}
+    {/* Score with Level below - added margin */}
     <motion.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ delay: 0.5, type: "spring" }}
-      className="flex flex-col items-center"
+      className="flex flex-col items-center mt-2"
     >
       <span className="text-3xl font-black" style={{ color: "#F5A623" }}>
         {score}
@@ -362,8 +364,8 @@ export function MatchResultScreen() {
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, type: "spring" }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-6"
-              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)", marginTop: "-15px" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-8"
+              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
             >
               <img src={coinIcon} alt="" className="w-6 h-6" />
               <span className="font-bold text-white text-lg">+{coinsEarned}</span>
@@ -375,7 +377,7 @@ export function MatchResultScreen() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex items-start justify-center gap-12 w-full"
+            className="flex items-start justify-center gap-16 w-full"
           >
             {/* Player */}
             <PlayerCard 
