@@ -86,11 +86,12 @@ export default function QuestionTools() {
     });
 
     try {
-      // Fetch questions without icon assignments
+      // Fetch questions WITHOUT icon assignments only (null or empty icon_slug)
       let query = supabase
         .from('questions')
-        .select('id, question_text, category_id')
-        .eq('is_active', true);
+        .select('id, question_text, category_id, icon_slug')
+        .eq('is_active', true)
+        .or('icon_slug.is.null,icon_slug.eq.');
       
       if (iconCategoryId !== 'all') {
         query = query.eq('category_id', iconCategoryId);
@@ -103,7 +104,7 @@ export default function QuestionTools() {
       if (!questions || questions.length === 0) {
         toast({
           title: 'კითხვები არ მოიძებნა',
-          description: 'არჩეულ კატეგორიაში კითხვები არ არის',
+          description: 'ყველა კითხვას უკვე აქვს აიკონი მინიჭებული',
         });
         setIconProgress(prev => ({ ...prev, status: 'completed' }));
         return;
