@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useCurrency } from "./useCurrency";
 
 interface SpinResult {
   label: string;
@@ -16,6 +17,7 @@ interface DailySpinInfo {
 
 export function useRewards() {
   const { user, profile, updateProfile } = useAuth();
+  const { addCoins, addGems, addCurrency } = useCurrency();
   const [dailySpinInfo, setDailySpinInfo] = useState<DailySpinInfo>({
     canSpin: true,
     spinsUsed: 0,
@@ -97,10 +99,14 @@ export function useRewards() {
         });
       }
 
-      // Apply XP reward if applicable
+      // Apply rewards based on type
       if (result.type === "xp" || result.type === "bonus") {
         const currentPoints = profile?.total_points || 0;
         await updateProfile({ total_points: currentPoints + result.value });
+      } else if (result.type === "coins") {
+        await addCoins(result.value);
+      } else if (result.type === "gems") {
+        await addGems(result.value);
       }
 
       // Refresh spin info
@@ -113,7 +119,7 @@ export function useRewards() {
     }
   };
 
-  const recordChestReward = async (rewards: { type: string; value: number; label: string }[]): Promise<{ success: boolean; newPoints?: number }> => {
+  const recordChestReward = async (rewards: { type: string; value: number; label: string }[]): Promise<{ success: boolean; newPoints?: number; newCoins?: number; newGems?: number }> => {
     if (!user) return { success: false };
 
     try {
@@ -124,17 +130,34 @@ export function useRewards() {
         reward_value: { rewards: rewards.map(r => ({ type: r.type, value: r.value, label: r.label })) },
       }]);
 
-      // Calculate total XP from rewards
-      const xpReward = rewards.find(r => r.type === "xp");
+      // Process all reward types
       let newPoints: number | undefined;
+      let totalCoins = 0;
+      let totalGems = 0;
       
-      if (xpReward) {
-        const currentPoints = profile?.total_points || 0;
-        newPoints = currentPoints + xpReward.value;
-        await updateProfile({ total_points: newPoints });
+      for (const reward of rewards) {
+        if (reward.type === "xp") {
+          const currentPoints = profile?.total_points || 0;
+          newPoints = currentPoints + reward.value;
+          await updateProfile({ total_points: newPoints });
+        } else if (reward.type === "coins") {
+          totalCoins += reward.value;
+        } else if (reward.type === "gems") {
+          totalGems += reward.value;
+        }
       }
 
-      return { success: true, newPoints };
+      // Add coins and gems
+      if (totalCoins > 0 || totalGems > 0) {
+        await addCurrency(totalCoins, totalGems);
+      }
+
+      return { 
+        success: true, 
+        newPoints,
+        newCoins: totalCoins > 0 ? (profile?.coins || 0) + totalCoins : undefined,
+        newGems: totalGems > 0 ? (profile?.gems || 0) + totalGems : undefined,
+      };
     } catch (error) {
       console.error("Error recording chest reward:", error);
       return { success: false };

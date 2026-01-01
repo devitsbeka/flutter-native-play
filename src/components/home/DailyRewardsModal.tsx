@@ -4,6 +4,8 @@ import { Gift, Flame, Check, Lock, Sparkles } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
+import { useCurrency } from "@/hooks/useCurrency";
+import { REWARDS } from "@/config/rewardConfig";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 
@@ -153,14 +155,20 @@ export function DailyRewardsModal({
   currentStreak,
   onClaim,
 }: DailyRewardsModalProps) {
+  const { addCurrency } = useCurrency();
   const [claimedToday, setClaimedToday] = useState(false);
   
   // Calculate which day the user is on (1-7, then resets)
   const currentDay = ((currentStreak - 1) % 7) + 1;
   
-  const handleClaim = () => {
+  const handleClaim = async () => {
     setClaimedToday(true);
     celebrateClaim();
+    
+    // Credit the coins and gems from today's reward
+    const todayReward = dailyRewards[currentDay - 1];
+    await addCurrency(todayReward.coins, todayReward.gems || 0);
+    
     onClaim?.();
     
     // Close after celebration

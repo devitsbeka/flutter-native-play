@@ -1,15 +1,18 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Home, RotateCcw, Star, User, Crown } from "lucide-react";
+import { Trophy, Home, RotateCcw, Star, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { REWARDS } from "@/config/rewardConfig";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 interface RankedParticipant {
   user_id: string;
@@ -100,6 +103,22 @@ export function MultiplayerResultScreen() {
       hasUpdatedStats.current = true;
 
       const updateStats = async () => {
+        // Calculate coins earned based on rank
+        let earnedCoins = 0;
+        if (myRank === 1) {
+          earnedCoins = REWARDS.MULTIPLAYER_1ST_COINS + myScore;
+        } else if (myRank === 2) {
+          earnedCoins = REWARDS.MULTIPLAYER_2ND_COINS + Math.floor(myScore / 2);
+        } else if (myRank === 3) {
+          earnedCoins = REWARDS.MULTIPLAYER_3RD_COINS + Math.floor(myScore / 2);
+        } else {
+          earnedCoins = REWARDS.MULTIPLAYER_PARTICIPATION_COINS;
+        }
+        setCoinsEarned(earnedCoins);
+
+        // Add coins
+        await addCoins(earnedCoins);
+
         await updateProfile({
           total_points: (profile.total_points || 0) + myScore,
           games_played: (profile.games_played || 0) + 1,
@@ -126,7 +145,7 @@ export function MultiplayerResultScreen() {
 
       updateStats();
     }
-  }, [user, profile, myScore, isWin, room, updateProfile, rankedParticipants]);
+  }, [user, profile, myScore, myRank, isWin, room, updateProfile, rankedParticipants, addCoins]);
 
   const handleBackToTeam = () => {
     resetMultiplayer();
@@ -277,12 +296,26 @@ export function MultiplayerResultScreen() {
           </motion.div>
         )}
 
+        {/* Coins Earned */}
+        {coinsEarned > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+            className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-amber-500/90"
+            style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
+          >
+            <img src={coinIcon} alt="" className="w-6 h-6" />
+            <span className="text-white font-bold text-lg">+{coinsEarned}</span>
+          </motion.div>
+        )}
+
         {/* Points Earned */}
         {myScore > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.6 }}
             className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-white/20"
           >
             <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />

@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Target, X, ArrowLeft, Crown } from "lucide-react";
 import confetti from "canvas-confetti";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { REWARDS } from "@/config/rewardConfig";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 // Player card component for clean display
 const PlayerCard = ({ 
@@ -107,6 +110,7 @@ const PlayerCard = ({
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
   const { user, profile, updateProfile } = useAuth();
+  const { addCoins } = useCurrency();
   const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
@@ -116,6 +120,7 @@ export function MatchResultScreen() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
+  const [coinsEarned, setCoinsEarned] = useState(0);
   const hasCheckedLevelUp = useRef(false);
 
   const handleBackToHome = () => {
@@ -164,6 +169,20 @@ export function MatchResultScreen() {
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
 
+        // Calculate coins earned
+        let earnedCoins = 0;
+        if (isWin) {
+          earnedCoins = REWARDS.GAME_WIN_BASE_COINS + (userScore * REWARDS.GAME_WIN_PER_POINT_COINS);
+        } else if (isDraw) {
+          earnedCoins = REWARDS.GAME_DRAW_COINS;
+        } else {
+          earnedCoins = REWARDS.GAME_LOSE_CONSOLATION_COINS;
+        }
+        setCoinsEarned(earnedCoins);
+
+        // Add coins
+        await addCoins(earnedCoins);
+
         await updateProfile({
           total_points: newPoints,
           games_played: (profile.games_played || 0) + 1,
@@ -196,7 +215,7 @@ export function MatchResultScreen() {
 
       updateStats();
     }
-  }, [user, profile, userScore, opponentScore, isWin, isDraw, opponent, updateProfile]);
+  }, [user, profile, userScore, opponentScore, isWin, isDraw, opponent, updateProfile, addCoins]);
 
   // Calculate user level
   const userLevel = calculateLevel(profile?.total_points || 0).level;
@@ -314,6 +333,20 @@ export function MatchResultScreen() {
           >
             {resultConfig.text}
           </motion.h1>
+
+          {/* Coins Earned Badge */}
+          {coinsEarned > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-6"
+              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
+            >
+              <img src={coinIcon} alt="" className="w-6 h-6" />
+              <span className="font-bold text-white text-lg">+{coinsEarned}</span>
+            </motion.div>
+          )}
 
           {/* Players Side by Side */}
           <motion.div

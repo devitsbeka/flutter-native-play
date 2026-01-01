@@ -4,8 +4,11 @@ import { X, Minus, Plus } from "lucide-react";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
+import { useCurrency } from "@/hooks/useCurrency";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { toast } from "sonner";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import { REWARDS } from "@/config/rewardConfig";
 
 interface PowerUpShopModalProps {
   isOpen: boolean;
@@ -41,15 +44,11 @@ const POWER_UP_INFO: PowerUpInfo[] = [
   },
 ];
 
-const POWER_UP_PRICES: Record<PowerUpType, number> = {
-  "5050": 150,
-  "freeze": 200,
-  "replace": 100,
-  "time-drain": 175,
-};
+const POWER_UP_PRICES: Record<PowerUpType, number> = REWARDS.POWER_UP_PRICES as Record<PowerUpType, number>;
 
 export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   const { powerUps, isLoading, addPowerUp } = useUserPowerUps();
+  const { coins, spendCoins, canAffordCoins } = useCurrency();
   const [selectedType, setSelectedType] = useState<PowerUpType>("5050");
   const [animationKey, setAnimationKey] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -79,20 +78,36 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   }, [isOpen]);
 
   const selectedInfo = POWER_UP_INFO.find((p) => p.type === selectedType)!;
-  const unitPrice = POWER_UP_PRICES[selectedType];
+  const unitPrice = POWER_UP_PRICES[selectedType] || 100;
   const totalPrice = unitPrice * quantity;
+  const canAfford = canAffordCoins(totalPrice);
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => Math.max(1, Math.min(10, prev + delta)));
   };
 
   const handlePurchase = async () => {
+    if (!canAfford) {
+      toast.error("არ გაქვს საკმარისი მონეტა!");
+      return;
+    }
+
     setIsPurchasing(true);
     try {
+      // Spend coins first
+      const spent = await spendCoins(totalPrice);
+      if (!spent) {
+        setIsPurchasing(false);
+        return;
+      }
+
+      // Add power-ups
       await addPowerUp(selectedType, quantity);
+      toast.success(`შეძენილია ${quantity}x ${selectedInfo.name}!`);
       onClose();
     } catch (error) {
       console.error("Purchase failed:", error);
+      toast.error("შეძენა ვერ მოხერხდა");
     } finally {
       setIsPurchasing(false);
     }
@@ -137,13 +152,20 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                   <X className="w-4 h-4 text-white" />
                 </motion.button>
 
-                <div className="text-center">
-                  <h2 className="text-xl font-display text-white">
-                    ⚡ ძალები
-                  </h2>
-                  <p className="text-white/60 text-sm">
-                    შეიძინე სუპერ ძალები
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div className="text-center">
+                    <h2 className="text-xl font-display text-white">
+                      ⚡ ძალები
+                    </h2>
+                    <p className="text-white/60 text-sm">
+                      შეიძინე სუპერ ძალები
+                    </p>
+                  </div>
+                  {/* Show coin balance */}
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15">
+                    <img src={coinIcon} alt="" className="w-5 h-5" />
+                    <span className="font-bold text-white">{coins.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
 
@@ -250,14 +272,14 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
 
                 {/* Buy Button */}
                 <ChunkyButton
-                  variant="success"
+                  variant={canAfford ? "success" : "secondary"}
                   size="lg"
                   className="w-full"
                   onClick={handlePurchase}
-                  disabled={isPurchasing}
+                  disabled={isPurchasing || !canAfford}
                 >
                   <img src={coinIcon} alt="" className="w-5 h-5" />
-                  <span>შეძენა</span>
+                  <span>{canAfford ? "შეძენა" : "არ გაქვს საკმარისი"}</span>
                   <span className="opacity-80">({totalPrice})</span>
                 </ChunkyButton>
               </div>

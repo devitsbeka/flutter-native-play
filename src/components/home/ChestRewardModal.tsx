@@ -5,6 +5,9 @@ import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import { useRewards } from "@/hooks/useRewards";
 import { toast } from "sonner";
+import { REWARDS } from "@/config/rewardConfig";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 
 interface ChestRewardModalProps {
   isOpen: boolean;
@@ -13,9 +16,9 @@ interface ChestRewardModalProps {
 }
 
 const rewards = [
-  { icon: "⭐", label: "50 XP", type: "xp", value: 50, gradient: "from-amber-400 to-yellow-500" },
-  { icon: "🎯", label: "2x ქულა", type: "multiplier", value: 2, gradient: "from-blue-400 to-cyan-500" },
-  { icon: "💎", label: "VIP დღე", type: "vip", value: 1, gradient: "from-purple-400 to-pink-500" },
+  { icon: coinIcon, isImage: true, label: `${REWARDS.CHEST_COINS} მონეტა`, type: "coins", value: REWARDS.CHEST_COINS, gradient: "from-amber-400 to-yellow-500" },
+  { icon: gemIcon, isImage: true, label: `${REWARDS.CHEST_GEMS} ლალი`, type: "gems", value: REWARDS.CHEST_GEMS, gradient: "from-purple-400 to-pink-500" },
+  { icon: "⭐", isImage: false, label: `${REWARDS.CHEST_XP} XP`, type: "xp", value: REWARDS.CHEST_XP, gradient: "from-blue-400 to-cyan-500" },
 ];
 
 export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalProps) {
@@ -84,14 +87,18 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
             }}
           >
             <motion.span 
-              className="text-3xl"
+              className="text-3xl flex items-center justify-center"
               animate={{ 
                 rotate: [-5, 5, -5],
                 scale: [1, 1.1, 1],
               }}
               transition={{ duration: 1.5, repeat: Infinity, delay: index * 0.2 }}
             >
-              {reward.icon}
+              {reward.isImage ? (
+                <img src={reward.icon as string} alt="" className="w-8 h-8" />
+              ) : (
+                reward.icon
+              )}
             </motion.span>
             <span className="font-bold text-lg">{reward.label}</span>
           </motion.div>

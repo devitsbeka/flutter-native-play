@@ -1,9 +1,13 @@
 import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Star, Sparkles, Gift } from "lucide-react";
-import { GameModal, GameModalFooter, GameModalStat } from "@/components/ui/game-modal";
+import { motion } from "framer-motion";
+import { Star, Gift } from "lucide-react";
+import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import { getLevelRewards } from "@/utils/levelCalculation";
+import { useCurrency } from "@/hooks/useCurrency";
+import { REWARDS } from "@/config/rewardConfig";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -14,9 +18,19 @@ interface LevelUpModalProps {
 
 export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: LevelUpModalProps) {
   const rewards = getLevelRewards(newLevel);
+  const { addCurrency } = useCurrency();
+
+  // Calculate level-up coins and gems
+  const levelUpCoins = newLevel * REWARDS.LEVEL_UP_COINS_PER_LEVEL;
+  const levelUpGems = newLevel >= REWARDS.LEVEL_UP_GEMS_THRESHOLD && newLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
+    ? Math.floor(newLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD) 
+    : 0;
 
   useEffect(() => {
     if (isOpen) {
+      // Credit level-up rewards
+      addCurrency(levelUpCoins, levelUpGems);
+
       const duration = 3000;
       const end = Date.now() + duration;
 
@@ -55,7 +69,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       
       frame();
     }
-  }, [isOpen]);
+  }, [isOpen, addCurrency, levelUpCoins, levelUpGems]);
 
   return (
     <GameModal
@@ -144,7 +158,19 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
           <Gift className="w-5 h-5 text-amber-700" />
           <span className="font-bold text-lg text-foreground">ჯილდოები</span>
         </div>
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 flex-wrap">
+          <div className="text-center">
+            <img src={coinIcon} alt="" className="w-8 h-8 mx-auto" />
+            <p className="font-bold text-lg text-foreground">+{levelUpCoins}</p>
+            <p className="text-sm font-medium text-foreground/70">მონეტა</p>
+          </div>
+          {levelUpGems > 0 && (
+            <div className="text-center">
+              <img src={gemIcon} alt="" className="w-8 h-8 mx-auto" />
+              <p className="font-bold text-lg text-foreground">+{levelUpGems}</p>
+              <p className="text-sm font-medium text-foreground/70">ლალი</p>
+            </div>
+          )}
           <div className="text-center">
             <span className="text-2xl">👑</span>
             <p className="font-bold text-lg text-foreground">+{rewards.xpBonus}</p>
@@ -155,13 +181,6 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
               <span className="text-2xl">⚡</span>
               <p className="font-bold text-lg text-foreground">+{rewards.powerUps}</p>
               <p className="text-sm font-medium text-foreground/70">ძალები</p>
-            </div>
-          )}
-          {rewards.spinTickets > 0 && (
-            <div className="text-center">
-              <span className="text-2xl">🎰</span>
-              <p className="font-bold text-lg text-foreground">+{rewards.spinTickets}</p>
-              <p className="text-sm font-medium text-foreground/70">სპინ ბილეთები</p>
             </div>
           )}
         </div>
