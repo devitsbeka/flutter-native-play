@@ -88,7 +88,7 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
           <div className="h-7 w-12 bg-white/20 rounded animate-pulse" />
         ) : (
           <motion.span
-            className="text-2xl font-bold"
+            className="text-sm font-bold"
             style={{ 
               color: scoreColors[position],
               textShadow: "0 2px 4px rgba(0,0,0,0.2)",
