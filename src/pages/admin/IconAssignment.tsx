@@ -59,7 +59,7 @@ export default function IconAssignment() {
         const response = await fetch('/data/icon-library-meta.json');
         const data = await response.json();
         
-        const iconList: IconItem[] = data.icons.map((icon: any) => ({
+        const iconList: IconItem[] = data.items.map((icon: any) => ({
           slug: icon.slug,
           title: icon.title,
           category: icon.category,
