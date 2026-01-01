@@ -37,31 +37,43 @@ async function analyzeQuestion(
   category: string | undefined,
   apiKey: string
 ): Promise<AIIconResult | null> {
-  const systemPrompt = `You are an icon matching assistant. Your job is to analyze trivia questions (often in Georgian language) and identify the VISUAL subject that would make the best icon representation.
+  const systemPrompt = `You are an icon matching assistant. Your job is to analyze trivia questions and identify a GENERAL TOPIC icon - NOT the specific answer.
 
-Focus on:
-- The main VISUAL subject of the question (animals, objects, places, people, concepts)
-- Concrete, drawable things rather than abstract concepts
-- The most specific identifiable subject
+CRITICAL RULES:
+- NEVER suggest icons that could hint at the answer
+- Focus on the CATEGORY or GENERAL THEME (science, history, geography, animals, sports, etc.)
+- For a question about "which animal has the longest tongue?" - suggest "animal", "wildlife", "nature" - NOT the specific animal
+- For a question about "who invented the telephone?" - suggest "history", "invention", "technology" - NOT "telephone" or the inventor
+- The icon should represent the SUBJECT AREA, not the specific answer
 
 Return ONLY valid JSON with no markdown formatting.`;
 
-  const userPrompt = `Analyze this trivia question and identify the best visual icon subject.
+  const userPrompt = `Analyze this trivia question and identify a GENERAL TOPIC icon.
 
 Question: "${question}"
 ${category ? `Category: "${category}"` : ''}
 
+IMPORTANT: The icon must NOT hint at the answer. Focus only on the broad topic/category.
+
 Return JSON in this exact format:
 {
   "slugs": ["slug1", "slug2", "slug3"],
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-  "mainConcept": "brief description"
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "mainConcept": "broad topic description"
 }
 
 Rules:
-- slugs: 3-5 specific icon slugs in kebab-case (e.g., "octopus", "blue-whale", "dna-helix")
-- keywords: 5-10 English keywords for icon search (nouns, not adjectives)
-- mainConcept: The primary visual subject in 2-4 words`;
+- slugs: 3-5 GENERAL topic icon slugs (e.g., "animal", "science", "globe", "trophy")
+- keywords: 5-10 BROAD category keywords (e.g., "wildlife", "biology", "geography")
+- mainConcept: The general topic in 2-4 words (e.g., "Animal Kingdom", "World History")
+
+Examples:
+- Question about octopus blood → slugs: ["animal", "marine-life", "ocean"], keywords: ["sea", "wildlife", "creature", "biology"]
+- Question about Einstein → slugs: ["science", "physics", "atom"], keywords: ["scientist", "history", "discovery"]
+- Question about Eiffel Tower → slugs: ["landmark", "travel", "architecture"], keywords: ["building", "city", "monument"]
+
+WRONG: Suggesting "octopus", "einstein", "eiffel-tower" - these hint at the answer!
+CORRECT: Suggesting general category icons like "science", "animal", "landmark"`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
