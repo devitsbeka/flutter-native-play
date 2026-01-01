@@ -140,13 +140,10 @@ export function GameLoseModal({
                 className="space-y-3"
               >
                 <ChunkyButton
-                  variant="primary"
+                  variant="mint"
                   size="lg"
                   onClick={onPlayAgain}
                   className="w-full"
-                  style={{
-                    background: "linear-gradient(180deg, #22C55E 0%, #16A34A 100%)",
-                  }}
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
                   თავიდან სცადე

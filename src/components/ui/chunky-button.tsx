@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "ghost" | "purple" | "white";
+  variant?: "primary" | "secondary" | "success" | "danger" | "ghost" | "purple" | "white" | "mint";
   size?: "sm" | "md" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -56,6 +56,12 @@ const variantStyles = {
     depth: "bg-gray-200",
     shadow: "shadow-[0_6px_0_0_#d1d5db]",
     pressed: "shadow-[0_2px_0_0_#d1d5db]",
+  },
+  mint: {
+    face: "bg-[#A8E6CF] text-[#2D5A4A]",
+    depth: "bg-[#7FCCB0]",
+    shadow: "shadow-[0_6px_0_0_#5DAB94]",
+    pressed: "shadow-[0_2px_0_0_#5DAB94]",
   },
 };
 
