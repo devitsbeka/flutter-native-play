@@ -135,12 +135,12 @@ export function GameModal({
   const handleClose = onClose || (() => {});
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, pointerEvents: "none" }}
+          animate={{ opacity: 1, pointerEvents: "auto" }}
+          exit={{ opacity: 0, pointerEvents: "none" }}
           className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
           onClick={!disableBackdropClick && onClose ? handleClose : undefined}
         >
