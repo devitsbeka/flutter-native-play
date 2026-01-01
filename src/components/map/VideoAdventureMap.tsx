@@ -388,6 +388,20 @@ export function VideoAdventureMap() {
                 {gems.toLocaleString()}
               </span>
             </div>
+            
+            {/* XP */}
+            <div 
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+            >
+              <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
+                {totalPoints.toLocaleString()} XP
+              </span>
+            </div>
           </div>
 
           {/* Help Button */}
