@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
+import { preloadIcons } from '@/hooks/useIconLibrary';
 
 export interface DatabaseCategory {
   id: string; // UUID
@@ -20,6 +21,11 @@ export interface TransformedCategory extends Category {
   uuid: string; // The actual UUID from database
   category_id: string; // String slug like "movies"  
   icon_slug?: string | null;
+}
+
+// Build icon URL from slug
+function getIconUrl(slug: string): string {
+  return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${slug}.png`;
 }
 
 // Transform database category to app Category format
@@ -51,7 +57,17 @@ export const useCategories = () => {
 
       if (error) throw error;
 
-      setCategories((data || []).map(transformCategory));
+      const transformed = (data || []).map(transformCategory);
+      setCategories(transformed);
+      
+      // Preload category icons for faster rendering
+      const iconUrls = transformed
+        .filter(cat => cat.icon_slug)
+        .map(cat => getIconUrl(cat.icon_slug!));
+      
+      if (iconUrls.length > 0) {
+        preloadIcons(iconUrls);
+      }
     } catch (err) {
       console.error('Error fetching categories:', err);
       setError(err as Error);
