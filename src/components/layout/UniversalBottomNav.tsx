@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Play } from "lucide-react";
-import { LottieNavIcon } from "./LottieNavIcon";
+import { Home, Play, Compass, Map, Trophy, Users } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 
@@ -27,91 +26,60 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
-      {/* Smooth gradient fade layer */}
+    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
+      {/* Single unified curved container */}
       <div 
-        className="absolute left-0 right-0 bottom-0 pointer-events-none"
+        className="relative mx-2 mb-2 rounded-[28px] overflow-visible"
         style={{
-          height: "140px",
-          background: "linear-gradient(to top, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0.2) 70%, transparent 100%)",
+          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+          boxShadow: "inset 0 4px 8px rgba(140,120,180,0.12), inset 0 -2px 4px rgba(255,255,255,0.9), 0 6px 0 #D8D0E8, 0 10px 24px rgba(0,0,0,0.12)",
+          border: "3px solid rgba(255,255,255,0.95)",
+          padding: "12px 16px 14px",
         }}
-      />
-      
-      <div className="relative px-0 pb-0 overflow-visible">
-        {/* Curved top edge SVG */}
-        <svg 
-          className="absolute left-0 right-0 w-full pointer-events-none"
-          style={{ top: -40, height: 42 }}
-          viewBox="0 0 100 20" 
-          preserveAspectRatio="none"
-        >
-          <path 
-            d="M0,20 L0,5 Q50,20 100,5 L100,20 Z" 
-            fill="rgba(255,255,255,0.95)"
+      >
+        <div className="flex items-center justify-around">
+          {/* Explore */}
+          <NavButton
+            onClick={() => navigate("/discover")}
+            isActive={isActive("/discover")}
+            label={t("nav.explore")}
+            icon={Compass}
           />
-        </svg>
-        
-        {/* Unified white container */}
-        <div 
-          className="relative overflow-visible"
-          style={{
-            background: "rgba(255,255,255,0.95)",
-            padding: "4px 20px 6px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-          }}
-        >
-          <div className="flex items-center justify-around overflow-visible">
-            {/* Explore */}
-            <NavButton
-              onClick={() => navigate("/discover")}
-              isActive={isActive("/discover")}
-              label={t("nav.explore")}
-            >
-              <LottieNavIcon type="explore" size={60} />
-            </NavButton>
 
-            {/* Map */}
-            <NavButton
-              onClick={() => navigate("/adventure-map")}
-              isActive={isActive("/adventure-map")}
-              label={t("nav.map")}
-              className="mr-[20px]"
-            >
-              <LottieNavIcon type="map" size={60} />
-            </NavButton>
+          {/* Map */}
+          <NavButton
+            onClick={() => navigate("/adventure-map")}
+            isActive={isActive("/adventure-map")}
+            label={t("nav.map")}
+            icon={Map}
+          />
 
-            {/* Center Button - positioned to float above */}
-            <div className="relative" style={{ width: 70 }}>
-              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -26 }}>
-                <Hex3DPlayButton 
-                  onClick={handleCenterClick}
-                  isPlayButton={isHome}
-                />
-              </div>
+          {/* Center Button - positioned to float above */}
+          <div className="relative" style={{ width: 88 }}>
+            <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4 }}>
+              <Hex3DPlayButton 
+                onClick={handleCenterClick}
+                isPlayButton={isHome}
+              />
             </div>
-
-            {/* Rank */}
-            <NavButton
-              onClick={() => navigate("/leaderboards")}
-              isActive={isActive("/leaderboards")}
-              label={t("nav.rank")}
-              className="ml-[20px]"
-            >
-              <LottieNavIcon type="rank" size={60} />
-            </NavButton>
-
-            {/* Team */}
-            <NavButton
-              onClick={onTeamClick || (() => navigate("/team"))}
-              isActive={isActive("/team")}
-              label={t("nav.sound")}
-              badgeCount={pendingChallenges.length}
-            >
-              <LottieNavIcon type="team" size={60} />
-            </NavButton>
           </div>
+
+          {/* Rank */}
+          <NavButton
+            onClick={() => navigate("/leaderboards")}
+            isActive={isActive("/leaderboards")}
+            label={t("nav.rank")}
+            icon={Trophy}
+          />
+
+          {/* Team */}
+          <NavButton
+            onClick={onTeamClick || (() => navigate("/team"))}
+            isActive={isActive("/team")}
+            label={t("nav.sound")}
+            icon={Users}
+            badgeCount={pendingChallenges.length}
+          />
         </div>
       </div>
     </div>
@@ -119,38 +87,51 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 }
 
 function NavButton({ 
-  children, 
   onClick, 
   isActive, 
   label,
-  className = "",
+  icon: Icon,
   badgeCount = 0,
 }: { 
-  children: React.ReactNode;
   onClick: () => void;
   isActive: boolean;
   label: string;
-  className?: string;
+  icon: React.ComponentType<{ className?: string }>;
   badgeCount?: number;
 }) {
   return (
     <motion.button
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-0 ${className}`}
-      style={{ marginTop: -5 }}
-      whileHover={{ scale: 1.1, y: -3 }}
+      className="relative flex flex-col items-center gap-1.5 min-w-[56px]"
+      whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.9 }}
     >
-      <div className="relative flex items-center justify-center">
-        {children}
+      <div className="relative">
+        {/* Icon container with subtle 3D effect */}
+        <div 
+          className="w-10 h-10 rounded-full flex items-center justify-center"
+          style={{
+            background: isActive 
+              ? "linear-gradient(180deg, #C9A8E9 0%, #A78BDA 100%)" 
+              : "transparent",
+            boxShadow: isActive 
+              ? "inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 0 rgba(139,92,246,0.3)" 
+              : "none",
+          }}
+        >
+          <Icon 
+            className={`w-5 h-5 ${isActive ? "text-white" : "text-gray-600"}`} 
+          />
+        </div>
         
         {/* Badge */}
         {badgeCount > 0 && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 flex items-center justify-center"
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center"
             style={{
+              background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
               boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
             }}
           >
@@ -160,11 +141,11 @@ function NavButton({
           </motion.div>
         )}
       </div>
+      
       <span 
-        className={`text-[10px] uppercase tracking-wider font-semibold drop-shadow-sm ${
-          isActive ? "text-primary font-bold" : "text-foreground/80"
+        className={`text-[10px] uppercase tracking-wide font-semibold ${
+          isActive ? "text-primary" : "text-gray-500"
         }`}
-        style={{ marginTop: -12 }}
       >
         {label}
       </span>
