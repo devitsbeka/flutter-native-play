@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift, Sparkles, Check, Lock, Flame } from "lucide-react";
+import { Gift, Sparkles, Check, Lock, Flame } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
+import { GameModal } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -38,14 +39,17 @@ const celebrateClaim = () => {
 // Streak badge component
 const StreakBadge = ({ streak }: { streak: number }) => (
   <div className="flex items-center justify-center gap-2 mb-4">
-    <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+    <div 
+      className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-full px-4 py-2 flex items-center gap-2"
+      style={{ boxShadow: "0 3px 0 #D97706" }}
+    >
       <Flame className="w-5 h-5 text-white" />
       <span className="text-white font-bold text-lg">{streak} დღე</span>
     </div>
   </div>
 );
 
-// Day reward card component - larger for 3-column layout
+// Day reward card component
 const DayRewardCard = ({
   reward,
   index,
@@ -73,53 +77,55 @@ const DayRewardCard = ({
       whileHover={isAvailable ? { scale: 1.05 } : {}}
       whileTap={isAvailable ? { scale: 0.95 } : {}}
       className={`
-        flex-shrink-0 w-24 rounded-2xl p-3 flex flex-col items-center justify-between snap-center
+        flex-shrink-0 w-20 rounded-2xl p-3 flex flex-col items-center justify-between snap-center
         transition-all duration-300 relative overflow-hidden
         ${isAvailable ? "cursor-pointer" : ""}
-        ${
-          isAvailable
-            ? "bg-gradient-to-b from-amber-400 to-orange-500 shadow-lg shadow-orange-500/30 ring-2 ring-amber-300"
-            : isClaimed
-            ? "bg-emerald-500/20 border-2 border-emerald-500/30"
-            : isLocked
-            ? "bg-slate-100 border-2 border-slate-200"
-            : "bg-white border-2 border-slate-200"
-        }
       `}
+      style={{
+        background: isAvailable 
+          ? "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)"
+          : isClaimed 
+          ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)"
+          : "linear-gradient(180deg, #F3F4F6 0%, #E5E7EB 100%)",
+        boxShadow: isAvailable 
+          ? "0 4px 0 #D97706, 0 6px 16px rgba(245, 158, 11, 0.3)"
+          : isClaimed
+          ? "0 3px 0 #6EE7B7"
+          : "0 3px 0 #D1D5DB",
+        border: isAvailable ? "2px solid #FDE68A" : "2px solid transparent",
+      }}
     >
       {/* Day label */}
       <span
         className={`text-xs font-bold mb-2 ${
-          isAvailable ? "text-white" : isClaimed ? "text-emerald-600" : "text-muted-foreground"
+          isAvailable ? "text-white" : isClaimed ? "text-emerald-700" : "text-gray-500"
         }`}
       >
         დღე {reward.day}
       </span>
 
       {/* Reward content */}
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-1.5">
         {isClaimed ? (
-          <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
-            <Check className="w-6 h-6 text-white" />
+          <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #059669" }}>
+            <Check className="w-5 h-5 text-white" />
           </div>
         ) : isLocked ? (
-          <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
-            <Lock className="w-5 h-5 text-muted-foreground" />
+          <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #9CA3AF" }}>
+            <Lock className="w-4 h-4 text-gray-400" />
           </div>
         ) : (
           <>
-            {/* Coins */}
             <div className="flex items-center gap-1">
-              <img src={coinIcon} alt="coins" className="w-5 h-5" />
-              <span className={`text-sm font-bold ${isAvailable ? "text-white" : "text-foreground"}`}>
+              <img src={coinIcon} alt="coins" className="w-4 h-4" />
+              <span className={`text-sm font-bold ${isAvailable ? "text-white" : "text-gray-700"}`}>
                 {reward.coins}
               </span>
             </div>
-            {/* Gems */}
             {reward.gems > 0 && (
               <div className="flex items-center gap-1">
-                <img src={gemIcon} alt="gems" className="w-5 h-5" />
-                <span className={`text-sm font-bold ${isAvailable ? "text-white" : "text-primary"}`}>
+                <img src={gemIcon} alt="gems" className="w-4 h-4" />
+                <span className={`text-sm font-bold ${isAvailable ? "text-white" : "text-purple-600"}`}>
                   +{reward.gems}
                 </span>
               </div>
@@ -129,12 +135,12 @@ const DayRewardCard = ({
       </div>
 
       {/* Status indicator */}
-      <div className="mt-2">
+      <div className="mt-2 h-5">
         {isAvailable && (
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
-            className="text-xs font-bold text-white bg-white/20 rounded-full px-2 py-0.5"
+            className="text-xs font-bold text-amber-900 bg-white/30 rounded-full px-2 py-0.5"
           >
             აიღე!
           </motion.div>
@@ -164,13 +170,13 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   const [showFlyingGems, setShowFlyingGems] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const currentDay = Math.min(((currentStreak - 1) % 7), 6); // 0-indexed, max 6
+  const currentDay = Math.min(((currentStreak - 1) % 7), 6);
 
   // Scroll to center the current day when modal opens
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const cardWidth = 96 + 12; // w-24 (96px) + gap-3 (12px)
+      const cardWidth = 80 + 12; // w-20 (80px) + gap-3 (12px)
       const scrollPosition = currentDay * cardWidth - container.offsetWidth / 2 + cardWidth / 2;
       setTimeout(() => {
         container.scrollTo({ left: Math.max(0, scrollPosition), behavior: "smooth" });
@@ -186,10 +192,8 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     vibrate([50, 30, 50]);
     celebrateClaim();
 
-    // Add rewards
     await addCurrency(reward.coins, reward.gems || 0);
 
-    // Show flying animations
     setShowFlyingCoins(true);
     if (reward.gems > 0) {
       setTimeout(() => setShowFlyingGems(true), 300);
@@ -197,7 +201,6 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
 
     setClaimedToday(true);
 
-    // Close after animation
     setTimeout(() => {
       setShowFlyingCoins(false);
       setShowFlyingGems(false);
@@ -206,86 +209,69 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     }, 1500);
   };
 
+  // Custom header icon
+  const headerIcon = (
+    <motion.div
+      className="relative w-16 h-16 rounded-full flex items-center justify-center"
+      style={{
+        background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
+        boxShadow: "0 4px 0 #F59E0B, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+      }}
+      animate={{ rotate: [-5, 5, -5], y: [0, -2, 0] }}
+      transition={{ duration: 2, repeat: Infinity }}
+    >
+      <Gift className="w-8 h-8 text-amber-600" />
+    </motion.div>
+  );
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-          />
+    <>
+      <GameModal
+        isOpen={isOpen}
+        onClose={onClose}
+        icon={headerIcon}
+        title="დღიური ჯილდოები"
+        subtitle="შემოდი ყოველდღე და აიღე ჯილდოები!"
+        showSparkles
+        hideFooter
+      >
+        {/* Streak Badge */}
+        <StreakBadge streak={currentStreak} />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
-          >
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden mb-20">
-              {/* Header */}
-              <div className="relative bg-gradient-to-r from-amber-500 to-orange-500 px-6 pt-6 pb-8">
-                {/* Close button */}
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/30 transition-colors z-10"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+        {/* Rewards - Horizontal scroll */}
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
+          {dailyRewards.map((reward, index) => (
+            <DayRewardCard
+              key={reward.day}
+              reward={reward}
+              index={index}
+              currentDay={currentDay}
+              claimedToday={claimedToday}
+              onClaim={handleClaim}
+            />
+          ))}
+        </div>
 
-                {/* Title */}
-                <div className="text-center pr-8">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Gift className="w-6 h-6 text-white" />
-                    <h2 className="text-xl font-bold text-white">დღიური ჯილდოები</h2>
-                  </div>
-                  <p className="text-white/80 text-sm">შემოდი ყოველდღე და აიღე ჯილდოები!</p>
-                </div>
-              </div>
+        {/* Hint */}
+        <p className="text-center text-muted-foreground text-xs mt-3">
+          ← გადაფურცლე ყველა დღის სანახავად →
+        </p>
+      </GameModal>
 
-              {/* Content */}
-              <div className="px-4 py-6 -mt-4 bg-white">
-                {/* Streak Badge */}
-                <StreakBadge streak={currentStreak} />
-
-                {/* Rewards - Horizontal scroll with 3 visible */}
-                <div
-                  ref={scrollContainerRef}
-                  className="flex gap-3 overflow-x-auto pb-4 px-1 scrollbar-hide"
-                  style={{ scrollSnapType: "x mandatory" }}
-                >
-                  {dailyRewards.map((reward, index) => (
-                    <DayRewardCard
-                      key={reward.day}
-                      reward={reward}
-                      index={index}
-                      currentDay={currentDay}
-                      claimedToday={claimedToday}
-                      onClaim={handleClaim}
-                    />
-                  ))}
-                </div>
-
-                {/* Hint */}
-                <p className="text-center text-slate-500 text-xs mt-2">
-                  ← გადაფურცლე ყველა დღის სანახავად →
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Flying Currency Animations */}
+      {/* Flying Currency Animations - outside modal for proper z-index */}
+      <AnimatePresence>
+        {showFlyingCoins && (
           <FlyingCurrency type="coins" amount={dailyRewards[currentDay].coins} isActive={showFlyingCoins} />
-          {dailyRewards[currentDay].gems > 0 && (
-            <FlyingCurrency type="gems" amount={dailyRewards[currentDay].gems} isActive={showFlyingGems} />
-          )}
-        </>
-      )}
-    </AnimatePresence>
+        )}
+        {dailyRewards[currentDay].gems > 0 && showFlyingGems && (
+          <FlyingCurrency type="gems" amount={dailyRewards[currentDay].gems} isActive={showFlyingGems} />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
