@@ -42,19 +42,47 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       <motion.div
         ref={ref}
         className={cn(
-          "relative w-full rounded-3xl overflow-hidden",
+          "relative w-full rounded-2xl overflow-hidden",
           className
         )}
         style={{
-          backgroundColor: "#6B5FA8",
-          boxShadow: "0 6px 0 #4A4080",
+          backgroundColor: "#FFFFFF",
+          boxShadow: "0 4px 0 #CBD5E1",
         }}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        {/* Progress bar at top */}
-        <div className="h-2 bg-white/20 w-full">
+        {/* Question counter (optional) */}
+        {questionNumber && totalQuestions && (
+          <div className="flex justify-center pt-4">
+            <span className="text-[#7E6AAE] text-sm font-medium">
+              {questionNumber}/{totalQuestions}
+            </span>
+          </div>
+        )}
+
+        {/* Question Text */}
+        <div className="px-5 py-4">
+          {isLoading ? (
+            <div className="space-y-2">
+              <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
+              <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mx-auto" />
+            </div>
+          ) : (
+            <p
+              className="text-center font-semibold leading-relaxed text-[#2A2550]"
+              style={{
+                fontSize: questionStyles.fontSize,
+              }}
+            >
+              {questionText}
+            </p>
+          )}
+        </div>
+
+        {/* Progress bar at bottom */}
+        <div className="h-2 bg-gray-200 w-full">
           <motion.div
             className="h-full rounded-r-full"
             style={{
@@ -65,34 +93,6 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             animate={{ width: `${progressPercent}%` }}
             transition={{ duration: 0.3 }}
           />
-        </div>
-
-        {/* Question counter (optional) */}
-        {questionNumber && totalQuestions && (
-          <div className="flex justify-center pt-3">
-            <span className="text-white/60 text-sm font-medium">
-              {questionNumber}/{totalQuestions}
-            </span>
-          </div>
-        )}
-
-        {/* Question Text */}
-        <div className="px-5 py-5">
-          {isLoading ? (
-            <div className="space-y-2">
-              <div className="h-5 w-full bg-white/20 rounded animate-pulse" />
-              <div className="h-5 w-3/4 bg-white/20 rounded animate-pulse mx-auto" />
-            </div>
-          ) : (
-            <p
-              className="text-center font-semibold leading-relaxed text-white"
-              style={{
-                fontSize: questionStyles.fontSize,
-              }}
-            >
-              {questionText}
-            </p>
-          )}
         </div>
       </motion.div>
     );

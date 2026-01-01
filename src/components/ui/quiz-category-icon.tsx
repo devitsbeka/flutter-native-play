@@ -1,28 +1,67 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 export type QuizCategoryIconState = "default" | "loading";
+
+// Category ID to emoji mapping for fallbacks
+const CATEGORY_EMOJI_MAP: Record<string, string> = {
+  movies: "🎬",
+  film: "🎬",
+  cinema: "🎬",
+  music: "🎵",
+  sports: "⚽",
+  science: "🔬",
+  history: "📜",
+  geography: "🌍",
+  art: "🎨",
+  literature: "📚",
+  technology: "💻",
+  food: "🍕",
+  nature: "🌿",
+  animals: "🐾",
+  general: "🎯",
+};
+
+function getCategoryEmoji(categoryId?: string): string {
+  if (!categoryId) return "🎯";
+  const lowerCategoryId = categoryId.toLowerCase();
+  
+  // Check for exact match first
+  if (CATEGORY_EMOJI_MAP[lowerCategoryId]) {
+    return CATEGORY_EMOJI_MAP[lowerCategoryId];
+  }
+  
+  // Check if categoryId contains any of the keywords
+  for (const [key, emoji] of Object.entries(CATEGORY_EMOJI_MAP)) {
+    if (lowerCategoryId.includes(key)) {
+      return emoji;
+    }
+  }
+  
+  return "🎯";
+}
 
 interface QuizCategoryIconProps {
   imageUrl?: string;
   iconSlug?: string;
   questionText?: string;
   categoryId?: string;
+  emoji?: string;
   size?: number;
   state?: QuizCategoryIconState;
   className?: string;
 }
 
 const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>(
-  ({ imageUrl, iconSlug, questionText, categoryId, size = 140, state = "default", className }, ref) => {
+  ({ imageUrl, iconSlug, questionText, categoryId, emoji, size = 140, state = "default", className }, ref) => {
     const isLoading = state === "loading";
+    const fallbackEmoji = emoji || getCategoryEmoji(categoryId);
 
     return (
       <motion.div
         ref={ref}
-        className={cn("relative", className)}
+        className={cn("relative flex items-center justify-center", className)}
         style={{ width: size, height: size }}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -46,11 +85,12 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
             transition={{ delay: 0.1 }}
           />
         ) : (
-          <DynamicIcon
-            slug={iconSlug}
-            categoryId={categoryId}
-            size={size}
-          />
+          <span 
+            className="drop-shadow-xl"
+            style={{ fontSize: size * 0.7 }}
+          >
+            {fallbackEmoji}
+          </span>
         )}
       </motion.div>
     );
