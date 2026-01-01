@@ -62,14 +62,14 @@ const PlayerCard = ({
   isWinner: boolean;
 }) => (
   <motion.div 
-    className="flex flex-col items-center w-[120px]"
+    className="flex flex-col items-center overflow-visible"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    {/* Avatar wrapper with fixed width for consistent crown/badge centering */}
-    <div className="relative w-[88px] flex justify-center">
-      {/* Crown for winner - centered on avatar container */}
+    {/* Avatar wrapper with overflow visible for crown */}
+    <div className="relative overflow-visible">
+      {/* Crown for winner - centered on avatar */}
       {isWinner && (
         <motion.div
           initial={{ scale: 0, y: 10 }}
@@ -104,28 +104,28 @@ const PlayerCard = ({
           )}
         </div>
       </div>
-
-      {/* Winner label - centered below avatar container */}
-      {isWinner && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.7, type: "spring" }}
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10"
-        >
-          <div 
-            className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-            style={{
-              background: "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
-              color: "#78350F",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-            }}
-          >
-            გამარჯვებული
-          </div>
-        </motion.div>
-      )}
     </div>
+
+    {/* Winner badge - in normal flow, centered naturally */}
+    {isWinner && (
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.7, type: "spring" }}
+        className="-mt-3 z-10"
+      >
+        <div 
+          className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+          style={{
+            background: "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
+            color: "#78350F",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+          }}
+        >
+          გამარჯვებული
+        </div>
+      </motion.div>
+    )}
     
     {/* Name - centered below avatar section */}
     <p className="mt-5 font-semibold text-white truncate max-w-[120px] text-center" style={{ fontSize: "22px" }}>
