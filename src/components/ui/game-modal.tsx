@@ -81,6 +81,7 @@ interface GameModalProps {
   hideFooter?: boolean;
   showBackButton?: boolean;
   onBack?: () => void;
+  disableBackdropClick?: boolean;
   // Quick footer props (alternative to custom footer)
   primaryLabel?: string;
   primaryIcon?: React.ReactNode;
@@ -107,6 +108,7 @@ export function GameModal({
   hideFooter = false,
   showBackButton = false,
   onBack,
+  disableBackdropClick = false,
   primaryLabel,
   primaryIcon,
   onPrimaryClick,
@@ -140,7 +142,7 @@ export function GameModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
-          onClick={onClose ? handleClose : undefined}
+          onClick={!disableBackdropClick && onClose ? handleClose : undefined}
         >
           <motion.div
             initial={{ scale: 0.85, opacity: 0, y: 40 }}

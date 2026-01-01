@@ -39,6 +39,8 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       title="დონე აიწია! 🎉"
       showSparkles
       showStars
+      hideCloseButton
+      disableBackdropClick
     >
       {/* Level Badge Animation */}
       <motion.div

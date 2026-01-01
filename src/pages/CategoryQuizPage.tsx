@@ -715,7 +715,7 @@ export default function CategoryQuizPage() {
             <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
           )}
 
-          <div className="space-y-3 relative z-10">
+          <div className="space-y-3 relative z-10 pointer-events-auto">
             {/* Primary action: Continue to next level if passed */}
             {passed && unlockedLevel && !isSaving && (
               <ChunkyButton 
