@@ -23,7 +23,7 @@ export function DynamicIcon({
   className 
 }: DynamicIconProps) {
   const [imageError, setImageError] = React.useState(false);
-  const { findIcon, getIconBySlug, getIconForCategory, isLoaded } = useIconLibrary();
+  const { findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
 
   // Resolve icon URL using the icon library
   const iconUrl = React.useMemo(() => {
@@ -50,10 +50,16 @@ export function DynamicIcon({
       if (categoryUrl && !failedIconUrls.has(categoryUrl)) {
         return categoryUrl;
       }
+      
+      // Priority 3: Random icon from category as fallback
+      const randomUrl = getRandomIconForCategory(categoryId);
+      if (randomUrl && !failedIconUrls.has(randomUrl)) {
+        return randomUrl;
+      }
     }
 
     return null;
-  }, [slug, categoryId, isLoaded, findIcon, getIconBySlug, getIconForCategory]);
+  }, [slug, categoryId, isLoaded, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
 
   // Reset error when URL changes
   React.useEffect(() => {
