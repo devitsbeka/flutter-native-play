@@ -15,6 +15,7 @@ interface PowerUpDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: PowerUpType;
+  onAddClick?: () => void;
 }
 
 const powerUpAssets: Record<PowerUpType, string> = {
@@ -43,7 +44,7 @@ const powerUpTranslationKeys: Record<PowerUpType, string> = {
 };
 
 
-export function PowerUpDetailModal({ isOpen, onClose, type }: PowerUpDetailModalProps) {
+export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerUpDetailModalProps) {
   const imageSrc = powerUpAssets[type];
   const titleGradient = powerUpTitleGradients[type];
   const translationKey = powerUpTranslationKeys[type];
@@ -93,8 +94,13 @@ export function PowerUpDetailModal({ isOpen, onClose, type }: PowerUpDetailModal
         </span>
       }
       subtitle={t(`powerups.${translationKey}.description`)}
-      primaryLabel={t("common.gotIt")}
-      onPrimaryClick={onClose}
+      primaryLabel="დამატება"
+      onPrimaryClick={() => {
+        onClose();
+        onAddClick?.();
+      }}
+      secondaryLabel="დახურვა"
+      onSecondaryClick={onClose}
       variant="primary"
     >
       {/* Hint */}

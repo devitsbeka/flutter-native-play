@@ -51,6 +51,7 @@ export default function PowerUps() {
   const { powerUps, isLoading } = useUserPowerUps();
   const [showShopModal, setShowShopModal] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<DetailPowerUpType | null>(null);
+  const [shopInitialType, setShopInitialType] = useState<PowerUpType | undefined>();
 
   // Map hook power-up type to detail modal power-up type
   const typeToDetailType: Record<PowerUpType, DetailPowerUpType> = {
@@ -59,9 +60,25 @@ export default function PowerUps() {
     "replace": "replace",
     "time-drain": "time-drain",
   };
+  
+  // Map detail modal type back to hook type
+  const detailTypeToType: Record<DetailPowerUpType, PowerUpType> = {
+    "fifty-fifty": "5050",
+    "freeze": "freeze",
+    "replace": "replace",
+    "time-drain": "time-drain",
+    "add-power": "5050", // fallback
+  };
 
   const handlePowerUpClick = (type: PowerUpType) => {
     setSelectedPowerUp(typeToDetailType[type]);
+  };
+  
+  const handleAddFromDetail = () => {
+    if (selectedPowerUp) {
+      setShopInitialType(detailTypeToType[selectedPowerUp]);
+    }
+    setShowShopModal(true);
   };
 
   return (
@@ -183,7 +200,11 @@ export default function PowerUps() {
       {/* Shop Modal */}
       <PowerUpShopModal
         isOpen={showShopModal}
-        onClose={() => setShowShopModal(false)}
+        onClose={() => {
+          setShowShopModal(false);
+          setShopInitialType(undefined);
+        }}
+        initialSelectedType={shopInitialType}
       />
 
       {/* Power-up Detail Modal */}
@@ -192,6 +213,7 @@ export default function PowerUps() {
           isOpen={!!selectedPowerUp}
           onClose={() => setSelectedPowerUp(null)}
           type={selectedPowerUp}
+          onAddClick={handleAddFromDetail}
         />
       )}
     </div>
