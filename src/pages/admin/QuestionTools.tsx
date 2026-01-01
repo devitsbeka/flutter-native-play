@@ -42,10 +42,13 @@ interface LongQuestion {
 interface IconAssignmentProgress {
   total: number;
   processed: number;
-  success: number;
+  assigned: number;
   failed: number;
+  remaining: number;
   status: 'idle' | 'running' | 'paused' | 'completed';
-  currentQuestion?: { id: string; text: string; slug?: string };
+  batchNumber: number;
+  estimatedTimeRemaining?: string;
+  rateLimited?: boolean;
 }
 
 interface IconStats {
@@ -64,16 +67,17 @@ export default function QuestionTools() {
   const [iconProgress, setIconProgress] = useState<IconAssignmentProgress>({
     total: 0,
     processed: 0,
-    success: 0,
+    assigned: 0,
     failed: 0,
-    status: 'idle'
+    remaining: 0,
+    status: 'idle',
+    batchNumber: 0
   });
   const [isPaused, setIsPaused] = useState(false);
-  const [processedQuestions, setProcessedQuestions] = useState<Array<{
-    id: string;
-    question: string;
-    slugs: string[];
-    success: boolean;
+  const [batchResults, setBatchResults] = useState<Array<{
+    batchNumber: number;
+    processed: number;
+    assigned: number;
   }>>([]);
 
   // Long Questions State
@@ -120,123 +124,99 @@ export default function QuestionTools() {
     loadIconStats();
   }, [iconCategoryId]);
 
-  // Icon Assignment Functions
+  // Batch Icon Assignment Function
   const startIconAssignment = async () => {
     setIsPaused(false);
-    setProcessedQuestions([]);
+    setBatchResults([]);
     setIconProgress({
-      total: 0,
+      total: iconStats.withoutIcons,
       processed: 0,
-      success: 0,
+      assigned: 0,
       failed: 0,
-      status: 'running'
+      remaining: iconStats.withoutIcons,
+      status: 'running',
+      batchNumber: 0
     });
 
+    const startTime = Date.now();
+    let totalProcessed = 0;
+    let totalAssigned = 0;
+    let batchNum = 0;
+    let shouldContinue = true;
+
     try {
-      // Fetch questions WITHOUT icon assignments only (null or empty icon_slug)
-      let query = supabase
-        .from('questions')
-        .select('id, question_text, category_id, icon_slug')
-        .eq('is_active', true)
-        .or('icon_slug.is.null,icon_slug.eq.');
-      
-      if (iconCategoryId !== 'all') {
-        query = query.eq('category_id', iconCategoryId);
-      }
-
-      const { data: questions, error } = await query;
-
-      if (error) throw error;
-
-      if (!questions || questions.length === 0) {
-        toast({
-          title: 'კითხვები არ მოიძებნა',
-          description: 'ყველა კითხვას უკვე აქვს აიკონი მინიჭებული',
+      while (shouldContinue && !isPaused) {
+        batchNum++;
+        
+        // Call batch function
+        const { data, error } = await supabase.functions.invoke('batch-assign-icons', {
+          body: { categoryId: iconCategoryId === 'all' ? null : iconCategoryId }
         });
-        setIconProgress(prev => ({ ...prev, status: 'completed' }));
-        return;
-      }
 
-      setIconProgress(prev => ({ ...prev, total: questions.length }));
-
-      // Process questions in batches
-      for (let i = 0; i < questions.length; i++) {
-        // Check if paused
-        if (isPaused) {
-          setIconProgress(prev => ({ ...prev, status: 'paused' }));
-          return;
-        }
-
-        const question = questions[i];
-
-        try {
-          // Call the AI analyze function
-          const { data, error: fnError } = await supabase.functions.invoke('analyze-question-icon', {
-            body: { questionText: question.question_text }
+        if (error) {
+          console.error('Batch error:', error);
+          toast({
+            title: 'შეცდომა',
+            description: 'ბათჩის დამუშავება ვერ მოხერხდა',
+            variant: 'destructive',
           });
+          break;
+        }
 
-          if (fnError) throw fnError;
+        if (data.done || data.remaining === 0) {
+          shouldContinue = false;
+        }
 
-          const slugs = data?.slugs || [];
-          const bestSlug = slugs[0] || null;
-          
-          // Update current question in progress for UI
-          setIconProgress(prev => ({
-            ...prev,
-            currentQuestion: { 
-              id: question.id, 
-              text: question.question_text,
-              slug: bestSlug 
-            }
-          }));
-          
-          // Save ONLY the first/best icon_slug to database
-          if (bestSlug) {
-            await supabase
-              .from('questions')
-              .update({ icon_slug: bestSlug })
-              .eq('id', question.id);
-          }
+        totalProcessed += data.processed || 0;
+        totalAssigned += data.assigned || 0;
 
-          setProcessedQuestions(prev => [...prev, {
-            id: question.id,
-            question: question.question_text,
-            slugs,
-            success: slugs.length > 0
-          }]);
+        // Calculate estimated time
+        const elapsed = (Date.now() - startTime) / 1000;
+        const rate = totalProcessed / elapsed; // questions per second
+        const remaining = data.remaining || 0;
+        const estimatedSeconds = rate > 0 ? remaining / rate : 0;
+        const estimatedTime = estimatedSeconds > 60 
+          ? `~${Math.ceil(estimatedSeconds / 60)} წუთი` 
+          : `~${Math.ceil(estimatedSeconds)} წამი`;
 
-          setIconProgress(prev => ({
-            ...prev,
-            processed: prev.processed + 1,
-            success: slugs.length > 0 ? prev.success + 1 : prev.success,
-            failed: slugs.length === 0 ? prev.failed + 1 : prev.failed
-          }));
+        setIconProgress({
+          total: iconStats.withoutIcons,
+          processed: totalProcessed,
+          assigned: totalAssigned,
+          failed: totalProcessed - totalAssigned,
+          remaining: remaining,
+          status: shouldContinue ? 'running' : 'completed',
+          batchNumber: batchNum,
+          estimatedTimeRemaining: shouldContinue ? estimatedTime : undefined,
+          rateLimited: data.rateLimited
+        });
 
-          // Small delay between requests to avoid rate limiting
-          if (i < questions.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
-        } catch (err) {
-          console.error('Error processing question:', err);
-          setProcessedQuestions(prev => [...prev, {
-            id: question.id,
-            question: question.question_text,
-            slugs: [],
-            success: false
-          }]);
-          setIconProgress(prev => ({
-            ...prev,
-            processed: prev.processed + 1,
-            failed: prev.failed + 1
-          }));
+        setBatchResults(prev => [...prev, {
+          batchNumber: batchNum,
+          processed: data.processed || 0,
+          assigned: data.assigned || 0
+        }]);
+
+        // If rate limited, wait longer before next batch
+        if (data.rateLimited) {
+          toast({
+            title: 'Rate limit',
+            description: '2 წამით ველოდებით...',
+          });
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          // Small delay between batches
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
 
-      setIconProgress(prev => ({ ...prev, status: 'completed' }));
-      toast({
-        title: 'აიკონების მინიჭება დასრულდა',
-        description: `დამუშავდა ${questions.length} კითხვა`,
-      });
+      if (!isPaused) {
+        setIconProgress(prev => ({ ...prev, status: 'completed' }));
+        toast({
+          title: 'აიკონების მინიჭება დასრულდა! 🎉',
+          description: `დამუშავდა ${totalProcessed} კითხვა, მინიჭდა ${totalAssigned} აიკონი`,
+        });
+      }
     } catch (err) {
       console.error('Icon assignment error:', err);
       toast({
@@ -255,22 +235,20 @@ export default function QuestionTools() {
 
   const resumeIconAssignment = () => {
     setIsPaused(false);
-    // Note: In a real implementation, you'd need to track where we left off
-    toast({
-      title: 'გაგრძელება',
-      description: 'პროცესის გასაგრძელებლად ხელახლა დაიწყეთ',
-    });
+    startIconAssignment(); // Will continue from where we left off
   };
 
   const resetIconAssignment = () => {
     setIsPaused(false);
-    setProcessedQuestions([]);
+    setBatchResults([]);
     setIconProgress({
       total: 0,
       processed: 0,
-      success: 0,
+      assigned: 0,
       failed: 0,
-      status: 'idle'
+      remaining: 0,
+      status: 'idle',
+      batchNumber: 0
     });
   };
 
@@ -387,19 +365,24 @@ export default function QuestionTools() {
                   </div>
                 </div>
 
-                {/* Current Question Being Processed */}
-                {iconProgress.status === 'running' && iconProgress.currentQuestion && (
+                {/* Batch Processing Status */}
+                {iconProgress.status === 'running' && (
                   <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      მუშავდება...
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        ბათჩი #{iconProgress.batchNumber} მუშავდება...
+                      </div>
+                      {iconProgress.estimatedTimeRemaining && (
+                        <span className="text-xs text-muted-foreground">
+                          დარჩა: {iconProgress.estimatedTimeRemaining}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm font-medium line-clamp-2">{iconProgress.currentQuestion.text}</p>
-                    {iconProgress.currentQuestion.slug && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-muted-foreground">აიკონი:</span>
-                        <DynamicIcon slug={iconProgress.currentQuestion.slug} className="h-6 w-6 text-primary" />
-                        <span className="text-xs font-mono text-muted-foreground">{iconProgress.currentQuestion.slug}</span>
+                    {iconProgress.rateLimited && (
+                      <div className="flex items-center gap-2 text-xs text-amber-600">
+                        <AlertTriangle className="h-3 w-3" />
+                        Rate limit - ველოდებით...
                       </div>
                     )}
                   </div>
@@ -424,9 +407,9 @@ export default function QuestionTools() {
 
                   <div className="flex gap-2">
                     {iconProgress.status === 'idle' && (
-                      <Button onClick={startIconAssignment}>
+                      <Button onClick={startIconAssignment} disabled={iconStats.withoutIcons === 0}>
                         <Play className="h-4 w-4 mr-2" />
-                        დაწყება
+                        დაწყება ({iconStats.withoutIcons})
                       </Button>
                     )}
                     {iconProgress.status === 'running' && (
@@ -458,54 +441,45 @@ export default function QuestionTools() {
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1 text-green-600">
                           <CheckCircle className="h-4 w-4" />
-                          {iconProgress.success}
+                          {iconProgress.assigned}
                         </span>
-                        <span className="flex items-center gap-1 text-red-500">
+                        <span className="flex items-center gap-1 text-amber-500">
                           <XCircle className="h-4 w-4" />
                           {iconProgress.failed}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          დარჩა: {iconProgress.remaining}
                         </span>
                       </div>
                     </div>
                     <Progress 
-                      value={(iconProgress.processed / iconProgress.total) * 100} 
+                      value={iconProgress.total > 0 ? ((iconProgress.total - iconProgress.remaining) / iconProgress.total) * 100 : 0} 
                       className="h-2"
                     />
                     {iconProgress.status === 'running' && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        მუშავდება...
+                        5x პარალელური დამუშავება...
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Results */}
-                {processedQuestions.length > 0 && (
-                  <div className="space-y-2 max-h-80 overflow-y-auto">
-                    <Label>ბოლო დამუშავებული:</Label>
-                    {processedQuestions.slice(-10).reverse().map((q) => (
-                      <div
-                        key={q.id}
-                        className={`p-3 rounded-lg border text-sm ${
-                          q.success 
-                            ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
-                            : 'border-red-200 bg-red-50 dark:bg-red-950/20'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="line-clamp-1 flex-1">{q.question}</p>
-                          {q.success ? (
-                            <Badge variant="secondary" className="shrink-0">
-                              {q.slugs.slice(0, 2).join(', ')}
-                            </Badge>
-                          ) : (
-                            <Badge variant="destructive" className="shrink-0">
-                              ვერ მოიძებნა
-                            </Badge>
-                          )}
+                {/* Batch Results */}
+                {batchResults.length > 0 && (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    <Label>ბათჩების შედეგები:</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {batchResults.slice(-10).map((batch) => (
+                        <div
+                          key={batch.batchNumber}
+                          className="p-2 rounded-lg border bg-muted/50 text-xs"
+                        >
+                          <span className="font-medium">ბათჩი #{batch.batchNumber}:</span>{' '}
+                          <span className="text-green-600">{batch.assigned}</span>/{batch.processed}
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
