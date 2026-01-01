@@ -1,6 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, RotateCcw, Home } from "lucide-react";
+import { RotateCcw, Home } from "lucide-react";
+import { GameModal } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
@@ -22,7 +23,6 @@ export function GameLoseModal({
   userScore,
   opponentScore,
   opponentName,
-  opponentAvatarUrl,
   coinsEarned,
 }: GameLoseModalProps) {
   const navigate = useNavigate();
@@ -33,136 +33,96 @@ export function GameLoseModal({
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={onClose}
-          />
+    <GameModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="წაგება"
+      iconEmoji="😔"
+      showSparkles={false}
+    >
+      {/* Score display */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex items-center justify-center gap-6 mb-4 p-4 rounded-2xl"
+        style={{
+          background: "#F3F4F6",
+          boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
+        }}
+      >
+        <div className="text-center">
+          <p className="text-gray-500 text-sm mb-1">შენ</p>
+          <p className="text-3xl font-bold text-gray-900">{userScore}</p>
+        </div>
+        <div 
+          className="text-gray-400 text-xl font-bold px-3 py-1 rounded-lg"
+          style={{
+            background: "#E5E7EB",
+          }}
+        >
+          vs
+        </div>
+        <div className="text-center">
+          <p className="text-gray-500 text-sm mb-1">{opponentName}</p>
+          <p className="text-3xl font-bold text-gray-900">{opponentScore}</p>
+        </div>
+      </motion.div>
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto"
-          >
-            <div 
-              className="rounded-3xl p-6 relative overflow-hidden"
-              style={{
-                background: "linear-gradient(180deg, #6366F1 0%, #4F46E5 100%)",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
-              }}
-            >
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
+      {/* Encouragement message */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-gray-600 text-center text-sm mb-4"
+      >
+        არ დანებდე! შემდეგ ჯერზე აუცილებლად მოიგებ 💪
+      </motion.p>
 
-              {/* Sad face icon */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                className="flex justify-center mb-4"
-              >
-                <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center">
-                  <span className="text-5xl">😔</span>
-                </div>
-              </motion.div>
-
-              {/* Title */}
-              <motion.h2
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-2xl font-bold text-white text-center mb-2"
-                style={{ fontFamily: "'TASolivare', sans-serif" }}
-              >
-                წაგება
-              </motion.h2>
-
-              {/* Score display */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center justify-center gap-4 mb-4"
-              >
-                <div className="text-center">
-                  <p className="text-white/70 text-sm">შენ</p>
-                  <p className="text-3xl font-bold text-white">{userScore}</p>
-                </div>
-                <div className="text-white/50 text-2xl font-bold">vs</div>
-                <div className="text-center">
-                  <p className="text-white/70 text-sm">{opponentName}</p>
-                  <p className="text-3xl font-bold text-white">{opponentScore}</p>
-                </div>
-              </motion.div>
-
-              {/* Encouragement message */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-white/80 text-center text-sm mb-4"
-              >
-                არ დანებდე! შემდეგ ჯერზე აუცილებლად მოიგებ 💪
-              </motion.p>
-
-              {/* Consolation coins */}
-              {coinsEarned > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white/10 mx-auto w-fit mb-6"
-                >
-                  <img src={coinIcon} alt="" className="w-5 h-5" />
-                  <span className="text-white font-medium">+{coinsEarned} ნუგეშის მონეტები</span>
-                </motion.div>
-              )}
-
-              {/* Action buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="space-y-3"
-              >
-                <ChunkyButton
-                  variant="mint"
-                  size="lg"
-                  onClick={onPlayAgain}
-                  className="w-full"
-                >
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  თავიდან სცადე
-                </ChunkyButton>
-
-                <ChunkyButton
-                  variant="secondary"
-                  size="lg"
-                  onClick={handleBackToHome}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white border-0"
-                >
-                  <Home className="w-5 h-5 mr-2" />
-                  მთავარ გვერდზე
-                </ChunkyButton>
-              </motion.div>
-            </div>
-          </motion.div>
-        </>
+      {/* Consolation coins */}
+      {coinsEarned > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, type: "spring" }}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full mx-auto w-fit mb-5"
+          style={{
+            background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+            boxShadow: "0 3px 0 #F59E0B, inset 0 1px 2px rgba(255,255,255,0.8)",
+          }}
+        >
+          <img src={coinIcon} alt="" className="w-5 h-5" />
+          <span className="text-amber-800 font-semibold">+{coinsEarned} ნუგეშის მონეტები</span>
+        </motion.div>
       )}
-    </AnimatePresence>
+
+      {/* Action buttons */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-3"
+      >
+        <ChunkyButton
+          variant="success"
+          size="lg"
+          onClick={onPlayAgain}
+          className="w-full"
+          icon={<RotateCcw className="w-5 h-5" />}
+        >
+          თავიდან სცადე
+        </ChunkyButton>
+
+        <ChunkyButton
+          variant="secondary"
+          size="lg"
+          onClick={handleBackToHome}
+          className="w-full"
+          icon={<Home className="w-5 h-5" />}
+        >
+          მთავარ გვერდზე
+        </ChunkyButton>
+      </motion.div>
+    </GameModal>
   );
 }
