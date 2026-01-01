@@ -105,12 +105,12 @@ Rules:
   }
 }
 
-// Find best matching icon from library
+// Find best matching icon from library with improved matching
 async function findBestIcon(
   supabase: any,
   aiResult: AIIconResult
 ): Promise<string | null> {
-  // Try exact slug matches first
+  // 1. Try exact slug matches first
   for (const slug of aiResult.slugs) {
     const { data } = await supabase
       .from('icon_library')
@@ -123,7 +123,33 @@ async function findBestIcon(
     }
   }
 
-  // Try keyword search in tags
+  // 2. Try slug-starts-with match (e.g., "king" → "king-chess-piece")
+  for (const slug of aiResult.slugs) {
+    const { data } = await supabase
+      .from('icon_library')
+      .select('slug')
+      .ilike('slug', `${slug}-%`)
+      .limit(1);
+    
+    if (data && data.length > 0) {
+      return data[0].slug;
+    }
+  }
+
+  // 3. Try title search (case-insensitive)
+  for (const keyword of aiResult.keywords.slice(0, 3)) {
+    const { data } = await supabase
+      .from('icon_library')
+      .select('slug, title')
+      .ilike('title', `%${keyword}%`)
+      .limit(1);
+    
+    if (data && data.length > 0) {
+      return data[0].slug;
+    }
+  }
+
+  // 4. Try keyword search in tags
   for (const keyword of aiResult.keywords.slice(0, 5)) {
     const { data } = await supabase
       .from('icon_library')
@@ -136,7 +162,7 @@ async function findBestIcon(
     }
   }
 
-  // Try partial slug match
+  // 5. Try partial slug match as fallback
   for (const slug of aiResult.slugs) {
     const { data } = await supabase
       .from('icon_library')
