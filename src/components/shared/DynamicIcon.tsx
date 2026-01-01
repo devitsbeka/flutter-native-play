@@ -102,7 +102,6 @@ export function DynamicIcon({
 
   return (
     <motion.img
-      key={iconUrl}
       src={iconUrl}
       alt="Category icon"
       width={size}
