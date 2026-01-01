@@ -106,14 +106,14 @@ function NavButton({
   return (
     <motion.button
       onClick={onClick}
-      className="relative flex flex-col items-center gap-1.5 min-w-[56px]"
+      className="relative flex items-center justify-center min-w-[56px]"
       whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.9 }}
     >
       <div className="relative">
         {/* Icon container with subtle 3D effect */}
         <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center"
+          className="w-12 h-12 rounded-full flex items-center justify-center"
           style={{
             background: isActive 
               ? "linear-gradient(180deg, #C9A8E9 0%, #A78BDA 100%)" 
@@ -124,7 +124,7 @@ function NavButton({
           }}
         >
           <Icon 
-            className={`w-5 h-5 ${isActive ? "text-white" : "text-gray-600"}`} 
+            className={`w-6 h-6 ${isActive ? "text-white" : "text-gray-600"}`} 
           />
         </div>
         
@@ -145,14 +145,6 @@ function NavButton({
           </motion.div>
         )}
       </div>
-      
-      <span 
-        className={`text-[10px] uppercase tracking-wide font-semibold ${
-          isActive ? "text-primary" : "text-gray-500"
-        }`}
-      >
-        {label}
-      </span>
     </motion.button>
   );
 }
