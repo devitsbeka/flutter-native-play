@@ -6,6 +6,7 @@ import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
 import { IconTab } from "@/components/discover/IconTab";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
@@ -30,6 +31,7 @@ export default function Discover() {
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
   const { favorites, toggleFavorite } = useFavorites();
+  const { ranks: leaderboardRanks } = useUserCategoryRanks();
 
   // Transform progress to simple number map
   const progressMap = useMemo(() => {
@@ -189,6 +191,7 @@ export default function Discover() {
                   categories={filteredCategories}
                   progress={progressMap}
                   favorites={favorites}
+                  leaderboardRanks={leaderboardRanks}
                   onCategoryClick={handleCategoryClick}
                   onFavoriteToggle={toggleFavorite}
                 />
@@ -215,6 +218,7 @@ export default function Discover() {
                     categories={favoriteCategories}
                     progress={progressMap}
                     favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -231,6 +235,7 @@ export default function Discover() {
                     categories={recentlyViewed as any[]}
                     progress={progressMap}
                     favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -247,6 +252,7 @@ export default function Discover() {
                   categories={popularCategories}
                   progress={progressMap}
                   favorites={favorites}
+                  leaderboardRanks={leaderboardRanks}
                   onCategoryClick={handleCategoryClick}
                   onFavoriteToggle={toggleFavorite}
                   getBadge={getBadge}
@@ -265,6 +271,7 @@ export default function Discover() {
                     categories={classicCategories}
                     progress={progressMap}
                     favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -283,6 +290,7 @@ export default function Discover() {
                     categories={funCategories}
                     progress={progressMap}
                     favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -301,6 +309,7 @@ export default function Discover() {
                     categories={educationalCategories}
                     progress={progressMap}
                     favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
                     onCategoryClick={handleCategoryClick}
                     onFavoriteToggle={toggleFavorite}
                   />
@@ -315,6 +324,7 @@ export default function Discover() {
                 categories={favoriteCategories}
                 progress={progressMap}
                 favorites={favorites}
+                leaderboardRanks={leaderboardRanks}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
@@ -336,6 +346,7 @@ export default function Discover() {
                 categories={filteredCategories}
                 progress={progressMap}
                 favorites={favorites}
+                leaderboardRanks={leaderboardRanks}
                 onCategoryClick={handleCategoryClick}
                 onFavoriteToggle={toggleFavorite}
               />
