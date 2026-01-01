@@ -91,7 +91,15 @@ export function useQuestionAvailability() {
 
   const hasEnoughQuestions = (categoryId: string, levelNumber: number): boolean => {
     const catAvail = availability.get(categoryId);
-    if (!catAvail) return false;
+    if (!catAvail) {
+      // If map is populated but category not found, log for debugging
+      // and return true as fallback to not block users (all categories have questions)
+      if (availability.size > 0) {
+        console.warn(`Category ${categoryId} not found in availability map. Available: ${Array.from(availability.keys()).slice(0, 5).join(', ')}...`);
+        return true; // Fallback: assume available since all active categories have questions
+      }
+      return false; // Still loading
+    }
 
     // If category has enough total questions, all levels are playable
     // Questions will be randomly selected from the pool
