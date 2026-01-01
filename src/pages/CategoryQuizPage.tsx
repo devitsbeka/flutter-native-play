@@ -718,20 +718,14 @@ export default function CategoryQuizPage() {
           <div className="space-y-3 relative z-10">
             {/* Primary action: Continue to next level if passed */}
             {passed && unlockedLevel && !isSaving && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+              <ChunkyButton 
+                variant="primary"
+                onClick={() => navigate(`/play/${categoryId}/${unlockedLevel}`)}
+                icon={<ChevronRight className="w-5 h-5" />}
+                className="w-full"
               >
-                <ChunkyButton 
-                  variant="primary"
-                  onClick={() => navigate(`/play/${categoryId}/${unlockedLevel}`)}
-                  icon={<ChevronRight className="w-5 h-5" />}
-                  className="w-full"
-                >
-                  შემდეგი დონე: {unlockedLevel}
-                </ChunkyButton>
-              </motion.div>
+                შემდეგი დონე: {unlockedLevel}
+              </ChunkyButton>
             )}
             
             {/* Secondary action: Go to category map */}
