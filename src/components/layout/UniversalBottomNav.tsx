@@ -47,6 +47,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         style={{
           background: "#F8F9FA",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 3px rgba(0, 0, 0, 0.05)",
         }}
       >
         {/* Navigation items container */}
