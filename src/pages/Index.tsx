@@ -220,7 +220,7 @@ export default function Index() {
               onClick={() => setIsSideMenuOpen(true)}
             >
               <span className="w-5 h-5 flex items-center justify-center text-base">🍔</span>
-              <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>მენიუ</span>
+              <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>ᲛᲔᲜᲘᲣ</span>
             </motion.button>
             
             {/* Notification icons chip */}
