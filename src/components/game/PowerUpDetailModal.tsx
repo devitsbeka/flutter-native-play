@@ -102,9 +102,9 @@ export function PowerUpDetailModal({ isOpen, onClose, type }: PowerUpDetailModal
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="w-full px-4 py-3 rounded-2xl bg-muted/50 border-2 border-border"
+        className="w-full px-4 py-3 rounded-2xl bg-cyan-50 border-2 border-cyan-200"
       >
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-cyan-700">
           💡 {t(`powerups.${translationKey}.hint`)}
         </p>
       </motion.div>
