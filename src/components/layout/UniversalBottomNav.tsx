@@ -51,7 +51,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         }}
       >
         {/* Navigation items container */}
-        <div className="flex items-center justify-around px-2 py-2">
+        <div className="flex items-center justify-around px-2 py-4">
           {/* Explore */}
           <NavButton
             onClick={() => navigate("/discover")}
