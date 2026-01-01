@@ -96,22 +96,20 @@ export default function ContentManager() {
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const [countsLoading, setCountsLoading] = useState(true);
   
-  // Fetch question counts per category
+  // Fetch question counts per category using RPC (server-side aggregation)
   const fetchQuestionCounts = useCallback(async () => {
     if (categories.length === 0) return;
     
     setCountsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('questions')
-        .select('category_id')
-        .eq('is_active', true);
+        .rpc('get_category_question_counts');
       
       if (error) throw error;
       
       const counts: Record<string, number> = {};
-      (data || []).forEach(q => {
-        counts[q.category_id] = (counts[q.category_id] || 0) + 1;
+      (data || []).forEach((row: { category_id: string; question_count: number }) => {
+        counts[row.category_id] = row.question_count;
       });
       setQuestionCounts(counts);
     } catch (err) {
