@@ -164,8 +164,8 @@ export function AirbnbCategoryCard({
           />
         </button>
 
-        {/* Badge */}
-        {badge && (
+        {/* Badge - only show if no leaderboard rank */}
+        {badge && !leaderboardRank && (
           <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center">
             <span className="text-[10px] font-semibold text-slate-700 leading-none">
               {badge}
@@ -173,19 +173,16 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
-        {/* Leaderboard Rank Badge */}
+        {/* Leaderboard Rank Badge - positioned at top left */}
         {leaderboardRank && leaderboardRank > 0 && (
           <div 
-            className="absolute top-2 left-2 px-2 py-1 rounded-lg flex items-center gap-1 z-10"
+            className="absolute top-2 left-2 px-2 py-1 rounded-lg flex items-center gap-1 z-10 bg-white/90 backdrop-blur-sm"
             style={{
-              background: leaderboardRank <= 3 
-                ? 'linear-gradient(135deg, #FFD700, #FFA500)' 
-                : 'linear-gradient(135deg, #64748B, #475569)',
-              boxShadow: '0 2px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)',
+              boxShadow: '0 2px 0 rgba(0,0,0,0.1)',
             }}
           >
-            <Trophy className="w-3 h-3 text-white" />
-            <span className="text-[11px] font-bold text-white leading-none">
+            <Trophy className="w-3 h-3 text-amber-500" />
+            <span className="text-[11px] font-bold text-slate-700 leading-none">
               #{leaderboardRank}
             </span>
           </div>
