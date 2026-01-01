@@ -21,7 +21,7 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
     const getDimensions = () => {
       switch (size) {
         case "xlarge":
-          return { width: 128, height: 128, borderRadius: 64 };
+          return { width: "min(100px, 22vw)", height: "min(100px, 22vw)", borderRadius: 64 };
         case "large":
           return { width: 50, height: 50, borderRadius: 25 };
         default:
