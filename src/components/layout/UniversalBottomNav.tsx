@@ -96,7 +96,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             />
 
             {/* Center Button - positioned to float above */}
-            <div className="relative" style={{ width: 80 }}>
+            <div className="relative" style={{ width: 90 }}>
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -14 }}>
                 <Hex3DPlayButton 
                   onClick={handleCenterClick}
@@ -195,7 +195,7 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
       whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.92, y: 4 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      style={{ width: 80, height: 80 }}
+      style={{ width: 90, height: 90 }}
     >
       {/* Soft outer glow - using box-shadow on button itself */}
       
