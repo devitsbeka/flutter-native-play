@@ -17,9 +17,7 @@ interface QuizPlayerAvatarProps {
 const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>(
   ({ avatarUrl, score = 0, position = "left", state = "default", size = "default", className }, ref) => {
     const isLoading = state === "loading";
-    const dimensions = size === "large" 
-      ? { width: 75, height: 75, borderRadius: 20 } 
-      : { width: 68, height: 68, borderRadius: 16 };
+    const dimensions = { width: 50, height: 50, borderRadius: 25 };
 
     const borderColors: Record<QuizPlayerAvatarState, string> = {
       default: "#9C99E8",

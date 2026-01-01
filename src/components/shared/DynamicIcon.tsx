@@ -1,8 +1,8 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { getCachedCategoryIcon, preloadCategoryIcons } from "@/hooks/useCategoryIconResolver";
 import { cn } from "@/lib/utils";
 import { HelpCircle } from "lucide-react";
+import { useIconLibrary } from "@/hooks/useIconLibrary";
 
 interface DynamicIconProps {
   categoryId?: string; // ASCII category_id from database - fallback lookup
@@ -22,64 +22,43 @@ export function DynamicIcon({
   size = 64,
   className 
 }: DynamicIconProps) {
-  const [iconUrl, setIconUrl] = React.useState<string | null>(null);
   const [imageError, setImageError] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const { findIcon, getIconBySlug, getIconForCategory, isLoaded } = useIconLibrary();
 
-  React.useEffect(() => {
-    let cancelled = false;
+  // Resolve icon URL using the icon library
+  const iconUrl = React.useMemo(() => {
+    if (!isLoaded) return null;
 
-    async function resolveIcon() {
-      setIsLoading(true);
-      setImageError(false);
-
-      // Priority 1: Direct slug (from database icon_slug column)
-      if (slug) {
-        const directUrl = `${ICON_STORAGE_URL}/${slug}.png`;
-        if (!failedIconUrls.has(directUrl)) {
-          if (!cancelled) {
-            setIconUrl(directUrl);
-            setIsLoading(false);
-          }
-          return;
-        }
+    // Priority 1: Search by slug keyword in icon library
+    if (slug) {
+      // Try exact slug match first
+      const exactUrl = getIconBySlug(slug);
+      if (exactUrl && !failedIconUrls.has(exactUrl)) {
+        return exactUrl;
       }
-
-      // Priority 2: Try cached category icon (from keyword resolver)
-      if (categoryId) {
-        const cachedUrl = getCachedCategoryIcon(categoryId);
-        if (cachedUrl && !failedIconUrls.has(cachedUrl)) {
-          if (!cancelled) {
-            setIconUrl(cachedUrl);
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        // If not cached, try to preload just this category
-        const resolved = await preloadCategoryIcons([categoryId]);
-        if (resolved[categoryId] && !failedIconUrls.has(resolved[categoryId])) {
-          if (!cancelled) {
-            setIconUrl(resolved[categoryId]);
-            setIsLoading(false);
-          }
-          return;
-        }
-      }
-
-      // No icon found
-      if (!cancelled) {
-        setIconUrl(null);
-        setIsLoading(false);
+      
+      // Try searching by the slug as a keyword
+      const match = findIcon([slug]);
+      if (match && !failedIconUrls.has(match.iconUrl)) {
+        return match.iconUrl;
       }
     }
 
-    resolveIcon();
+    // Priority 2: Try category-based lookup
+    if (categoryId) {
+      const categoryUrl = getIconForCategory(categoryId);
+      if (categoryUrl && !failedIconUrls.has(categoryUrl)) {
+        return categoryUrl;
+      }
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [categoryId, slug]);
+    return null;
+  }, [slug, categoryId, isLoaded, findIcon, getIconBySlug, getIconForCategory]);
+
+  // Reset error when URL changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [iconUrl]);
 
   const handleImageError = React.useCallback(() => {
     if (iconUrl) {
@@ -89,7 +68,7 @@ export function DynamicIcon({
   }, [iconUrl]);
 
   // Show placeholder if loading, no icon, or error
-  if (isLoading || !iconUrl || imageError) {
+  if (!isLoaded || !iconUrl || imageError) {
     return (
       <div 
         className={cn("flex items-center justify-center rounded-xl bg-white/20", className)}
