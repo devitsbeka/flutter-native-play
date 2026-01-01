@@ -1029,7 +1029,10 @@ export default function CategoryQuizPage() {
               გაგრძელება
             </AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => navigate(`/category/${categoryId}`)}
+              onClick={() => {
+                setShowExitDialog(false);
+                navigate(`/category/${categoryId}`);
+              }}
               className="flex-1 m-0 bg-red-500 hover:bg-red-600 text-white"
             >
               გამოსვლა
