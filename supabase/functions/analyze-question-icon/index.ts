@@ -11,9 +11,13 @@ serve(async (req) => {
   }
 
   try {
-    const { question, category } = await req.json();
+    const body = await req.json();
+    // Accept both 'question' and 'questionText' for compatibility
+    const question = body.question || body.questionText;
+    const category = body.category;
     
     if (!question) {
+      console.error('No question provided. Body:', JSON.stringify(body));
       return new Response(
         JSON.stringify({ error: 'Question is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
