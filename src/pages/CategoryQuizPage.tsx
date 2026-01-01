@@ -494,7 +494,7 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Avatars + Category Icon Row */}
-      <div className="flex items-start justify-between px-4 -mt-2">
+      <div className="flex items-start justify-between px-4 mt-4">
         {/* Player Avatar + Score */}
         <div className="flex flex-col items-center">
           <div className="w-16 h-16 rounded-xl border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
