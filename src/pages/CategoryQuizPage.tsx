@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, Check, X } from "lucide-react";
+import { ArrowLeft, Clock, Check, X, HelpCircle } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import confetti from "canvas-confetti";
+
+// Import bot avatars for opponent
+import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
+import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
+import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
+
+const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
 
 interface TriviaQuestion {
   question: string;
@@ -44,6 +51,34 @@ export default function CategoryQuizPage() {
   const hasSaved = useRef(false);
 
   const category = getCategoryById(categoryId || "");
+  
+  // Mock opponent data
+  const opponent = useMemo(() => ({
+    name: "QuizBot",
+    avatar: BOT_AVATARS[Math.floor(Math.random() * BOT_AVATARS.length)],
+    score: 0,
+  }), []);
+  
+  const [opponentScore, setOpponentScore] = useState(0);
+  const [playerScore, setPlayerScore] = useState(0);
+  
+  // Simulate opponent answering
+  useEffect(() => {
+    if (isAnswered && !showResults) {
+      // Simulate opponent getting answer right ~60% of the time
+      const opponentCorrect = Math.random() > 0.4;
+      if (opponentCorrect) {
+        setOpponentScore(prev => prev + Math.floor(Math.random() * 30) + 20);
+      }
+    }
+  }, [isAnswered, currentQuestionIndex]);
+  
+  // Update player score when they answer correctly
+  useEffect(() => {
+    if (isAnswered && selectedAnswer === questions[currentQuestionIndex]?.correct_answer) {
+      setPlayerScore(prev => prev + Math.floor(Math.random() * 30) + 25);
+    }
+  }, [isAnswered]);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -426,13 +461,26 @@ export default function CategoryQuizPage() {
     );
   }
 
-  // Answer letter labels
-  const answerLabels = ["A", "B", "C", "D"];
+  // Georgian answer labels
+  const answerLabels = ["ა:", "ბ:", "გ:", "დ:"];
   const progressPercent = ((currentQuestionIndex + (isAnswered ? 1 : 0)) / questions.length) * 100;
+  
+  // Get difficulty text in Georgian
+  const getDifficultyBadge = () => {
+    const diff = currentQuestion?.difficulty || "easy";
+    switch (diff) {
+      case "easy": return { text: "მარტივი", color: "#4ADE80" };
+      case "medium": return { text: "საშუალო", color: "#FBBF24" };
+      case "hard": return { text: "რთული", color: "#EF4444" };
+      default: return { text: "მარტივი", color: "#4ADE80" };
+    }
+  };
+  
+  const diffBadge = getDifficultyBadge();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
-      {/* Header */}
+      {/* Top Header Row */}
       <div className="flex items-center justify-between px-4 py-3 pt-[calc(env(safe-area-inset-top)+12px)]">
         <button
           onClick={() => navigate(-1)}
@@ -441,17 +489,50 @@ export default function CategoryQuizPage() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         
-        <div className="flex items-center gap-1 bg-white/10 px-4 py-2 rounded-full">
-          <span className="text-white font-bold text-lg">{currentQuestionIndex + 1}</span>
-          <span className="text-white/60 font-medium">/</span>
-          <span className="text-white/60 font-bold text-lg">{questions.length}</span>
+        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+          <HelpCircle className="w-5 h-5 text-white" />
+        </button>
+      </div>
+      
+      {/* VS Header with Avatars and Category Image */}
+      <div className="flex items-center justify-center px-4 pb-4">
+        {/* Player Side */}
+        <div className="flex flex-col items-center">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-3 border-[#9F8FEF] overflow-hidden bg-white/20">
+              <img 
+                src={profile?.avatar_url || "/placeholder.svg"} 
+                alt="Player"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+          <span className="text-white font-bold text-lg mt-1">{playerScore}</span>
         </div>
-
-        <div className="flex items-center gap-1 bg-white/10 px-3 py-1.5 rounded-full">
-          <Clock className={`w-4 h-4 ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`} />
-          <span className={`font-bold ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`}>
-            {timeRemaining}
-          </span>
+        
+        {/* Category Image in Center */}
+        <div className="mx-6 relative">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/10 border-2 border-white/20 flex items-center justify-center">
+            <span className="text-5xl">{category?.icon || "🎯"}</span>
+          </div>
+          {/* Question counter badge */}
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white/20 px-3 py-0.5 rounded-full">
+            <span className="text-white font-bold text-sm">{currentQuestionIndex + 1}/{questions.length}</span>
+          </div>
+        </div>
+        
+        {/* Opponent Side */}
+        <div className="flex flex-col items-center">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-3 border-[#9F8FEF] overflow-hidden bg-white/20">
+              <img 
+                src={opponent.avatar} 
+                alt="Opponent"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+          <span className="text-white font-bold text-lg mt-1">{opponentScore}</span>
         </div>
       </div>
 
@@ -465,6 +546,22 @@ export default function CategoryQuizPage() {
             exit={{ opacity: 0, y: -20 }}
             className="flex-1 flex flex-col"
           >
+            {/* Timer and Difficulty Row */}
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-full">
+                <Clock className={`w-4 h-4 ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`} />
+                <span className={`font-bold text-sm ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`}>
+                  {timeRemaining}
+                </span>
+              </div>
+              <div 
+                className="px-3 py-1 rounded-full text-white font-semibold text-sm"
+                style={{ backgroundColor: diffBadge.color }}
+              >
+                {diffBadge.text}
+              </div>
+            </div>
+            
             {/* Question Card */}
             <div 
               className="rounded-3xl overflow-hidden mb-4"
@@ -510,7 +607,7 @@ export default function CategoryQuizPage() {
             </div>
 
             {/* Answer Buttons */}
-            <div className="space-y-2 flex-1">
+            <div className="space-y-2.5 flex-1">
               {currentQuestion?.allAnswers?.map((answer, index) => {
                 const isCorrect = answer === currentQuestion.correct_answer;
                 const isSelected = answer === selectedAnswer;
@@ -518,22 +615,16 @@ export default function CategoryQuizPage() {
                 let bgColor = "#FFFFFF";
                 let depthColor = "#CBD5E1";
                 let textColor = "#2A2550";
-                let labelBg = "#7DD3FC";
-                let labelText = "#FFFFFF";
                 
                 if (isAnswered) {
                   if (isCorrect) {
                     bgColor = "#4ADE80";
                     depthColor = "#22C55E";
                     textColor = "#FFFFFF";
-                    labelBg = "#FFFFFF";
-                    labelText = "#22C55E";
                   } else if (isSelected) {
                     bgColor = "#EF4444";
                     depthColor = "#DC2626";
                     textColor = "#FFFFFF";
-                    labelBg = "#FFFFFF";
-                    labelText = "#EF4444";
                   }
                 }
 
@@ -542,7 +633,7 @@ export default function CategoryQuizPage() {
                     key={index}
                     onClick={() => handleAnswerSelect(answer)}
                     disabled={isAnswered}
-                    className="w-full rounded-2xl text-left font-bold text-lg disabled:cursor-not-allowed relative"
+                    className="w-full rounded-2xl text-left font-bold text-base disabled:cursor-not-allowed relative"
                     style={{ marginBottom: 4 }}
                     whileHover={!isAnswered ? { scale: 1.01 } : undefined}
                     whileTap={!isAnswered ? { scale: 0.99 } : undefined}
@@ -555,12 +646,15 @@ export default function CategoryQuizPage() {
                     
                     {/* Main face */}
                     <div
-                      className="relative flex items-center min-h-[56px] py-3 rounded-2xl"
+                      className="relative flex items-center min-h-[52px] py-2.5 px-4 rounded-2xl"
                       style={{ background: bgColor }}
                     >
-                      <div
-                        className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base"
-                        style={{ background: labelBg, color: labelText }}
+                      {/* Georgian label prefix */}
+                      <span 
+                        className="font-bold mr-2" 
+                        style={{ 
+                          color: isAnswered && (isCorrect || isSelected) ? "#FFFFFF" : "#7E6AAE" 
+                        }}
                       >
                         {isAnswered && isCorrect ? (
                           <Check className="w-5 h-5" />
@@ -569,8 +663,8 @@ export default function CategoryQuizPage() {
                         ) : (
                           answerLabels[index]
                         )}
-                      </div>
-                      <span className="flex-1 px-3" style={{ color: textColor }}>
+                      </span>
+                      <span className="flex-1" style={{ color: textColor }}>
                         {answer}
                       </span>
                     </div>
@@ -592,11 +686,11 @@ export default function CategoryQuizPage() {
               >
                 <div
                   className="absolute inset-0 rounded-2xl"
-                  style={{ background: "#22C55E", transform: "translateY(4px)" }}
+                  style={{ background: "#5D4A3A", transform: "translateY(4px)" }}
                 />
                 <div
                   className="relative flex items-center justify-center min-h-[56px] py-3 rounded-2xl text-white"
-                  style={{ background: "#4ADE80" }}
+                  style={{ background: "#7A6352" }}
                 >
                   {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგები"}
                 </div>
