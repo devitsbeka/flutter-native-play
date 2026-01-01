@@ -11,6 +11,7 @@ import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
+import { useAIIcon } from "@/hooks/useAIIcon";
 
 // Bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -68,6 +69,13 @@ export function QuizGameScreenProd() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+  // Get AI-suggested icon for current question
+  const { aiData } = useAIIcon({
+    questionText: currentQuestion?.question,
+    category: currentQuestion?.categoryId,
+    enabled: !!currentQuestion,
+  });
 
   // Reset state when question changes
   useEffect(() => {
@@ -265,6 +273,8 @@ export function QuizGameScreenProd() {
           difficultyColor={DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}
           timerSeconds={timeRemaining}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}
+          iconSlug={aiData?.slugs?.[0]}
+          categoryId={currentQuestion.categoryId}
         />
       </div>
 
