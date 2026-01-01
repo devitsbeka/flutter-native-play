@@ -1034,6 +1034,13 @@ export type Database = {
     }
     Functions: {
       generate_room_code: { Args: never; Returns: string }
+      get_category_question_counts: {
+        Args: never
+        Returns: {
+          category_id: string
+          question_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
