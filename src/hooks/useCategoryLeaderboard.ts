@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -14,6 +15,35 @@ interface LeaderboardEntry {
 
 export function useCategoryLeaderboard(categoryId: string | undefined) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!categoryId) return;
+
+    const channel = supabase
+      .channel(`leaderboard-${categoryId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'user_level_progress',
+          filter: `category_id=eq.${categoryId}`,
+        },
+        (payload) => {
+          console.log('Leaderboard update received:', payload);
+          // Invalidate and refetch leaderboard data
+          queryClient.invalidateQueries({ queryKey: ["category-leaderboard", categoryId] });
+          queryClient.invalidateQueries({ queryKey: ["user-category-rank", categoryId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [categoryId, queryClient]);
 
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ["category-leaderboard", categoryId],
@@ -90,7 +120,7 @@ export function useCategoryLeaderboard(categoryId: string | undefined) {
       return entries.slice(0, 100); // Top 100
     },
     enabled: !!categoryId,
-    staleTime: 30000, // 30 seconds
+    staleTime: 10000, // 10 seconds - shorter for more responsive updates
   });
 
   // Find current user's entry
@@ -145,6 +175,7 @@ export function useCategoryLeaderboard(categoryId: string | undefined) {
       };
     },
     enabled: !!categoryId && !!user && !userEntry,
+    staleTime: 10000,
   });
 
   return {
