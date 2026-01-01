@@ -480,64 +480,58 @@ export default function CategoryQuizPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
-      {/* Top Header Row */}
-      <div className="flex items-center justify-between px-4 py-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-white" />
-        </button>
-        
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-          <HelpCircle className="w-5 h-5 text-white" />
-        </button>
-      </div>
-      
-      {/* VS Header with Avatars and Category Image */}
-      <div className="flex items-center justify-center px-4 pb-4">
-        {/* Player Side */}
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full border-3 border-[#9F8FEF] overflow-hidden bg-white/20">
+      {/* Compact Header Row with Avatars */}
+      <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+8px)]">
+        {/* Back Button + Player */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 text-white" />
+          </button>
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full border-2 border-[#9F8FEF] overflow-hidden bg-white/20">
               <img 
                 src={profile?.avatar_url || "/placeholder.svg"} 
                 alt="Player"
                 className="w-full h-full object-cover"
               />
             </div>
-          </div>
-          <span className="text-white font-bold text-lg mt-1">{playerScore}</span>
-        </div>
-        
-        {/* Category Image in Center */}
-        <div className="mx-6 relative">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/10 border-2 border-white/20 flex items-center justify-center">
-            <span className="text-5xl">{category?.icon || "🎯"}</span>
-          </div>
-          {/* Question counter badge */}
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white/20 px-3 py-0.5 rounded-full">
-            <span className="text-white font-bold text-sm">{currentQuestionIndex + 1}/{questions.length}</span>
+            <span className="text-white font-bold text-xs mt-0.5">{playerScore}</span>
           </div>
         </div>
         
-        {/* Opponent Side */}
-        <div className="flex flex-col items-center">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full border-3 border-[#9F8FEF] overflow-hidden bg-white/20">
+        {/* Category Image in Center - smaller */}
+        <div className="relative -mb-6 z-10">
+          <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/10 border-2 border-white/20 flex items-center justify-center">
+            <span className="text-3xl">{category?.icon || "🎯"}</span>
+          </div>
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/20 px-2 py-0.5 rounded-full">
+            <span className="text-white font-bold text-[10px]">{currentQuestionIndex + 1}/{questions.length}</span>
+          </div>
+        </div>
+        
+        {/* Opponent + Help */}
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full border-2 border-[#9F8FEF] overflow-hidden bg-white/20">
               <img 
                 src={opponent.avatar} 
                 alt="Opponent"
                 className="w-full h-full object-cover"
               />
             </div>
+            <span className="text-white font-bold text-xs mt-0.5">{opponentScore}</span>
           </div>
-          <span className="text-white font-bold text-lg mt-1">{opponentScore}</span>
+          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <HelpCircle className="w-4 h-4 text-white" />
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-4 pb-6 flex flex-col">
+      <div className="flex-1 px-3 pb-4 pt-4 flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestionIndex}
@@ -546,32 +540,16 @@ export default function CategoryQuizPage() {
             exit={{ opacity: 0, y: -20 }}
             className="flex-1 flex flex-col"
           >
-            {/* Timer and Difficulty Row */}
-            <div className="flex items-center justify-between mb-3 px-1">
-              <div className="flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-full">
-                <Clock className={`w-4 h-4 ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`} />
-                <span className={`font-bold text-sm ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`}>
-                  {timeRemaining}
-                </span>
-              </div>
-              <div 
-                className="px-3 py-1 rounded-full text-white font-semibold text-sm"
-                style={{ backgroundColor: diffBadge.color }}
-              >
-                {diffBadge.text}
-              </div>
-            </div>
-            
-            {/* Question Card */}
+            {/* Question Card with Timer/Difficulty inside */}
             <div 
-              className="rounded-3xl overflow-hidden mb-4"
+              className="rounded-2xl overflow-hidden mb-2"
               style={{
                 backgroundColor: "#6B5FA8",
-                boxShadow: "0 6px 0 #4A4080",
+                boxShadow: "0 4px 0 #4A4080",
               }}
             >
               {/* Progress bar */}
-              <div className="h-2 bg-white/20 w-full">
+              <div className="h-1.5 bg-white/20 w-full">
                 <motion.div
                   className="h-full rounded-r-full"
                   style={{
@@ -583,31 +561,46 @@ export default function CategoryQuizPage() {
                 />
               </div>
               
-              <div className="px-5 py-5">
-                <p className="text-center font-semibold leading-relaxed text-white text-lg">
+              <div className="px-4 py-3">
+                {/* Timer and Difficulty inside card */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1 bg-white/15 px-2 py-0.5 rounded-full">
+                    <Clock className={`w-3 h-3 ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`} />
+                    <span className={`font-bold text-xs ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`}>
+                      {timeRemaining}
+                    </span>
+                  </div>
+                  <div 
+                    className="px-2 py-0.5 rounded-full text-white font-semibold text-[10px]"
+                    style={{ backgroundColor: diffBadge.color }}
+                  >
+                    {diffBadge.text}
+                  </div>
+                </div>
+                <p className="text-center font-semibold leading-snug text-white text-base">
                   {currentQuestion?.question}
                 </p>
               </div>
             </div>
 
-            {/* Progress dots */}
-            <div className="flex justify-center gap-2 mb-4">
+            {/* Progress dots - smaller */}
+            <div className="flex justify-center gap-1.5 mb-2">
               {questions.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  className={`w-2 h-2 rounded-full transition-all ${
                     index < currentQuestionIndex
                       ? "bg-white"
                       : index === currentQuestionIndex
-                      ? "bg-white scale-125"
+                      ? "bg-white scale-110"
                       : "bg-white/40"
                   }`}
                 />
               ))}
             </div>
 
-            {/* Answer Buttons */}
-            <div className="space-y-2.5 flex-1">
+            {/* Answer Buttons - more compact */}
+            <div className="space-y-2 flex-1">
               {currentQuestion?.allAnswers?.map((answer, index) => {
                 const isCorrect = answer === currentQuestion.correct_answer;
                 const isSelected = answer === selectedAnswer;
@@ -633,38 +626,38 @@ export default function CategoryQuizPage() {
                     key={index}
                     onClick={() => handleAnswerSelect(answer)}
                     disabled={isAnswered}
-                    className="w-full rounded-2xl text-left font-bold text-base disabled:cursor-not-allowed relative"
-                    style={{ marginBottom: 4 }}
+                    className="w-full rounded-xl text-left font-bold text-sm disabled:cursor-not-allowed relative"
+                    style={{ marginBottom: 3 }}
                     whileHover={!isAnswered ? { scale: 1.01 } : undefined}
                     whileTap={!isAnswered ? { scale: 0.99 } : undefined}
                   >
                     {/* Depth layer */}
                     <div
-                      className="absolute inset-0 rounded-2xl"
-                      style={{ background: depthColor, transform: "translateY(4px)" }}
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: depthColor, transform: "translateY(3px)" }}
                     />
                     
                     {/* Main face */}
                     <div
-                      className="relative flex items-center min-h-[52px] py-2.5 px-4 rounded-2xl"
+                      className="relative flex items-center min-h-[44px] py-2 px-3 rounded-xl"
                       style={{ background: bgColor }}
                     >
                       {/* Georgian label prefix */}
                       <span 
-                        className="font-bold mr-2" 
+                        className="font-bold mr-2 text-sm" 
                         style={{ 
                           color: isAnswered && (isCorrect || isSelected) ? "#FFFFFF" : "#7E6AAE" 
                         }}
                       >
                         {isAnswered && isCorrect ? (
-                          <Check className="w-5 h-5" />
+                          <Check className="w-4 h-4" />
                         ) : isAnswered && isSelected && !isCorrect ? (
-                          <X className="w-5 h-5" />
+                          <X className="w-4 h-4" />
                         ) : (
                           answerLabels[index]
                         )}
                       </span>
-                      <span className="flex-1" style={{ color: textColor }}>
+                      <span className="flex-1 text-sm" style={{ color: textColor }}>
                         {answer}
                       </span>
                     </div>
@@ -673,23 +666,23 @@ export default function CategoryQuizPage() {
               })}
             </div>
 
-            {/* Next Button */}
+            {/* Next Button - more compact */}
             {isAnswered && (
               <motion.button
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={handleNextQuestion}
-                className="mt-4 w-full rounded-2xl font-bold text-lg relative"
-                style={{ marginBottom: 4 }}
+                className="mt-3 w-full rounded-xl font-bold text-base relative"
+                style={{ marginBottom: 3 }}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <div
-                  className="absolute inset-0 rounded-2xl"
-                  style={{ background: "#5D4A3A", transform: "translateY(4px)" }}
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: "#5D4A3A", transform: "translateY(3px)" }}
                 />
                 <div
-                  className="relative flex items-center justify-center min-h-[56px] py-3 rounded-2xl text-white"
+                  className="relative flex items-center justify-center min-h-[48px] py-2.5 rounded-xl text-white"
                   style={{ background: "#7A6352" }}
                 >
                   {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგები"}
