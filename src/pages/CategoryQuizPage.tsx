@@ -481,7 +481,7 @@ export default function CategoryQuizPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
       {/* Compact Header Row */}
-      <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+8px)]">
+      <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+24px)]">
         {/* Back Button + Player Avatar */}
         <div className="flex items-center gap-2">
           <button
@@ -520,11 +520,9 @@ export default function CategoryQuizPage() {
         </div>
       </div>
 
-      {/* Large Category Image - Overlapping Question Card */}
-      <div className="flex justify-center -mb-12 z-20 relative">
-        <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/10 border-4 border-white/30 flex items-center justify-center shadow-xl">
-          <span className="text-5xl">{category?.icon || "🎯"}</span>
-        </div>
+      {/* Category Icon - Overlapping Question Card, no container */}
+      <div className="flex justify-center -mb-10 z-20 relative">
+        <span className="text-6xl drop-shadow-lg">{category?.icon || "🎯"}</span>
       </div>
 
       {/* Main Content */}
@@ -537,16 +535,16 @@ export default function CategoryQuizPage() {
             exit={{ opacity: 0, y: -20 }}
             className="flex-1 flex flex-col"
           >
-            {/* Question Card with Timer/Difficulty inside */}
+            {/* Question Card - White background */}
             <div 
               className="rounded-2xl overflow-hidden mb-3 pt-8"
               style={{
-                backgroundColor: "#6B5FA8",
-                boxShadow: "0 4px 0 #4A4080",
+                backgroundColor: "#FFFFFF",
+                boxShadow: "0 4px 0 #CBD5E1",
               }}
             >
               {/* Progress bar */}
-              <div className="h-1.5 bg-white/20 w-full">
+              <div className="h-1.5 bg-[#E5E7EB] w-full">
                 <motion.div
                   className="h-full rounded-r-full"
                   style={{
@@ -561,9 +559,9 @@ export default function CategoryQuizPage() {
               <div className="px-4 py-3">
                 {/* Timer and Difficulty inside card */}
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1 bg-white/15 px-2 py-0.5 rounded-full">
-                    <Clock className={`w-3 h-3 ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`} />
-                    <span className={`font-bold text-xs ${timeRemaining <= 5 ? "text-red-400" : "text-white"}`}>
+                  <div className="flex items-center gap-1 bg-[#F0EEFF] px-2 py-0.5 rounded-full">
+                    <Clock className={`w-3 h-3 ${timeRemaining <= 5 ? "text-red-400" : "text-[#5B4FA3]"}`} />
+                    <span className={`font-bold text-xs ${timeRemaining <= 5 ? "text-red-400" : "text-[#5B4FA3]"}`}>
                       {timeRemaining}
                     </span>
                   </div>
@@ -574,7 +572,7 @@ export default function CategoryQuizPage() {
                     {diffBadge.text}
                   </div>
                 </div>
-                <p className="text-center font-semibold leading-snug text-white text-base">
+                <p className="text-center font-semibold leading-snug text-[#2A2550] text-base">
                   {currentQuestion?.question}
                 </p>
               </div>
@@ -669,8 +667,8 @@ export default function CategoryQuizPage() {
                           answerLabels[index]
                         )}
                       </span>
-                      <span className="flex-1 text-sm" style={{ color: textColor }}>
-                        {answer}
+                      <span className="flex-1 text-sm truncate" style={{ color: textColor }}>
+                        {answer.length > 70 ? answer.substring(0, 67) + '...' : answer}
                       </span>
                     </div>
                   </motion.button>
@@ -691,11 +689,11 @@ export default function CategoryQuizPage() {
               >
                 <div
                   className="absolute inset-0 rounded-xl"
-                  style={{ background: "#5D4A3A", transform: "translateY(3px)" }}
+                  style={{ background: "#CBD5E1", transform: "translateY(3px)" }}
                 />
                 <div
-                  className="relative flex items-center justify-center min-h-[48px] py-2.5 rounded-xl text-white"
-                  style={{ background: "#7A6352" }}
+                  className="relative flex items-center justify-center min-h-[48px] py-2.5 rounded-xl text-[#5B4FA3] font-bold"
+                  style={{ background: "#FFFFFF" }}
                 >
                   {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგები"}
                 </div>
