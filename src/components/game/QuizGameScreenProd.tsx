@@ -251,9 +251,10 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* 3D Icon Container - Fixed Position, Overlapping Question */}
-      <div className="relative w-full flex justify-center z-20" style={{ marginBottom: -48 }}>
-        <div className="w-32 h-32">
+      {/* Question Card with 3D Icon Overlay */}
+      <div className="px-4 flex-shrink-0 mt-3 relative">
+        {/* 3D Icon - Absolute positioned on top of question card */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-20 w-32 h-32">
           <DynamicIcon 
             slug={aiData?.slugs?.[0]}
             categoryId={currentQuestion.categoryId}
@@ -261,10 +262,7 @@ export function QuizGameScreenProd() {
             className="drop-shadow-lg"
           />
         </div>
-      </div>
-
-      {/* Question Card - With padding-top to account for overlapping icon */}
-      <div className="px-4 flex-shrink-0 mt-3 pt-12 relative z-10">
+        
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
