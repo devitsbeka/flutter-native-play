@@ -126,10 +126,10 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/70 z-[100]"
+            className="fixed inset-0 bg-black/60 z-[100]"
           />
 
-          {/* Modal */}
+          {/* Modal - New whitish 3D chunky style */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -139,27 +139,34 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
             <div 
               className="rounded-3xl p-6 relative"
               style={{
-                background: "#7E7BDC",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
               }}
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-display font-bold text-white">Lucky Spin!</h2>
+                <h2 className="text-2xl font-display font-bold text-gray-900">🎰 Lucky Spin!</h2>
                 <div className="flex items-center gap-2">
-                  <button
+                  <motion.button
                     onClick={() => setSoundEnabled(!soundEnabled)}
-                    className="p-2 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
+                    className="p-2 rounded-full transition-colors"
+                    style={{
+                      background: "#F3F4F6",
+                      boxShadow: "0 2px 0 #D1D5DB",
+                    }}
+                    whileTap={{ scale: 0.95, y: 2 }}
                   >
-                    {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                  </button>
+                    {soundEnabled ? <Volume2 className="w-5 h-5 text-gray-600" /> : <VolumeX className="w-5 h-5 text-gray-400" />}
+                  </motion.button>
                   <motion.button
                     onClick={handleClose}
-                    className="w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
+                    className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                    style={{ boxShadow: "0 3px 0 #D1D5DB" }}
                     whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.95, y: 2 }}
                   >
-                    <X className="w-4 h-4 text-white" />
+                    <X className="w-4 h-4 text-gray-600" />
                   </motion.button>
                 </div>
               </div>
@@ -168,7 +175,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               <div className="relative aspect-square mb-4">
                 {/* Glow effect */}
                 <div 
-                  className="absolute inset-0 rounded-full blur-2xl opacity-50"
+                  className="absolute inset-0 rounded-full blur-2xl opacity-40"
                   style={{ background: "radial-gradient(circle, #F59E0B 0%, transparent 70%)" }}
                 />
 
@@ -185,12 +192,13 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   />
                 </div>
 
-                {/* Outer ring */}
+                {/* Outer ring - 3D chunky */}
                 <div 
                   className="absolute inset-0 rounded-full"
                   style={{
-                    background: "linear-gradient(180deg, #F59E0B 0%, #B45309 100%)",
+                    background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
                     padding: "8px",
+                    boxShadow: "0 6px 0 #92400E",
                   }}
                 >
                   {/* Inner wheel */}
@@ -231,18 +239,18 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                       );
                     })}
 
-                    {/* Center button */}
+                    {/* Center button - 3D chunky */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <motion.button
                         onClick={spinWheel}
                         disabled={!canSpin}
                         className="relative w-20 h-20 rounded-full flex items-center justify-center disabled:opacity-70"
                         style={{
-                          background: "linear-gradient(180deg, #FFFFFF 0%, #E5E5E5 100%)",
-                          boxShadow: "0 4px 0 #B5B5B5, 0 6px 20px rgba(0,0,0,0.3)",
+                          background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                          boxShadow: "0 4px 0 #D1D5DB, 0 6px 20px rgba(0,0,0,0.2)",
                         }}
                         whileHover={{ scale: canSpin ? 1.05 : 1 }}
-                        whileTap={{ scale: canSpin ? 0.95 : 1 }}
+                        whileTap={{ scale: canSpin ? 0.95 : 1, y: canSpin ? 2 : 0 }}
                       >
                         <span className="font-display font-bold text-lg text-amber-600">
                           {isSpinning ? "..." : result ? "✓" : "SPIN"}
@@ -287,14 +295,17 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                     exit={{ opacity: 0, y: -20 }}
                   >
                     <motion.div
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500"
-                      style={{ boxShadow: "0 4px 0 #B45309" }}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl"
+                      style={{ 
+                        background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                        boxShadow: "0 4px 0 #F59E0B" 
+                      }}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", delay: 0.2 }}
                     >
                       {getRewardDisplay(result)}
-                      <span className="font-display text-white text-lg font-bold">
+                      <span className="font-display text-amber-800 text-lg font-bold">
                         მოიგე {result.label}!
                       </span>
                     </motion.div>
@@ -322,8 +333,13 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   აიღე ჯილდო
                 </ChunkyButton>
               ) : (
-                <div className="text-center">
-                  <span className="text-white/70 text-sm">
+                <div 
+                  className="text-center py-2 px-4 rounded-xl"
+                  style={{
+                    background: "#F3F4F6",
+                  }}
+                >
+                  <span className="text-gray-600 text-sm">
                     {loading ? "იტვირთება..." :
                       dailySpinInfo.canSpin 
                         ? `${dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed} უფასო სპინი დარჩა`

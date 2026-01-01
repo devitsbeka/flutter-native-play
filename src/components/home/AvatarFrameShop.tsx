@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, Lock, Sparkles } from "lucide-react";
 import { useAvatarFrames, AVATAR_FRAMES, AvatarFrame } from "@/hooks/useAvatarFrames";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -27,6 +26,13 @@ const rarityLabels = {
   rare: "იშვიათი",
   epic: "ეპიკური",
   legendary: "ლეგენდარული",
+};
+
+const rarityShadows = {
+  common: "#9CA3AF",
+  rare: "#3B82F6",
+  epic: "#7C3AED",
+  legendary: "#F59E0B",
 };
 
 export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
@@ -90,9 +96,15 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
 
   return (
     <div className="space-y-6">
-      {/* Preview Section */}
-      <div className="flex flex-col items-center gap-4 py-4">
-        <p className="text-sm text-white/60">გადახედვა</p>
+      {/* Preview Section - 3D chunky card */}
+      <div 
+        className="flex flex-col items-center gap-4 py-4 rounded-2xl"
+        style={{
+          background: "#F9FAFB",
+          boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
+        }}
+      >
+        <p className="text-sm text-gray-500 font-medium">გადახედვა</p>
         <AvatarWithFrame
           imageUrl={profile?.avatar_url || undefined}
           size="xl"
@@ -105,13 +117,13 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <p className="font-bold text-white">{selectedFrame.name}</p>
-            <p className="text-sm text-white/60">{selectedFrame.description}</p>
+            <p className="font-bold text-gray-800">{selectedFrame.name}</p>
+            <p className="text-sm text-gray-500">{selectedFrame.description}</p>
           </motion.div>
         )}
       </div>
 
-      {/* Frames Grid */}
+      {/* Frames Grid - 3D chunky cards */}
       <div className="grid grid-cols-3 gap-3">
         {AVATAR_FRAMES.map((frame) => {
           const isUnlocked = isFrameUnlocked(frame.id);
@@ -129,13 +141,27 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
                 }
               }}
               onMouseEnter={() => setSelectedFrame(frame)}
-              className={`relative p-3 rounded-2xl transition-all ${
-                isSelected
-                  ? "bg-white/20 ring-2 ring-white/40"
-                  : "bg-white/10 hover:bg-white/15"
-              } ${!isUnlocked && !canAfford ? "opacity-50" : ""}`}
+              className="relative p-3 rounded-2xl transition-all"
+              style={{
+                background: isSelected
+                  ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                  : isEquipped
+                    ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)"
+                    : "#F9FAFB",
+                boxShadow: isSelected
+                  ? "0 3px 0 #C4B5FD"
+                  : isEquipped
+                    ? "0 3px 0 #6EE7B7"
+                    : "0 2px 0 #E5E7EB",
+                border: isSelected
+                  ? "2px solid #A78BFA"
+                  : isEquipped
+                    ? "2px solid #34D399"
+                    : "2px solid transparent",
+                opacity: !isUnlocked && !canAfford ? 0.5 : 1,
+              }}
               whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.98, y: 2 }}
               disabled={isPurchasing}
             >
               {/* Rarity badge */}
@@ -143,6 +169,9 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
                 className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold text-white bg-gradient-to-r ${
                   rarityColors[frame.rarity]
                 }`}
+                style={{
+                  boxShadow: `0 1px 0 ${rarityShadows[frame.rarity]}`,
+                }}
               >
                 {rarityLabels[frame.rarity]}
               </div>
@@ -154,8 +183,8 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
                 } flex items-center justify-center mb-2`}
                 style={{
                   boxShadow: isEquipped
-                    ? "0 0 20px rgba(139, 92, 246, 0.6)"
-                    : undefined,
+                    ? "0 0 20px rgba(34, 197, 94, 0.4), 0 3px 0 rgba(0,0,0,0.15)"
+                    : "0 3px 0 rgba(0,0,0,0.15)",
                 }}
               >
                 {isEquipped ? (
@@ -168,22 +197,22 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
               </div>
 
               {/* Name */}
-              <p className="text-xs font-semibold text-white text-center truncate">
+              <p className="text-xs font-semibold text-gray-800 text-center truncate">
                 {frame.name}
               </p>
 
               {/* Price or Status */}
               <div className="flex items-center justify-center gap-1 mt-1">
                 {isEquipped ? (
-                  <span className="text-[10px] text-green-400 font-bold">აქტიური</span>
+                  <span className="text-[10px] text-green-600 font-bold">აქტიური</span>
                 ) : isUnlocked ? (
-                  <span className="text-[10px] text-white/60">გახსნილი</span>
+                  <span className="text-[10px] text-gray-500">გახსნილი</span>
                 ) : (
                   <>
                     <img src={gemIcon} alt="" className="w-4 h-4" />
                     <span
                       className={`text-xs font-bold ${
-                        canAfford ? "text-white" : "text-red-400"
+                        canAfford ? "text-gray-800" : "text-red-500"
                       }`}
                     >
                       {frame.price}

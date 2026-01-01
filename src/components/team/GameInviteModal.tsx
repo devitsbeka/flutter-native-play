@@ -108,11 +108,11 @@ export function GameInviteModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60"
             onClick={handleDecline}
           />
 
-          {/* Modal */}
+          {/* Modal - New whitish 3D chunky style */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -120,51 +120,77 @@ export function GameInviteModal({
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
             className="relative w-full max-w-sm"
           >
-            {/* Glowing border */}
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 opacity-75 blur-lg animate-pulse" />
+            {/* Subtle glow */}
+            <div 
+              className="absolute -inset-1 rounded-3xl opacity-50 blur-lg"
+              style={{
+                background: "linear-gradient(135deg, rgba(147, 51, 234, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)",
+              }}
+            />
             
-            <div className="relative rounded-3xl bg-gradient-to-b from-purple-900/95 to-purple-950/95 border border-purple-500/30 p-6 backdrop-blur-xl overflow-hidden">
-              {/* Sparkle decorations */}
-              <div className="absolute top-4 left-4 w-2 h-2 rounded-full bg-white/40 animate-ping" />
-              <div className="absolute top-8 right-6 w-1.5 h-1.5 rounded-full bg-pink-400/50 animate-ping" style={{ animationDelay: "0.5s" }} />
-              <div className="absolute bottom-12 left-8 w-1 h-1 rounded-full bg-purple-400/50 animate-ping" style={{ animationDelay: "1s" }} />
-
+            <div 
+              className="relative rounded-3xl p-6 overflow-hidden"
+              style={{
+                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
+              }}
+            >
               {/* Close button */}
               <motion.button
                 onClick={handleDecline}
-                className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 text-white/60 hover:text-white hover:bg-white/20"
-                whileTap={{ scale: 0.95 }}
+                className="absolute top-4 right-4 p-2 rounded-xl transition-colors"
+                style={{
+                  background: "#F3F4F6",
+                  boxShadow: "0 2px 0 #D1D5DB",
+                }}
+                whileTap={{ scale: 0.95, y: 2 }}
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 text-gray-500" />
               </motion.button>
 
               {/* Content */}
               <div className="flex flex-col items-center">
-                {/* Icon */}
+                {/* Icon - 3D chunky badge */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1, rotate: [0, -10, 10, -10, 0] }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 shadow-lg shadow-purple-500/30"
+                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                    boxShadow: "0 4px 0 #C4B5FD",
+                  }}
                 >
-                  <Gamepad2 className="w-8 h-8 text-white" />
+                  <Gamepad2 className="w-8 h-8 text-purple-600" />
                 </motion.div>
 
                 {/* Title */}
-                <h2 className="font-display text-xl text-white mb-1">თამაშის მოწვევა</h2>
-                <p className="text-white/60 text-sm mb-4">გიწვევს თამაშში!</p>
+                <h2 className="font-display text-xl text-gray-900 mb-1">თამაშის მოწვევა</h2>
+                <p className="text-gray-500 text-sm mb-4">გიწვევს თამაშში!</p>
 
-                {/* Sender info */}
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/10 w-full mb-4">
-                  <Avatar className="w-14 h-14 border-2 border-purple-400/50">
+                {/* Sender info - 3D card */}
+                <div 
+                  className="flex items-center gap-3 p-3 rounded-2xl w-full mb-4"
+                  style={{
+                    background: "#F9FAFB",
+                    boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
+                  }}
+                >
+                  <Avatar className="w-14 h-14 border-2 border-white shadow-md">
                     <AvatarImage src={invitation.sender?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
+                    <AvatarFallback 
+                      className="text-white text-lg font-bold"
+                      style={{
+                        background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
+                      }}
+                    >
                       {invitation.sender?.nickname?.charAt(0).toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-white">
+                      <p className="font-medium text-gray-800">
                         {invitation.sender?.nickname || "მეგობარი"}
                       </p>
                       {invitation.sender?.country_code && (
@@ -172,20 +198,30 @@ export function GameInviteModal({
                       )}
                     </div>
                     {invitation.room?.category_name && (
-                      <p className="text-white/60 text-sm">
+                      <p className="text-gray-500 text-sm">
                         კატეგორია: {invitation.room.category_name}
                       </p>
                     )}
                   </div>
                 </div>
 
-                {/* Timer */}
-                <div className="flex items-center gap-2 mb-6">
-                  <Clock className={`w-4 h-4 ${timeRemaining < 30 ? "text-red-400" : "text-white/60"}`} />
-                  <span className={`text-sm font-mono ${timeRemaining < 30 ? "text-red-400" : "text-white/60"}`}>
+                {/* Timer - 3D badge */}
+                <div 
+                  className="flex items-center gap-2 mb-6 px-4 py-2 rounded-full"
+                  style={{
+                    background: timeRemaining < 30 
+                      ? "linear-gradient(180deg, #FEE2E2 0%, #FECACA 100%)"
+                      : "#F3F4F6",
+                    boxShadow: timeRemaining < 30 
+                      ? "0 2px 0 #FCA5A5"
+                      : "0 2px 0 #E5E7EB",
+                  }}
+                >
+                  <Clock className={`w-4 h-4 ${timeRemaining < 30 ? "text-red-500" : "text-gray-500"}`} />
+                  <span className={`text-sm font-mono font-bold ${timeRemaining < 30 ? "text-red-600" : "text-gray-600"}`}>
                     {formatTime(timeRemaining)}
                   </span>
-                  <span className="text-white/40 text-sm">დარჩენილია</span>
+                  <span className="text-gray-400 text-sm">დარჩენილია</span>
                 </div>
 
                 {/* Buttons */}
@@ -201,7 +237,7 @@ export function GameInviteModal({
                   </ChunkyButton>
                   
                   <ChunkyButton
-                    variant="primary"
+                    variant="success"
                     className="flex-1"
                     onClick={handleAccept}
                     disabled={isAccepting}
