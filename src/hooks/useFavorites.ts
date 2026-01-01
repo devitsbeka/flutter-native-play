@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export function useFavorites() {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ export function useFavorites() {
 
       if (error) throw error;
 
+      // Convert UUIDs to Set
       setFavorites(new Set(data?.map((f) => f.category_id) || []));
     } catch (error) {
       console.error("Error fetching favorites:", error);
@@ -75,19 +77,24 @@ export function useFavorites() {
 
       try {
         if (isFavorite) {
-          await supabase
+          const { error } = await supabase
             .from("user_favorites")
             .delete()
             .eq("user_id", user.id)
             .eq("category_id", categoryId);
+          
+          if (error) throw error;
         } else {
-          await supabase.from("user_favorites").insert({
+          const { error } = await supabase.from("user_favorites").insert({
             user_id: user.id,
             category_id: categoryId,
           });
+          
+          if (error) throw error;
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error toggling favorite:", error);
+        toast.error("Failed to update favorite");
         // Revert optimistic update
         setFavorites((prev) => {
           const next = new Set(prev);

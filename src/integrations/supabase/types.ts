@@ -510,6 +510,7 @@ export type Database = {
           correct_answer: string
           created_at: string | null
           difficulty: string
+          icon_slug: string | null
           id: string
           incorrect_answers: Json
           is_active: boolean | null
@@ -522,6 +523,7 @@ export type Database = {
           correct_answer: string
           created_at?: string | null
           difficulty?: string
+          icon_slug?: string | null
           id?: string
           incorrect_answers?: Json
           is_active?: boolean | null
@@ -534,6 +536,7 @@ export type Database = {
           correct_answer?: string
           created_at?: string | null
           difficulty?: string
+          icon_slug?: string | null
           id?: string
           incorrect_answers?: Json
           is_active?: boolean | null

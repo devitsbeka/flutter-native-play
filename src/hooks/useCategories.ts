@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 
 export interface DatabaseCategory {
-  id: string;
-  category_id: string;
+  id: string; // UUID
+  category_id: string; // String slug like "movies"
   name: string;
   icon: string;
   icon_slug?: string | null;
@@ -16,9 +16,17 @@ export interface DatabaseCategory {
   sort_order: number | null;
 }
 
+export interface TransformedCategory extends Category {
+  uuid: string; // The actual UUID from database
+  category_id: string; // String slug like "movies"  
+  icon_slug?: string | null;
+}
+
 // Transform database category to app Category format
-const transformCategory = (dbCat: DatabaseCategory): Category & { icon_slug?: string | null } => ({
-  id: dbCat.category_id,
+const transformCategory = (dbCat: DatabaseCategory): TransformedCategory => ({
+  id: dbCat.category_id, // Keep using category_id as id for backwards compatibility
+  uuid: dbCat.id, // Add the actual UUID
+  category_id: dbCat.category_id,
   name: dbCat.name,
   icon: dbCat.icon,
   icon_slug: dbCat.icon_slug,
@@ -29,7 +37,7 @@ const transformCategory = (dbCat: DatabaseCategory): Category & { icon_slug?: st
 });
 
 export const useCategories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<TransformedCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

@@ -11,6 +11,7 @@ export interface AdminQuestion {
   difficulty: 'easy' | 'medium' | 'hard';
   level_number: number;
   is_active: boolean;
+  icon_slug?: string;
   created_at: string;
   updated_at: string;
 }
@@ -22,10 +23,12 @@ export const useAdminQuestions = (categoryId?: string) => {
 
   const fetchQuestions = useCallback(async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from('questions')
         .select('*')
-        .order('level_number', { ascending: true });
+        .order('level_number', { ascending: true })
+        .limit(10000); // Load all questions
 
       if (categoryId) {
         query = query.eq('category_id', categoryId);
@@ -37,6 +40,7 @@ export const useAdminQuestions = (categoryId?: string) => {
       setQuestions((data || []).map(q => ({
         ...q,
         difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+        icon_slug: q.icon_slug || undefined,
         incorrect_answers: Array.isArray(q.incorrect_answers) 
           ? (q.incorrect_answers as unknown as string[]) 
           : [],

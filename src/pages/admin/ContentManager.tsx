@@ -125,6 +125,7 @@ export default function ContentManager() {
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     level_number: 1,
     is_active: true,
+    icon_slug: '',
   });
 
   // Derived data
@@ -227,6 +228,7 @@ export default function ContentManager() {
       difficulty: 'medium',
       level_number: 1,
       is_active: true,
+      icon_slug: '',
     });
     setEditingQuestion(null);
     setIsQuestionDialogOpen(true);
@@ -245,6 +247,7 @@ export default function ContentManager() {
       difficulty: question.difficulty,
       level_number: question.level_number,
       is_active: question.is_active,
+      icon_slug: question.icon_slug || '',
     });
     setEditingQuestion(question);
     setIsQuestionDialogOpen(true);
@@ -256,6 +259,7 @@ export default function ContentManager() {
       const data = {
         ...questionForm,
         incorrect_answers: questionForm.incorrect_answers.filter(a => a.trim()),
+        icon_slug: questionForm.icon_slug || null,
       };
       if (editingQuestion) {
         await updateQuestion(editingQuestion.id, data);
@@ -405,7 +409,7 @@ export default function ContentManager() {
                 </>
               )}
               {!selectedCategory && (
-                <span className="text-xs font-semibold text-muted-foreground">ყველა კითხვა</span>
+                <span className="text-xs font-semibold text-muted-foreground">ყველა კითხვა ({questions.length.toLocaleString()})</span>
               )}
             </div>
             <Button 
@@ -865,6 +869,15 @@ export default function ContentManager() {
                   />
                 ))}
               </div>
+            </div>
+
+            {/* Icon Picker for Question */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">აიკონი (სურვილისამებრ)</Label>
+              <IconPicker
+                value={questionForm.icon_slug}
+                onChange={(slug) => setQuestionForm({ ...questionForm, icon_slug: slug })}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
