@@ -15,6 +15,7 @@ import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
+import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
@@ -96,6 +97,7 @@ export default function Index() {
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -192,6 +194,10 @@ export default function Index() {
       <AvatarModal 
         isOpen={isAvatarModalOpen} 
         onClose={() => setIsAvatarModalOpen(false)} 
+      />
+      <AdFreeModal
+        isOpen={isAdFreeModalOpen}
+        onClose={() => setIsAdFreeModalOpen(false)}
       />
       
       
@@ -305,10 +311,37 @@ export default function Index() {
               {/* Avatar Circle Component - clickable to open modal */}
               <div 
                 data-walkthrough="avatar" 
-                className="pointer-events-auto cursor-pointer"
+                className="pointer-events-auto cursor-pointer relative"
                 onClick={() => user && setIsAvatarModalOpen(true)}
               >
                 <AvatarCircle avatarUrl={profile?.avatar_url} size={292} />
+                
+                {/* Ad-Free Button - Top Left of Avatar */}
+                <motion.button
+                  className="absolute pointer-events-auto"
+                  style={{
+                    top: 15,
+                    left: 15,
+                    width: 52,
+                    height: 52,
+                    borderRadius: "50%",
+                    background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                    boxShadow: "inset 0 3px 6px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
+                    border: "3px solid rgba(255,255,255,0.95)",
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAdFreeModalOpen(true);
+                  }}
+                >
+                  <img 
+                    src="https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/shield.png"
+                    alt="Ad-Free"
+                    className="w-8 h-8 object-contain mx-auto drop-shadow-sm"
+                  />
+                </motion.button>
               </div>
                 
             
