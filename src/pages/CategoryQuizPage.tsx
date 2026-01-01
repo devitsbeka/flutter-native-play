@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, Check, X, HelpCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, Check, X } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import confetti from "canvas-confetti";
+
+// Import shared quiz UI components
+import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
+import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
+import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
+import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Import bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -462,258 +469,190 @@ export default function CategoryQuizPage() {
   }
 
   // Georgian answer labels
-  const answerLabels = ["ა:", "ბ:", "გ:", "დ:"];
-  const progressPercent = ((currentQuestionIndex + (isAnswered ? 1 : 0)) / questions.length) * 100;
+  const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
   
-  // Get difficulty text in Georgian
-  const getDifficultyBadge = () => {
-    const diff = currentQuestion?.difficulty || "easy";
-    switch (diff) {
-      case "easy": return { text: "მარტივი", color: "#4ADE80" };
-      case "medium": return { text: "საშუალო", color: "#FBBF24" };
-      case "hard": return { text: "რთული", color: "#EF4444" };
-      default: return { text: "მარტივი", color: "#4ADE80" };
-    }
+  // Difficulty labels and colors (same as QuizGameScreenProd)
+  const DIFFICULTY_LABELS: Record<string, string> = {
+    easy: "მარტივი",
+    medium: "საშუალო",
+    hard: "რთული",
+  };
+
+  const DIFFICULTY_COLORS: Record<string, string> = {
+    easy: "bg-success",
+    medium: "bg-warning",
+    hard: "bg-destructive",
   };
   
-  const diffBadge = getDifficultyBadge();
+  const difficultyKey = currentQuestion?.difficulty || "easy";
+
+  // Get answer button state (same logic as QuizGameScreenProd)
+  const getAnswerState = useCallback(
+    (answer: string): QuizAnswerState => {
+      if (!isAnswered) {
+        return "default";
+      }
+
+      const isCorrect = answer === currentQuestion?.correct_answer;
+      const isSelected = answer === selectedAnswer;
+
+      if (isCorrect) return "correct";
+      if (isSelected && !isCorrect) return "wrong";
+      return "default";
+    },
+    [isAnswered, currentQuestion, selectedAnswer]
+  );
+
+  // Build progress results for dots (same as QuizGameScreenProd)
+  const progressResults = useMemo(() => {
+    const results: ("correct" | "wrong" | null)[] = [];
+    for (let i = 0; i < questions.length; i++) {
+      if (i < currentQuestionIndex) {
+        // Previous questions - we need to check if they were correct
+        // For simplicity, mark as answered based on score progression
+        results.push(i < score ? "correct" : "wrong");
+      } else if (i === currentQuestionIndex && isAnswered) {
+        results.push(selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong");
+      } else {
+        results.push(null);
+      }
+    }
+    return results;
+  }, [questions.length, currentQuestionIndex, isAnswered, selectedAnswer, currentQuestion, score]);
+
+  // Get player avatar state
+  const getPlayerState = useCallback(() => {
+    if (!isAnswered) return "active";
+    return selectedAnswer === currentQuestion?.correct_answer ? "correct" : "wrong";
+  }, [isAnswered, selectedAnswer, currentQuestion]);
+
+  // Get opponent avatar state (simulated)
+  const getOpponentState = useCallback(() => {
+    if (!isAnswered) return "default";
+    // Simulate opponent getting ~60% right
+    return Math.random() > 0.4 ? "correct" : "wrong";
+  }, [isAnswered, currentQuestionIndex]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
-      {/* Top Navigation Row - Back and Help buttons */}
-      <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+12px)]">
+    <div className="w-full h-screen flex flex-col bg-[#7E7ADB] overflow-hidden">
+      {/* Safe area padding for notched phones */}
+      <div className="pt-[env(safe-area-inset-top)]" />
+
+      {/* Header - same as QuizGameScreenProd */}
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
         <button
           onClick={() => navigate(-1)}
-          className="p-2"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
         >
-          <ArrowLeft className="w-6 h-6 text-white" />
+          <ArrowLeft className="w-5 h-5 text-white" />
         </button>
-        <button className="p-2">
-          <HelpCircle className="w-6 h-6 text-white" />
+        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+          <HelpCircle className="w-5 h-5 text-white" />
         </button>
       </div>
 
-      {/* Avatars + Category Icon Row */}
-      <div className="flex items-start justify-between px-4 mt-4">
-        {/* Player Avatar + Score */}
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-xl border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
-            <img 
-              src={profile?.avatar_url || "/placeholder.svg"} 
-              alt="Player"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <span className="text-white font-bold text-lg mt-1">{playerScore}</span>
+      {/* Players Row - same layout as QuizGameScreenProd */}
+      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
+        {/* Player (Left) */}
+        <QuizPlayerAvatar
+          avatarUrl={profile?.avatar_url}
+          score={playerScore}
+          position="left"
+          state={getPlayerState()}
+          size="large"
+        />
+
+        {/* Category Icon - Between Players */}
+        <div className="flex-1 flex justify-center items-start pt-4">
+          <DynamicIcon 
+            slug={category?.icon_slug}
+            categoryId={categoryId}
+            size={80}
+            className="drop-shadow-lg"
+          />
         </div>
-        
-        {/* Spacer for icon area */}
-        <div className="flex-1" />
-        
-        {/* Opponent Avatar + Score */}
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-xl border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
-            <img 
-              src={opponent.avatar} 
-              alt="Opponent"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <span className="text-white font-bold text-lg mt-1">{opponentScore}</span>
-        </div>
+
+        {/* Opponent (Right) */}
+        <QuizPlayerAvatar
+          avatarUrl={opponent.avatar}
+          score={opponentScore}
+          position="right"
+          state={getOpponentState()}
+          size="large"
+        />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 px-3 pb-4 flex flex-col" style={{ marginTop: "-52px" }}>
+      {/* Question Card - same component as QuizGameScreenProd */}
+      <div className="px-4 flex-shrink-0 mt-4">
+        <QuizQuestionCard
+          questionText={currentQuestion?.question || ""}
+          progressPercent={(timeRemaining / 15) * 100}
+          state="default"
+          difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
+          difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
+          timerSeconds={timeRemaining}
+          timerMaxSeconds={15}
+        />
+      </div>
+
+      {/* Progress Dots - same component as QuizGameScreenProd */}
+      <div className="flex justify-center my-3 flex-shrink-0">
+        <QuizProgressDots
+          total={questions.length}
+          current={currentQuestionIndex}
+          results={progressResults}
+        />
+      </div>
+
+      {/* Answer Buttons - same component as QuizGameScreenProd */}
+      <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQuestionIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex-1 flex flex-col"
-          >
-            {/* Question Card with overlapping icon */}
-            <div className="relative">
-              {/* Category Icon - 50% overlap */}
-              <div 
-                className="absolute left-1/2 -translate-x-1/2 z-10"
-                style={{ top: "-48px" }}
-              >
-                <span className="drop-shadow-xl" style={{ fontSize: "6rem" }}>{category?.icon || "🎯"}</span>
-              </div>
-              
-              {/* Question Card - White background */}
-              <div 
-                className="rounded-2xl overflow-hidden mb-3 pt-12"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  boxShadow: "0 4px 0 #CBD5E1",
-                }}
-              >
-              <div className="px-4 py-3" style={{ marginTop: "-30px" }}>
-                {/* Timer and Difficulty inside card */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xl">⏰</span>
-                    <span className="font-bold text-lg text-[#4ADE80]">
-                      {timeRemaining}
-                    </span>
-                  </div>
-                  <div 
-                    className="px-3 py-1 rounded-full text-white font-semibold text-xs"
-                    style={{ backgroundColor: diffBadge.color }}
-                  >
-                    {diffBadge.text}
-                  </div>
-                </div>
-                <p className="text-center font-semibold leading-snug text-[#2A2550] text-lg pb-3">
-                  {currentQuestion?.question}
-                </p>
-              </div>
-              
-              {/* Progress bar - at bottom */}
-              <div className="h-1.5 bg-[#E5E7EB] w-full">
-                <motion.div
-                  className="h-full rounded-r-full"
-                  style={{
-                    background: "linear-gradient(90deg, #F5A623 0%, #F7C948 100%)",
-                  }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </div>
-            </div>
-
-            {/* Progress dots */}
-            <div className="flex justify-center gap-1.5 mb-3">
-              {questions.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index < currentQuestionIndex
-                      ? "bg-white"
-                      : index === currentQuestionIndex
-                      ? "bg-white scale-110"
-                      : "bg-white/40"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Answer Buttons with purple left accent */}
-            <div className="space-y-2.5 flex-1">
-              {currentQuestion?.allAnswers?.map((answer, index) => {
-                const isCorrect = answer === currentQuestion.correct_answer;
-                const isSelected = answer === selectedAnswer;
-                
-                let bgColor = "#FFFFFF";
-                let depthColor = "#CBD5E1";
-                let textColor = "#2A2550";
-                let leftBorderColor = "#7E6AAE";
-                let showOutline = false;
-                
-                if (isAnswered) {
-                  if (isCorrect) {
-                    bgColor = "#4ADE80";
-                    depthColor = "#22C55E";
-                    textColor = "#FFFFFF";
-                    leftBorderColor = "#22C55E";
-                  } else if (isSelected) {
-                    bgColor = "#EF4444";
-                    depthColor = "#DC2626";
-                    textColor = "#FFFFFF";
-                    leftBorderColor = "#DC2626";
-                  }
-                } else if (isSelected) {
-                  showOutline = true;
-                }
-
-                return (
-                  <motion.button
-                    key={index}
-                    onClick={() => handleAnswerSelect(answer)}
-                    disabled={isAnswered}
-                    className="w-full rounded-xl text-left font-bold text-sm disabled:cursor-not-allowed relative"
-                    style={{ marginBottom: 3 }}
-                    whileHover={!isAnswered ? { scale: 1.01 } : undefined}
-                    whileTap={!isAnswered ? { scale: 0.99 } : undefined}
-                  >
-                    {/* Depth layer */}
-                    <div
-                      className="absolute inset-0 rounded-xl"
-                      style={{ background: depthColor, transform: "translateY(3px)" }}
-                    />
-                    
-                    {/* Main face with left accent border */}
-                    <div
-                      className="relative flex items-center min-h-[48px] py-2.5 px-4 rounded-xl overflow-hidden"
-                      style={{ 
-                        background: bgColor,
-                        boxShadow: showOutline ? `inset 0 0 0 2px #7E6AAE` : 'none'
-                      }}
-                    >
-                      {/* Purple left accent border */}
-                      <div 
-                        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-                        style={{ backgroundColor: leftBorderColor }}
-                      />
-                      
-                      {/* Georgian label prefix */}
-                      <span 
-                        className="font-bold mr-3 text-sm ml-2" 
-                        style={{ 
-                          color: isAnswered && (isCorrect || isSelected) ? "#FFFFFF" : "#7E6AAE" 
-                        }}
-                      >
-                        {isAnswered && isCorrect ? (
-                          <Check className="w-4 h-4" />
-                        ) : isAnswered && isSelected && !isCorrect ? (
-                          <X className="w-4 h-4" />
-                        ) : (
-                          answerLabels[index]
-                        )}
-                      </span>
-                      <span className="flex-1 text-sm truncate" style={{ color: textColor }}>
-                        {answer.length > 70 ? answer.substring(0, 67) + '...' : answer}
-                      </span>
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            {/* Next Button - more compact */}
-            {isAnswered && (
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                onClick={handleNextQuestion}
-                className="mt-3 w-full rounded-xl font-bold text-base relative"
-                style={{ marginBottom: 3 }}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div
-                  className="absolute inset-0 rounded-xl"
-                  style={{ background: "#CBD5E1", transform: "translateY(3px)" }}
-                />
-                <div
-                  className="relative flex items-center justify-center min-h-[48px] py-2.5 rounded-xl text-[#5B4FA3] font-bold"
-                  style={{ background: "#FFFFFF" }}
-                >
-                  {currentQuestionIndex < questions.length - 1 ? "შემდეგი" : "შედეგები"}
-                </div>
-              </motion.button>
-            )}
-          </motion.div>
+          {currentQuestion?.allAnswers?.map((answer, index) => (
+            <motion.div
+              key={`${currentQuestionIndex}-${index}`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ delay: index * 0.05 }}
+              className="flex-shrink-0"
+            >
+              <QuizAnswerButton
+                label={ANSWER_LABELS[index]}
+                text={answer}
+                state={getAnswerState(answer)}
+                onClick={() => handleAnswerSelect(answer)}
+                disabled={isAnswered}
+                showLabel={true}
+              />
+            </motion.div>
+          ))}
         </AnimatePresence>
       </div>
 
-      {/* Safe area bottom padding */}
-      <div className="pb-[env(safe-area-inset-bottom)]" />
+      {/* Bottom Area - Next Button (same as QuizGameScreenProd) */}
+      <div className="px-4 pb-4 pt-2 flex-shrink-0">
+        <div className="pb-[env(safe-area-inset-bottom)]">
+          <AnimatePresence mode="wait">
+            {isAnswered && (
+              <motion.div
+                key="next-button"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <ChunkyButton
+                  variant="white"
+                  size="xl"
+                  onClick={handleNextQuestion}
+                  className="w-full"
+                >
+                  {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
+                </ChunkyButton>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
