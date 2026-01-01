@@ -301,47 +301,6 @@ export default function Index() {
                 <AvatarCircle avatarUrl={profile?.avatar_url} size={292} />
               </div>
                 
-              {/* Power badges in curved arc at top of avatar */}
-              <div 
-                className="absolute top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-auto" 
-                style={{ marginTop: -30 }}
-                data-walkthrough="powerups"
-              >
-                {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
-                  // True curved arc using calculated positions
-                  const totalBadges = 5;
-                  const arcSpan = 140; // slightly wider curve
-                  const startAngle = -70; // start position
-                  const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
-                  const radius = 160; // wider radius to match bigger circle
-                  const radians = (angle * Math.PI) / 180;
-                  const badgeWidth = 48; // approximate badge width
-                  const x = Math.sin(radians) * radius - badgeWidth / 2 - 6;
-                  const y = -Math.cos(radians) * radius + radius;
-                  
-                  return (
-                    <motion.div
-                      key={type}
-                      initial={{ scale: 0, opacity: 0, x, y }}
-                      animate={{ scale: 1, opacity: 1, x, y }}
-                      transition={{ delay: 0.2 + index * 0.08, type: "spring", stiffness: 200 }}
-                      className="absolute"
-                      style={{ 
-                        left: "50%",
-                        top: 0,
-                      }}
-                    >
-                      <PowerUpBadge 
-                        type={type} 
-                        size="sm" 
-                        index={index} 
-                        count={type === "add-power" ? undefined : 3}
-                        onClick={() => setSelectedPowerUp(type)}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </div>
             
               {/* User info & XP bar - positioned below avatar */}
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+16px)] z-20 pointer-events-auto">
@@ -478,6 +437,49 @@ export default function Index() {
                             {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                           </span>
                         </motion.div>
+                      </div>
+                      
+                      {/* Power badges in curved arc below progress bar */}
+                      <div 
+                        className="relative w-full flex justify-center mt-4 pointer-events-auto" 
+                        data-walkthrough="powerups"
+                      >
+                        <div className="relative" style={{ width: 300, height: 60 }}>
+                          {(["fifty-fifty", "freeze", "replace", "time-drain", "add-power"] as const).map((type, index) => {
+                            // Inverted curved arc (smile shape) below progress bar
+                            const totalBadges = 5;
+                            const arcSpan = 100; // curve span in degrees
+                            const startAngle = -50; // start position
+                            const angle = startAngle + (arcSpan / (totalBadges - 1)) * index;
+                            const radius = 120; // radius for the arc
+                            const radians = (angle * Math.PI) / 180;
+                            const badgeWidth = 48;
+                            const x = Math.sin(radians) * radius - badgeWidth / 2;
+                            const y = Math.cos(radians) * radius - radius + 20; // inverted: positive y goes down
+                            
+                            return (
+                              <motion.div
+                                key={type}
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1, x, y }}
+                                transition={{ delay: 0.4 + index * 0.08, type: "spring", stiffness: 200 }}
+                                className="absolute"
+                                style={{ 
+                                  left: "50%",
+                                  top: 0,
+                                }}
+                              >
+                                <PowerUpBadge 
+                                  type={type} 
+                                  size="sm" 
+                                  index={index} 
+                                  count={type === "add-power" ? undefined : 3}
+                                  onClick={() => setSelectedPowerUp(type)}
+                                />
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </>
                   )}
