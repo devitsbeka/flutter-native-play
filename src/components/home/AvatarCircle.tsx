@@ -55,20 +55,19 @@ export function AvatarCircle({ avatarUrl, size = 320 }: AvatarCircleProps) {
         }}
       />
       
-      {/* Main circle with studio gradient background */}
+      {/* Main circle with 3D chunky styling */}
       <div 
         className="absolute inset-0 rounded-full overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, #f8f9fa 0%, #e9ecef 25%, #dee2e6 50%, #e9ecef 75%, #f8f9fa 100%)",
+          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
           boxShadow: `
-            0 0 40px rgba(147,112,219,0.2),
-            0 0 80px rgba(100,149,237,0.15),
-            0 20px 60px rgba(0,0,0,0.15),
-            0 8px 25px rgba(0,0,0,0.1),
-            inset 0 2px 4px rgba(255,255,255,0.9),
-            inset 0 -2px 4px rgba(0,0,0,0.05)
+            inset 0 6px 12px rgba(140,120,180,0.15),
+            inset 0 -3px 6px rgba(255,255,255,0.9),
+            0 8px 0 #D8D0E8,
+            0 12px 24px rgba(0,0,0,0.12),
+            0 0 40px rgba(147,112,219,0.15)
           `,
-          border: "3px solid rgba(255,255,255,0.8)",
+          border: "4px solid rgba(255,255,255,0.95)",
         }}
       />
 
