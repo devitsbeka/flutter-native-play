@@ -106,39 +106,24 @@ const PlayerCard = ({
     </div>
     
     {/* Name */}
-    <p className="mt-2 font-semibold text-white text-sm truncate max-w-[100px]">
+    <p className="mt-2 font-semibold text-white truncate max-w-[120px]" style={{ fontSize: "22px" }}>
       {name}
     </p>
     
-    {/* Score with Level */}
+    {/* Score with Level below */}
     <motion.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ delay: 0.5, type: "spring" }}
-      className="flex items-baseline gap-1"
+      className="flex flex-col items-center"
     >
-      <span 
-        className="text-3xl font-black text-white"
-      >
+      <span className="text-3xl font-black text-white">
         {score}
       </span>
       <span className="text-white/70 text-xs font-medium">
         (Lvl.{level})
       </span>
     </motion.div>
-
-    {/* Earned points - only for winner */}
-    {isWinner && earnedPoints !== undefined && (
-      <motion.div
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="mt-1 px-3 py-0.5 rounded-full"
-        style={{ backgroundColor: "#22C55E" }}
-      >
-        <span className="text-white text-xs font-bold">+{earnedPoints}</span>
-      </motion.div>
-    )}
   </motion.div>
 );
 
@@ -345,7 +330,7 @@ export function MatchResultScreen() {
         </motion.div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center px-6 pt-8 relative z-10">
+        <div className="flex-1 flex flex-col items-center px-6 pt-2 relative z-10">
           
           {/* Result Icon */}
           <motion.div
@@ -421,13 +406,10 @@ export function MatchResultScreen() {
           className="px-6 pb-8 relative z-10"
         >
           <ChunkyButton
-            variant="primary"
+            variant="mint"
             size="lg"
             onClick={handlePlayAgain}
             className="w-full"
-            style={{
-              background: "linear-gradient(180deg, #22C55E 0%, #16A34A 100%)",
-            }}
           >
             თავიდან თამაში
           </ChunkyButton>
