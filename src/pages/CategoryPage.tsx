@@ -181,12 +181,12 @@ export default function CategoryPage() {
 
           <div className="text-center">
             <div 
-              className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-lg"
+              className="mx-auto mb-4 flex h-32 w-32 items-center justify-center rounded-3xl bg-white shadow-lg"
             >
               <DynamicIcon
                 slug={(category as any).icon_slug || undefined}
                 categoryId={category.id}
-                size={56}
+                size={128}
                 className="drop-shadow-lg"
               />
             </div>

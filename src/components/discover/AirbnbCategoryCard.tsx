@@ -67,7 +67,7 @@ export function AirbnbCategoryCard({
   const pastel = getPastelColors(id);
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
-  const iconSize = isFull ? 120 : 84;
+  const iconSize = 128;
 
   // Generate floating particles
   const particles = useMemo(

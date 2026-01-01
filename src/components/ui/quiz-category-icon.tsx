@@ -16,7 +16,7 @@ interface QuizCategoryIconProps {
 }
 
 const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>(
-  ({ imageUrl, iconSlug, categoryId, emoji, size = 140, state = "default", className }, ref) => {
+  ({ imageUrl, iconSlug, categoryId, emoji, size = 128, state = "default", className }, ref) => {
     const isLoading = state === "loading";
 
     return (
