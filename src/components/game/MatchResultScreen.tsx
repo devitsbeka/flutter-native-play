@@ -68,13 +68,19 @@ const PlayerCard = ({
     transition={{ delay: 0.3 }}
   >
     {/* Avatar wrapper with overflow visible for crown */}
-    <div className="relative overflow-visible">
+    <div className="relative overflow-visible w-[88px]">
       {/* Crown for winner - centered on avatar */}
       {isWinner && (
         <motion.div
           initial={{ scale: 0, y: 10 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ delay: 0.6, type: "spring" }}
+          animate={{ 
+            scale: 1, 
+            y: [0, -4, 0]
+          }}
+          transition={{ 
+            scale: { delay: 0.6, type: "spring", stiffness: 400 },
+            y: { delay: 0.8, duration: 0.8, repeat: Infinity, ease: "easeInOut" }
+          }}
           className="absolute -top-6 left-1/2 -translate-x-1/2 z-10"
           style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" }}
         >
@@ -370,7 +376,7 @@ export function MatchResultScreen() {
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, type: "spring" }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-4"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-8"
               style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
             >
               <img src={coinIcon} alt="" className="w-6 h-6" />
