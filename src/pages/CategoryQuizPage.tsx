@@ -36,6 +36,7 @@ interface TriviaQuestion {
   incorrect_answers: string[];
   difficulty: "easy" | "medium" | "hard";
   allAnswers?: string[];
+  icon_slug?: string | null; // Question-specific icon
 }
 
 export default function CategoryQuizPage() {
@@ -142,10 +143,10 @@ export default function CategoryQuizPage() {
         // Store the database category for icon rendering
         setDbCategory(categoryData);
 
-        // Fetch questions from database
+        // Fetch questions from database - include icon_slug
         const { data: dbQuestions, error: dbError } = await supabase
           .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number')
+          .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
           .eq('is_active', true)
           .eq('category_id', categoryData.id)
           .gte('level_number', levelNumber)
@@ -176,6 +177,7 @@ export default function CategoryQuizPage() {
               incorrect_answers: incorrectAnswers,
               difficulty: q.difficulty as "easy" | "medium" | "hard",
               allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
+              icon_slug: q.icon_slug,
             };
           })
           // Filter out questions/answers that are too long for viewport
@@ -666,10 +668,10 @@ export default function CategoryQuizPage() {
           size="large"
         />
 
-        {/* Category Icon - Between Players */}
+        {/* Category Icon - Between Players - prioritize question icon over category */}
         <div className="flex-1 flex justify-center items-start pt-4">
           <DynamicIcon 
-            slug={dbCategory?.icon_slug || undefined}
+            slug={currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
             categoryId={categoryId}
             size={80}
             className="drop-shadow-lg"

@@ -7,6 +7,8 @@ export interface TriviaQuestion {
   category: string;      // Display name (Georgian)
   categoryId?: string;   // Database category_id for icon lookup
   categoryIcon?: string;
+  categoryIconSlug?: string; // Icon slug from category
+  questionIconSlug?: string; // Icon slug for specific question
   difficulty: "easy" | "medium" | "hard";
   question: string;
   correctAnswer: string;
@@ -65,14 +67,14 @@ export function useTrivia() {
         // Fetch from specific category
         const { data: categoryData } = await supabase
           .from('categories')
-          .select('id, name, icon, category_id')
+          .select('id, name, icon, category_id, icon_slug')
           .eq('category_id', category)
           .maybeSingle();
 
         if (categoryData) {
           const result = await supabase
             .from('questions')
-            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id')
+            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
             .eq('is_active', true)
             .eq('category_id', categoryData.id)
             .gte('level_number', level)
@@ -83,7 +85,9 @@ export function useTrivia() {
             ...q,
             categoryName: categoryData.name,
             categoryIcon: categoryData.icon,
-            categorySlug: categoryData.category_id  // The actual category_id for icon lookup
+            categoryIconSlug: categoryData.icon_slug,
+            categorySlug: categoryData.category_id,  // The actual category_id for icon lookup
+            questionIconSlug: q.icon_slug,
           }));
           dbError = result.error;
         }
@@ -91,7 +95,7 @@ export function useTrivia() {
         // VS Mode: Pick one question from each of 6 random categories
         const { data: categories } = await supabase
           .from('categories')
-          .select('id, name, icon, category_id')
+          .select('id, name, icon, category_id, icon_slug')
           .eq('is_active', true);
         
         if (categories && categories.length > 0) {
@@ -104,7 +108,7 @@ export function useTrivia() {
           const questionPromises = randomCategories.map(async (cat) => {
             const { data } = await supabase
               .from('questions')
-              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id')
+              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
               .eq('is_active', true)
               .eq('category_id', cat.id)
               .limit(10);
@@ -115,7 +119,9 @@ export function useTrivia() {
                 ...randomQ, 
                 categoryName: cat.name, 
                 categoryIcon: cat.icon,
-                categorySlug: cat.category_id  // The actual category_id for icon lookup
+                categoryIconSlug: cat.icon_slug,
+                categorySlug: cat.category_id,  // The actual category_id for icon lookup
+                questionIconSlug: randomQ.icon_slug,
               };
             }
             return null;
@@ -171,6 +177,8 @@ export function useTrivia() {
               category: q.categoryName,
               categoryId: q.categorySlug || '',  // Pass the actual category_id for icon lookup
               categoryIcon: q.categoryIcon || '📚',
+              categoryIconSlug: q.categoryIconSlug || undefined,
+              questionIconSlug: q.questionIconSlug || undefined,
               difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
               question: q.question_text,
               correctAnswer: q.correct_answer,
