@@ -106,6 +106,27 @@ const PlayerCard = ({
           )}
         </div>
       </div>
+
+      {/* Winner label - half overlapping bottom of avatar */}
+      {isWinner && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.7, type: "spring" }}
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10"
+        >
+          <div 
+            className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+            style={{
+              background: "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
+              color: "#78350F",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            }}
+          >
+            გამარჯვებული
+          </div>
+        </motion.div>
+      )}
     </div>
     
     {/* Name - increased margin */}
