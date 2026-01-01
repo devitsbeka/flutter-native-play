@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Bell, Gift, Menu } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
@@ -253,29 +253,6 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
               >
                 <Bell className="w-5 h-5 text-gray-600" />
-              </motion.button>
-              
-              {/* Divider */}
-              <div className="w-px h-4 bg-gray-300/60" />
-              
-              {/* Gift icon with red dot */}
-              <motion.button
-                className="relative p-1"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsDailyRewardsOpen(true)}
-              >
-                <Gift className="w-5 h-5 text-gray-600" />
-                {/* Red notification dot */}
-                <motion.div 
-                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
-                  style={{ 
-                    background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
-                    boxShadow: "0 1px 3px rgba(239,68,68,0.5)"
-                  }}
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
               </motion.button>
             </motion.div>
             

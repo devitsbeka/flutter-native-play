@@ -41,7 +41,7 @@ const fillColors: Record<PowerUpType | "add-power", string> = {
 
 const sizeConfig = {
   xs: { outer: 32, inner: 20 },
-  sm: { outer: 48, inner: 30 },
+  sm: { outer: 58, inner: 36 },
   md: { outer: 69, inner: 45 },
   lg: { outer: 88, inner: 58 },
   avatar: { outer: 56, inner: 36 },
