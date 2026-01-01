@@ -8,7 +8,8 @@ import {
   ChevronLeft,
   Upload,
   Search,
-  Sparkles
+  Sparkles,
+  Wrench
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,11 @@ const navItems = [
     to: '/admin/import', 
     icon: Upload, 
     label: 'იმპორტი' 
+  },
+  { 
+    to: '/admin/tools', 
+    icon: Wrench, 
+    label: 'ინსტრუმენტები' 
   },
   { 
     to: '/admin/duplicates', 
