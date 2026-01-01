@@ -1,6 +1,7 @@
-import { Flame, Crown, Menu } from "lucide-react";
+import { Flame, Menu } from "lucide-react";
 import { Avatar } from "@/components/shared/Avatar";
 import { Profile } from "@/hooks/useAuth";
+import { CurrencyDisplay } from "@/components/shared/CurrencyDisplay";
 
 interface FloatingUserStatsProps {
   profile: Profile | null;
@@ -23,15 +24,12 @@ export function FloatingUserStats({ profile }: FloatingUserStatsProps) {
         </button>
       </div>
 
-      {/* Stats - same height as avatar button */}
+      {/* Stats - Coins, Gems, Streak */}
       <div className="flex items-center gap-2">
+        <CurrencyDisplay size="md" />
         <div className="liquid-glass h-12 rounded-2xl px-4 flex items-center gap-2">
           <Flame className="h-5 w-5 text-orange-400" />
           <span className="font-bold text-foreground">{profile?.current_streak || 0}</span>
-        </div>
-        <div className="liquid-glass h-12 rounded-2xl px-4 flex items-center gap-2">
-          <Crown className="h-5 w-5 text-amber-400" />
-          <span className="font-bold text-foreground">{profile?.total_points || 0}</span>
         </div>
       </div>
     </div>

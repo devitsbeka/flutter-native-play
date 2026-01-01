@@ -13,6 +13,8 @@ export interface Profile {
   games_won: number;
   current_streak: number;
   best_streak: number;
+  coins: number;
+  gems: number;
 }
 
 interface AuthContextType {

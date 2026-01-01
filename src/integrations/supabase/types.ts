@@ -457,11 +457,13 @@ export type Database = {
         Row: {
           avatar_url: string | null
           best_streak: number | null
+          coins: number
           country_code: string | null
           created_at: string
           current_streak: number | null
           games_played: number | null
           games_won: number | null
+          gems: number
           id: string
           nickname: string
           total_points: number | null
@@ -471,11 +473,13 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           best_streak?: number | null
+          coins?: number
           country_code?: string | null
           created_at?: string
           current_streak?: number | null
           games_played?: number | null
           games_won?: number | null
+          gems?: number
           id?: string
           nickname: string
           total_points?: number | null
@@ -485,11 +489,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           best_streak?: number | null
+          coins?: number
           country_code?: string | null
           created_at?: string
           current_streak?: number | null
           games_played?: number | null
           games_won?: number | null
+          gems?: number
           id?: string
           nickname?: string
           total_points?: number | null

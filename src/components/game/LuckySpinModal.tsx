@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { useRewards } from "@/hooks/useRewards";
 import { toast } from "sonner";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 
 interface LuckySpinModalProps {
   isOpen: boolean;
@@ -11,14 +13,14 @@ interface LuckySpinModalProps {
 }
 
 const WHEEL_SEGMENTS = [
-  { label: "50 XP", color: "#9B87F5", value: 50, type: "xp" },
-  { label: "Free Spin", color: "#F59E0B", value: 1, type: "spin" },
-  { label: "100 XP", color: "#22C55E", value: 100, type: "xp" },
-  { label: "Power-Up", color: "#3B82F6", value: 1, type: "powerup" },
-  { label: "25 XP", color: "#EC4899", value: 25, type: "xp" },
-  { label: "200 XP", color: "#F97316", value: 200, type: "xp" },
-  { label: "Bonus!", color: "#8B5CF6", value: 500, type: "bonus" },
-  { label: "75 XP", color: "#14B8A6", value: 75, type: "xp" },
+  { label: "50 მონეტა", color: "#FFD700", value: 50, type: "coins", icon: coinIcon },
+  { label: "1 ლალი", color: "#A855F7", value: 1, type: "gems", icon: gemIcon },
+  { label: "100 მონეტა", color: "#22C55E", value: 100, type: "coins", icon: coinIcon },
+  { label: "ძალა", color: "#3B82F6", value: 1, type: "powerup", icon: "⚡" },
+  { label: "25 მონეტა", color: "#EC4899", value: 25, type: "coins", icon: coinIcon },
+  { label: "200 მონეტა", color: "#F97316", value: 200, type: "coins", icon: coinIcon },
+  { label: "3 ლალი", color: "#8B5CF6", value: 3, type: "gems", icon: gemIcon },
+  { label: "75 მონეტა", color: "#14B8A6", value: 75, type: "coins", icon: coinIcon },
 ];
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
@@ -81,14 +83,11 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
     onClose();
   };
 
-  const getRewardEmoji = (type: string) => {
-    switch (type) {
-      case "xp": return "⭐";
-      case "spin": return "🎰";
-      case "powerup": return "⚡";
-      case "bonus": return "🎁";
-      default: return "🎉";
+  const getRewardDisplay = (segment: typeof WHEEL_SEGMENTS[0]) => {
+    if (typeof segment.icon === "string" && !segment.icon.includes("/")) {
+      return <span className="text-2xl">{segment.icon}</span>;
     }
+    return <img src={segment.icon as string} alt="" className="w-6 h-6" />;
   };
 
   return (
@@ -262,13 +261,13 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                     exit={{ opacity: 0, y: -20 }}
                   >
                     <motion.div
-                      className="inline-block px-6 py-3 rounded-2xl bg-amber-500"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500"
                       style={{ boxShadow: "0 4px 0 #B45309" }}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", delay: 0.2 }}
                     >
-                      <span className="text-2xl mr-2">{getRewardEmoji(result.type)}</span>
+                      {getRewardDisplay(result)}
                       <span className="font-display text-white text-lg font-bold">
                         მოიგე {result.label}!
                       </span>
