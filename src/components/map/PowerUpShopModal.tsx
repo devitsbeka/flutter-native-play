@@ -15,6 +15,7 @@ import { REWARDS } from "@/config/rewardConfig";
 interface PowerUpShopModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSelectedType?: PowerUpType;
 }
 
 interface PowerUpInfo {
@@ -48,11 +49,11 @@ const POWER_UP_INFO: PowerUpInfo[] = [
 
 const POWER_UP_PRICES: Record<PowerUpType, number> = REWARDS.POWER_UP_PRICES as Record<PowerUpType, number>;
 
-export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
+export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: PowerUpShopModalProps) {
   const { powerUps, isLoading, addPowerUp } = useUserPowerUps();
   const { coins, spendCoins, canAffordCoins } = useCurrency();
   const { playSound, vibrate } = useSound();
-  const [selectedType, setSelectedType] = useState<PowerUpType>("5050");
+  const [selectedType, setSelectedType] = useState<PowerUpType>(initialSelectedType || "5050");
   const [animationKey, setAnimationKey] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -79,8 +80,11 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
     if (isOpen) {
       setQuantity(1);
       setShowSuccess(false);
+      if (initialSelectedType) {
+        setSelectedType(initialSelectedType);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialSelectedType]);
 
   const selectedInfo = POWER_UP_INFO.find((p) => p.type === selectedType)!;
   const unitPrice = POWER_UP_PRICES[selectedType] || 100;
