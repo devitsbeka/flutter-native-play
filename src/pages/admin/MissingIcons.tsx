@@ -56,7 +56,7 @@ export default function MissingIcons() {
       }
       
       const data = await response.json();
-      let icons: IconMeta[] = data.icons || [];
+      let icons: IconMeta[] = data.items || [];
       
       // For quick scan, sample random icons
       if (!fullScan) {
