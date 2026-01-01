@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export interface AdminQuestion {
   id: string;
@@ -16,64 +16,156 @@ export interface AdminQuestion {
   updated_at: string;
 }
 
-export const useAdminQuestions = (categoryId?: string) => {
+const PAGE_SIZE = 50;
+
+export const useAdminQuestions = (categoryId?: string | null) => {
   const [questions, setQuestions] = useState<AdminQuestion[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
 
   const fetchQuestions = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      // Build base query for count
+      let countQuery = supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true });
       
-      // Fetch all questions using pagination to bypass the 1000 row limit
-      const allQuestions: any[] = [];
-      const pageSize = 1000;
-      let page = 0;
-      let hasMore = true;
-      
-      while (hasMore) {
-        let query = supabase
-          .from('questions')
-          .select('*')
-          .order('level_number', { ascending: true })
-          .range(page * pageSize, (page + 1) * pageSize - 1);
-
-        if (categoryId) {
-          query = query.eq('category_id', categoryId);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          allQuestions.push(...data);
-          hasMore = data.length === pageSize;
-          page++;
-        } else {
-          hasMore = false;
-        }
+      if (categoryId) {
+        countQuery = countQuery.eq('category_id', categoryId);
       }
       
-      setQuestions(allQuestions.map(q => ({
-        ...q,
-        difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
-        icon_slug: q.icon_slug || undefined,
+      const { count, error: countError } = await countQuery;
+      
+      if (countError) {
+        console.error('Error fetching count:', countError);
+        toast.error('კითხვების რაოდენობის ჩატვირთვა ვერ მოხერხდა');
+        setLoading(false);
+        return;
+      }
+      
+      setTotalCount(count || 0);
+      
+      // Fetch current page
+      const offset = page * PAGE_SIZE;
+      let dataQuery = supabase
+        .from('questions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+      
+      if (categoryId) {
+        dataQuery = dataQuery.eq('category_id', categoryId);
+      }
+      
+      const { data, error } = await dataQuery;
+      
+      if (error) {
+        console.error('Error fetching questions:', error);
+        toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');
+        setLoading(false);
+        return;
+      }
+      
+      const formattedQuestions: AdminQuestion[] = (data || []).map((q) => ({
+        id: q.id,
+        category_id: q.category_id,
+        question_text: q.question_text,
+        correct_answer: q.correct_answer,
         incorrect_answers: Array.isArray(q.incorrect_answers) 
-          ? (q.incorrect_answers as unknown as string[]) 
+          ? q.incorrect_answers as string[]
           : [],
-      })));
+        difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
+        level_number: q.level_number || 1,
+        is_active: q.is_active ?? true,
+        icon_slug: q.icon_slug || undefined,
+        created_at: q.created_at || '',
+        updated_at: q.updated_at || '',
+      }));
+      
+      setQuestions(formattedQuestions);
     } catch (err) {
-      console.error('Error fetching questions:', err);
-      toast({
-        title: 'შეცდომა',
-        description: 'კითხვების ჩატვირთვა ვერ მოხერხდა',
-        variant: 'destructive',
-      });
+      console.error('Error in fetchQuestions:', err);
+      toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');
     } finally {
       setLoading(false);
     }
-  }, [categoryId, toast]);
+  }, [categoryId, page]);
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [fetchQuestions]);
+
+  // Reset page when category changes
+  useEffect(() => {
+    setPage(0);
+  }, [categoryId]);
+
+  // Real-time subscription with local updates (no full refetch)
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-questions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'questions',
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newQ = payload.new as any;
+            // Only add if matches current filter
+            if (!categoryId || newQ.category_id === categoryId) {
+              const formatted: AdminQuestion = {
+                id: newQ.id,
+                category_id: newQ.category_id,
+                question_text: newQ.question_text,
+                correct_answer: newQ.correct_answer,
+                incorrect_answers: Array.isArray(newQ.incorrect_answers) 
+                  ? newQ.incorrect_answers 
+                  : [],
+                difficulty: newQ.difficulty,
+                level_number: newQ.level_number || 1,
+                is_active: newQ.is_active ?? true,
+                icon_slug: newQ.icon_slug || undefined,
+                created_at: newQ.created_at || '',
+                updated_at: newQ.updated_at || '',
+              };
+              setQuestions(prev => [formatted, ...prev].slice(0, PAGE_SIZE));
+              setTotalCount(prev => prev + 1);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as any;
+            setQuestions(prev => prev.map(q => 
+              q.id === updated.id ? {
+                ...q,
+                question_text: updated.question_text,
+                correct_answer: updated.correct_answer,
+                incorrect_answers: Array.isArray(updated.incorrect_answers) 
+                  ? updated.incorrect_answers 
+                  : q.incorrect_answers,
+                difficulty: updated.difficulty,
+                level_number: updated.level_number || 1,
+                is_active: updated.is_active ?? true,
+                icon_slug: updated.icon_slug || undefined,
+                updated_at: updated.updated_at || '',
+              } : q
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            const deleted = payload.old as any;
+            setQuestions(prev => prev.filter(q => q.id !== deleted.id));
+            setTotalCount(prev => Math.max(0, prev - 1));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [categoryId]);
 
   const addQuestion = async (question: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -87,18 +179,11 @@ export const useAdminQuestions = (categoryId?: string) => {
         .single();
 
       if (error) throw error;
-      toast({
-        title: 'წარმატება',
-        description: 'კითხვა დაემატა',
-      });
+      toast.success('კითხვა დაემატა');
       return data;
     } catch (err: any) {
       console.error('Error adding question:', err);
-      toast({
-        title: 'შეცდომა',
-        description: err.message || 'კითხვის დამატება ვერ მოხერხდა',
-        variant: 'destructive',
-      });
+      toast.error(err.message || 'კითხვის დამატება ვერ მოხერხდა');
       return null;
     }
   };
@@ -111,18 +196,11 @@ export const useAdminQuestions = (categoryId?: string) => {
         .eq('id', id);
 
       if (error) throw error;
-      toast({
-        title: 'წარმატება',
-        description: 'კითხვა განახლდა',
-      });
+      toast.success('კითხვა განახლდა');
       return true;
     } catch (err: any) {
       console.error('Error updating question:', err);
-      toast({
-        title: 'შეცდომა',
-        description: err.message || 'კითხვის განახლება ვერ მოხერხდა',
-        variant: 'destructive',
-      });
+      toast.error(err.message || 'კითხვის განახლება ვერ მოხერხდა');
       return false;
     }
   };
@@ -135,76 +213,39 @@ export const useAdminQuestions = (categoryId?: string) => {
         .eq('id', id);
 
       if (error) throw error;
-      toast({
-        title: 'წარმატება',
-        description: 'კითხვა წაიშალა',
-      });
+      toast.success('კითხვა წაიშალა');
       return true;
     } catch (err: any) {
       console.error('Error deleting question:', err);
-      toast({
-        title: 'შეცდომა',
-        description: err.message || 'კითხვის წაშლა ვერ მოხერხდა',
-        variant: 'destructive',
-      });
+      toast.error(err.message || 'კითხვის წაშლა ვერ მოხერხდა');
       return false;
     }
   };
 
-  const bulkAddQuestions = async (questions: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>[]) => {
+  const bulkAddQuestions = async (questionsData: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>[]) => {
     try {
       const { data, error } = await supabase
         .from('questions')
-        .insert(questions)
+        .insert(questionsData)
         .select();
 
       if (error) throw error;
-      toast({
-        title: 'წარმატება',
-        description: `${data.length} კითხვა დაემატა`,
-      });
+      toast.success(`${data.length} კითხვა დაემატა`);
       return data;
     } catch (err: any) {
       console.error('Error bulk adding questions:', err);
-      toast({
-        title: 'შეცდომა',
-        description: err.message || 'კითხვების დამატება ვერ მოხერხდა',
-        variant: 'destructive',
-      });
+      toast.error(err.message || 'კითხვების დამატება ვერ მოხერხდა');
       return null;
     }
   };
 
-  // Initial fetch
-  useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
-
-  // Real-time subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('admin-questions')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'questions',
-        },
-        () => {
-          fetchQuestions();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchQuestions]);
-
   return {
     questions,
     loading,
+    totalCount,
+    page,
+    pageSize: PAGE_SIZE,
+    setPage,
     addQuestion,
     updateQuestion,
     deleteQuestion,

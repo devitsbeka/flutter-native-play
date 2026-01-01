@@ -283,6 +283,46 @@ function scoreMatch(icon: IconItem, keywords: string[], category?: string): numb
   return score;
 }
 
+// Module-level cache for database icons
+let dbIconsCache: Record<string, string> | null = null;
+let dbIconsPromise: Promise<Record<string, string>> | null = null;
+
+async function loadDbIcons(): Promise<Record<string, string>> {
+  if (dbIconsCache) return dbIconsCache;
+  if (dbIconsPromise) return dbIconsPromise;
+
+  dbIconsPromise = (async () => {
+    const { data, error } = await supabase
+      .from('icon_library')
+      .select('slug, icon_url')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    
+    if (error) {
+      console.error('[IconLibrary] DB fetch error:', error);
+      dbIconsCache = {};
+      return dbIconsCache;
+    }
+    
+    dbIconsCache = {};
+    (data || []).forEach((icon) => {
+      if (icon.slug && icon.icon_url) {
+        dbIconsCache![icon.slug] = icon.icon_url;
+      }
+    });
+    console.info(`[IconLibrary] Loaded ${Object.keys(dbIconsCache).length} icons from database`);
+    return dbIconsCache;
+  })();
+
+  return dbIconsPromise;
+}
+
+// Export function to refresh db cache (called from Icon Library admin)
+export function refreshDbIconsCache(): void {
+  dbIconsCache = null;
+  dbIconsPromise = null;
+}
+
 export function useIconLibrary() {
   const [iconIndex, setIconIndex] = useState<IconItem[]>([]);
   const [dbIcons, setDbIcons] = useState<Record<string, string>>({});
@@ -296,25 +336,18 @@ export function useIconLibrary() {
     });
   }, []);
 
-  // Load recently uploaded icons from database (for icons not in local JSON)
+  // Load database icons using module-level cache
   useEffect(() => {
-    supabase
-      .from('icon_library')
-      .select('slug, icon_url')
-      .order('created_at', { ascending: false })
-      .limit(200)
-      .then(({ data, error }) => {
-        if (data && !error) {
-          const iconMap: Record<string, string> = {};
-          data.forEach(icon => {
-            if (icon.slug && icon.icon_url) {
-              iconMap[icon.slug] = icon.icon_url;
-            }
-          });
-          setDbIcons(iconMap);
-          console.log(`[IconLibrary] Loaded ${Object.keys(iconMap).length} icons from database`);
-        }
-      });
+    loadDbIcons().then(setDbIcons);
+    
+    // Listen for refresh events from Icon Library admin
+    const handleRefresh = () => {
+      refreshDbIconsCache();
+      loadDbIcons().then(setDbIcons);
+    };
+    
+    window.addEventListener('icon-library-refresh', handleRefresh);
+    return () => window.removeEventListener('icon-library-refresh', handleRefresh);
   }, []);
 
   const findIcon = useCallback((

@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { refreshDbIconsCache } from "@/hooks/useIconLibrary";
 
 interface ImportStatus {
   phase: "idle" | "extracting" | "importing" | "done" | "error";
@@ -15,6 +16,7 @@ interface ImportStatus {
 
 // Event to notify other components to refresh icons
 export const refreshIconLibrary = () => {
+  refreshDbIconsCache(); // Clear the module-level cache
   window.dispatchEvent(new CustomEvent('icon-library-refresh'));
 };
 
@@ -165,9 +167,9 @@ export default function IconLibraryAdmin() {
   };
 
   // Check icon count on mount
-  useState(() => {
+  useEffect(() => {
     checkIconCount();
-  });
+  }, []);
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
