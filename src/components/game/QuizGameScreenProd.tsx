@@ -231,7 +231,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Players Row - No VS */}
-      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0">
+      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
         {/* Player (Left) */}
         <QuizPlayerAvatar
           avatarUrl={opponent?.avatarUrl}
@@ -240,6 +240,18 @@ export function QuizGameScreenProd() {
           state={getPlayerState()}
           size="large"
         />
+
+        {/* Category Icon - Between Players */}
+        {(aiData?.slugs?.[0] || currentQuestion.categoryId) && (
+          <div className="flex-1 flex justify-center items-start pt-4">
+            <DynamicIcon 
+              slug={aiData?.slugs?.[0]}
+              categoryId={currentQuestion.categoryId}
+              size={80}
+              className="drop-shadow-lg"
+            />
+          </div>
+        )}
 
         {/* Opponent (Right) */}
         <QuizPlayerAvatar
@@ -251,19 +263,8 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Question Card with Overlapping Icon */}
-      <div className="px-4 flex-shrink-0 relative mt-3">
-        {/* 3D Icon - positioned 50% in, 50% out */}
-        {(aiData?.slugs?.[0] || currentQuestion.categoryId) && (
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20">
-            <DynamicIcon 
-              slug={aiData?.slugs?.[0]}
-              categoryId={currentQuestion.categoryId}
-              size={80}
-              className="drop-shadow-lg"
-            />
-          </div>
-        )}
+      {/* Question Card */}
+      <div className="px-4 flex-shrink-0 mt-4">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
