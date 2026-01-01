@@ -137,7 +137,7 @@ export default function IconAssignment() {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden">
       {/* Header with Stats */}
       <div className="border-b border-border/50 bg-card/30 p-4">
         <div className="flex items-center justify-between">
