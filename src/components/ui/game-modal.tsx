@@ -148,7 +148,7 @@ export function GameModal({
             initial={{ scale: 0.85, opacity: 0, y: 40 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.85, opacity: 0, y: 40 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30, duration: 0.15 }}
             onClick={(e) => e.stopPropagation()}
             className={cn("relative w-full max-w-sm", className)}
           >
