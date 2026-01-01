@@ -74,9 +74,9 @@ export default function Discover() {
     [categories]
   );
 
-  // Get favorite categories
+  // Get favorite categories - match by uuid
   const favoriteCategories = useMemo(
-    () => categories.filter((cat) => favorites.has(cat.id)),
+    () => categories.filter((cat) => favorites.has(cat.uuid || cat.id)),
     [categories, favorites]
   );
 

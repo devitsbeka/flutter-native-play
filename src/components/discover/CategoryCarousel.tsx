@@ -4,6 +4,7 @@ import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 
 interface Category {
   id: string;
+  uuid?: string; // The actual UUID from database
   category_id?: string; // ASCII slug like 'world_history'
   name: string;
   icon: string;
@@ -19,7 +20,7 @@ interface CategoryCarouselProps {
   progress: Record<string, number>;
   favorites: Set<string>;
   onCategoryClick: (categoryId: string) => void;
-  onFavoriteToggle: (categoryId: string) => void;
+  onFavoriteToggle: (categoryUuid: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
 }
 
@@ -67,30 +68,35 @@ export function CategoryCarousel({
         className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none", paddingLeft: "20px", paddingRight: "16px" }}
       >
-        {categories.map((category, index) => (
-          <div key={category.id} className="flex-shrink-0 w-40">
-            <AirbnbCategoryCard
-              id={category.id}
-              categoryId={category.category_id || category.id}
-              iconSlug={category.icon_slug}
-              name={category.name}
-              icon={category.icon}
-              color={category.color}
-              description={category.description}
-              categoryType={category.type}
-              progress={progress[category.id] || 0}
-              totalLevels={20}
-              badge={getBadge?.(category, index)}
-              imageUrl={category.image_url}
-              isFavorite={favorites.has(category.id)}
-              onFavoriteClick={(e) => {
-                e.stopPropagation();
-                onFavoriteToggle(category.id);
-              }}
-              onClick={() => onCategoryClick(category.id)}
-            />
-          </div>
-        ))}
+        {categories.map((category, index) => {
+          // Use uuid for favorites if available, fallback to id
+          const favoriteId = category.uuid || category.id;
+          
+          return (
+            <div key={category.id} className="flex-shrink-0 w-40">
+              <AirbnbCategoryCard
+                id={category.id}
+                categoryId={category.category_id || category.id}
+                iconSlug={category.icon_slug}
+                name={category.name}
+                icon={category.icon}
+                color={category.color}
+                description={category.description}
+                categoryType={category.type}
+                progress={progress[category.id] || 0}
+                totalLevels={20}
+                badge={getBadge?.(category, index)}
+                imageUrl={category.image_url}
+                isFavorite={favorites.has(favoriteId)}
+                onFavoriteClick={(e) => {
+                  e.stopPropagation();
+                  onFavoriteToggle(favoriteId);
+                }}
+                onClick={() => onCategoryClick(category.id)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

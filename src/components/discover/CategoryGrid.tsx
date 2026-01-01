@@ -2,6 +2,7 @@ import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 
 interface Category {
   id: string;
+  uuid?: string; // The actual UUID from database
   category_id?: string;
   name: string;
   icon: string;
@@ -17,7 +18,7 @@ interface CategoryGridProps {
   progress: Record<string, number>;
   favorites: Set<string>;
   onCategoryClick: (categoryId: string) => void;
-  onFavoriteToggle: (categoryId: string) => void;
+  onFavoriteToggle: (categoryUuid: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
 }
 
@@ -36,29 +37,34 @@ export function CategoryGrid({
       className="grid grid-cols-2 gap-3"
       style={{ paddingLeft: 20, paddingRight: 20 }}
     >
-      {categories.map((category, index) => (
-        <AirbnbCategoryCard
-          key={category.id}
-          id={category.id}
-          categoryId={category.category_id || category.id}
-          iconSlug={category.icon_slug}
-          name={category.name}
-          icon={category.icon}
-          color={category.color}
-          description={category.description}
-          categoryType={category.type}
-          progress={progress[category.id] || 0}
-          totalLevels={20}
-          badge={getBadge?.(category, index)}
-          imageUrl={category.image_url}
-          isFavorite={favorites.has(category.id)}
-          onFavoriteClick={(e) => {
-            e.stopPropagation();
-            onFavoriteToggle(category.id);
-          }}
-          onClick={() => onCategoryClick(category.id)}
-        />
-      ))}
+      {categories.map((category, index) => {
+        // Use uuid for favorites if available, fallback to id
+        const favoriteId = category.uuid || category.id;
+        
+        return (
+          <AirbnbCategoryCard
+            key={category.id}
+            id={category.id}
+            categoryId={category.category_id || category.id}
+            iconSlug={category.icon_slug}
+            name={category.name}
+            icon={category.icon}
+            color={category.color}
+            description={category.description}
+            categoryType={category.type}
+            progress={progress[category.id] || 0}
+            totalLevels={20}
+            badge={getBadge?.(category, index)}
+            imageUrl={category.image_url}
+            isFavorite={favorites.has(favoriteId)}
+            onFavoriteClick={(e) => {
+              e.stopPropagation();
+              onFavoriteToggle(favoriteId);
+            }}
+            onClick={() => onCategoryClick(category.id)}
+          />
+        );
+      })}
     </div>
   );
 }
