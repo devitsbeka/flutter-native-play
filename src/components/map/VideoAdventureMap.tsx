@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings } from "lucide-react";
-import { LevelCircle } from "./LevelCircle";
+import { ArrowLeft } from "lucide-react";
 import { PowerUpsBar } from "./PowerUpsBar";
 import { AdventureQuickActions } from "./AdventureQuickActions";
+import { HeaderLevelBadge } from "./HeaderLevelBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,8 @@ import { MAP_VIDEOS } from "@/components/game/VideoPreloader";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
+import { LevelInfoModal } from "@/components/home/LevelInfoModal";
+import { calculateLevel } from "@/utils/levelCalculation";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 
@@ -26,6 +28,7 @@ export function VideoAdventureMap() {
   const [showGiftsModal, setShowGiftsModal] = useState(false);
   const [showMissionsModal, setShowMissionsModal] = useState(false);
   const [showChestModal, setShowChestModal] = useState(false);
+  const [showLevelModal, setShowLevelModal] = useState(false);
   const [videosReady, setVideosReady] = useState({ default: false, b: false, c: false });
   const { coins, gems } = useCurrency();
   
@@ -387,36 +390,28 @@ export function VideoAdventureMap() {
             </div>
           </div>
 
-          <button
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{
-              background: "rgba(255, 255, 255, 0.8)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <Settings className="w-5 h-5" style={{ color: "#7C3AED" }} />
-          </button>
+          <HeaderLevelBadge 
+            totalPoints={totalPoints} 
+            onClick={() => setShowLevelModal(true)}
+          />
         </motion.div>
 
-        {/* Center content - Level Circle */}
-        <div className="flex-1 flex items-start justify-center -mt-4">
-          {!loading && (
-            <LevelCircle 
-              totalPoints={totalPoints} 
-              onClick={handleLevelCircleClick}
-            />
-          )}
-        </div>
-
-        {/* Bottom content - Quick Actions and Power-ups bar */}
-        <div className="pb-[155px] space-y-6">
-          {/* Quick Actions */}
+        {/* Quick Actions - Below Header */}
+        <div className="px-4 py-2">
           <AdventureQuickActions
             onGiftsClick={() => setShowGiftsModal(true)}
             onMissionsClick={() => setShowMissionsModal(true)}
             onChestClick={() => setShowChestModal(true)}
+            onXPClick={() => setShowLevelModal(true)}
+            totalXP={totalPoints}
           />
-          
+        </div>
+
+        {/* Center content - Empty spacer */}
+        <div className="flex-1" />
+
+        {/* Bottom content - Power-ups bar */}
+        <div className="pb-[155px]">
           {/* Power-ups Bar */}
           <PowerUpsBar onAddClick={handleAddPowerUp} />
         </div>
@@ -438,6 +433,12 @@ export function VideoAdventureMap() {
         isOpen={showChestModal}
         onClose={() => setShowChestModal(false)}
         onClaim={() => setShowChestModal(false)}
+      />
+      
+      <LevelInfoModal
+        isOpen={showLevelModal}
+        onClose={() => setShowLevelModal(false)}
+        levelInfo={calculateLevel(totalPoints)}
       />
     </div>
   );

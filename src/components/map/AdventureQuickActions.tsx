@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
-import { Gift, Target, Package } from "lucide-react";
+import { Gift, Target, Package, Star } from "lucide-react";
 
 interface AdventureQuickActionsProps {
   onGiftsClick: () => void;
   onMissionsClick: () => void;
   onChestClick: () => void;
+  onXPClick: () => void;
+  totalXP: number;
 }
 
 interface ActionButtonProps {
@@ -27,7 +29,7 @@ function ActionButton({ icon, label, onClick, gradient, shadowColor, index, badg
       className="flex flex-col items-center gap-2"
     >
       <div 
-        className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
+        className="relative w-14 h-14 rounded-2xl flex items-center justify-center"
         style={{
           background: gradient,
           boxShadow: `0 4px 0 ${shadowColor}`,
@@ -59,17 +61,19 @@ function ActionButton({ icon, label, onClick, gradient, shadowColor, index, badg
 export function AdventureQuickActions({ 
   onGiftsClick, 
   onMissionsClick, 
-  onChestClick 
+  onChestClick,
+  onXPClick,
+  totalXP,
 }: AdventureQuickActionsProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
-      className="flex items-center justify-center gap-8 px-6"
+      className="flex items-center justify-center gap-6 px-4"
     >
       <ActionButton
-        icon={<Gift className="w-7 h-7 text-white" />}
+        icon={<Gift className="w-6 h-6 text-white" />}
         label="საჩუქრები"
         onClick={onGiftsClick}
         gradient="linear-gradient(135deg, #f472b6, #ec4899)"
@@ -79,7 +83,7 @@ export function AdventureQuickActions({
       />
       
       <ActionButton
-        icon={<Target className="w-7 h-7 text-white" />}
+        icon={<Target className="w-6 h-6 text-white" />}
         label="მისიები"
         onClick={onMissionsClick}
         gradient="linear-gradient(135deg, #60a5fa, #3b82f6)"
@@ -89,12 +93,21 @@ export function AdventureQuickActions({
       />
       
       <ActionButton
-        icon={<Package className="w-7 h-7 text-white" />}
+        icon={<Package className="w-6 h-6 text-white" />}
         label="ხაზინა"
         onClick={onChestClick}
         gradient="linear-gradient(135deg, #fbbf24, #f59e0b)"
         shadowColor="#b45309"
         index={2}
+      />
+      
+      <ActionButton
+        icon={<Star className="w-6 h-6 text-white" />}
+        label={`${totalXP.toLocaleString()} XP`}
+        onClick={onXPClick}
+        gradient="linear-gradient(135deg, #a855f7, #7c3aed)"
+        shadowColor="#6d28d9"
+        index={3}
       />
     </motion.div>
   );
