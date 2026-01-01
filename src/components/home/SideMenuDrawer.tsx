@@ -91,11 +91,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
 
             {/* Central Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[360px] bg-background rounded-3xl z-50 shadow-2xl overflow-hidden"
+              className="fixed inset-4 m-auto w-[calc(100%-32px)] max-w-[360px] h-fit max-h-[85vh] bg-background rounded-3xl z-50 shadow-2xl overflow-hidden"
             >
               {/* Header with User Info */}
               <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-5">
