@@ -209,25 +209,27 @@ export default function Index() {
           <div className="flex items-center justify-between">
             {/* Burger menu chip - same style as currency */}
             <motion.button
-              className="flex items-center gap-2 px-3 py-2 rounded-full h-[38px]"
+              className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
               style={{
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+                background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                border: "3px solid rgba(255,255,255,0.9)",
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsSideMenuOpen(true)}
             >
-              <span className="w-6 h-6 flex items-center justify-center text-lg">🍔</span>
-              <span className="text-sm font-bold text-gray-800 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>მენიუ</span>
+              <span className="w-5 h-5 flex items-center justify-center text-base">🍔</span>
+              <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>მენიუ</span>
             </motion.button>
             
             {/* Notification icons chip */}
             <motion.div 
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full h-[38px]"
+              className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
               style={{
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+                background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                border: "3px solid rgba(255,255,255,0.9)",
               }}
             >
               {/* Bell icon */}
@@ -236,11 +238,11 @@ export default function Index() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <Bell className="w-5 h-5 text-gray-700" />
+                <Bell className="w-5 h-5 text-gray-600" />
               </motion.button>
               
               {/* Divider */}
-              <div className="w-px h-4 bg-gray-200" />
+              <div className="w-px h-4 bg-gray-300/60" />
               
               {/* Gift icon with red dot */}
               <motion.button
@@ -249,7 +251,7 @@ export default function Index() {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsDailyRewardsOpen(true)}
               >
-                <Gift className="w-5 h-5 text-gray-700" />
+                <Gift className="w-5 h-5 text-gray-600" />
                 {/* Red notification dot */}
                 <motion.div 
                   className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
