@@ -57,7 +57,6 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [purchasedAmount, setPurchasedAmount] = useState(0);
 
   // Restart animation when switching power-ups
   const handleSelectPowerUp = (type: PowerUpType) => {
@@ -114,7 +113,6 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
       // Success feedback
       playSound("reward");
       vibrate([50, 30, 50]);
-      setPurchasedAmount(quantity);
       setShowSuccess(true);
       
       // Confetti celebration
@@ -152,198 +150,185 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/60"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
           />
 
-          {/* Modal Card - New whitish 3D chunky style */}
+          {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 bottom-24 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:max-w-md z-50"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
           >
-            <div 
-              className="rounded-3xl overflow-hidden"
-              style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
-                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
-                border: "3px solid rgba(255, 255, 255, 0.95)",
-              }}
-            >
+            <div className="bg-card rounded-3xl border border-border shadow-2xl overflow-hidden relative">
               {/* Header */}
-              <div className="relative px-6 pt-5 pb-3">
-                <motion.button
+              <div className="relative bg-gradient-to-r from-purple-500 to-indigo-500 px-6 pt-6 pb-8">
+                {/* Close button */}
+                <button
                   onClick={onClose}
-                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                  style={{ boxShadow: "0 3px 0 #D1D5DB" }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/30 transition-colors z-10"
                 >
-                  <X className="w-4 h-4 text-gray-600" />
-                </motion.button>
+                  <X className="w-5 h-5" />
+                </button>
 
-                <div className="flex items-center justify-between">
-                  <div className="text-center">
-                    <h2 className="text-xl font-display font-bold text-gray-900">
-                      ⚡ ძალები
-                    </h2>
-                    <p className="text-gray-500 text-sm">
-                      შეიძინე სუპერ ძალები
-                    </p>
-                  </div>
-                  {/* Show coin balance */}
-                  <div 
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                      boxShadow: "0 2px 0 #F59E0B",
-                    }}
-                  >
-                    <img src={coinIcon} alt="" className="w-5 h-5" />
-                    <span className="font-bold text-amber-700">{coins.toLocaleString()}</span>
+                {/* Title and coin balance */}
+                <div className="pr-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-2xl">⚡</span>
+                        <h2 className="text-xl font-bold text-white">ძალები</h2>
+                      </div>
+                      <p className="text-white/80 text-sm">შეიძინე სუპერ ძალები</p>
+                    </div>
+                    
+                    {/* Coin balance */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5"
+                    >
+                      <img src={coinIcon} alt="coins" className="w-5 h-5" />
+                      <span className="text-sm font-bold text-white">
+                        {coins.toLocaleString()}
+                      </span>
+                    </motion.div>
                   </div>
                 </div>
               </div>
 
-              {/* Demo Preview Area */}
-              <div className="px-4">
-                <div 
-                  className="rounded-2xl overflow-hidden"
-                  style={{
-                    boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
-                  }}
-                >
+              {/* Content */}
+              <div className="px-6 py-4 -mt-4">
+                {/* Power-up preview */}
+                <div className="bg-muted/30 rounded-2xl border border-border p-4 mb-4">
                   <PowerUpDemoPreview
                     type={selectedType}
                     animationKey={animationKey}
                   />
+                  
+                  {/* Description */}
+                  <motion.p
+                    key={selectedType}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center text-muted-foreground text-sm mt-3"
+                  >
+                    <span className="font-semibold text-foreground">{selectedInfo.name}</span>
+                    {" — "}
+                    {selectedInfo.description}
+                  </motion.p>
                 </div>
-                
-                {/* Description */}
-                <motion.p
-                  key={selectedType}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center text-gray-600 text-sm mt-3 mb-4"
-                >
-                  <span className="font-semibold text-gray-800">{selectedInfo.name}</span>
-                  {" — "}
-                  {selectedInfo.description}
-                </motion.p>
-              </div>
 
-              {/* Power-up Selector Buttons - 3D chunky style */}
-              <div className="px-4 pb-4">
+                {/* Power-up selector */}
                 <div className="flex justify-center gap-3 mb-4">
                   {POWER_UP_INFO.map((info) => {
                     const isSelected = selectedType === info.type;
                     const count = isLoading ? 0 : powerUps[info.type];
-                    
+
                     return (
                       <motion.button
                         key={info.type}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => handleSelectPowerUp(info.type)}
-                        whileTap={{ scale: 0.95, y: 2 }}
-                        className="relative p-2 rounded-2xl transition-all"
-                        style={{
-                          background: isSelected
-                            ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                            : "#F3F4F6",
-                          boxShadow: isSelected
-                            ? "0 3px 0 #C4B5FD"
-                            : "0 2px 0 #E5E7EB",
-                          border: isSelected
-                            ? "2px solid #A78BFA"
-                            : "2px solid transparent",
-                        }}
+                        className={`relative rounded-2xl p-1 transition-all ${
+                          isSelected
+                            ? "ring-2 ring-primary bg-primary/10"
+                            : "bg-muted/30 hover:bg-muted/50"
+                        }`}
                       >
-                        <PowerUpBadge
-                          type={info.type === "5050" ? "fifty-fifty" : info.type}
-                          size="sm"
+                        <PowerUpBadge 
+                          type={info.type === "5050" ? "fifty-fifty" : info.type} 
+                          size="sm" 
                           count={count}
-                          disabled={count === 0}
                         />
-                        
-                        {/* Selection indicator */}
-                        {isSelected && (
-                          <motion.div
-                            layoutId="selector"
-                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-purple-500"
-                          />
-                        )}
                       </motion.button>
                     );
                   })}
                 </div>
 
-                {/* Quantity Selector - 3D chunky style */}
-                <div className="flex items-center justify-center gap-4 mb-3">
+                {/* Quantity selector */}
+                <div className="flex items-center justify-center gap-4 mb-4">
                   <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => handleQuantityChange(-1)}
                     disabled={quantity <= 1}
-                    whileTap={{ scale: 0.9, y: 2 }}
-                    className="w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    style={{
-                      background: "#F3F4F6",
-                      boxShadow: "0 3px 0 #D1D5DB",
-                    }}
+                    className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center disabled:opacity-40"
                   >
-                    <Minus className="w-5 h-5 text-gray-600" />
+                    <Minus className="w-5 h-5 text-foreground" />
                   </motion.button>
-                  
-                  <motion.span 
-                    key={quantity}
-                    initial={{ scale: 1.3 }}
-                    animate={{ scale: 1 }}
-                    className="text-3xl font-bold text-gray-800 w-12 text-center"
-                  >
-                    {quantity}
-                  </motion.span>
-                  
+
+                  <div className="text-center min-w-[60px]">
+                    <span className="text-3xl font-bold text-foreground">{quantity}</span>
+                  </div>
+
                   <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => handleQuantityChange(1)}
                     disabled={quantity >= 10}
-                    whileTap={{ scale: 0.9, y: 2 }}
-                    className="w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    style={{
-                      background: "#F3F4F6",
-                      boxShadow: "0 3px 0 #D1D5DB",
-                    }}
+                    className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center disabled:opacity-40"
                   >
-                    <Plus className="w-5 h-5 text-gray-600" />
+                    <Plus className="w-5 h-5 text-foreground" />
                   </motion.button>
                 </div>
 
-                {/* Price Display */}
-                <motion.div 
-                  key={totalPrice}
-                  initial={{ scale: 1.05 }}
-                  animate={{ scale: 1 }}
-                  className="flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full mx-auto w-fit"
-                  style={{
-                    background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                    boxShadow: "0 2px 0 #F59E0B",
-                  }}
-                >
-                  <img src={coinIcon} alt="coins" className="w-6 h-6" />
-                  <span className="text-xl font-bold text-amber-700">{totalPrice}</span>
-                  <span className="text-amber-600 text-sm">მონეტა</span>
-                </motion.div>
+                {/* Total price */}
+                <div className="text-center mb-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <img src={coinIcon} alt="coins" className="w-6 h-6" />
+                    <span className="text-2xl font-bold text-amber-500">
+                      {totalPrice.toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {POWER_UP_PRICES[selectedType]} × {quantity}
+                  </p>
+                </div>
 
-                {/* Buy Button */}
+                {/* Purchase button */}
                 <ChunkyButton
-                  variant={canAfford ? "success" : "secondary"}
-                  size="lg"
-                  className="w-full"
                   onClick={handlePurchase}
                   disabled={isPurchasing || !canAfford}
+                  variant={canAfford ? "success" : "secondary"}
+                  className="w-full"
                 >
-                  <img src={coinIcon} alt="" className="w-5 h-5" />
-                  <span>{canAfford ? "შეძენა" : "არ გაქვს საკმარისი"}</span>
-                  <span className="opacity-80">({totalPrice})</span>
+                  {isPurchasing ? (
+                    "იძენება..."
+                  ) : !canAfford ? (
+                    "არ გაქვს საკმარისი მონეტები"
+                  ) : (
+                    <>
+                      <img src={coinIcon} alt="" className="w-5 h-5 mr-2" />
+                      შეიძინე
+                    </>
+                  )}
                 </ChunkyButton>
               </div>
+
+              {/* Success animation overlay */}
+              <AnimatePresence>
+                {showSuccess && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-card/90 rounded-3xl z-20"
+                  >
+                    <div className="text-center">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: 2, duration: 0.3 }}
+                        className="text-6xl mb-2"
+                      >
+                        ✨
+                      </motion.div>
+                      <p className="text-lg font-bold text-foreground">წარმატებით შეიძინე!</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </>
