@@ -27,15 +27,25 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Clean frosted glass container with safe area */}
+      {/* Wave divider at top */}
+      <svg 
+        className="absolute w-full" 
+        style={{ top: -3, left: 0, right: 0 }}
+        height="4" 
+        viewBox="0 0 1440 4" 
+        preserveAspectRatio="none"
+      >
+        <path 
+          d="M0,2 C360,4 720,0 1080,2 C1260,3 1380,1 1440,2 L1440,4 L0,4 Z" 
+          fill="#F8F9FA"
+        />
+      </svg>
+      
+      {/* Solid color container */}
       <div 
         className="relative"
         style={{
-          background: "rgba(255, 255, 255, 0.85)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.6)",
-          boxShadow: "0 -4px 30px rgba(0, 0, 0, 0.08)",
+          background: "#F8F9FA",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
