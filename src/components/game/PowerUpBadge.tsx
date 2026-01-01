@@ -30,13 +30,13 @@ const powerUpAssets: Record<PowerUpType | "add-power", string> = {
   "add-power": addPowerImg,
 };
 
-// SVG ring gradients matching design (from -> to colors)
-const ringGradients: Record<PowerUpType | "add-power", { from: string; to: string; fill: string }> = {
-  "fifty-fifty": { from: "#E85C3A", to: "#FFB347", fill: "#FFF5ED" },
-  "freeze": { from: "#1C8CA8", to: "#95EBE9", fill: "#EDF8FF" },
-  "replace": { from: "#1CA88C", to: "#95EBD4", fill: "#EDFFF8" },
-  "time-drain": { from: "#7B4BBF", to: "#C9A8E9", fill: "#F5EDFF" },
-  "add-power": { from: "#5BA81C", to: "#B5EB95", fill: "#F2FFED" },
+// Unified purple style with white/cream border (matching XP bar)
+const fillColors: Record<PowerUpType | "add-power", string> = {
+  "fifty-fifty": "#E8E0F5",
+  "freeze": "#E8E0F5",
+  "replace": "#E8E0F5",
+  "time-drain": "#E8E0F5",
+  "add-power": "#E8F5E0",
 };
 
 const sizeConfig = {
@@ -58,9 +58,8 @@ export function PowerUpBadge({
   className,
 }: PowerUpBadgeProps) {
   const imageSrc = powerUpAssets[type];
-  const gradient = ringGradients[type];
+  const fill = fillColors[type];
   const { outer, inner } = sizeConfig[size];
-  const gradientId = `gradient-${type}-${index}`;
 
   return (
     <motion.div
@@ -97,7 +96,7 @@ export function PowerUpBadge({
           className
         )}
       >
-        {/* SVG Ring matching exact design specs */}
+        {/* SVG Ring with unified white/cream border like XP bar */}
         <svg 
           width={outer} 
           height={outer} 
@@ -110,24 +109,26 @@ export function PowerUpBadge({
             cx={outer / 2} 
             cy={outer / 2} 
             r={outer / 2} 
-            fill={gradient.fill}
+            fill={fill}
           />
-          {/* Gradient stroke ring - 7px at 60% opacity */}
+          {/* White/cream stroke ring */}
           <circle 
             cx={outer / 2} 
             cy={outer / 2} 
             r={(outer / 2) - 3.5} 
-            stroke={`url(#${gradientId})`}
-            strokeOpacity="0.6"
-            strokeWidth="7"
+            stroke="rgba(255,255,255,0.9)"
+            strokeWidth="6"
             fill="none"
           />
-          <defs>
-            <linearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
-              <stop stopColor={gradient.from} />
-              <stop offset="1" stopColor={gradient.to} />
-            </linearGradient>
-          </defs>
+          {/* Subtle outer shadow */}
+          <circle 
+            cx={outer / 2} 
+            cy={outer / 2} 
+            r={(outer / 2) - 0.5} 
+            stroke="rgba(0,0,0,0.08)"
+            strokeWidth="1"
+            fill="none"
+          />
         </svg>
       
       {/* Inner icon */}
