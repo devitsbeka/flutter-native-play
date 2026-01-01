@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, HelpCircle } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 
 // Import custom 3D icons
@@ -13,6 +13,7 @@ interface AdventureQuickActionsProps {
   onChestClick: () => void;
   onXPClick: () => void;
   onLevelClick: () => void;
+  onHelpClick: () => void;
   totalXP: number;
   level: number;
 }
@@ -76,6 +77,7 @@ export function AdventureQuickActions({
   onMissionsClick, 
   onChestClick,
   onLevelClick,
+  onHelpClick,
   totalXP,
   level,
 }: AdventureQuickActionsProps) {
@@ -112,21 +114,39 @@ export function AdventureQuickActions({
         />
       </div>
 
-      {/* Level Badge Below */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5 }}
-        onClick={onLevelClick}
-        className="flex items-center gap-2 px-5 py-2 rounded-full"
-        style={{
-          background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
-          boxShadow: "0 4px 0 #5b21b6",
-        }}
-      >
-        <Star className="w-4 h-4 text-yellow-300" fill="#fde047" />
-        <span className="text-white font-bold text-sm">Level {level}</span>
-      </motion.button>
+      {/* Level Badge and Help Button Row */}
+      <div className="flex items-center justify-center gap-3">
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          onClick={onLevelClick}
+          className="flex items-center gap-2 px-5 py-2 rounded-full"
+          style={{
+            background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+            boxShadow: "0 4px 0 #5b21b6",
+          }}
+        >
+          <Star className="w-4 h-4 text-yellow-300" fill="#fde047" />
+          <span className="text-white font-bold text-sm">Level {level}</span>
+        </motion.button>
+
+        {/* Help Button */}
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.55 }}
+          onClick={onHelpClick}
+          className="w-10 h-10 rounded-full flex items-center justify-center"
+          style={{
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05)",
+          }}
+        >
+          <HelpCircle className="w-5 h-5" style={{ color: "#7C3AED" }} />
+        </motion.button>
+      </div>
     </motion.div>
   );
 }

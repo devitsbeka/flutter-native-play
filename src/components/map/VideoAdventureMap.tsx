@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { PowerUpsBar } from "./PowerUpsBar";
 import { AdventureQuickActions } from "./AdventureQuickActions";
 import { AdventureHelpModal } from "./AdventureHelpModal";
@@ -344,20 +344,9 @@ export function VideoAdventureMap() {
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex items-center justify-between px-4 pt-12 pb-4"
+          className="flex items-center justify-center px-4 pt-12 pb-4"
         >
-          <button
-            onClick={handleBack}
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{
-              background: "rgba(255, 255, 255, 0.8)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <ArrowLeft className="w-5 h-5" style={{ color: "#7C3AED" }} />
-          </button>
-
-          {/* Currency Display */}
+          {/* Currency Display - Centered */}
           <div className="flex items-center gap-2">
             {/* Coins */}
             <div 
@@ -389,9 +378,9 @@ export function VideoAdventureMap() {
               </span>
             </div>
             
-            {/* XP */}
+            {/* XP - whitespace-nowrap to keep on one line */}
             <div 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap"
               style={{
                 background: "rgba(255, 255, 255, 0.9)",
                 backdropFilter: "blur(10px)",
@@ -403,19 +392,6 @@ export function VideoAdventureMap() {
               </span>
             </div>
           </div>
-
-          {/* Help Button */}
-          <button
-            onClick={() => setShowHelpModal(true)}
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{
-              background: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(10px)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-          >
-            <HelpCircle className="w-5 h-5" style={{ color: "#7C3AED" }} />
-          </button>
         </motion.div>
 
         {/* Quick Actions - Below Header */}
@@ -426,6 +402,7 @@ export function VideoAdventureMap() {
             onChestClick={() => setShowChestModal(true)}
             onXPClick={() => setShowLevelModal(true)}
             onLevelClick={() => setShowLevelModal(true)}
+            onHelpClick={() => setShowHelpModal(true)}
             totalXP={totalPoints}
             level={calculateLevel(totalPoints).level}
           />
