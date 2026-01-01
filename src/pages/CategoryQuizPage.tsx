@@ -16,6 +16,16 @@ import { useSessionQuestions } from "@/hooks/useSessionQuestions";
 import confetti from "canvas-confetti";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
 import { calculateLevel } from "@/utils/levelCalculation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Import shared quiz UI components
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
@@ -77,6 +87,7 @@ export default function CategoryQuizPage() {
   const [hiddenAnswers, setHiddenAnswers] = useState<string[]>([]);
   const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
   const [timerBonus, setTimerBonus] = useState(0);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
@@ -873,7 +884,7 @@ export default function CategoryQuizPage() {
       {/* Header - same as QuizGameScreenProd */}
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
         <button
-          onClick={() => navigate(`/category/${categoryId}`)}
+          onClick={() => setShowExitDialog(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-white" />
@@ -1002,6 +1013,30 @@ export default function CategoryQuizPage() {
           </AnimatePresence>
         </div>
       </div>
+      {/* Exit Confirmation Dialog */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent className="bg-white rounded-2xl border-0 max-w-[90%] sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-xl text-slate-800">
+              გამოსვლა?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-slate-500">
+              თქვენი პროგრესი დაიკარგება. დარწმუნებული ხართ რომ გინდათ გამოსვლა?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3 sm:gap-3">
+            <AlertDialogCancel className="flex-1 m-0 bg-slate-100 border-0 text-slate-700 hover:bg-slate-200">
+              გაგრძელება
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => navigate(`/category/${categoryId}`)}
+              className="flex-1 m-0 bg-red-500 hover:bg-red-600 text-white"
+            >
+              გამოსვლა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
