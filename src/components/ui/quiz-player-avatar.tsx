@@ -3,18 +3,21 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export type QuizPlayerAvatarState = "default" | "active" | "correct" | "wrong" | "loading";
+export type QuizPlayerAvatarSize = "default" | "large";
 
 interface QuizPlayerAvatarProps {
   avatarUrl?: string;
   score?: number;
   position?: "left" | "right";
   state?: QuizPlayerAvatarState;
+  size?: QuizPlayerAvatarSize;
   className?: string;
 }
 
 const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>(
-  ({ avatarUrl, score = 0, position = "left", state = "default", className }, ref) => {
+  ({ avatarUrl, score = 0, position = "left", state = "default", size = "default", className }, ref) => {
     const isLoading = state === "loading";
+    const dimensions = size === "large" ? { width: 100, height: 100, borderRadius: 24 } : { width: 68, height: 68, borderRadius: 20 };
 
     const borderColors: Record<QuizPlayerAvatarState, string> = {
       default: "#9C99E8",
@@ -46,22 +49,24 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {/* Avatar Container with 3D effect */}
-        <div className="relative" style={{ width: 68, height: 68 }}>
+        <div className="relative" style={{ width: dimensions.width, height: dimensions.height }}>
           {/* 3D Depth shadow */}
           <div
-            className="absolute inset-0 rounded-[20px]"
+            className="absolute inset-0"
             style={{
               backgroundColor: shadowColors[state],
               transform: "translateY(4px)",
+              borderRadius: dimensions.borderRadius,
             }}
           />
           
           {/* Main avatar container */}
           <motion.div
-            className="relative w-full h-full rounded-[20px] overflow-hidden"
+            className="relative w-full h-full overflow-hidden"
             style={{
               border: `3px solid ${borderColors[state]}`,
               backgroundColor: "#F5F4FF",
+              borderRadius: dimensions.borderRadius,
             }}
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}

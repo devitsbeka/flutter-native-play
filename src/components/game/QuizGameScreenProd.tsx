@@ -221,28 +221,27 @@ export function QuizGameScreenProd() {
         </button>
       </div>
 
-      {/* Players Row with Timer in Center */}
-      <div className="flex items-start justify-between px-4 flex-shrink-0">
+      {/* VS-Style Players Row */}
+      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0">
         {/* Player (Left) */}
         <QuizPlayerAvatar
           avatarUrl={opponent?.avatarUrl}
           score={userScore}
           position="left"
           state={getPlayerState()}
+          size="large"
         />
 
-        {/* Timer + Difficulty Badge (Center) */}
-        <div className="flex flex-col items-center gap-2 pt-2">
-          <TimerBadge 
-            seconds={timeRemaining} 
-            maxSeconds={timePerQuestion + playerTimerBonus} 
-          />
+        {/* VS Badge in Center */}
+        <div className="flex-1 flex items-center justify-center pt-6">
           <span 
-            className={`px-3 py-1 rounded-full text-white text-xs font-bold ${
-              DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium
-            }`}
+            className="text-4xl font-black text-white"
+            style={{ 
+              textShadow: "0 4px 20px rgba(0,0,0,0.3)",
+              fontFamily: "'TASolivare', sans-serif",
+            }}
           >
-            {DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
+            VS
           </span>
         </div>
 
@@ -252,11 +251,27 @@ export function QuizGameScreenProd() {
           score={opponentScore}
           position="right"
           state={getOpponentState()}
+          size="large"
         />
       </div>
 
+      {/* Timer + Difficulty Badge Row */}
+      <div className="flex flex-col items-center gap-2 py-3 flex-shrink-0">
+        <TimerBadge 
+          seconds={timeRemaining} 
+          maxSeconds={timePerQuestion + playerTimerBonus} 
+        />
+        <span 
+          className={`px-3 py-1 rounded-full text-white text-xs font-bold ${
+            DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium
+          }`}
+        >
+          {DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
+        </span>
+      </div>
+
       {/* Question Card */}
-      <div className="px-4 mt-4 flex-shrink-0">
+      <div className="px-4 flex-shrink-0">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
