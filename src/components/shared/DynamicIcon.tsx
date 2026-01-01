@@ -10,6 +10,7 @@ interface DynamicIconProps {
   size?: number;
   className?: string;
   hideIfEmpty?: boolean; // Don't render anything if no icon found
+  fallbackEmoji?: string; // Emoji to show when icon fails to load
 }
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
@@ -41,7 +42,8 @@ export function DynamicIcon({
   slug,
   size = 64,
   className,
-  hideIfEmpty = false
+  hideIfEmpty = false,
+  fallbackEmoji
 }: DynamicIconProps) {
   const [imageError, setImageError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
@@ -129,6 +131,17 @@ export function DynamicIcon({
   if (!iconUrl || imageError) {
     if (hideIfEmpty) {
       return null;
+    }
+    // Use emoji fallback if provided, otherwise show question mark icon
+    if (fallbackEmoji) {
+      return (
+        <div 
+          className={cn("flex items-center justify-center", className)}
+          style={{ width: size, height: size }}
+        >
+          <span style={{ fontSize: size * 0.6 }}>{fallbackEmoji}</span>
+        </div>
+      );
     }
     return (
       <div 
