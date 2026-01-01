@@ -163,7 +163,7 @@ export default function CategoryPage() {
         <div className="px-5 pb-6 pt-12">
           <div className="flex items-center justify-between mb-6">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/discover")}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm"
             >
               <ArrowLeft className="h-5 w-5 text-white" />
