@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
 
 export interface TriviaQuestion {
   id: string;
@@ -177,6 +178,13 @@ export function useTrivia() {
               allAnswers,
               hash: questionHash,
             };
+          })
+          // Filter out questions/answers that are too long for viewport
+          .filter((q: TriviaQuestion & { hash: string }) => {
+            if (q.question.length > QUESTION_MAX_LENGTH) return false;
+            if (q.correctAnswer.length > ANSWER_MAX_LENGTH) return false;
+            if (q.incorrectAnswers.some(a => a.length > ANSWER_MAX_LENGTH)) return false;
+            return true;
           })
           .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash))
           .slice(0, amount);

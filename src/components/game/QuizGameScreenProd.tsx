@@ -264,7 +264,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-4">
+      <div className="px-4 flex-shrink-0 mt-3">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
@@ -277,7 +277,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center my-3 flex-shrink-0">
+      <div className="flex justify-center my-2 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -286,7 +286,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Answer Buttons - No Scroll */}
-      <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
+      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);

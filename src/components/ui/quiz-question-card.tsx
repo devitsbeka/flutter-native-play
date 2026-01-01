@@ -17,14 +17,12 @@ interface QuizQuestionCardProps {
   timerMaxSeconds?: number;
 }
 
-// Dynamic font sizing based on question length
+// Dynamic font sizing based on question length - conservative for viewport fit
 function getQuestionStyles(text: string) {
   const length = text.length;
-  if (length > 200) return { fontSize: "14px" };
-  if (length > 150) return { fontSize: "15px" };
-  if (length > 100) return { fontSize: "16px" };
-  if (length > 60) return { fontSize: "18px" };
-  return { fontSize: "20px" };
+  if (length > 55) return { fontSize: "16px" };
+  if (length > 40) return { fontSize: "17px" };
+  return { fontSize: "18px" };
 }
 
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(
@@ -103,8 +101,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
         {/* Question Text */}
         <div className={cn(
-          "px-5 py-4",
-          (timerSeconds !== undefined || difficultyLabel) && "pt-14"
+          "px-5 py-3",
+          (timerSeconds !== undefined || difficultyLabel) && "pt-12"
         )}>
           {isLoading ? (
             <div className="space-y-2">
@@ -113,7 +111,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             </div>
           ) : (
             <p
-              className="text-center font-semibold leading-relaxed text-[#2A2550]"
+              className="text-center font-semibold leading-snug text-[#2A2550] line-clamp-3"
               style={{
                 fontSize: questionStyles.fontSize,
               }}

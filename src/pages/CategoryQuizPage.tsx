@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import confetti from "canvas-confetti";
+import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
 
 // Import shared quiz UI components
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
@@ -157,24 +158,33 @@ export default function CategoryQuizPage() {
           return;
         }
 
+        // Filter and process questions
+        const processedQuestions = dbQuestions
+          .map((q: any) => {
+            const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+              ? q.incorrect_answers 
+              : JSON.parse(q.incorrect_answers || '[]');
+            
+            return {
+              question: q.question_text,
+              correct_answer: q.correct_answer,
+              incorrect_answers: incorrectAnswers,
+              difficulty: q.difficulty as "easy" | "medium" | "hard",
+              allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
+            };
+          })
+          // Filter out questions/answers that are too long for viewport
+          .filter((q) => {
+            if (q.question.length > QUESTION_MAX_LENGTH) return false;
+            if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
+            if (q.incorrect_answers.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
+            return true;
+          });
+
         // Shuffle and take 5 questions
-        const shuffledDbQuestions = shuffleArray(dbQuestions).slice(0, 5);
+        const shuffledDbQuestions = shuffleArray(processedQuestions).slice(0, 5);
 
-        const processedQuestions = shuffledDbQuestions.map((q: any) => {
-          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-            ? q.incorrect_answers 
-            : JSON.parse(q.incorrect_answers || '[]');
-          
-          return {
-            question: q.question_text,
-            correct_answer: q.correct_answer,
-            incorrect_answers: incorrectAnswers,
-            difficulty: q.difficulty as "easy" | "medium" | "hard",
-            allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
-          };
-        });
-
-        setQuestions(processedQuestions);
+        setQuestions(shuffledDbQuestions);
       } catch (err) {
         console.error("Unexpected error:", err);
         setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");

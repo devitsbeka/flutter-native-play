@@ -113,7 +113,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         
         {/* Main Face */}
         <div
-          className="relative flex items-center min-h-[56px] py-3 rounded-2xl transition-transform duration-100"
+          className="relative flex items-center min-h-[52px] py-2.5 rounded-2xl transition-transform duration-100"
           style={{
             background: styles.faceBg,
             transform: `translateY(${isPressed ? 2 : 0}px)`,
@@ -143,7 +143,8 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           <span
             className={cn(
               "flex-1 px-3 leading-tight",
-              state === "next" ? "text-center" : "text-left"
+              state === "next" ? "text-center" : "text-left",
+              text.length > 30 ? "text-base" : "text-lg"
             )}
             style={{ color: styles.textColor }}
           >
