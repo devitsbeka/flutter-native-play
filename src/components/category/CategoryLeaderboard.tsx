@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trophy, Medal, Play, Crown, User } from "lucide-react";
+import { Trophy, Medal, Play, Crown, User, Star } from "lucide-react";
 import { useCategoryLeaderboard } from "@/hooks/useCategoryLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,8 +76,11 @@ export function CategoryLeaderboard({
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-white/60">ქულები</p>
-                <p className="text-xl font-bold text-primary">{userRank.total_score.toLocaleString()}</p>
+                <p className="text-sm text-white/60">ვარსკვლავები</p>
+                <div className="flex items-center gap-1 justify-end">
+                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                  <p className="text-xl font-bold text-amber-400">{userRank.total_stars}</p>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -122,7 +125,7 @@ export function CategoryLeaderboard({
               
               return (
                 <motion.div
-                  key={entry.id}
+                  key={entry.user_id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.03 }}
@@ -161,21 +164,26 @@ export function CategoryLeaderboard({
                       {isCurrentUser && " (შენ)"}
                     </p>
                     <p className="text-xs text-white/50">
-                      {entry.games_played} თამაში
+                      {entry.levels_completed} დონე დასრულებული
                     </p>
                   </div>
 
-                  {/* Score */}
-                  <div className="text-right">
+                  {/* Stars */}
+                  <div className="text-right flex items-center gap-1">
+                    <Star className={`h-4 w-4 ${
+                      entry.rank === 1 ? "text-amber-400 fill-amber-400" : 
+                      entry.rank === 2 ? "text-slate-300 fill-slate-300" :
+                      entry.rank === 3 ? "text-amber-600 fill-amber-600" :
+                      "text-amber-400 fill-amber-400"
+                    }`} />
                     <p className={`font-bold ${
                       entry.rank === 1 ? "text-amber-400" : 
                       entry.rank === 2 ? "text-slate-300" :
                       entry.rank === 3 ? "text-amber-600" :
                       "text-white"
                     }`}>
-                      {entry.total_score.toLocaleString()}
+                      {entry.total_stars}
                     </p>
-                    <p className="text-xs text-white/40">ქულა</p>
                   </div>
                 </motion.div>
               );
@@ -202,11 +210,11 @@ export function CategoryLeaderboard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-primary truncate">შენ</p>
-                    <p className="text-xs text-white/50">შენი პოზიცია</p>
+                    <p className="text-xs text-white/50">{userRank.levels_completed} დონე</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-white">{userRank.total_score.toLocaleString()}</p>
-                    <p className="text-xs text-white/40">ქულა</p>
+                  <div className="text-right flex items-center gap-1">
+                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                    <p className="font-bold text-white">{userRank.total_stars}</p>
                   </div>
                 </motion.div>
               </>
