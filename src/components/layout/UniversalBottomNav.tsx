@@ -34,7 +34,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           style={{
             bottom: "100%",
             height: 70,
-            background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.75) 60%, rgba(255,255,255,0.9) 100%)",
+            background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0.85) 60%, rgba(255,255,255,0.95) 100%)",
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
             maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
@@ -62,7 +62,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         <div 
           className="relative overflow-visible"
           style={{
-            background: "rgba(255,255,255,0.85)",
+            background: "rgba(255,255,255,0.92)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             padding: "0px 20px 4px",
