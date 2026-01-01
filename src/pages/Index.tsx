@@ -209,7 +209,7 @@ export default function Index() {
           <div className="flex items-center justify-between">
             {/* Burger menu chip - same style as currency */}
             <motion.button
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-full h-[38px]"
               style={{
                 background: "rgba(255,255,255,0.95)",
                 boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
@@ -224,7 +224,7 @@ export default function Index() {
             
             {/* Notification icons chip */}
             <motion.div 
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full h-[38px]"
               style={{
                 background: "rgba(255,255,255,0.95)",
                 boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
