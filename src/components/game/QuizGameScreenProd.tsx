@@ -4,12 +4,12 @@ import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
-import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
-import { QuizNextButton } from "@/components/ui/quiz-next-button";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 
 // Bot avatars for opponent
@@ -19,19 +19,22 @@ import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
 import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
 import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
 
-// Popcorn icon for category
-import popcornIcon from "@/assets/icons/icon-compass.png";
-
 const botAvatars = [botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5];
 
 // Georgian answer labels
 const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
 
-// Difficulty mappings
-const DIFFICULTY_MAP: Record<string, "easy" | "medium" | "hard"> = {
-  easy: "easy",
-  medium: "medium",
-  hard: "hard",
+// Difficulty labels and colors
+const DIFFICULTY_LABELS: Record<string, string> = {
+  easy: "მარტივი",
+  medium: "საშუალო",
+  hard: "რთული",
+};
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  easy: "bg-success",
+  medium: "bg-warning",
+  hard: "bg-destructive",
 };
 
 // Removed text truncation - show full question and answer text
@@ -218,7 +221,7 @@ export function QuizGameScreenProd() {
         </button>
       </div>
 
-      {/* Players Row */}
+      {/* Players Row with Timer in Center */}
       <div className="flex items-start justify-between px-4 flex-shrink-0">
         {/* Player (Left) */}
         <QuizPlayerAvatar
@@ -228,8 +231,20 @@ export function QuizGameScreenProd() {
           state={getPlayerState()}
         />
 
-        {/* Spacer for centered icon */}
-        <div className="flex-1" />
+        {/* Timer + Difficulty Badge (Center) */}
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <TimerBadge 
+            seconds={timeRemaining} 
+            maxSeconds={timePerQuestion + playerTimerBonus} 
+          />
+          <span 
+            className={`px-3 py-1 rounded-full text-white text-xs font-bold ${
+              DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium
+            }`}
+          >
+            {DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
+          </span>
+        </div>
 
         {/* Opponent (Right) */}
         <QuizPlayerAvatar
@@ -240,25 +255,12 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Question Card with Floating Category Icon */}
-      <div className="relative px-4 flex-shrink-0" style={{ marginTop: "-52px" }}>
-        {/* Floating Category Icon - 50% overlap */}
-        <div 
-          className="absolute left-1/2 -translate-x-1/2 z-10"
-          style={{ top: "-48px" }}
-        >
-          <QuizCategoryIcon
-            categoryId={currentQuestion.categoryId || currentQuestion.category}
-            size={96}
-            state="default"
-          />
-        </div>
-
+      {/* Question Card */}
+      <div className="px-4 mt-4 flex-shrink-0">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
           state="default"
-          className="pt-12"
         />
       </div>
 
@@ -312,12 +314,14 @@ export function QuizGameScreenProd() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <QuizNextButton
-                  text={isLastQuestion ? "შედეგები" : "შემდეგი კითხვა"}
-                  duration={3000}
+                <ChunkyButton
+                  variant="success"
+                  size="xl"
                   onClick={handleNext}
-                  autoClickEnabled={true}
-                />
+                  className="w-full"
+                >
+                  {isLastQuestion ? "შედეგები" : "შემდეგი კითხვა"}
+                </ChunkyButton>
               </motion.div>
             ) : (
               <motion.div
