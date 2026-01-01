@@ -28,16 +28,41 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
       <div className="relative overflow-visible">
-        {/* Main container with curved top using border-radius */}
+        {/* Elegant curved wave SVG */}
+        <svg 
+          className="absolute left-0 right-0 w-full pointer-events-none"
+          style={{ bottom: "100%", height: 50 }}
+          viewBox="0 0 400 50" 
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="navCurveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#F8F6FC" stopOpacity="0.4" />
+              <stop offset="40%" stopColor="#F8F6FC" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#F8F6FC" />
+            </linearGradient>
+          </defs>
+          {/* Smooth bezier curve wave */}
+          <path 
+            d="M0,50 L0,35 C80,50 150,15 200,20 C250,25 320,50 400,35 L400,50 Z" 
+            fill="url(#navCurveGradient)"
+          />
+          {/* Top highlight stroke */}
+          <path 
+            d="M0,35 C80,50 150,15 200,20 C250,25 320,50 400,35" 
+            fill="none"
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth="2"
+          />
+        </svg>
+        
+        {/* Main container */}
         <div 
           className="relative overflow-visible"
           style={{
             background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
             padding: "16px 20px 12px",
-            borderRadius: "32px 32px 0 0",
-            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9), 0 -6px 20px rgba(0,0,0,0.08)",
-            border: "3px solid rgba(255,255,255,0.95)",
-            borderBottom: "none",
+            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9)",
           }}
         >
           <div className="flex items-center justify-around overflow-visible">
