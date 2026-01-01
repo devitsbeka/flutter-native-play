@@ -341,11 +341,11 @@ export function VideoAdventureMap() {
 
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* Header with title, currency, and level badge */}
+        {/* Header with title and level badge */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex items-center justify-between px-4 pt-12 pb-4"
+          className="flex items-center justify-between px-4 pt-12 pb-2"
         >
           {/* Left: Page Title */}
           <h1 
@@ -358,68 +358,74 @@ export function VideoAdventureMap() {
             რუქა
           </h1>
 
-          {/* Center: Currency Display */}
-          <div className="flex items-center gap-2">
-            {/* Coins */}
-            <div 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-              style={{
-                background: "rgba(255, 255, 255, 0.9)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              }}
-            >
-              <img src={coinIcon} alt="Coins" className="w-5 h-5" />
-              <span className="text-sm font-bold" style={{ color: "#b45309" }}>
-                {coins.toLocaleString()}
-              </span>
-            </div>
-            
-            {/* Gems */}
-            <div 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-              style={{
-                background: "rgba(255, 255, 255, 0.9)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              }}
-            >
-              <img src={gemIcon} alt="Gems" className="w-5 h-5" />
-              <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
-                {gems.toLocaleString()}
-              </span>
-            </div>
-            
-            {/* XP */}
-            <div 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap"
-              style={{
-                background: "rgba(255, 255, 255, 0.9)",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              }}
-            >
-              <img src={xpIcon} alt="XP" className="w-5 h-5" />
-              <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
-                {totalPoints.toLocaleString()} XP
-              </span>
-            </div>
-          </div>
-
           {/* Right: Level Badge */}
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowLevelModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap"
             style={{
               background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
               boxShadow: "0 4px 0 #5b21b6",
             }}
           >
-            <Star className="w-4 h-4 text-yellow-300" fill="#fde047" />
-            <span className="text-white font-bold text-sm">Level {calculateLevel(totalPoints).level}</span>
+            <Star className="w-4 h-4 text-yellow-300 flex-shrink-0" fill="#fde047" />
+            <span className="text-white font-bold text-sm whitespace-nowrap">Level {calculateLevel(totalPoints).level}</span>
           </motion.button>
         </motion.div>
+
+        {/* Currency Display Row */}
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="flex items-center justify-center gap-2 px-4 py-2"
+        >
+          {/* Coins */}
+          <div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style={{
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+            <span className="text-sm font-bold" style={{ color: "#b45309" }}>
+              {coins.toLocaleString()}
+            </span>
+          </div>
+          
+          {/* Gems */}
+          <div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style={{
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+            <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
+              {gems.toLocaleString()}
+            </span>
+          </div>
+          
+          {/* XP */}
+          <div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap"
+            style={{
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <img src={xpIcon} alt="XP" className="w-5 h-5" />
+            <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
+              {totalPoints.toLocaleString()} XP
+            </span>
+          </div>
+        </motion.div>
+
 
         {/* Quick Actions - Below Header */}
         <div className="px-4 py-2">
