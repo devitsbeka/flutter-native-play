@@ -257,8 +257,6 @@ export function QuizGameScreenProd() {
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
-          questionNumber={currentQuestionIndex + 1}
-          totalQuestions={questions.length}
           state="default"
           className="pt-12"
         />
