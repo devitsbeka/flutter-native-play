@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, Gift } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
-import confetti from "canvas-confetti";
 import { getLevelRewards } from "@/utils/levelCalculation";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
@@ -30,37 +29,6 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
     if (isOpen) {
       // Credit level-up rewards
       addCurrency(levelUpCoins, levelUpGems);
-
-      const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
-
-      // Single burst of confetti - much lighter on GPU
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { x: 0.5, y: 0.4 },
-        colors,
-        zIndex: 9999,
-      });
-
-      // Small side bursts after a short delay
-      setTimeout(() => {
-        confetti({
-          particleCount: 30,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0, y: 0.6 },
-          colors,
-          zIndex: 9999,
-        });
-        confetti({
-          particleCount: 30,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1, y: 0.6 },
-          colors,
-          zIndex: 9999,
-        });
-      }, 300);
     }
   }, [isOpen, addCurrency, levelUpCoins, levelUpGems]);
 
