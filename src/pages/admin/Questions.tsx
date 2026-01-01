@@ -59,6 +59,7 @@ export default function AdminQuestions() {
   const { questions, loading, addQuestion, updateQuestion, deleteQuestion } = useAdminQuestions();
   const [search, setSearch] = useState('');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
+  const [filterMissingIcons, setFilterMissingIcons] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<AdminQuestion | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminQuestion | null>(null);
@@ -147,8 +148,11 @@ export default function AdminQuestions() {
     const matchesSearch = q.question_text.toLowerCase().includes(search.toLowerCase()) ||
       q.correct_answer.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = filterCategoryId === 'all' || q.category_id === filterCategoryId;
-    return matchesSearch && matchesCategory;
+    const matchesMissingIcon = !filterMissingIcons || !q.icon_slug || q.icon_slug.trim() === '';
+    return matchesSearch && matchesCategory && matchesMissingIcon;
   });
+
+  const missingIconsCount = questions.filter(q => !q.icon_slug || q.icon_slug.trim() === '').length;
 
   const getCategoryName = (categoryId: string) => {
     const cat = categories.find(c => c.id === categoryId);
@@ -208,6 +212,18 @@ export default function AdminQuestions() {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant={filterMissingIcons ? "default" : "outline"}
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={() => setFilterMissingIcons(!filterMissingIcons)}
+          >
+            <ImageOff className="h-3.5 w-3.5" />
+            აიკონის გარეშე
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+              {missingIconsCount}
+            </Badge>
+          </Button>
         </div>
 
         {/* Questions List - Compact Cards */}
