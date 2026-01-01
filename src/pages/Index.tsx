@@ -357,7 +357,7 @@ export default function Index() {
                     <>
                       {/* Name, Flag, Level row */}
                       <div className="flex items-center justify-center gap-3">
-                        <span className="text-2xl font-display font-bold text-gray-800 drop-shadow-sm">
+                        <span className="text-2xl font-display font-bold text-white drop-shadow-md">
                           {profile?.nickname || t("game.guest")}
                         </span>
                         {profile?.country_code && (
