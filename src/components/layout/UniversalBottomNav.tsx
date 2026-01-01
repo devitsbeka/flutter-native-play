@@ -80,7 +80,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={onTeamClick || (() => navigate("/team"))}
             isActive={isActive("/team")}
             icon={Headphones}
-            label="Sound"
+            label="Team"
             badgeCount={pendingChallenges.length}
           />
         </div>
@@ -109,10 +109,10 @@ function NavButton({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      <div className="relative" style={{ opacity: isActive ? 1 : 0.5 }}>
+      <div className="relative" style={{ opacity: isActive ? 1 : 0.6 }}>
         {/* Icon */}
         <div className="w-8 h-8 flex items-center justify-center">
-          <Icon className="w-6 h-6 text-gray-700" />
+          <Icon className="w-6 h-6 text-white" />
         </div>
         
         {/* Badge */}
@@ -133,13 +133,13 @@ function NavButton({
         )}
       </div>
       
-      {/* Label */}
+      {/* Label - matching XP text style */}
       <span 
-        className="text-gray-700 mt-0.5"
+        className="text-white font-medium mt-0.5"
         style={{ 
-          fontSize: 12, 
+          fontSize: 14, 
           fontFamily: "'Google Sans', sans-serif",
-          opacity: isActive ? 1 : 0.5,
+          opacity: isActive ? 1 : 0.6,
         }}
       >
         {label}
