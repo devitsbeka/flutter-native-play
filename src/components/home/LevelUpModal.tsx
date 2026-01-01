@@ -63,7 +63,6 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       onClose={onClose}
       variant="gold"
       title="დონე აიწია! 🎉"
-      subtitle="Level Up!"
       showSparkles
       showStars
     >
@@ -171,7 +170,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       <GameModalFooter
         primaryLabel="გაგრძელება"
         onPrimary={onClose}
-        primaryVariant="primary"
+        primaryVariant="success"
       />
     </GameModal>
   );
