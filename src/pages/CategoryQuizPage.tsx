@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, HelpCircle, ChevronRight, TrendingUp } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,9 @@ import { toast } from "sonner";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
-import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useCurrency } from "@/hooks/useCurrency";
+import { REWARDS } from "@/config/rewardConfig";
 import { useSessionQuestions } from "@/hooks/useSessionQuestions";
 import confetti from "canvas-confetti";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
@@ -63,10 +64,13 @@ export default function CategoryQuizPage() {
   const [pointsEarned, setPointsEarned] = useState(0);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
-  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [newProfileLevel, setNewProfileLevel] = useState(0);
   const [previousProfileLevel, setPreviousProfileLevel] = useState(0);
   const [questionIds, setQuestionIds] = useState<string[]>([]);
+  const [levelUpRewardsCredited, setLevelUpRewardsCredited] = useState(false);
+  
+  // Currency hook for level-up rewards
+  const { addCurrency } = useCurrency();
   
   // Power-up state
   const { powerUps, usePowerUp: consumePowerUp } = useUserPowerUps();
@@ -336,8 +340,13 @@ export default function CategoryQuizPage() {
         const newLevel = calculateLevel(newTotalPoints).level;
         if (newLevel > previousLevel) {
           setNewProfileLevel(newLevel);
-          // Show level-up modal after a short delay
-          setTimeout(() => setShowLevelUpModal(true), 1000);
+          // Credit level-up rewards immediately (no modal)
+          const levelUpCoins = REWARDS.LEVEL_UP_COINS_PER_LEVEL * newLevel;
+          const levelUpGems = newLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
+            ? Math.floor(newLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD) 
+            : 0;
+          addCurrency(levelUpCoins, levelUpGems);
+          setLevelUpRewardsCredited(true);
         }
       }
       
@@ -636,6 +645,13 @@ export default function CategoryQuizPage() {
     const displayStars = isSaving ? stars : savedStars || stars;
     const passed = displayStars >= 1;
     const isPerfect = score === questions.length;
+    const didLevelUp = newProfileLevel > previousProfileLevel;
+    
+    // Calculate level-up rewards for display
+    const levelUpCoins = didLevelUp ? REWARDS.LEVEL_UP_COINS_PER_LEVEL * newProfileLevel : 0;
+    const levelUpGems = didLevelUp && newProfileLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
+      ? Math.floor(newProfileLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD)
+      : 0;
     
     return (
       <>
@@ -647,125 +663,167 @@ export default function CategoryQuizPage() {
             navigate("/auth");
           }}
         />
-        <LevelUpModal
-          isOpen={showLevelUpModal}
-          onClose={() => setShowLevelUpModal(false)}
-          newLevel={newProfileLevel}
-          previousLevel={previousProfileLevel}
-        />
         <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
-        {/* Back button */}
-        <button
-          onClick={() => navigate(`/category/${categoryId}`)}
-          className="absolute top-4 left-4 z-20 p-2.5 rounded-full bg-foreground/10 backdrop-blur-sm hover:bg-foreground/20 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-foreground" />
-        </button>
-        
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center max-w-sm w-full"
-        >
-          {/* Result emoji with animation */}
-          <motion.div 
-            className="text-7xl mb-4"
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+          {/* Back button */}
+          <button
+            onClick={() => navigate(`/category/${categoryId}`)}
+            className="absolute top-4 left-4 z-20 p-2.5 rounded-full bg-foreground/10 backdrop-blur-sm hover:bg-foreground/20 transition-colors"
           >
-            {isPerfect ? "🏆" : passed ? "🎉" : "💪"}
-          </motion.div>
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            {isPerfect ? "იდეალური!" : passed ? "შესანიშნავია!" : "გააგრძელე ვარჯიში!"}
-          </h2>
-          <p className="text-muted-foreground mb-2">
-            სწორი პასუხი: {score} / {questions.length}
-          </p>
-          
-          {/* Points earned with animation */}
-          {pointsEarned > 0 && (
-            <motion.p 
-              initial={{ scale: 0, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              transition={{ delay: 0.3, type: "spring" }}
-              className="text-xl font-bold text-primary mb-3"
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center max-w-sm w-full"
+          >
+            {/* Result emoji with animation */}
+            <motion.div 
+              className="text-7xl mb-4"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
             >
-              +{pointsEarned} ქულა!
-            </motion.p>
-          )}
-          
-          {/* Stars with enhanced animation */}
-          <div className="flex justify-center gap-3 mb-6">
-            {[...Array(3)].map((_, i) => (
-              <motion.span
-                key={i}
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.4 + i * 0.15, type: "spring", stiffness: 300 }}
-                className={`text-5xl ${i < displayStars ? "drop-shadow-lg" : "opacity-30 grayscale"}`}
+              {isPerfect ? "🏆" : passed ? "🎉" : "💪"}
+            </motion.div>
+            
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              {isPerfect ? "იდეალური!" : passed ? "შესანიშნავია!" : "გააგრძელე ვარჯიში!"}
+            </h2>
+            <p className="text-muted-foreground mb-2">
+              სწორი პასუხი: {score} / {questions.length}
+            </p>
+            
+            {/* Points earned with animation */}
+            {pointsEarned > 0 && (
+              <motion.p 
+                initial={{ scale: 0, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ delay: 0.3, type: "spring" }}
+                className="text-xl font-bold text-primary mb-3"
               >
-                ⭐
-              </motion.span>
-            ))}
-          </div>
-
-          {isSaving && (
-            <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
-          )}
-
-          <div className="space-y-3 relative z-[110] pointer-events-auto">
-            {/* Primary action: Continue to next level if passed */}
-            {passed && unlockedLevel && !isSaving && (
-              <ChunkyButton 
-                variant="primary"
-                onClick={() => {
-                  setShowLevelUpModal(false);
-                  setShowRegisterPrompt(false);
-                  navigate(`/play/${categoryId}/${unlockedLevel}`);
-                }}
-                icon={<ChevronRight className="w-5 h-5" />}
-                className="w-full"
-              >
-                შემდეგი დონე: {unlockedLevel}
-              </ChunkyButton>
+                +{pointsEarned} ქულა!
+              </motion.p>
             )}
             
-            {/* Secondary action: Go to category map */}
-            <ChunkyButton 
-              variant={passed && unlockedLevel ? "secondary" : "primary"}
-              onClick={() => navigate(`/category/${categoryId}`)}
-              disabled={isSaving}
-              className="w-full"
-            >
-              {passed && unlockedLevel ? "რუკაზე დაბრუნება" : "გაგრძელება"}
-            </ChunkyButton>
+            {/* Inline Level-Up Banner */}
+            {didLevelUp && !isSaving && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                className="mb-4 p-3 rounded-xl bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30"
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <span className="font-bold text-foreground">დონე აიწია!</span>
+                </div>
+                <p className="text-lg font-bold text-primary">
+                  {previousProfileLevel} → {newProfileLevel}
+                </p>
+                <div className="flex items-center justify-center gap-3 mt-2 text-sm text-muted-foreground">
+                  {levelUpCoins > 0 && <span>+{levelUpCoins} 🪙</span>}
+                  {levelUpGems > 0 && <span>+{levelUpGems} 💎</span>}
+                </div>
+              </motion.div>
+            )}
             
-            {/* Retry option */}
-            <ChunkyButton 
-              variant="ghost" 
-              disabled={isSaving}
-              className="w-full"
-              onClick={() => {
-                hasFetched.current = false;
-                hasSaved.current = false;
-                setQuestions([]);
-                setCurrentQuestionIndex(0);
-                setScore(0);
-                setShowResults(false);
-                setLoading(true);
-                setSavedStars(0);
-                setPointsEarned(0);
-                setUnlockedLevel(null);
-                setQuestionIds([]);
-              }}
-            >
-              თავიდან თამაში
-            </ChunkyButton>
-          </div>
-        </motion.div>
-      </div>
+            {/* Stars with enhanced animation */}
+            <div className="flex justify-center gap-3 mb-6">
+              {[...Array(3)].map((_, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.4 + i * 0.15, type: "spring", stiffness: 300 }}
+                  className={`text-5xl ${i < displayStars ? "drop-shadow-lg" : "opacity-30 grayscale"}`}
+                >
+                  ⭐
+                </motion.span>
+              ))}
+            </div>
+
+            {isSaving && (
+              <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
+            )}
+
+            <div className="space-y-3">
+              {/* Primary action: Continue to next level if passed and unlocked */}
+              {passed && unlockedLevel && !isSaving && (
+                <ChunkyButton 
+                  variant="primary"
+                  onClick={() => navigate(`/play/${categoryId}/${unlockedLevel}`)}
+                  icon={<ChevronRight className="w-5 h-5" />}
+                  className="w-full"
+                >
+                  შემდეგი დონე: {unlockedLevel}
+                </ChunkyButton>
+              )}
+              
+              {/* If not passed or no next level: Primary is replay */}
+              {(!passed || !unlockedLevel) && !isSaving && (
+                <ChunkyButton 
+                  variant="primary"
+                  className="w-full"
+                  onClick={() => {
+                    hasFetched.current = false;
+                    hasSaved.current = false;
+                    setQuestions([]);
+                    setCurrentQuestionIndex(0);
+                    setScore(0);
+                    setShowResults(false);
+                    setLoading(true);
+                    setSavedStars(0);
+                    setPointsEarned(0);
+                    setUnlockedLevel(null);
+                    setQuestionIds([]);
+                    setNewProfileLevel(0);
+                    setPreviousProfileLevel(0);
+                    setLevelUpRewardsCredited(false);
+                  }}
+                >
+                  თავიდან თამაში
+                </ChunkyButton>
+              )}
+              
+              {/* Secondary action: Go to category map */}
+              <ChunkyButton 
+                variant="secondary"
+                onClick={() => navigate(`/category/${categoryId}`)}
+                disabled={isSaving}
+                className="w-full"
+              >
+                რუკაზე დაბრუნება
+              </ChunkyButton>
+              
+              {/* Replay option when next level is available */}
+              {passed && unlockedLevel && !isSaving && (
+                <ChunkyButton 
+                  variant="ghost" 
+                  className="w-full"
+                  onClick={() => {
+                    hasFetched.current = false;
+                    hasSaved.current = false;
+                    setQuestions([]);
+                    setCurrentQuestionIndex(0);
+                    setScore(0);
+                    setShowResults(false);
+                    setLoading(true);
+                    setSavedStars(0);
+                    setPointsEarned(0);
+                    setUnlockedLevel(null);
+                    setQuestionIds([]);
+                    setNewProfileLevel(0);
+                    setPreviousProfileLevel(0);
+                    setLevelUpRewardsCredited(false);
+                  }}
+                >
+                  თავიდან თამაში
+                </ChunkyButton>
+              )}
+            </div>
+          </motion.div>
+        </div>
       </>
     );
   }
