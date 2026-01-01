@@ -507,10 +507,8 @@ export default function CategoryQuizPage() {
           <span className="text-white font-bold text-lg mt-1">{playerScore}</span>
         </div>
         
-        {/* Category Icon - Large, centered */}
-        <div className="flex-1 flex justify-center" style={{ marginTop: "38px" }}>
-          <span className="drop-shadow-xl" style={{ fontSize: "6rem" }}>{category?.icon || "🎯"}</span>
-        </div>
+        {/* Spacer for icon area */}
+        <div className="flex-1" />
         
         {/* Opponent Avatar + Score */}
         <div className="flex flex-col items-center">
@@ -526,7 +524,7 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-3 pb-4 flex flex-col -mt-8">
+      <div className="flex-1 px-3 pb-4 flex flex-col" style={{ marginTop: "-52px" }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestionIndex}
@@ -535,14 +533,24 @@ export default function CategoryQuizPage() {
             exit={{ opacity: 0, y: -20 }}
             className="flex-1 flex flex-col"
           >
-            {/* Question Card - White background */}
-            <div 
-              className="rounded-2xl overflow-hidden mb-3 pt-12"
-              style={{
-                backgroundColor: "#FFFFFF",
-                boxShadow: "0 4px 0 #CBD5E1",
-              }}
-            >
+            {/* Question Card with overlapping icon */}
+            <div className="relative">
+              {/* Category Icon - 50% overlap */}
+              <div 
+                className="absolute left-1/2 -translate-x-1/2 z-10"
+                style={{ top: "-48px" }}
+              >
+                <span className="drop-shadow-xl" style={{ fontSize: "6rem" }}>{category?.icon || "🎯"}</span>
+              </div>
+              
+              {/* Question Card - White background */}
+              <div 
+                className="rounded-2xl overflow-hidden mb-3 pt-12"
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  boxShadow: "0 4px 0 #CBD5E1",
+                }}
+              >
               <div className="px-4 py-3" style={{ marginTop: "-30px" }}>
                 {/* Timer and Difficulty inside card */}
                 <div className="flex items-center justify-between mb-3">
@@ -576,6 +584,7 @@ export default function CategoryQuizPage() {
                   transition={{ duration: 0.3 }}
                 />
               </div>
+            </div>
             </div>
 
             {/* Progress dots */}
