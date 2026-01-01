@@ -241,13 +241,15 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Question Card with Floating Category Icon */}
-      <div className="relative px-4 mt-2 flex-shrink-0">
-        {/* Floating Category Icon - Uses categoryId for proper icon lookup */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-[70px] z-10">
+      <div className="relative px-4 flex-shrink-0" style={{ marginTop: "-52px" }}>
+        {/* Floating Category Icon - 50% overlap */}
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 z-10"
+          style={{ top: "-48px" }}
+        >
           <QuizCategoryIcon
-            questionText={currentQuestion.question}
             categoryId={currentQuestion.categoryId || currentQuestion.category}
-            size={120}
+            size={96}
             state="default"
           />
         </div>
@@ -258,6 +260,7 @@ export function QuizGameScreenProd() {
           questionNumber={currentQuestionIndex + 1}
           totalQuestions={questions.length}
           state="default"
+          className="pt-12"
         />
       </div>
 
