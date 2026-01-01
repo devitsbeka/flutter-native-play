@@ -459,12 +459,12 @@ export default function ContentManager() {
                     !question.is_active && "opacity-50"
                   )}
                 >
-                  <FileText className={cn(
-                    "h-3.5 w-3.5 mt-0.5 shrink-0",
-                    selectedQuestionId === question.id 
-                      ? "text-primary-foreground" 
-                      : "text-muted-foreground"
-                  )} />
+                  <DynamicIcon 
+                    slug={question.icon_slug || undefined}
+                    categoryId={cat?.category_id}
+                    size={18}
+                    className="shrink-0 mt-0.5"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium leading-snug line-clamp-2">
                       {question.question_text}
