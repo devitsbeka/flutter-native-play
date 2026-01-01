@@ -159,15 +159,7 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
       style={{ width: 88, height: 88 }}
     >
-      {/* Soft outer glow - box-shadow only, no filter */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          inset: -8,
-          background: "radial-gradient(circle, rgba(110,255,194,0.25) 0%, rgba(80,230,170,0.1) 50%, transparent 70%)",
-          boxShadow: "0 0 25px rgba(110,255,194,0.4), 0 0 50px rgba(80,230,170,0.2)",
-        }}
-      />
+      {/* Soft outer glow - using box-shadow on button itself */}
       
       {/* Bottom 3D depth layer - lighter mint-teal */}
       <div
