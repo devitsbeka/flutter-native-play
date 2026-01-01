@@ -92,17 +92,16 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
         )}
         style={{
           transform: isPressed ? "translateY(4px)" : "translateY(0px)",
+          touchAction: "manipulation",
           ...style,
         }}
         whileHover={{ scale: disabled ? 1 : 1.02 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         disabled={disabled}
         onClick={onClick}
-        onMouseDown={() => setIsPressed(true)}
-        onMouseUp={() => setIsPressed(false)}
-        onMouseLeave={() => setIsPressed(false)}
-        onTouchStart={() => setIsPressed(true)}
-        onTouchEnd={() => setIsPressed(false)}
+        onPointerDown={() => setIsPressed(true)}
+        onPointerUp={() => setIsPressed(false)}
+        onPointerLeave={() => setIsPressed(false)}
       >
         {icon && <span className="text-xl">{icon}</span>}
         {children}

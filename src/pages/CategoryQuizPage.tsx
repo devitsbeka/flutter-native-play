@@ -655,14 +655,16 @@ export default function CategoryQuizPage() {
     
     return (
       <>
-        <RegisterPromptModal
-          isOpen={showRegisterPrompt}
-          onClose={() => setShowRegisterPrompt(false)}
-          onRegister={() => {
-            setShowRegisterPrompt(false);
-            navigate("/auth");
-          }}
-        />
+        {showRegisterPrompt && (
+          <RegisterPromptModal
+            isOpen={showRegisterPrompt}
+            onClose={() => setShowRegisterPrompt(false)}
+            onRegister={() => {
+              setShowRegisterPrompt(false);
+              navigate("/auth");
+            }}
+          />
+        )}
         <div className="min-h-screen bg-background flex items-center justify-center p-6 relative">
           {/* Back button */}
           <button
@@ -747,7 +749,7 @@ export default function CategoryQuizPage() {
               <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-3 relative z-10">
               {/* Primary action: Continue to next level if passed and unlocked */}
               {passed && unlockedLevel && !isSaving && (
                 <ChunkyButton 
