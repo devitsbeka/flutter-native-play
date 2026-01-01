@@ -5,7 +5,7 @@ import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
-import { QuizAnswerButton } from "@/components/ui/quiz-answer-button";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -229,10 +229,10 @@ export function VSScreen() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <QuizPlayerAvatar
-            avatarUrl={currentAvatar || undefined}
+            avatarUrl={currentAvatar || slotAvatars[0]}
             score={opponentPointsDisplay}
             position="right"
-            state={isMatchFound ? "default" : "loading"}
+            state="default"
             size="xlarge"
           />
           <h2
@@ -262,13 +262,15 @@ export function VSScreen() {
           }}
           transition={{ duration: 0.3 }}
         >
-          <QuizAnswerButton
-            state="next"
-            text="დაწყება"
+          <ChunkyButton
+            variant="mint"
+            size="xl"
             onClick={handleStart}
-            showLabel={false}
             disabled={!isMatchFound}
-          />
+            className="w-full"
+          >
+            დაწყება
+          </ChunkyButton>
         </motion.div>
       </div>
     </div>
