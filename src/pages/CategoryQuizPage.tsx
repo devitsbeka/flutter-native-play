@@ -480,9 +480,9 @@ export default function CategoryQuizPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
-      {/* Compact Header Row with Avatars */}
+      {/* Compact Header Row */}
       <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+8px)]">
-        {/* Back Button + Player */}
+        {/* Back Button + Player Avatar */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(-1)}
@@ -491,38 +491,28 @@ export default function CategoryQuizPage() {
             <ArrowLeft className="w-4 h-4 text-white" />
           </button>
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full border-2 border-[#9F8FEF] overflow-hidden bg-white/20">
+            <div className="w-12 h-12 rounded-lg border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
               <img 
                 src={profile?.avatar_url || "/placeholder.svg"} 
                 alt="Player"
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="text-white font-bold text-xs mt-0.5">{playerScore}</span>
+            <span className="text-white font-bold text-sm mt-1">{playerScore}</span>
           </div>
         </div>
         
-        {/* Category Image in Center - smaller */}
-        <div className="relative -mb-6 z-10">
-          <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/10 border-2 border-white/20 flex items-center justify-center">
-            <span className="text-3xl">{category?.icon || "🎯"}</span>
-          </div>
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-white/20 px-2 py-0.5 rounded-full">
-            <span className="text-white font-bold text-[10px]">{currentQuestionIndex + 1}/{questions.length}</span>
-          </div>
-        </div>
-        
-        {/* Opponent + Help */}
+        {/* Opponent Avatar + Help */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full border-2 border-[#9F8FEF] overflow-hidden bg-white/20">
+            <div className="w-12 h-12 rounded-lg border-[3px] border-[#4ADE80] overflow-hidden bg-white/20 shadow-lg">
               <img 
                 src={opponent.avatar} 
                 alt="Opponent"
                 className="w-full h-full object-cover"
               />
             </div>
-            <span className="text-white font-bold text-xs mt-0.5">{opponentScore}</span>
+            <span className="text-white font-bold text-sm mt-1">{opponentScore}</span>
           </div>
           <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
             <HelpCircle className="w-4 h-4 text-white" />
@@ -530,8 +520,15 @@ export default function CategoryQuizPage() {
         </div>
       </div>
 
+      {/* Large Category Image - Overlapping Question Card */}
+      <div className="flex justify-center -mb-12 z-20 relative">
+        <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/10 border-4 border-white/30 flex items-center justify-center shadow-xl">
+          <span className="text-5xl">{category?.icon || "🎯"}</span>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 px-3 pb-4 pt-4 flex flex-col">
+      <div className="flex-1 px-3 pb-4 pt-6 flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestionIndex}
@@ -542,7 +539,7 @@ export default function CategoryQuizPage() {
           >
             {/* Question Card with Timer/Difficulty inside */}
             <div 
-              className="rounded-2xl overflow-hidden mb-2"
+              className="rounded-2xl overflow-hidden mb-3 pt-8"
               style={{
                 backgroundColor: "#6B5FA8",
                 boxShadow: "0 4px 0 #4A4080",
@@ -583,8 +580,8 @@ export default function CategoryQuizPage() {
               </div>
             </div>
 
-            {/* Progress dots - smaller */}
-            <div className="flex justify-center gap-1.5 mb-2">
+            {/* Progress dots */}
+            <div className="flex justify-center gap-1.5 mb-3">
               {questions.map((_, index) => (
                 <div
                   key={index}
@@ -599,8 +596,8 @@ export default function CategoryQuizPage() {
               ))}
             </div>
 
-            {/* Answer Buttons - more compact */}
-            <div className="space-y-2 flex-1">
+            {/* Answer Buttons with purple left accent */}
+            <div className="space-y-2.5 flex-1">
               {currentQuestion?.allAnswers?.map((answer, index) => {
                 const isCorrect = answer === currentQuestion.correct_answer;
                 const isSelected = answer === selectedAnswer;
@@ -608,17 +605,23 @@ export default function CategoryQuizPage() {
                 let bgColor = "#FFFFFF";
                 let depthColor = "#CBD5E1";
                 let textColor = "#2A2550";
+                let leftBorderColor = "#7E6AAE";
+                let showOutline = false;
                 
                 if (isAnswered) {
                   if (isCorrect) {
                     bgColor = "#4ADE80";
                     depthColor = "#22C55E";
                     textColor = "#FFFFFF";
+                    leftBorderColor = "#22C55E";
                   } else if (isSelected) {
                     bgColor = "#EF4444";
                     depthColor = "#DC2626";
                     textColor = "#FFFFFF";
+                    leftBorderColor = "#DC2626";
                   }
+                } else if (isSelected) {
+                  showOutline = true;
                 }
 
                 return (
@@ -637,14 +640,23 @@ export default function CategoryQuizPage() {
                       style={{ background: depthColor, transform: "translateY(3px)" }}
                     />
                     
-                    {/* Main face */}
+                    {/* Main face with left accent border */}
                     <div
-                      className="relative flex items-center min-h-[44px] py-2 px-3 rounded-xl"
-                      style={{ background: bgColor }}
+                      className="relative flex items-center min-h-[48px] py-2.5 px-4 rounded-xl overflow-hidden"
+                      style={{ 
+                        background: bgColor,
+                        boxShadow: showOutline ? `inset 0 0 0 2px #7E6AAE` : 'none'
+                      }}
                     >
+                      {/* Purple left accent border */}
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+                        style={{ backgroundColor: leftBorderColor }}
+                      />
+                      
                       {/* Georgian label prefix */}
                       <span 
-                        className="font-bold mr-2 text-sm" 
+                        className="font-bold mr-3 text-sm ml-2" 
                         style={{ 
                           color: isAnswered && (isCorrect || isSelected) ? "#FFFFFF" : "#7E6AAE" 
                         }}
