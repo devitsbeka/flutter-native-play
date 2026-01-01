@@ -241,18 +241,6 @@ export function QuizGameScreenProd() {
           size="large"
         />
 
-        {/* Category Icon - Between Players */}
-        {(aiData?.slugs?.[0] || currentQuestion.categoryId) && (
-          <div className="flex-1 flex justify-center items-start pt-4">
-            <DynamicIcon 
-              slug={aiData?.slugs?.[0]}
-              categoryId={currentQuestion.categoryId}
-              size={80}
-              className="drop-shadow-lg"
-            />
-          </div>
-        )}
-
         {/* Opponent (Right) */}
         <QuizPlayerAvatar
           avatarUrl={botAvatars[opponentAvatarIndex]}
@@ -263,8 +251,20 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-3">
+      {/* 3D Icon Container - Fixed Position, Overlapping Question */}
+      <div className="relative w-full flex justify-center z-20" style={{ marginBottom: -48 }}>
+        <div className="w-32 h-32">
+          <DynamicIcon 
+            slug={aiData?.slugs?.[0]}
+            categoryId={currentQuestion.categoryId}
+            size={128}
+            className="drop-shadow-lg"
+          />
+        </div>
+      </div>
+
+      {/* Question Card - With padding-top to account for overlapping icon */}
+      <div className="px-4 flex-shrink-0 mt-3 pt-12 relative z-10">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
