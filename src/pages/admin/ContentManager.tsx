@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   FolderOpen, 
   Plus, 
@@ -11,7 +11,8 @@ import {
   ChevronRight,
   HelpCircle,
   MoreHorizontal,
-  FileText
+  FileText,
+  ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,11 +86,23 @@ const GRADIENT_PRESETS = [
 
 export default function ContentManager() {
   const { categories, loading: catsLoading, addCategory, updateCategory, deleteCategory } = useAdminCategories();
-  const { questions, loading: qsLoading, addQuestion, updateQuestion, deleteQuestion } = useAdminQuestions();
   
   // Selection state
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  
+  // Use hook with selected category for server-side filtering
+  const { 
+    questions, 
+    loading: qsLoading, 
+    totalCount, 
+    page, 
+    pageSize, 
+    setPage, 
+    addQuestion, 
+    updateQuestion, 
+    deleteQuestion 
+  } = useAdminQuestions(selectedCategoryId);
   
   // Search
   const [categorySearch, setCategorySearch] = useState('');
@@ -143,32 +156,26 @@ export default function ContentManager() {
     [categories, categorySearch]
   );
 
+  // Client-side search filter on current page of questions
   const filteredQuestions = useMemo(() => {
-    let qs = questions;
-    if (selectedCategoryId) {
-      qs = qs.filter(q => q.category_id === selectedCategoryId);
-    }
-    if (questionSearch) {
-      qs = qs.filter(q => 
-        q.question_text.toLowerCase().includes(questionSearch.toLowerCase())
-      );
-    }
-    return qs;
-  }, [questions, selectedCategoryId, questionSearch]);
+    if (!questionSearch) return questions;
+    return questions.filter(q => 
+      q.question_text.toLowerCase().includes(questionSearch.toLowerCase())
+    );
+  }, [questions, questionSearch]);
 
   const selectedQuestion = useMemo(() =>
     questions.find(q => q.id === selectedQuestionId),
     [questions, selectedQuestionId]
   );
 
-  // Question count per category
-  const questionCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    questions.forEach(q => {
-      counts[q.category_id] = (counts[q.category_id] || 0) + 1;
-    });
-    return counts;
-  }, [questions]);
+  // Pagination helpers
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const showingFrom = totalCount > 0 ? page * pageSize + 1 : 0;
+  const showingTo = Math.min((page + 1) * pageSize, totalCount);
+
+  // Placeholder for question counts (now using totalCount from selected category)
+  const questionCounts: Record<string, number> = {};
 
   // Category handlers
   const openAddCategory = () => {
@@ -517,6 +524,35 @@ export default function ContentManager() {
             )}
           </div>
         </ScrollArea>
+        
+        {/* Pagination */}
+        {totalCount > pageSize && (
+          <div className="p-2 border-t border-border/50 flex items-center justify-between bg-background/50">
+            <span className="text-[10px] text-muted-foreground">
+              {showingFrom}-{showingTo} / {totalCount.toLocaleString()}
+            </span>
+            <div className="flex gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => setPage(p => Math.max(0, p - 1))} 
+                disabled={page === 0 || qsLoading}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => setPage(p => p + 1)} 
+                disabled={page >= totalPages - 1 || qsLoading}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Column 3: Preview & Edit */}
