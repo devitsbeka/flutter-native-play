@@ -148,21 +148,11 @@ function NavButton({
       whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.9 }}
     >
-      <div className="relative">
-        {/* Icon container with subtle 3D effect */}
-        <div 
-          className="w-12 h-12 rounded-full flex items-center justify-center"
-          style={{
-            background: isActive 
-              ? "linear-gradient(180deg, #C9A8E9 0%, #A78BDA 100%)" 
-              : "transparent",
-            boxShadow: isActive 
-              ? "inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 0 rgba(139,92,246,0.3)" 
-              : "none",
-          }}
-        >
+      <div className="relative" style={{ opacity: isActive ? 1 : 0.3 }}>
+        {/* Icon container - no background, just opacity change */}
+        <div className="w-12 h-12 flex items-center justify-center">
           <Icon 
-            className={`w-6 h-6 ${isActive ? "text-white" : "text-gray-600"}`} 
+            className="w-6 h-6 text-gray-700" 
           />
         </div>
         
