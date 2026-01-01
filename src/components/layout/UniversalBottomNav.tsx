@@ -28,54 +28,45 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
       <div className="relative overflow-visible">
-        {/* Elegant curved wave SVG */}
-        <svg 
-          className="absolute left-0 right-0 w-full pointer-events-none"
-          style={{ bottom: "calc(100% - 8px)", height: 55 }}
-          viewBox="0 0 400 55" 
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="navCurveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#F8F6FC" stopOpacity="0" />
-              <stop offset="30%" stopColor="#F8F6FC" stopOpacity="0.6" />
-              <stop offset="60%" stopColor="#F8F6FC" stopOpacity="0.95" />
-              <stop offset="100%" stopColor="#F8F6FC" />
-            </linearGradient>
-          </defs>
-          {/* Smooth bezier curve wave */}
-          <path 
-            d="M0,55 L0,30 C80,48 150,12 200,18 C250,24 320,48 400,30 L400,55 Z" 
-            fill="url(#navCurveGradient)"
-          />
-          {/* Top highlight stroke */}
-          <path 
-            d="M0,30 C80,48 150,12 200,18 C250,24 320,48 400,30" 
-            fill="none"
-            stroke="rgba(255,255,255,0.6)"
-            strokeWidth="1.5"
-          />
-        </svg>
-        
-        {/* Blur transition layer */}
+        {/* Seamless frosted blur fade - goes from transparent to frosted */}
         <div 
           className="absolute left-0 right-0 pointer-events-none"
           style={{
-            top: -4,
-            height: 12,
-            background: "linear-gradient(180deg, transparent 0%, #F8F6FC 100%)",
-            filter: "blur(4px)",
+            bottom: "100%",
+            height: 60,
+            background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0.7) 70%, rgba(248,246,252,0.95) 100%)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
           }}
         />
         
-        {/* Main container - minimal height so play button overlaps background more */}
+        {/* Curved SVG shape - purely decorative wave line */}
+        <svg 
+          className="absolute left-0 right-0 w-full pointer-events-none"
+          style={{ bottom: "calc(100% + 15px)", height: 40 }}
+          viewBox="0 0 400 40" 
+          preserveAspectRatio="none"
+        >
+          {/* Subtle wave highlight */}
+          <path 
+            d="M0,38 C80,25 150,40 200,35 C250,30 320,40 400,28" 
+            fill="none"
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="2"
+          />
+        </svg>
+        
+        {/* Main container */}
         <div 
           className="relative overflow-visible"
           style={{
-            background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+            background: "rgba(248,246,252,0.95)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
             padding: "0px 20px 4px",
-            marginTop: -14,
-            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9)",
+            boxShadow: "0 -1px 0 rgba(255,255,255,0.5)",
           }}
         >
           <div className="flex items-center justify-around overflow-visible">
