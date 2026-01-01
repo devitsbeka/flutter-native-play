@@ -104,19 +104,18 @@ function NavButton({
   onClick, 
   isActive, 
   icon: Icon,
-  label,
   badgeCount = 0,
 }: { 
   onClick: () => void;
   isActive: boolean;
   icon: React.ComponentType<{ className?: string }>;
-  label: string;
+  label?: string;
   badgeCount?: number;
 }) {
   return (
     <motion.button
       onClick={onClick}
-      className="relative flex flex-col items-center justify-center min-w-[56px] py-1"
+      className="relative flex items-center justify-center min-w-[56px] h-12"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
@@ -143,18 +142,6 @@ function NavButton({
           </motion.div>
         )}
       </div>
-      
-      {/* Label */}
-      <span 
-        className="text-gray-900 font-medium mt-0.5"
-        style={{ 
-          fontSize: 13, 
-          fontFamily: "'Google Sans', sans-serif",
-          opacity: isActive ? 1 : 0.5,
-        }}
-      >
-        {label}
-      </span>
     </motion.button>
   );
 }
