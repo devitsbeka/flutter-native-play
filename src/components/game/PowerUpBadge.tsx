@@ -30,22 +30,13 @@ const powerUpAssets: Record<PowerUpType | "add-power", string> = {
   "add-power": addPowerImg,
 };
 
-// Colorful background fills for each power-up type
+// Solid background fills for each power-up type (clean style like XP bar)
 const fillColors: Record<PowerUpType | "add-power", string> = {
-  "fifty-fifty": "#FEF3C7", // Warm amber/gold
-  "freeze": "#DBEAFE",      // Light blue
-  "replace": "#D1FAE5",     // Light green
-  "time-drain": "#FEE2E2",  // Light red/pink
-  "add-power": "#EDE9FE",   // Light purple
-};
-
-// Colorful ring colors for each power-up
-const ringColors: Record<PowerUpType | "add-power", string> = {
-  "fifty-fifty": "#F59E0B", // Amber
-  "freeze": "#3B82F6",      // Blue
-  "replace": "#10B981",     // Green
-  "time-drain": "#EF4444",  // Red
-  "add-power": "#8B5CF6",   // Purple
+  "fifty-fifty": "#FFD699", // Warm orange/gold
+  "freeze": "#B3E5FC",      // Light blue
+  "replace": "#C8E6C9",     // Light green
+  "time-drain": "#FFCDD2",  // Light pink/red
+  "add-power": "#D1C4E9",   // Light purple
 };
 
 const sizeConfig = {
@@ -68,7 +59,6 @@ export function PowerUpBadge({
 }: PowerUpBadgeProps) {
   const imageSrc = powerUpAssets[type];
   const fill = fillColors[type];
-  const ringColor = ringColors[type];
   const { outer, inner } = sizeConfig[size];
 
   return (
@@ -106,41 +96,14 @@ export function PowerUpBadge({
           className
         )}
       >
-        {/* SVG Ring with colorful border */}
-        <svg 
-          width={outer} 
-          height={outer} 
-          viewBox={`0 0 ${outer} ${outer}`} 
-          fill="none" 
-          className="absolute inset-0"
-        >
-          {/* Background fill circle */}
-          <circle 
-            cx={outer / 2} 
-            cy={outer / 2} 
-            r={outer / 2} 
-            fill={fill}
-          />
-          {/* Colorful stroke ring */}
-          <circle 
-            cx={outer / 2} 
-            cy={outer / 2} 
-            r={(outer / 2) - 3} 
-            stroke={ringColor}
-            strokeWidth="4"
-            fill="none"
-            opacity={disabled ? 0.5 : 1}
-          />
-          {/* Inner white ring for depth */}
-          <circle 
-            cx={outer / 2} 
-            cy={outer / 2} 
-            r={(outer / 2) - 5.5} 
-            stroke="rgba(255,255,255,0.7)"
-            strokeWidth="2"
-            fill="none"
-          />
-        </svg>
+        {/* Solid filled background - clean style like XP bar */}
+        <div 
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: fill,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.6)",
+          }}
+        />
       
         {/* Inner icon */}
         <div 
