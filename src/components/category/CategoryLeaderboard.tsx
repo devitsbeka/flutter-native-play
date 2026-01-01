@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { Trophy, Medal, Play, Crown, User, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Trophy, Medal, Play, Crown, User, Star, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { useCategoryLeaderboard } from "@/hooks/useCategoryLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -120,74 +120,127 @@ export function CategoryLeaderboard({
           </div>
         ) : (
           <>
-            {leaderboard.map((entry, index) => {
-              const isCurrentUser = user?.id === entry.user_id;
-              
-              return (
-                <motion.div
-                  key={entry.user_id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className={`p-3 rounded-xl border flex items-center gap-3 ${
-                    isCurrentUser
-                      ? "bg-primary/20 border-primary/40 ring-2 ring-primary/30"
-                      : getRankBackground(entry.rank)
-                  }`}
-                >
-                  {/* Rank */}
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-                    {getRankIcon(entry.rank) || (
-                      <span className="text-sm font-bold text-white/70">{entry.rank}</span>
+            <AnimatePresence mode="popLayout">
+              {leaderboard.map((entry, index) => {
+                const isCurrentUser = user?.id === entry.user_id;
+                const hasRankChange = entry.rankChange;
+                
+                return (
+                  <motion.div
+                    key={entry.user_id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ 
+                      opacity: 1, 
+                      x: 0,
+                      scale: hasRankChange ? [1, 1.02, 1] : 1,
+                    }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ 
+                      delay: hasRankChange ? 0 : index * 0.03,
+                      layout: { type: "spring", stiffness: 300, damping: 30 },
+                      scale: { duration: 0.3 }
+                    }}
+                    className={`p-3 rounded-xl border flex items-center gap-3 relative overflow-hidden ${
+                      isCurrentUser
+                        ? "bg-primary/20 border-primary/40 ring-2 ring-primary/30"
+                        : getRankBackground(entry.rank)
+                    } ${hasRankChange ? "ring-2 ring-offset-1 ring-offset-transparent" : ""} ${
+                      hasRankChange === "up" ? "ring-emerald-400/50" : 
+                      hasRankChange === "down" ? "ring-rose-400/50" : 
+                      hasRankChange === "new" ? "ring-amber-400/50" : ""
+                    }`}
+                  >
+                    {/* Rank change indicator */}
+                    {hasRankChange && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        className={`absolute -right-1 -top-1 w-6 h-6 rounded-full flex items-center justify-center ${
+                          hasRankChange === "up" ? "bg-emerald-500" : 
+                          hasRankChange === "down" ? "bg-rose-500" : 
+                          "bg-amber-500"
+                        }`}
+                      >
+                        {hasRankChange === "up" && <TrendingUp className="h-3 w-3 text-white" />}
+                        {hasRankChange === "down" && <TrendingDown className="h-3 w-3 text-white" />}
+                        {hasRankChange === "new" && <Sparkles className="h-3 w-3 text-white" />}
+                      </motion.div>
                     )}
-                  </div>
 
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {entry.avatar_url ? (
-                      <img
-                        src={entry.avatar_url}
-                        alt={entry.nickname}
-                        className="w-full h-full object-cover"
+                    {/* Shine animation for rank changes */}
+                    {hasRankChange === "up" && (
+                      <motion.div
+                        initial={{ x: "-100%", opacity: 0 }}
+                        animate={{ x: "200%", opacity: [0, 0.5, 0] }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                        className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent skew-x-12"
                       />
-                    ) : (
-                      <User className="h-5 w-5 text-white/50" />
                     )}
-                  </div>
 
-                  {/* Name & Stats */}
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-semibold truncate ${
-                      isCurrentUser ? "text-primary" : "text-white"
-                    }`}>
-                      {entry.nickname}
-                      {isCurrentUser && " (შენ)"}
-                    </p>
-                    <p className="text-xs text-white/50">
-                      {entry.levels_completed} დონე დასრულებული
-                    </p>
-                  </div>
+                    {/* Rank */}
+                    <motion.div 
+                      className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0"
+                      animate={hasRankChange ? { scale: [1, 1.2, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {getRankIcon(entry.rank) || (
+                        <span className="text-sm font-bold text-white/70">{entry.rank}</span>
+                      )}
+                    </motion.div>
 
-                  {/* Stars */}
-                  <div className="text-right flex items-center gap-1">
-                    <Star className={`h-4 w-4 ${
-                      entry.rank === 1 ? "text-amber-400 fill-amber-400" : 
-                      entry.rank === 2 ? "text-slate-300 fill-slate-300" :
-                      entry.rank === 3 ? "text-amber-600 fill-amber-600" :
-                      "text-amber-400 fill-amber-400"
-                    }`} />
-                    <p className={`font-bold ${
-                      entry.rank === 1 ? "text-amber-400" : 
-                      entry.rank === 2 ? "text-slate-300" :
-                      entry.rank === 3 ? "text-amber-600" :
-                      "text-white"
-                    }`}>
-                      {entry.total_stars}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {entry.avatar_url ? (
+                        <img
+                          src={entry.avatar_url}
+                          alt={entry.nickname}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-5 w-5 text-white/50" />
+                      )}
+                    </div>
+
+                    {/* Name & Stats */}
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-semibold truncate ${
+                        isCurrentUser ? "text-primary" : "text-white"
+                      }`}>
+                        {entry.nickname}
+                        {isCurrentUser && " (შენ)"}
+                      </p>
+                      <p className="text-xs text-white/50">
+                        {entry.levels_completed} დონე დასრულებული
+                      </p>
+                    </div>
+
+                    {/* Stars */}
+                    <motion.div 
+                      className="text-right flex items-center gap-1"
+                      animate={hasRankChange ? { scale: [1, 1.15, 1] } : {}}
+                      transition={{ duration: 0.3, delay: 0.1 }}
+                    >
+                      <Star className={`h-4 w-4 ${
+                        entry.rank === 1 ? "text-amber-400 fill-amber-400" : 
+                        entry.rank === 2 ? "text-slate-300 fill-slate-300" :
+                        entry.rank === 3 ? "text-amber-600 fill-amber-600" :
+                        "text-amber-400 fill-amber-400"
+                      }`} />
+                      <p className={`font-bold ${
+                        entry.rank === 1 ? "text-amber-400" : 
+                        entry.rank === 2 ? "text-slate-300" :
+                        entry.rank === 3 ? "text-amber-600" :
+                        "text-white"
+                      }`}>
+                        {entry.total_stars}
+                      </p>
+                    </motion.div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
 
             {/* Show user's position if not in top 100 */}
             {user && userRank && userRank.rank > 100 && (

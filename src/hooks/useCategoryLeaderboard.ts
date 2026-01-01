@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -11,12 +11,15 @@ interface LeaderboardEntry {
   nickname: string;
   avatar_url: string | null;
   country_code: string | null;
+  rankChange?: "up" | "down" | "new" | null;
 }
 
 export function useCategoryLeaderboard(categoryId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isMountedRef = useRef(true);
+  const previousRanksRef = useRef<Map<string, number>>(new Map());
+  const [recentlyChanged, setRecentlyChanged] = useState<Set<string>>(new Set());
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debounced invalidation to prevent rapid re-renders
@@ -31,6 +34,16 @@ export function useCategoryLeaderboard(categoryId: string | undefined) {
       }
     }, 500);
   }, [categoryId, queryClient]);
+
+  // Clear rank change indicators after animation
+  useEffect(() => {
+    if (recentlyChanged.size > 0) {
+      const timer = setTimeout(() => {
+        setRecentlyChanged(new Set());
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [recentlyChanged]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -120,6 +133,7 @@ export function useCategoryLeaderboard(categoryId: string | undefined) {
           nickname: profile?.nickname || "მოთამაშე",
           avatar_url: profile?.avatar_url || null,
           country_code: profile?.country_code || null,
+          rankChange: null,
         };
       });
 
@@ -131,15 +145,43 @@ export function useCategoryLeaderboard(categoryId: string | undefined) {
         return b.levels_completed - a.levels_completed;
       });
 
-      // Assign ranks
+      // Assign ranks and detect changes
+      const changedUsers = new Set<string>();
       entries.forEach((entry, index) => {
         entry.rank = index + 1;
+        const previousRank = previousRanksRef.current.get(entry.user_id);
+        
+        if (previousRank === undefined) {
+          // New entry
+          if (previousRanksRef.current.size > 0) {
+            entry.rankChange = "new";
+            changedUsers.add(entry.user_id);
+          }
+        } else if (previousRank > entry.rank) {
+          entry.rankChange = "up";
+          changedUsers.add(entry.user_id);
+        } else if (previousRank < entry.rank) {
+          entry.rankChange = "down";
+          changedUsers.add(entry.user_id);
+        }
       });
+
+      // Update previous ranks for next comparison
+      const newRanks = new Map<string, number>();
+      entries.forEach((entry) => {
+        newRanks.set(entry.user_id, entry.rank);
+      });
+      previousRanksRef.current = newRanks;
+
+      // Trigger animation state
+      if (changedUsers.size > 0) {
+        setRecentlyChanged(changedUsers);
+      }
 
       return entries.slice(0, 100); // Top 100
     },
     enabled: !!categoryId,
-    staleTime: 10000, // 10 seconds - shorter for more responsive updates
+    staleTime: 10000,
   });
 
   // Find current user's entry
