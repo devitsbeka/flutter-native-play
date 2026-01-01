@@ -4,14 +4,49 @@ import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useSound } from "@/contexts/SoundContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Target, X, ArrowLeft, Crown } from "lucide-react";
-import confetti from "canvas-confetti";
+import { Trophy, Target, ArrowLeft, Crown } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
+import { GameLoseModal } from "@/components/game/GameLoseModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+
+// Floating trophy animation component
+const FloatingTrophy = () => (
+  <motion.div
+    initial={{ scale: 0, y: 50, opacity: 0 }}
+    animate={{ 
+      scale: 1, 
+      y: [0, -15, 0], 
+      opacity: 1,
+    }}
+    transition={{ 
+      scale: { type: "spring", stiffness: 200, damping: 15 },
+      y: { 
+        duration: 2, 
+        repeat: Infinity, 
+        ease: "easeInOut" 
+      },
+      opacity: { duration: 0.3 }
+    }}
+    className="relative"
+  >
+    {/* Golden glow effect */}
+    <div 
+      className="absolute inset-0 blur-xl rounded-full"
+      style={{
+        background: "radial-gradient(circle, rgba(250, 204, 21, 0.6) 0%, transparent 70%)",
+        transform: "scale(1.5)",
+      }}
+    />
+    <div className="w-24 h-24 flex items-center justify-center relative">
+      <Trophy className="w-16 h-16 text-yellow-400 fill-yellow-400 drop-shadow-lg" />
+    </div>
+  </motion.div>
+);
 
 // Player card component for clean display
 const PlayerCard = ({ 
@@ -111,17 +146,21 @@ export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
   const { user, profile, updateProfile } = useAuth();
   const { addCoins } = useCurrency();
+  const { playSound } = useSound();
   const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
   const isDraw = userScore === opponentScore;
+  const isLose = !isWin && !isDraw;
 
   // Level up detection
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showLoseModal, setShowLoseModal] = useState(false);
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
   const [coinsEarned, setCoinsEarned] = useState(0);
   const hasCheckedLevelUp = useRef(false);
+  const hasSoundPlayed = useRef(false);
 
   const handleBackToHome = () => {
     resetGame();
@@ -129,37 +168,25 @@ export function MatchResultScreen() {
   };
 
   const handlePlayAgain = () => {
+    setShowLoseModal(false);
     startMatchmaking();
   };
 
+  // Play sound effects
   useEffect(() => {
+    if (hasSoundPlayed.current) return;
+    hasSoundPlayed.current = true;
+
     if (isWin) {
-      const duration = 2000;
-      const end = Date.now() + duration;
-
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ['#7C5CFC', '#F5A623', '#FFD6E0', '#FDE047'],
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ['#7C5CFC', '#F5A623', '#FFD6E0', '#FDE047'],
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      frame();
+      playSound("game-win"); // Victory sound
+    } else if (isLose) {
+      playSound("game-lose"); // Lose sound
+      // Show lose modal after a short delay
+      setTimeout(() => setShowLoseModal(true), 800);
     }
+  }, [isWin, isLose, playSound]);
 
+  useEffect(() => {
     if (user && profile && !hasCheckedLevelUp.current) {
       hasCheckedLevelUp.current = true;
       
@@ -209,7 +236,7 @@ export function MatchResultScreen() {
           setNewLevel(newLevelInfo.level);
           setTimeout(() => {
             setShowLevelUp(true);
-          }, isWin ? 2500 : 500);
+          }, isWin ? 1500 : 500);
         }
       };
 
@@ -225,7 +252,7 @@ export function MatchResultScreen() {
   const getResultConfig = () => {
     if (isWin) {
       return {
-        icon: <Trophy className="w-16 h-16 text-yellow-400 fill-yellow-400" />,
+        icon: <FloatingTrophy />,
         text: "გამარჯვება!",
       };
     }
@@ -236,7 +263,7 @@ export function MatchResultScreen() {
       };
     }
     return {
-      icon: <X className="w-16 h-16 text-white" strokeWidth={3} />,
+      icon: <span className="text-5xl">😔</span>,
       text: "წაგება",
     };
   };
@@ -250,6 +277,17 @@ export function MatchResultScreen() {
         onClose={() => setShowLevelUp(false)}
         newLevel={newLevel}
         previousLevel={previousLevel}
+      />
+
+      <GameLoseModal
+        isOpen={showLoseModal}
+        onClose={() => setShowLoseModal(false)}
+        onPlayAgain={handlePlayAgain}
+        userScore={userScore}
+        opponentScore={opponentScore}
+        opponentName={opponent?.name || "მოწინააღმდეგე"}
+        opponentAvatarUrl={opponent?.avatarUrl}
+        coinsEarned={coinsEarned}
       />
       
       <div 
@@ -311,14 +349,12 @@ export function MatchResultScreen() {
           
           {/* Result Icon */}
           <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             className="mb-4"
           >
-            <div className="w-24 h-24 flex items-center justify-center">
-              {resultConfig.icon}
-            </div>
+            {resultConfig.icon}
           </motion.div>
 
           {/* Result Text */}
