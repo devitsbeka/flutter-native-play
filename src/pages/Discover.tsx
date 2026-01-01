@@ -137,11 +137,11 @@ export default function Discover() {
             {/* Search Bar */}
             <div className="pt-4">
               <div
-                className={`flex items-center gap-3 bg-white/50 border border-white/40 rounded-full px-4 py-3 transition-all shadow-sm ${
-                  isSearchFocused ? "ring-2 ring-foreground/20" : ""
+                className={`flex items-center gap-3 bg-white/90 border border-white/60 rounded-full px-4 py-3 transition-all shadow-sm ${
+                  isSearchFocused ? "ring-2 ring-white/40" : ""
                 }`}
               >
-                <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -149,7 +149,7 @@ export default function Discover() {
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                   placeholder="მოძებნე კატეგორია..."
-                  className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
+                  className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
                 />
               </div>
             </div>
