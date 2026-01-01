@@ -26,92 +26,59 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
-      <div className="relative overflow-visible">
-        {/* Seamless frosted blur fade - goes from transparent to frosted white */}
-        <div 
-          className="absolute left-0 right-0 pointer-events-none"
-          style={{
-            bottom: "100%",
-            height: 70,
-            background: "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0.85) 60%, rgba(255,255,255,0.95) 100%)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            maskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 100%)",
-          }}
-        />
-        
-        {/* Curved SVG shape - purely decorative wave line */}
-        <svg 
-          className="absolute left-0 right-0 w-full pointer-events-none"
-          style={{ bottom: "calc(100% + 20px)", height: 40 }}
-          viewBox="0 0 400 40" 
-          preserveAspectRatio="none"
-        >
-          {/* Subtle wave highlight */}
-          <path 
-            d="M0,38 C80,25 150,40 200,35 C250,30 320,40 400,28" 
-            fill="none"
-            stroke="rgba(255,255,255,0.5)"
-            strokeWidth="2"
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      {/* Clean frosted glass container with safe area */}
+      <div 
+        className="relative"
+        style={{
+          background: "rgba(255, 255, 255, 0.85)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255, 255, 255, 0.6)",
+          boxShadow: "0 -4px 30px rgba(0, 0, 0, 0.08)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        {/* Navigation items container */}
+        <div className="flex items-end justify-around px-2 h-16">
+          {/* Explore */}
+          <NavButton
+            onClick={() => navigate("/discover")}
+            isActive={isActive("/discover")}
+            icon={Compass}
           />
-        </svg>
-        
-        {/* Main container - frosted glass, no solid fill */}
-        <div 
-          className="relative overflow-visible"
-          style={{
-            background: "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            padding: "0px 20px 4px",
-          }}
-        >
-          <div className="flex items-center justify-around overflow-visible">
-            {/* Explore */}
-            <NavButton
-              onClick={() => navigate("/discover")}
-              isActive={isActive("/discover")}
-              label={t("nav.explore")}
-              icon={Compass}
-            />
 
-            {/* Map */}
-            <NavButton
-              onClick={() => navigate("/adventure-map")}
-              isActive={isActive("/adventure-map")}
-              label={t("nav.map")}
-              icon={Map}
-            />
+          {/* Map */}
+          <NavButton
+            onClick={() => navigate("/adventure-map")}
+            isActive={isActive("/adventure-map")}
+            icon={Map}
+          />
 
-            {/* Center Button - positioned to float above */}
-            <div className="relative" style={{ width: 90 }}>
-              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -14 }}>
-                <Hex3DPlayButton 
-                  onClick={handleCenterClick}
-                  isPlayButton={isHome}
-                />
-              </div>
+          {/* Center Play Button - floats above */}
+          <div className="relative flex items-center justify-center" style={{ width: 72 }}>
+            <div className="absolute" style={{ bottom: 8 }}>
+              <Hex3DPlayButton 
+                onClick={handleCenterClick}
+                isPlayButton={isHome}
+              />
             </div>
-
-            {/* Rank */}
-            <NavButton
-              onClick={() => navigate("/leaderboards")}
-              isActive={isActive("/leaderboards")}
-              label={t("nav.rank")}
-              icon={Trophy}
-            />
-
-            {/* Team */}
-            <NavButton
-              onClick={onTeamClick || (() => navigate("/team"))}
-              isActive={isActive("/team")}
-              label={t("nav.sound")}
-              icon={Headphones}
-              badgeCount={pendingChallenges.length}
-            />
           </div>
+
+          {/* Rank */}
+          <NavButton
+            onClick={() => navigate("/leaderboards")}
+            isActive={isActive("/leaderboards")}
+            icon={Trophy}
+          />
+
+          {/* Team */}
+          <NavButton
+            onClick={onTeamClick || (() => navigate("/team"))}
+            isActive={isActive("/team")}
+            icon={Headphones}
+            badgeCount={pendingChallenges.length}
+          />
         </div>
       </div>
     </div>
@@ -121,13 +88,11 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 function NavButton({ 
   onClick, 
   isActive, 
-  label,
   icon: Icon,
   badgeCount = 0,
 }: { 
   onClick: () => void;
   isActive: boolean;
-  label: string;
   icon: React.ComponentType<{ className?: string }>;
   badgeCount?: number;
 }) {
