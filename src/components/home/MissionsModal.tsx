@@ -55,7 +55,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
           >
-            <div className="bg-card rounded-3xl border border-border shadow-2xl overflow-hidden max-h-[80vh] flex flex-col">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden max-h-[80vh] flex flex-col mb-20">
               {/* Header */}
               <div className="relative bg-gradient-to-r from-emerald-500 to-teal-500 px-6 pt-6 pb-8 flex-shrink-0">
                 {/* Close button */}
@@ -78,21 +78,21 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
 
               {/* Stats Badge */}
               <div className="px-6 -mt-4 flex-shrink-0">
-                <div className="bg-card rounded-2xl border border-border p-4 shadow-lg">
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                         <Trophy className="w-6 h-6 text-emerald-500" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">შესრულებული</p>
-                        <p className="text-lg font-bold text-foreground">
+                        <p className="text-sm text-slate-500">შესრულებული</p>
+                        <p className="text-lg font-bold text-slate-800">
                           {completedCount}/{missions.length}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">მიღებული XP</p>
+                      <p className="text-sm text-slate-500">მიღებული XP</p>
                       <p className="text-lg font-bold text-emerald-500">+{totalXpEarned}</p>
                     </div>
                   </div>
@@ -205,8 +205,8 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-border flex-shrink-0">
-                <p className="text-center text-muted-foreground text-xs">
+              <div className="px-6 py-4 border-t border-slate-200 flex-shrink-0 bg-white">
+                <p className="text-center text-slate-500 text-xs">
                   მისიები განახლდება ყოველ დღე 00:00-ზე
                 </p>
               </div>

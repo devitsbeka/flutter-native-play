@@ -82,8 +82,8 @@ const DayRewardCard = ({
             : isClaimed
             ? "bg-emerald-500/20 border-2 border-emerald-500/30"
             : isLocked
-            ? "bg-muted/30 border-2 border-border/30"
-            : "bg-card/50 border-2 border-border/50"
+            ? "bg-slate-100 border-2 border-slate-200"
+            : "bg-white border-2 border-slate-200"
         }
       `}
     >
@@ -226,7 +226,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
           >
-            <div className="bg-card rounded-3xl border border-border shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden mb-20">
               {/* Header */}
               <div className="relative bg-gradient-to-r from-amber-500 to-orange-500 px-6 pt-6 pb-8">
                 {/* Close button */}
@@ -248,7 +248,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
               </div>
 
               {/* Content */}
-              <div className="px-4 py-6 -mt-4">
+              <div className="px-4 py-6 -mt-4 bg-white">
                 {/* Streak Badge */}
                 <StreakBadge streak={currentStreak} />
 
@@ -271,7 +271,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
                 </div>
 
                 {/* Hint */}
-                <p className="text-center text-muted-foreground text-xs mt-2">
+                <p className="text-center text-slate-500 text-xs mt-2">
                   ← გადაფურცლე ყველა დღის სანახავად →
                 </p>
               </div>
