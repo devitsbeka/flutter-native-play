@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, HelpCircle } from "lucide-react";
-import { calculateLevel } from "@/utils/levelCalculation";
+import { HelpCircle } from "lucide-react";
 
 // Import custom 3D icons
 import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
@@ -11,11 +10,7 @@ interface AdventureQuickActionsProps {
   onGiftsClick: () => void;
   onMissionsClick: () => void;
   onChestClick: () => void;
-  onXPClick: () => void;
-  onLevelClick: () => void;
   onHelpClick: () => void;
-  totalXP: number;
-  level: number;
 }
 
 interface ActionButtonProps {
@@ -76,10 +71,7 @@ export function AdventureQuickActions({
   onGiftsClick, 
   onMissionsClick, 
   onChestClick,
-  onLevelClick,
   onHelpClick,
-  totalXP,
-  level,
 }: AdventureQuickActionsProps) {
   return (
     <motion.div
@@ -88,8 +80,8 @@ export function AdventureQuickActions({
       transition={{ delay: 0.3 }}
       className="flex flex-col items-center gap-4"
     >
-      {/* Action Buttons Row - 3 white buttons */}
-      <div className="flex items-center justify-center gap-6 px-4">
+      {/* Action Buttons Row - 3 white buttons + Help */}
+      <div className="flex items-center justify-center gap-4 px-4">
         <ActionButton
           icon={giftBottleIcon}
           label="საჩუქარი"
@@ -112,39 +104,34 @@ export function AdventureQuickActions({
           onClick={onChestClick}
           index={2}
         />
-      </div>
 
-      {/* Level Badge and Help Button Row */}
-      <div className="flex items-center justify-center gap-3">
+        {/* Help Button - 4th item in row */}
         <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          onClick={onLevelClick}
-          className="flex items-center gap-2 px-5 py-2 rounded-full"
-          style={{
-            background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
-            boxShadow: "0 4px 0 #5b21b6",
-          }}
-        >
-          <Star className="w-4 h-4 text-yellow-300" fill="#fde047" />
-          <span className="text-white font-bold text-sm">Level {level}</span>
-        </motion.button>
-
-        {/* Help Button */}
-        <motion.button
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.55 }}
           onClick={onHelpClick}
-          className="w-10 h-10 rounded-full flex items-center justify-center"
-          style={{
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05)",
-          }}
+          className="flex flex-col items-center gap-2"
         >
-          <HelpCircle className="w-5 h-5" style={{ color: "#7C3AED" }} />
+          <div 
+            className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
+            style={{
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05)",
+            }}
+          >
+            <HelpCircle className="w-8 h-8" style={{ color: "#7C3AED" }} />
+          </div>
+          <span 
+            className="text-xs font-semibold"
+            style={{
+              color: "#374151",
+              textShadow: "0 1px 2px rgba(255,255,255,0.8)",
+            }}
+          >
+            დახმარება
+          </span>
         </motion.button>
       </div>
     </motion.div>

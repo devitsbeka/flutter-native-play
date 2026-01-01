@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { HelpCircle } from "lucide-react";
+import { Star } from "lucide-react";
 import { PowerUpsBar } from "./PowerUpsBar";
 import { AdventureQuickActions } from "./AdventureQuickActions";
 import { AdventureHelpModal } from "./AdventureHelpModal";
@@ -341,13 +341,24 @@ export function VideoAdventureMap() {
 
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* Header with currency display */}
+        {/* Header with title, currency, and level badge */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex items-center justify-center px-4 pt-12 pb-4"
+          className="flex items-center justify-between px-4 pt-12 pb-4"
         >
-          {/* Currency Display - Centered */}
+          {/* Left: Page Title */}
+          <h1 
+            className="text-xl font-bold"
+            style={{ 
+              color: "#1f2937",
+              textShadow: "0 1px 2px rgba(255,255,255,0.8)" 
+            }}
+          >
+            რუქა
+          </h1>
+
+          {/* Center: Currency Display */}
           <div className="flex items-center gap-2">
             {/* Coins */}
             <div 
@@ -379,7 +390,7 @@ export function VideoAdventureMap() {
               </span>
             </div>
             
-            {/* XP - whitespace-nowrap to keep on one line */}
+            {/* XP */}
             <div 
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap"
               style={{
@@ -394,6 +405,20 @@ export function VideoAdventureMap() {
               </span>
             </div>
           </div>
+
+          {/* Right: Level Badge */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowLevelModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full"
+            style={{
+              background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+              boxShadow: "0 4px 0 #5b21b6",
+            }}
+          >
+            <Star className="w-4 h-4 text-yellow-300" fill="#fde047" />
+            <span className="text-white font-bold text-sm">Level {calculateLevel(totalPoints).level}</span>
+          </motion.button>
         </motion.div>
 
         {/* Quick Actions - Below Header */}
@@ -402,11 +427,7 @@ export function VideoAdventureMap() {
             onGiftsClick={() => setShowGiftsModal(true)}
             onMissionsClick={() => setShowMissionsModal(true)}
             onChestClick={() => setShowChestModal(true)}
-            onXPClick={() => setShowLevelModal(true)}
-            onLevelClick={() => setShowLevelModal(true)}
             onHelpClick={() => setShowHelpModal(true)}
-            totalXP={totalPoints}
-            level={calculateLevel(totalPoints).level}
           />
         </div>
 
