@@ -5,6 +5,8 @@ import { Bell, Menu } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
+import { MissionsModal } from "@/components/home/MissionsModal";
+import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -17,12 +19,17 @@ import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthr
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
+import { AdventureQuickActions } from "@/components/map/AdventureQuickActions";
+import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import xpIcon from "@/assets/icons/icon-xp.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { useCurrency } from "@/hooks/useCurrency";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -93,6 +100,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, needsWalkthrough, setStep, hasCompletedOnboarding } = useOnboarding();
+  const { coins, gems } = useCurrency();
   
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
@@ -102,6 +110,9 @@ export default function Index() {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
+  const [showMissionsModal, setShowMissionsModal] = useState(false);
+  const [showLevelModal, setShowLevelModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -208,6 +219,23 @@ export default function Index() {
         isOpen={isGemShopOpen}
         onClose={() => setIsGemShopOpen(false)}
       />
+      <MissionsModal
+        isOpen={showMissionsModal}
+        onClose={() => setShowMissionsModal(false)}
+      />
+      <LevelInfoModal
+        isOpen={showLevelModal}
+        onClose={() => setShowLevelModal(false)}
+        levelInfo={levelInfo}
+        onContinue={() => {
+          setShowLevelModal(false);
+          navigate("/game");
+        }}
+      />
+      <AdventureHelpModal
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+      />
       
       
       <div 
@@ -269,6 +297,71 @@ export default function Index() {
             
           </div>
         </header>
+
+        {/* ===== CURRENCY ROW ===== */}
+        <motion.div 
+          className="relative z-20 flex items-center justify-center gap-2 px-4 py-3"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* Coins */}
+          <motion.div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+            style={{
+              background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FCD34D 100%)",
+              boxShadow: "inset 0 2px 4px rgba(251,191,36,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #D97706, 0 4px 8px rgba(0,0,0,0.15)",
+              border: "2px solid rgba(255,255,255,0.8)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsGemShopOpen(true)}
+          >
+            <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+            <span className="text-sm font-bold text-amber-900">{coins.toLocaleString()}</span>
+          </motion.div>
+
+          {/* Gems */}
+          <motion.div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+            style={{
+              background: "linear-gradient(180deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
+              boxShadow: "inset 0 2px 4px rgba(139,92,246,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #7C3AED, 0 4px 8px rgba(0,0,0,0.15)",
+              border: "2px solid rgba(255,255,255,0.8)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsGemShopOpen(true)}
+          >
+            <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+            <span className="text-sm font-bold text-purple-900">{gems.toLocaleString()}</span>
+          </motion.div>
+
+          {/* XP */}
+          <motion.div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style={{
+              background: "linear-gradient(180deg, #BBF7D0 0%, #86EFAC 50%, #4ADE80 100%)",
+              boxShadow: "inset 0 2px 4px rgba(34,197,94,0.3), inset 0 -1px 2px rgba(255,255,255,0.6), 0 3px 0 #16A34A, 0 4px 8px rgba(0,0,0,0.15)",
+              border: "2px solid rgba(255,255,255,0.8)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <img src={xpIcon} alt="XP" className="w-5 h-5" />
+            <span className="text-sm font-bold text-green-900">{(profile?.total_points || 0).toLocaleString()}</span>
+          </motion.div>
+        </motion.div>
+
+        {/* ===== QUICK ACTIONS ===== */}
+        <div className="relative z-20 px-4 py-1">
+          <AdventureQuickActions
+            onGiftsClick={() => setIsDailyRewardsOpen(true)}
+            onMissionsClick={() => setShowMissionsModal(true)}
+            onChestClick={() => setIsChestModalOpen(true)}
+            onHelpClick={() => setShowHelpModal(true)}
+          />
+        </div>
 
         {/* ===== CENTER: AVATAR WITH ARC BADGES ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -230 }}>

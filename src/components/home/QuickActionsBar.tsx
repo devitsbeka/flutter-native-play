@@ -5,7 +5,7 @@ import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import iconWheel from "@/assets/icon-wheel.png";
 import iconVip from "@/assets/icon-vip.png";
 import iconLeaderboard from "@/assets/icon-leaderboard.png";
-import iconMap from "@/assets/icon-map.png";
+import iconShop from "@/assets/icons/icon-shop-3d.png";
 
 interface QuickActionsBarProps {
   className?: string;
@@ -56,10 +56,10 @@ export function QuickActionsBar({ className = "" }: QuickActionsBarProps) {
               />
               <div className="w-px h-14 self-center" style={{ background: "rgba(30, 41, 59, 0.08)" }} />
               <QuickButton 
-                iconSrc={iconMap}
-                label="რუქა"
-                onClick={() => navigate("/adventure-map")}
-                isActive={isActive("/adventure-map")}
+                iconSrc={iconShop}
+                label="მაღაზია"
+                onClick={() => navigate("/power-ups")}
+                isActive={isActive("/power-ups")}
               />
             </div>
           </div>
