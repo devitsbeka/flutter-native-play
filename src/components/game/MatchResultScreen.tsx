@@ -79,10 +79,13 @@ const PlayerCard = ({
           }}
           transition={{ 
             scale: { delay: 0.6, type: "spring", stiffness: 400 },
-            y: { delay: 0.8, duration: 0.8, repeat: Infinity, ease: "easeInOut" }
+            y: { delay: 0.8, duration: 1.5, repeat: Infinity, ease: "easeInOut" }
           }}
-          className="absolute -top-6 left-1/2 -translate-x-1/2 z-10"
-          style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" }}
+          className="absolute -top-6 left-1/2 z-10"
+          style={{ 
+            filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))",
+            transform: "translateX(calc(-50% - 10px))"
+          }}
         >
           <Crown className="w-8 h-8 text-yellow-400 fill-yellow-400" />
         </motion.div>
