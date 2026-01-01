@@ -16,6 +16,7 @@ import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import xpIcon from "@/assets/icons/icon-xp.png";
 type VideoPhase = "default" | "video-b" | "video-c";
 
 export function VideoAdventureMap() {
@@ -387,6 +388,7 @@ export function VideoAdventureMap() {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
             >
+              <img src={xpIcon} alt="XP" className="w-5 h-5" />
               <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
                 {totalPoints.toLocaleString()} XP
               </span>

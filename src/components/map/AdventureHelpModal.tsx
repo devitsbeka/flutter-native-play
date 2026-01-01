@@ -1,6 +1,10 @@
 import { motion } from "framer-motion";
-import { Gift, Target, Package, Star, Zap, HelpCircle } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
+import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
+import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
+import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
+import xpIcon from "@/assets/icons/icon-xp.png";
+import powersIcon from "@/assets/icons/icon-powers-3d.png";
 
 interface AdventureHelpModalProps {
   isOpen: boolean;
@@ -28,7 +32,7 @@ function HelpItem({ icon, title, description, gradient, index }: HelpItemProps) 
       }}
     >
       <div 
-        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
         style={{ background: gradient }}
       >
         {icon}
@@ -44,31 +48,31 @@ function HelpItem({ icon, title, description, gradient, index }: HelpItemProps) 
 export function AdventureHelpModal({ isOpen, onClose }: AdventureHelpModalProps) {
   const helpItems = [
     {
-      icon: <Gift className="w-5 h-5 text-white" />,
-      title: "საჩუქრები",
+      icon: <img src={giftBottleIcon} alt="საჩუქარი" className="w-6 h-6 object-contain" />,
+      title: "საჩუქარი",
       description: "ყოველდღიური ჯილდოები - შემოდი ყოველ დღე და მიიღე ბონუსები!",
       gradient: "linear-gradient(135deg, #f472b6, #ec4899)",
     },
     {
-      icon: <Target className="w-5 h-5 text-white" />,
-      title: "მისიები",
+      icon: <img src={missionCrystalIcon} alt="მისია" className="w-6 h-6 object-contain" />,
+      title: "მისია",
       description: "შეასრულე დავალებები და მიიღე XP და მონეტები.",
       gradient: "linear-gradient(135deg, #60a5fa, #3b82f6)",
     },
     {
-      icon: <Package className="w-5 h-5 text-white" />,
-      title: "ხაზინა",
-      description: "გახსენი ხაზინა და მიიღე შემთხვევითი ჯილდოები!",
+      icon: <img src={chestBoxIcon} alt="სკივრი" className="w-6 h-6 object-contain" />,
+      title: "სკივრი",
+      description: "გახსენი სკივრი და მიიღე შემთხვევითი ჯილდოები!",
       gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)",
     },
     {
-      icon: <Star className="w-5 h-5 text-white" />,
-      title: "XP და დონეები",
+      icon: <img src={xpIcon} alt="XP ქულა" className="w-6 h-6 object-contain" />,
+      title: "XP ქულა",
       description: "დააგროვე XP თამაშით და აიმაღლე დონე ახალი ჯილდოებისთვის.",
       gradient: "linear-gradient(135deg, #a855f7, #7c3aed)",
     },
     {
-      icon: <Zap className="w-5 h-5 text-white" />,
+      icon: <img src={powersIcon} alt="ძალები" className="w-6 h-6 object-contain" />,
       title: "ძალები",
       description: "გამოიყენე სპეციალური ძალები კითხვებზე პასუხის გასაადვილებლად.",
       gradient: "linear-gradient(135deg, #22c55e, #16a34a)",
