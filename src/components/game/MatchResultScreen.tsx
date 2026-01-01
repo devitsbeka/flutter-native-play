@@ -75,10 +75,10 @@ const PlayerCard = ({
           initial={{ scale: 0, y: 10 }}
           animate={{ scale: 1, y: 0 }}
           transition={{ delay: 0.6, type: "spring" }}
-          className="absolute -top-8 left-1/2 -translate-x-1/2 z-10"
+          className="absolute -top-6 left-1/2 -translate-x-1/2 z-10"
           style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" }}
         >
-          <Crown className="w-10 h-10 text-yellow-400 fill-yellow-400" />
+          <Crown className="w-8 h-8 text-yellow-400 fill-yellow-400" />
         </motion.div>
       )}
       
@@ -370,7 +370,7 @@ export function MatchResultScreen() {
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, type: "spring" }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-8"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-4"
               style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
             >
               <img src={coinIcon} alt="" className="w-6 h-6" />
