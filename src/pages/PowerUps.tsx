@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useState } from "react";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { PowerUpDetailModal, PowerUpType as DetailPowerUpType } from "@/components/game/PowerUpDetailModal";
+import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
@@ -50,6 +51,7 @@ export default function PowerUps() {
   const navigate = useNavigate();
   const { powerUps, isLoading } = useUserPowerUps();
   const [showShopModal, setShowShopModal] = useState(false);
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<DetailPowerUpType | null>(null);
   const [shopInitialType, setShopInitialType] = useState<PowerUpType | undefined>();
 
@@ -106,11 +108,11 @@ export default function PowerUps() {
         <h1 className="text-2xl font-display text-white">შენი ძალები</h1>
         
         <button
-          onClick={() => setShowShopModal(true)}
+          onClick={() => setShowTutorialModal(true)}
           className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg"
           style={{ boxShadow: "0 4px 0 #b45309" }}
         >
-          <ShoppingBag className="w-6 h-6 text-white" />
+          <HelpCircle className="w-6 h-6 text-white" />
         </button>
       </motion.header>
 
@@ -216,6 +218,12 @@ export default function PowerUps() {
           onAddClick={handleAddFromDetail}
         />
       )}
+      
+      {/* Tutorial Modal */}
+      <PowerUpTutorialModal
+        isOpen={showTutorialModal}
+        onClose={() => setShowTutorialModal(false)}
+      />
     </div>
   );
 }

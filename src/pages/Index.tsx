@@ -193,7 +193,8 @@ export default function Index() {
       <PowerUpDetailModal 
         isOpen={selectedPowerUp !== null} 
         onClose={() => setSelectedPowerUp(null)} 
-        type={selectedPowerUp || "fifty-fifty"} 
+        type={selectedPowerUp || "fifty-fifty"}
+        onAddClick={() => navigate("/power-ups")}
       />
       <AvatarModal 
         isOpen={isAvatarModalOpen} 
