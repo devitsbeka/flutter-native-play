@@ -1,5 +1,11 @@
 import { motion } from "framer-motion";
-import { Gift, Target, Package, Star } from "lucide-react";
+import { Star } from "lucide-react";
+import { calculateLevel } from "@/utils/levelCalculation";
+
+// Import custom 3D icons
+import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
+import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
+import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 
 interface AdventureQuickActionsProps {
   onGiftsClick: () => void;
@@ -12,16 +18,14 @@ interface AdventureQuickActionsProps {
 }
 
 interface ActionButtonProps {
-  icon: React.ReactNode;
+  icon: string;
   label: string;
   onClick: () => void;
-  gradient: string;
-  shadowColor: string;
   index: number;
   badge?: number;
 }
 
-function ActionButton({ icon, label, onClick, gradient, shadowColor, index, badge }: ActionButtonProps) {
+function ActionButton({ icon, label, onClick, index, badge }: ActionButtonProps) {
   return (
     <motion.button
       initial={{ opacity: 0, y: 20 }}
@@ -31,13 +35,14 @@ function ActionButton({ icon, label, onClick, gradient, shadowColor, index, badg
       className="flex flex-col items-center gap-2"
     >
       <div 
-        className="relative w-14 h-14 rounded-2xl flex items-center justify-center"
+        className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
         style={{
-          background: gradient,
-          boxShadow: `0 4px 0 ${shadowColor}`,
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05)",
         }}
       >
-        {icon}
+        <img src={icon} alt={label} className="w-10 h-10 object-contain" />
         
         {/* Badge */}
         {badge !== undefined && badge > 0 && (
@@ -70,7 +75,6 @@ export function AdventureQuickActions({
   onGiftsClick, 
   onMissionsClick, 
   onChestClick,
-  onXPClick,
   onLevelClick,
   totalXP,
   level,
@@ -82,44 +86,29 @@ export function AdventureQuickActions({
       transition={{ delay: 0.3 }}
       className="flex flex-col items-center gap-4"
     >
-      {/* Action Buttons Row */}
+      {/* Action Buttons Row - 3 white buttons */}
       <div className="flex items-center justify-center gap-6 px-4">
         <ActionButton
-          icon={<Gift className="w-6 h-6 text-white" />}
+          icon={giftBottleIcon}
           label="საჩუქრები"
           onClick={onGiftsClick}
-          gradient="linear-gradient(135deg, #f472b6, #ec4899)"
-          shadowColor="#be185d"
           index={0}
           badge={1}
         />
         
         <ActionButton
-          icon={<Target className="w-6 h-6 text-white" />}
+          icon={missionCrystalIcon}
           label="მისიები"
           onClick={onMissionsClick}
-          gradient="linear-gradient(135deg, #60a5fa, #3b82f6)"
-          shadowColor="#1d4ed8"
           index={1}
           badge={3}
         />
         
         <ActionButton
-          icon={<Package className="w-6 h-6 text-white" />}
-          label="ხაზინა"
+          icon={chestBoxIcon}
+          label="სკივრი"
           onClick={onChestClick}
-          gradient="linear-gradient(135deg, #fbbf24, #f59e0b)"
-          shadowColor="#b45309"
           index={2}
-        />
-        
-        <ActionButton
-          icon={<Star className="w-6 h-6 text-white" />}
-          label={`${totalXP.toLocaleString()} XP`}
-          onClick={onXPClick}
-          gradient="linear-gradient(135deg, #a855f7, #7c3aed)"
-          shadowColor="#6d28d9"
-          index={3}
         />
       </div>
 
