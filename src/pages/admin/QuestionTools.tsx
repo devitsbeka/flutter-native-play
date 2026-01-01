@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Wand2, 
   Search, 
@@ -12,6 +12,7 @@ import {
   XCircle,
   RotateCcw
 } from 'lucide-react';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -44,6 +45,14 @@ interface IconAssignmentProgress {
   success: number;
   failed: number;
   status: 'idle' | 'running' | 'paused' | 'completed';
+  currentQuestion?: { id: string; text: string; slug?: string };
+}
+
+interface IconStats {
+  total: number;
+  withIcons: number;
+  withoutIcons: number;
+  loading: boolean;
 }
 
 export default function QuestionTools() {
@@ -72,6 +81,44 @@ export default function QuestionTools() {
   const [longQuestions, setLongQuestions] = useState<LongQuestion[]>([]);
   const [scanningLong, setScanningLong] = useState(false);
   const [minLength, setMinLength] = useState(70);
+
+  // Icon Stats State
+  const [iconStats, setIconStats] = useState<IconStats>({
+    total: 0,
+    withIcons: 0,
+    withoutIcons: 0,
+    loading: false
+  });
+
+  // Load icon stats on mount and when category changes
+  useEffect(() => {
+    const loadIconStats = async () => {
+      setIconStats(prev => ({ ...prev, loading: true }));
+      
+      let query = supabase
+        .from('questions')
+        .select('id, icon_slug', { count: 'exact' })
+        .eq('is_active', true);
+      
+      if (iconCategoryId !== 'all') {
+        query = query.eq('category_id', iconCategoryId);
+      }
+
+      const { data, count } = await query;
+      
+      const withIcons = data?.filter(q => q.icon_slug && q.icon_slug.trim() !== '').length || 0;
+      const total = count || 0;
+      
+      setIconStats({
+        total,
+        withIcons,
+        withoutIcons: total - withIcons,
+        loading: false
+      });
+    };
+
+    loadIconStats();
+  }, [iconCategoryId]);
 
   // Icon Assignment Functions
   const startIconAssignment = async () => {
@@ -131,12 +178,23 @@ export default function QuestionTools() {
           if (fnError) throw fnError;
 
           const slugs = data?.slugs || [];
+          const bestSlug = slugs[0] || null;
           
-          // Save icon_slug to database if we got slugs
-          if (slugs.length > 0) {
+          // Update current question in progress for UI
+          setIconProgress(prev => ({
+            ...prev,
+            currentQuestion: { 
+              id: question.id, 
+              text: question.question_text,
+              slug: bestSlug 
+            }
+          }));
+          
+          // Save ONLY the first/best icon_slug to database
+          if (bestSlug) {
             await supabase
               .from('questions')
-              .update({ icon_slug: slugs.join(',') })
+              .update({ icon_slug: bestSlug })
               .eq('id', question.id);
           }
 
@@ -302,11 +360,50 @@ export default function QuestionTools() {
                   <Image className="h-5 w-5" />
                   აიკონების ავტო-მინიჭება
                 </CardTitle>
-                <CardDescription>
+              <CardDescription>
                   AI ანალიზის საშუალებით კითხვებს ავტომატურად მიენიჭება შესაბამისი აიკონები
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Stats Display */}
+                <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">
+                      {iconStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : iconStats.total}
+                    </div>
+                    <div className="text-xs text-muted-foreground">სულ კითხვა</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-500">
+                      {iconStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : iconStats.withIcons}
+                    </div>
+                    <div className="text-xs text-muted-foreground">აიკონით</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-amber-500">
+                      {iconStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : iconStats.withoutIcons}
+                    </div>
+                    <div className="text-xs text-muted-foreground">აიკონის გარეშე</div>
+                  </div>
+                </div>
+
+                {/* Current Question Being Processed */}
+                {iconProgress.status === 'running' && iconProgress.currentQuestion && (
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      მუშავდება...
+                    </div>
+                    <p className="text-sm font-medium line-clamp-2">{iconProgress.currentQuestion.text}</p>
+                    {iconProgress.currentQuestion.slug && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-muted-foreground">აიკონი:</span>
+                        <DynamicIcon slug={iconProgress.currentQuestion.slug} className="h-6 w-6 text-primary" />
+                        <span className="text-xs font-mono text-muted-foreground">{iconProgress.currentQuestion.slug}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-end gap-4">
                   <div className="flex-1 space-y-2">
                     <Label>კატეგორია</Label>
