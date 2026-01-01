@@ -194,14 +194,18 @@ export default function CategoryQuizPage() {
         // Get previously asked question IDs to exclude
         let askedIds = getAskedQuestionIds();
         
-        // First, check total available questions for this level range
+        // Expand level range to get more variety (N-3 to N+5)
+        const minLevel = Math.max(1, levelNumber - 3);
+        const maxLevel = Math.min(20, levelNumber + 5);
+        
+        // First, check total available questions for this expanded level range
         const { count: totalCount } = await supabase
           .from('questions')
           .select('id', { count: 'exact', head: true })
           .eq('is_active', true)
           .eq('category_id', categoryData.id)
-          .gte('level_number', levelNumber)
-          .lte('level_number', levelNumber + 2);
+          .gte('level_number', minLevel)
+          .lte('level_number', maxLevel);
         
         // Reset pool if we've used most questions
         if (totalCount && shouldResetPool(totalCount)) {
@@ -209,21 +213,21 @@ export default function CategoryQuizPage() {
           askedIds = [];
         }
 
-        // Build query excluding asked questions
+        // Build query excluding asked questions with expanded level range
         let query = supabase
           .from('questions')
           .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
           .eq('is_active', true)
           .eq('category_id', categoryData.id)
-          .gte('level_number', levelNumber)
-          .lte('level_number', levelNumber + 2);
+          .gte('level_number', minLevel)
+          .lte('level_number', maxLevel);
         
         // Exclude previously asked questions if any
         if (askedIds.length > 0) {
           query = query.not('id', 'in', `(${askedIds.join(',')})`);
         }
         
-        const { data: dbQuestions, error: dbError } = await query.limit(15);
+        const { data: dbQuestions, error: dbError } = await query.limit(30);
 
         if (dbError) {
           console.error("Questions fetch error:", dbError);
