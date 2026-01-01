@@ -96,7 +96,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
           >
             {newLevel}
           </motion.span>
-          <span className="text-xs font-semibold text-amber-700">დონე</span>
+          <span className="text-sm font-bold text-amber-800">დონე</span>
         </div>
 
         {/* Stars around badge */}
@@ -123,7 +123,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="text-center text-muted-foreground text-sm mb-4"
+        className="text-center text-foreground/80 text-base font-medium mb-4"
       >
         დონე {previousLevel} → დონე {newLevel}
       </motion.p>
@@ -141,27 +141,27 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
         }}
       >
         <div className="flex items-center justify-center gap-2 mb-3">
-          <Gift className="w-5 h-5 text-amber-600" />
-          <span className="font-bold text-foreground">ჯილდოები</span>
+          <Gift className="w-5 h-5 text-amber-700" />
+          <span className="font-bold text-lg text-foreground">ჯილდოები</span>
         </div>
         <div className="flex justify-center gap-4">
           <div className="text-center">
             <span className="text-2xl">👑</span>
-            <p className="font-bold text-foreground">+{rewards.xpBonus}</p>
-            <p className="text-xs text-muted-foreground">XP ბონუსი</p>
+            <p className="font-bold text-lg text-foreground">+{rewards.xpBonus}</p>
+            <p className="text-sm font-medium text-foreground/70">XP ბონუსი</p>
           </div>
           {rewards.powerUps > 0 && (
             <div className="text-center">
               <span className="text-2xl">⚡</span>
-              <p className="font-bold text-foreground">+{rewards.powerUps}</p>
-              <p className="text-xs text-muted-foreground">ძალები</p>
+              <p className="font-bold text-lg text-foreground">+{rewards.powerUps}</p>
+              <p className="text-sm font-medium text-foreground/70">ძალები</p>
             </div>
           )}
           {rewards.spinTickets > 0 && (
             <div className="text-center">
               <span className="text-2xl">🎰</span>
-              <p className="font-bold text-foreground">+{rewards.spinTickets}</p>
-              <p className="text-xs text-muted-foreground">სპინ ბილეთები</p>
+              <p className="font-bold text-lg text-foreground">+{rewards.spinTickets}</p>
+              <p className="text-sm font-medium text-foreground/70">სპინ ბილეთები</p>
             </div>
           )}
         </div>
