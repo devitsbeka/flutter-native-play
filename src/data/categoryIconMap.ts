@@ -3,6 +3,9 @@
 
 // PRIMARY MAPPING: category_id → icon slug (45 total)
 export const CATEGORY_ID_TO_ICON: Record<string, string> = {
+  // General
+  'general': 'lightbulb',
+  
   // Classic (15)
   'archaeology': 'fossil',
   'architecture': 'building',
@@ -57,6 +60,9 @@ export const CATEGORY_ID_TO_ICON: Record<string, string> = {
 
 // Legacy mapping (kept for backward compatibility)
 export const CATEGORY_ICON_SLUGS: Record<string, string> = {
+  // General
+  'general': 'lightbulb',
+  
   // Classic/Educational
   'geography': 'globe',
   'world_history': 'scroll',
@@ -116,6 +122,10 @@ export const CATEGORY_ICON_SLUGS: Record<string, string> = {
 
 // Map Georgian category names to English category slugs
 export const GEORGIAN_CATEGORY_SLUGS: Record<string, string> = {
+  // General
+  'ზოგადი ცოდნა': 'general',
+  'ზოგადი': 'general',
+  
   // Classic (exact names from database)
   'არქეოლოგია': 'archaeology',
   'არქიტექტურა': 'architecture',
