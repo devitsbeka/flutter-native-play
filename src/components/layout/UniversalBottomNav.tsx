@@ -73,8 +73,8 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           className="relative overflow-visible"
           style={{
             background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-            padding: "0px 20px 10px",
-            marginTop: -8,
+            padding: "0px 20px 4px",
+            marginTop: -14,
             boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9)",
           }}
         >
