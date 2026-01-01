@@ -3,9 +3,10 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { QuizAnswerButton } from "@/components/ui/quiz-answer-button";
+import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -24,121 +25,31 @@ const slotAvatars = [
   botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10
 ];
 
-// Background pattern shapes
-const PatternShape = ({ delay, x, y, rotation, type }: { delay: number; x: number; y: number; rotation: number; type: string }) => (
-  <motion.div
-    className="absolute text-white/[0.07] font-bold pointer-events-none select-none"
-    style={{
-      left: `${x}%`,
-      top: `${y}%`,
-      fontSize: type.length === 1 ? '48px' : '32px',
-      transform: `rotate(${rotation}deg)`,
-    }}
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: delay * 0.1, duration: 0.5 }}
+// Topographic wave pattern SVG (matching MatchResultScreen)
+const WavePattern = () => (
+  <svg
+    className="absolute bottom-0 left-0 w-full"
+    viewBox="0 0 400 200"
+    preserveAspectRatio="none"
+    style={{ height: "40%" }}
   >
-    {type}
-  </motion.div>
-);
-
-// Square avatar with mint border
-const SquareAvatar = ({ avatarUrl, size = 120, isSearching = false }: { avatarUrl?: string | null; size?: number; isSearching?: boolean }) => (
-  <motion.div 
-    className="relative"
-    animate={isSearching ? { scale: [1, 1.02, 1] } : {}}
-    transition={{ duration: 1.5, repeat: isSearching ? Infinity : 0 }}
-  >
-    {/* Mint/Cyan border */}
-    <div 
-      className="rounded-3xl p-1.5"
-      style={{
-        background: "linear-gradient(135deg, #5EEAD4 0%, #2DD4BF 50%, #14B8A6 100%)",
-        boxShadow: "0 8px 30px rgba(45, 212, 191, 0.35)",
-      }}
-    >
-      <div 
-        className="rounded-2xl overflow-hidden flex items-center justify-center"
-        style={{ 
-          width: size, 
-          height: size,
-          background: "#94a3b8",
-        }}
-      >
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center">
-            <span className="text-4xl text-white/60">?</span>
-          </div>
-        )}
-      </div>
-    </div>
-    
-    {/* Spinning ring during search */}
-    {isSearching && (
-      <motion.div
-        className="absolute inset-[-6px] rounded-3xl border-2 border-dashed border-white/40"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      />
-    )}
-  </motion.div>
-);
-
-// Player card component for consistent layout
-const PlayerCard = ({ 
-  avatarUrl, 
-  name, 
-  points, 
-  level, 
-  isPlayer = false,
-  isSearching = false,
-  avatarSize = 120,
-}: { 
-  avatarUrl?: string | null;
-  name: string;
-  points: string;
-  level: string;
-  isPlayer?: boolean;
-  isSearching?: boolean;
-  avatarSize?: number;
-}) => (
-  <motion.div 
-    className="flex flex-col items-center"
-    initial={{ opacity: 0, y: isPlayer ? -30 : 30 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: isPlayer ? 0 : 0.2 }}
-  >
-    {/* Avatar */}
-    <SquareAvatar avatarUrl={avatarUrl} size={avatarSize} isSearching={isSearching} />
-
-    {/* Score & Level - Fixed height container */}
-    <div className="mt-3 text-center h-8 flex items-center justify-center">
-      <span className="text-white/90 text-xl font-bold">
-        {points}
-      </span>
-      <span className="text-white/60 text-lg ml-2">
-        ({level})
-      </span>
-    </div>
-
-    {/* Name - Fixed height container */}
-    <div className="h-10 flex items-center justify-center">
-      <h2
-        className="text-2xl font-black tracking-wide"
-        style={{
-          fontFamily: "'TASolivare', sans-serif",
-          color: isPlayer ? "#86EFAC" : "#FFFFFF",
-          textShadow: isPlayer 
-            ? "0 2px 10px rgba(134, 239, 172, 0.4)"
-            : "0 2px 10px rgba(0,0,0,0.3)",
-        }}
-      >
-        {name}
-      </h2>
-    </div>
-  </motion.div>
+    <path
+      d="M0 100 Q50 80 100 100 T200 100 T300 100 T400 100 L400 200 L0 200 Z"
+      fill="rgba(255,255,255,0.03)"
+    />
+    <path
+      d="M0 120 Q50 100 100 120 T200 120 T300 120 T400 120 L400 200 L0 200 Z"
+      fill="rgba(255,255,255,0.05)"
+    />
+    <path
+      d="M0 140 Q50 120 100 140 T200 140 T300 140 T400 140 L400 200 L0 200 Z"
+      fill="rgba(255,255,255,0.07)"
+    />
+    <path
+      d="M0 160 Q50 140 100 160 T200 160 T300 160 T400 160 L400 200 L0 200 Z"
+      fill="rgba(255,255,255,0.09)"
+    />
+  </svg>
 );
 
 type SlotPhase = "searching" | "slowing" | "found" | "ready";
@@ -153,19 +64,6 @@ export function VSScreen() {
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Generate pattern shapes
-  const patternShapes = useMemo(() => {
-    const shapes = ['A', 'X', 'O', '△', '□', 'M', 'V', '♦', '+', 'Y', 'Z', 'K'];
-    return Array.from({ length: 35 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      rotation: Math.random() * 360,
-      type: shapes[Math.floor(Math.random() * shapes.length)],
-      delay: i,
-    }));
-  }, []);
-
   // Player data
   const playerPoints = profile?.total_points || 0;
   const playerLevelInfo = calculateLevel(playerPoints);
@@ -174,8 +72,8 @@ export function VSScreen() {
 
   // Derived display values
   const isMatchFound = slotPhase === "found" || slotPhase === "ready";
-  const opponentName = isMatchFound ? (opponent?.name || "მოწინააღმდეგე") : "...";
-  const opponentPointsDisplay = isMatchFound ? opponentPoints.toLocaleString() : "???";
+  const opponentName = isMatchFound ? (opponent?.name || "მოწინააღმდეგე") : "ძებნა...";
+  const opponentPointsDisplay = isMatchFound ? opponentPoints : 0;
   const opponentLevelDisplay = isMatchFound ? `Lvl.${opponentLevelInfo.level}` : "Lvl.?";
 
   // Slot machine cycling effect
@@ -246,19 +144,13 @@ export function VSScreen() {
     startMatch();
   };
 
-  const avatarSize = 120;
-
   return (
     <div 
       className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
-      style={{ background: "#7E7BDC" }}
+      style={{ background: "#7E7ADB" }}
     >
-      {/* Pattern Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {patternShapes.map((shape) => (
-          <PatternShape key={shape.id} {...shape} />
-        ))}
-      </div>
+      {/* Wave Pattern Background */}
+      <WavePattern />
 
       {/* Header */}
       <motion.div 
@@ -272,7 +164,7 @@ export function VSScreen() {
           className="p-2"
           whileTap={{ scale: 0.95 }}
         >
-          <ArrowLeft className="w-6 h-6 text-white/80" strokeWidth={2} />
+          <ArrowLeft className="w-6 h-6 text-white" strokeWidth={2.5} />
         </motion.button>
         
         <motion.button className="p-2" whileTap={{ scale: 0.95 }}>
@@ -280,67 +172,129 @@ export function VSScreen() {
         </motion.button>
       </motion.div>
 
-      {/* Main Content - Stable layout with fixed structure */}
-      <div className="flex-1 flex flex-col items-center justify-between relative z-10 px-6 py-4">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center relative z-10 px-6">
         
-        {/* Players Section - Centered vertically */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-6">
-          
-          {/* Player (You) */}
-          <PlayerCard
+        {/* Players Row - Side by side at top */}
+        <motion.div 
+          className="w-full flex items-start justify-between px-4 pt-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Player Avatar */}
+          <QuizPlayerAvatar
             avatarUrl={profile?.avatar_url}
-            name="შენ"
-            points={playerPoints.toLocaleString()}
-            level={`Lvl.${playerLevelInfo.level}`}
-            isPlayer={true}
-            avatarSize={avatarSize}
+            score={playerPoints}
+            position="left"
+            state="active"
           />
+          
+          {/* VS Badge in center */}
+          <div className="flex-1 flex items-center justify-center pt-4">
+            <motion.div
+              className="relative"
+              animate={!isMatchFound ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+              transition={{ duration: 1.5, repeat: !isMatchFound ? Infinity : 0 }}
+            >
+              <span 
+                className="text-4xl font-black text-white"
+                style={{ 
+                  textShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                  fontFamily: "'TASolivare', sans-serif",
+                }}
+              >
+                VS
+              </span>
+            </motion.div>
+          </div>
+          
+          {/* Opponent Avatar */}
+          <QuizPlayerAvatar
+            avatarUrl={currentAvatar || undefined}
+            score={opponentPointsDisplay}
+            position="right"
+            state={isMatchFound ? "default" : "loading"}
+          />
+        </motion.div>
 
-          {/* VS Divider - Always visible, simple line with dots */}
+        {/* Player Names & Levels Section */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 w-full">
+          
+          {/* Player Info */}
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <h2
+              className="text-2xl font-black tracking-wide"
+              style={{
+                fontFamily: "'TASolivare', sans-serif",
+                color: "#86EFAC",
+                textShadow: "0 2px 10px rgba(134, 239, 172, 0.4)",
+              }}
+            >
+              შენ
+            </h2>
+            <p className="text-white/70 text-sm mt-1">
+              Lvl.{playerLevelInfo.level}
+            </p>
+          </motion.div>
+
+          {/* Animated dots divider */}
           <motion.div
-            className="flex items-center gap-3"
+            className="flex items-center gap-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="w-12 h-0.5 bg-white/30 rounded-full" />
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-2 h-2 rounded-full bg-white/50"
-                  animate={!isMatchFound ? { 
-                    opacity: [0.3, 1, 0.3],
-                    scale: [0.8, 1, 0.8],
-                  } : { opacity: 1, scale: 1 }}
-                  transition={{
-                    duration: 1,
-                    repeat: !isMatchFound ? Infinity : 0,
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="w-12 h-0.5 bg-white/30 rounded-full" />
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 rounded-full bg-white/50"
+                animate={!isMatchFound ? { 
+                  opacity: [0.3, 1, 0.3],
+                  scale: [0.8, 1.2, 0.8],
+                } : { opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 1,
+                  repeat: !isMatchFound ? Infinity : 0,
+                  delay: i * 0.2,
+                }}
+              />
+            ))}
           </motion.div>
 
-          {/* Opponent */}
-          <PlayerCard
-            avatarUrl={currentAvatar}
-            name={opponentName}
-            points={opponentPointsDisplay}
-            level={opponentLevelDisplay}
-            isPlayer={false}
-            isSearching={!isMatchFound}
-            avatarSize={avatarSize}
-          />
+          {/* Opponent Info */}
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <h2
+              className="text-2xl font-black tracking-wide"
+              style={{
+                fontFamily: "'TASolivare', sans-serif",
+                color: "#FFFFFF",
+                textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              }}
+            >
+              {opponentName}
+            </h2>
+            <p className="text-white/70 text-sm mt-1">
+              {opponentLevelDisplay}
+            </p>
+          </motion.div>
         </div>
 
-        {/* Button Section - Fixed at bottom, always takes space */}
-        <div className="w-full max-w-sm h-24 flex items-center justify-center">
+        {/* Button Section - Fixed at bottom */}
+        <div className="w-full max-w-sm pb-8">
           <motion.div
             className="w-full"
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ 
               opacity: isMatchFound ? 1 : 0,
               y: isMatchFound ? 0 : 20,
