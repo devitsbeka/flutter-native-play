@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Flame, Star, Gift } from "lucide-react";
+import { Bell, Gift } from "lucide-react";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
@@ -19,8 +19,6 @@ import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
-import iconCoin from "@/assets/icons/icon-coin.png";
-import iconGem from "@/assets/icons/icon-gem.png";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -221,38 +219,45 @@ export default function Index() {
               onClick={() => setIsSideMenuOpen(true)}
             >
               <span className="w-6 h-6 flex items-center justify-center text-lg">🍔</span>
-              <span className="text-sm font-display font-bold text-gray-800 uppercase">{t("nav.menu")}</span>
+              <span className="text-sm font-bold text-gray-800 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>მენიუ</span>
             </motion.button>
             
-            {/* Combined currency chip */}
+            {/* Notification icons chip */}
             <motion.div 
-              className="flex items-center gap-3 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full"
               style={{
                 background: "rgba(255,255,255,0.95)",
                 boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
               }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
-              {isRefreshing ? (
-                <>
-                  <Skeleton className="w-14 h-5 rounded-full bg-gray-200" />
-                  <div className="w-px h-4 bg-gray-200" />
-                  <Skeleton className="w-10 h-5 rounded-full bg-gray-200" />
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1">
-                    <img src={iconCoin} alt="" className="w-6 h-6 object-contain" />
-                    <span className="text-sm font-bold text-gray-800">{(gamesWon * 10).toLocaleString()}</span>
-                  </div>
-                  <div className="w-px h-4 bg-gray-200" />
-                  <div className="flex items-center gap-1">
-                    <img src={iconGem} alt="" className="w-6 h-6 object-contain" />
-                    <span className="text-sm font-bold text-gray-800">{currentStreak}</span>
-                  </div>
-                </>
-              )}
+              {/* Bell icon */}
+              <motion.button
+                className="relative p-1"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Bell className="w-5 h-5 text-gray-700" />
+              </motion.button>
+              
+              {/* Gift icon with red dot */}
+              <motion.button
+                className="relative p-1"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsDailyRewardsOpen(true)}
+              >
+                <Gift className="w-5 h-5 text-gray-700" />
+                {/* Red notification dot */}
+                <motion.div 
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+                  style={{ 
+                    background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
+                    boxShadow: "0 1px 3px rgba(239,68,68,0.5)"
+                  }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.button>
             </motion.div>
             
           </div>
