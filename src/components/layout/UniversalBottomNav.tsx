@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, Map, Trophy, Tv } from "lucide-react";
+import { Home, Play, Compass, Map, Trophy, Headphones } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 
@@ -80,7 +80,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               onClick={onTeamClick || (() => navigate("/team"))}
               isActive={isActive("/team")}
               label={t("nav.sound")}
-              icon={Tv}
+              icon={Headphones}
               badgeCount={pendingChallenges.length}
             />
           </div>
