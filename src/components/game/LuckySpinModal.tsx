@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { useRewards } from "@/hooks/useRewards";
 import { toast } from "sonner";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface LuckySpinModalProps {
   isOpen: boolean;
@@ -10,14 +11,14 @@ interface LuckySpinModalProps {
 }
 
 const WHEEL_SEGMENTS = [
-  { label: "50 XP", color: "hsl(280 60% 55%)", value: 50, type: "xp" },
-  { label: "Free Spin", color: "hsl(45 90% 50%)", value: 1, type: "spin" },
-  { label: "100 XP", color: "hsl(140 50% 45%)", value: 100, type: "xp" },
-  { label: "Power-Up", color: "hsl(200 70% 50%)", value: 1, type: "powerup" },
-  { label: "25 XP", color: "hsl(340 70% 55%)", value: 25, type: "xp" },
-  { label: "200 XP", color: "hsl(25 85% 55%)", value: 200, type: "xp" },
-  { label: "Bonus!", color: "hsl(280 60% 55%)", value: 500, type: "bonus" },
-  { label: "75 XP", color: "hsl(170 60% 45%)", value: 75, type: "xp" },
+  { label: "50 XP", color: "#9B87F5", value: 50, type: "xp" },
+  { label: "Free Spin", color: "#F59E0B", value: 1, type: "spin" },
+  { label: "100 XP", color: "#22C55E", value: 100, type: "xp" },
+  { label: "Power-Up", color: "#3B82F6", value: 1, type: "powerup" },
+  { label: "25 XP", color: "#EC4899", value: 25, type: "xp" },
+  { label: "200 XP", color: "#F97316", value: 200, type: "xp" },
+  { label: "Bonus!", color: "#8B5CF6", value: 500, type: "bonus" },
+  { label: "75 XP", color: "#14B8A6", value: 75, type: "xp" },
 ];
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
@@ -28,7 +29,6 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Refresh spin info when modal opens
   useEffect(() => {
@@ -94,222 +94,213 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+        <>
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={handleClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={handleClose}
+            className="fixed inset-0 bg-black/70 z-[100]"
           />
 
-          {/* Modal Content */}
+          {/* Modal */}
           <motion.div
-            className="relative z-10 w-[90%] max-w-md"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:max-w-sm z-[100]"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-display font-bold text-white">Lucky Spin!</h2>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-                >
-                  {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Wheel Container */}
-            <div className="relative aspect-square">
-              {/* Glow effect */}
-              <div 
-                className="absolute inset-0 rounded-full blur-2xl opacity-50"
-                style={{ background: "radial-gradient(circle, hsl(45 90% 60%) 0%, transparent 70%)" }}
-              />
-
-              {/* Pointer/Arrow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20">
-                <div 
-                  className="w-0 h-0"
-                  style={{
-                    borderLeft: "15px solid transparent",
-                    borderRight: "15px solid transparent",
-                    borderTop: "30px solid hsl(45 90% 50%)",
-                    filter: "drop-shadow(0 2px 4px hsl(0 0% 0% / 0.3))"
-                  }}
-                />
-              </div>
-
-              {/* Outer ring */}
-              <div 
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "linear-gradient(180deg, hsl(45 80% 55%) 0%, hsl(40 75% 40%) 100%)",
-                  padding: "8px",
-                }}
-              >
-                {/* Inner wheel */}
-                <motion.div
-                  className="relative w-full h-full rounded-full overflow-hidden"
-                  style={{
-                    background: "conic-gradient(" +
-                      WHEEL_SEGMENTS.map((seg, i) => 
-                        `${seg.color} ${i * SEGMENT_ANGLE}deg ${(i + 1) * SEGMENT_ANGLE}deg`
-                      ).join(", ") +
-                    ")",
-                  }}
-                  animate={{ rotate: rotation }}
-                  transition={{
-                    duration: 4,
-                    ease: [0.17, 0.67, 0.12, 0.99], // Custom easing for realistic spin
-                  }}
-                >
-                  {/* Segment labels */}
-                  {WHEEL_SEGMENTS.map((segment, index) => {
-                    const angle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
-                    return (
-                      <div
-                        key={index}
-                        className="absolute left-1/2 top-1/2 origin-left"
-                        style={{
-                          transform: `rotate(${angle}deg) translateX(20%)`,
-                          width: "50%",
-                        }}
-                      >
-                        <span 
-                          className="text-white font-bold text-xs whitespace-nowrap"
-                          style={{ 
-                            textShadow: "0 1px 2px hsl(0 0% 0% / 0.5)",
-                            transform: "rotate(0deg)"
-                          }}
-                        >
-                          {segment.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-
-                  {/* Center button */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.button
-                      onClick={spinWheel}
-                      disabled={!canSpin}
-                      className="relative w-20 h-20 rounded-full flex items-center justify-center disabled:opacity-70"
-                      style={{
-                        background: "linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 90%) 100%)",
-                        boxShadow: "0 4px 0 hsl(0 0% 70%), 0 6px 20px hsl(0 0% 0% / 0.3)",
-                      }}
-                      whileHover={{ scale: canSpin ? 1.05 : 1 }}
-                      whileTap={{ scale: canSpin ? 0.95 : 1 }}
-                    >
-                      <span className="font-display font-bold text-lg" style={{ color: "hsl(25 85% 50%)" }}>
-                        {isSpinning ? "..." : result ? "✓" : "SPIN"}
-                      </span>
-                    </motion.button>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Decorative lights around wheel */}
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-3 h-3 rounded-full"
-                  style={{
-                    background: i % 2 === 0 ? "hsl(45 90% 60%)" : "hsl(0 0% 100%)",
-                    top: `${50 + 48 * Math.sin((i * 30 * Math.PI) / 180)}%`,
-                    left: `${50 + 48 * Math.cos((i * 30 * Math.PI) / 180)}%`,
-                    transform: "translate(-50%, -50%)",
-                    boxShadow: "0 0 10px hsl(45 90% 60% / 0.5)",
-                  }}
-                  animate={{
-                    opacity: [0.5, 1, 0.5],
-                    scale: [0.8, 1, 0.8],
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Result Display */}
-            <AnimatePresence>
-              {result && (
-                <motion.div
-                  className="mt-6 text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <motion.div
-                    className="inline-block px-8 py-4 rounded-2xl"
-                    style={{
-                      background: "linear-gradient(180deg, hsl(45 90% 55%) 0%, hsl(40 85% 45%) 100%)",
-                      boxShadow: "0 4px 0 hsl(35 80% 35%)",
-                    }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", delay: 0.2 }}
+            <div 
+              className="rounded-3xl p-6 relative"
+              style={{
+                background: "#7E7BDC",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-display font-bold text-white">Lucky Spin!</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    className="p-2 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
                   >
-                    <span className="text-3xl mr-2">{getRewardEmoji(result.type)}</span>
-                    <span className="font-display text-white text-xl font-bold">
-                      You won {result.label}!
-                    </span>
-                  </motion.div>
-
+                    {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                  </button>
                   <motion.button
                     onClick={handleClose}
-                    className="mt-4 px-6 py-3 rounded-xl font-display font-bold text-white"
-                    style={{
-                      background: "linear-gradient(180deg, hsl(140 50% 45%) 0%, hsl(140 50% 35%) 100%)",
-                      boxShadow: "0 3px 0 hsl(140 50% 25%)",
-                    }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
+                    className="w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    Collect Reward
+                    <X className="w-4 h-4 text-white" />
                   </motion.button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Spins remaining */}
-            {!result && (
-              <div className="mt-4 text-center">
-                <span className="text-white/70 text-sm">
-                  {loading ? "იტვირთება..." : 
-                    dailySpinInfo.canSpin 
-                      ? `${dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed} უფასო სპინი დარჩა`
-                      : "ხვალ დაბრუნდი მეტი სპინებისთვის!"
-                  }
-                </span>
+                </div>
               </div>
-            )}
+
+              {/* Wheel Container */}
+              <div className="relative aspect-square mb-4">
+                {/* Glow effect */}
+                <div 
+                  className="absolute inset-0 rounded-full blur-2xl opacity-50"
+                  style={{ background: "radial-gradient(circle, #F59E0B 0%, transparent 70%)" }}
+                />
+
+                {/* Pointer/Arrow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20">
+                  <div 
+                    className="w-0 h-0"
+                    style={{
+                      borderLeft: "15px solid transparent",
+                      borderRight: "15px solid transparent",
+                      borderTop: "30px solid #F59E0B",
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
+                    }}
+                  />
+                </div>
+
+                {/* Outer ring */}
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(180deg, #F59E0B 0%, #B45309 100%)",
+                    padding: "8px",
+                  }}
+                >
+                  {/* Inner wheel */}
+                  <motion.div
+                    className="relative w-full h-full rounded-full overflow-hidden"
+                    style={{
+                      background: "conic-gradient(" +
+                        WHEEL_SEGMENTS.map((seg, i) => 
+                          `${seg.color} ${i * SEGMENT_ANGLE}deg ${(i + 1) * SEGMENT_ANGLE}deg`
+                        ).join(", ") +
+                      ")",
+                    }}
+                    animate={{ rotate: rotation }}
+                    transition={{
+                      duration: 4,
+                      ease: [0.17, 0.67, 0.12, 0.99],
+                    }}
+                  >
+                    {/* Segment labels */}
+                    {WHEEL_SEGMENTS.map((segment, index) => {
+                      const angle = index * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
+                      return (
+                        <div
+                          key={index}
+                          className="absolute left-1/2 top-1/2 origin-left"
+                          style={{
+                            transform: `rotate(${angle}deg) translateX(20%)`,
+                            width: "50%",
+                          }}
+                        >
+                          <span 
+                            className="text-white font-bold text-xs whitespace-nowrap"
+                            style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
+                          >
+                            {segment.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+
+                    {/* Center button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.button
+                        onClick={spinWheel}
+                        disabled={!canSpin}
+                        className="relative w-20 h-20 rounded-full flex items-center justify-center disabled:opacity-70"
+                        style={{
+                          background: "linear-gradient(180deg, #FFFFFF 0%, #E5E5E5 100%)",
+                          boxShadow: "0 4px 0 #B5B5B5, 0 6px 20px rgba(0,0,0,0.3)",
+                        }}
+                        whileHover={{ scale: canSpin ? 1.05 : 1 }}
+                        whileTap={{ scale: canSpin ? 0.95 : 1 }}
+                      >
+                        <span className="font-display font-bold text-lg text-amber-600">
+                          {isSpinning ? "..." : result ? "✓" : "SPIN"}
+                        </span>
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Decorative lights around wheel */}
+                {[...Array(12)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-3 h-3 rounded-full"
+                    style={{
+                      background: i % 2 === 0 ? "#F59E0B" : "#FFFFFF",
+                      top: `${50 + 48 * Math.sin((i * 30 * Math.PI) / 180)}%`,
+                      left: `${50 + 48 * Math.cos((i * 30 * Math.PI) / 180)}%`,
+                      transform: "translate(-50%, -50%)",
+                      boxShadow: "0 0 10px rgba(245,158,11,0.5)",
+                    }}
+                    animate={{
+                      opacity: [0.5, 1, 0.5],
+                      scale: [0.8, 1, 0.8],
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Result Display */}
+              <AnimatePresence>
+                {result && (
+                  <motion.div
+                    className="text-center mb-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <motion.div
+                      className="inline-block px-6 py-3 rounded-2xl bg-amber-500"
+                      style={{ boxShadow: "0 4px 0 #B45309" }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", delay: 0.2 }}
+                    >
+                      <span className="text-2xl mr-2">{getRewardEmoji(result.type)}</span>
+                      <span className="font-display text-white text-lg font-bold">
+                        მოიგე {result.label}!
+                      </span>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Footer */}
+              {result ? (
+                <ChunkyButton
+                  variant="success"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleClose}
+                >
+                  აიღე ჯილდო
+                </ChunkyButton>
+              ) : (
+                <div className="text-center">
+                  <span className="text-white/70 text-sm">
+                    {loading ? "იტვირთება..." : 
+                      dailySpinInfo.canSpin 
+                        ? `${dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed} უფასო სპინი დარჩა`
+                        : "ხვალ დაბრუნდი მეტი სპინებისთვის!"
+                    }
+                  </span>
+                </div>
+              )}
+            </div>
           </motion.div>
-        </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface PowerUpShopModalProps {
   isOpen: boolean;
@@ -64,42 +65,46 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-end justify-center pb-24"
-        >
-          {/* Modal Card - no backdrop, map visible */}
+        <>
+          {/* Backdrop - semi-transparent to show map behind */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50"
+          />
+
+          {/* Modal Card */}
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full max-w-md mx-4"
+            className="fixed inset-x-4 bottom-24 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:max-w-md z-50"
           >
             <div 
               className="rounded-3xl overflow-hidden"
               style={{
-                background: "rgba(30, 20, 60, 0.95)",
-                backdropFilter: "blur(20px)",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+                background: "#7E7BDC",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
               }}
             >
               {/* Header */}
               <div className="relative px-6 pt-5 pb-3">
-                <button
+                <motion.button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <X className="w-5 h-5 text-white/70" />
-                </button>
+                  <X className="w-4 h-4 text-white" />
+                </motion.button>
 
                 <div className="text-center">
                   <h2 className="text-xl font-display text-white">
                     ⚡ ძალები
                   </h2>
-                  <p className="text-white/50 text-sm">
+                  <p className="text-white/60 text-sm">
                     შენი სუპერ ძალები
                   </p>
                 </div>
@@ -129,7 +134,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
 
               {/* Power-up Selector Buttons */}
               <div className="px-4 pb-4">
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-3 mb-4">
                   {POWER_UP_INFO.map((info) => {
                     const isSelected = selectedType === info.type;
                     const count = isLoading ? 0 : powerUps[info.type];
@@ -141,8 +146,8 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                         whileTap={{ scale: 0.95 }}
                         className={`relative p-2 rounded-2xl transition-all ${
                           isSelected
-                            ? "bg-white/15 ring-2 ring-white/30"
-                            : "bg-white/5 hover:bg-white/10"
+                            ? "bg-white/25 ring-2 ring-white/40"
+                            : "bg-white/10 hover:bg-white/15"
                         }`}
                       >
                         <PowerUpBadge
@@ -163,11 +168,19 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                     );
                   })}
                 </div>
-              </div>
 
+                <ChunkyButton
+                  variant="success"
+                  size="md"
+                  className="w-full"
+                  onClick={onClose}
+                >
+                  დახურვა
+                </ChunkyButton>
+              </div>
             </div>
           </motion.div>
-        </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
