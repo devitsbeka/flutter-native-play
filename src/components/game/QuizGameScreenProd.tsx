@@ -254,7 +254,7 @@ export function QuizGameScreenProd() {
       {/* Question Card with 3D Icon Overlay */}
       <div className="px-4 flex-shrink-0 mt-3 relative">
         {/* 3D Icon - Absolute positioned on top of question card */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-20 w-32 h-32">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20 w-32 h-32">
           <DynamicIcon 
             slug={aiData?.slugs?.[0]}
             categoryId={currentQuestion.categoryId}
