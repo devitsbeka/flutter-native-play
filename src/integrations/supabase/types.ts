@@ -642,6 +642,33 @@ export type Database = {
           },
         ]
       }
+      user_avatar_frames: {
+        Row: {
+          created_at: string
+          frame_id: string
+          id: string
+          is_equipped: boolean | null
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frame_id: string
+          id?: string
+          is_equipped?: boolean | null
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frame_id?: string
+          id?: string
+          is_equipped?: boolean | null
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_category_progress: {
         Row: {
           category_id: string
@@ -962,6 +989,39 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vip_subscriptions: {
+        Row: {
+          auto_renew: boolean | null
+          created_at: string
+          expires_at: string
+          id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+          vip_tier: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+          vip_tier?: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+          vip_tier?: string
         }
         Relationships: []
       }
