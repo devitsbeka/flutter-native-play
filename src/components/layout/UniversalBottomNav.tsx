@@ -59,7 +59,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 
           {/* Center Play Button - floats above, overlapping nav bar */}
           <div className="relative flex flex-col items-center justify-center" style={{ width: 72, height: 48 }}>
-            <div className="absolute" style={{ bottom: 12 }}>
+            <div className="absolute" style={{ bottom: -18 }}>
               <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={isHome}
