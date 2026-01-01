@@ -42,3 +42,6 @@ verify_jwt = false
 
 [functions.analyze-question-icon]
 verify_jwt = false
+
+[functions.batch-assign-icons]
+verify_jwt = false
