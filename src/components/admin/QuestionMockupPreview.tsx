@@ -1,17 +1,20 @@
 import { cn } from '@/lib/utils';
 import { Crown, Zap, Check } from 'lucide-react';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 
 interface QuestionMockupPreviewProps {
   question: string;
   correctAnswer: string;
   incorrectAnswers: string[];
   difficulty?: 'easy' | 'medium' | 'hard';
+  iconSlug?: string;
 }
 
 export function QuestionMockupPreview({
   question,
   correctAnswer,
   incorrectAnswers,
+  iconSlug,
 }: QuestionMockupPreviewProps) {
   const allAnswers = [correctAnswer, ...incorrectAnswers].slice(0, 4);
   const letters = ['A', 'B', 'C', 'D'];
@@ -65,8 +68,14 @@ export function QuestionMockupPreview({
               <div className="h-full bg-white rounded-full w-3/4" />
             </div>
 
-            {/* Result banner placeholder */}
-            <div className="h-6 mb-1" />
+            {/* Icon display */}
+            {iconSlug && (
+              <div className="flex justify-center mb-2">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                  <DynamicIcon slug={iconSlug.split(',')[0]} size={28} />
+                </div>
+              </div>
+            )}
 
             {/* Question text */}
             <p className="text-white text-sm font-bold italic text-center leading-snug min-h-[40px]">

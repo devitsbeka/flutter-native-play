@@ -9,7 +9,7 @@ import {
   ToggleRight,
   Loader2,
   Filter,
-  X
+  ImageOff
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ import {
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions, AdminQuestion } from '@/hooks/useAdminQuestions';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { cn } from '@/lib/utils';
 
 const DIFFICULTIES = [
@@ -71,6 +72,7 @@ export default function AdminQuestions() {
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     level_number: 1,
     is_active: true,
+    icon_slug: '' as string,
   });
 
   const resetForm = () => {
@@ -82,6 +84,7 @@ export default function AdminQuestions() {
       difficulty: 'medium',
       level_number: 1,
       is_active: true,
+      icon_slug: '',
     });
   };
 
@@ -104,6 +107,7 @@ export default function AdminQuestions() {
       difficulty: question.difficulty,
       level_number: question.level_number,
       is_active: question.is_active,
+      icon_slug: question.icon_slug || '',
     });
     setEditingQuestion(question);
     setIsAddDialogOpen(true);
@@ -218,6 +222,25 @@ export default function AdminQuestions() {
             >
               <CardContent className="p-3">
                 <div className="flex items-start gap-3">
+                  {/* Icon Display */}
+                  <div className="flex flex-col items-center gap-1 shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-600/20 flex items-center justify-center border border-violet-500/20">
+                      {question.icon_slug ? (
+                        <DynamicIcon 
+                          slug={question.icon_slug.split(',')[0]} 
+                          size={32}
+                        />
+                      ) : (
+                        <ImageOff className="w-5 h-5 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    {question.icon_slug && (
+                      <span className="text-[9px] text-muted-foreground truncate max-w-[48px]">
+                        {question.icon_slug.split(',')[0]}
+                      </span>
+                    )}
+                  </div>
+                  
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -392,6 +415,26 @@ export default function AdminQuestions() {
                     />
                   </div>
                 </div>
+
+                {/* Icon Slug Field */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">აიკონი (slug)</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      value={formData.icon_slug}
+                      onChange={(e) => setFormData({ ...formData, icon_slug: e.target.value })}
+                      placeholder="მაგ: atom, crown, globe"
+                      className="h-9 flex-1"
+                    />
+                    <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center shrink-0 border border-violet-500/20">
+                      {formData.icon_slug ? (
+                        <DynamicIcon slug={formData.icon_slug.split(',')[0]} size={28} />
+                      ) : (
+                        <ImageOff className="w-4 h-4 text-muted-foreground/50" />
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </ScrollArea>
 
@@ -402,6 +445,7 @@ export default function AdminQuestions() {
                 correctAnswer={formData.correct_answer}
                 incorrectAnswers={formData.incorrect_answers.filter(a => a.trim())}
                 difficulty={formData.difficulty}
+                iconSlug={formData.icon_slug}
               />
             </div>
           </div>

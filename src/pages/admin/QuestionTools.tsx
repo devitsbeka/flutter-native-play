@@ -130,6 +130,14 @@ export default function QuestionTools() {
           if (fnError) throw fnError;
 
           const slugs = data?.slugs || [];
+          
+          // Save icon_slug to database if we got slugs
+          if (slugs.length > 0) {
+            await supabase
+              .from('questions')
+              .update({ icon_slug: slugs.join(',') })
+              .eq('id', question.id);
+          }
 
           setProcessedQuestions(prev => [...prev, {
             id: question.id,
