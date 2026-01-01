@@ -34,7 +34,7 @@ export function CategoryGrid({
 
   return (
     <div 
-      className="grid grid-cols-2 gap-3"
+      className="flex flex-col gap-4"
       style={{ paddingLeft: 20, paddingRight: 20 }}
     >
       {categories.map((category, index) => {
@@ -62,6 +62,7 @@ export function CategoryGrid({
               onFavoriteToggle(favoriteId);
             }}
             onClick={() => onCategoryClick(category.id)}
+            variant="full"
           />
         );
       })}

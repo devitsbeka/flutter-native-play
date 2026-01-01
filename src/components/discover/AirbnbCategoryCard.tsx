@@ -19,6 +19,7 @@ interface AirbnbCategoryCardProps {
   isFavorite?: boolean;
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
+  variant?: "compact" | "full"; // compact = carousel, full = single column grid
 }
 
 // Pastel color palette for category cards - light whitish with soft color hints
@@ -59,9 +60,12 @@ export function AirbnbCategoryCard({
   isFavorite = false,
   onFavoriteClick,
   onClick,
+  variant = "compact",
 }: AirbnbCategoryCardProps) {
   const pastel = getPastelColors(id);
   const isCompleted = progress >= totalLevels;
+  const isFull = variant === "full";
+  const iconSize = isFull ? 120 : 84;
 
   // Generate floating particles
   const particles = useMemo(
@@ -86,7 +90,7 @@ export function AirbnbCategoryCard({
       className="flex-shrink-0 w-full text-left"
     >
       {/* Animated Gradient + Particle Area */}
-      <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden">
+      <div className={`relative w-full rounded-xl overflow-hidden ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
         {/* Pastel Gradient Background */}
         <div
           className="absolute inset-0"
@@ -135,7 +139,7 @@ export function AirbnbCategoryCard({
           <DynamicIcon
             slug={iconSlug || undefined}
             categoryId={categoryId}
-            size={84}
+            size={iconSize}
             className="drop-shadow-lg filter brightness-110"
           />
         </motion.div>
@@ -170,12 +174,12 @@ export function AirbnbCategoryCard({
       </div>
 
       {/* Title */}
-      <h3 className="mt-2 font-semibold text-white text-sm line-clamp-1 drop-shadow-sm">
+      <h3 className={`mt-2 font-semibold text-white line-clamp-1 drop-shadow-sm ${isFull ? 'text-lg' : 'text-sm'}`}>
         {name}
       </h3>
 
       {/* Subtitle - Progress */}
-      <p className="text-xs font-medium" style={{ color: '#FFB230' }}>
+      <p className={`font-medium ${isFull ? 'text-sm' : 'text-xs'}`} style={{ color: '#FFB230' }}>
         {progress}/{totalLevels} დონე
       </p>
     </motion.button>
