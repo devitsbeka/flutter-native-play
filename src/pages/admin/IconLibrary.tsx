@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, Database, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
 
 interface ImportStatus {
   phase: "idle" | "extracting" | "importing" | "done" | "error";
@@ -13,6 +13,11 @@ interface ImportStatus {
   details?: string;
 }
 
+// Event to notify other components to refresh icons
+export const refreshIconLibrary = () => {
+  window.dispatchEvent(new CustomEvent('icon-library-refresh'));
+};
+
 export default function IconLibraryAdmin() {
   const [status, setStatus] = useState<ImportStatus>({
     phase: "idle",
@@ -20,6 +25,7 @@ export default function IconLibraryAdmin() {
     progress: 0,
   });
   const [iconCount, setIconCount] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Check how many icons are already imported
   const checkIconCount = async () => {
@@ -31,6 +37,18 @@ export default function IconLibraryAdmin() {
       setIconCount(count);
     }
   };
+
+  // Force refresh the icon library cache
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await checkIconCount();
+      refreshIconLibrary(); // Dispatch event for other components
+      toast.success("Icon library refreshed!");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
 
   // Import metadata from JSON file
   const importMetadata = async () => {
@@ -153,7 +171,18 @@ export default function IconLibraryAdmin() {
 
   return (
     <div className="container mx-auto p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Icon Library Admin</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Icon Library Admin</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
 
       {/* Status Card */}
       <Card className="mb-6">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   FolderOpen, 
   Plus, 
@@ -8,7 +8,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ImageIcon
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -47,6 +48,7 @@ import { useAdminCategories, AdminCategory } from '@/hooks/useAdminCategories';
 import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview';
 import { IconPicker } from '@/components/admin/IconPicker';
 import { cn } from '@/lib/utils';
+import { useIconLibrary } from '@/hooks/useIconLibrary';
 
 const CATEGORY_TYPES = [
   { value: 'classic', label: 'კლასიკური' },
@@ -72,12 +74,14 @@ const GRADIENT_PRESETS = [
 
 export default function AdminCategories() {
   const { categories, loading, addCategory, updateCategory, deleteCategory } = useAdminCategories();
+  const { getIconBySlug, isLoaded: iconsLoaded } = useIconLibrary();
   const [search, setSearch] = useState('');
   const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
   const [saving, setSaving] = useState(false);
   const [iconSlugError, setIconSlugError] = useState<string | null>(null);
+  const [resolvedIconUrl, setResolvedIconUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     category_id: '',
@@ -110,6 +114,16 @@ export default function AdminCategories() {
     return !!data;
   };
 
+  // Resolve icon URL when icon_slug changes
+  useEffect(() => {
+    if (formData.icon_slug && iconsLoaded) {
+      const url = getIconBySlug(formData.icon_slug);
+      setResolvedIconUrl(url);
+    } else {
+      setResolvedIconUrl(null);
+    }
+  }, [formData.icon_slug, iconsLoaded, getIconBySlug]);
+
   const resetForm = () => {
     setFormData({
       category_id: '',
@@ -124,6 +138,7 @@ export default function AdminCategories() {
       sort_order: 0,
     });
     setIconSlugError(null);
+    setResolvedIconUrl(null);
   };
 
   const openAddDialog = () => {
@@ -383,6 +398,30 @@ export default function AdminCategories() {
                           setIconSlugError(null); // Clear error when user selects from picker
                         }}
                       />
+                      {/* Icon Preview */}
+                      {formData.icon_slug && (
+                        <div className="mt-3 p-3 bg-muted/50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <div className="text-xs text-muted-foreground font-medium">Preview:</div>
+                            {resolvedIconUrl ? (
+                              <div className="flex items-center gap-2">
+                                <img 
+                                  src={resolvedIconUrl} 
+                                  alt={formData.icon_slug}
+                                  className="w-10 h-10 object-contain"
+                                  onError={() => setResolvedIconUrl(null)}
+                                />
+                                <span className="text-xs text-green-600 font-medium">✓ Found</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 text-amber-600">
+                                <ImageIcon className="w-5 h-5" />
+                                <span className="text-xs">Loading or not found...</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       {iconSlugError && (
                         <div className="flex items-center gap-2 mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded-lg">
                           <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
