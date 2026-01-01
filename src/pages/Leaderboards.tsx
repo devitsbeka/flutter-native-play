@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Clock, Users, Diamond, Loader2 } from "lucide-react";
+import { Clock, Users, Diamond, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -174,11 +174,11 @@ export default function Leaderboards() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-32">
-      {/* White radial vignette mask over Spline background */}
+      {/* Clean white background overlay */}
       <div 
         className="fixed inset-0 z-[1] pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 0%, transparent 30%, rgba(255,255,255,0.7) 100%)"
+          background: "radial-gradient(ellipse at center, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.95) 100%)"
         }}
       />
 
@@ -195,12 +195,6 @@ export default function Leaderboards() {
           {/* Header - Title */}
           <header className="px-4 pt-4 pb-3 safe-top">
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate("/")}
-                className="h-11 w-11 rounded-2xl flex items-center justify-center bg-white/70 backdrop-blur-sm shadow-sm"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
-              </button>
               <h1 className="text-xl font-display font-bold text-slate-800 uppercase">
                 რეიტინგი
               </h1>

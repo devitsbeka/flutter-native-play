@@ -50,7 +50,7 @@ export function Avatar({
       
       {/* Country flag badge */}
       {countryCode && (
-        <div className="absolute -bottom-1 -right-1 text-lg bg-card rounded-full p-0.5 shadow-sm">
+        <div className="absolute -bottom-1 -right-1 text-lg">
           {getCountryFlag(countryCode)}
         </div>
       )}
