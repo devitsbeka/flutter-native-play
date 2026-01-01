@@ -24,9 +24,9 @@ export function useSessionQuestions(categoryId: string) {
   };
 
   const shouldResetPool = (totalAvailable: number): boolean => {
-    // Reset if we've used more than 70% of available questions
+    // Reset if we've used more than 50% of available questions
     const asked = getAskedQuestionIds();
-    return asked.length > totalAvailable * 0.7;
+    return asked.length > totalAvailable * 0.5;
   };
 
   return { 
