@@ -154,14 +154,14 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
             <div className="text-center">
               <span className="text-2xl">⚡</span>
               <p className="font-bold text-foreground">+{rewards.powerUps}</p>
-              <p className="text-xs text-muted-foreground">Power-Ups</p>
+              <p className="text-xs text-muted-foreground">ძალები</p>
             </div>
           )}
           {rewards.spinTickets > 0 && (
             <div className="text-center">
               <span className="text-2xl">🎰</span>
               <p className="font-bold text-foreground">+{rewards.spinTickets}</p>
-              <p className="text-xs text-muted-foreground">Spin Tickets</p>
+              <p className="text-xs text-muted-foreground">სპინ ბილეთები</p>
             </div>
           )}
         </div>
