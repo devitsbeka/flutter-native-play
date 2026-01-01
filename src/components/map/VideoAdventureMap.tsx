@@ -4,10 +4,16 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Settings } from "lucide-react";
 import { LevelCircle } from "./LevelCircle";
 import { PowerUpsBar } from "./PowerUpsBar";
-import { PowerUpShopModal } from "./PowerUpShopModal";
+import { AdventureQuickActions } from "./AdventureQuickActions";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { MAP_VIDEOS } from "@/components/game/VideoPreloader";
+import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
+import { MissionsModal } from "@/components/home/MissionsModal";
+import { ChestRewardModal } from "@/components/home/ChestRewardModal";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 
 type VideoPhase = "default" | "video-b" | "video-c";
 
@@ -17,8 +23,11 @@ export function VideoAdventureMap() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPhase, setCurrentPhase] = useState<VideoPhase>("default");
-  const [showPowerUpShop, setShowPowerUpShop] = useState(false);
+  const [showGiftsModal, setShowGiftsModal] = useState(false);
+  const [showMissionsModal, setShowMissionsModal] = useState(false);
+  const [showChestModal, setShowChestModal] = useState(false);
   const [videosReady, setVideosReady] = useState({ default: false, b: false, c: false });
+  const { coins, gems } = useCurrency();
   
   // Refs for all three video elements
   const videoDefaultRef = useRef<HTMLVideoElement>(null);
@@ -239,7 +248,7 @@ export function VideoAdventureMap() {
   };
 
   const handleAddPowerUp = () => {
-    setShowPowerUpShop(true);
+    navigate("/power-ups");
   };
 
   // Trigger video sequence when level circle is clicked
@@ -328,7 +337,7 @@ export function VideoAdventureMap() {
 
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col h-full">
-        {/* Header */}
+        {/* Header with currency display */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -344,6 +353,39 @@ export function VideoAdventureMap() {
           >
             <ArrowLeft className="w-5 h-5" style={{ color: "#7C3AED" }} />
           </button>
+
+          {/* Currency Display */}
+          <div className="flex items-center gap-2">
+            {/* Coins */}
+            <div 
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+            >
+              <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+              <span className="text-sm font-bold" style={{ color: "#b45309" }}>
+                {coins.toLocaleString()}
+              </span>
+            </div>
+            
+            {/* Gems */}
+            <div 
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              style={{
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+            >
+              <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+              <span className="text-sm font-bold" style={{ color: "#7c3aed" }}>
+                {gems.toLocaleString()}
+              </span>
+            </div>
+          </div>
 
           <button
             className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -366,18 +408,36 @@ export function VideoAdventureMap() {
           )}
         </div>
 
-        {/* Bottom content - Power-ups bar (hidden when modal open) */}
-        {!showPowerUpShop && (
-          <div className="pb-[155px]">
-            <PowerUpsBar onAddClick={handleAddPowerUp} />
-          </div>
-        )}
+        {/* Bottom content - Quick Actions and Power-ups bar */}
+        <div className="pb-[155px] space-y-6">
+          {/* Quick Actions */}
+          <AdventureQuickActions
+            onGiftsClick={() => setShowGiftsModal(true)}
+            onMissionsClick={() => setShowMissionsModal(true)}
+            onChestClick={() => setShowChestModal(true)}
+          />
+          
+          {/* Power-ups Bar */}
+          <PowerUpsBar onAddClick={handleAddPowerUp} />
+        </div>
       </div>
 
-      {/* Power-up Shop Modal */}
-      <PowerUpShopModal 
-        isOpen={showPowerUpShop} 
-        onClose={() => setShowPowerUpShop(false)} 
+      {/* Modals */}
+      <DailyRewardsModal
+        isOpen={showGiftsModal}
+        onClose={() => setShowGiftsModal(false)}
+        currentStreak={1}
+      />
+      
+      <MissionsModal
+        isOpen={showMissionsModal}
+        onClose={() => setShowMissionsModal(false)}
+      />
+      
+      <ChestRewardModal
+        isOpen={showChestModal}
+        onClose={() => setShowChestModal(false)}
+        onClaim={() => setShowChestModal(false)}
       />
     </div>
   );

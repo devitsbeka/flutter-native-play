@@ -32,6 +32,7 @@ import AdminImport from "./pages/admin/Import";
 import DuplicateScanner from "./pages/admin/DuplicateScanner";
 import IconLibraryAdmin from "./pages/admin/IconLibrary";
 import QuestionTools from "./pages/admin/QuestionTools";
+import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 
 const App = () => (
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/adventure-map" element={<AdventureMap />} />
               <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
+              <Route path="/power-ups" element={<PowerUps />} />
               <Route path="/category/:categoryId" element={<CategoryPage />} />
               <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
               <Route path="/auth" element={<Auth />} />
