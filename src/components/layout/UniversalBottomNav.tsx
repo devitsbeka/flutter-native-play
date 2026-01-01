@@ -26,60 +26,89 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom">
-      {/* Single unified curved container */}
-      <div 
-        className="relative mx-2 mb-2 rounded-[28px] overflow-visible"
-        style={{
-          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-          boxShadow: "inset 0 4px 8px rgba(140,120,180,0.12), inset 0 -2px 4px rgba(255,255,255,0.9), 0 6px 0 #D8D0E8, 0 10px 24px rgba(0,0,0,0.12)",
-          border: "3px solid rgba(255,255,255,0.95)",
-          padding: "12px 16px 14px",
-        }}
-      >
-        <div className="flex items-center justify-around">
-          {/* Explore */}
-          <NavButton
-            onClick={() => navigate("/discover")}
-            isActive={isActive("/discover")}
-            label={t("nav.explore")}
-            icon={Compass}
+    <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
+      <div className="relative px-0 pb-0 overflow-visible">
+        {/* Curved top edge SVG - matches the container color */}
+        <svg 
+          className="absolute left-0 right-0 w-full pointer-events-none"
+          style={{ top: -38, height: 40 }}
+          viewBox="0 0 100 20" 
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="curveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#F8F6FC" />
+              <stop offset="50%" stopColor="#EDE8F5" />
+              <stop offset="100%" stopColor="#E5DEF0" />
+            </linearGradient>
+          </defs>
+          <path 
+            d="M0,20 L0,8 Q50,22 100,8 L100,20 Z" 
+            fill="url(#curveGradient)"
           />
-
-          {/* Map */}
-          <NavButton
-            onClick={() => navigate("/adventure-map")}
-            isActive={isActive("/adventure-map")}
-            label={t("nav.map")}
-            icon={Map}
+          {/* Top border line for the curve */}
+          <path 
+            d="M0,8 Q50,22 100,8" 
+            fill="none"
+            stroke="rgba(255,255,255,0.95)"
+            strokeWidth="1.5"
           />
+        </svg>
+        
+        {/* Main container with 3D chunky styling */}
+        <div 
+          className="relative overflow-visible"
+          style={{
+            background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+            padding: "8px 20px 12px",
+            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9), 0 -4px 12px rgba(0,0,0,0.04)",
+            borderTop: "3px solid rgba(255,255,255,0.95)",
+          }}
+        >
+          <div className="flex items-center justify-around overflow-visible">
+            {/* Explore */}
+            <NavButton
+              onClick={() => navigate("/discover")}
+              isActive={isActive("/discover")}
+              label={t("nav.explore")}
+              icon={Compass}
+            />
 
-          {/* Center Button - positioned to float above */}
-          <div className="relative" style={{ width: 88 }}>
-            <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -4 }}>
-              <Hex3DPlayButton 
-                onClick={handleCenterClick}
-                isPlayButton={isHome}
-              />
+            {/* Map */}
+            <NavButton
+              onClick={() => navigate("/adventure-map")}
+              isActive={isActive("/adventure-map")}
+              label={t("nav.map")}
+              icon={Map}
+            />
+
+            {/* Center Button - positioned to float above */}
+            <div className="relative" style={{ width: 88 }}>
+              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: 0 }}>
+                <Hex3DPlayButton 
+                  onClick={handleCenterClick}
+                  isPlayButton={isHome}
+                />
+              </div>
             </div>
+
+            {/* Rank */}
+            <NavButton
+              onClick={() => navigate("/leaderboards")}
+              isActive={isActive("/leaderboards")}
+              label={t("nav.rank")}
+              icon={Trophy}
+            />
+
+            {/* Team */}
+            <NavButton
+              onClick={onTeamClick || (() => navigate("/team"))}
+              isActive={isActive("/team")}
+              label={t("nav.sound")}
+              icon={Users}
+              badgeCount={pendingChallenges.length}
+            />
           </div>
-
-          {/* Rank */}
-          <NavButton
-            onClick={() => navigate("/leaderboards")}
-            isActive={isActive("/leaderboards")}
-            label={t("nav.rank")}
-            icon={Trophy}
-          />
-
-          {/* Team */}
-          <NavButton
-            onClick={onTeamClick || (() => navigate("/team"))}
-            isActive={isActive("/team")}
-            label={t("nav.sound")}
-            icon={Users}
-            badgeCount={pendingChallenges.length}
-          />
         </div>
       </div>
     </div>
