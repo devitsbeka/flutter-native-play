@@ -73,7 +73,7 @@ export function CategoryCarousel({
           const favoriteId = category.uuid || category.id;
           
           return (
-            <div key={category.id} className="flex-shrink-0 w-40">
+            <div key={category.id} className="flex-shrink-0" style={{ width: 'calc(80vw - 24px)', maxWidth: '320px' }}>
               <AirbnbCategoryCard
                 id={category.id}
                 categoryId={category.category_id || category.id}
@@ -93,6 +93,7 @@ export function CategoryCarousel({
                   onFavoriteToggle(favoriteId);
                 }}
                 onClick={() => onCategoryClick(category.id)}
+                variant="compact"
               />
             </div>
           );
