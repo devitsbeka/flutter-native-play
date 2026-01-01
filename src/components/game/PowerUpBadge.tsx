@@ -147,7 +147,13 @@ export function PowerUpBadge({
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -top-0.5 -right-0.5 w-6 h-6 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center shadow-lg z-20"
+          className="absolute -top-0.5 -right-0.5 w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center shadow-lg z-20"
+          style={{
+            background: "linear-gradient(180deg, #FFE4B5 0%, #FFD699 100%)",
+            color: "#6B4226",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.5)",
+            border: "2px solid rgba(255,255,255,0.8)",
+          }}
         >
           {count}
         </motion.span>
