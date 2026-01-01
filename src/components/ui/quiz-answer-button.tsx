@@ -1,7 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Timer } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 export type QuizAnswerState = "default" | "selected" | "correct" | "wrong" | "next" | "loading" | "disabled";
 
@@ -17,56 +17,60 @@ interface QuizAnswerButtonProps {
 
 const stateStyles: Record<Exclude<QuizAnswerState, "loading" | "disabled">, {
   faceBg: string;
-  borderColor: string;
   depthColor: string;
   textColor: string;
-  labelBg?: string;
+  labelBg: string;
+  labelText: string;
 }> = {
   default: {
-    faceBg: "#EDECFF",
-    borderColor: "#B9B6FF",
-    depthColor: "#6A69B4",
-    textColor: "#514F7F",
-    labelBg: "rgba(126, 122, 219, 0.15)",
+    faceBg: "#FFFFFF",
+    depthColor: "#CBD5E1",
+    textColor: "#2A2550",
+    labelBg: "#7DD3FC",
+    labelText: "#FFFFFF",
   },
   selected: {
-    faceBg: "#D9D8FF",
-    borderColor: "#B9B6FF",
-    depthColor: "#6A69B4",
-    textColor: "#514F7F",
-    labelBg: "rgba(126, 122, 219, 0.25)",
+    faceBg: "#7DD3FC",
+    depthColor: "#38BDF8",
+    textColor: "#FFFFFF",
+    labelBg: "#FFFFFF",
+    labelText: "#7DD3FC",
   },
   correct: {
-    faceBg: "#83F7DA",
-    borderColor: "#5EDAD0",
-    depthColor: "#1E9A7F",
-    textColor: "#1A5C4B",
-    labelBg: "rgba(57, 203, 166, 0.25)",
+    faceBg: "#4ADE80",
+    depthColor: "#22C55E",
+    textColor: "#FFFFFF",
+    labelBg: "#FFFFFF",
+    labelText: "#22C55E",
   },
   wrong: {
-    faceBg: "#FF7575",
-    borderColor: "#FF5C5C",
-    depthColor: "#B83A3A",
+    faceBg: "#EF4444",
+    depthColor: "#DC2626",
     textColor: "#FFFFFF",
-    labelBg: "rgba(255, 255, 255, 0.25)",
+    labelBg: "#FFFFFF",
+    labelText: "#EF4444",
   },
   next: {
-    faceBg: "#83F7DA",
-    borderColor: "#5EDAD0",
-    depthColor: "#1E9A7F",
-    textColor: "#1A5C4B",
+    faceBg: "#4ADE80",
+    depthColor: "#22C55E",
+    textColor: "#FFFFFF",
+    labelBg: "#FFFFFF",
+    labelText: "#22C55E",
   },
 };
 
 const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonProps>(
-  ({ state = "default", label = "ა", text, onClick, disabled = false, showLabel = true, className }, ref) => {
+  ({ state = "default", label = "A", text, onClick, disabled = false, showLabel = true, className }, ref) => {
     const isLoading = state === "loading";
     const isDisabledState = state === "disabled";
     const styleKey = (isLoading || isDisabledState) ? "default" : state;
     const styles = stateStyles[styleKey];
     const [isPressed, setIsPressed] = React.useState(false);
 
-    const depthHeight = 6;
+    const depthHeight = 4;
+
+    // Show icon instead of letter for correct/wrong states
+    const showIcon = state === "correct" || state === "wrong";
 
     return (
       <motion.button
@@ -109,32 +113,33 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         
         {/* Main Face */}
         <div
-          className="relative flex items-center min-h-[66px] py-3 rounded-2xl border-[3px] transition-transform duration-100"
+          className="relative flex items-center min-h-[56px] py-3 rounded-2xl transition-transform duration-100"
           style={{
             background: styles.faceBg,
-            borderColor: styles.borderColor,
-            transform: `translateY(${isPressed ? 3 : 0}px)`,
+            transform: `translateY(${isPressed ? 2 : 0}px)`,
             boxShadow: `inset 0 2px 0 rgba(255,255,255,0.4)`,
           }}
         >
-          {/* Label Badge or Timer */}
+          {/* Label Badge */}
           {showLabel && state !== "next" && (
             <div
-              className="flex items-center justify-center w-12 h-9 ml-3 rounded-xl font-bold text-base"
+              className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base"
               style={{
                 background: styles.labelBg,
-                color: styles.textColor,
+                color: styles.labelText,
               }}
             >
               {isLoading ? (
-                <Timer className="w-4 h-4 animate-pulse" />
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : showIcon ? (
+                state === "correct" ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />
               ) : (
-                <>{label}:</>
+                label
               )}
             </div>
           )}
           
-          {/* Text - allow wrapping for long answers */}
+          {/* Text */}
           <span
             className={cn(
               "flex-1 px-3 leading-tight",
@@ -148,7 +153,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
                   className="h-4 rounded-md animate-pulse"
                   style={{ 
                     width: "60%",
-                    background: "rgba(126, 122, 219, 0.3)"
+                    background: "rgba(0, 0, 0, 0.1)"
                   }} 
                 />
               </div>

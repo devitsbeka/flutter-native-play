@@ -109,10 +109,12 @@ export function MultiplayerGameScreen() {
   // Count how many opponents have answered
   const answeredCount = Object.keys(opponentAnswers).length;
 
+  const progressPercent = isRevealed ? 100 : timerPercentage;
+
   return (
-    <div className="w-full h-[100dvh] flex flex-col bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
+    <div className="w-full h-[100dvh] flex flex-col bg-[#7E7BDC]">
       {/* Header with avatars and scores */}
-      <div className="px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <div className="px-4 py-3 flex items-center justify-between flex-shrink-0 pt-[calc(env(safe-area-inset-top)+12px)]">
         {/* Player */}
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-[#5B4BC4] border-2 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]">
@@ -131,8 +133,10 @@ export function MultiplayerGameScreen() {
         </div>
 
         {/* Question counter */}
-        <div className="text-white/80 text-sm font-medium">
-          {currentQuestionIndex + 1}/{questions.length}
+        <div className="flex items-center gap-1 bg-white/10 px-4 py-2 rounded-full">
+          <span className="text-white font-bold text-lg">{currentQuestionIndex + 1}</span>
+          <span className="text-white/60 font-medium">/</span>
+          <span className="text-white/60 font-bold text-lg">{questions.length}</span>
         </div>
 
         {/* Leaderboard toggle / opponent count */}
@@ -220,23 +224,32 @@ export function MultiplayerGameScreen() {
       {/* Main content area */}
       <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden min-h-0">
         {/* Question card */}
-        <div className="bg-[#5B4BC4] rounded-3xl p-4 mb-3 flex-shrink-0 relative">
-          {/* Timer progress */}
-          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-3">
+        <div 
+          className="rounded-3xl overflow-hidden mb-3 flex-shrink-0"
+          style={{
+            backgroundColor: "#6B5FA8",
+            boxShadow: "0 6px 0 #4A4080",
+          }}
+        >
+          {/* Progress bar */}
+          <div className="h-2 bg-white/20 w-full">
             <motion.div
               className={cn(
-                "h-full rounded-full transition-colors",
+                "h-full rounded-r-full transition-colors",
                 isRevealed ? "bg-green-400" :
-                timerPercentage > 50 ? "bg-white" : 
+                timerPercentage > 50 ? "" : 
                 timerPercentage > 25 ? "bg-amber-400" : "bg-red-500"
               )}
-              style={{ width: isRevealed ? "100%" : `${timerPercentage}%` }}
+              style={{ 
+                background: isRevealed ? "#4ADE80" : timerPercentage > 50 ? "linear-gradient(90deg, #F5A623 0%, #F7C948 100%)" : undefined,
+                width: `${progressPercent}%` 
+              }}
               transition={{ duration: 0.1 }}
             />
           </div>
 
           {/* Result banner */}
-          <div className="h-10 mb-2">
+          <div className="min-h-[40px] px-4 pt-2">
             <AnimatePresence>
               {isRevealed && (
                 <motion.div
@@ -263,9 +276,11 @@ export function MultiplayerGameScreen() {
           </div>
 
           {/* Question text */}
-          <p className="text-white text-xl font-bold text-center leading-snug">
-            {currentQuestion.question}
-          </p>
+          <div className="px-5 pb-5">
+            <p className="text-white text-lg font-semibold text-center leading-snug">
+              {currentQuestion.question}
+            </p>
+          </div>
         </div>
 
         {/* Answer buttons */}
@@ -284,33 +299,33 @@ export function MultiplayerGameScreen() {
                   }))
               : [];
 
-            let buttonBg = "bg-white";
-            let letterBg = "bg-[#7DD3FC]";
-            let letterText = "text-white";
-            let answerText = "text-[#2A2550]";
-            let shadow = "shadow-[0_4px_0_0_#CBD5E1]";
+            let bgColor = "#FFFFFF";
+            let depthColor = "#CBD5E1";
+            let textColor = "#2A2550";
+            let labelBg = "#7DD3FC";
+            let labelText = "#FFFFFF";
 
             if (answerState !== "idle") {
               if (isRevealed) {
                 if (isCorrect) {
-                  buttonBg = "bg-green-500";
-                  letterBg = "bg-white";
-                  letterText = "text-green-500";
-                  answerText = "text-white";
-                  shadow = "shadow-[0_4px_0_0_#16A34A]";
+                  bgColor = "#4ADE80";
+                  depthColor = "#22C55E";
+                  textColor = "#FFFFFF";
+                  labelBg = "#FFFFFF";
+                  labelText = "#22C55E";
                 } else if (isThisSelected && !isCorrect) {
-                  buttonBg = "bg-red-500";
-                  letterBg = "bg-white";
-                  letterText = "text-red-500";
-                  answerText = "text-white";
-                  shadow = "shadow-[0_4px_0_0_#DC2626]";
+                  bgColor = "#EF4444";
+                  depthColor = "#DC2626";
+                  textColor = "#FFFFFF";
+                  labelBg = "#FFFFFF";
+                  labelText = "#EF4444";
                 }
               } else if (isThisSelected) {
-                buttonBg = "bg-[#7DD3FC]";
-                letterBg = "bg-white";
-                letterText = "text-[#7DD3FC]";
-                answerText = "text-white";
-                shadow = "shadow-[0_4px_0_0_#38BDF8]";
+                bgColor = "#7DD3FC";
+                depthColor = "#38BDF8";
+                textColor = "#FFFFFF";
+                labelBg = "#FFFFFF";
+                labelText = "#7DD3FC";
               }
             }
 
@@ -322,76 +337,96 @@ export function MultiplayerGameScreen() {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleAnswer(answer)}
                 disabled={answerState !== "idle"}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-2xl text-left relative",
-                  "disabled:cursor-not-allowed min-h-[56px]",
-                  buttonBg,
-                  shadow
-                )}
+                className="w-full rounded-2xl text-left font-bold text-base disabled:cursor-not-allowed relative min-h-[56px]"
+                style={{ marginBottom: 4 }}
               >
-                <span className={cn(
-                  "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0",
-                  letterBg,
-                  letterText
-                )}>
-                  {isRevealed && isCorrect ? (
-                    <Check className="w-5 h-5" />
-                  ) : isRevealed && isThisSelected && !isCorrect ? (
-                    <X className="w-5 h-5" />
-                  ) : (
-                    letters[index]
-                  )}
-                </span>
-                <span className={cn("flex-1 font-bold text-base", answerText)}>
-                  {answer}
-                </span>
-
-                {/* Opponent avatars who chose this answer */}
-                {opponentsWhoChoseThis.length > 0 && (
-                  <div className="flex -space-x-1.5">
-                    {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
-                      <Avatar 
-                        key={opp?.id || i} 
-                        className={cn(
-                          "w-7 h-7 border-2",
-                          opp?.isCorrect ? "border-green-500" : "border-red-500"
-                        )}
-                      >
-                        <AvatarImage src={opp?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                          {opp?.nickname?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {opponentsWhoChoseThis.length > 4 && (
-                      <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
-                        +{opponentsWhoChoseThis.length - 4}
-                      </div>
+                {/* Depth layer */}
+                <div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{ background: depthColor, transform: "translateY(4px)" }}
+                />
+                
+                {/* Main face */}
+                <div
+                  className="relative flex items-center min-h-[56px] py-3 rounded-2xl"
+                  style={{ background: bgColor }}
+                >
+                  <div
+                    className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base flex-shrink-0"
+                    style={{ background: labelBg, color: labelText }}
+                  >
+                    {isRevealed && isCorrect ? (
+                      <Check className="w-5 h-5" />
+                    ) : isRevealed && isThisSelected && !isCorrect ? (
+                      <X className="w-5 h-5" />
+                    ) : (
+                      letters[index]
                     )}
                   </div>
-                )}
+                  <span className="flex-1 px-3" style={{ color: textColor }}>
+                    {answer}
+                  </span>
+
+                  {/* Opponent avatars who chose this answer */}
+                  {opponentsWhoChoseThis.length > 0 && (
+                    <div className="flex -space-x-1.5 mr-3">
+                      {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
+                        <Avatar 
+                          key={opp?.id || i} 
+                          className={cn(
+                            "w-7 h-7 border-2",
+                            opp?.isCorrect ? "border-green-500" : "border-red-500"
+                          )}
+                        >
+                          <AvatarImage src={opp?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-purple-500 text-white text-[10px]">
+                            {opp?.nickname?.charAt(0) || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {opponentsWhoChoseThis.length > 4 && (
+                        <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
+                          +{opponentsWhoChoseThis.length - 4}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </motion.button>
             );
           })}
         </div>
 
         {/* Next Button */}
-        <div className="mt-3 flex-shrink-0 h-14">
+        <div className="mt-3 flex-shrink-0">
           <div className={cn(
             "transition-opacity duration-200",
-            isRevealed ? "opacity-100" : "opacity-0 pointer-events-none"
+            isRevealed ? "opacity-100" : "opacity-0 pointer-events-none h-0"
           )}>
-            <ChunkyButton
-              variant="primary"
-              size="lg"
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               onClick={handleNext}
-              className="w-full"
+              className="w-full rounded-2xl font-bold text-lg relative"
+              style={{ marginBottom: 4 }}
             >
-              {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
-            </ChunkyButton>
+              <div
+                className="absolute inset-0 rounded-2xl"
+                style={{ background: "#22C55E", transform: "translateY(4px)" }}
+              />
+              <div
+                className="relative flex items-center justify-center min-h-[56px] py-3 rounded-2xl text-white"
+                style={{ background: "#4ADE80" }}
+              >
+                {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
+              </div>
+            </motion.button>
           </div>
         </div>
       </div>
+
+      {/* Safe area bottom padding */}
+      <div className="pb-[env(safe-area-inset-bottom)]" />
     </div>
   );
 }

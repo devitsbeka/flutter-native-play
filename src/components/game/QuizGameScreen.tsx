@@ -342,8 +342,9 @@ const QuizGameScreen = ({
           >
             <QuizQuestionCard
               questionText={currentQuestion?.questionText || ""}
-              timeRemaining={timeRemaining}
-              difficulty={currentQuestion?.difficulty || "medium"}
+              progressPercent={(timeRemaining / 10) * 100}
+              questionNumber={currentQuestionIndex + 1}
+              totalQuestions={questions.length}
               state={isLoading ? "loading" : "default"}
             />
           </motion.div>
