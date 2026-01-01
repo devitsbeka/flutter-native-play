@@ -20,7 +20,7 @@ import WorldHome from "./pages/WorldHome";
 import NotFound from "./pages/NotFound";
 import Game from "./pages/Game";
 import Team from "./pages/Team";
-import AdventureMap from "./pages/AdventureMap";
+
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
 import Discover from "./pages/Discover";
@@ -54,7 +54,7 @@ const App = () => (
             <UserPresenceTracker />
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/adventure-map" element={<AdventureMap />} />
+              
               <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
               <Route path="/power-ups" element={<PowerUps />} />
               <Route path="/category/:categoryId" element={<CategoryPage />} />

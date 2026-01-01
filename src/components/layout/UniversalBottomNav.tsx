@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, Map, Trophy, Headphones } from "lucide-react";
+import { Home, Play, Compass, ShoppingBag, Trophy, Headphones } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 
@@ -61,12 +61,12 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           />
 
           {/* Map */}
-          <NavButton
-            onClick={() => navigate("/adventure-map")}
-            isActive={isActive("/adventure-map")}
-            icon={Map}
-            label="რუკა"
-          />
+        <NavButton
+          onClick={() => navigate("/power-ups")}
+          isActive={isActive("/power-ups")}
+          icon={ShoppingBag}
+          label="მაღაზია"
+        />
 
           {/* Center Play Button - floats above, overlapping nav bar */}
           <div className="relative flex flex-col items-center justify-center" style={{ width: 72, height: 48 }}>
