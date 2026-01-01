@@ -68,7 +68,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             <div 
               className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold",
-                isLowTime ? "bg-destructive" : "bg-primary"
+                isLowTime ? "bg-destructive animate-pulse" : "bg-primary"
               )}
               style={{
                 boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
