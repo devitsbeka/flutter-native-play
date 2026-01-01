@@ -148,7 +148,7 @@ function NavButton({
       whileHover={{ scale: 1.1, y: -2 }}
       whileTap={{ scale: 0.9 }}
     >
-      <div className="relative" style={{ opacity: isActive ? 1 : 0.3 }}>
+      <div className="relative" style={{ opacity: isActive ? 1 : 0.5 }}>
         {/* Icon container - no background, just opacity change */}
         <div className="w-12 h-12 flex items-center justify-center">
           <Icon 
