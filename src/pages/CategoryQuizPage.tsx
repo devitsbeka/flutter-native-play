@@ -17,7 +17,10 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
+import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 
 // Import bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -53,6 +56,12 @@ export default function CategoryQuizPage() {
   const [savedStars, setSavedStars] = useState(0);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
+  
+  // Power-up state
+  const { powerUps, usePowerUp: consumePowerUp } = useUserPowerUps();
+  const [hiddenAnswers, setHiddenAnswers] = useState<string[]>([]);
+  const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
+  const [timerBonus, setTimerBonus] = useState(0);
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
@@ -308,11 +317,93 @@ export default function CategoryQuizPage() {
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setIsAnswered(false);
-      setTimeRemaining(15);
+      setTimeRemaining(15 + timerBonus);
+      // Reset power-up states for new question
+      setHiddenAnswers([]);
+      setUsedPowerUpsThisQuestion(new Set());
     } else {
       setShowResults(true);
     }
   };
+
+  // Power-up handler
+  const handleUsePowerUp = useCallback(async (uiType: UIPowerUpType) => {
+    const currentQ = questions[currentQuestionIndex];
+    if (!currentQ || isAnswered) return;
+
+    // Map UI type to hook type
+    const typeMap: Record<UIPowerUpType, PowerUpType> = {
+      "5050": "5050",
+      freeze: "freeze",
+      replace: "replace",
+      hint: "time-drain",
+    };
+    const type = typeMap[uiType];
+
+    // Check if already used this question
+    if (usedPowerUpsThisQuestion.has(type)) return;
+
+    // Check if user has any left
+    if (powerUps[type] <= 0) return;
+
+    // Consume power-up from database
+    const success = await consumePowerUp(type);
+    if (!success) return;
+
+    // Mark as used this question
+    setUsedPowerUpsThisQuestion(prev => new Set(prev).add(type));
+
+    // Apply power-up effect
+    switch (type) {
+      case "5050": {
+        // Hide 2 wrong answers
+        const wrongAnswers = (currentQ.allAnswers || [])
+          .filter(a => a !== currentQ.correct_answer)
+          .filter(a => !hiddenAnswers.includes(a));
+        const toHide = wrongAnswers.sort(() => Math.random() - 0.5).slice(0, 2);
+        setHiddenAnswers(prev => [...prev, ...toHide]);
+        break;
+      }
+      case "freeze": {
+        // Freeze opponent (in this simple version, just reduce their score chance)
+        // Effect is visual - opponent won't gain score this round
+        toast.success("❄️ მოწინააღმდეგე გაყინულია!");
+        break;
+      }
+      case "replace": {
+        // Replace one wrong answer (similar to 50/50 but just one)
+        const wrongAnswers = (currentQ.allAnswers || [])
+          .filter(a => a !== currentQ.correct_answer)
+          .filter(a => !hiddenAnswers.includes(a));
+        if (wrongAnswers.length > 0) {
+          setHiddenAnswers(prev => [...prev, wrongAnswers[0]]);
+        }
+        break;
+      }
+      case "time-drain": {
+        // Add 5 seconds to timer
+        setTimerBonus(prev => prev + 5);
+        setTimeRemaining(prev => prev + 5);
+        toast.success("⏱️ +5 წამი დამატებულია!");
+        break;
+      }
+    }
+  }, [questions, currentQuestionIndex, isAnswered, usedPowerUpsThisQuestion, powerUps, consumePowerUp, hiddenAnswers]);
+
+  // Build power-ups for UI bar
+  const powerUpsForUI = useMemo(() => {
+    const typeMap: Record<PowerUpType, UIPowerUpType> = {
+      "5050": "5050",
+      freeze: "freeze",
+      replace: "replace",
+      "time-drain": "hint",
+    };
+    return (Object.entries(powerUps) as [PowerUpType, number][]).map(([type, count]) => ({
+      type: typeMap[type],
+      count,
+      state: usedPowerUpsThisQuestion.has(type) ? ("disabled" as const) : ("default" as const),
+    }));
+  }, [powerUps, usedPowerUpsThisQuestion]);
 
   const currentQuestion = questions[currentQuestionIndex];
   const stars = Math.min(3, Math.floor((score / Math.max(questions.length, 1)) * 4));
@@ -339,6 +430,8 @@ export default function CategoryQuizPage() {
   const getAnswerState = useCallback(
     (answer: string): QuizAnswerState => {
       if (!isAnswered) {
+        // Check if answer is hidden by 50/50
+        if (hiddenAnswers.includes(answer)) return "disabled";
         return "default";
       }
 
@@ -349,7 +442,7 @@ export default function CategoryQuizPage() {
       if (isSelected && !isCorrect) return "wrong";
       return "default";
     },
-    [isAnswered, currentQuestion, selectedAnswer]
+    [isAnswered, currentQuestion, selectedAnswer, hiddenAnswers]
   );
 
   // Build progress results for dots (same as QuizGameScreenProd) - MUST be before early returns
@@ -582,12 +675,12 @@ export default function CategoryQuizPage() {
       <div className="px-4 flex-shrink-0 mt-4">
         <QuizQuestionCard
           questionText={currentQuestion?.question || ""}
-          progressPercent={(timeRemaining / 15) * 100}
+          progressPercent={(timeRemaining / (15 + timerBonus)) * 100}
           state="default"
           difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           timerSeconds={timeRemaining}
-          timerMaxSeconds={15}
+          timerMaxSeconds={15 + timerBonus}
         />
       </div>
 
@@ -603,33 +696,38 @@ export default function CategoryQuizPage() {
       {/* Answer Buttons - same component as QuizGameScreenProd */}
       <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
-          {currentQuestion?.allAnswers?.map((answer, index) => (
-            <motion.div
-              key={`${currentQuestionIndex}-${index}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ delay: index * 0.05 }}
-              className="flex-shrink-0"
-            >
-              <QuizAnswerButton
-                label={ANSWER_LABELS[index]}
-                text={answer}
-                state={getAnswerState(answer)}
-                onClick={() => handleAnswerSelect(answer)}
-                disabled={isAnswered}
-                showLabel={true}
-              />
-            </motion.div>
-          ))}
+          {currentQuestion?.allAnswers?.map((answer, index) => {
+            // Skip hidden answers (from 50/50 power-up)
+            if (hiddenAnswers.includes(answer)) return null;
+            
+            return (
+              <motion.div
+                key={`${currentQuestionIndex}-${index}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex-shrink-0"
+              >
+                <QuizAnswerButton
+                  label={ANSWER_LABELS[index]}
+                  text={answer}
+                  state={getAnswerState(answer)}
+                  onClick={() => handleAnswerSelect(answer)}
+                  disabled={isAnswered || hiddenAnswers.includes(answer)}
+                  showLabel={true}
+                />
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 
-      {/* Bottom Area - Next Button (same as QuizGameScreenProd) */}
+      {/* Bottom Area - Power-ups OR Next Button (same as QuizGameScreenProd) */}
       <div className="px-4 pb-4 pt-2 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
-            {isAnswered && (
+            {isAnswered ? (
               <motion.div
                 key="next-button"
                 initial={{ opacity: 0, y: 20 }}
@@ -644,6 +742,18 @@ export default function CategoryQuizPage() {
                 >
                   {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
                 </ChunkyButton>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="power-ups"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <QuizPowerUpBar
+                  powerUps={powerUpsForUI}
+                  onPowerUpClick={handleUsePowerUp}
+                />
               </motion.div>
             )}
           </AnimatePresence>
