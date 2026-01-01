@@ -24,20 +24,38 @@ export const useAdminQuestions = (categoryId?: string) => {
   const fetchQuestions = useCallback(async () => {
     try {
       setLoading(true);
-      let query = supabase
-        .from('questions')
-        .select('*')
-        .order('level_number', { ascending: true })
-        .limit(10000); // Load all questions
+      
+      // Fetch all questions using pagination to bypass the 1000 row limit
+      const allQuestions: any[] = [];
+      const pageSize = 1000;
+      let page = 0;
+      let hasMore = true;
+      
+      while (hasMore) {
+        let query = supabase
+          .from('questions')
+          .select('*')
+          .order('level_number', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
 
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
+        if (categoryId) {
+          query = query.eq('category_id', categoryId);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allQuestions.push(...data);
+          hasMore = data.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setQuestions((data || []).map(q => ({
+      
+      setQuestions(allQuestions.map(q => ({
         ...q,
         difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
         icon_slug: q.icon_slug || undefined,
