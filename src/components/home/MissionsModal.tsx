@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Target, Trophy, Star, CheckCircle2, Gift } from "lucide-react";
+import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import { useMissions } from "@/hooks/useMissions";
 import { useSound } from "@/contexts/SoundContext";
 import { GameModal } from "@/components/ui/game-modal";
@@ -45,7 +46,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       animate={{ rotate: [-5, 5, -5], y: [0, -2, 0] }}
       transition={{ duration: 2, repeat: Infinity }}
     >
-      <Target className="w-8 h-8 text-emerald-600" />
+      <img src={missionCrystalIcon} alt="" className="w-10 h-10 object-contain" />
     </motion.div>
   );
 

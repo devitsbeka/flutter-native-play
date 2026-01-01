@@ -90,7 +90,7 @@ export function AdventureQuickActions({
       <div className="flex items-center justify-center gap-6 px-4">
         <ActionButton
           icon={giftBottleIcon}
-          label="საჩუქრები"
+          label="საჩუქარი"
           onClick={onGiftsClick}
           index={0}
           badge={1}
@@ -98,7 +98,7 @@ export function AdventureQuickActions({
         
         <ActionButton
           icon={missionCrystalIcon}
-          label="მისიები"
+          label="მისია"
           onClick={onMissionsClick}
           index={1}
           badge={3}

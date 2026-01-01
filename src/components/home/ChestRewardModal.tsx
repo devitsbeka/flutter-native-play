@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
+import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import confetti from "canvas-confetti";
 import { useRewards } from "@/hooks/useRewards";
 import { useSound } from "@/contexts/SoundContext";
@@ -81,12 +82,27 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     onClaim(result.newPoints);
   };
 
+  // Custom header icon for chest
+  const chestIcon = (
+    <motion.div
+      className="relative w-16 h-16 rounded-full flex items-center justify-center"
+      style={{
+        background: "linear-gradient(135deg, #EDE9FE 0%, #C4B5FD 100%)",
+        boxShadow: "0 4px 0 #A78BFA, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+      }}
+      animate={{ rotate: [-5, 5, -5], y: [0, -2, 0] }}
+      transition={{ duration: 2, repeat: Infinity }}
+    >
+      <img src={chestBoxIcon} alt="" className="w-10 h-10 object-contain" />
+    </motion.div>
+  );
+
   return (
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
       variant="gold"
-      iconEmoji="🎁"
+      icon={chestIcon}
       title="სკივრი გახსნილია!"
       subtitle="გილოცავ! მიიღე შენი ჯილდოები"
       showSparkles
