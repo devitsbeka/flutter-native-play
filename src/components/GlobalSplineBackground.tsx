@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 // Pages where the background should be visible
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile", "/category"];
 
+// Pages where particles should be disabled for performance
+const NO_PARTICLES_PAGES = ["/"];
+
 // White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
   <motion.div
@@ -64,6 +67,9 @@ export function GlobalSplineBackground() {
   // Check if current page should show background
   const shouldShow = BACKGROUND_PAGES.some(page => location.pathname.startsWith(page) || location.pathname === page);
   
+  // Check if particles should be disabled for performance
+  const shouldShowParticles = shouldShow && !NO_PARTICLES_PAGES.includes(location.pathname);
+  
   // Generate sparkle particles - 80 particles for dense effect
   const sparkles = useMemo(() => 
     Array.from({ length: 80 }, (_, i) => ({
@@ -111,7 +117,7 @@ export function GlobalSplineBackground() {
       )}
       
       {/* Floating orb particles - ambient background movement */}
-      {shouldShow && (
+      {shouldShowParticles && (
         <div 
           className="fixed inset-0 overflow-hidden pointer-events-none"
           style={{ zIndex: -15 }}
@@ -123,7 +129,7 @@ export function GlobalSplineBackground() {
       )}
       
       {/* White sparkle particles - rising effect */}
-      {shouldShow && (
+      {shouldShowParticles && (
         <div 
           className="fixed inset-0 overflow-hidden pointer-events-none"
           style={{ zIndex: -5 }}
