@@ -252,7 +252,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Question Card with Overlapping Icon */}
-      <div className="px-4 flex-shrink-0 relative mt-8">
+      <div className="px-4 flex-shrink-0 relative mt-3">
         {/* 3D Icon - positioned 50% in, 50% out */}
         {(aiData?.slugs?.[0] || currentQuestion.categoryId) && (
           <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20">
@@ -326,7 +326,7 @@ export function QuizGameScreenProd() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <ChunkyButton
-                  variant="ghost"
+                  variant="white"
                   size="xl"
                   onClick={handleNext}
                   className="w-full"

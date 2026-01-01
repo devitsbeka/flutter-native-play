@@ -18,8 +18,8 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
   ({ avatarUrl, score = 0, position = "left", state = "default", size = "default", className }, ref) => {
     const isLoading = state === "loading";
     const dimensions = size === "large" 
-      ? { width: 100, height: 100, borderRadius: 24 } 
-      : { width: 68, height: 68, borderRadius: 20 };
+      ? { width: 75, height: 75, borderRadius: 20 } 
+      : { width: 68, height: 68, borderRadius: 16 };
 
     const borderColors: Record<QuizPlayerAvatarState, string> = {
       default: "#9C99E8",
