@@ -13,6 +13,8 @@ interface QuizQuestionCardProps {
   className?: string;
   difficultyLabel?: string;
   difficultyColor?: string;
+  timerSeconds?: number;
+  timerMaxSeconds?: number;
 }
 
 // Dynamic font sizing based on question length
@@ -36,11 +38,14 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       className,
       difficultyLabel,
       difficultyColor,
+      timerSeconds,
+      timerMaxSeconds = 20,
     },
     ref
   ) => {
     const isLoading = state === "loading";
     const questionStyles = getQuestionStyles(questionText);
+    const isLowTime = timerSeconds !== undefined && timerSeconds <= 5;
 
     return (
       <motion.div
@@ -57,6 +62,23 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
+        {/* Timer badge - top left corner */}
+        {timerSeconds !== undefined && (
+          <div className="absolute top-3 left-3 z-10">
+            <div 
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold",
+                isLowTime ? "bg-destructive" : "bg-primary"
+              )}
+              style={{
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
+              }}
+            >
+              {timerSeconds}
+            </div>
+          </div>
+        )}
+
         {/* Difficulty badge - top right corner */}
         {difficultyLabel && (
           <div className="absolute top-3 right-3 z-10">
