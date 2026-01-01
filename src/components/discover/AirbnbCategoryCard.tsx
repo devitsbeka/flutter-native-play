@@ -146,8 +146,12 @@ export function AirbnbCategoryCard({
 
         {/* Heart/Favorite Button */}
         <button
-          onClick={onFavoriteClick}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onFavoriteClick?.(e);
+          }}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors z-10"
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
