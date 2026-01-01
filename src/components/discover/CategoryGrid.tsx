@@ -17,6 +17,7 @@ interface CategoryGridProps {
   categories: Category[];
   progress: Record<string, number>;
   favorites: Set<string>;
+  leaderboardRanks?: Record<string, number>;
   onCategoryClick: (categoryId: string) => void;
   onFavoriteToggle: (categoryUuid: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
@@ -26,6 +27,7 @@ export function CategoryGrid({
   categories,
   progress,
   favorites,
+  leaderboardRanks = {},
   onCategoryClick,
   onFavoriteToggle,
   getBadge,
@@ -57,6 +59,7 @@ export function CategoryGrid({
             badge={getBadge?.(category, index)}
             imageUrl={category.image_url}
             isFavorite={favorites.has(favoriteId)}
+            leaderboardRank={leaderboardRanks[category.id]}
             onFavoriteClick={(e) => {
               e.stopPropagation();
               onFavoriteToggle(favoriteId);

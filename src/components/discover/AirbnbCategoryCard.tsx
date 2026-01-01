@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
+import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface AirbnbCategoryCardProps {
@@ -17,6 +17,7 @@ interface AirbnbCategoryCardProps {
   badge?: string;
   imageUrl?: string;
   isFavorite?: boolean;
+  leaderboardRank?: number | null; // User's rank in this category
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
   variant?: "compact" | "full"; // compact = carousel, full = single column grid
@@ -58,6 +59,7 @@ export function AirbnbCategoryCard({
   totalLevels = 20,
   badge,
   isFavorite = false,
+  leaderboardRank,
   onFavoriteClick,
   onClick,
   variant = "compact",
@@ -81,6 +83,8 @@ export function AirbnbCategoryCard({
       })),
     []
   );
+
+  const progressPercent = (progress / totalLevels) * 100;
 
   return (
     <motion.button
@@ -169,6 +173,24 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
+        {/* Leaderboard Rank Badge */}
+        {leaderboardRank && leaderboardRank > 0 && (
+          <div 
+            className="absolute top-2 left-2 px-2 py-1 rounded-lg flex items-center gap-1 z-10"
+            style={{
+              background: leaderboardRank <= 3 
+                ? 'linear-gradient(135deg, #FFD700, #FFA500)' 
+                : 'linear-gradient(135deg, #64748B, #475569)',
+              boxShadow: '0 2px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)',
+            }}
+          >
+            <Trophy className="w-3 h-3 text-white" />
+            <span className="text-[11px] font-bold text-white leading-none">
+              #{leaderboardRank}
+            </span>
+          </div>
+        )}
+
         {/* Completed Checkmark */}
         {isCompleted && (
           <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
@@ -176,35 +198,70 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
-        {/* Progress Bar at Bottom of Container */}
+        {/* 3D Chunky Progress Bar at Bottom */}
         <div className={`absolute left-3 right-3 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
           <div className="flex items-center gap-2">
-            {/* Progress Bar Track */}
-            <div className={`flex-1 rounded-full bg-white/30 backdrop-blur-sm overflow-hidden ${isFull ? 'h-2.5' : 'h-2'}`}>
-              {/* Progress Fill with animation */}
-              <motion.div 
-                className="h-full rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${(progress / totalLevels) * 100}%` }}
-                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                style={{ 
-                  backgroundColor: '#FFB230',
-                  boxShadow: progress / totalLevels >= 0.8 
-                    ? '0 0 12px 2px rgba(255, 178, 48, 0.6), 0 0 20px 4px rgba(255, 178, 48, 0.3)' 
-                    : 'none'
+            {/* 3D Progress Bar Container */}
+            <div className="flex-1 relative">
+              {/* Bottom shadow layer */}
+              <div 
+                className={`absolute inset-0 rounded-full ${isFull ? 'h-4' : 'h-3'}`}
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  transform: 'translateY(2px)',
                 }}
               />
+              {/* Track with 3D effect */}
+              <div 
+                className={`relative rounded-full overflow-hidden ${isFull ? 'h-4' : 'h-3'}`}
+                style={{
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.15) 100%)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.2)',
+                }}
+              >
+                {/* Progress Fill with 3D chunky style */}
+                <motion.div 
+                  className="h-full rounded-full relative"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                  style={{ 
+                    background: 'linear-gradient(180deg, #FFCC4D 0%, #FFB230 50%, #E59500 100%)',
+                    boxShadow: progressPercent > 0 
+                      ? 'inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.15), 0 0 8px rgba(255,178,48,0.5)' 
+                      : 'none',
+                  }}
+                >
+                  {/* Shine effect */}
+                  <div 
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%)',
+                    }}
+                  />
+                </motion.div>
+              </div>
             </div>
-            {/* Progress Text */}
-            <span className={`font-semibold text-white drop-shadow-md whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}>
+            {/* Progress Text with shadow */}
+            <span 
+              className={`font-bold text-white whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}
+              style={{
+                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+              }}
+            >
               {progress}/{totalLevels}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Title */}
-      <h3 className={`mt-2 font-semibold text-white line-clamp-1 drop-shadow-sm ${isFull ? 'text-lg' : 'text-sm'}`}>
+      {/* Title - Larger text */}
+      <h3 
+        className={`mt-2 font-bold text-white line-clamp-1 ${isFull ? 'text-xl' : 'text-base'}`}
+        style={{
+          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+        }}
+      >
         {name}
       </h3>
     </motion.button>
