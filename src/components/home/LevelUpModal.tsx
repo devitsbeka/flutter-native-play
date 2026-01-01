@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Star, Gift } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
@@ -25,12 +25,22 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
     ? Math.floor(newLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD) 
     : 0;
 
+  const hasClaimedRewards = useRef(false);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !hasClaimedRewards.current) {
+      hasClaimedRewards.current = true;
       // Credit level-up rewards
       addCurrency(levelUpCoins, levelUpGems);
     }
-  }, [isOpen, addCurrency, levelUpCoins, levelUpGems]);
+  }, [isOpen, levelUpCoins, levelUpGems, addCurrency]);
+
+  // Reset ref when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      hasClaimedRewards.current = false;
+    }
+  }, [isOpen]);
 
   return (
     <GameModal
