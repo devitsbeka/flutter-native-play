@@ -24,6 +24,9 @@ let cachePromise: Promise<IconItem[]> | null = null;
 // Complete category to icon slug mappings for all app categories
 // Using verified slugs that exist in the icon library
 const CATEGORY_ICON_MAP: Record<string, string[]> = {
+  // General
+  'general': ['lightbulb', 'brain', 'question', 'puzzle', 'book', 'star', 'sparkle', 'idea'],
+  
   // Classic/Educational
   'geography': ['globe', 'globe-earth', 'world-map', 'map', 'compass', 'earth', 'planet'],
   'world_history': ['scroll', 'papyrus-scroll', 'magic-scroll', 'castle', 'crown', 'medieval'],

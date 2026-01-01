@@ -174,22 +174,11 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
     >
       <div className="relative">
         {/* Power-up preview */}
-        <div className="bg-muted/30 rounded-2xl border border-border p-4 mb-4">
+        <div className="bg-muted/30 rounded-2xl border border-border p-3 mb-3">
           <PowerUpDemoPreview
             type={selectedType}
             animationKey={animationKey}
           />
-          
-          <motion.p
-            key={selectedType}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center text-muted-foreground text-sm mt-3"
-          >
-            <span className="font-semibold text-foreground">{selectedInfo.name}</span>
-            {" — "}
-            {selectedInfo.description}
-          </motion.p>
         </div>
 
         {/* Power-up selector */}
