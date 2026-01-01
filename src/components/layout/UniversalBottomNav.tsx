@@ -40,12 +40,13 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         }}
       >
         {/* Navigation items container */}
-        <div className="flex items-end justify-around px-2 h-16">
+        <div className="flex items-center justify-around px-2 py-2">
           {/* Explore */}
           <NavButton
             onClick={() => navigate("/discover")}
             isActive={isActive("/discover")}
             icon={Compass}
+            label="Explore"
           />
 
           {/* Map */}
@@ -53,16 +54,27 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={() => navigate("/adventure-map")}
             isActive={isActive("/adventure-map")}
             icon={Map}
+            label="Map"
           />
 
           {/* Center Play Button - floats above */}
-          <div className="relative flex items-center justify-center" style={{ width: 72 }}>
-            <div className="absolute" style={{ bottom: 8 }}>
+          <div className="relative flex flex-col items-center justify-center" style={{ width: 72 }}>
+            <div className="absolute" style={{ bottom: 20 }}>
               <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={isHome}
               />
             </div>
+            <span 
+              className="text-gray-700 mt-auto"
+              style={{ 
+                fontSize: 12, 
+                fontFamily: "'Google Sans', sans-serif",
+                opacity: 0.7,
+              }}
+            >
+              {isHome ? "Play" : "Home"}
+            </span>
           </div>
 
           {/* Rank */}
@@ -70,6 +82,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={() => navigate("/leaderboards")}
             isActive={isActive("/leaderboards")}
             icon={Trophy}
+            label="Rank"
           />
 
           {/* Team */}
@@ -77,6 +90,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
             onClick={onTeamClick || (() => navigate("/team"))}
             isActive={isActive("/team")}
             icon={Headphones}
+            label="Sound"
             badgeCount={pendingChallenges.length}
           />
         </div>
@@ -89,26 +103,26 @@ function NavButton({
   onClick, 
   isActive, 
   icon: Icon,
+  label,
   badgeCount = 0,
 }: { 
   onClick: () => void;
   isActive: boolean;
   icon: React.ComponentType<{ className?: string }>;
+  label: string;
   badgeCount?: number;
 }) {
   return (
     <motion.button
       onClick={onClick}
-      className="relative flex items-center justify-center min-w-[56px]"
-      whileHover={{ scale: 1.1, y: -2 }}
-      whileTap={{ scale: 0.9 }}
+      className="relative flex flex-col items-center justify-center min-w-[56px] py-1"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
     >
       <div className="relative" style={{ opacity: isActive ? 1 : 0.5 }}>
-        {/* Icon container - no background, just opacity change */}
-        <div className="w-12 h-12 flex items-center justify-center">
-          <Icon 
-            className="w-6 h-6 text-gray-700" 
-          />
+        {/* Icon */}
+        <div className="w-8 h-8 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-gray-700" />
         </div>
         
         {/* Badge */}
@@ -116,18 +130,30 @@ function NavButton({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center"
+            className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
             style={{
               background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
               boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
             }}
           >
-            <span className="text-[10px] font-bold text-white">
+            <span className="text-[9px] font-bold text-white">
               {badgeCount > 9 ? "9+" : badgeCount}
             </span>
           </motion.div>
         )}
       </div>
+      
+      {/* Label */}
+      <span 
+        className="text-gray-700 mt-0.5"
+        style={{ 
+          fontSize: 12, 
+          fontFamily: "'Google Sans', sans-serif",
+          opacity: isActive ? 1 : 0.5,
+        }}
+      >
+        {label}
+      </span>
     </motion.button>
   );
 }
