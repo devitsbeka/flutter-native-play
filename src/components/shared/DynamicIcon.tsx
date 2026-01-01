@@ -31,14 +31,20 @@ export function DynamicIcon({
 
     // Priority 1: Search by slug keyword in icon library
     if (slug) {
-      // Try exact slug match first
-      const exactUrl = getIconBySlug(slug);
-      if (exactUrl && !failedIconUrls.has(exactUrl)) {
-        return exactUrl;
+      // Parse slug - could be a single slug or comma-separated AI slugs
+      const slugs = slug.includes(',') ? slug.split(',').map(s => s.trim()) : [slug];
+      
+      // Try each slug in order of priority
+      for (const s of slugs) {
+        // Try exact slug match first
+        const exactUrl = getIconBySlug(s);
+        if (exactUrl && !failedIconUrls.has(exactUrl)) {
+          return exactUrl;
+        }
       }
       
-      // Try searching by the slug as a keyword
-      const match = findIcon([slug]);
+      // Try searching by slugs as keywords
+      const match = findIcon(slugs);
       if (match && !failedIconUrls.has(match.iconUrl)) {
         return match.iconUrl;
       }
