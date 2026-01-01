@@ -40,7 +40,7 @@ function shouldRetryUrl(url: string): boolean {
 export function DynamicIcon({ 
   categoryId,
   slug,
-  size = 64,
+  size = 128,
   className,
   hideIfEmpty = false,
   fallbackEmoji
