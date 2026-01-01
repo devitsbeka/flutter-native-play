@@ -16,7 +16,9 @@ import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
+import { GemShopModal } from "@/components/home/GemShopModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
@@ -99,6 +101,7 @@ export default function Index() {
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
+  const [isGemShopOpen, setIsGemShopOpen] = useState(false);
   
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -199,6 +202,10 @@ export default function Index() {
       <AdFreeModal
         isOpen={isAdFreeModalOpen}
         onClose={() => setIsAdFreeModalOpen(false)}
+      />
+      <GemShopModal
+        isOpen={isGemShopOpen}
+        onClose={() => setIsGemShopOpen(false)}
       />
       
       
@@ -341,6 +348,33 @@ export default function Index() {
                     src={adFreeIcon}
                     alt="Ad-Free"
                     className="w-10 h-10 object-contain mx-auto drop-shadow-sm"
+                  />
+                </motion.button>
+                
+                {/* Gem Shop Button - Top Right of Avatar */}
+                <motion.button
+                  className="absolute pointer-events-auto"
+                  style={{
+                    top: 15,
+                    right: 15,
+                    width: 52,
+                    height: 52,
+                    borderRadius: "50%",
+                    background: "linear-gradient(180deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
+                    boxShadow: "inset 0 3px 6px rgba(139,92,246,0.2), inset 0 -2px 4px rgba(255,255,255,0.6), 0 4px 0 #7C3AED, 0 6px 12px rgba(139,92,246,0.3)",
+                    border: "3px solid rgba(255,255,255,0.95)",
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsGemShopOpen(true);
+                  }}
+                >
+                  <img 
+                    src={gemIcon}
+                    alt="Gem Shop"
+                    className="w-9 h-9 object-contain mx-auto drop-shadow-sm"
                   />
                 </motion.button>
               </div>
