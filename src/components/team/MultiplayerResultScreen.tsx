@@ -28,6 +28,8 @@ export function MultiplayerResultScreen() {
   const navigate = useNavigate();
   const { user, profile, updateProfile } = useAuth();
   const { playSound, vibrate } = useSound();
+  const { addCoins } = useCurrency();
+  const [coinsEarned, setCoinsEarned] = useState(0);
   const { 
     myScore: localMyScore, 
     participants, 
