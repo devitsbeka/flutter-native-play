@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export type QuizPlayerAvatarState = "default" | "active" | "correct" | "wrong" | "loading";
-export type QuizPlayerAvatarSize = "default" | "large";
+export type QuizPlayerAvatarSize = "default" | "large" | "xlarge";
 
 interface QuizPlayerAvatarProps {
   avatarUrl?: string;
@@ -17,7 +17,21 @@ interface QuizPlayerAvatarProps {
 const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>(
   ({ avatarUrl, score = 0, position = "left", state = "default", size = "default", className }, ref) => {
     const isLoading = state === "loading";
-    const dimensions = { width: 50, height: 50, borderRadius: 25 };
+    
+    const getDimensions = () => {
+      switch (size) {
+        case "xlarge":
+          return { width: 128, height: 128, borderRadius: 64 };
+        case "large":
+          return { width: 50, height: 50, borderRadius: 25 };
+        default:
+          return { width: 50, height: 50, borderRadius: 25 };
+      }
+    };
+    
+    const dimensions = getDimensions();
+    const borderWidth = size === "xlarge" ? 4 : 3;
+    const shadowOffset = size === "xlarge" ? 6 : 4;
 
     const borderColors: Record<QuizPlayerAvatarState, string> = {
       default: "#9C99E8",
@@ -55,7 +69,7 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
             className="absolute inset-0"
             style={{
               backgroundColor: shadowColors[state],
-              transform: "translateY(4px)",
+              transform: `translateY(${shadowOffset}px)`,
               borderRadius: dimensions.borderRadius,
             }}
           />
@@ -64,7 +78,7 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
           <motion.div
             className="relative w-full h-full overflow-hidden"
             style={{
-              border: `3px solid ${borderColors[state]}`,
+              border: `${borderWidth}px solid ${borderColors[state]}`,
               backgroundColor: "#F5F4FF",
               borderRadius: dimensions.borderRadius,
             }}
