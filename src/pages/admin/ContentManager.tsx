@@ -383,6 +383,7 @@ export default function ContentManager() {
                   categoryId={category.category_id}
                   size={24}
                   className="shrink-0"
+                  fallbackEmoji={category.icon}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{category.name}</p>
@@ -453,6 +454,7 @@ export default function ContentManager() {
                     slug={selectedCategory.icon_slug || undefined}
                     categoryId={selectedCategory.category_id}
                     size={20}
+                    fallbackEmoji={selectedCategory.icon}
                   />
                   <span className="text-xs font-semibold truncate">{selectedCategory.name}</span>
                 </>
@@ -503,6 +505,7 @@ export default function ContentManager() {
                     categoryId={cat?.category_id}
                     size={18}
                     className="shrink-0 mt-0.5"
+                    fallbackEmoji={cat?.icon}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium leading-snug line-clamp-2">
@@ -521,6 +524,7 @@ export default function ContentManager() {
                             categoryId={cat.category_id}
                             size={14}
                             hideIfEmpty={true}
+                            fallbackEmoji={cat.icon}
                           />
                         </span>
                       )}
