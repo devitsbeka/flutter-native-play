@@ -481,7 +481,7 @@ export default function CategoryQuizPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#7E7BDC]">
       {/* Compact Header Row */}
-      <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+24px)]">
+      <div className="flex items-center justify-between px-3 py-2 pt-[calc(env(safe-area-inset-top)+40px)]">
         {/* Back Button + Player Avatar */}
         <div className="flex items-center gap-2">
           <button
@@ -521,8 +521,8 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Category Icon - Overlapping Question Card, no container */}
-      <div className="flex justify-center -mb-10 z-20 relative">
-        <span className="text-6xl drop-shadow-lg">{category?.icon || "🎯"}</span>
+      <div className="flex justify-center -mb-12 z-20 relative">
+        <span className="drop-shadow-lg" style={{ fontSize: "4.5rem" }}>{category?.icon || "🎯"}</span>
       </div>
 
       {/* Main Content */}
@@ -543,19 +543,6 @@ export default function CategoryQuizPage() {
                 boxShadow: "0 4px 0 #CBD5E1",
               }}
             >
-              {/* Progress bar */}
-              <div className="h-1.5 bg-[#E5E7EB] w-full">
-                <motion.div
-                  className="h-full rounded-r-full"
-                  style={{
-                    background: "linear-gradient(90deg, #F5A623 0%, #F7C948 100%)",
-                  }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-              
               <div className="px-4 py-3">
                 {/* Timer and Difficulty inside card */}
                 <div className="flex items-center justify-between mb-2">
@@ -572,9 +559,22 @@ export default function CategoryQuizPage() {
                     {diffBadge.text}
                   </div>
                 </div>
-                <p className="text-center font-semibold leading-snug text-[#2A2550] text-base">
+                <p className="text-center font-semibold leading-snug text-[#2A2550] text-base pb-3">
                   {currentQuestion?.question}
                 </p>
+              </div>
+              
+              {/* Progress bar - at bottom */}
+              <div className="h-1.5 bg-[#E5E7EB] w-full">
+                <motion.div
+                  className="h-full rounded-r-full"
+                  style={{
+                    background: "linear-gradient(90deg, #F5A623 0%, #F7C948 100%)",
+                  }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.3 }}
+                />
               </div>
             </div>
 
