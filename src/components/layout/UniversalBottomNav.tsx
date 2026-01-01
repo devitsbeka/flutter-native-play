@@ -28,32 +28,49 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
       <div className="relative overflow-visible">
-        {/* Elegant curved wave SVG - extended down to overlap */}
+        {/* Dramatic curved wave SVG with center hump for play button */}
         <svg 
           className="absolute left-0 right-0 w-full pointer-events-none"
-          style={{ bottom: "calc(100% - 8px)", height: 55 }}
-          viewBox="0 0 400 55" 
+          style={{ bottom: "calc(100% - 12px)", height: 80 }}
+          viewBox="0 0 400 80" 
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="navCurveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#F8F6FC" stopOpacity="0" />
-              <stop offset="30%" stopColor="#F8F6FC" stopOpacity="0.6" />
-              <stop offset="60%" stopColor="#F8F6FC" stopOpacity="0.95" />
+              <stop offset="20%" stopColor="#F8F6FC" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#F8F6FC" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#F8F6FC" />
+            </linearGradient>
+            <linearGradient id="centerHumpGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#EDE8F5" stopOpacity="0.95" />
               <stop offset="100%" stopColor="#F8F6FC" />
             </linearGradient>
           </defs>
-          {/* Smooth bezier curve wave - extends to bottom */}
+          {/* Dramatic wave with center hump rising under play button */}
           <path 
-            d="M0,55 L0,30 C80,48 150,12 200,18 C250,24 320,48 400,30 L400,55 Z" 
+            d="M0,80 L0,55 C60,70 120,45 160,35 C180,30 190,15 200,10 C210,15 220,30 240,35 C280,45 340,70 400,55 L400,80 Z" 
             fill="url(#navCurveGradient)"
           />
-          {/* Top highlight stroke */}
+          {/* Center hump overlay for extra depth */}
           <path 
-            d="M0,30 C80,48 150,12 200,18 C250,24 320,48 400,30" 
+            d="M140,80 L140,40 C160,32 180,18 200,12 C220,18 240,32 260,40 L260,80 Z" 
+            fill="url(#centerHumpGradient)"
+          />
+          {/* Top highlight stroke - dramatic wave */}
+          <path 
+            d="M0,55 C60,70 120,45 160,35 C180,30 190,15 200,10 C210,15 220,30 240,35 C280,45 340,70 400,55" 
             fill="none"
-            stroke="rgba(255,255,255,0.6)"
-            strokeWidth="1.5"
+            stroke="rgba(255,255,255,0.7)"
+            strokeWidth="2"
+          />
+          {/* Extra glow around center hump */}
+          <path 
+            d="M160,35 C180,30 190,15 200,10 C210,15 220,30 240,35" 
+            fill="none"
+            stroke="rgba(255,255,255,0.9)"
+            strokeWidth="3"
+            strokeLinecap="round"
           />
         </svg>
         
@@ -61,10 +78,10 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         <div 
           className="absolute left-0 right-0 pointer-events-none"
           style={{
-            top: -4,
-            height: 12,
+            top: -6,
+            height: 16,
             background: "linear-gradient(180deg, transparent 0%, #F8F6FC 100%)",
-            filter: "blur(4px)",
+            filter: "blur(5px)",
           }}
         />
         
