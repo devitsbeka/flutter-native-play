@@ -101,10 +101,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           </div>
         )}
 
-        {/* Question Text - extra top padding for external overlapping icon */}
+        {/* Question Text */}
         <div className={cn(
-          "px-5 py-4 pt-10",
-          (timerSeconds !== undefined || difficultyLabel) && "pt-12"
+          "px-5 py-4",
+          (timerSeconds !== undefined || difficultyLabel) && "pt-14"
         )}>
           {isLoading ? (
             <div className="space-y-2">
