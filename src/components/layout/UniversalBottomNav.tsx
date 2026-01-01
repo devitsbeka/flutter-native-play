@@ -27,42 +27,17 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-20 safe-bottom overflow-visible">
-      <div className="relative px-0 pb-0 overflow-visible">
-        {/* Curved top edge SVG - matches the container color */}
-        <svg 
-          className="absolute left-0 right-0 w-full pointer-events-none"
-          style={{ top: -38, height: 40 }}
-          viewBox="0 0 100 20" 
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="curveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#F8F6FC" />
-              <stop offset="50%" stopColor="#EDE8F5" />
-              <stop offset="100%" stopColor="#E5DEF0" />
-            </linearGradient>
-          </defs>
-          <path 
-            d="M0,20 L0,8 Q50,22 100,8 L100,20 Z" 
-            fill="url(#curveGradient)"
-          />
-          {/* Top border line for the curve */}
-          <path 
-            d="M0,8 Q50,22 100,8" 
-            fill="none"
-            stroke="rgba(255,255,255,0.95)"
-            strokeWidth="1.5"
-          />
-        </svg>
-        
-        {/* Main container with 3D chunky styling */}
+      <div className="relative overflow-visible">
+        {/* Main container with curved top using border-radius */}
         <div 
           className="relative overflow-visible"
           style={{
             background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-            padding: "8px 20px 12px",
-            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9), 0 -4px 12px rgba(0,0,0,0.04)",
-            borderTop: "3px solid rgba(255,255,255,0.95)",
+            padding: "16px 20px 12px",
+            borderRadius: "32px 32px 0 0",
+            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,0.9), 0 -6px 20px rgba(0,0,0,0.08)",
+            border: "3px solid rgba(255,255,255,0.95)",
+            borderBottom: "none",
           }}
         >
           <div className="flex items-center justify-around overflow-visible">
