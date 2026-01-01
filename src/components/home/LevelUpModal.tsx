@@ -36,7 +36,6 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      variant="gold"
       title="დონე აიწია! 🎉"
       showSparkles
       showStars
@@ -50,17 +49,21 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       >
         {/* Glow ring */}
         <motion.div
-          className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-yellow-400 opacity-40 blur-xl"
+          className="absolute inset-0 rounded-full opacity-40 blur-xl"
+          style={{
+            background: "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
+          }}
           animate={{ scale: [1, 1.3, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
         
-        {/* Level badge */}
+        {/* Level badge - 3D chunky style */}
         <div 
-          className="relative w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full bg-gradient-to-b from-white to-amber-50"
+          className="relative w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full"
           style={{
-            boxShadow: "0 8px 0 rgba(251,191,36,0.4), inset 0 2px 8px rgba(255,255,255,0.8)",
-            border: "4px solid hsl(45 90% 55%)",
+            background: "linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%)",
+            boxShadow: "0 6px 0 #F59E0B, inset 0 2px 8px rgba(255,255,255,0.8)",
+            border: "4px solid #FBBF24",
           }}
         >
           <motion.span
@@ -71,7 +74,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
           >
             {newLevel}
           </motion.span>
-          <span className="text-sm font-bold text-amber-800">დონე</span>
+          <span className="text-sm font-bold text-amber-700">დონე</span>
         </div>
 
         {/* Stars around badge */}
@@ -88,7 +91,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
               transform: "translate(-50%, -50%)",
             }}
           >
-            <Star className="w-6 h-6 text-yellow-400 fill-yellow-400 drop-shadow-lg" />
+            <Star className="w-6 h-6 text-amber-500 fill-amber-400 drop-shadow-lg" />
           </motion.div>
         ))}
       </motion.div>
@@ -98,50 +101,50 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="text-center text-foreground/80 text-base font-medium mb-4"
+        className="text-center text-gray-600 text-base font-medium mb-4"
       >
         დონე {previousLevel} → დონე {newLevel}
       </motion.p>
 
-      {/* Rewards section */}
+      {/* Rewards section - 3D chunky card */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8 }}
         className="rounded-2xl p-4 mb-4"
         style={{
-          background: "linear-gradient(180deg, rgba(251,191,36,0.15) 0%, rgba(251,191,36,0.05) 100%)",
-          border: "2px solid rgba(251,191,36,0.3)",
-          boxShadow: "0 4px 0 rgba(251,191,36,0.15)",
+          background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+          boxShadow: "0 4px 0 #F59E0B, inset 0 1px 2px rgba(255,255,255,0.8)",
+          border: "2px solid #FBBF24",
         }}
       >
         <div className="flex items-center justify-center gap-2 mb-3">
           <Gift className="w-5 h-5 text-amber-700" />
-          <span className="font-bold text-lg text-foreground">ჯილდოები</span>
+          <span className="font-bold text-lg text-amber-800">ჯილდოები</span>
         </div>
         <div className="flex justify-center gap-4 flex-wrap">
           <div className="text-center">
             <img src={coinIcon} alt="" className="w-8 h-8 mx-auto" />
-            <p className="font-bold text-lg text-foreground">+{levelUpCoins}</p>
-            <p className="text-sm font-medium text-foreground/70">მონეტა</p>
+            <p className="font-bold text-lg text-amber-800">+{levelUpCoins}</p>
+            <p className="text-sm font-medium text-amber-700">მონეტა</p>
           </div>
           {levelUpGems > 0 && (
             <div className="text-center">
               <img src={gemIcon} alt="" className="w-8 h-8 mx-auto" />
-              <p className="font-bold text-lg text-foreground">+{levelUpGems}</p>
-              <p className="text-sm font-medium text-foreground/70">ლალი</p>
+              <p className="font-bold text-lg text-amber-800">+{levelUpGems}</p>
+              <p className="text-sm font-medium text-amber-700">ლალი</p>
             </div>
           )}
           <div className="text-center">
             <span className="text-2xl">👑</span>
-            <p className="font-bold text-lg text-foreground">+{rewards.xpBonus}</p>
-            <p className="text-sm font-medium text-foreground/70">XP ბონუსი</p>
+            <p className="font-bold text-lg text-amber-800">+{rewards.xpBonus}</p>
+            <p className="text-sm font-medium text-amber-700">XP ბონუსი</p>
           </div>
           {rewards.powerUps > 0 && (
             <div className="text-center">
               <span className="text-2xl">⚡</span>
-              <p className="font-bold text-lg text-foreground">+{rewards.powerUps}</p>
-              <p className="text-sm font-medium text-foreground/70">ძალები</p>
+              <p className="font-bold text-lg text-amber-800">+{rewards.powerUps}</p>
+              <p className="text-sm font-medium text-amber-700">ძალები</p>
             </div>
           )}
         </div>

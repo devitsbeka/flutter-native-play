@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Crown, Sparkles, Zap, Star, Check, Palette } from "lucide-react";
+import { X, Crown, Zap, Star, Check } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useVipStatus, VipDuration, VIP_PRICES } from "@/hooks/useVipStatus";
-import { useAvatarFrames, AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
 import { AvatarFrameShop } from "@/components/home/AvatarFrameShop";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -68,7 +67,7 @@ const SHOP_ITEMS: ShopItem[] = [
     name: "ძალების პაკეტი",
     description: "5x ყველა ძალა",
     price: 15,
-    icon: <Zap className="w-8 h-8 text-blue-400" />,
+    icon: <Zap className="w-8 h-8 text-blue-500" />,
     category: "powerup",
     gradient: "from-blue-400 to-cyan-500",
   },
@@ -78,7 +77,7 @@ const SHOP_ITEMS: ShopItem[] = [
     name: "VIP კვირა",
     description: "2x XP, +3 სპინი, ექსკლუზიური აქსესუარები",
     price: VIP_PRICES.week,
-    icon: <Crown className="w-8 h-8 text-amber-400" />,
+    icon: <Crown className="w-8 h-8 text-amber-500" />,
     category: "vip",
     gradient: "from-purple-500 to-pink-500",
     popular: true,
@@ -89,7 +88,7 @@ const SHOP_ITEMS: ShopItem[] = [
     name: "VIP თვე",
     description: "ყველა VIP ბენეფიტი 30 დღე",
     price: VIP_PRICES.month,
-    icon: <Star className="w-8 h-8 text-amber-300 fill-amber-300" />,
+    icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" />,
     category: "vip",
     gradient: "from-amber-400 to-pink-500",
     vipDuration: "month",
@@ -173,7 +172,7 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
             className="fixed inset-0 z-[100] bg-black/60"
           />
 
-          {/* Modal */}
+          {/* Modal - New whitish 3D chunky style */}
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
@@ -184,40 +183,43 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
             <div 
               className="rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col max-h-[85vh]"
               style={{
-                background: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
-                boxShadow: "0 -10px 50px rgba(139, 92, 246, 0.3)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
               }}
             >
               {/* Header */}
               <div className="relative px-6 pt-5 pb-3 flex-shrink-0">
                 <motion.button
                   onClick={onClose}
-                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors"
+                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  style={{ boxShadow: "0 3px 0 #D1D5DB" }}
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <X className="w-4 h-4 text-gray-600" />
                 </motion.button>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
+                    <h2 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
                       <span>💎</span> ლალების მაღაზია
                     </h2>
-                    <p className="text-white/60 text-sm">პრემიუმ აითემები ლალებით</p>
+                    <p className="text-gray-500 text-sm">პრემიუმ აითემები ლალებით</p>
                   </div>
                   
                   {/* Gem Balance */}
                   <motion.div 
                     className="flex items-center gap-1.5 px-4 py-2 rounded-full"
                     style={{
-                      background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)",
-                      border: "2px solid rgba(255,255,255,0.3)",
+                      background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
+                      boxShadow: "0 3px 0 #C4B5FD",
+                      border: "2px solid #A78BFA",
                     }}
                     whileHover={{ scale: 1.02 }}
                   >
                     <img src={gemIcon} alt="" className="w-6 h-6" />
-                    <span className="font-bold text-white text-lg">{gems}</span>
+                    <span className="font-bold text-purple-700 text-lg">{gems}</span>
                   </motion.div>
                 </div>
 
@@ -228,32 +230,40 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-3 px-4 py-2 rounded-xl flex items-center justify-between"
                     style={{
-                      background: "linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,165,0,0.2) 100%)",
-                      border: "1px solid rgba(255,215,0,0.3)",
+                      background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                      boxShadow: "0 2px 0 #F59E0B",
+                      border: "2px solid #FBBF24",
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Crown className="w-5 h-5 text-yellow-400" />
-                      <span className="text-white font-semibold">VIP აქტიური</span>
+                      <Crown className="w-5 h-5 text-amber-600" />
+                      <span className="text-amber-800 font-semibold">VIP აქტიური</span>
                     </div>
-                    <span className="text-yellow-400 text-sm font-bold">
+                    <span className="text-amber-700 text-sm font-bold">
                       {getDaysRemaining()} დღე დარჩენილი
                     </span>
                   </motion.div>
                 )}
 
-                {/* Category Tabs */}
+                {/* Category Tabs - 3D chunky style */}
                 <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
                   {CATEGORIES.map((category) => (
                     <motion.button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                        selectedCategory === category.id
-                          ? "bg-white text-purple-700"
-                          : "bg-white/15 text-white hover:bg-white/25"
-                      }`}
-                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all"
+                      style={{
+                        background: selectedCategory === category.id
+                          ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                          : "#F3F4F6",
+                        boxShadow: selectedCategory === category.id
+                          ? "0 2px 0 #C4B5FD"
+                          : "0 2px 0 #E5E7EB",
+                        color: selectedCategory === category.id
+                          ? "#7C3AED"
+                          : "#6B7280",
+                      }}
+                      whileTap={{ scale: 0.95, y: 2 }}
                     >
                       <span>{category.icon}</span>
                       <span>{category.name}</span>
@@ -289,7 +299,7 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
                               className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
                               style={{ 
                                 background: "linear-gradient(135deg, #EC4899 0%, #F97316 100%)",
-                                boxShadow: "0 2px 8px rgba(236, 72, 153, 0.4)",
+                                boxShadow: "0 2px 0 #BE185D",
                               }}
                               animate={{ scale: [1, 1.05, 1] }}
                               transition={{ duration: 2, repeat: Infinity }}
@@ -301,20 +311,30 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
                           <motion.button
                             onClick={() => !isPurchased && !isLoading && handlePurchase(item)}
                             disabled={isPurchased || isLoading}
-                            className={`w-full p-4 rounded-2xl text-left transition-all ${
-                              isPurchased 
-                                ? "bg-green-500/20 border-2 border-green-400/50" 
+                            className="w-full p-4 rounded-2xl text-left transition-all"
+                            style={{
+                              background: isPurchased 
+                                ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)" 
                                 : canAfford 
-                                  ? "bg-white/10 hover:bg-white/20 border-2 border-white/20" 
-                                  : "bg-white/5 border-2 border-white/10 opacity-60"
-                            }`}
+                                  ? "#F9FAFB" 
+                                  : "#F3F4F6",
+                              boxShadow: isPurchased
+                                ? "0 3px 0 #6EE7B7"
+                                : canAfford
+                                  ? "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)"
+                                  : "0 2px 0 #E5E7EB",
+                              border: isPurchased 
+                                ? "2px solid #34D399" 
+                                : "2px solid transparent",
+                              opacity: !canAfford && !isPurchased ? 0.6 : 1,
+                            }}
                             whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
                             whileTap={!isPurchased && canAfford ? { scale: 0.98 } : {}}
                           >
                             {/* Icon */}
                             <div 
                               className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 mx-auto`}
-                              style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}
+                              style={{ boxShadow: "0 4px 0 rgba(0,0,0,0.15)" }}
                             >
                               {isPurchased ? (
                                 <Check className="w-8 h-8 text-white" />
@@ -324,17 +344,17 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
                             </div>
 
                             {/* Name & Description */}
-                            <h3 className="font-bold text-white text-sm text-center mb-1">
+                            <h3 className="font-bold text-gray-800 text-sm text-center mb-1">
                               {item.name}
                             </h3>
-                            <p className="text-white/60 text-xs text-center mb-3 line-clamp-2">
+                            <p className="text-gray-500 text-xs text-center mb-3 line-clamp-2">
                               {item.description}
                             </p>
 
                             {/* Price */}
                             <div className="flex items-center justify-center gap-1.5">
                               <img src={gemIcon} alt="" className="w-5 h-5" />
-                              <span className={`font-bold ${canAfford ? "text-white" : "text-red-300"}`}>
+                              <span className={`font-bold ${canAfford ? "text-gray-800" : "text-red-500"}`}>
                                 {isPurchased ? "შეძენილია" : isVipActive ? "გაახანგრძლივე" : item.price}
                               </span>
                             </div>

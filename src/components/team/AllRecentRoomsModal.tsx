@@ -1,7 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Trophy, Clock, Users } from "lucide-react";
+import { motion } from "framer-motion";
+import { Trophy, Clock, Users } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 
 interface AllRecentRoomsModalProps {
   isOpen: boolean;
@@ -26,68 +27,58 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, y: "100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "100%" }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh]"
-          >
-            <div className="bg-gradient-to-b from-[#7E7BDC] to-[#5855A8] rounded-t-3xl shadow-2xl border-t border-white/20">
-              {/* Handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 rounded-full bg-white/30" />
-              </div>
-
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 pb-4">
-                <h2 className="text-xl font-bold text-white">ყველა თამაში</h2>
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="px-5 pb-8 overflow-y-auto max-h-[70vh]">
-                {loading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="animate-pulse rounded-2xl bg-white/10 h-20" />
-                    ))}
-                  </div>
-                ) : rooms.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-white/30 mx-auto mb-3" />
-                    <p className="text-white/60">ჯერ არ გითამაშია</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {rooms.map((room, index) => (
-                      <RoomListItem key={room.id} room={room} index={index} formatTimeAgo={formatTimeAgo} />
-                    ))}
-                  </div>
-                )}
-              </div>
+    <GameModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="ყველა თამაში"
+      iconEmoji="🎮"
+      showSparkles={false}
+      className="max-w-md"
+    >
+      {/* Content */}
+      <div className="max-h-[50vh] overflow-y-auto pr-1 -mr-1">
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div 
+                key={i} 
+                className="animate-pulse rounded-2xl h-20"
+                style={{
+                  background: "#F3F4F6",
+                }}
+              />
+            ))}
+          </div>
+        ) : rooms.length === 0 ? (
+          <div className="text-center py-8">
+            <div 
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
+              style={{
+                background: "#F3F4F6",
+                boxShadow: "0 3px 0 #E5E7EB",
+              }}
+            >
+              <Users className="w-8 h-8 text-gray-400" />
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            <p className="text-gray-500 font-medium">ჯერ არ გითამაშია</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {rooms.map((room, index) => (
+              <RoomListItem key={room.id} room={room} index={index} formatTimeAgo={formatTimeAgo} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <GameModalFooter
+          primaryLabel="დახურვა"
+          onPrimary={onClose}
+          primaryVariant="secondary"
+        />
+      </div>
+    </GameModal>
   );
 }
 
@@ -99,25 +90,45 @@ function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index:
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.03 }}
-      className={`p-4 rounded-2xl ${
-        room.won
-          ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30"
-          : "bg-white/10 border border-white/10"
-      }`}
+      className="p-3 rounded-2xl"
+      style={{
+        background: room.won
+          ? "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
+          : "#F9FAFB",
+        boxShadow: room.won
+          ? "0 3px 0 #F59E0B, inset 0 1px 2px rgba(255,255,255,0.8)"
+          : "0 2px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
+        border: room.won ? "2px solid #F59E0B" : "none",
+      }}
     >
       <div className="flex items-center gap-3">
         {/* Participants */}
         <div className="flex -space-x-2">
           {room.participants.slice(0, 3).map((p, i) => (
-            <Avatar key={p.user_id} className="w-10 h-10 border-2 border-[#7E7BDC]" style={{ zIndex: 3 - i }}>
+            <Avatar 
+              key={p.user_id} 
+              className="w-10 h-10 border-2 border-white shadow-sm" 
+              style={{ zIndex: 3 - i }}
+            >
               <AvatarImage src={p.avatar_url || undefined} />
-              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-sm font-bold">
+              <AvatarFallback 
+                className="text-white text-sm font-bold"
+                style={{
+                  background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
+                }}
+              >
                 {p.nickname.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           ))}
           {room.participants.length > 3 && (
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-sm text-white font-medium border-2 border-[#7E7BDC]">
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium border-2 border-white"
+              style={{
+                background: "#E5E7EB",
+                color: "#6B7280",
+              }}
+            >
               +{room.participants.length - 3}
             </div>
           )}
@@ -126,20 +137,25 @@ function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index:
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="font-bold text-white text-sm">{squadName}</p>
+            <p className="font-bold text-gray-800 text-sm">{squadName}</p>
             {room.won && (
-              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/30">
-                <Trophy className="w-3 h-3 text-amber-300" />
+              <div 
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+                }}
+              >
+                <Trophy className="w-3 h-3 text-white" />
               </div>
             )}
           </div>
-          <p className="text-white/60 text-xs truncate">{room.category_name || "ზოგადი"}</p>
+          <p className="text-gray-500 text-xs truncate">{room.category_name || "ზოგადი"}</p>
         </div>
 
         {/* Score & Time */}
         <div className="text-right">
-          <p className="text-white font-medium text-sm">{room.my_score} ქულა</p>
-          <div className="flex items-center gap-1 text-white/50 text-xs">
+          <p className="text-gray-800 font-bold text-sm">{room.my_score} ქულა</p>
+          <div className="flex items-center gap-1 text-gray-400 text-xs">
             <Clock className="w-3 h-3" />
             <span>{formatTimeAgo(room.completed_at)}</span>
           </div>

@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { REWARDS } from "@/config/rewardConfig";
-import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 
 interface PowerUpShopModalProps {
   isOpen: boolean;
@@ -153,10 +152,10 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/40"
+            className="fixed inset-0 z-50 bg-black/60"
           />
 
-          {/* Modal Card */}
+          {/* Modal Card - New whitish 3D chunky style */}
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,41 +166,54 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
             <div 
               className="rounded-3xl overflow-hidden"
               style={{
-                background: "#7E7BDC",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
               }}
             >
               {/* Header */}
               <div className="relative px-6 pt-5 pb-3">
                 <motion.button
                   onClick={onClose}
-                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
+                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  style={{ boxShadow: "0 3px 0 #D1D5DB" }}
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <X className="w-4 h-4 text-gray-600" />
                 </motion.button>
 
                 <div className="flex items-center justify-between">
                   <div className="text-center">
-                    <h2 className="text-xl font-display text-white">
+                    <h2 className="text-xl font-display font-bold text-gray-900">
                       ⚡ ძალები
                     </h2>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-gray-500 text-sm">
                       შეიძინე სუპერ ძალები
                     </p>
                   </div>
                   {/* Show coin balance */}
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15">
+                  <div 
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                    style={{
+                      background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                      boxShadow: "0 2px 0 #F59E0B",
+                    }}
+                  >
                     <img src={coinIcon} alt="" className="w-5 h-5" />
-                    <span className="font-bold text-white">{coins.toLocaleString()}</span>
+                    <span className="font-bold text-amber-700">{coins.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
 
               {/* Demo Preview Area */}
               <div className="px-4">
-                <div className="rounded-2xl overflow-hidden">
+                <div 
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
+                  }}
+                >
                   <PowerUpDemoPreview
                     type={selectedType}
                     animationKey={animationKey}
@@ -213,15 +225,15 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                   key={selectedType}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center text-white/70 text-sm mt-3 mb-4"
+                  className="text-center text-gray-600 text-sm mt-3 mb-4"
                 >
-                  <span className="font-semibold text-white">{selectedInfo.name}</span>
+                  <span className="font-semibold text-gray-800">{selectedInfo.name}</span>
                   {" — "}
                   {selectedInfo.description}
                 </motion.p>
               </div>
 
-              {/* Power-up Selector Buttons */}
+              {/* Power-up Selector Buttons - 3D chunky style */}
               <div className="px-4 pb-4">
                 <div className="flex justify-center gap-3 mb-4">
                   {POWER_UP_INFO.map((info) => {
@@ -232,12 +244,19 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                       <motion.button
                         key={info.type}
                         onClick={() => handleSelectPowerUp(info.type)}
-                        whileTap={{ scale: 0.95 }}
-                        className={`relative p-2 rounded-2xl transition-all ${
-                          isSelected
-                            ? "bg-white/25 ring-2 ring-white/40"
-                            : "bg-white/10 hover:bg-white/15"
-                        }`}
+                        whileTap={{ scale: 0.95, y: 2 }}
+                        className="relative p-2 rounded-2xl transition-all"
+                        style={{
+                          background: isSelected
+                            ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                            : "#F3F4F6",
+                          boxShadow: isSelected
+                            ? "0 3px 0 #C4B5FD"
+                            : "0 2px 0 #E5E7EB",
+                          border: isSelected
+                            ? "2px solid #A78BFA"
+                            : "2px solid transparent",
+                        }}
                       >
                         <PowerUpBadge
                           type={info.type === "5050" ? "fifty-fifty" : info.type}
@@ -250,7 +269,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                         {isSelected && (
                           <motion.div
                             layoutId="selector"
-                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white"
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-purple-500"
                           />
                         )}
                       </motion.button>
@@ -258,22 +277,26 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                   })}
                 </div>
 
-                {/* Quantity Selector */}
+                {/* Quantity Selector - 3D chunky style */}
                 <div className="flex items-center justify-center gap-4 mb-3">
                   <motion.button
                     onClick={() => handleQuantityChange(-1)}
                     disabled={quantity <= 1}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/30 transition-colors"
+                    whileTap={{ scale: 0.9, y: 2 }}
+                    className="w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    style={{
+                      background: "#F3F4F6",
+                      boxShadow: "0 3px 0 #D1D5DB",
+                    }}
                   >
-                    <Minus className="w-5 h-5 text-white" />
+                    <Minus className="w-5 h-5 text-gray-600" />
                   </motion.button>
                   
                   <motion.span 
                     key={quantity}
                     initial={{ scale: 1.3 }}
                     animate={{ scale: 1 }}
-                    className="text-3xl font-bold text-white w-12 text-center"
+                    className="text-3xl font-bold text-gray-800 w-12 text-center"
                   >
                     {quantity}
                   </motion.span>
@@ -281,10 +304,14 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                   <motion.button
                     onClick={() => handleQuantityChange(1)}
                     disabled={quantity >= 10}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/30 transition-colors"
+                    whileTap={{ scale: 0.9, y: 2 }}
+                    className="w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    style={{
+                      background: "#F3F4F6",
+                      boxShadow: "0 3px 0 #D1D5DB",
+                    }}
                   >
-                    <Plus className="w-5 h-5 text-white" />
+                    <Plus className="w-5 h-5 text-gray-600" />
                   </motion.button>
                 </div>
 
@@ -293,11 +320,15 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                   key={totalPrice}
                   initial={{ scale: 1.05 }}
                   animate={{ scale: 1 }}
-                  className="flex items-center justify-center gap-2 mb-4"
+                  className="flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full mx-auto w-fit"
+                  style={{
+                    background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                    boxShadow: "0 2px 0 #F59E0B",
+                  }}
                 >
                   <img src={coinIcon} alt="coins" className="w-6 h-6" />
-                  <span className="text-xl font-bold text-white">{totalPrice}</span>
-                  <span className="text-white/60 text-sm">მონეტა</span>
+                  <span className="text-xl font-bold text-amber-700">{totalPrice}</span>
+                  <span className="text-amber-600 text-sm">მონეტა</span>
                 </motion.div>
 
                 {/* Buy Button */}
