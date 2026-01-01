@@ -28,11 +28,11 @@ export function LockedLevelModal({ isOpen, onClose, levelId, requiredLevel }: Lo
           boxShadow: "0 4px 0 rgba(251,191,36,0.15)",
         }}
       >
-        <p className="text-sm text-muted-foreground font-medium mb-3">
+        <p className="text-sm text-gray-500 font-medium mb-3">
           Complete previous levels to unlock!
         </p>
         
-        <div className="flex items-center justify-center gap-2 text-foreground">
+        <div className="flex items-center justify-center gap-2 text-gray-800">
           <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
           <span className="font-bold">
             Complete Level {levelId - 1}

@@ -38,8 +38,8 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
       {/* Week Calendar */}
       <div className="mb-4">
         <div className="flex items-center gap-1.5 mb-2">
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">ბოლო 7 დღე</span>
+          <Calendar className="w-4 h-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-600">ბოლო 7 დღე</span>
         </div>
         <div className="flex justify-between gap-1">
           {last7Days.map((day, i) => (
@@ -49,11 +49,11 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
               style={{
                 background: day.isActive
                   ? "linear-gradient(180deg, #F97316 0%, #EA580C 100%)"
-                  : "hsl(var(--muted))",
-                color: day.isActive ? "white" : "hsl(var(--muted-foreground))",
+                  : "#F3F4F6",
+                color: day.isActive ? "white" : "#6B7280",
                 boxShadow: day.isActive 
                   ? "0 3px 0 rgba(234,88,12,0.4)"
-                  : "0 2px 0 hsl(var(--border))",
+                  : "0 2px 0 #E5E7EB",
               }}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -91,7 +91,7 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
 
       {/* Milestones */}
       <div className="space-y-2">
-        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <span>🎯</span>
           სერიის ეტაპები
         </h3>
@@ -102,13 +102,13 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
             <motion.div
               key={milestone.days}
               className="flex items-center justify-between p-2.5 rounded-xl"
-              style={{
-                background: isReached
-                  ? "linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)"
-                  : isNext
-                    ? "linear-gradient(180deg, rgba(249,115,22,0.1) 0%, rgba(249,115,22,0.05) 100%)"
-                    : "hsl(var(--muted) / 0.3)",
-                border: `2px solid ${isReached ? "rgba(34,197,94,0.3)" : isNext ? "rgba(249,115,22,0.3)" : "transparent"}`,
+                style={{
+                  background: isReached
+                    ? "linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)"
+                    : isNext
+                      ? "linear-gradient(180deg, rgba(249,115,22,0.1) 0%, rgba(249,115,22,0.05) 100%)"
+                      : "#F9FAFB",
+                  border: `2px solid ${isReached ? "rgba(34,197,94,0.3)" : isNext ? "rgba(249,115,22,0.3)" : "#E5E7EB"}`,
                 boxShadow: isReached || isNext ? "0 2px 0 rgba(0,0,0,0.05)" : "none",
               }}
               initial={{ opacity: 0, x: -10 }}
@@ -116,10 +116,10 @@ export function StreakModal({ isOpen, onClose, currentStreak, bestStreak }: Stre
               transition={{ delay: i * 0.05 }}
             >
               <div className="flex items-center gap-2">
-                <span className={isReached ? "text-green-500" : "text-muted-foreground"}>
+                <span className={isReached ? "text-green-500" : "text-gray-500"}>
                   {isReached ? "✓" : `${milestone.days} დღე`}
                 </span>
-                <span className="text-sm font-medium text-foreground">{milestone.reward}</span>
+                <span className="text-sm font-medium text-gray-800">{milestone.reward}</span>
               </div>
               {isNext && (
                 <span className="text-xs font-bold text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-lg">

@@ -27,13 +27,13 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       }}
     >
       <div className="text-center">
-        <p className="text-lg font-bold text-foreground">{completedCount}/{missions.length}</p>
-        <p className="text-xs text-muted-foreground">შესრულებულია</p>
+        <p className="text-lg font-bold text-gray-900">{completedCount}/{missions.length}</p>
+        <p className="text-xs text-gray-500">შესრულებულია</p>
       </div>
-      <div className="w-px h-8 bg-border" />
+      <div className="w-px h-8" style={{ background: "#E5E7EB" }} />
       <div className="text-center">
         <p className="text-lg font-bold text-blue-600">+{totalXP}</p>
-        <p className="text-xs text-muted-foreground">XP მიღებული</p>
+        <p className="text-xs text-gray-500">XP მიღებული</p>
       </div>
     </div>
   );
@@ -52,9 +52,9 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       {/* Missions List */}
       <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">იტვირთება...</div>
+          <div className="text-center py-8 text-gray-500">იტვირთება...</div>
         ) : missions.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-gray-500">
             შედი ანგარიშზე მისიების სანახავად
           </div>
         ) : (
@@ -67,11 +67,11 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 style={{
                   background: mission.completed
                     ? "linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)"
-                    : "linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%)",
-                  border: `2px solid ${mission.completed ? "rgba(34,197,94,0.3)" : "hsl(var(--border))"}`,
+                    : "#F9FAFB",
+                  border: `2px solid ${mission.completed ? "rgba(34,197,94,0.3)" : "#E5E7EB"}`,
                   boxShadow: mission.completed 
                     ? "0 3px 0 rgba(34,197,94,0.2)" 
-                    : "0 3px 0 hsl(var(--border))",
+                    : "0 3px 0 #E5E7EB",
                 }}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -83,16 +83,16 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                       {mission.completed ? (
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                       ) : (
-                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <Clock className="w-4 h-4 text-gray-400" />
                       )}
                       <span className={`text-sm font-bold ${
-                        mission.completed ? "text-green-700 dark:text-green-400" : "text-foreground"
+                        mission.completed ? "text-green-700" : "text-gray-800"
                       }`}>
                         {mission.mission_title}
                       </span>
                     </div>
                     {mission.mission_description && (
-                      <p className="text-xs text-muted-foreground mb-2">
+                      <p className="text-xs text-gray-500 mb-2">
                         {mission.mission_description}
                       </p>
                     )}
@@ -101,12 +101,15 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                     {!mission.completed && (
                       <div className="mt-2">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">პროგრესი</span>
-                          <span className="font-medium text-foreground">
+                          <span className="text-gray-500">პროგრესი</span>
+                          <span className="font-medium text-gray-800">
                             {mission.current_progress}/{mission.target_value}
                           </span>
                         </div>
-                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-2.5 rounded-full overflow-hidden"
+                          style={{ background: "#E5E7EB" }}
+                        >
                           <motion.div
                             className="h-full rounded-full bg-gradient-to-r from-blue-400 to-cyan-400"
                             initial={{ width: 0 }}
@@ -122,8 +125,8 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                   <div 
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-bold ${
                       mission.completed
-                        ? "bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300"
-                        : "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-amber-100 text-amber-700"
                     }`}
                     style={{
                       boxShadow: mission.completed 
@@ -141,7 +144,10 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       </div>
 
       {/* Reset info */}
-      <p className="text-xs text-center text-muted-foreground mt-4 pt-3 border-t border-border">
+      <p 
+        className="text-xs text-center text-gray-500 mt-4 pt-3"
+        style={{ borderTop: "1px solid #E5E7EB" }}
+      >
         მისიები განახლდება ყოველ დღე 00:00-ზე
       </p>
     </GameModal>
