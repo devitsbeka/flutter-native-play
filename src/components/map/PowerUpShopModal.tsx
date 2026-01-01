@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Minus, Plus } from "lucide-react";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 interface PowerUpShopModalProps {
   isOpen: boolean;
@@ -40,15 +41,25 @@ const POWER_UP_INFO: PowerUpInfo[] = [
   },
 ];
 
+const POWER_UP_PRICES: Record<PowerUpType, number> = {
+  "5050": 150,
+  "freeze": 200,
+  "replace": 100,
+  "time-drain": 175,
+};
+
 export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
-  const { powerUps, isLoading } = useUserPowerUps();
+  const { powerUps, isLoading, addPowerUp } = useUserPowerUps();
   const [selectedType, setSelectedType] = useState<PowerUpType>("5050");
   const [animationKey, setAnimationKey] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   // Restart animation when switching power-ups
   const handleSelectPowerUp = (type: PowerUpType) => {
     setSelectedType(type);
     setAnimationKey((prev) => prev + 1);
+    setQuantity(1); // Reset quantity when switching
   };
 
   // Auto-loop animation every 4 seconds
@@ -60,18 +71,44 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
     return () => clearInterval(interval);
   }, [isOpen, selectedType]);
 
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+    }
+  }, [isOpen]);
+
   const selectedInfo = POWER_UP_INFO.find((p) => p.type === selectedType)!;
+  const unitPrice = POWER_UP_PRICES[selectedType];
+  const totalPrice = unitPrice * quantity;
+
+  const handleQuantityChange = (delta: number) => {
+    setQuantity((prev) => Math.max(1, Math.min(10, prev + delta)));
+  };
+
+  const handlePurchase = async () => {
+    setIsPurchasing(true);
+    try {
+      await addPowerUp(selectedType, quantity);
+      onClose();
+    } catch (error) {
+      console.error("Purchase failed:", error);
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop - semi-transparent to show map behind */}
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50"
+            onClick={onClose}
+            className="fixed inset-0 z-50 bg-black/40"
           />
 
           {/* Modal Card */}
@@ -105,7 +142,7 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                     ⚡ ძალები
                   </h2>
                   <p className="text-white/60 text-sm">
-                    შენი სუპერ ძალები
+                    შეიძინე სუპერ ძალები
                   </p>
                 </div>
               </div>
@@ -169,13 +206,59 @@ export function PowerUpShopModal({ isOpen, onClose }: PowerUpShopModalProps) {
                   })}
                 </div>
 
+                {/* Quantity Selector */}
+                <div className="flex items-center justify-center gap-4 mb-3">
+                  <motion.button
+                    onClick={() => handleQuantityChange(-1)}
+                    disabled={quantity <= 1}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/30 transition-colors"
+                  >
+                    <Minus className="w-5 h-5 text-white" />
+                  </motion.button>
+                  
+                  <motion.span 
+                    key={quantity}
+                    initial={{ scale: 1.3 }}
+                    animate={{ scale: 1 }}
+                    className="text-3xl font-bold text-white w-12 text-center"
+                  >
+                    {quantity}
+                  </motion.span>
+                  
+                  <motion.button
+                    onClick={() => handleQuantityChange(1)}
+                    disabled={quantity >= 10}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/30 transition-colors"
+                  >
+                    <Plus className="w-5 h-5 text-white" />
+                  </motion.button>
+                </div>
+
+                {/* Price Display */}
+                <motion.div 
+                  key={totalPrice}
+                  initial={{ scale: 1.05 }}
+                  animate={{ scale: 1 }}
+                  className="flex items-center justify-center gap-2 mb-4"
+                >
+                  <img src={coinIcon} alt="coins" className="w-6 h-6" />
+                  <span className="text-xl font-bold text-white">{totalPrice}</span>
+                  <span className="text-white/60 text-sm">მონეტა</span>
+                </motion.div>
+
+                {/* Buy Button */}
                 <ChunkyButton
                   variant="success"
-                  size="md"
+                  size="lg"
                   className="w-full"
-                  onClick={onClose}
+                  onClick={handlePurchase}
+                  disabled={isPurchasing}
                 >
-                  დახურვა
+                  <img src={coinIcon} alt="" className="w-5 h-5" />
+                  <span>შეძენა</span>
+                  <span className="opacity-80">({totalPrice})</span>
                 </ChunkyButton>
               </div>
             </div>
