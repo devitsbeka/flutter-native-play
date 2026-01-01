@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "./chunky-button";
 
@@ -17,7 +17,7 @@ const ModalSparkle = ({ index }: { index: number }) => {
       style={{ 
         left: `${x}%`, 
         top: `${y}%`,
-        background: "radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, transparent 70%)",
       }}
       animate={{
         opacity: [0, 1, 0],
@@ -135,27 +135,28 @@ export function GameModal({
   return (
     <AnimatePresence>
       {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
+          onClick={onClose ? handleClose : undefined}
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4"
-            onClick={onClose ? handleClose : undefined}
-          >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 30 }}
+            initial={{ scale: 0.85, opacity: 0, y: 40 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 30 }}
-            transition={{ type: "spring", stiffness: 350, damping: 28 }}
+            exit={{ scale: 0.85, opacity: 0, y: 40 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
             className={cn("relative w-full max-w-sm", className)}
           >
-            {/* Main content container - Unified purple background */}
+            {/* Main content container - Whitish 3D chunky style */}
             <div 
               className="relative rounded-3xl overflow-hidden"
               style={{
-                background: "#7E7BDC",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
               }}
             >
               {/* Background sparkles */}
@@ -180,27 +181,31 @@ export function GameModal({
               {showBackButton && onBack && (
                 <motion.button
                   onClick={onBack}
-                  className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                  className="absolute top-3 left-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  style={{
+                    boxShadow: "0 3px 0 #D1D5DB",
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95, y: 2 }}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
-                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
+                  <ChevronLeft className="w-5 h-5 text-gray-600" />
                 </motion.button>
               )}
               
-              {/* Close button - Dark circular style */}
+              {/* Close button - 3D chunky style */}
               {!hideCloseButton && onClose && (
                 <motion.button
                   onClick={handleClose}
-                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-900/80 flex items-center justify-center hover:bg-gray-900 transition-colors"
+                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  style={{
+                    boxShadow: "0 3px 0 #D1D5DB",
+                  }}
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.95, y: 2 }}
                 >
-                  <X className="w-4 h-4 text-white" />
+                  <X className="w-4 h-4 text-gray-600" />
                 </motion.button>
               )}
               
@@ -214,18 +219,22 @@ export function GameModal({
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", delay: 0.1, stiffness: 300 }}
                   >
-                    {/* Glow ring */}
+                    {/* Subtle glow ring */}
                     <motion.div
-                      className="absolute inset-0 rounded-full bg-white/20 blur-lg"
+                      className="absolute inset-0 rounded-full blur-lg"
+                      style={{
+                        background: "radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, transparent 70%)",
+                      }}
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
                     
-                    {/* Icon container */}
+                    {/* Icon container - 3D chunky badge */}
                     <div 
-                      className="relative w-20 h-20 rounded-full flex items-center justify-center bg-white/25"
+                      className="relative w-20 h-20 rounded-full flex items-center justify-center"
                       style={{
-                        boxShadow: "0 6px 0 0 rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.3)",
+                        background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                        boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
                       }}
                     >
                       {iconEmoji ? (
@@ -240,7 +249,7 @@ export function GameModal({
                           {iconEmoji}
                         </motion.span>
                       ) : (
-                        <div className="text-white">
+                        <div className="text-purple-600">
                           {icon}
                         </div>
                       )}
@@ -248,9 +257,9 @@ export function GameModal({
                   </motion.div>
                 )}
                 
-                {/* Title */}
+                {/* Title - Dark text */}
                 <motion.h2 
-                  className="font-display text-2xl font-bold text-white"
+                  className="font-display text-2xl font-bold text-gray-900"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
@@ -258,10 +267,10 @@ export function GameModal({
                   {title}
                 </motion.h2>
                 
-                {/* Subtitle */}
+                {/* Subtitle - Medium gray text */}
                 {subtitle && (
                   <motion.p 
-                    className="text-sm text-white/70 mt-1"
+                    className="text-sm text-gray-500 mt-1"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
@@ -338,7 +347,7 @@ export function GameModalFooter({
       {secondaryLabel && onSecondary && (
         <button
           onClick={onSecondary}
-          className="w-full text-center text-sm text-white/70 py-2 hover:text-white transition-colors"
+          className="w-full text-center text-sm text-gray-500 py-2 hover:text-gray-700 transition-colors font-medium"
         >
           {secondaryLabel}
         </button>
@@ -347,7 +356,7 @@ export function GameModalFooter({
   );
 }
 
-// Stat card component for modals
+// Stat card component for modals - 3D chunky style
 interface GameModalStatProps {
   icon: React.ReactNode;
   value: string | number;
@@ -357,25 +366,32 @@ interface GameModalStatProps {
 
 export function GameModalStat({ icon, value, label, highlight }: GameModalStatProps) {
   return (
-    <div className={cn(
-      "rounded-2xl p-3 text-center",
-      highlight 
-        ? "bg-amber-400/30" 
-        : "bg-white/15"
-    )}>
-      <div className="flex justify-center mb-1 text-white">{icon}</div>
+    <div 
+      className={cn(
+        "rounded-2xl p-3 text-center",
+        highlight 
+          ? "bg-amber-50" 
+          : "bg-gray-100"
+      )}
+      style={{
+        boxShadow: highlight 
+          ? "0 3px 0 #FCD34D, inset 0 1px 2px rgba(255, 255, 255, 0.8)" 
+          : "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255, 255, 255, 0.8)",
+      }}
+    >
+      <div className="flex justify-center mb-1">{icon}</div>
       <p className={cn(
         "text-lg font-bold",
-        highlight ? "text-amber-200" : "text-white"
+        highlight ? "text-amber-600" : "text-gray-900"
       )}>
         {value}
       </p>
-      <p className="text-xs text-white/70">{label}</p>
+      <p className="text-xs text-gray-500">{label}</p>
     </div>
   );
 }
 
-// Info row for modal content
+// Info row for modal content - 3D chunky style
 interface GameModalInfoRowProps {
   icon: React.ReactNode;
   label: string;
@@ -385,12 +401,17 @@ interface GameModalInfoRowProps {
 
 export function GameModalInfoRow({ icon, label, value, color }: GameModalInfoRowProps) {
   return (
-    <div className="flex items-center justify-between p-2.5 bg-white/15 rounded-xl">
+    <div 
+      className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl"
+      style={{
+        boxShadow: "0 2px 0 #E5E7EB, inset 0 1px 2px rgba(255, 255, 255, 0.8)",
+      }}
+    >
       <div className="flex items-center gap-2">
-        <span className={color || "text-white"}>{icon}</span>
-        <span className="text-sm text-white">{label}</span>
+        <span className={color || "text-purple-600"}>{icon}</span>
+        <span className="text-sm text-gray-700">{label}</span>
       </div>
-      <span className="text-sm font-bold text-white">{value}</span>
+      <span className="text-sm font-bold text-gray-900">{value}</span>
     </div>
   );
 }
