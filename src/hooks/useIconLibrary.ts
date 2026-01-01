@@ -367,32 +367,33 @@ export function useIconLibrary() {
 
   // Get a random icon from the category (used as fallback when main icon fails)
   const getRandomIconForCategory = useCallback((categoryId: string, seed: number = 0): string | null => {
+    // If no icons loaded, return null
+    if (iconIndex.length === 0) return null;
+    
     // Filter icons that might match the category
     const categoryKey = categoryId.toLowerCase();
     const categoryKeywords = CATEGORY_ICON_MAP[categoryKey] || [];
     
     // Try to find icons matching category keywords
-    const matchingIcons = iconIndex.filter(icon => {
-      const slugMatch = categoryKeywords.some(kw => icon.slug.includes(kw));
-      const tagMatch = icon.tags.some(tag => 
-        categoryKeywords.some(kw => tag.toLowerCase().includes(kw))
-      );
-      return slugMatch || tagMatch;
-    });
-    
-    if (matchingIcons.length > 0) {
-      // Use seed to get different icon each retry
-      const index = seed % matchingIcons.length;
-      return getIconUrl(matchingIcons[index].file_name);
+    if (categoryKeywords.length > 0) {
+      const matchingIcons = iconIndex.filter(icon => {
+        const slugMatch = categoryKeywords.some(kw => icon.slug.includes(kw));
+        const tagMatch = icon.tags.some(tag => 
+          categoryKeywords.some(kw => tag.toLowerCase().includes(kw))
+        );
+        return slugMatch || tagMatch;
+      });
+      
+      if (matchingIcons.length > 0) {
+        // Use seed to get different icon each retry
+        const index = Math.abs(seed) % matchingIcons.length;
+        return getIconUrl(matchingIcons[index].file_name);
+      }
     }
     
-    // Last resort: just pick any icon based on seed
-    if (iconIndex.length > 0) {
-      const index = (seed * 137) % iconIndex.length; // 137 is prime for better distribution
-      return getIconUrl(iconIndex[index].file_name);
-    }
-    
-    return null;
+    // Fallback: pick any icon based on seed (ALWAYS returns something)
+    const index = Math.abs((seed * 137) % iconIndex.length); // 137 is prime for better distribution
+    return getIconUrl(iconIndex[index].file_name);
   }, [iconIndex]);
 
   return { 

@@ -50,12 +50,13 @@ export function DynamicIcon({
       if (categoryUrl && !failedIconUrls.has(categoryUrl)) {
         return categoryUrl;
       }
-      
-      // Priority 3: Random icon from category as fallback
-      const randomUrl = getRandomIconForCategory(categoryId);
-      if (randomUrl && !failedIconUrls.has(randomUrl)) {
-        return randomUrl;
-      }
+    }
+    
+    // Priority 3: Random icon from category as final fallback
+    // Use categoryId or a generic seed
+    const fallbackUrl = getRandomIconForCategory(categoryId || 'general', Date.now() % 1000);
+    if (fallbackUrl && !failedIconUrls.has(fallbackUrl)) {
+      return fallbackUrl;
     }
 
     return null;
