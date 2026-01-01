@@ -12,6 +12,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { useAIIcon } from "@/hooks/useAIIcon";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -229,7 +230,7 @@ export function QuizGameScreenProd() {
         </button>
       </div>
 
-      {/* VS-Style Players Row */}
+      {/* Players Row - No VS */}
       <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0">
         {/* Player (Left) */}
         <QuizPlayerAvatar
@@ -239,19 +240,6 @@ export function QuizGameScreenProd() {
           state={getPlayerState()}
           size="large"
         />
-
-        {/* VS Badge in Center */}
-        <div className="flex-1 flex items-center justify-center pt-6">
-          <span 
-            className="text-4xl font-black text-white"
-            style={{ 
-              textShadow: "0 4px 20px rgba(0,0,0,0.3)",
-              fontFamily: "'TASolivare', sans-serif",
-            }}
-          >
-            VS
-          </span>
-        </div>
 
         {/* Opponent (Right) */}
         <QuizPlayerAvatar
@@ -263,8 +251,19 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Question Card */}
-      <div className="px-4 flex-shrink-0">
+      {/* Question Card with Overlapping Icon */}
+      <div className="px-4 flex-shrink-0 relative mt-8">
+        {/* 3D Icon - positioned 50% in, 50% out */}
+        {(aiData?.slugs?.[0] || currentQuestion.categoryId) && (
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20">
+            <DynamicIcon 
+              slug={aiData?.slugs?.[0]}
+              categoryId={currentQuestion.categoryId}
+              size={80}
+              className="drop-shadow-lg"
+            />
+          </div>
+        )}
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
@@ -273,8 +272,6 @@ export function QuizGameScreenProd() {
           difficultyColor={DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}
           timerSeconds={timeRemaining}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}
-          iconSlug={aiData?.slugs?.[0]}
-          categoryId={currentQuestion.categoryId}
         />
       </div>
 
@@ -329,7 +326,7 @@ export function QuizGameScreenProd() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <ChunkyButton
-                  variant="success"
+                  variant="ghost"
                   size="xl"
                   onClick={handleNext}
                   className="w-full"

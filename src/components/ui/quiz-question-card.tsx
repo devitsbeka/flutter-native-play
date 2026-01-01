@@ -1,7 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 export type QuizQuestionCardState = "default" | "loading";
 
@@ -16,9 +15,6 @@ interface QuizQuestionCardProps {
   difficultyColor?: string;
   timerSeconds?: number;
   timerMaxSeconds?: number;
-  iconSlug?: string;
-  categoryId?: string;
-  showIcon?: boolean;
 }
 
 // Dynamic font sizing based on question length
@@ -44,9 +40,6 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       difficultyColor,
       timerSeconds,
       timerMaxSeconds = 20,
-      iconSlug,
-      categoryId,
-      showIcon = true,
     },
     ref
   ) => {
@@ -108,25 +101,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           </div>
         )}
 
-        {/* 3D Question Icon */}
-        {showIcon && (iconSlug || categoryId) && (
-          <div className={cn(
-            "flex justify-center pb-2",
-            (timerSeconds !== undefined || difficultyLabel) ? "pt-12" : "pt-4"
-          )}>
-            <DynamicIcon 
-              slug={iconSlug}
-              categoryId={categoryId}
-              size={64}
-              className="drop-shadow-lg"
-            />
-          </div>
-        )}
-
-        {/* Question Text */}
+        {/* Question Text - extra top padding for external overlapping icon */}
         <div className={cn(
-          "px-5 py-4",
-          (timerSeconds !== undefined || difficultyLabel) && !(iconSlug || categoryId) && "pt-10"
+          "px-5 py-4 pt-10",
+          (timerSeconds !== undefined || difficultyLabel) && "pt-12"
         )}>
           {isLoading ? (
             <div className="space-y-2">
