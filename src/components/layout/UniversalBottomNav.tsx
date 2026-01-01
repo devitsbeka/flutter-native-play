@@ -30,13 +30,13 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
       {/* Wave divider at top */}
       <svg 
         className="absolute w-full" 
-        style={{ top: -3, left: 0, right: 0 }}
-        height="4" 
-        viewBox="0 0 1440 4" 
+        style={{ top: -8, left: 0, right: 0 }}
+        height="10" 
+        viewBox="0 0 1440 10" 
         preserveAspectRatio="none"
       >
         <path 
-          d="M0,2 C360,4 720,0 1080,2 C1260,3 1380,1 1440,2 L1440,4 L0,4 Z" 
+          d="M0,8 C180,0 360,10 540,4 C720,0 900,10 1080,6 C1260,2 1380,8 1440,4 L1440,10 L0,10 Z" 
           fill="#F8F9FA"
         />
       </svg>
