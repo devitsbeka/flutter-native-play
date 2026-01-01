@@ -21,29 +21,12 @@ interface QuizPowerUpButtonProps {
 
 const powerUpConfig: Record<PowerUpType, { 
   image: string; 
-  glowColor: string;
   label: string;
 }> = {
-  "5050": { 
-    image: power5050, 
-    glowColor: "#FFBE00",
-    label: "50/50"
-  },
-  freeze: { 
-    image: powerFreeze, 
-    glowColor: "#00BFFF",
-    label: "Freeze"
-  },
-  replace: { 
-    image: powerReplace, 
-    glowColor: "#00E2FF",
-    label: "Replace"
-  },
-  hint: { 
-    image: powerHint, 
-    glowColor: "#AD59FF",
-    label: "Hint"
-  },
+  "5050": { image: power5050, label: "50/50" },
+  freeze: { image: powerFreeze, label: "Freeze" },
+  replace: { image: powerReplace, label: "Replace" },
+  hint: { image: powerHint, label: "Hint" },
 };
 
 const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonProps>(
@@ -60,15 +43,15 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
           disabled={isDisabled || isLoading}
           className={cn(
             "relative w-14 h-14 rounded-full p-1",
-            "border-2 border-[#605CCB]",
+            "border-2 border-white/70",
             "transition-all duration-200",
             isDisabled ? "opacity-40 cursor-not-allowed grayscale" : "cursor-pointer",
-            isLoading ? "bg-[#5A58A8]" : "bg-[#474DAE]"
+            isLoading ? "bg-gradient-to-b from-[#9E8CD9] to-[#7B6BB7]" : "bg-gradient-to-b from-[#A59ADB] to-[#8B7BC7]"
           )}
           style={{
             boxShadow: isDisabled 
               ? "none" 
-              : `0 3px 0 #3D3A8C, 0 0 ${state === "active" ? "15px" : "8px"} ${config.glowColor}40`,
+              : "0 3px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.3)",
           }}
           whileHover={!isDisabled && !isLoading ? { scale: 1.1, y: -2 } : {}}
           whileTap={!isDisabled && !isLoading ? { scale: 0.95, y: 2 } : {}}
@@ -84,7 +67,7 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
                 alt={config.label}
                 className="w-10 h-10 object-contain"
                 style={{
-                  filter: isDisabled ? "none" : `drop-shadow(0 0 6px ${config.glowColor})`,
+                  filter: isDisabled ? "none" : "drop-shadow(0 2px 3px rgba(0,0,0,0.2))",
                 }}
               />
             )}
@@ -97,9 +80,9 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
             className={cn(
               "absolute -top-1 -right-1 w-6 h-6 rounded-full",
               "flex items-center justify-center",
-              "bg-white text-[#474DAE]",
+              "bg-[#FFF8E7] text-[#7C6BBB]",
               "text-sm font-bold",
-              "border-2 border-[#474DAE]"
+              "border-2 border-white/80"
             )}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
