@@ -17,6 +17,7 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
+import islandHill from "@/assets/map/island-hill.png";
 type VideoPhase = "default" | "video-b" | "video-c";
 
 export function VideoAdventureMap() {
@@ -338,6 +339,14 @@ export function VideoAdventureMap() {
           <source src={MAP_VIDEOS.videoC} type="video/mp4" />
         </video>
       </div>
+
+      {/* Island hill image at bottom */}
+      <img 
+        src={islandHill} 
+        alt="" 
+        className="absolute bottom-0 left-0 right-0 w-full z-[5] pointer-events-none"
+        style={{ objectFit: "contain", objectPosition: "bottom" }}
+      />
 
       {/* Content overlay */}
       <div className="relative z-10 flex flex-col h-full">
