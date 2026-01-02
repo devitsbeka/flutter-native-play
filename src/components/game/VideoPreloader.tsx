@@ -1,16 +1,24 @@
-import { useEffect } from "react";
 import { MAP_VIDEOS, getAllVideoUrls } from "@/config/videoConfig";
-
-// Global video preloading state
-let videosLoaded = false;
-const videoLoadCallbacks: (() => void)[] = [];
 
 // Re-export MAP_VIDEOS for backward compatibility
 export { MAP_VIDEOS };
 
+// Global video preloading state
+let videosLoaded = false;
+let preloadingStarted = false;
+const videoLoadCallbacks: (() => void)[] = [];
+
+// Store blob URLs for preloaded videos
+const videoBlobUrls: Map<string, string> = new Map();
+
 // Check if videos are loaded
 export function areVideosLoaded(): boolean {
   return videosLoaded;
+}
+
+// Get blob URL for a video (returns original URL if not cached)
+export function getVideoBlobUrl(originalUrl: string): string {
+  return videoBlobUrls.get(originalUrl) || originalUrl;
 }
 
 // Register callback for when videos are loaded
@@ -22,70 +30,61 @@ export function onVideosLoaded(callback: () => void): void {
   }
 }
 
-// Preloader component
+// Mark loading as complete
+function markComplete() {
+  if (!videosLoaded) {
+    videosLoaded = true;
+    videoLoadCallbacks.forEach((cb) => cb());
+    videoLoadCallbacks.length = 0;
+  }
+}
+
+// Start preloading immediately (called at module load time)
+export function startVideoPreload(): void {
+  if (preloadingStarted) return;
+  preloadingStarted = true;
+
+  const videoUrls = getAllVideoUrls();
+  let loadedCount = 0;
+  const totalVideos = videoUrls.length;
+
+  const checkAllLoaded = () => {
+    loadedCount++;
+    if (loadedCount >= totalVideos) {
+      markComplete();
+    }
+  };
+
+  // Use fetch + blob for better caching
+  videoUrls.forEach(async (url) => {
+    try {
+      const response = await fetch(url, { 
+        cache: 'force-cache',
+        priority: 'high' as RequestPriority
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        videoBlobUrls.set(url, blobUrl);
+      }
+      checkAllLoaded();
+    } catch {
+      // Fallback: just mark as loaded, will use original URL
+      checkAllLoaded();
+    }
+  });
+
+  // Global fallback timeout - don't block forever
+  setTimeout(() => {
+    markComplete();
+  }, 12000);
+}
+
+// Start preloading immediately when this module is imported
+startVideoPreload();
+
+// Empty component for backward compatibility
 export function VideoPreloader() {
-  useEffect(() => {
-    if (videosLoaded) return;
-
-    const videoUrls = getAllVideoUrls();
-    let loadedCount = 0;
-    const totalVideos = videoUrls.length;
-
-    const checkAllLoaded = () => {
-      loadedCount++;
-      if (loadedCount >= totalVideos) {
-        videosLoaded = true;
-        videoLoadCallbacks.forEach((cb) => cb());
-        videoLoadCallbacks.length = 0;
-      }
-    };
-
-    // Create hidden video elements to preload and decode each video
-    videoUrls.forEach((url) => {
-      const video = document.createElement("video");
-      video.preload = "auto";
-      video.muted = true;
-      video.playsInline = true;
-      video.style.cssText = "position:fixed;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;";
-      
-      // When video has enough data to play through
-      video.addEventListener("canplaythrough", () => {
-        checkAllLoaded();
-        // Clean up the hidden element after a delay
-        setTimeout(() => {
-          if (video.parentNode) {
-            video.parentNode.removeChild(video);
-          }
-        }, 1000);
-      }, { once: true });
-
-      // Fallback timeout in case canplaythrough doesn't fire
-      setTimeout(() => {
-        if (loadedCount < totalVideos) {
-          checkAllLoaded();
-        }
-      }, 10000);
-
-      video.src = url;
-      document.body.appendChild(video);
-      
-      // Start loading
-      video.load();
-    });
-
-    // Global fallback timeout
-    const fallbackTimeout = setTimeout(() => {
-      if (!videosLoaded) {
-        videosLoaded = true;
-        videoLoadCallbacks.forEach((cb) => cb());
-        videoLoadCallbacks.length = 0;
-      }
-    }, 15000);
-
-    return () => {
-      clearTimeout(fallbackTimeout);
-    };
-  }, []);
-
   return null;
 }

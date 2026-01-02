@@ -6,7 +6,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { SplashScreen } from "@/components/SplashScreen";
-import { VideoPreloader } from "@/components/game/VideoPreloader";
+// VideoPreloader auto-starts on import - no component needed
+import "@/components/game/VideoPreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { AdminRoute } from "@/components/admin/AdminRoute";
 import { UserPresenceTracker } from "@/components/UserPresenceTracker";
@@ -43,9 +44,6 @@ const App = () => (
       <SoundProvider>
         <SplashScreen>
           <TooltipProvider>
-            {/* Preload all map videos in background */}
-            <VideoPreloader />
-            
             {/* Global persistent background with particles */}
             <GlobalSplineBackground />
             
