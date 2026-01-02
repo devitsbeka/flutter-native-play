@@ -291,10 +291,21 @@ export default function IconAssignment() {
           : 100;
         setBatchProgress(progress);
 
+        // Handle skipped icons in diversify mode
+        if (data.skippedIcon) {
+          toast.info(`გამოტოვებულია: ${data.skippedIcon}, შემდეგი...`);
+        }
+
         // If done, stop
-        if (data.done || data.processed === 0) {
+        if (data.done) {
           const successLabel = mode === 'diversify' ? 'დივერსიფიცირებულია' : 'მინიჭებულია';
           toast.success(`დასრულდა! ${successLabel} ${totalAssigned} აიკონი`);
+          break;
+        }
+        
+        // For assign mode, stop if no more questions
+        if (mode === 'assign' && data.processed === 0) {
+          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი`);
           break;
         }
 
