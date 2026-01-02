@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import geoBattleVideo from "@/assets/videos/geo-battle.mp4";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -68,6 +69,49 @@ export function AirbnbCategoryCard({
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
   const iconSize = 128;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playbackDirection, setPlaybackDirection] = useState<'forward' | 'backward'>('forward');
+
+  // Ping-pong video playback
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      if (playbackDirection === 'backward' && video.currentTime <= 0.05) {
+        setPlaybackDirection('forward');
+        video.playbackRate = 1;
+        video.play();
+      }
+    };
+
+    const handleEnded = () => {
+      if (playbackDirection === 'forward') {
+        setPlaybackDirection('backward');
+        video.playbackRate = -1;
+        // Manually reverse by stepping backward
+        const reverseStep = () => {
+          if (video.currentTime > 0.05) {
+            video.currentTime -= 0.033; // ~30fps step
+            requestAnimationFrame(reverseStep);
+          } else {
+            setPlaybackDirection('forward');
+            video.currentTime = 0;
+            video.play();
+          }
+        };
+        reverseStep();
+      }
+    };
+
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+
+    return () => {
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, [playbackDirection]);
 
   // Generate floating particles
   const particles = useMemo(
@@ -80,6 +124,17 @@ export function AirbnbCategoryCard({
         delay: Math.random() * 3,
         duration: 4 + Math.random() * 3,
         drift: -15 + Math.random() * 30,
+      })),
+    []
+  );
+
+  // Progress bar particles
+  const progressParticles = useMemo(
+    () =>
+      Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        delay: i * 0.4,
+        size: 2 + Math.random() * 2,
       })),
     []
   );
@@ -134,17 +189,20 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Large Centered Icon with Float Animation */}
+        {/* Video with Float Animation - Ping Pong Loop */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center"
           animate={{ y: [0, -4, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <DynamicIcon
-            slug={iconSlug || undefined}
-            categoryId={categoryId}
-            size={iconSize}
-            className="drop-shadow-lg filter brightness-110"
+          <video
+            ref={videoRef}
+            src={geoBattleVideo}
+            autoPlay
+            muted
+            playsInline
+            className="w-32 h-32 object-contain drop-shadow-lg"
+            style={{ filter: 'brightness(1.1)' }}
           />
         </motion.div>
 
@@ -155,7 +213,7 @@ export function AirbnbCategoryCard({
             e.preventDefault();
             onFavoriteClick?.(e);
           }}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors z-10"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors z-10 flex items-center justify-center"
         >
           <Heart
             className={`w-4 h-4 transition-colors ${
@@ -173,16 +231,16 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
-        {/* Leaderboard Rank Badge - positioned at top left */}
+        {/* Leaderboard Rank Badge - same height as heart button */}
         {leaderboardRank && leaderboardRank > 0 && (
           <div 
-            className="absolute top-2 left-2 px-2 py-1 rounded-lg flex items-center gap-1 z-10 bg-white/90 backdrop-blur-sm"
+            className="absolute top-2 left-2 h-8 px-2.5 rounded-full flex items-center gap-1.5 z-10 bg-white/90 backdrop-blur-sm"
             style={{
-              boxShadow: '0 2px 0 rgba(0,0,0,0.1)',
+              boxShadow: '0 2px 0 rgba(0,0,0,0.08)',
             }}
           >
-            <Trophy className="w-3 h-3 text-amber-500" />
-            <span className="text-[11px] font-bold text-slate-700 leading-none">
+            <Trophy className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-bold text-slate-700 leading-none">
               #{leaderboardRank}
             </span>
           </div>
@@ -195,55 +253,81 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
-        {/* 3D Chunky Progress Bar at Bottom */}
+        {/* Elegant 3D Progress Bar with Particles */}
         <div className={`absolute left-3 right-3 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
           <div className="flex items-center gap-2">
-            {/* 3D Progress Bar Container */}
+            {/* Elegant Progress Bar Container */}
             <div className="flex-1 relative">
-              {/* Bottom shadow layer */}
+              {/* Soft shadow underneath */}
               <div 
-                className={`absolute inset-0 rounded-full ${isFull ? 'h-4' : 'h-3'}`}
+                className={`absolute inset-0 rounded-full ${isFull ? 'h-4' : 'h-3.5'}`}
                 style={{
-                  background: 'rgba(0,0,0,0.3)',
+                  background: 'rgba(0,0,0,0.15)',
                   transform: 'translateY(2px)',
+                  filter: 'blur(2px)',
                 }}
               />
-              {/* Track with 3D effect */}
+              {/* Track - elegant frosted glass */}
               <div 
-                className={`relative rounded-full overflow-hidden ${isFull ? 'h-4' : 'h-3'}`}
+                className={`relative rounded-full overflow-hidden ${isFull ? 'h-4' : 'h-3.5'}`}
                 style={{
-                  background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.15) 100%)',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.2)',
+                  background: 'rgba(255,255,255,0.35)',
+                  backdropFilter: 'blur(4px)',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15), 0 1px 0 rgba(255,255,255,0.3)',
                 }}
               >
-                {/* Progress Fill with 3D chunky style */}
+                {/* Progress Fill - golden gradient with glow */}
                 <motion.div 
-                  className="h-full rounded-full relative"
+                  className="h-full rounded-full relative overflow-hidden"
                   initial={{ width: 0 }}
                   animate={{ width: `${progressPercent}%` }}
                   transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                   style={{ 
-                    background: 'linear-gradient(180deg, #FFCC4D 0%, #FFB230 50%, #E59500 100%)',
+                    background: 'linear-gradient(180deg, #FFD666 0%, #FFAA00 50%, #E69500 100%)',
                     boxShadow: progressPercent > 0 
-                      ? 'inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.15), 0 0 8px rgba(255,178,48,0.5)' 
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.5), 0 0 12px rgba(255,170,0,0.4)' 
                       : 'none',
                   }}
                 >
-                  {/* Shine effect */}
+                  {/* Top shine */}
                   <div 
-                    className="absolute inset-0 rounded-full"
+                    className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
                     style={{
-                      background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%)',
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)',
                     }}
                   />
+                  {/* Animated particles inside progress */}
+                  {progressPercent > 10 && progressParticles.map((p) => (
+                    <motion.div
+                      key={p.id}
+                      className="absolute rounded-full bg-white/70"
+                      style={{
+                        width: p.size,
+                        height: p.size,
+                        top: '50%',
+                        marginTop: -p.size / 2,
+                      }}
+                      animate={{
+                        left: ['-5%', '105%'],
+                        opacity: [0, 1, 1, 0],
+                        scale: [0.5, 1, 1, 0.5],
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        delay: p.delay,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  ))}
                 </motion.div>
               </div>
             </div>
-            {/* Progress Text with shadow */}
+            {/* Progress Text */}
             <span 
               className={`font-bold text-white whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}
               style={{
-                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                textShadow: '0 1px 3px rgba(0,0,0,0.4)',
               }}
             >
               {progress}/{totalLevels}
