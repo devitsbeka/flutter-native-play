@@ -210,19 +210,17 @@ function TeamContent() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-lg border border-slate-200 shadow-lg">
-            <ChunkyButton
-              variant="success"
-              size="lg"
-              className="w-full"
-              onClick={() => {
-                playSound("button-click");
-                setShowCreateModal(true);
-              }}
-            >
-              + თამაშის შექმნა
-            </ChunkyButton>
-          </div>
+          <ChunkyButton
+            variant="mint"
+            size="xl"
+            className="w-full"
+            onClick={() => {
+              playSound("button-click");
+              setShowCreateModal(true);
+            }}
+          >
+            + თამაშის შექმნა
+          </ChunkyButton>
         </motion.div>
 
         {/* Friends Section */}
