@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
@@ -336,7 +337,8 @@ export default function PowerUps() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-24">
+    <div className="min-h-screen flex flex-col pb-24">
+      <GlobalSplineBackground />
       {/* Sticky Header */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
