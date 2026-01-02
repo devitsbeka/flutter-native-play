@@ -13,6 +13,8 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 interface AnimateRequest {
   imageUrl: string;
   userId?: string;
+  checkStatus?: boolean;
+  requestId?: string;
 }
 
 interface VyroStatusResponse {
@@ -21,80 +23,88 @@ interface VyroStatusResponse {
   error?: string;
 }
 
-// Poll for video generation result
-async function pollForResult(requestId: string, maxAttempts = 120): Promise<string> {
+// Check status and upload if ready
+async function checkAndUpload(requestId: string, userId: string): Promise<{ status: string; videoUrl?: string }> {
   const statusUrl = "https://api.vyro.ai/v2/video/status";
   
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    console.log(`Polling attempt ${attempt + 1}/${maxAttempts} for request ${requestId}`);
-    
-    const response = await fetch(`${statusUrl}?request_id=${requestId}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${VYRO_API_KEY}`,
-      },
-    });
-
-    if (!response.ok) {
-      console.error("Status check failed:", response.status);
-      throw new Error(`Status check failed: ${response.status}`);
-    }
-
-    const data: VyroStatusResponse = await response.json();
-    console.log(`Status: ${data.status}`);
-
-    if (data.status === "completed" && data.result) {
-      console.log("Video generation completed!");
-      return data.result;
-    }
-
-    if (data.status === "failed" || data.error) {
-      throw new Error(`Video generation failed: ${data.error || 'Unknown error'}`);
-    }
-
-    // Wait 3 seconds before next poll (video generation takes time)
-    await new Promise(resolve => setTimeout(resolve, 3000));
-  }
-
-  throw new Error("Polling timed out waiting for video generation");
-}
-
-// Download video and upload to Supabase storage
-async function uploadToStorage(
-  supabase: any, 
-  videoUrl: string, 
-  userId: string
-): Promise<string> {
-  console.log("Downloading video from:", videoUrl.substring(0, 100));
+  console.log(`Checking status for request ${requestId}`);
   
-  const response = await fetch(videoUrl);
+  const response = await fetch(`${statusUrl}?request_id=${requestId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${VYRO_API_KEY}`,
+    },
+  });
+
   if (!response.ok) {
-    throw new Error(`Failed to download video: ${response.status}`);
+    console.error("Status check failed:", response.status);
+    throw new Error(`Status check failed: ${response.status}`);
   }
 
-  const videoBlob = await response.blob();
-  const fileName = `${userId}/animated-avatar-${Date.now()}.mp4`;
+  const data: VyroStatusResponse = await response.json();
+  console.log(`Status: ${data.status}`, data);
 
-  console.log("Uploading video to storage:", fileName);
+  if (data.status === "completed" && data.result) {
+    console.log("Video generation completed!");
+    
+    // Upload to storage
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      
+      // Download video
+      console.log("Downloading video from:", data.result.substring(0, 100));
+      const videoResponse = await fetch(data.result);
+      if (!videoResponse.ok) {
+        throw new Error(`Failed to download video: ${videoResponse.status}`);
+      }
 
-  const { data, error } = await supabase.storage
-    .from('avatars')
-    .upload(fileName, videoBlob, {
-      contentType: 'video/mp4',
-      upsert: true,
-    });
+      const videoBlob = await videoResponse.blob();
+      const fileName = `${userId}/animated-avatar-${Date.now()}.mp4`;
 
-  if (error) {
-    console.error("Storage upload error:", error);
-    throw new Error(`Failed to upload video: ${error.message}`);
+      console.log("Uploading video to storage:", fileName);
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, videoBlob, {
+          contentType: 'video/mp4',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        throw new Error(`Failed to upload video: ${uploadError.message}`);
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const storedUrl = publicUrlData.publicUrl;
+      console.log("Video uploaded successfully:", storedUrl);
+
+      // Update user profile with animated avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ animated_avatar_url: storedUrl })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error("Profile update error:", updateError);
+      } else {
+        console.log("Profile updated with animated avatar URL");
+      }
+
+      return { status: "completed", videoUrl: storedUrl };
+    }
+    
+    return { status: "completed", videoUrl: data.result };
   }
 
-  const { data: publicUrl } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(fileName);
+  if (data.status === "failed" || data.error) {
+    throw new Error(`Video generation failed: ${data.error || 'Unknown error'}`);
+  }
 
-  console.log("Video uploaded successfully:", publicUrl.publicUrl);
-  return publicUrl.publicUrl;
+  return { status: data.status || "processing" };
 }
 
 serve(async (req) => {
@@ -107,7 +117,16 @@ serve(async (req) => {
       throw new Error("VYRO_API_KEY is not configured");
     }
 
-    const { imageUrl, userId }: AnimateRequest = await req.json();
+    const { imageUrl, userId, checkStatus, requestId }: AnimateRequest = await req.json();
+
+    // If checking status of existing request
+    if (checkStatus && requestId && userId) {
+      const result = await checkAndUpload(requestId, userId);
+      return new Response(
+        JSON.stringify({ success: true, ...result }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
@@ -152,41 +171,27 @@ serve(async (req) => {
     const data = await response.json();
     console.log("Vyro API response:", JSON.stringify(data));
 
-    // Check for request_id or id (Vyro uses 'id' for async requests)
-    if (data.request_id || data.id) {
-      const requestId = data.request_id || data.id;
-      console.log("Got request ID, polling for result:", requestId);
-      const videoUrl = await pollForResult(requestId);
-      
-      // If userId provided, upload to storage
-      if (userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-        const storedUrl = await uploadToStorage(supabase, videoUrl, userId);
-        
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            videoUrl: storedUrl,
-            originalUrl: videoUrl,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
+    // Return request ID immediately - client will poll for status
+    const generatedRequestId = data.request_id || data.id;
+    if (generatedRequestId) {
+      console.log("Returning request ID for polling:", generatedRequestId);
       return new Response(
         JSON.stringify({ 
           success: true, 
-          videoUrl: videoUrl,
+          status: "processing",
+          requestId: generatedRequestId,
+          message: "Video generation started. Please check status periodically."
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // If result is returned directly
+    // If result is returned directly (unlikely for video generation)
     if (data.result) {
       return new Response(
         JSON.stringify({ 
           success: true, 
+          status: "completed",
           videoUrl: data.result,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
