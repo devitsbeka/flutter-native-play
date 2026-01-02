@@ -22,6 +22,7 @@ interface ActionButtonWithParticlesProps {
   particleColor?: string;
   glowColor?: string;
   idleOffset?: number; // Offset for idle animation timing
+  size?: number; // Button size in pixels
 }
 
 // Star SVG component for sparkle particles
@@ -42,7 +43,9 @@ export function ActionButtonWithParticles({
   particleColor = "rgba(255,255,255,0.8)",
   glowColor = "rgba(255,255,255,0.4)",
   idleOffset = 0,
+  size = 73,
 }: ActionButtonWithParticlesProps) {
+  const iconSize = Math.round(size * 0.71); // ~52px for 73px button
   // Generate random particles with varied timing
   const particles = useMemo<Particle[]>(() => {
     return Array.from({ length: 8 }, (_, i) => ({
@@ -64,8 +67,8 @@ export function ActionButtonWithParticles({
       onClick={onClick}
       className="relative rounded-full flex items-center justify-center"
       style={{
-        width: 73,
-        height: 73,
+        width: size,
+        height: size,
         background,
         boxShadow: `0 4px 12px rgba(0,0,0,0.1), 0 3px 0 ${shadowColor}`,
         border: "3px solid rgba(255,255,255,0.9)",
@@ -125,7 +128,7 @@ export function ActionButtonWithParticles({
         src={iconSrc}
         alt={alt}
         className="object-contain relative z-10"
-        style={{ width: 52, height: 52 }}
+        style={{ width: iconSize, height: iconSize }}
         animate={{
           y: [0, -2, 0],
           rotate: [-2, 2, -2],

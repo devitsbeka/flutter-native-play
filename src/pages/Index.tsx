@@ -322,8 +322,118 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar section with orbiting buttons */}
+            {/* Avatar section with curved action buttons above */}
             <div className="relative">
+              {/* Curved action buttons above avatar */}
+              <div 
+                className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-3 pointer-events-auto z-20"
+                style={{ 
+                  top: -45,
+                  width: 320,
+                }}
+                data-walkthrough="powerups"
+              >
+                {/* Gift Button - leftmost, lower */}
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  style={{ marginBottom: 12 }}
+                >
+                  <ActionButtonWithParticles
+                    iconSrc={giftBottleIcon}
+                    alt="Gift"
+                    onClick={() => setIsDailyRewardsOpen(true)}
+                    background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
+                    shadowColor="#FDBA74"
+                    delay={0.4}
+                    particleColor="rgba(253, 186, 116, 0.9)"
+                    glowColor="rgba(253, 186, 116, 0.5)"
+                    idleOffset={0}
+                    size={56}
+                    badge={
+                      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
+                    }
+                  />
+                </motion.div>
+
+                {/* Mission Button - left-center, higher */}
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.35, type: "spring" }}
+                  style={{ marginBottom: 24 }}
+                >
+                  <ActionButtonWithParticles
+                    iconSrc={missionCrystalIcon}
+                    alt="Mission"
+                    onClick={() => setShowMissionsModal(true)}
+                    background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
+                    shadowColor="#7DD3FC"
+                    delay={0.48}
+                    particleColor="rgba(125, 211, 252, 0.9)"
+                    glowColor="rgba(125, 211, 252, 0.5)"
+                    idleOffset={0.7}
+                    size={56}
+                    badge={
+                      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">2</span>
+                    }
+                  />
+                </motion.div>
+
+                {/* Chest Button - right-center, higher */}
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.4, type: "spring" }}
+                  style={{ marginBottom: 24 }}
+                >
+                  <ActionButtonWithParticles
+                    iconSrc={chestBoxIcon}
+                    alt="Chest"
+                    onClick={() => setIsChestModalOpen(true)}
+                    background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
+                    shadowColor="#FCD34D"
+                    delay={0.56}
+                    particleColor="rgba(252, 211, 77, 0.9)"
+                    glowColor="rgba(252, 211, 77, 0.5)"
+                    idleOffset={1.4}
+                    size={56}
+                    badge={
+                      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
+                    }
+                  />
+                </motion.div>
+
+                {/* Powers Button - rightmost, lower */}
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.45, type: "spring" }}
+                  style={{ marginBottom: 12 }}
+                >
+                  <ActionButtonWithParticles
+                    iconSrc={powersIcon}
+                    alt="Powers"
+                    onClick={() => setShowMyPowersModal(true)}
+                    background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                    shadowColor="#C4B5FD"
+                    delay={0.64}
+                    particleColor="rgba(196, 181, 253, 0.9)"
+                    glowColor="rgba(196, 181, 253, 0.5)"
+                    idleOffset={2.1}
+                    size={56}
+                    badge={
+                      totalPowerUps > 0 ? (
+                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                          {totalPowerUps}
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                </motion.div>
+              </div>
+
               <motion.div 
                 animate={isRefreshing ? {
                   rotateY: [0, 360],
@@ -387,80 +497,6 @@ export default function Index() {
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
-                      
-                      {/* Action buttons row - Gift, Mission, Chest, Help */}
-                      <div 
-                        className="flex items-center justify-center gap-4 mt-6 pointer-events-auto" 
-                        data-walkthrough="powerups"
-                      >
-                        {/* Gift Button */}
-                        <ActionButtonWithParticles
-                          iconSrc={giftBottleIcon}
-                          alt="Gift"
-                          onClick={() => setIsDailyRewardsOpen(true)}
-                          background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
-                          shadowColor="#FDBA74"
-                          delay={0.4}
-                          particleColor="rgba(253, 186, 116, 0.9)"
-                          glowColor="rgba(253, 186, 116, 0.5)"
-                          idleOffset={0}
-                          badge={
-                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">1</span>
-                          }
-                        />
-
-                        {/* Mission Button */}
-                        <ActionButtonWithParticles
-                          iconSrc={missionCrystalIcon}
-                          alt="Mission"
-                          onClick={() => setShowMissionsModal(true)}
-                          background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
-                          shadowColor="#7DD3FC"
-                          delay={0.48}
-                          particleColor="rgba(125, 211, 252, 0.9)"
-                          glowColor="rgba(125, 211, 252, 0.5)"
-                          idleOffset={0.7}
-                          badge={
-                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">2</span>
-                          }
-                        />
-
-                        {/* Chest Button */}
-                        <ActionButtonWithParticles
-                          iconSrc={chestBoxIcon}
-                          alt="Chest"
-                          onClick={() => setIsChestModalOpen(true)}
-                          background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
-                          shadowColor="#FCD34D"
-                          delay={0.56}
-                          particleColor="rgba(252, 211, 77, 0.9)"
-                          glowColor="rgba(252, 211, 77, 0.5)"
-                          idleOffset={1.4}
-                          badge={
-                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">1</span>
-                          }
-                        />
-
-                        {/* Powers Button */}
-                        <ActionButtonWithParticles
-                          iconSrc={powersIcon}
-                          alt="Powers"
-                          onClick={() => setShowMyPowersModal(true)}
-                          background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                          shadowColor="#C4B5FD"
-                          delay={0.64}
-                          particleColor="rgba(196, 181, 253, 0.9)"
-                          glowColor="rgba(196, 181, 253, 0.5)"
-                          idleOffset={2.1}
-                          badge={
-                            totalPowerUps > 0 ? (
-                              <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">
-                                {totalPowerUps}
-                              </span>
-                            ) : undefined
-                          }
-                        />
-                      </div>
                     </>
                   )}
                 </motion.div>
