@@ -61,7 +61,7 @@ export function useCurrency() {
     if (!user || amount <= 0) return false;
 
     if (gems < amount) {
-      toast.error("არ გაქვს საკმარისი ლალი!");
+      toast.error("არ გაქვს საკმარისი ალმასი!");
       return false;
     }
 

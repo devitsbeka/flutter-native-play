@@ -53,7 +53,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     }
 
     if (!canAffordGems(frame.price)) {
-      toast.error("არ გაქვს საკმარისი ლალი!");
+      toast.error("არ გაქვს საკმარისი ალმასი!");
       playSound("wrong-answer");
       return;
     }

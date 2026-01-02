@@ -20,7 +20,7 @@ interface ChestRewardModalProps {
 
 const rewards = [
   { icon: coinIcon, isImage: true, label: `${REWARDS.CHEST_COINS} მონეტა`, type: "coins", value: REWARDS.CHEST_COINS, gradient: "from-amber-400 to-yellow-500" },
-  { icon: gemIcon, isImage: true, label: `${REWARDS.CHEST_GEMS} ლალი`, type: "gems", value: REWARDS.CHEST_GEMS, gradient: "from-purple-400 to-pink-500" },
+  { icon: gemIcon, isImage: true, label: `${REWARDS.CHEST_GEMS} ალმასი`, type: "gems", value: REWARDS.CHEST_GEMS, gradient: "from-purple-400 to-pink-500" },
   { icon: "⭐", isImage: false, label: `${REWARDS.CHEST_XP} XP`, type: "xp", value: REWARDS.CHEST_XP, gradient: "from-blue-400 to-cyan-500" },
 ];
 

@@ -5,6 +5,8 @@ import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
+import { useMissions } from "@/hooks/useMissions";
+import { missionTracker } from "@/services/missionTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { Target, ArrowLeft, Crown } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -163,6 +165,7 @@ export function MatchResultScreen() {
   const { user, profile, updateProfile } = useAuth();
   const { addCoins } = useCurrency();
   const { playSound } = useSound();
+  const { updateMissionProgress } = useMissions();
   const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
@@ -284,6 +287,24 @@ export function MatchResultScreen() {
               setShowLevelUp(true);
             }, isWin ? 1500 : 500);
           });
+        }
+
+        // Update mission progress
+        const sessionData = missionTracker.getSessionData();
+        
+        // Update correct answers mission
+        if (sessionData.correctAnswers > 0) {
+          await updateMissionProgress("answer_correct", sessionData.correctAnswers);
+        }
+        
+        // Update win games mission
+        if (isWin) {
+          await updateMissionProgress("win_games", 1);
+        }
+        
+        // Update categories played mission
+        if (sessionData.categoriesPlayed > 0) {
+          await updateMissionProgress("play_categories", sessionData.categoriesPlayed);
         }
       };
 

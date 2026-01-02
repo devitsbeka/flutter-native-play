@@ -17,12 +17,12 @@ interface LuckySpinModalProps {
 
 const WHEEL_SEGMENTS = [
   { label: "50 მონეტა", color: "#FFD700", value: 50, type: "coins", icon: coinIcon },
-  { label: "1 ლალი", color: "#A855F7", value: 1, type: "gems", icon: gemIcon },
+  { label: "1 ალმასი", color: "#A855F7", value: 1, type: "gems", icon: gemIcon },
   { label: "100 მონეტა", color: "#22C55E", value: 100, type: "coins", icon: coinIcon },
   { label: "ძალა", color: "#3B82F6", value: 1, type: "powerup", icon: "⚡" },
   { label: "25 მონეტა", color: "#EC4899", value: 25, type: "coins", icon: coinIcon },
   { label: "200 მონეტა", color: "#F97316", value: 200, type: "coins", icon: coinIcon },
-  { label: "3 ლალი", color: "#8B5CF6", value: 3, type: "gems", icon: gemIcon },
+  { label: "3 ალმასი", color: "#8B5CF6", value: 3, type: "gems", icon: gemIcon },
   { label: "75 მონეტა", color: "#14B8A6", value: 75, type: "coins", icon: coinIcon },
 ];
 
