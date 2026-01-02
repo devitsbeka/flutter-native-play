@@ -93,29 +93,31 @@ function FriendStoryAvatar({ friend, index, onClick }: FriendStoryAvatarProps) {
       whileTap={{ scale: 0.95 }}
     >
       {/* Avatar with gradient ring */}
-      <div className="relative">
-        {/* Gradient ring */}
+      <div className="relative w-16 h-16">
+        {/* Gradient ring background */}
         <div 
-          className="absolute -inset-1 rounded-full"
+          className="absolute inset-0 rounded-full p-[3px]"
           style={{
             background: friend.isOnline 
               ? "linear-gradient(135deg, #9333EA 0%, #EC4899 50%, #F97316 100%)"
               : "linear-gradient(135deg, #94A3B8 0%, #CBD5E1 100%)",
-            padding: 3,
           }}
         >
-          <div className="w-full h-full rounded-full bg-white" />
+          {/* White inner ring */}
+          <div className="w-full h-full rounded-full bg-white p-[2px]">
+            {/* Avatar container - ensures perfect circle crop */}
+            <div className="w-full h-full rounded-full overflow-hidden">
+              <SmartAvatar
+                avatarUrl={friend.avatarUrl}
+                animatedAvatarUrl={friend.animatedAvatarUrl}
+                fallback={friend.nickname}
+                size="lg"
+                className="w-full h-full object-cover"
+                playOnHover={true}
+              />
+            </div>
+          </div>
         </div>
-        
-        {/* Avatar */}
-        <SmartAvatar
-          avatarUrl={friend.avatarUrl}
-          animatedAvatarUrl={friend.animatedAvatarUrl}
-          fallback={friend.nickname}
-          size="lg"
-          className="relative z-10 w-14 h-14"
-          playOnHover={true}
-        />
         
         {/* Online indicator dot */}
         <div 

@@ -34,17 +34,6 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">შენი ოთახები</span>
-        {onCreateRoom && (
-          <motion.button
-            onClick={onCreateRoom}
-            className="text-sm font-semibold text-purple-600 px-3 py-1 rounded-full bg-purple-100 hover:bg-purple-200 transition-colors flex items-center gap-1"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Plus className="w-4 h-4" />
-            შექმნა
-          </motion.button>
-        )}
       </div>
 
       {/* Rooms List */}
@@ -127,16 +116,17 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       </div>
 
       {/* Participants */}
-      <div className="flex items-center gap-1 mb-3">
+      <div className="flex items-center gap-1 mb-4">
         <div className="flex -space-x-2">
           {room.participants.slice(0, 4).map((p, i) => (
-            <SmartAvatar
-              key={p.user_id}
-              avatarUrl={p.avatar_url}
-              fallback={p.nickname}
-              size="sm"
-              className="w-7 h-7 border-2 border-white"
-            />
+            <div key={p.user_id} className="w-7 h-7 rounded-full overflow-hidden border-2 border-white flex-shrink-0">
+              <SmartAvatar
+                avatarUrl={p.avatar_url}
+                fallback={p.nickname}
+                size="sm"
+                className="w-full h-full object-cover"
+              />
+            </div>
           ))}
         </div>
         {room.participants.length > 4 && (
