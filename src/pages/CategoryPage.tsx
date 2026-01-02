@@ -10,6 +10,8 @@ import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { CategoryLeaderboard } from "@/components/category/CategoryLeaderboard";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
@@ -159,8 +161,43 @@ export default function CategoryPage() {
 
 
       <div className="min-h-screen flex flex-col">
+        {/* Blurred Video Background for Header */}
+        <div className="absolute inset-x-0 top-0 h-[45vh] overflow-hidden">
+          {/* Video layer */}
+          <div className="absolute inset-0 scale-125">
+            <PingPongVideo 
+              src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
+            />
+          </div>
+          
+          {/* Heavy blur overlay */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+            }}
+          />
+          
+          {/* White fade masks for barely visible effect */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,255,0.5) 70%, rgba(255,255,255,0.85) 100%)',
+            }}
+          />
+          
+          {/* Extra top white fade */}
+          <div 
+            className="absolute inset-x-0 top-0 h-24"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, transparent 100%)',
+            }}
+          />
+        </div>
+
         {/* Header */}
-        <div className="px-5 pb-6 pt-12">
+        <div className="relative px-5 pb-6 pt-12 z-10">
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate("/discover")}
@@ -196,7 +233,7 @@ export default function CategoryPage() {
         </div>
 
         {/* Tabs */}
-        <div className="px-5 mb-4">
+        <div className="relative px-5 mb-4 z-10">
           <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
             <button
               onClick={() => setActiveTab("leaderboard")}
