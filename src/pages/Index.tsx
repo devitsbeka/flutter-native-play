@@ -509,7 +509,7 @@ export default function Index() {
                           boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
                         }}
                       >
-                        <img src={coinIcon} alt="Coins" className="w-8 h-8" />
+                        <img src={coinIcon} alt="Coins" className="w-10 h-10" />
                       </div>
                       <span className="font-bold text-gray-700 text-lg">
                         {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
@@ -522,7 +522,7 @@ export default function Index() {
                           boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
                         }}
                       >
-                        <img src={gemIcon} alt="Gems" className="w-8 h-8" />
+                        <img src={gemIcon} alt="Gems" className="w-10 h-10" />
                       </div>
                       <span className="font-bold text-gray-700 text-lg">
                         {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
