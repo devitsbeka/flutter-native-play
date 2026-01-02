@@ -260,16 +260,18 @@ export function AirbnbCategoryCard({
 
             {/* Progress Bar Area with gradient mask */}
             <div className={`absolute left-0 right-0 ${isFull ? 'bottom-0' : 'bottom-0'}`}>
-              {/* Gradient mask matching container color */}
+              {/* Strong gradient mask for video fade */}
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-x-0 pointer-events-none"
                 style={{
-                  background: `linear-gradient(180deg, transparent 0%, ${pastel.base}ee 40%, ${pastel.base} 100%)`,
+                  bottom: 0,
+                  height: isFull ? '120px' : '100px',
+                  background: `linear-gradient(180deg, transparent 0%, ${pastel.base}40 20%, ${pastel.base}aa 45%, ${pastel.base}dd 65%, ${pastel.base} 85%)`,
                 }}
               />
               
               {/* Progress bar content */}
-              <div className={`relative px-4 ${isFull ? 'pb-4 pt-8' : 'pb-3 pt-6'}`}>
+              <div className={`relative px-4 ${isFull ? 'pb-4 pt-12' : 'pb-3 pt-10'}`}>
                 {/* Progress bar with integrated count */}
                 <div 
                   className={`relative rounded-full overflow-hidden ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70`}
