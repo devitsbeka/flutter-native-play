@@ -265,18 +265,55 @@ export function AvatarCircle({
       </div>
 
 
-      {/* Level badge at bottom center - 3D chunky white style */}
+      {/* Level badge at bottom center - 3D chunky purple style with particles */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20" style={{ marginBottom: -15 }}>
         <div 
-          className="flex flex-col items-center px-5 py-2 rounded-full whitespace-nowrap"
+          className="relative flex flex-col items-center px-5 py-2 rounded-full whitespace-nowrap overflow-hidden"
           style={{
-            background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
-            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
-            border: "3px solid rgba(255,255,255,0.95)",
+            background: "linear-gradient(180deg, #9B87F5 0%, #7E69AB 50%, #6E59A5 100%)",
+            boxShadow: "inset 0 4px 8px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.2), 0 5px 0 #4A3D70, 0 8px 16px rgba(0,0,0,0.25)",
+            border: "3px solid rgba(255,255,255,0.3)",
           }}
         >
-          <span className="font-bold text-gray-800 text-base">Level {level}</span>
-          <span className="text-gray-500 text-xs">
+          {/* Animated particles for 3D depth */}
+          <div className="absolute inset-0 overflow-hidden rounded-full">
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  width: Math.random() * 4 + 2,
+                  height: Math.random() * 4 + 2,
+                  background: `rgba(255,255,255,${Math.random() * 0.4 + 0.2})`,
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [0, -15, 0],
+                  x: [0, Math.random() * 10 - 5, 0],
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: Math.random() * 2 + 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Glossy highlight */}
+          <div 
+            className="absolute inset-x-0 top-0 h-1/2 rounded-t-full opacity-30"
+            style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+          
+          <span className="relative font-bold text-white text-base drop-shadow-sm">Level {level}</span>
+          <span className="relative text-white/80 text-xs drop-shadow-sm">
             {xpCurrent !== undefined ? xpCurrent.toLocaleString() : 0} / {xpTotal !== undefined ? xpTotal.toLocaleString() : 0} XP
           </span>
         </div>
