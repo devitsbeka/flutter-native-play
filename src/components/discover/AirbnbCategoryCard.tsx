@@ -1,7 +1,8 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { ShaderVideoLoop } from "@/components/shared/ShaderVideoLoop";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -18,7 +19,7 @@ interface AirbnbCategoryCardProps {
   imageUrl?: string;
   isFavorite?: boolean;
   leaderboardRank?: number | null;
-  videoUrl?: string; // Optional video URL for specific categories
+  videoUrl?: string;
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
   variant?: "compact" | "full";
@@ -68,83 +69,6 @@ export function AirbnbCategoryCard({
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
   const iconSize = 128;
-  
-  // Crossfade looping: two videos that fade into each other
-  const videoARef = useRef<HTMLVideoElement>(null);
-  const videoBRef = useRef<HTMLVideoElement>(null);
-  const [activeVideo, setActiveVideo] = useState<'A' | 'B'>('A');
-  const [opacityA, setOpacityA] = useState(1);
-  const [opacityB, setOpacityB] = useState(0);
-  const crossfadeDuration = 1.0; // seconds for crossfade
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!videoUrl) return;
-
-    const videoA = videoARef.current;
-    const videoB = videoBRef.current;
-    if (!videoA || !videoB) return;
-
-    let isMounted = true;
-
-    const handleTimeUpdate = () => {
-      if (!isMounted) return;
-      
-      const active = activeVideo === 'A' ? videoA : videoB;
-      const inactive = activeVideo === 'A' ? videoB : videoA;
-      
-      if (!active.duration || isNaN(active.duration)) return;
-      
-      const timeRemaining = active.duration - active.currentTime;
-      
-      // Start crossfade when approaching end
-      if (timeRemaining <= crossfadeDuration && timeRemaining > 0) {
-        const fadeProgress = 1 - (timeRemaining / crossfadeDuration);
-        
-        if (activeVideo === 'A') {
-          setOpacityA(1 - fadeProgress);
-          setOpacityB(fadeProgress);
-        } else {
-          setOpacityB(1 - fadeProgress);
-          setOpacityA(fadeProgress);
-        }
-        
-        // Start the inactive video if not playing
-        if (inactive.paused) {
-          inactive.currentTime = 0;
-          inactive.play().catch(() => {});
-        }
-      }
-    };
-
-    const handleEnded = () => {
-      if (!isMounted) return;
-      
-      // Swap active video
-      setActiveVideo(prev => prev === 'A' ? 'B' : 'A');
-      
-      // Reset the one that just ended
-      const ended = activeVideo === 'A' ? videoA : videoB;
-      ended.currentTime = 0;
-    };
-
-    videoA.addEventListener('timeupdate', handleTimeUpdate);
-    videoB.addEventListener('timeupdate', handleTimeUpdate);
-    videoA.addEventListener('ended', handleEnded);
-    videoB.addEventListener('ended', handleEnded);
-
-    // Start video A
-    videoA.play().catch(() => {});
-
-    return () => {
-      isMounted = false;
-      videoA.removeEventListener('timeupdate', handleTimeUpdate);
-      videoB.removeEventListener('timeupdate', handleTimeUpdate);
-      videoA.removeEventListener('ended', handleEnded);
-      videoB.removeEventListener('ended', handleEnded);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [videoUrl, activeVideo]);
 
   const particles = useMemo(
     () =>
@@ -219,26 +143,9 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Video (if provided) or Icon */}
+        {/* Video (WebGL shader-based seamless loop) or Icon */}
         {videoUrl ? (
-          <>
-            <video
-              ref={videoARef}
-              src={videoUrl}
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-              style={{ opacity: opacityA }}
-            />
-            <video
-              ref={videoBRef}
-              src={videoUrl}
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-              style={{ opacity: opacityB }}
-            />
-          </>
+          <ShaderVideoLoop src={videoUrl} />
         ) : (
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
