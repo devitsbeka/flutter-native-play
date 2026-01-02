@@ -14,14 +14,14 @@ interface AvatarRequest {
 const AVATAR_PROMPT = `Create a fun, friendly 3D avatar portrait based on this photo.
 
 EXPRESSION (Very Important):
-- Give them a warm, friendly SMILE - they should look happy and approachable
-- Bright, sparkling eyes with a hint of joy
+- Give them a warm, friendly toothless SMILE - they should look happy and approachable
+- Bright, big and wide open sparkling eyes with a hint of joy
 - Confident, positive expression - NOT sad or neutral
 - Think "profile picture you'd be proud of"
 
 LIKENESS (Important):
-- Preserve their face shape, jawline, and bone structure
-- Match their exact skin tone, hair color, and hairstyle
+- Preserve their face shape, jawline, and bone structure but make more beautiful
+- Match their exact skin tone, hair color, and hairstyle but make more beautiful
 - Keep their eye color and general facial features recognizable
 - The person should be recognizable but idealized
 
