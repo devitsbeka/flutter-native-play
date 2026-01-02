@@ -189,22 +189,15 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Video - Full Width with Float Animation - Ping Pong Loop */}
-        <motion.div
-          className="absolute inset-0 flex items-center justify-center px-4 py-8"
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <video
-            ref={videoRef}
-            src={geoBattleVideo}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-contain drop-shadow-lg rounded-lg"
-            style={{ filter: 'brightness(1.1)' }}
-          />
-        </motion.div>
+        {/* Video - Full Width Background - Ping Pong Loop */}
+        <video
+          ref={videoRef}
+          src={geoBattleVideo}
+          autoPlay
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
         {/* Heart/Favorite Button */}
         <button
