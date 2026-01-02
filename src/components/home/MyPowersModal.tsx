@@ -47,7 +47,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
       >
         <div className="space-y-6">
           {/* Power-ups grid */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-3 p-2 overflow-visible">
             {POWER_UP_ORDER.map((powerUp) => (
               <motion.div
                 key={powerUp.hookType}
@@ -85,7 +85,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
               whileTap={{ scale: 0.98, y: 0 }}
             >
               <img src={coinIcon} alt="" className="w-6 h-6" />
-              <span className="font-bold text-white drop-shadow-sm">
+              <span className="font-bold text-amber-900">
                 ყიდვა მონეტებით
               </span>
             </motion.button>
@@ -102,7 +102,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
             >
               <img src={gemIcon} alt="" className="w-6 h-6" />
               <span className="font-bold text-white drop-shadow-sm">
-                ყიდვა ლალებით
+                ყიდვა ალმასებით
               </span>
             </motion.button>
           </div>
