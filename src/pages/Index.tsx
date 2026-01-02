@@ -350,7 +350,15 @@ export default function Index() {
                   className="pointer-events-auto cursor-pointer"
                   onClick={() => user && setIsAvatarModalOpen(true)}
                 >
-                  <AvatarCircle avatarUrl={profile?.avatar_url} size={250} level={levelInfo.level} totalStars={totalStars} />
+                  <AvatarCircle 
+                    avatarUrl={profile?.avatar_url} 
+                    size={280} 
+                    level={levelInfo.level} 
+                    totalStars={totalStars}
+                    xpProgress={levelInfo.progress}
+                    xpCurrent={levelInfo.xpInCurrentLevel}
+                    xpTotal={levelInfo.xpNeededForNextLevel}
+                  />
                 </div>
               </motion.div>
 
@@ -413,90 +421,6 @@ export default function Index() {
                       <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{gems.toLocaleString()}</span>
                     </motion.div>
                   </div>
-                  
-                  {/* 3D Chunky Progress bar */}
-                  <div 
-                    className="relative h-9 rounded-full overflow-hidden w-[280px] mt-4"
-                    style={{
-                      background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                      boxShadow: "inset 0 4px 8px rgba(140,120,180,0.2), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-                      border: "3px solid rgba(255,255,255,0.9)",
-                    }}
-                  >
-                        {/* Dot indicators on the left */}
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex gap-1.5 z-10">
-                          <div className="w-2 h-2 rounded-full bg-purple-400" />
-                          <div className="w-2 h-2 rounded-full bg-purple-400" />
-                          <div className="w-2 h-2 rounded-full bg-purple-400" />
-                        </div>
-                        
-                        {/* Progress fill with 3D depth */}
-                        {levelInfo.progress > 0 && (
-                          <motion.div 
-                            className="absolute inset-1 rounded-full overflow-hidden"
-                            style={{
-                              width: `calc(${levelInfo.progress}% - 8px)`,
-                              background: "linear-gradient(180deg, #C084FC 0%, #A855F7 40%, #9333EA 100%)",
-                              boxShadow: "inset 0 3px 6px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(100,50,180,0.3), 0 0 20px rgba(168,85,247,0.4)",
-                            }}
-                            initial={{ width: 0 }}
-                            animate={{ width: `calc(${levelInfo.progress}% - 8px)` }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                          >
-                            {/* Sparkle particles inside filled area */}
-                            {[...Array(6)].map((_, i) => (
-                              <motion.div
-                                key={i}
-                                className="absolute rounded-full"
-                                style={{
-                                  width: i % 2 === 0 ? 5 : 4,
-                                  height: i % 2 === 0 ? 5 : 4,
-                                  background: "rgba(255,255,255,0.95)",
-                                  boxShadow: "0 0 8px rgba(255,255,255,0.9)",
-                                  left: `${12 + (i * 14)}%`,
-                                  top: "50%",
-                                  transform: "translateY(-50%)",
-                                }}
-                                animate={{
-                                  y: [-3, 3, -3],
-                                  opacity: [0.5, 1, 0.5],
-                                  scale: [0.9, 1.1, 0.9],
-                                }}
-                                transition={{
-                                  duration: 1.5 + (i * 0.2),
-                                  repeat: Infinity,
-                                  ease: "easeInOut",
-                                  delay: i * 0.15,
-                                }}
-                              />
-                            ))}
-                            
-                            {/* Shine effect */}
-                            <motion.div
-                              className="absolute inset-0 rounded-full"
-                              style={{
-                                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",
-                              }}
-                              animate={{
-                                x: ["-100%", "200%"],
-                              }}
-                              transition={{
-                                duration: 2.5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                repeatDelay: 1.5,
-                              }}
-                            />
-                          </motion.div>
-                        )}
-                        
-                        {/* XP text - single layer with drop shadow for visibility */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                          <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-                            {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                          </span>
-                        </div>
-                      </div>
                       
                       {/* Action buttons row - Gift, Mission, Chest, Help */}
                       <div 
