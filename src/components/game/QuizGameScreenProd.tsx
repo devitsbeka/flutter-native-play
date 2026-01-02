@@ -58,6 +58,8 @@ export function QuizGameScreenProd() {
     playerPowerUps,
     hiddenAnswers,
     playerTimerBonus,
+    playerTimerFrozen,
+    playerFreezeEndTime,
     answerQuestion,
     nextQuestion,
     usePowerUp,
@@ -67,6 +69,7 @@ export function QuizGameScreenProd() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [opponentAvatarIndex] = useState(() => Math.floor(Math.random() * botAvatars.length));
+  const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -92,11 +95,23 @@ export function QuizGameScreenProd() {
     }
   }, [phase]);
 
-  // Timer countdown
+  // Timer countdown - pauses when frozen
   useEffect(() => {
     if (phase !== "playing" || answerRevealed || !currentQuestion) return;
 
     const interval = setInterval(() => {
+      // Check if timer is frozen
+      if (playerTimerFrozen && playerFreezeEndTime) {
+        const remaining = Math.max(0, Math.ceil((playerFreezeEndTime - Date.now()) / 1000));
+        setFreezeTimeLeft(remaining);
+        if (remaining <= 0) {
+          // Freeze expired - timer will resume on next tick
+          setFreezeTimeLeft(0);
+        }
+        return; // Don't decrement timer while frozen
+      }
+      
+      setFreezeTimeLeft(0);
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
@@ -108,7 +123,7 @@ export function QuizGameScreenProd() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [phase, answerRevealed, currentQuestion, currentQuestionIndex]);
+  }, [phase, answerRevealed, currentQuestion, currentQuestionIndex, playerTimerFrozen, playerFreezeEndTime]);
 
   const handleAnswer = useCallback(
     (answer: string | null) => {
@@ -268,11 +283,12 @@ export function QuizGameScreenProd() {
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
-          state="default"
+          state={playerTimerFrozen ? "frozen" : "default"}
           difficultyLabel={DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
           difficultyColor={DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}
           timerSeconds={timeRemaining}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}
+          freezeTimeLeft={freezeTimeLeft}
         />
       </div>
 

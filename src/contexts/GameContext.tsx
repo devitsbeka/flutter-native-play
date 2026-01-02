@@ -43,6 +43,8 @@ interface GameState {
   activePowerUp: PowerUpType | null;
   opponentFrozen: boolean;
   opponentFreezeEndTime: number | null;
+  playerTimerFrozen: boolean;
+  playerFreezeEndTime: number | null;
   playerTimerBonus: number;
   hiddenAnswers: string[];
   replacedAnswer: { old: string; new: string } | null;
@@ -92,6 +94,8 @@ const initialState: GameState = {
   activePowerUp: null,
   opponentFrozen: false,
   opponentFreezeEndTime: null,
+  playerTimerFrozen: false,
+  playerFreezeEndTime: null,
   playerTimerBonus: 0,
   hiddenAnswers: [],
   replacedAnswer: null,
@@ -166,6 +170,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       activePowerUp: null,
       opponentFrozen: false,
       opponentFreezeEndTime: null,
+      playerTimerFrozen: false,
+      playerFreezeEndTime: null,
       playerTimerBonus: 0,
       hiddenAnswers: [],
       replacedAnswer: null,
@@ -205,8 +211,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           break;
         }
         case "freeze": {
+          // Freeze player's timer for 10 seconds
+          updates.playerTimerFrozen = true;
+          updates.playerFreezeEndTime = Date.now() + 10000;
+          // Also freeze opponent (optional bonus effect)
           updates.opponentFrozen = true;
-          updates.opponentFreezeEndTime = Date.now() + 5000;
+          updates.opponentFreezeEndTime = Date.now() + 10000;
           break;
         }
         case "replace": {
@@ -219,7 +229,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           break;
         }
         case "time-drain": {
-          updates.playerTimerBonus = prev.playerTimerBonus + 3;
+          // Add 10 seconds to timer
+          updates.playerTimerBonus = prev.playerTimerBonus + 10;
           break;
         }
       }
@@ -309,6 +320,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         activePowerUp: null,
         opponentFrozen: false,
         opponentFreezeEndTime: null,
+        playerTimerFrozen: false,
+        playerFreezeEndTime: null,
         playerTimerBonus: 0,
         hiddenAnswers: [],
         replacedAnswer: null,
