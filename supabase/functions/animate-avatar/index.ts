@@ -159,7 +159,7 @@ serve(async (req) => {
 
     // Create FormData for the request
     const formData = new FormData();
-    formData.append("image", imageBlob, "avatar.png");
+    formData.append("image_url", imageBlob, "avatar.png");
     
     // Animation prompt for subtle avatar movements
     formData.append("prompt", "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly and calm expression. Smooth natural animation.");
