@@ -109,7 +109,7 @@ export function QuickPlayModal({
 
                 {/* Game Mode Indicator */}
                 <div 
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap"
                   style={{
                     background: friend.isOnline 
                       ? "linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)"
