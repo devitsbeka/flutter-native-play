@@ -29,13 +29,14 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an icon matching assistant. Your job is to analyze trivia questions and identify a GENERAL TOPIC icon - NOT the specific answer.
+    const systemPrompt = `You are an icon matching assistant. Your job is to analyze trivia questions (in any language including Georgian) and identify a GENERAL TOPIC icon - NOT the specific answer.
 
 CRITICAL RULES:
 - NEVER suggest icons that could hint at the answer
-- Focus on the CATEGORY or GENERAL THEME (science, history, geography, animals, sports, etc.)
+- Focus on the CATEGORY or GENERAL THEME (science, history, geography, animals, insects, sports, etc.)
 - For a question about "which animal has the longest tongue?" - suggest "animal", "wildlife", "nature" - NOT the specific animal
 - For a question about "who invented the telephone?" - suggest "history", "invention", "technology" - NOT "telephone" or the inventor
+- For a question about insects/bugs - suggest "insect", "bug", "beetle", "nature" - NOT the specific insect
 - The icon should represent the SUBJECT AREA, not the specific answer
 
 Return ONLY valid JSON with no markdown formatting.`;
@@ -46,6 +47,7 @@ Question: "${question}"
 ${category ? `Category: "${category}"` : ''}
 
 IMPORTANT: The icon must NOT hint at the answer. Focus only on the broad topic/category.
+The question may be in Georgian (ქართული) or any other language - analyze the meaning, not just the words.
 
 Return JSON in this exact format:
 {
@@ -55,17 +57,19 @@ Return JSON in this exact format:
 }
 
 Rules:
-- slugs: 3-5 GENERAL topic icon slugs (e.g., "animal", "science", "globe", "trophy")
-- keywords: 5-10 BROAD category keywords (e.g., "wildlife", "biology", "geography")
-- mainConcept: The general topic in 2-4 words (e.g., "Animal Kingdom", "World History")
+- slugs: 3-5 GENERAL topic icon slugs in English (e.g., "animal", "insect", "science", "globe", "trophy")
+- keywords: 5-10 BROAD category keywords in English (e.g., "wildlife", "biology", "geography", "bug")
+- mainConcept: The general topic in 2-4 words in English (e.g., "Animal Kingdom", "Insects and Bugs")
 
 Examples:
+- Question about which insect spreads disease → slugs: ["insect", "bug", "beetle", "nature"], keywords: ["insect", "bug", "biology", "creature", "nature"]
 - Question about octopus blood → slugs: ["animal", "marine-life", "ocean"], keywords: ["sea", "wildlife", "creature", "biology"]
 - Question about Einstein → slugs: ["science", "physics", "atom"], keywords: ["scientist", "history", "discovery"]
 - Question about Eiffel Tower → slugs: ["landmark", "travel", "architecture"], keywords: ["building", "city", "monument"]
+- Question about birds → slugs: ["bird", "animal", "nature", "wildlife"], keywords: ["bird", "flying", "feather", "nature"]
 
-WRONG: Suggesting "octopus", "einstein", "eiffel-tower" - these hint at the answer!
-CORRECT: Suggesting general category icons like "science", "animal", "landmark"`;
+WRONG: Suggesting the specific answer (like "mosquito", "einstein", "eiffel-tower") - these hint at the answer!
+CORRECT: Suggesting general category icons like "insect", "science", "landmark"`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
