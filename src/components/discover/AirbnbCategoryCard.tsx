@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { ShaderVideoLoop } from "@/components/shared/ShaderVideoLoop";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -143,9 +143,9 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Video (WebGL shader-based seamless loop) or Icon */}
+        {/* Video (ping-pong seamless loop) or Icon */}
         {videoUrl ? (
-          <ShaderVideoLoop src={videoUrl} />
+          <PingPongVideo src={videoUrl} />
         ) : (
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
