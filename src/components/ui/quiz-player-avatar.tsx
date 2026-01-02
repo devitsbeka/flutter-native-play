@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +7,8 @@ export type QuizPlayerAvatarState = "default" | "active" | "correct" | "wrong" |
 export type QuizPlayerAvatarSize = "default" | "large" | "xlarge";
 
 interface QuizPlayerAvatarProps {
-  avatarUrl?: string;
+  avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
   score?: number;
   position?: "left" | "right";
   state?: QuizPlayerAvatarState;
@@ -15,8 +17,14 @@ interface QuizPlayerAvatarProps {
 }
 
 const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>(
-  ({ avatarUrl, score = 0, position = "left", state = "default", size = "default", className }, ref) => {
+  ({ avatarUrl, animatedAvatarUrl, score = 0, position = "left", state = "default", size = "default", className }, ref) => {
     const isLoading = state === "loading";
+    const [showVideo, setShowVideo] = useState(false);
+    const [videoLoaded, setVideoLoaded] = useState(false);
+    const [videoError, setVideoError] = useState(false);
+    const [isReversing, setIsReversing] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const animationFrameRef = useRef<number | null>(null);
     
     const getDimensions = () => {
       switch (size) {
@@ -54,6 +62,54 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
       right: "#F2FFFB",
     };
 
+    // Ping-pong reverse playback using requestAnimationFrame
+    const reversePlay = () => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const step = () => {
+        if (video.currentTime <= 0.05) {
+          video.currentTime = 0;
+          setIsReversing(false);
+          video.play().catch(() => setVideoError(true));
+          return;
+        }
+        
+        video.currentTime = Math.max(0, video.currentTime - 0.033);
+        animationFrameRef.current = requestAnimationFrame(step);
+      };
+
+      animationFrameRef.current = requestAnimationFrame(step);
+    };
+
+    const handleVideoEnded = () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        setIsReversing(true);
+        reversePlay();
+      }
+    };
+
+    // Cleanup animation frame on unmount
+    useEffect(() => {
+      return () => {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+      };
+    }, []);
+
+    // Auto-play video when component mounts if animated avatar exists
+    useEffect(() => {
+      if (animatedAvatarUrl && videoRef.current && !videoError && videoLoaded) {
+        setShowVideo(true);
+        videoRef.current.play().catch(() => setVideoError(true));
+      }
+    }, [animatedAvatarUrl, videoError, videoLoaded]);
+
+    const hasAnimatedAvatar = animatedAvatarUrl && !videoError;
+    const displayUrl = avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=player";
+
     return (
       <motion.div
         ref={ref}
@@ -88,11 +144,40 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
             {isLoading ? (
               <div className="w-full h-full bg-[#E5E4FF] animate-pulse" />
             ) : (
-              <img
-                src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=player"}
-                alt="Player avatar"
-                className="w-full h-full object-cover"
-              />
+              <>
+                {/* Video layer - for animated avatars */}
+                {hasAnimatedAvatar && (
+                  <video
+                    ref={videoRef}
+                    src={animatedAvatarUrl}
+                    className={cn(
+                      "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
+                      showVideo && videoLoaded ? "opacity-100 z-10" : "opacity-0"
+                    )}
+                    muted
+                    playsInline
+                    onLoadedData={() => {
+                      setVideoLoaded(true);
+                      if (videoRef.current) {
+                        setShowVideo(true);
+                        videoRef.current.play().catch(() => setVideoError(true));
+                      }
+                    }}
+                    onEnded={handleVideoEnded}
+                    onError={() => setVideoError(true)}
+                  />
+                )}
+                
+                {/* Static image - shown as fallback or when video not playing */}
+                <img
+                  src={displayUrl}
+                  alt="Player avatar"
+                  className={cn(
+                    "w-full h-full object-cover transition-opacity duration-300",
+                    hasAnimatedAvatar && showVideo && videoLoaded ? "opacity-0" : "opacity-100"
+                  )}
+                />
+              </>
             )}
           </motion.div>
         </div>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
+import { useAuth } from "@/hooks/useAuth";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -43,6 +44,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export function QuizGameScreenProd() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const {
     phase,
     questions,
@@ -247,9 +249,10 @@ export function QuizGameScreenProd() {
 
       {/* Players Row - No VS */}
       <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
-        {/* Player (Left) */}
+        {/* Player (Left) - Use user's profile avatar */}
         <QuizPlayerAvatar
-          avatarUrl={opponent?.avatarUrl}
+          avatarUrl={profile?.avatar_url}
+          animatedAvatarUrl={profile?.animated_avatar_url}
           score={userScore}
           position="left"
           state={getPlayerState()}
