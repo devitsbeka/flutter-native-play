@@ -73,7 +73,8 @@ export default function IconAssignment() {
   const [shouldStop, setShouldStop] = useState(false);
   const [methodBreakdown, setMethodBreakdown] = useState<Record<string, number>>({});
   const [batchMode, setBatchMode] = useState<'assign' | 'diversify'>('assign');
-  const [overusedIcons, setOverusedIcons] = useState<{ slug: string; count: number }[]>([]);
+  const [diversifyOffset, setDiversifyOffset] = useState(0);
+  const [totalScanned, setTotalScanned] = useState(0);
   const [resetting, setResetting] = useState(false);
   
   // Fast mode (no longer toggleable - always uses fast batch)
@@ -233,6 +234,13 @@ export default function IconAssignment() {
     setBatchProgress(0);
     setBatchStats({ processed: 0, assigned: 0, uniqueIcons: 0 });
     setMethodBreakdown({});
+    setTotalScanned(0);
+    
+    // Reset offset for diversify mode
+    let currentOffset = 0;
+    if (mode === 'diversify') {
+      setDiversifyOffset(0);
+    }
 
     let totalProcessed = 0;
     let totalAssigned = 0;
@@ -247,12 +255,23 @@ export default function IconAssignment() {
 
     try {
       while (!shouldStop) {
+        const requestBody: any = { 
+          brokenSlugs: brokenSlugsArray,
+          mode
+        };
+        
+        // For assign mode, include category filter
+        if (mode === 'assign') {
+          requestBody.categoryId = categoryFilter;
+        }
+        
+        // For diversify mode, use offset pagination
+        if (mode === 'diversify') {
+          requestBody.offset = currentOffset;
+        }
+        
         const { data, error } = await supabase.functions.invoke(functionName, {
-          body: { 
-            categoryId: categoryFilter, 
-            brokenSlugs: brokenSlugsArray,
-            mode
-          }
+          body: requestBody
         });
 
         if (error) {
@@ -264,9 +283,11 @@ export default function IconAssignment() {
         totalProcessed += data.processed;
         totalAssigned += mode === 'diversify' ? data.diversified : data.assigned;
         
-        // Update overused icons list (for diversify mode)
-        if (data.overusedIcons) {
-          setOverusedIcons(data.overusedIcons);
+        // Update offset for diversify mode
+        if (mode === 'diversify' && data.nextOffset !== undefined) {
+          currentOffset = data.nextOffset;
+          setDiversifyOffset(currentOffset);
+          setTotalScanned(currentOffset);
         }
         
         // Accumulate method breakdown
@@ -283,23 +304,19 @@ export default function IconAssignment() {
           uniqueIcons: data.uniqueIcons || 0
         });
         
+        // Calculate progress
         const total = mode === 'diversify' 
-          ? (data.overusedIcons?.[0]?.count || 100)
+          ? (data.totalWithIcons || stats.withIcons || 1)
           : stats.withoutIcons;
         const progress = total > 0 
           ? Math.min(100, (totalProcessed / total) * 100)
           : 100;
         setBatchProgress(progress);
 
-        // Handle skipped icons in diversify mode
-        if (data.skippedIcon) {
-          toast.info(`გამოტოვებულია: ${data.skippedIcon}, შემდეგი...`);
-        }
-
         // If done, stop
         if (data.done) {
-          const successLabel = mode === 'diversify' ? 'დივერსიფიცირებულია' : 'მინიჭებულია';
-          toast.success(`დასრულდა! ${successLabel} ${totalAssigned} აიკონი`);
+          const successLabel = mode === 'diversify' ? 'გაუმჯობესდა' : 'მინიჭდა';
+          toast.success(`დასრულდა! ${successLabel} ${totalAssigned} აიკონი (${totalProcessed} დასკანირდა)`);
           break;
         }
         
@@ -438,15 +455,15 @@ export default function IconAssignment() {
             <Wand2 className="h-5 w-5 text-violet-500" />
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {batchMode === 'diversify' ? 'დივერსიფიკაცია' : 'სწრაფი მინიჭება (5x)'}
+                {batchMode === 'diversify' ? 'სმარტ დივერსიფიკაცია' : 'სწრაფი მინიჭება (5x)'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {batchMode === 'diversify'
-                  ? 'ზედმეტად გამოყენებული აიკონები შეიცვლება უფრო სპეციფიკურით'
+                  ? `სკანირებს ყველა კითხვას და პოულობს უფრო რელევანტურ აიკონებს (დასკანირდა: ${totalScanned})`
                   : categoryFilter 
                     ? `არჩეული კატეგორიის ${stats.withoutIcons} კითხვას დაამუშავებს`
                     : `ყველა ${stats.withoutIcons} კითხვას დაამუშავებს`
-                } • Keyword + Category fallback
+                } • Keyword + Title + Tags matching
               </p>
             </div>
             
