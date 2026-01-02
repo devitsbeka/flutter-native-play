@@ -39,7 +39,7 @@ export function PowerUpTutorialModal({ isOpen, onClose, powerUpType }: PowerUpTu
       variant="info"
     >
       <div className="flex flex-col items-center gap-6 py-4">
-        <div className="transform scale-150">
+        <div className="p-4">
           <PowerUpBadge type={powerUpType} size="lg" />
         </div>
         
