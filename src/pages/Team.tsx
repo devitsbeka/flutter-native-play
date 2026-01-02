@@ -12,16 +12,15 @@ import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
 import { MultiplayerResultScreen } from "@/components/team/MultiplayerResultScreen";
 import { WaitingForOpponentScreen } from "@/components/team/WaitingForOpponentScreen";
 import { AsyncResultScreen } from "@/components/team/AsyncResultScreen";
-import { FriendsList } from "@/components/team/FriendsList";
-import { RecentPlayersList } from "@/components/team/RecentPlayersList";
-import { RecentRoomsSection } from "@/components/team/RecentRoomsSection";
+import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
+import { MyRoomsSection } from "@/components/team/MyRoomsSection";
+import { GameHistoryTable } from "@/components/team/GameHistoryTable";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChatModal } from "@/components/team/ChatModal";
 import { GameInviteModal } from "@/components/team/GameInviteModal";
 import { QuickPlayModal } from "@/components/team/QuickPlayModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
-import { AllRecentPlayersModal } from "@/components/team/AllRecentPlayersModal";
 import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -58,8 +57,7 @@ function TeamContent() {
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
-  const [showAllRoomsModal, setShowAllRoomsModal] = useState(false);
-  const [showAllPlayersModal, setShowAllPlayersModal] = useState(false);
+  const [showAllGamesModal, setShowAllGamesModal] = useState(false);
   const [chatFriend, setChatFriend] = useState<Friend | null>(null);
   const [quickPlayFriend, setQuickPlayFriend] = useState<Friend | null>(null);
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
@@ -204,67 +202,51 @@ function TeamContent() {
       {/* Content */}
       <div className="relative z-10 flex flex-col px-4 pb-6">
 
-        {/* Create Game Button - Right after header */}
+        {/* Friends Stories Bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <ChunkyButton
-            variant="mint"
-            size="xl"
-            className="w-full"
-            onClick={() => {
-              playSound("button-click");
-              setShowCreateModal(true);
-            }}
-          >
-            + თამაშის შექმნა
-          </ChunkyButton>
+          <FriendsStoriesBar
+            onAddFriendClick={() => setShowAddFriendModal(true)}
+            onFriendClick={handleQuickPlay}
+          />
         </motion.div>
 
-        {/* Friends Section */}
+        {/* My Rooms Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <FriendsList
-            onAddFriendClick={() => setShowAddFriendModal(true)}
-            onQuickPlay={handleQuickPlay}
-            onStartChat={(friend) => setChatFriend(friend)}
+          <MyRoomsSection
+            onCreateRoom={() => {
+              playSound("button-click");
+              setShowCreateModal(true);
+            }}
           />
-        </motion.div>
-
-        {/* Recent Rooms Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-          className="mb-6"
-        >
-          <RecentRoomsSection onViewAll={() => setShowAllRoomsModal(true)} />
         </motion.div>
 
         {/* Pending Challenges Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14 }}
+          transition={{ delay: 0.12 }}
           className="mb-6"
         >
           <PendingChallengesSection onAcceptChallenge={handleAcceptChallenge} />
         </motion.div>
 
-        {/* Recent Players Section */}
+        {/* Game History Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.16 }}
+          transition={{ delay: 0.14 }}
           className="mb-6"
         >
-          <RecentPlayersList onViewAll={() => setShowAllPlayersModal(true)} />
+          <GameHistoryTable onViewAll={() => setShowAllGamesModal(true)} />
         </motion.div>
       </div>
 
@@ -304,16 +286,17 @@ function TeamContent() {
         onClose={() => setShowHelpModal(false)}
       />
       <AllRecentRoomsModal
-        isOpen={showAllRoomsModal}
-        onClose={() => setShowAllRoomsModal(false)}
-      />
-      <AllRecentPlayersModal
-        isOpen={showAllPlayersModal}
-        onClose={() => setShowAllPlayersModal(false)}
+        isOpen={showAllGamesModal}
+        onClose={() => setShowAllGamesModal(false)}
       />
 
       {/* Bottom Navigation */}
-      <UniversalBottomNav />
+      <UniversalBottomNav 
+        onTeamPlayClick={() => {
+          playSound("button-click");
+          setShowCreateModal(true);
+        }}
+      />
     </div>
   );
 }

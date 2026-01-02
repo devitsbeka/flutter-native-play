@@ -7,19 +7,27 @@ import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 interface UniversalBottomNavProps {
   onPlayClick?: () => void;
   onTeamClick?: () => void;
+  onTeamPlayClick?: () => void;
 }
 
-export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottomNavProps) {
+export function UniversalBottomNav({ onPlayClick, onTeamClick, onTeamPlayClick }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingChallenges } = usePendingChallenges();
   
   const isHome = location.pathname === "/";
+  const isTeam = location.pathname === "/team";
   const isActive = (path: string) => location.pathname === path;
+
+  // Determine center button behavior
+  const showPlayButton = isHome || isTeam;
+  const isPurpleVariant = isTeam;
 
   const handleCenterClick = () => {
     if (isHome) {
       onPlayClick?.();
+    } else if (isTeam) {
+      onTeamPlayClick?.();
     } else {
       navigate("/");
     }
@@ -76,7 +84,8 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -8 }}>
                 <Hex3DPlayButton 
                   onClick={handleCenterClick}
-                  isPlayButton={isHome}
+                  isPlayButton={showPlayButton}
+                  variant={isPurpleVariant ? "purple" : "mint"}
                 />
               </div>
             </div>
@@ -167,7 +176,32 @@ function NavButton({
   );
 }
 
-function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPlayButton: boolean }) {
+interface Hex3DPlayButtonProps {
+  onClick: () => void;
+  isPlayButton: boolean;
+  variant?: "mint" | "purple";
+}
+
+function Hex3DPlayButton({ onClick, isPlayButton, variant = "mint" }: Hex3DPlayButtonProps) {
+  const colorSchemes = {
+    mint: {
+      depth: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
+      bevel: "linear-gradient(180deg, #7EECC5 0%, #6ADDB5 100%)",
+      face: "radial-gradient(circle at 40% 35%, #8AFFDA 0%, #6EFFC2 25%, #5EE8B5 50%, #4DD8A5 75%, #3FC99A 100%)",
+      sparkle: "rgba(180,255,220,0.95)",
+      sparkleShadow: "0 0 6px rgba(150,255,210,0.9), 0 0 10px rgba(100,230,180,0.6)",
+    },
+    purple: {
+      depth: "linear-gradient(180deg, #6B21A8 0%, #581C87 50%, #4C1D95 100%)",
+      bevel: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+      face: "radial-gradient(circle at 40% 35%, #C084FC 0%, #A855F7 25%, #9333EA 50%, #7C3AED 75%, #6D28D9 100%)",
+      sparkle: "rgba(220,180,255,0.95)",
+      sparkleShadow: "0 0 6px rgba(200,150,255,0.9), 0 0 10px rgba(160,100,230,0.6)",
+    },
+  };
+
+  const colors = colorSchemes[variant];
+
   return (
     <motion.button
       onClick={onClick}
@@ -177,41 +211,39 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
       style={{ width: 90, height: 90 }}
     >
-      {/* Soft outer glow - using box-shadow on button itself */}
-      
-      {/* Bottom 3D depth layer - lighter mint-teal */}
+      {/* Bottom 3D depth layer */}
       <div
         className="absolute rounded-full"
         style={{
           inset: 0,
           top: 6,
-          background: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
+          background: colors.depth,
         }}
       />
       
-      {/* Middle bevel layer - light mint */}
+      {/* Middle bevel layer */}
       <div
         className="absolute rounded-full"
         style={{
           inset: 3,
           top: 4,
           bottom: 8,
-          background: "linear-gradient(180deg, #7EECC5 0%, #6ADDB5 100%)",
+          background: colors.bevel,
         }}
       />
       
-      {/* Main face - mint green radial gradient */}
+      {/* Main face - radial gradient */}
       <div
         className="absolute rounded-full overflow-hidden"
         style={{
           inset: 4,
           top: 0,
           bottom: 12,
-          background: "radial-gradient(circle at 40% 35%, #8AFFDA 0%, #6EFFC2 25%, #5EE8B5 50%, #4DD8A5 75%, #3FC99A 100%)",
+          background: colors.face,
         }}
       >
         
-        {/* Mint green sparkle particles */}
+        {/* Sparkle particles */}
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
@@ -219,8 +251,8 @@ function Hex3DPlayButton({ onClick, isPlayButton }: { onClick: () => void; isPla
             style={{
               width: i % 2 === 0 ? 4 : 3,
               height: i % 2 === 0 ? 4 : 3,
-              background: "rgba(180,255,220,0.95)",
-              boxShadow: "0 0 6px rgba(150,255,210,0.9), 0 0 10px rgba(100,230,180,0.6)",
+              background: colors.sparkle,
+              boxShadow: colors.sparkleShadow,
               left: `${20 + (i * 12)}%`,
               top: `${25 + ((i % 3) * 18)}%`,
             }}
