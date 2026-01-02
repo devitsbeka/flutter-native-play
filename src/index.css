@@ -159,6 +159,10 @@
     @apply border-border;
   }
 
+  html {
+    overflow-y: scroll;
+  }
+
   body {
     @apply text-foreground antialiased;
     font-family: var(--font-sans);
