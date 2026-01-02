@@ -145,7 +145,7 @@ export function GameModal({
           initial={{ opacity: 0, pointerEvents: "none" }}
           animate={{ opacity: 1, pointerEvents: "auto" }}
           exit={{ opacity: 0, pointerEvents: "none" }}
-          className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
           onClick={!disableBackdropClick && onClose ? handleClose : undefined}
         >
           <motion.div
@@ -154,7 +154,7 @@ export function GameModal({
             exit={{ scale: 0.85, opacity: 0, y: 40 }}
             transition={{ type: "spring", stiffness: 400, damping: 30, duration: 0.15 }}
             onClick={(e) => e.stopPropagation()}
-            className={cn("relative w-full max-w-sm mt-8 mb-12", className)}
+            className={cn("relative w-full max-w-sm", className)}
           >
             {/* Main content container - Whitish 3D chunky style */}
             <div 

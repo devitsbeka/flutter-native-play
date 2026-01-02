@@ -273,11 +273,11 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto px-4 pb-6">
+              <div className="flex-1 overflow-y-auto px-4 pb-6 pt-2">
                 {selectedCategory === "frames" ? (
                   <AvatarFrameShop />
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 pt-2">
                     {filteredItems.map((item, index) => {
                       const canAfford = gems >= item.price;
                       const isPurchased = purchasedItems.has(item.id);
@@ -296,7 +296,7 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
                           {/* Popular badge */}
                           {item.popular && (
                             <motion.div 
-                              className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
+                              className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
                               style={{ 
                                 background: "linear-gradient(135deg, #EC4899 0%, #F97316 100%)",
                                 boxShadow: "0 2px 0 #BE185D",
