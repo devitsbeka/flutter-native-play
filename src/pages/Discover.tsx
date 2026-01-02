@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useCategories } from "@/hooks/useCategories";
@@ -12,6 +12,7 @@ import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { CategoryGrid } from "@/components/discover/CategoryGrid";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const tabs = [
   { id: "all", label: "ყველა" },
@@ -27,6 +28,7 @@ export default function Discover() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
@@ -134,30 +136,58 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* Search Bar + Tabs Container */}
-          <div className="sticky top-0 z-20 backdrop-blur-md" style={{ paddingLeft: 20, paddingRight: 20, paddingTop: 8 }}>
-            {/* Search Bar */}
-            <div className="pt-4">
-              <div
-                className={`flex items-center gap-3 bg-white/90 border border-white/60 rounded-full px-4 py-3 transition-all shadow-sm ${
-                  isSearchFocused ? "ring-2 ring-white/40" : ""
-                }`}
+          {/* Header with Page Title */}
+          <PageHeader
+            title="ძებნა"
+            showBack={false}
+            rightElements={
+              <button
+                onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
               >
-                <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                  placeholder="მოძებნე კატეგორია..."
-                  className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
-                />
-              </div>
-            </div>
+                {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+              </button>
+            }
+          />
 
-            {/* Icon Tabs */}
-            <div className="flex overflow-x-auto scrollbar-hide pt-4 pb-2" style={{ scrollbarWidth: "none", marginLeft: -20, marginRight: -20, paddingLeft: 20 }}>
+          {/* Expandable Search Bar */}
+          <AnimatePresence>
+            {isSearchExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden px-4"
+              >
+                <div
+                  className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm mb-2 ${
+                    isSearchFocused ? "ring-2 ring-primary/30" : ""
+                  }`}
+                >
+                  <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    placeholder="მოძებნე კატეგორია..."
+                    className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Icon Tabs */}
+          <div className="px-4">
+            <div className="flex overflow-x-auto scrollbar-hide pt-2 pb-2 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
               {tabs.map((tab) => (
                 <IconTab
                   key={tab.id}
@@ -168,6 +198,7 @@ export default function Discover() {
               ))}
             </div>
           </div>
+        </div>
 
         {/* Content */}
         <div className="py-4">
@@ -197,7 +228,7 @@ export default function Discover() {
                 />
                 {filteredCategories.length === 0 && (
                   <div className="text-center py-12 px-4">
-                    <p className="text-muted-foreground">
+                    <p className="text-slate-500">
                       არაფერი მოიძებნა "{searchQuery}"
                     </p>
                   </div>
@@ -360,7 +391,6 @@ export default function Discover() {
             </section>
           )}
           </div>
-        </div>
 
         <UniversalBottomNav />
       </div>

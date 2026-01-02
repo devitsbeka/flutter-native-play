@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface LeaderboardEntry {
   id: string;
@@ -65,8 +66,8 @@ function PlayerCard({
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: position * 0.02 }}
       className={cn(
-        "flex items-center gap-3 p-4 rounded-2xl bg-card/80 dark:bg-card/60 backdrop-blur-xl border border-border/50",
-        isCurrentUser && "ring-2 ring-primary bg-primary/10 dark:bg-primary/20 border-primary/50"
+        "flex items-center gap-3 p-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200",
+        isCurrentUser && "ring-2 ring-primary bg-primary/10 border-primary/50"
       )}
     >
       {/* Rank Badge */}
@@ -94,12 +95,12 @@ function PlayerCard({
       <div className="flex-1 min-w-0">
         <p className={cn(
           "font-display font-bold text-sm truncate uppercase tracking-wide",
-          isCurrentUser ? "text-primary" : "text-foreground"
+          isCurrentUser ? "text-primary" : "text-slate-800"
         )}>
           {entry.nickname}
           {isCurrentUser && " (შენ)"}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="text-xs text-slate-600 mt-0.5">
           {entry.games_played || 0} თამაში • {entry.games_won || 0} მოგება
         </p>
       </div>
@@ -107,7 +108,7 @@ function PlayerCard({
       {/* Points */}
       <div className="flex items-center gap-1.5 shrink-0">
         <Diamond className="w-4 h-4 text-primary fill-primary/30" />
-        <span className="text-sm font-bold text-foreground">{entry.total_points.toLocaleString()}</span>
+        <span className="text-sm font-bold text-slate-800">{entry.total_points.toLocaleString()}</span>
       </div>
     </motion.div>
   );
@@ -163,23 +164,17 @@ export default function Leaderboards() {
   const remainingEntries = entries.slice(3);
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-32 bg-background">
+    <div className="min-h-screen relative overflow-hidden pb-32">
       {/* Content */}
       <div className="relative z-10 flex flex-col h-screen">
         {/* Sticky Header Container */}
-        <div className="sticky top-0 z-20 shrink-0 relative bg-background/80 dark:bg-background/90 backdrop-blur-xl border-b border-border/30">
+        <div className="sticky top-0 z-20 shrink-0 relative backdrop-blur-xl">
           {/* Header - Title */}
-          <header className="px-4 pt-4 pb-3 safe-top">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-display font-bold text-foreground uppercase">
-                რეიტინგი
-              </h1>
-            </div>
-          </header>
+          <PageHeader title="რეიტინგი" showBack={false} />
 
           {/* Tabs - 3D Chunky Active Style */}
           <div className="px-4 pb-4">
-            <div className="flex gap-1 p-1.5 rounded-2xl bg-secondary/50 dark:bg-secondary/30">
+            <div className="flex gap-1 p-1.5 rounded-2xl bg-white/60 backdrop-blur-sm">
               {tabs.map((tab) => (
                 <motion.button
                   key={tab.id}
@@ -192,7 +187,7 @@ export default function Leaderboards() {
                     <div className="relative">
                       {/* 3D depth shadow */}
                       <div 
-                        className="absolute inset-0 rounded-xl bg-primary/80 dark:bg-primary/70"
+                        className="absolute inset-0 rounded-xl bg-primary/80"
                         style={{ top: 3 }}
                       />
                       {/* Main face */}
@@ -202,7 +197,7 @@ export default function Leaderboards() {
                     </div>
                   ) : (
                     // Inactive state
-                    <div className="px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-secondary/80 dark:hover:bg-secondary/50 transition-colors">
+                    <div className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white/80 transition-colors">
                       {tab.label}
                     </div>
                   )}
@@ -224,8 +219,8 @@ export default function Leaderboards() {
           ) : entries.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🏆</div>
-              <h3 className="text-lg font-bold text-foreground mb-2">ჯერ მოთამაშეები არ არიან!</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-lg font-bold text-slate-800 mb-2">ჯერ მოთამაშეები არ არიან!</h3>
+              <p className="text-slate-600">
                 ითამაშე რომ გამოჩნდე რეიტინგში
               </p>
             </div>
@@ -235,13 +230,13 @@ export default function Leaderboards() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl px-4 py-3 flex items-center justify-between mb-4 bg-card/80 dark:bg-card/60 backdrop-blur-xl border border-border/50"
+                className="rounded-2xl px-4 py-3 flex items-center justify-between mb-4 bg-white/80 backdrop-blur-xl border border-slate-200"
               >
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-bold text-foreground text-sm">{entries.length} მოთამაშე</span>
+                  <Users className="w-4 h-4 text-slate-500" />
+                  <span className="font-bold text-slate-800 text-sm">{entries.length} მოთამაშე</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-slate-500">
                   <Clock className="w-4 h-4" />
                   <span className="text-sm font-medium">{getTimeUntilReset()}</span>
                 </div>
@@ -252,7 +247,7 @@ export default function Leaderboards() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-3xl p-6 mb-4 bg-card/80 dark:bg-card/60 backdrop-blur-xl border border-border/50"
+                  className="rounded-3xl p-6 mb-4 bg-white/80 backdrop-blur-xl border border-slate-200"
                 >
                   <div className="flex items-start justify-center gap-4">
                     {/* 2nd Place */}
@@ -266,8 +261,8 @@ export default function Leaderboards() {
                         <RankMedal rank={2} size="md" />
                       </div>
                       <div className="relative mb-2">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-500 dark:to-slate-600 p-0.5 shadow-lg">
-                          <div className="w-full h-full rounded-full overflow-hidden bg-card flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 p-0.5 shadow-lg">
+                          <div className="w-full h-full rounded-full overflow-hidden bg-white flex items-center justify-center">
                             {topThree[1] ? (
                               <Avatar
                                 imageUrl={topThree[1].avatar_url || undefined}
@@ -280,7 +275,7 @@ export default function Leaderboards() {
                           </div>
                         </div>
                       </div>
-                      <span className="text-sm font-display font-bold text-foreground mb-0.5 truncate max-w-[80px] text-center uppercase tracking-wide">
+                      <span className="text-sm font-display font-bold text-slate-800 mb-0.5 truncate max-w-[80px] text-center uppercase tracking-wide">
                         {topThree[1]?.nickname || "---"}
                       </span>
                       <div className="flex items-center gap-1 text-primary">
@@ -301,7 +296,7 @@ export default function Leaderboards() {
                       </div>
                       <div className="relative mb-2">
                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 p-0.5 shadow-xl shadow-amber-400/30">
-                          <div className="w-full h-full rounded-full overflow-hidden bg-card flex items-center justify-center">
+                          <div className="w-full h-full rounded-full overflow-hidden bg-white flex items-center justify-center">
                             {topThree[0] ? (
                               <Avatar
                                 imageUrl={topThree[0].avatar_url || undefined}
@@ -319,7 +314,7 @@ export default function Leaderboards() {
                           </div>
                         )}
                       </div>
-                      <span className="text-base font-display font-bold text-foreground mb-0.5 truncate max-w-[90px] text-center uppercase tracking-wide">
+                      <span className="text-base font-display font-bold text-slate-800 mb-0.5 truncate max-w-[90px] text-center uppercase tracking-wide">
                         {topThree[0]?.nickname || "---"}
                       </span>
                       <div className="flex items-center gap-1 text-primary">
@@ -340,7 +335,7 @@ export default function Leaderboards() {
                       </div>
                       <div className="relative mb-2">
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 p-0.5 shadow-lg">
-                          <div className="w-full h-full rounded-full overflow-hidden bg-card flex items-center justify-center">
+                          <div className="w-full h-full rounded-full overflow-hidden bg-white flex items-center justify-center">
                             {topThree[2] ? (
                               <Avatar
                                 imageUrl={topThree[2].avatar_url || undefined}
@@ -353,7 +348,7 @@ export default function Leaderboards() {
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs font-display font-bold text-foreground mb-0.5 truncate max-w-[70px] text-center uppercase tracking-wide">
+                      <span className="text-xs font-display font-bold text-slate-800 mb-0.5 truncate max-w-[70px] text-center uppercase tracking-wide">
                         {topThree[2]?.nickname || "---"}
                       </span>
                       <div className="flex items-center gap-1 text-primary">
@@ -367,11 +362,11 @@ export default function Leaderboards() {
 
               {/* Divider with label */}
               <div className="flex items-center gap-3 py-3">
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
                   ◆ ტოპ რეიტინგი ◆
                 </span>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
               </div>
 
               {/* Player List */}
@@ -394,14 +389,6 @@ export default function Leaderboards() {
           )}
         </div>
       </div>
-
-      {/* Gradient fade overlay */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 pointer-events-none z-10 h-[180px]"
-        style={{
-          background: "linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.8) 30%, hsl(var(--background) / 0.4) 60%, transparent 100%)",
-        }}
-      />
 
       {/* Universal Bottom Navigation */}
       <UniversalBottomNav />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -24,6 +24,7 @@ import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
 import { AllRecentPlayersModal } from "@/components/team/AllRecentPlayersModal";
 import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
@@ -185,28 +186,21 @@ function TeamContent() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-28">
-      {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={() => navigate("/")}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+      {/* Header */}
+      <PageHeader
+        title="მეგობრები"
+        rightElements={
+          <button
             onClick={() => setShowHelpModal(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm hover:bg-white transition-colors"
           >
             ?
-          </motion.button>
-        </div>
+          </button>
+        }
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col px-4 pb-6">
 
         {/* Friends Section */}
         <motion.div
@@ -303,9 +297,9 @@ function TeamContent() {
         animate={{ opacity: 1, y: 0 }}
         className="fixed bottom-6 left-4 right-4 z-20"
       >
-        <div className="p-3 rounded-2xl bg-gray-900/90 backdrop-blur-lg border border-white/10 shadow-2xl">
+        <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-lg border border-slate-200 shadow-lg">
           <ChunkyButton
-            variant="purple"
+            variant="success"
             size="lg"
             className="w-full"
             onClick={() => {
