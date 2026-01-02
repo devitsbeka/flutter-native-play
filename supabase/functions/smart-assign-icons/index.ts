@@ -290,6 +290,21 @@ serve(async (req) => {
         if (!updateError) {
           assigned++;
           console.log(`Assigned ${matchedIcon} to question (${matchMethod})`);
+          
+          // Log to assignment history
+          const categoryName = allCategories?.find(c => c.id === question.category_id)?.name;
+          await supabase
+            .from('icon_assignment_history')
+            .insert({
+              question_id: question.id,
+              question_text: question.question_text.substring(0, 200),
+              old_icon_slug: null,
+              new_icon_slug: matchedIcon,
+              assignment_method: matchMethod,
+              category_id: question.category_id,
+              category_name: categoryName || null,
+              assigned_by: null
+            });
         } else {
           console.error(`Failed to update question ${question.id}:`, updateError);
         }

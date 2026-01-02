@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BrokenIconsModal } from '@/components/admin/BrokenIconsModal';
+import { IconAssignmentHistory } from '@/components/admin/IconAssignmentHistory';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
@@ -169,16 +171,29 @@ export default function IconAssignment() {
     setRecentlyFixedSlugs(prev => new Set([slug, ...prev]));
   };
 
-  // Handle icon assignment
+  // Handle icon assignment (manual)
   const handleAssignIcon = async (iconSlug: string) => {
     if (!selectedQuestion) {
       toast.error('აირჩიეთ კითხვა');
       return;
     }
 
+    const oldIconSlug = selectedQuestion.icon_slug;
     const success = await assignIcon(selectedQuestion.id, iconSlug);
     
     if (success) {
+      // Log to assignment history
+      await supabase.from('icon_assignment_history').insert({
+        question_id: selectedQuestion.id,
+        question_text: selectedQuestion.question_text.substring(0, 200),
+        old_icon_slug: oldIconSlug,
+        new_icon_slug: iconSlug,
+        assignment_method: 'manual',
+        category_id: selectedQuestion.category_id,
+        category_name: selectedQuestion.category_name,
+        assigned_by: null // Could add user id if needed
+      });
+      
       toast.success(`აიკონი მინიჭებულია: ${iconSlug}`);
       
       if (autoAdvance) {
@@ -304,11 +319,14 @@ export default function IconAssignment() {
     return icon?.url || null;
   };
 
+  // State for active tab
+  const [activeTab, setActiveTab] = useState<string>('questions');
+
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      {/* Header with Stats and Batch Controls */}
-      <div className="border-b border-border/50 bg-card/30 p-4">
-        <div className="flex items-center justify-between">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col overflow-hidden">
+      {/* Tab Navigation */}
+      <div className="border-b border-border/50 bg-card/30 px-4 pt-4">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
               <Image className="h-5 w-5 text-white" />
@@ -338,6 +356,23 @@ export default function IconAssignment() {
             </div>
           </div>
         </div>
+        
+        <TabsList className="bg-muted/50">
+          <TabsTrigger value="questions" className="gap-2">
+            <Image className="h-4 w-4" />
+            კითხვები
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <History className="h-4 w-4" />
+            ისტორია
+          </TabsTrigger>
+        </TabsList>
+      </div>
+
+      {/* Questions Tab Content */}
+      <TabsContent value="questions" className="flex-1 mt-0 overflow-hidden flex flex-col">
+      {/* Header with Stats and Batch Controls */}
+      <div className="border-b border-border/50 bg-card/30 p-4">
         
         {/* Visual Progress Bar */}
         <div className="mt-4 rounded-lg border border-border/50 bg-background/50 p-3">
@@ -801,6 +836,15 @@ export default function IconAssignment() {
           </ScrollArea>
         </div>
       </div>
-    </div>
+      </TabsContent>
+
+      {/* History Tab Content */}
+      <TabsContent value="history" className="flex-1 mt-0 overflow-hidden">
+        <IconAssignmentHistory 
+          categories={categories.map(c => ({ id: c.id, uuid: (c as any).uuid, name: c.name, icon: c.icon }))} 
+          getIconUrl={getIconUrl}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }

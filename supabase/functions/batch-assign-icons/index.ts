@@ -313,14 +313,31 @@ serve(async (req) => {
       }
     }
 
-    // Bulk update successful results
+    // Bulk update successful results and log to history
     const successfulResults = results.filter(r => r.success && r.icon_slug);
     
     for (const result of successfulResults) {
+      // Get question details for history
+      const question = formattedQuestions.find(q => q.id === result.id);
+      
       await supabase
         .from('questions')
         .update({ icon_slug: result.icon_slug })
         .eq('id', result.id);
+      
+      // Log to assignment history
+      await supabase
+        .from('icon_assignment_history')
+        .insert({
+          question_id: result.id,
+          question_text: question?.question_text?.substring(0, 200),
+          old_icon_slug: null, // batch assigns to questions without icons
+          new_icon_slug: result.icon_slug,
+          assignment_method: result.method,
+          category_id: question?.category_id,
+          category_name: question?.category_name,
+          assigned_by: null // batch job
+        });
     }
 
     // Get remaining count
