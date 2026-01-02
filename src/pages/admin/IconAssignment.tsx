@@ -54,6 +54,7 @@ export default function IconAssignment() {
   const [iconSearchTerm, setIconSearchTerm] = useState('');
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [iconsLoading, setIconsLoading] = useState(true);
+  const [iconsLoadProgress, setIconsLoadProgress] = useState(0);
   const [autoAdvance, setAutoAdvance] = useState(true);
   
   // Track broken icons
@@ -69,26 +70,46 @@ export default function IconAssignment() {
   // Smart assignment mode
   const [useSmartAssignment, setUseSmartAssignment] = useState(true);
 
-  // Load icons from database
+  // Load ALL icons from database with pagination
   useEffect(() => {
     const loadIcons = async () => {
       try {
-        const { data, error } = await supabase
-          .from('icon_library')
-          .select('slug, title, category, tags, icon_url, file_name')
-          .order('title');
+        const allIcons: IconItem[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
         
-        if (error) throw error;
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('icon_library')
+            .select('slug, title, category, tags, icon_url, file_name')
+            .order('title')
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+          
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            const iconList: IconItem[] = data.map((icon: any) => ({
+              slug: icon.slug,
+              title: icon.title,
+              category: icon.category,
+              tags: icon.tags || [],
+              url: icon.icon_url || `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${icon.file_name}`
+            }));
+            
+            allIcons.push(...iconList);
+            setIconsLoadProgress(allIcons.length);
+            page++;
+            
+            // If we got less than pageSize, we've reached the end
+            hasMore = data.length === pageSize;
+          } else {
+            hasMore = false;
+          }
+        }
         
-        const iconList: IconItem[] = (data || []).map((icon: any) => ({
-          slug: icon.slug,
-          title: icon.title,
-          category: icon.category,
-          tags: icon.tags || [],
-          url: icon.icon_url || `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${icon.file_name}`
-        }));
-        
-        setIcons(iconList);
+        console.log(`Loaded ${allIcons.length} icons from database`);
+        setIcons(allIcons);
       } catch (error) {
         console.error('Error loading icons:', error);
       } finally {
@@ -613,8 +634,11 @@ export default function IconAssignment() {
           {/* Icon Grid */}
           <ScrollArea className="flex-1">
             {iconsLoading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  იტვირთება... {iconsLoadProgress.toLocaleString()} აიკონი
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-5 gap-2 p-3">
