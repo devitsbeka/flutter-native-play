@@ -14,7 +14,7 @@ export interface ParsedQuestion {
 
 // Character limits for UI display
 export const CHAR_LIMITS = {
-  question: { max: 150, warn: 120 },
+  question: { max: 70, warn: 60 },
   answer: { max: 60, warn: 50 },
 };
 
