@@ -131,8 +131,18 @@ export function AirbnbCategoryCard({
             boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.05)',
           }}
         >
-          {/* Video/Icon Area */}
-          <div className={`relative w-full ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+          {/* Video/Icon Area with inner frame */}
+          <div className={`relative w-full ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'} m-2`} style={{ width: 'calc(100% - 16px)' }}>
+            {/* Inner frame border matching container color */}
+            <div 
+              className="absolute inset-0 rounded-[20px] pointer-events-none z-[2]"
+              style={{
+                boxShadow: `inset 0 0 0 3px ${pastel.depth}40, inset 0 0 0 4px rgba(255,255,255,0.3)`,
+              }}
+            />
+            
+            {/* Video content container */}
+            <div className="absolute inset-0 rounded-[20px] overflow-hidden">
             {/* Top shine effect */}
             <div 
               className="absolute inset-x-0 top-0 h-1/3 pointer-events-none z-[1]"
@@ -327,6 +337,7 @@ export function AirbnbCategoryCard({
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
