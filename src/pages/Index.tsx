@@ -498,10 +498,25 @@ export default function Index() {
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
-                  {/* XP Progress Text */}
-                  <span className="text-white/80 text-sm font-medium mt-1">
-                    {levelInfo.xpInCurrentLevel.toLocaleString()} / {levelInfo.xpNeededForNextLevel.toLocaleString()} XP
-                  </span>
+                  {/* Coins & Gems below name */}
+                  <div 
+                    className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap mt-2"
+                    style={{
+                      background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
+                      boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
+                      border: "3px solid rgba(255,255,255,0.95)",
+                    }}
+                  >
+                    <div className="flex items-center gap-1">
+                      <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+                      <span className="font-bold text-gray-700 text-sm">{coins.toLocaleString()}</span>
+                    </div>
+                    <div className="w-px h-4 bg-gray-300" />
+                    <div className="flex items-center gap-1">
+                      <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+                      <span className="font-bold text-gray-700 text-sm">{gems.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </>
               )}
                 </motion.div>
