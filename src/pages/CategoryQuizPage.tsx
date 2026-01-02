@@ -908,16 +908,6 @@ export default function CategoryQuizPage() {
           size="large"
         />
 
-        {/* Category Icon - Between Players - prioritize question icon over category */}
-        <div className="flex-1 flex justify-center items-start pt-4">
-          <DynamicIcon 
-            slug={currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
-            categoryId={categoryId}
-            size={80}
-            className="drop-shadow-lg"
-          />
-        </div>
-
         {/* Opponent (Right) */}
         <QuizPlayerAvatar
           avatarUrl={opponent.avatar}
@@ -928,8 +918,17 @@ export default function CategoryQuizPage() {
         />
       </div>
 
-      {/* Question Card - same component as QuizGameScreenProd */}
-      <div className="px-4 flex-shrink-0 mt-4">
+      {/* Question Card with Overlapping Icon - same as QuizGameScreenProd */}
+      <div className="px-4 flex-shrink-0 mt-4 relative">
+        {/* Category Icon - Positioned above question card, overlapping players */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20">
+          <DynamicIcon 
+            slug={currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
+            categoryId={categoryId}
+            size={128}
+            className="drop-shadow-2xl"
+          />
+        </div>
         <QuizQuestionCard
           questionText={currentQuestion?.question || ""}
           progressPercent={(timeRemaining / (15 + timerBonus)) * 100}
