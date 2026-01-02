@@ -40,6 +40,18 @@ export function AvatarCircle({
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
     >
+      {/* Thick white chunky ring background */}
+      <div 
+        className="absolute rounded-full"
+        style={{
+          width: size - 4,
+          height: size - 4,
+          background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FC 50%, #F0ECF8 100%)",
+          boxShadow: "inset 0 2px 6px rgba(140,120,180,0.15), 0 4px 12px rgba(0,0,0,0.1)",
+          border: "4px solid rgba(255,255,255,0.9)",
+        }}
+      />
+
       {/* Background track for progress ring */}
       <svg 
         className="absolute inset-0"
@@ -52,7 +64,7 @@ export function AvatarCircle({
           cy={outerRadius}
           r={progressRadius}
           fill="none"
-          stroke="#E5DEF0"
+          stroke="rgba(200,190,220,0.4)"
           strokeWidth={progressRingWidth}
           strokeLinecap="round"
           strokeDasharray={`${arcCircumference} ${2 * Math.PI * progressRadius}`}
