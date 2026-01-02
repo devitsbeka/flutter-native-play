@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, RefreshCcw, AlertTriangle, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, RefreshCcw, AlertTriangle, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -63,7 +63,7 @@ export default function IconAssignment() {
   // Track broken icons
   const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
   const [showBrokenIcons, setShowBrokenIcons] = useState(false);
-  const [deletingBroken, setDeletingBroken] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState<string | null>(null);
   
   // Batch assignment state
   const [batchRunning, setBatchRunning] = useState(false);
@@ -129,52 +129,64 @@ export default function IconAssignment() {
     return icons.filter(icon => brokenIcons.has(icon.slug));
   }, [icons, brokenIcons]);
 
-  // Delete broken icons from database
-  const deleteBrokenIcons = async () => {
-    if (brokenIcons.size === 0) return;
-    
-    setDeletingBroken(true);
-    try {
-      const slugsToDelete = Array.from(brokenIcons);
-      const { error } = await supabase
-        .from('icon_library')
-        .delete()
-        .in('slug', slugsToDelete);
-      
-      if (error) throw error;
-      
-      // Remove from local state
-      setIcons(prev => prev.filter(icon => !brokenIcons.has(icon.slug)));
-      setBrokenIcons(new Set());
-      toast.success(`${slugsToDelete.length} გატეხილი აიკონი წაიშალა`);
-    } catch (error) {
-      console.error('Error deleting broken icons:', error);
-      toast.error('შეცდომა წაშლისას');
-    } finally {
-      setDeletingBroken(false);
+  // Upload replacement icon for a broken one
+  const uploadReplacementIcon = async (slug: string, file: File) => {
+    if (!file || !file.type.includes('png')) {
+      toast.error('მხოლოდ PNG ფაილები დაშვებულია');
+      return;
     }
-  };
-
-  // Delete single broken icon
-  const deleteSingleBrokenIcon = async (slug: string) => {
+    
+    setUploadingIcon(slug);
     try {
-      const { error } = await supabase
+      // Get the icon details to find the file_name
+      const icon = icons.find(i => i.slug === slug);
+      if (!icon) throw new Error('Icon not found');
+      
+      const fileName = `${slug}.png`;
+      
+      // Upload to storage (this will overwrite if exists)
+      const { error: uploadError } = await supabase.storage
+        .from('icon-library')
+        .upload(fileName, file, { 
+          cacheControl: '3600',
+          upsert: true 
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get the new public URL
+      const { data: urlData } = supabase.storage
+        .from('icon-library')
+        .getPublicUrl(fileName);
+      
+      // Update the database record with new URL
+      const newUrl = urlData.publicUrl;
+      const { error: updateError } = await supabase
         .from('icon_library')
-        .delete()
+        .update({ 
+          icon_url: newUrl,
+          file_name: fileName 
+        })
         .eq('slug', slug);
       
-      if (error) throw error;
+      if (updateError) throw updateError;
       
-      setIcons(prev => prev.filter(icon => icon.slug !== slug));
+      // Update local state
+      setIcons(prev => prev.map(i => 
+        i.slug === slug ? { ...i, url: newUrl + '?t=' + Date.now() } : i
+      ));
       setBrokenIcons(prev => {
         const newSet = new Set(prev);
         newSet.delete(slug);
         return newSet;
       });
-      toast.success(`აიკონი წაიშალა: ${slug}`);
+      
+      toast.success(`აიკონი ატვირთულია: ${slug}`);
     } catch (error) {
-      console.error('Error deleting icon:', error);
-      toast.error('შეცდომა წაშლისას');
+      console.error('Error uploading icon:', error);
+      toast.error('შეცდომა ატვირთვისას');
+    } finally {
+      setUploadingIcon(null);
     }
   };
 
@@ -648,38 +660,45 @@ export default function IconAssignment() {
                 <div className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-orange-600">გატეხილი აიკონები</span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={deleteBrokenIcons}
-                      disabled={deletingBroken || brokenIcons.size === 0}
-                      className="h-7 text-xs"
-                    >
-                      {deletingBroken ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : (
-                        <Trash2 className="h-3 w-3 mr-1" />
-                      )}
-                      ყველას წაშლა ({brokenIcons.size})
-                    </Button>
+                    <span className="text-xs text-muted-foreground">PNG ფაილის ატვირთვა</span>
                   </div>
-                  <ScrollArea className="max-h-40">
-                    <div className="space-y-1">
+                  <ScrollArea className="max-h-48">
+                    <div className="space-y-2">
                       {brokenIconDetails.map(icon => (
-                        <div key={icon.slug} className="flex items-center justify-between py-1 px-2 rounded bg-background/50">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <AlertTriangle className="h-3 w-3 text-orange-500 shrink-0" />
-                            <span className="text-xs truncate">{icon.slug}</span>
-                            <Badge variant="outline" className="text-[10px] px-1">{icon.category}</Badge>
+                        <div key={icon.slug} className="flex items-center justify-between py-2 px-3 rounded-lg bg-background/80 border border-border/50">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-sm font-medium truncate block">{icon.slug}</span>
+                              <Badge variant="outline" className="text-[10px] px-1 mt-0.5">{icon.category}</Badge>
+                            </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteSingleBrokenIcon(icon.slug)}
-                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept=".png,image/png"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) uploadReplacementIcon(icon.slug, file);
+                                e.target.value = '';
+                              }}
+                              disabled={uploadingIcon === icon.slug}
+                            />
+                            <div className={cn(
+                              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                              uploadingIcon === icon.slug
+                                ? "bg-muted text-muted-foreground"
+                                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                            )}>
+                              {uploadingIcon === icon.slug ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Upload className="h-3 w-3" />
+                              )}
+                              ატვირთვა
+                            </div>
+                          </label>
                         </div>
                       ))}
                     </div>
