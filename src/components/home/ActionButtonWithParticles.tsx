@@ -23,6 +23,7 @@ interface ActionButtonWithParticlesProps {
   glowColor?: string;
   idleOffset?: number; // Offset for idle animation timing
   size?: number; // Button size in pixels
+  showParticles?: boolean; // Whether to show sparkle particles
 }
 
 // Star SVG component for sparkle particles
@@ -44,6 +45,7 @@ export function ActionButtonWithParticles({
   glowColor = "rgba(255,255,255,0.4)",
   idleOffset = 0,
   size = 73,
+  showParticles = true,
 }: ActionButtonWithParticlesProps) {
   const iconSize = Math.round(size * 0.71); // ~52px for 73px button
   // Generate random particles with varied timing
@@ -73,8 +75,8 @@ export function ActionButtonWithParticles({
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
-      {/* Star Sparkle Particles */}
-      {particles.map((particle) => (
+      {/* Star Sparkle Particles - only show if enabled */}
+      {showParticles && particles.map((particle) => (
         <motion.div
           key={particle.id}
           className="absolute pointer-events-none"
