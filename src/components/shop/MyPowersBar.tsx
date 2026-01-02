@@ -42,7 +42,7 @@ export function MyPowersBar({ onPowerClick }: MyPowersBarProps) {
         <h2 className="text-lg font-display font-bold text-foreground">ჩემი ძალები</h2>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide pt-3 pb-2">
         {powerTypes.map((type, index) => {
           const count = isLoading ? 0 : powerUps[type] || 0;
           const isEmpty = count === 0;
