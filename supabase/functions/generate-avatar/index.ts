@@ -46,12 +46,12 @@ serve(async (req) => {
     formData.append("image", imageBlob, "source.png");
     formData.append("prompt", "Cute adorable 3D Pixar Disney cartoon character portrait, big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression, soft violet and pink accent lighting on hair and face edges, dark navy gradient background, Pixar Disney animation quality, charming lovable character design, high quality 3D render");
     formData.append("mode", "image-to-image");
-    formData.append("strength", "0.65"); // Balance between preserving likeness and applying cartoon style
-    formData.append("model", "sd3.5-large-turbo"); // Fast and high quality
+    formData.append("strength", "0.7");
+    formData.append("model", "sd3-large"); // Use sd3-large which supports image-to-image properly
     formData.append("output_format", "png");
     formData.append("negative_prompt", "realistic, photo, photograph, ugly, deformed, noisy, blurry, low quality, distorted face, bad anatomy");
 
-    // Call Stability AI SD3.5 image-to-image endpoint
+    // Call Stability AI SD3 image-to-image endpoint
     const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/sd3", {
       method: "POST",
       headers: {
