@@ -409,7 +409,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={giftBottleIcon} alt="Gift" className="w-10 h-10 object-contain" />
+                          <img src={giftBottleIcon} alt="Gift" className="object-contain" style={{ width: 52, height: 52 }} />
                           <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
@@ -430,7 +430,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={missionCrystalIcon} alt="Mission" className="w-10 h-10 object-contain" />
+                          <img src={missionCrystalIcon} alt="Mission" className="object-contain" style={{ width: 52, height: 52 }} />
                           <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md">2</span>
                         </motion.button>
 
@@ -451,7 +451,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={chestBoxIcon} alt="Chest" className="w-10 h-10 object-contain" />
+                          <img src={chestBoxIcon} alt="Chest" className="object-contain" style={{ width: 52, height: 52 }} />
                           <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
@@ -472,7 +472,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={powersIcon} alt="Powers" className="w-10 h-10 object-contain" />
+                          <img src={powersIcon} alt="Powers" className="object-contain" style={{ width: 52, height: 52 }} />
                           {totalPowerUps > 0 && (
                             <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md">
                               {totalPowerUps}
