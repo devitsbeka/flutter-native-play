@@ -375,21 +375,23 @@ export default function Index() {
                 <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
               ) : (
                 <>
-                  {/* Name with Flag in white 3D chunky placeholder */}
-                  <div 
-                    className="flex items-center justify-center gap-3 px-6 py-3 rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                      boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-                      border: "3px solid rgba(255,255,255,0.9)",
-                    }}
-                  >
+                  {/* Name with Flag */}
+                  <div className="flex items-center justify-center gap-3">
                     {profile?.country_code && (
-                      <span className="text-2xl">
-                        {getFlagEmoji(profile.country_code)}
-                      </span>
+                      <div 
+                        className="flex items-center justify-center w-12 h-12 rounded-full"
+                        style={{
+                          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                          boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                          border: "3px solid rgba(255,255,255,0.9)",
+                        }}
+                      >
+                        <span className="text-xl">
+                          {getFlagEmoji(profile.country_code)}
+                        </span>
+                      </div>
                     )}
-                    <span className="font-display font-bold text-gray-700" style={{ fontSize: 24 }}>
+                    <span className="font-display font-bold text-white drop-shadow-md" style={{ fontSize: 32 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
