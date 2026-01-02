@@ -453,7 +453,7 @@ export default function Index() {
                 style={{ 
                   perspective: 1000,
                   transformStyle: "preserve-3d",
-                  marginTop: 30,
+                  marginTop: 15,
                 }}
               >
                 {/* Avatar */}
