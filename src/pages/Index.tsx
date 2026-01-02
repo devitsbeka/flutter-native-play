@@ -393,8 +393,8 @@ export default function Index() {
                     <motion.div 
                       className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
                       style={{
-                        background: "linear-gradient(180deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #7E22CE, 0 4px 8px rgba(168,85,247,0.3)",
+                        background: "linear-gradient(180deg, #60A5FA 0%, #3B82F6 50%, #2563EB 100%)",
+                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #1D4ED8, 0 4px 8px rgba(59,130,246,0.3)",
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
