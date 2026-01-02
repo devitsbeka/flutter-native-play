@@ -51,3 +51,6 @@ verify_jwt = true
 
 [functions.batch-animate-avatars]
 verify_jwt = false
+
+[functions.batch-assign-icons-category]
+verify_jwt = false
