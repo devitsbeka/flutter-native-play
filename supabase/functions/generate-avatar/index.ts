@@ -73,7 +73,7 @@ serve(async (req) => {
 
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
 
-    // Single API call: Generate stylized avatar - subtle artistic enhancement, NOT cartoon
+    // Single API call: Generate 3D Pixar-style avatar matching reference style
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
@@ -82,7 +82,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         imageUrl: imageUrl,
-        textPrompt: "Create a stylized digital art portrait of this person, keep their EXACT facial features face shape and proportions, apply subtle artistic enhancement NOT cartoon, natural looking skin with soft artistic glow, eyes with gentle sparkle keeping original size and color, soft natural smile, gentle warm studio lighting, same hair style and color as original, head and face only cropped tight, clean simple gradient background, professional artistic portrait style like Artgerm or Loish, maintain recognizable likeness, high quality digital illustration",
+        textPrompt: "Transform this person into a high quality 3D Pixar Disney style character portrait, PRESERVE their exact face shape nose shape and unique facial features, smooth stylized 3D rendered skin but keep any freckles or distinctive marks, slightly enlarged expressive eyes with glossy reflections and soft catchlights keeping original eye color, natural closed mouth expression, same hair color and style as original rendered in detailed 3D, soft warm cinematic studio lighting with gentle shadows, head and upper shoulders only, clean neutral gray or brown gradient background, Pixar movie quality 3D render, maintain the persons recognizable identity and likeness, 8K ultra detailed",
       }),
     });
 
