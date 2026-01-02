@@ -51,9 +51,14 @@ export function useAdminIconAssignment() {
   }, []);
 
   // Fetch questions with filters
-  const fetchQuestions = useCallback(async (reset = false) => {
+  const fetchQuestions = useCallback(async (reset = false, currentSearchTerm?: string, currentCategoryFilter?: string | null, currentShowOnlyWithoutIcons?: boolean) => {
     setLoading(true);
     const currentPage = reset ? 0 : page;
+    
+    // Use passed values or current state
+    const search = currentSearchTerm !== undefined ? currentSearchTerm : searchTerm;
+    const catFilter = currentCategoryFilter !== undefined ? currentCategoryFilter : categoryFilter;
+    const onlyWithout = currentShowOnlyWithoutIcons !== undefined ? currentShowOnlyWithoutIcons : showOnlyWithoutIcons;
     
     let query = supabase
       .from('questions')
@@ -63,15 +68,15 @@ export function useAdminIconAssignment() {
       .order('created_at', { ascending: false })
       .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
 
-    if (searchTerm) {
-      query = query.ilike('question_text', `%${searchTerm}%`);
+    if (search) {
+      query = query.ilike('question_text', `%${search}%`);
     }
 
-    if (categoryFilter) {
-      query = query.eq('category_id', categoryFilter);
+    if (catFilter) {
+      query = query.eq('category_id', catFilter);
     }
 
-    if (showOnlyWithoutIcons) {
+    if (onlyWithout) {
       query = query.is('icon_slug', null);
     }
 
@@ -105,12 +110,12 @@ export function useAdminIconAssignment() {
     fetchStats();
   }, [fetchStats]);
 
-  // Fetch when filters change
+  // Fetch when filters change - pass current values to avoid stale closures
   useEffect(() => {
     if (categories.length > 0) {
-      fetchQuestions(true);
+      fetchQuestions(true, searchTerm, categoryFilter, showOnlyWithoutIcons);
     }
-  }, [searchTerm, categoryFilter, showOnlyWithoutIcons, categories]);
+  }, [searchTerm, categoryFilter, showOnlyWithoutIcons, categories.length]);
 
   // Load more
   const loadMore = useCallback(() => {
@@ -124,7 +129,7 @@ export function useAdminIconAssignment() {
     if (page > 0 && categories.length > 0) {
       fetchQuestions(false);
     }
-  }, [page]);
+  }, [page, categories.length]);
 
   // Assign icon to question
   const assignIcon = useCallback(async (questionId: string, iconSlug: string) => {
