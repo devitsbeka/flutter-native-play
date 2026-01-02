@@ -21,9 +21,9 @@ interface ActionButtonWithParticlesProps {
   delay?: number;
   particleColor?: string;
   glowColor?: string;
-  idleOffset?: number; // Offset for idle animation timing
-  size?: number; // Button size in pixels
-  showParticles?: boolean; // Whether to show sparkle particles
+  idleOffset?: number;
+  size?: number;
+  showContainer?: boolean; // Show circular background container (true for homepage, false for modals)
 }
 
 // Star SVG component for sparkle particles
@@ -45,9 +45,9 @@ export function ActionButtonWithParticles({
   glowColor = "rgba(255,255,255,0.4)",
   idleOffset = 0,
   size = 73,
-  showParticles = true,
+  showContainer = true,
 }: ActionButtonWithParticlesProps) {
-  const iconSize = Math.round(size * 0.71); // ~52px for 73px button
+  const iconSize = Math.round(size * 0.71);
   // Generate random particles with varied timing
   const particles = useMemo<Particle[]>(() => {
     return Array.from({ length: 8 }, (_, i) => ({
@@ -67,16 +67,42 @@ export function ActionButtonWithParticles({
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay, type: "spring", stiffness: 200 }}
       onClick={onClick}
-      className="relative flex items-center justify-center"
-      style={{
+      className="relative rounded-full flex items-center justify-center"
+      style={showContainer ? {
+        width: size,
+        height: size,
+        background,
+        boxShadow: `0 4px 12px rgba(0,0,0,0.1), 0 3px 0 ${shadowColor}`,
+        border: "3px solid rgba(255,255,255,0.9)",
+      } : {
         width: size,
         height: size,
       }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
-      {/* Star Sparkle Particles - only show if enabled */}
-      {showParticles && particles.map((particle) => (
+      {/* Pulsing Glow Aura - only with container */}
+      {showContainer && (
+        <motion.div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
+          }}
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.4, 0.8, 0.4],
+          }}
+          transition={{
+            duration: 2 + idleOffset * 0.3,
+            delay: idleOffset * 0.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      )}
+
+      {/* Star Sparkle Particles - only with container */}
+      {showContainer && particles.map((particle) => (
         <motion.div
           key={particle.id}
           className="absolute pointer-events-none"
@@ -104,15 +130,15 @@ export function ActionButtonWithParticles({
         </motion.div>
       ))}
 
-      {/* Icon with drop shadow - no container */}
+      {/* Icon */}
       <motion.img
         src={iconSrc}
         alt={alt}
-        className="object-contain relative z-10 drop-shadow-lg"
+        className="object-contain relative z-10"
         style={{ 
-          width: size, 
-          height: size,
-          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.15))",
+          width: showContainer ? iconSize : size, 
+          height: showContainer ? iconSize : size,
+          filter: showContainer ? undefined : "drop-shadow(0 4px 8px rgba(0,0,0,0.15))",
         }}
         animate={{
           y: [0, -2, 0],
