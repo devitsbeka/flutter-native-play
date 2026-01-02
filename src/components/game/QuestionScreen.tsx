@@ -37,6 +37,8 @@ export function QuestionScreen() {
     hiddenAnswers,
     replacedAnswer,
     playerTimerBonus,
+    playerTimerFrozen,
+    playerFreezeEndTime,
     opponentFrozen,
   } = useGame();
 
@@ -55,6 +57,7 @@ export function QuestionScreen() {
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
   const [questionResults, setQuestionResults] = useState<(boolean | null)[]>([]);
   const [timedOut, setTimedOut] = useState(false);
+  const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -139,11 +142,22 @@ export function QuestionScreen() {
     usePowerUp(type);
   }, [answerState, usePowerUp, playSound, vibrate]);
 
-  // Timer - use ref to avoid stale closure issues
+  // Timer - pauses when frozen
   useEffect(() => {
     if (answerState !== "idle") return;
 
     const timer = setInterval(() => {
+      // Check if timer is frozen
+      if (playerTimerFrozen && playerFreezeEndTime) {
+        const remaining = Math.max(0, Math.ceil((playerFreezeEndTime - Date.now()) / 1000));
+        setFreezeTimeLeft(remaining);
+        if (remaining <= 0) {
+          setFreezeTimeLeft(0);
+        }
+        return; // Don't decrement timer while frozen
+      }
+      
+      setFreezeTimeLeft(0);
       setTimeRemaining((prev) => {
         if (prev <= 0.1) {
           // Schedule timeout handling outside of state update
@@ -155,7 +169,7 @@ export function QuestionScreen() {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [answerState, handleAnswer]);
+  }, [answerState, handleAnswer, playerTimerFrozen, playerFreezeEndTime]);
 
   if (!currentQuestion) return null;
 
@@ -251,22 +265,43 @@ export function QuestionScreen() {
         </div>
       </div>
 
-      {/* Question card - purple themed */}
-      <div className="mx-4 mb-4 bg-[#7B6BA8] dark:bg-slate-800 rounded-3xl p-5 relative shadow-lg">
+      {/* Question card - purple themed with freeze effect */}
+      <div className={cn(
+        "mx-4 mb-4 rounded-3xl p-5 relative shadow-lg transition-all duration-300",
+        playerTimerFrozen && freezeTimeLeft > 0 
+          ? "bg-cyan-100 dark:bg-cyan-900/50 ring-4 ring-cyan-400/50" 
+          : "bg-[#7B6BA8] dark:bg-slate-800"
+      )}>
         {/* Timer progress bar */}
         <div className="mb-4 h-2 bg-white/30 rounded-full overflow-hidden">
           <motion.div
             className="h-full rounded-full"
             style={{
-              background: timerPercentage > 50 ? "white" : timerPercentage > 25 ? "#fbbf24" : "#ef4444",
+              background: playerTimerFrozen && freezeTimeLeft > 0 
+                ? "linear-gradient(90deg, #00BCD4 0%, #4DD0E1 100%)"
+                : timerPercentage > 50 ? "white" : timerPercentage > 25 ? "#fbbf24" : "#ef4444",
               width: `${timerPercentage}%`,
             }}
             transition={{ duration: 0.1 }}
           />
         </div>
 
+        {/* Freeze indicator */}
+        {playerTimerFrozen && freezeTimeLeft > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute top-3 right-3 bg-cyan-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1"
+          >
+            ❄️ {freezeTimeLeft}წ
+          </motion.div>
+        )}
+
         {/* Question text */}
-        <p className="text-white text-xl font-bold text-center leading-relaxed">
+        <p className={cn(
+          "text-xl font-bold text-center leading-relaxed",
+          playerTimerFrozen && freezeTimeLeft > 0 ? "text-cyan-800 dark:text-cyan-100" : "text-white"
+        )}>
           {currentQuestion.question}
         </p>
       </div>
