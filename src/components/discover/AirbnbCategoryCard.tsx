@@ -342,7 +342,7 @@ export function AirbnbCategoryCard({
           </div>
 
           {/* Name Section - Direct text on the chunky container */}
-          <div className="px-5 pb-3" style={{ marginTop: '-3px' }}>
+          <div className="px-5 pb-3" style={{ marginTop: '-1px' }}>
             <h3 
               className="font-bold tracking-wider line-clamp-1 text-left"
               style={{
