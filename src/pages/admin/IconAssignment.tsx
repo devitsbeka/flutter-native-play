@@ -220,8 +220,13 @@ export default function IconAssignment() {
     let offset = 0;
     const batchSize = useSmartAssignment ? 20 : 100; // Smaller batches for smart mode
 
-    const functionName = useSmartAssignment ? 'smart-assign-icons' : 'batch-assign-icons-category';
-    toast.info(`${useSmartAssignment ? 'ჭკვიანი' : 'ბეჩ'} მინიჭება დაიწყო...`);
+    const functionName = useSmartAssignment ? 'smart-assign-icons' : 'batch-assign-icons';
+    
+    // Get array of broken icon slugs to exclude
+    const brokenSlugsArray = Array.from(brokenIcons);
+    console.log(`Passing ${brokenSlugsArray.length} broken icons to exclude`);
+    
+    toast.info(`${useSmartAssignment ? 'ჭკვიანი AI' : 'ბეჩ'} მინიჭება დაიწყო... (${brokenSlugsArray.length} გატეხილი გამორიცხულია)`);
 
     try {
       while (!shouldStop) {
@@ -230,7 +235,8 @@ export default function IconAssignment() {
             categoryId: categoryFilter, 
             batchSize, 
             offset,
-            resetFirst: offset === 0 && useSmartAssignment // Reset only on first batch in smart mode
+            resetFirst: offset === 0 && useSmartAssignment,
+            brokenSlugs: brokenSlugsArray
           }
         });
 
@@ -368,7 +374,7 @@ export default function IconAssignment() {
             </div>
             <div className="flex-1 text-xs text-muted-foreground">
               {useSmartAssignment 
-                ? 'AI აანალიზებს თითოეულ კითხვას და პოულობს შესაბამის აიკონს (პირამიდა, ხმალი, და ა.შ.)'
+                ? 'AI ანალიზი + კატეგორიის აიკონი fallback (გატეხილი აიკონები გამორიცხულია)'
                 : 'ყველა კითხვას მიანიჭებს კატეგორიის საერთო აიკონს'
               }
             </div>

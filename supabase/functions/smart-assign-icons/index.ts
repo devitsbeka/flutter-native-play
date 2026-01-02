@@ -96,35 +96,47 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, batchSize = 20, offset = 0, resetFirst = false } = await req.json();
+    const { categoryId, batchSize = 20, offset = 0, resetFirst = false, brokenSlugs = [] } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get category info - support both UUID (id) and string (category_id)
-    let categoryQuery = supabase.from('categories').select('id, category_id, name, icon_slug');
-    if (categoryId) {
-      // Check if it's a UUID format
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
-      if (isUuid) {
-        categoryQuery = categoryQuery.eq('id', categoryId);
-      } else {
-        categoryQuery = categoryQuery.eq('category_id', categoryId);
-      }
-    }
-    const { data: categories, error: catError } = await categoryQuery;
     
-    if (catError) {
-      console.error('Error fetching categories:', catError);
+    // Create set of broken slugs for O(1) lookup
+    const brokenSet = new Set<string>(brokenSlugs);
+    console.log(`Excluding ${brokenSet.size} broken icons from assignment`);
+
+    // Get ALL categories for fallback lookup (we need icon_slug for each)
+    const { data: allCategories, error: allCatError } = await supabase
+      .from('categories')
+      .select('id, category_id, name, icon_slug');
+    
+    if (allCatError) {
+      console.error('Error fetching categories:', allCatError);
       throw new Error('Failed to fetch categories');
     }
 
-    const targetCategory = categories?.[0];
-    if (!targetCategory && categoryId) {
-      throw new Error(`Category not found: ${categoryId}`);
+    // Build category icon lookup map (category_id -> icon_slug)
+    const categoryIconMap = new Map<string, string>();
+    allCategories?.forEach(cat => {
+      if (cat.icon_slug && !brokenSet.has(cat.icon_slug)) {
+        categoryIconMap.set(cat.id, cat.icon_slug);
+      }
+    });
+    console.log(`Category fallback map has ${categoryIconMap.size} valid icons`);
+
+    // Find target category if filtering
+    let targetCategory = null;
+    if (categoryId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
+      targetCategory = allCategories?.find(c => 
+        isUuid ? c.id === categoryId : c.category_id === categoryId
+      );
+      if (!targetCategory) {
+        throw new Error(`Category not found: ${categoryId}`);
+      }
     }
 
     // Reset icons if requested
@@ -183,11 +195,15 @@ serve(async (req) => {
       throw new Error('Failed to fetch icon library');
     }
 
-    const iconSlugs = new Set(icons?.map(i => i.slug) || []);
+    // Filter out broken icons
+    const validIcons = icons?.filter(i => !brokenSet.has(i.slug)) || [];
+    console.log(`${validIcons.length} valid icons after excluding ${brokenSet.size} broken`);
+
+    const iconSlugs = new Set(validIcons.map(i => i.slug));
     const iconsByTag: Record<string, string[]> = {};
     
-    // Build tag-to-slug index
-    icons?.forEach(icon => {
+    // Build tag-to-slug index (only valid icons)
+    validIcons.forEach(icon => {
       const allTags = [...(icon.tags || []), icon.title?.toLowerCase(), icon.category?.toLowerCase()].filter(Boolean);
       allTags.forEach(tag => {
         const normalizedTag = tag.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -268,10 +284,13 @@ serve(async (req) => {
         }
       }
 
-      // Step 4: Use category default as fallback
-      if (!matchedIcon && targetCategory?.icon_slug) {
-        matchedIcon = targetCategory.icon_slug;
-        matchMethod = 'category-default';
+      // Step 4: Use category default as fallback (works for ALL questions, not just filtered category)
+      if (!matchedIcon) {
+        const categoryFallback = categoryIconMap.get(question.category_id);
+        if (categoryFallback) {
+          matchedIcon = categoryFallback;
+          matchMethod = 'category-fallback';
+        }
       }
 
       results.push({ id: question.id, icon_slug: matchedIcon, method: matchMethod });
