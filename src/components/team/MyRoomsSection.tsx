@@ -80,25 +80,41 @@ interface RoomCardProps {
 
 function RoomCard({ room, index, onJoin }: RoomCardProps) {
   const statusConfig = {
-    waiting: { label: "მოლოდინი", color: "bg-amber-100 text-amber-700" },
-    ready: { label: "მზადაა", color: "bg-green-100 text-green-700" },
-    playing: { label: "მიმდინარე", color: "bg-blue-100 text-blue-700" },
+    waiting: { label: "მოლოდინი", color: "bg-amber-500 text-white" },
+    ready: { label: "მზადაა", color: "bg-green-500 text-white" },
+    playing: { label: "მიმდინარე", color: "bg-purple-500 text-white" },
   };
 
   const status = statusConfig[room.status as keyof typeof statusConfig] || statusConfig.waiting;
+
+  // Gradient backgrounds based on index for variety
+  const gradients = [
+    "linear-gradient(135deg, #FFFFFF 0%, #F3E8FF 50%, #E9D5FF 100%)",
+    "linear-gradient(135deg, #FFFFFF 0%, #FCE7F3 50%, #FBCFE8 100%)",
+    "linear-gradient(135deg, #FFFFFF 0%, #E0E7FF 50%, #C7D2FE 100%)",
+    "linear-gradient(135deg, #FFFFFF 0%, #CCFBF1 50%, #99F6E4 100%)",
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex-shrink-0 w-52 p-4 rounded-2xl bg-gradient-to-br from-white via-white to-purple-50 shadow-lg border border-purple-100 relative overflow-hidden"
+      className="flex-shrink-0 w-52 p-4 rounded-2xl shadow-lg border border-white/50 relative overflow-hidden"
+      style={{
+        background: gradients[index % gradients.length],
+        boxShadow: "0 8px 32px rgba(147, 51, 234, 0.15), 0 4px 0 rgba(233, 213, 255, 0.5)",
+      }}
     >
-      {/* Decorative gradient orb */}
-      <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-purple-200/40 to-pink-200/40 rounded-full blur-xl" />
+      {/* Decorative gradient orbs */}
+      <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-purple-300/50 to-pink-300/50 rounded-full blur-2xl" />
+      <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-200/40 to-purple-200/40 rounded-full blur-xl" />
       
       {/* Status badge */}
-      <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${status.color} mb-2`}>
+      <div 
+        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${status.color} mb-2`}
+        style={{ boxShadow: "0 2px 0 rgba(0,0,0,0.1)" }}
+      >
         {status.label}
       </div>
 
