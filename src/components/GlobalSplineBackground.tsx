@@ -114,12 +114,12 @@ export function GlobalSplineBackground() {
         </video>
       </div>
       
-      {/* Subtle gradient overlay for depth */}
+      {/* White radial mask - transparent center, white edges */}
       {shouldShow && (
         <div 
           className="fixed inset-0 pointer-events-none"
           style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.1) 100%)",
+            background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.7) 80%, rgba(255,255,255,1) 100%)",
             zIndex: -25,
           }}
         />
