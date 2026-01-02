@@ -5,54 +5,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LIGHTX_API_KEY = Deno.env.get('LIGHTX_API_KEY');
+const STABILITY_API_KEY = Deno.env.get('STABILITY_API_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
 }
 
-interface LightXResultResponse {
-  statusCode: number;
-  body: {
-    status: string;
-    output?: string;
-    error?: string;
-  };
-}
-
-async function pollForResult(orderId: string, maxAttempts = 60): Promise<string> {
-  const pollUrl = "https://api.lightxeditor.com/external/api/v1/order-status";
-  
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    console.log(`Polling attempt ${attempt + 1} for order ${orderId}`);
-    
-    const response = await fetch(pollUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": LIGHTX_API_KEY!,
-      },
-      body: JSON.stringify({ orderId }),
-    });
-
-    const data: LightXResultResponse = await response.json();
-    console.log(`Poll response status: ${data.body?.status}`);
-
-    if (data.body?.status === "completed" || data.body?.status === "active") {
-      if (data.body.output) {
-        return data.body.output;
-      }
-      throw new Error("No output URL in completed response");
-    }
-
-    if (data.body?.status === "failed") {
-      throw new Error(data.body.error || "Operation failed");
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
+async function fetchImageAsBlob(url: string): Promise<Blob> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.statusText}`);
   }
-
-  throw new Error("Operation timed out");
+  return await response.blob();
 }
 
 serve(async (req) => {
@@ -61,8 +25,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!LIGHTX_API_KEY) {
-      throw new Error("LIGHTX_API_KEY is not configured");
+    if (!STABILITY_API_KEY) {
+      throw new Error("STABILITY_API_KEY is not configured");
     }
 
     const { imageUrl }: AvatarRequest = await req.json();
@@ -71,38 +35,50 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
+    console.log("Starting avatar generation with Stability AI for image:", imageUrl.substring(0, 100));
 
-    // Single API call: Generate 3D Pixar-style avatar matching reference style
-    const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
+    // Fetch the source image
+    const imageBlob = await fetchImageAsBlob(imageUrl);
+    console.log("Fetched source image, size:", imageBlob.size);
+
+    // Create form data for Stability AI
+    const formData = new FormData();
+    formData.append("image", imageBlob, "source.png");
+    formData.append("prompt", "Cute adorable 3D Pixar Disney cartoon character portrait, big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression, soft violet and pink accent lighting on hair and face edges, dark navy gradient background, Pixar Disney animation quality, charming lovable character design, high quality 3D render");
+    formData.append("mode", "image-to-image");
+    formData.append("strength", "0.65"); // Balance between preserving likeness and applying cartoon style
+    formData.append("model", "sd3.5-large-turbo"); // Fast and high quality
+    formData.append("output_format", "png");
+    formData.append("negative_prompt", "realistic, photo, photograph, ugly, deformed, noisy, blurry, low quality, distorted face, bad anatomy");
+
+    // Call Stability AI SD3.5 image-to-image endpoint
+    const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/sd3", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": LIGHTX_API_KEY,
+        "Authorization": `Bearer ${STABILITY_API_KEY}`,
+        "Accept": "application/json",
       },
-      body: JSON.stringify({
-        imageUrl: imageUrl,
-        styleImageUrl: "https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com/images/avatar-style-reference.jpg",
-        textPrompt: "Create a cute adorable 3D cartoon character portrait exactly like the style reference, big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression, soft violet and pink accent lighting on hair and face edges, dark navy gradient background, Pixar Disney animation quality, charming lovable character design",
-      }),
+      body: formData,
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Stability AI error response:", response.status, errorText);
+      throw new Error(`Stability AI API error: ${response.status} - ${errorText}`);
+    }
+
     const data = await response.json();
-    console.log("LightX avatar response:", JSON.stringify(data));
+    console.log("Stability AI response received");
 
-    if (!response.ok || (data.statusCode && data.statusCode !== 2000)) {
-      throw new Error(`LightX API error: ${data.message || JSON.stringify(data)}`);
+    // The response contains base64 encoded image
+    if (!data.image) {
+      console.error("Unexpected response format:", JSON.stringify(data));
+      throw new Error("No image in response");
     }
 
-    const orderId = data.body?.orderId || data.orderId;
-    if (!orderId) {
-      throw new Error(`No orderId in response: ${JSON.stringify(data)}`);
-    }
-    
-    console.log("Got orderId:", orderId);
-
-    const avatarUrl = await pollForResult(orderId);
-    console.log("Avatar generated successfully:", avatarUrl);
+    // Return the base64 image as a data URL
+    const avatarUrl = `data:image/png;base64,${data.image}`;
+    console.log("Avatar generated successfully");
 
     return new Response(
       JSON.stringify({ 
