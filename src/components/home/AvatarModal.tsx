@@ -289,9 +289,10 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
 
     setIsAnimating(true);
-    toast.info("Starting avatar animation... This takes 10-15 minutes", { duration: 5000 });
+    toast.info("Starting avatar animation... This takes 10-15 minutes. We'll keep checking!", { duration: 5000 });
 
     try {
+      // Start the animation
       const { data, error } = await supabase.functions.invoke("animate-avatar", {
         body: { 
           imageUrl: profile.avatar_url,
@@ -300,19 +301,67 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       });
 
       if (error) throw new Error(error.message);
-      if (!data.success) throw new Error(data.error || "Failed to animate avatar");
+      if (!data.success) throw new Error(data.error || "Failed to start animation");
 
-      // Update profile with animated avatar URL
-      await updateProfile({ animated_avatar_url: data.videoUrl });
-      
-      toast.success("Avatar animated! 🎬", { duration: 5000 });
-      
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#A855F7", "#EC4899", "#3B82F6"],
-      });
+      // If completed immediately (unlikely)
+      if (data.status === "completed" && data.videoUrl) {
+        await updateProfile({ animated_avatar_url: data.videoUrl });
+        toast.success("Avatar animated! 🎬", { duration: 5000 });
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#A855F7", "#EC4899", "#3B82F6"],
+        });
+        setIsAnimating(false);
+        return;
+      }
+
+      // Poll for status
+      const requestId = data.requestId;
+      if (!requestId) throw new Error("No request ID received");
+
+      toast.info("Animation started! Checking progress...", { duration: 3000 });
+
+      // Poll every 10 seconds for up to 15 minutes (90 attempts)
+      const maxAttempts = 90;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+
+        const { data: statusData, error: statusError } = await supabase.functions.invoke("animate-avatar", {
+          body: { 
+            checkStatus: true,
+            requestId,
+            userId: user.id
+          },
+        });
+
+        if (statusError) {
+          console.error("Status check error:", statusError);
+          continue;
+        }
+
+        if (statusData?.status === "completed" && statusData?.videoUrl) {
+          toast.success("Avatar animated! 🎬", { duration: 5000 });
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#A855F7", "#EC4899", "#3B82F6"],
+          });
+          // Profile is updated by the edge function
+          // Trigger a refresh
+          window.location.reload();
+          return;
+        }
+
+        // Show progress every 30 seconds (every 3rd attempt)
+        if ((attempt + 1) % 3 === 0) {
+          toast.info(`Still processing... (${Math.round((attempt + 1) / 6)} min)`, { duration: 2000 });
+        }
+      }
+
+      toast.error("Animation is taking longer than expected. Please try again later.");
 
     } catch (error) {
       console.error("Error animating avatar:", error);
