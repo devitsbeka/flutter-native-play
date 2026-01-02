@@ -30,7 +30,7 @@ const POWER_UP_INFO: PowerUpInfo[] = [
   {
     type: "freeze",
     name: "გაყინვა",
-    description: "აჩერებს ტაიმერს 5 წამით",
+    description: "დრო გაიყინება 10 წამით",
     icon: freezeIcon,
   },
   {
