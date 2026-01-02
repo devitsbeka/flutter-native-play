@@ -51,7 +51,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         }}
       >
         {/* Navigation items container */}
-        <div className="flex items-center justify-around px-2 py-4">
+        <div className="flex items-center justify-between px-4 py-4">
           {/* Explore */}
           <NavButton
             onClick={() => navigate("/discover")}
@@ -115,7 +115,7 @@ function NavButton({
   return (
     <motion.button
       onClick={onClick}
-      className="relative flex items-center justify-center min-w-[56px] h-12"
+      className="relative flex items-center justify-center w-14 h-12 flex-shrink-0"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
