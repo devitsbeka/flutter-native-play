@@ -31,6 +31,11 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   movies: "/videos/movies.mp4",
   music: "/videos/music.mp4",
   tv_shows: "/videos/tvshows.mp4",
+  biology: "/videos/biology.mp4",
+  memes: "/videos/memes.mp4",
+  modern_technologies: "/videos/modern-technologies.mp4",
+  myths_or_reality: "/videos/myths-or-reality.mp4",
+  paparazzi: "/videos/paparazzi.mp4",
 };
 
 // Get all video URLs for preloading
