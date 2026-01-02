@@ -166,7 +166,7 @@ export function AvatarCircle({
 
 
       {/* Level badge at bottom center - 3D chunky white style */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20" style={{ marginBottom: -25 }}>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20" style={{ marginBottom: -15 }}>
         <div 
           className="flex flex-col items-center px-5 py-2 rounded-full whitespace-nowrap"
           style={{
