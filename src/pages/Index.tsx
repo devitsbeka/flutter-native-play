@@ -38,6 +38,7 @@ import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useTotalStars } from "@/hooks/useTotalStars";
+import { FlagIcon } from "@/components/shared/FlagIcon";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -492,9 +493,7 @@ export default function Index() {
                   {/* Flag and Name */}
                   <div className="flex items-center justify-center gap-2">
                     {profile?.country_code && (
-                      <span className="text-2xl">
-                        {getFlagEmoji(profile.country_code)}
-                      </span>
+                      <FlagIcon countryCode={profile.country_code} size="lg" />
                     )}
                     <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
                       {profile?.nickname || t("game.guest")}
