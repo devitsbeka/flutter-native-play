@@ -53,7 +53,7 @@ const CATEGORY_ICON_MAP: Record<string, string[]> = {
   'technology': ['laptop', 'computer', 'smartphone', 'chip', 'circuit', 'robot', 'processor', 'motherboard'],
   'nature': ['tree', 'flower', 'leaf', 'mountain', 'forest', 'green-earth', 'plant', 'nature'],
   'space': ['rocket', 'astronaut', 'planet', 'satellite', 'galaxy', 'telescope', 'space-shuttle', 'moon'],
-  'animals': ['lion', 'african-lion', 'elephant', 'african-elephant', 'tiger', 'bear', 'wildlife', 'panda'],
+  'animals': ['african-lion', 'african-elephant', 'forest-full-of-animals', 'wildlife-rehabilitator', 'cat-paw-print', 'dog-paw-print', 'totem-animal-effigy', 'panda', 'tiger', 'bear'],
   'math': ['calculator', 'abacus', 'ruler', 'protractor', 'graph', 'equation', 'numbers', 'pi'],
   'physics': ['atom', 'magnet', 'pendulum', 'wave', 'energy', 'electron', 'nuclear', 'radiation'],
   'chemistry': ['flask', 'beaker', 'test-tube', 'molecule', 'periodic-table', 'experiment', 'erlenmeyer-flask'],
@@ -253,13 +253,16 @@ function scoreMatch(icon: IconItem, keywords: string[], category?: string): numb
     }
   }
   
-  // Exact slug match
+  // Slug matching - prioritize partial matches for generic keywords
   for (const keyword of keywords) {
     if (icon.slug === keyword) {
       score += 80;
-    }
-    if (icon.slug.includes(keyword)) {
-      score += 40;
+    } else if (icon.slug.includes(keyword)) {
+      // "animal" matches "forest-full-of-animals", "wildlife" matches "wildlife-rehabilitator"
+      score += 50;
+    } else if (keyword.length >= 4 && icon.slug.split('-').some(part => part.includes(keyword) || keyword.includes(part))) {
+      // Match word parts: "paw" matches "cat-paw-print"
+      score += 35;
     }
   }
   
