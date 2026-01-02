@@ -130,7 +130,9 @@ export function AvatarCircle({
           style={{
             width: size - (progressRingWidth + ringGap) * 2 - 8,
             height: size - (progressRingWidth + ringGap) * 2 - 8,
-            background: "rgba(240,240,245,1)",
+            background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
+            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
+            border: "3px solid rgba(255,255,255,0.95)",
           }}
         >
           <span className="text-6xl">🎮</span>
