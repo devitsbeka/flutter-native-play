@@ -19,7 +19,7 @@ const POWER_UP_IMAGES: Record<PowerUpType, string> = {
 
 const POWER_UP_DESCRIPTIONS: Record<PowerUpType, string> = {
   "5050": "წაშლის 2 არასწორ პასუხს",
-  "freeze": "აყინებს მოწინააღმდეგეს 5 წამით",
+  "freeze": "ყინავს მოწინააღმდეგეს 5 წამით",
   "replace": "ცვლის კითხვას ახლით",
   "time-drain": "დაამატებს 3 წამს",
 };

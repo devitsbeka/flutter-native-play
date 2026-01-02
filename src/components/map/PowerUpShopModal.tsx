@@ -34,7 +34,7 @@ const POWER_UP_INFO: PowerUpInfo[] = [
   {
     type: "freeze",
     name: "გაყინვა",
-    description: "აყინებს მოწინააღმდეგეს 5 წამით",
+    description: "ყინავს მოწინააღმდეგეს 5 წამით",
   },
   {
     type: "replace",
