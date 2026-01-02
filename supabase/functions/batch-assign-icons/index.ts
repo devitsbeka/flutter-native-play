@@ -13,6 +13,7 @@ const PARALLEL_LIMIT = 5;
 interface Question {
   id: string;
   question_text: string;
+  category_id?: string;
   category_name?: string;
 }
 
@@ -120,17 +121,22 @@ CORRECT: Suggesting general category icons like "science", "animal", "landmark"`
 // Find best matching icon from library with improved matching
 async function findBestIcon(
   supabase: any,
-  aiResult: AIIconResult
+  aiResult: AIIconResult,
+  brokenSet: Set<string>
 ): Promise<string | null> {
+  // Helper to check if slug is valid (not broken)
+  const isValid = (slug: string) => !brokenSet.has(slug);
+
   // 1. Try exact slug matches first
   for (const slug of aiResult.slugs) {
+    if (brokenSet.has(slug)) continue;
     const { data } = await supabase
       .from('icon_library')
       .select('slug')
       .eq('slug', slug)
       .limit(1);
     
-    if (data && data.length > 0) {
+    if (data && data.length > 0 && isValid(data[0].slug)) {
       return data[0].slug;
     }
   }
@@ -141,10 +147,11 @@ async function findBestIcon(
       .from('icon_library')
       .select('slug')
       .ilike('slug', `${slug}-%`)
-      .limit(1);
+      .limit(5);
     
-    if (data && data.length > 0) {
-      return data[0].slug;
+    const validMatch = data?.find((d: any) => isValid(d.slug));
+    if (validMatch) {
+      return validMatch.slug;
     }
   }
 
@@ -154,10 +161,11 @@ async function findBestIcon(
       .from('icon_library')
       .select('slug, title')
       .ilike('title', `%${keyword}%`)
-      .limit(1);
+      .limit(5);
     
-    if (data && data.length > 0) {
-      return data[0].slug;
+    const validMatch = data?.find((d: any) => isValid(d.slug));
+    if (validMatch) {
+      return validMatch.slug;
     }
   }
 
@@ -167,10 +175,11 @@ async function findBestIcon(
       .from('icon_library')
       .select('slug, tags')
       .contains('tags', [keyword.toLowerCase()])
-      .limit(1);
+      .limit(5);
     
-    if (data && data.length > 0) {
-      return data[0].slug;
+    const validMatch = data?.find((d: any) => isValid(d.slug));
+    if (validMatch) {
+      return validMatch.slug;
     }
   }
 
@@ -180,10 +189,11 @@ async function findBestIcon(
       .from('icon_library')
       .select('slug')
       .ilike('slug', `%${slug}%`)
-      .limit(1);
+      .limit(5);
     
-    if (data && data.length > 0) {
-      return data[0].slug;
+    const validMatch = data?.find((d: any) => isValid(d.slug));
+    if (validMatch) {
+      return validMatch.slug;
     }
   }
 
@@ -196,7 +206,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode } = await req.json();
+    const { categoryId, testMode, brokenSlugs = [] } = await req.json();
     const batchSize = testMode ? TEST_BATCH_SIZE : BATCH_SIZE;
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -208,12 +218,31 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Create set of broken slugs for O(1) lookup
+    const brokenSet = new Set<string>(brokenSlugs);
+    console.log(`Excluding ${brokenSet.size} broken icons from assignment`);
+
+    // Get ALL categories for fallback lookup
+    const { data: allCategories } = await supabase
+      .from('categories')
+      .select('id, icon_slug');
+    
+    // Build category icon lookup map (category_id -> icon_slug)
+    const categoryIconMap = new Map<string, string>();
+    allCategories?.forEach(cat => {
+      if (cat.icon_slug && !brokenSet.has(cat.icon_slug)) {
+        categoryIconMap.set(cat.id, cat.icon_slug);
+      }
+    });
+    console.log(`Category fallback map has ${categoryIconMap.size} valid icons`);
+
     // Build query for questions without icons
     let query = supabase
       .from('questions')
       .select(`
         id,
         question_text,
+        category_id,
         category:categories!inner(name)
       `)
       .or('icon_slug.is.null,icon_slug.eq.')
@@ -259,6 +288,7 @@ serve(async (req) => {
     const formattedQuestions: Question[] = questions.map((q: any) => ({
       id: q.id,
       question_text: q.question_text,
+      category_id: q.category_id,
       category_name: q.category?.name
     }));
 
@@ -278,12 +308,31 @@ serve(async (req) => {
             LOVABLE_API_KEY
           );
 
-          if (!aiResult) {
-            return { id: question.id, icon_slug: null, success: false };
+          let iconSlug: string | null = null;
+          let method = 'none';
+
+          if (aiResult) {
+            iconSlug = await findBestIcon(supabase, aiResult, brokenSet);
+            if (iconSlug) {
+              method = 'ai-match';
+            }
           }
 
-          const iconSlug = await findBestIcon(supabase, aiResult);
-          return { id: question.id, icon_slug: iconSlug, success: true };
+          // Fallback to category icon if no AI match
+          if (!iconSlug && question.category_id) {
+            const categoryFallback = categoryIconMap.get(question.category_id);
+            if (categoryFallback) {
+              iconSlug = categoryFallback;
+              method = 'category-fallback';
+            }
+          }
+
+          return { 
+            id: question.id, 
+            icon_slug: iconSlug, 
+            success: aiResult !== null || iconSlug !== null,
+            method
+          };
         })
       );
 
