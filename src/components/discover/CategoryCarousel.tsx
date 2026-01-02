@@ -2,6 +2,12 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 
+// Map category IDs to their video URLs
+const CATEGORY_VIDEOS: Record<string, string> = {
+  "art": "/videos/painting.mp4",
+  "georgian_history": "/videos/geo-battle-2.mp4",
+};
+
 interface Category {
   id: string;
   uuid?: string; // The actual UUID from database
@@ -91,6 +97,7 @@ export function CategoryCarousel({
                 imageUrl={category.image_url}
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
+                videoUrl={CATEGORY_VIDEOS[category.id]}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);
