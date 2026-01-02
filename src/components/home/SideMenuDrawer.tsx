@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, User, Sun, Moon } from "lucide-react";
+import { X, LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
-import { useTheme } from "@/providers/theme-provider";
 import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -39,15 +38,8 @@ const bottomLinks = [
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-  const toggleTheme = () => {
-    setTheme(isDark ? "light" : "dark");
-  };
 
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
@@ -195,21 +187,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                     className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     პარამეტრები
-                  </button>
-
-                  {/* Theme Switcher */}
-                  <button
-                    onClick={toggleTheme}
-                    className="flex items-center justify-between py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <span>{isDark ? "ღია თემა" : "მუქი თემა"}</span>
-                    <div className="flex items-center gap-2">
-                      {isDark ? (
-                        <Sun className="h-4 w-4" />
-                      ) : (
-                        <Moon className="h-4 w-4" />
-                      )}
-                    </div>
                   </button>
 
                   {/* დახმარება */}

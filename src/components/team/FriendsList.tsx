@@ -61,11 +61,11 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-white tracking-wide">მეგობრები</span>
+          <span className="text-sm font-bold text-slate-800 tracking-wide">მეგობრები</span>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex-shrink-0 w-40 h-48 animate-pulse rounded-2xl bg-white/20" />
+            <div key={i} className="flex-shrink-0 w-40 h-48 animate-pulse rounded-2xl bg-slate-200" />
           ))}
         </div>
       </div>
@@ -77,7 +77,7 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
       {/* Pending Requests */}
       {pendingRequests.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-amber-300 mb-2">
+          <div className="flex items-center gap-2 text-amber-600 mb-2">
             <Mail className="w-4 h-4" />
             <span className="text-sm font-medium">მომლოდინე მოთხოვნები ({pendingRequests.length})</span>
           </div>
@@ -97,10 +97,10 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
 
       {/* Friends List Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-white tracking-wide">მეგობრები</span>
+        <span className="text-sm font-bold text-slate-800 tracking-wide">მეგობრები</span>
         <motion.button
           onClick={onAddFriendClick}
-          className="text-sm font-semibold text-orange-400 px-3 py-1 rounded-full bg-orange-400/15 hover:bg-orange-400/25 transition-colors"
+          className="text-sm font-semibold text-orange-600 px-3 py-1 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -113,10 +113,10 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-8 rounded-2xl bg-white/5 border border-white/10"
+          className="text-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
         >
-          <Users className="w-12 h-12 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60 text-sm mb-3">ჯერ მეგობრები არ გყავს</p>
+          <Users className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-500 text-sm mb-3">ჯერ მეგობრები არ გყავს</p>
           <ChunkyButton
             variant="secondary"
             size="sm"
@@ -146,17 +146,17 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
 
       {/* Remove Friend Confirmation Dialog */}
       <AlertDialog open={!!friendToRemove} onOpenChange={() => setFriendToRemove(null)}>
-        <AlertDialogContent className="bg-gradient-to-b from-purple-900 to-purple-950 border-purple-500/30">
+        <AlertDialogContent className="bg-white border-slate-200">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white font-display">
+            <AlertDialogTitle className="text-slate-800 font-display">
               მეგობრის წაშლა
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-white/70">
-              დარწმუნებული ხარ, რომ გინდა <span className="text-white font-medium">{friendToRemove?.nickname}</span>-ის წაშლა მეგობრებიდან?
+            <AlertDialogDescription className="text-slate-500">
+              დარწმუნებული ხარ, რომ გინდა <span className="text-slate-800 font-medium">{friendToRemove?.nickname}</span>-ის წაშლა მეგობრებიდან?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+            <AlertDialogCancel className="bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200">
               გაუქმება
             </AlertDialogCancel>
             <AlertDialogAction
@@ -281,9 +281,9 @@ function PendingRequestCard({ request, onAccept, onDecline }: PendingRequestCard
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="flex items-center gap-3 p-3 rounded-2xl bg-amber-500/20 backdrop-blur-sm border border-amber-500/30"
+      className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 backdrop-blur-sm border border-amber-200"
     >
-      <Avatar className="w-12 h-12 border-2 border-amber-400/50">
+      <Avatar className="w-12 h-12 border-2 border-amber-300">
         <AvatarImage src={request.avatarUrl || undefined} />
         <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold">
           {request.nickname.charAt(0).toUpperCase()}
@@ -291,14 +291,14 @@ function PendingRequestCard({ request, onAccept, onDecline }: PendingRequestCard
       </Avatar>
 
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-white truncate">{request.nickname}</p>
-        <p className="text-xs text-amber-300">გთხოვს მეგობრობას</p>
+        <p className="font-medium text-slate-800 truncate">{request.nickname}</p>
+        <p className="text-xs text-amber-600">გთხოვს მეგობრობას</p>
       </div>
 
       <div className="flex items-center gap-2">
         <motion.button
           onClick={onAccept}
-          className="p-2 rounded-xl bg-green-500/30 text-green-300 hover:bg-green-500/40"
+          className="p-2 rounded-xl bg-green-100 text-green-600 hover:bg-green-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -306,7 +306,7 @@ function PendingRequestCard({ request, onAccept, onDecline }: PendingRequestCard
         </motion.button>
         <motion.button
           onClick={onDecline}
-          className="p-2 rounded-xl bg-red-500/30 text-red-300 hover:bg-red-500/40"
+          className="p-2 rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >

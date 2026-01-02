@@ -12,7 +12,7 @@ createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider defaultTheme="system" storageKey="quiz-theme">
+        <ThemeProvider defaultTheme="light" storageKey="quiz-theme">
           <App />
         </ThemeProvider>
       </BrowserRouter>
