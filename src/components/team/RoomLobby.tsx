@@ -99,13 +99,7 @@ export function RoomLobby() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          background: "linear-gradient(180deg, hsl(260 70% 65%) 0%, hsl(280 60% 55%) 50%, hsl(300 50% 45%) 100%)"
-        }}
-      />
+      {/* No local background - uses GlobalSplineBackground */}
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
@@ -113,17 +107,27 @@ export function RoomLobby() {
         <div className="flex items-center justify-between mb-6">
           <motion.button
             onClick={handleLeave}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+            }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">გასვლა</span>
+            <ArrowLeft className="w-4 h-4 text-gray-700" />
+            <span className="text-sm font-medium text-gray-700">გასვლა</span>
           </motion.button>
 
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm text-white">
-            <Users className="w-4 h-4" />
-            <span className="text-sm font-medium">{participants.length}/{room.max_players}</span>
+          <div 
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+            }}
+          >
+            <Users className="w-4 h-4 text-gray-700" />
+            <span className="text-sm font-medium text-gray-700">{participants.length}/{room.max_players}</span>
           </div>
         </div>
 
@@ -133,12 +137,16 @@ export function RoomLobby() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <p className="text-white/80 text-sm mb-2 text-center">ოთახის კოდი</p>
+          <p className="text-gray-600 text-sm mb-2 text-center font-medium">ოთახის კოდი</p>
           <div className="flex items-center justify-center gap-2">
             <motion.div
-              className="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30"
+              className="px-4 py-2 rounded-xl"
+              style={{
+                background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%)",
+                boxShadow: "0 4px 0 #7C3AED, 0 6px 16px rgba(139, 92, 246, 0.3)",
+              }}
               animate={{ 
-                boxShadow: ["0 0 15px rgba(255,255,255,0.2)", "0 0 25px rgba(255,255,255,0.4)", "0 0 15px rgba(255,255,255,0.2)"]
+                boxShadow: ["0 4px 0 #7C3AED, 0 6px 20px rgba(139, 92, 246, 0.3)", "0 4px 0 #7C3AED, 0 6px 30px rgba(139, 92, 246, 0.5)", "0 4px 0 #7C3AED, 0 6px 20px rgba(139, 92, 246, 0.3)"]
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -149,20 +157,28 @@ export function RoomLobby() {
             
             <motion.button
               onClick={handleCopyCode}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 text-white"
+              className="flex items-center justify-center w-10 h-10 rounded-xl"
+              style={{
+                background: "rgba(255,255,255,0.95)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
             </motion.button>
             
             <motion.button
               onClick={handleShare}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 text-white"
+              className="flex items-center justify-center w-10 h-10 rounded-xl"
+              style={{
+                background: "rgba(255,255,255,0.95)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-4 h-4 text-gray-600" />
             </motion.button>
           </div>
         </motion.div>
@@ -172,17 +188,21 @@ export function RoomLobby() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6"
+            className="mx-auto px-4 py-2 rounded-full mb-6"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}
           >
-            <span className="text-sm text-white">
-              კატეგორია: <strong>{room.category_name}</strong>
+            <span className="text-sm text-gray-700">
+              კატეგორია: <strong className="text-purple-600">{room.category_name}</strong>
             </span>
           </motion.div>
         )}
 
         {/* Participants */}
         <div className="flex-1 max-w-md mx-auto w-full">
-          <h3 className="text-white/90 font-medium text-center mb-4">
+          <h3 className="text-gray-700 font-medium text-center mb-4">
             მოთამაშეები
           </h3>
           
@@ -202,13 +222,16 @@ export function RoomLobby() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="rounded-2xl border-2 border-dashed border-white/30 p-4 flex items-center justify-center"
+                className="rounded-2xl border-2 border-dashed border-gray-300 p-4 flex items-center justify-center"
+                style={{
+                  background: "rgba(255,255,255,0.6)",
+                }}
               >
                 <div className="text-center">
-                  <Loader2 className="w-6 h-6 text-white/50 animate-spin mx-auto mb-2" />
-                  <p className="text-white/50 text-sm">ველოდებით მოთამაშეს...</p>
+                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">ველოდებით მოთამაშეს...</p>
                   {isHost && participants.length < 2 && (
-                    <p className="text-white/40 text-xs mt-1">ან დაიწყე მარტო - მეგობარი მოგვიანებით ითამაშებს</p>
+                    <p className="text-gray-400 text-xs mt-1">ან დაიწყე მარტო - მეგობარი მოგვიანებით ითამაშებს</p>
                   )}
                 </div>
               </motion.div>
@@ -280,7 +303,7 @@ export function RoomLobby() {
           {/* Leave button */}
           <button
             onClick={handleLeave}
-            className="w-full text-center text-white/70 hover:text-white py-2 text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full text-center text-gray-500 hover:text-gray-700 py-2 text-sm transition-colors flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" />
             ოთახიდან გასვლა
