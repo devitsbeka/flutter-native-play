@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Zap, Sparkles, Check } from "lucide-react";
+import { Crown, Zap, Sparkles, Check, Frame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
+import { useAvatarFrames, AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -37,13 +38,14 @@ interface ShopItem {
   currency: "gems" | "coins";
   icon: React.ReactNode;
   gradient: string;
-  category: "hot" | "powers" | "coins" | "vip";
+  category: "hot" | "powers" | "coins" | "vip" | "frames";
   badge?: ShopItemBadge;
   savings?: number;
   vipDuration?: VipDuration;
   powerType?: PowerUpType;
   amount?: number;
   value?: number;
+  frameId?: string;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
@@ -252,6 +254,77 @@ const SHOP_ITEMS: ShopItem[] = [
     savings: 35,
     vipDuration: "month",
   },
+  // Frames
+  {
+    id: "frame_galaxy",
+    name: "Galaxy",
+    description: "კოსმოსური ჩარჩო ვარსკვლავებით",
+    price: 20,
+    currency: "gems",
+    icon: <Frame className="w-8 h-8 text-purple-200" />,
+    gradient: "linear-gradient(135deg, hsl(263 70% 55%) 0%, hsl(320 75% 50%) 100%)",
+    category: "frames",
+    frameId: "galaxy",
+    badge: "new",
+  },
+  {
+    id: "frame_fire",
+    name: "Fire",
+    description: "ცეცხლოვანი ანიმაციური ჩარჩო",
+    price: 30,
+    currency: "gems",
+    icon: <Frame className="w-8 h-8 text-orange-200" />,
+    gradient: "linear-gradient(135deg, hsl(25 90% 55%) 0%, hsl(350 80% 50%) 100%)",
+    category: "frames",
+    frameId: "fire",
+    badge: "popular",
+  },
+  {
+    id: "frame_ice",
+    name: "Ice",
+    description: "ყინულოვანი ბრჭყვიალა ჩარჩო",
+    price: 25,
+    currency: "gems",
+    icon: <Frame className="w-8 h-8 text-cyan-200" />,
+    gradient: "linear-gradient(135deg, hsl(190 80% 55%) 0%, hsl(210 75% 50%) 100%)",
+    category: "frames",
+    frameId: "ice",
+  },
+  {
+    id: "frame_golden",
+    name: "Golden Crown",
+    description: "ლეგენდარული ოქროს გვირგვინი",
+    price: 50,
+    currency: "gems",
+    icon: <Frame className="w-8 h-8 text-amber-200" />,
+    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(35 85% 45%) 100%)",
+    category: "frames",
+    frameId: "golden",
+    badge: "best-value",
+  },
+  {
+    id: "frame_neon",
+    name: "Neon Glow",
+    description: "ნეონის ბრწყინვალე ჩარჩო",
+    price: 35,
+    currency: "gems",
+    icon: <Frame className="w-8 h-8 text-green-200" />,
+    gradient: "linear-gradient(135deg, hsl(150 70% 50%) 0%, hsl(180 75% 45%) 100%)",
+    category: "frames",
+    frameId: "neon",
+  },
+  {
+    id: "frame_rainbow",
+    name: "Rainbow",
+    description: "ცისარტყელას მრავალფერი ჩარჩო",
+    price: 40,
+    currency: "gems",
+    icon: <Frame className="w-8 h-8 text-pink-200" />,
+    gradient: "linear-gradient(135deg, hsl(350 80% 55%) 0%, hsl(45 90% 55%) 50%, hsl(180 70% 50%) 100%)",
+    category: "frames",
+    frameId: "rainbow",
+    badge: "popular",
+  },
 ];
 
 export default function PowerUps() {
@@ -260,6 +333,7 @@ export default function PowerUps() {
   const { addPowerUp, refetch } = useUserPowerUps();
   const { gems, spendGems, addCoins } = useCurrency();
   const { activateVip } = useVipStatus();
+  const { unlockFrame, isFrameUnlocked } = useAvatarFrames();
   const { playSound } = useSound();
 
   const [activeTab, setActiveTab] = useState<ShopTab>("hot");
@@ -309,6 +383,8 @@ export default function PowerUps() {
         await addCoins(item.value);
       } else if (item.vipDuration) {
         await activateVip(item.vipDuration);
+      } else if (item.frameId) {
+        await unlockFrame(item.frameId);
       } else if (item.powerType && item.amount) {
         await addPowerUp(item.powerType, item.amount);
         await refetch();
@@ -369,6 +445,8 @@ export default function PowerUps() {
               {filteredItems.map((item, index) => {
                 const canAfford = gems >= item.price;
                 const isPurchased = purchasedItems.has(item.id);
+                const isFrameOwned = item.frameId ? isFrameUnlocked(item.frameId) : false;
+                const isOwned = isPurchased || isFrameOwned;
 
                 return (
                   <ShopItemCard
@@ -382,11 +460,11 @@ export default function PowerUps() {
                     gradient={item.gradient}
                     badge={item.badge}
                     savings={item.savings}
-                    isPurchased={isPurchased}
+                    isPurchased={isOwned}
                     isLoading={isPurchasing === item.id}
                     canAfford={canAfford}
                     index={index}
-                    onClick={() => !isPurchased && handlePurchase(item)}
+                    onClick={() => !isOwned && handlePurchase(item)}
                   />
                 );
               })}
