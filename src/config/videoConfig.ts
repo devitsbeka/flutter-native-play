@@ -7,13 +7,13 @@ export const MAP_VIDEOS = {
   videoC: "/videos/map-video-c.mp4",
 };
 
-// Category card background videos
+// Category card background videos - v2 cache bust for updated files
 export const CATEGORY_VIDEOS: Record<string, string> = {
-  art: "/videos/art.mp4",
-  georgian_history: "/videos/geo-history.mp4",
-  sports: "/videos/sport-final.mp4",
+  art: "/videos/art.mp4?v=2",
+  georgian_history: "/videos/geo-history.mp4?v=2",
+  sports: "/videos/sport-final.mp4?v=2",
   space: "/videos/galaxy.mp4",
-  georgian_literature: "/videos/literature.mp4",
+  georgian_literature: "/videos/literature.mp4?v=2",
   psychology: "/videos/psyc.mp4",
   geography: "/videos/geography.mp4",
   science: "/videos/science.mp4",
