@@ -1,16 +1,5 @@
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
-
-// Map category IDs to their video URLs
-const CATEGORY_VIDEOS: Record<string, string> = {
-  "art": "/videos/painting.mp4",
-  "georgian_history": "/videos/geo-battle-2.mp4",
-  "sports": "/videos/sport.mp4",
-  "space": "/videos/galaxy.mp4",
-  "georgian_literature": "/videos/literature.mp4",
-  "psychology": "/videos/psyc.mp4",
-  "geography": "/videos/geography.mp4",
-  "science": "/videos/science.mp4",
-};
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 
 interface Category {
   id: string;
