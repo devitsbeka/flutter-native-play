@@ -43,7 +43,7 @@ export function CurrencyDisplay({
             key={coins}
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            className={`font-bold text-gray-700 ${config.text}`}
+            className={`font-bold text-gray-900 ${config.text}`}
           >
             {coins.toLocaleString()}
           </motion.span>
@@ -62,7 +62,7 @@ export function CurrencyDisplay({
             key={gems}
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            className={`font-bold text-gray-700 ${config.text}`}
+            className={`font-bold text-gray-900 ${config.text}`}
           >
             {gems.toLocaleString()}
           </motion.span>
