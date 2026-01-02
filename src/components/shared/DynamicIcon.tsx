@@ -74,8 +74,8 @@ export function DynamicIcon({
         }
       }
       
-      // Try searching by slugs as keywords
-      const match = findIcon(slugs);
+      // Try searching by slugs as keywords, passing categoryId for fallback
+      const match = findIcon(slugs, categoryId);
       if (match && shouldRetryUrl(match.iconUrl)) {
         return match.iconUrl;
       }
