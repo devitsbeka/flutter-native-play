@@ -104,25 +104,38 @@ export function useTrivia() {
           
           setPreparationProgress(20);
           
-          // Fetch one random question from each category
+          // Fetch one random question from each category - increased limit to ensure we get valid ones
           const questionPromises = randomCategories.map(async (cat) => {
             const { data } = await supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
               .eq('is_active', true)
               .eq('category_id', cat.id)
-              .limit(10);
+              .limit(50); // Increased from 10 to ensure we have enough after filtering
             
             if (data && data.length > 0) {
-              const randomQ = data[Math.floor(Math.random() * data.length)];
-              return { 
-                ...randomQ, 
-                categoryName: cat.name, 
-                categoryIcon: cat.icon,
-                categoryIconSlug: cat.icon_slug,
-                categorySlug: cat.category_id,  // The actual category_id for icon lookup
-                questionIconSlug: randomQ.icon_slug,
-              };
+              // Filter by length first, then pick random
+              const validQuestions = data.filter(q => {
+                if (q.question_text.length > QUESTION_MAX_LENGTH) return false;
+                if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
+                const incorrects = Array.isArray(q.incorrect_answers) 
+                  ? q.incorrect_answers as string[]
+                  : JSON.parse(String(q.incorrect_answers) || '[]');
+                if (incorrects.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
+                return true;
+              });
+              
+              if (validQuestions.length > 0) {
+                const randomQ = validQuestions[Math.floor(Math.random() * validQuestions.length)];
+                return { 
+                  ...randomQ, 
+                  categoryName: cat.name, 
+                  categoryIcon: cat.icon,
+                  categoryIconSlug: cat.icon_slug,
+                  categorySlug: cat.category_id,
+                  questionIconSlug: randomQ.icon_slug,
+                };
+              }
             }
             return null;
           });
