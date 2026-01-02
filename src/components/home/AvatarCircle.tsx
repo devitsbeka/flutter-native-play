@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
+import iconCoin from "@/assets/icons/icon-coin.png";
+import iconGem from "@/assets/icons/icon-gem.png";
 
 interface AvatarCircleProps {
   avatarUrl?: string | null;
   size?: number;
-  level?: number;
-  totalStars?: number;
+  coins?: number;
+  gems?: number;
   xpProgress?: number; // 0-100 percentage
   xpCurrent?: number;
   xpTotal?: number;
@@ -13,8 +15,8 @@ interface AvatarCircleProps {
 export function AvatarCircle({ 
   avatarUrl, 
   size = 320, 
-  level, 
-  totalStars,
+  coins = 0,
+  gems = 0,
   xpProgress = 0,
   xpCurrent,
   xpTotal,
@@ -165,21 +167,27 @@ export function AvatarCircle({
         </div>
       )}
 
-      {/* Level + Stars badge at bottom center - 3D chunky white style */}
-      {level !== undefined && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20">
-          <div 
-            className="flex items-center px-4 py-2 rounded-full whitespace-nowrap"
-            style={{
-              background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
-              boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
-              border: "3px solid rgba(255,255,255,0.95)",
-            }}
-          >
-            <span className="font-bold text-gray-700 text-sm">დონე {level} · ⭐ {totalStars ?? 0}</span>
+      {/* Coins & Gems badge at bottom center - 3D chunky white style */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20">
+        <div 
+          className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap"
+          style={{
+            background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
+            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
+            border: "3px solid rgba(255,255,255,0.95)",
+          }}
+        >
+          <div className="flex items-center gap-1">
+            <img src={iconCoin} alt="Coins" className="w-5 h-5" />
+            <span className="font-bold text-gray-700 text-sm">{coins}</span>
+          </div>
+          <div className="w-px h-4 bg-gray-300" />
+          <div className="flex items-center gap-1">
+            <img src={iconGem} alt="Gems" className="w-5 h-5" />
+            <span className="font-bold text-gray-700 text-sm">{gems}</span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
