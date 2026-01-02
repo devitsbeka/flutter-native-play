@@ -73,8 +73,8 @@ export function CategoryCarousel({
       {/* Scrollable Container */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none", paddingLeft: "20px", paddingRight: "16px" }}
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {categories.map((category, index) => {
           // Use uuid for favorites if available, fallback to id
