@@ -401,7 +401,9 @@ export default function Index() {
                           background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
                           shadowColor="#FDBA74"
                           delay={0.4}
-                          particleColor="rgba(253, 186, 116, 0.8)"
+                          particleColor="rgba(253, 186, 116, 0.9)"
+                          glowColor="rgba(253, 186, 116, 0.5)"
+                          idleOffset={0}
                           badge={
                             <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">1</span>
                           }
@@ -415,7 +417,9 @@ export default function Index() {
                           background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
                           shadowColor="#7DD3FC"
                           delay={0.48}
-                          particleColor="rgba(125, 211, 252, 0.8)"
+                          particleColor="rgba(125, 211, 252, 0.9)"
+                          glowColor="rgba(125, 211, 252, 0.5)"
+                          idleOffset={0.7}
                           badge={
                             <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">2</span>
                           }
@@ -429,7 +433,9 @@ export default function Index() {
                           background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
                           shadowColor="#FCD34D"
                           delay={0.56}
-                          particleColor="rgba(252, 211, 77, 0.8)"
+                          particleColor="rgba(252, 211, 77, 0.9)"
+                          glowColor="rgba(252, 211, 77, 0.5)"
+                          idleOffset={1.4}
                           badge={
                             <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">1</span>
                           }
@@ -443,7 +449,9 @@ export default function Index() {
                           background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
                           shadowColor="#C4B5FD"
                           delay={0.64}
-                          particleColor="rgba(196, 181, 253, 0.8)"
+                          particleColor="rgba(196, 181, 253, 0.9)"
+                          glowColor="rgba(196, 181, 253, 0.5)"
+                          idleOffset={2.1}
                           badge={
                             totalPowerUps > 0 ? (
                               <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">
