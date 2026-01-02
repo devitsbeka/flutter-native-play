@@ -400,8 +400,8 @@ export default function Index() {
                           onClick={() => setIsDailyRewardsOpen(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 81,
-                            height: 81,
+                            width: 73,
+                            height: 73,
                             background: "linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FDBA74",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -409,7 +409,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={giftBottleIcon} alt="Gift" className="w-11 h-11 object-contain" />
+                          <img src={giftBottleIcon} alt="Gift" className="w-10 h-10 object-contain" />
                           <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
@@ -421,8 +421,8 @@ export default function Index() {
                           onClick={() => setShowMissionsModal(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 81,
-                            height: 81,
+                            width: 73,
+                            height: 73,
                             background: "linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #7DD3FC",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -430,7 +430,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={missionCrystalIcon} alt="Mission" className="w-11 h-11 object-contain" />
+                          <img src={missionCrystalIcon} alt="Mission" className="w-10 h-10 object-contain" />
                           <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md">2</span>
                         </motion.button>
 
@@ -442,8 +442,8 @@ export default function Index() {
                           onClick={() => setIsChestModalOpen(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 81,
-                            height: 81,
+                            width: 73,
+                            height: 73,
                             background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FCD34D",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -451,7 +451,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={chestBoxIcon} alt="Chest" className="w-11 h-11 object-contain" />
+                          <img src={chestBoxIcon} alt="Chest" className="w-10 h-10 object-contain" />
                           <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
@@ -463,8 +463,8 @@ export default function Index() {
                           onClick={() => setShowMyPowersModal(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 81,
-                            height: 81,
+                            width: 73,
+                            height: 73,
                             background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #C4B5FD",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -472,7 +472,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={powersIcon} alt="Powers" className="w-11 h-11 object-contain" />
+                          <img src={powersIcon} alt="Powers" className="w-10 h-10 object-contain" />
                           {totalPowerUps > 0 && (
                             <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md">
                               {totalPowerUps}
