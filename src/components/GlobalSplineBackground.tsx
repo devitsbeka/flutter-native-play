@@ -119,7 +119,7 @@ export function GlobalSplineBackground() {
         <div 
           className="fixed inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 30%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.85) 70%, rgba(255,255,255,1) 85%)",
+            background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 35%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.75) 75%, rgba(255,255,255,1) 95%)",
             zIndex: -25,
           }}
         />
