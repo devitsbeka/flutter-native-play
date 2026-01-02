@@ -172,11 +172,17 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
     ? formatDistanceToNow(new Date(room.completed_at), { addSuffix: true, locale: ka })
     : "";
 
-  // Get opponents (other participants)
-  const opponents = room.participants.filter(p => p.user_id !== room.participants[0]?.user_id);
+  // Get first opponent (the main person you played against)
+  const me = room.participants.find(p => p.user_id === room.participants[0]?.user_id);
+  const opponents = room.participants.filter(p => p.user_id !== me?.user_id);
+  const mainOpponent = opponents[0];
   
-  // Get category icon using category_id instead of category_name
+  // Get category icon using category_id
   const categoryIcon = room.category_id ? getIcon(room.category_id) : null;
+
+  // Calculate correct answers (score is points, but typically 1 point per correct answer for simplicity)
+  // Since my_score seems to be points, we'll show it as score vs opponent score
+  const opponentScore = mainOpponent?.score || 0;
 
   return (
     <motion.div
@@ -185,72 +191,84 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
       transition={{ delay: index * 0.03 }}
       className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-100 hover:border-slate-200 transition-colors"
     >
-      {/* Category icon or result indicator */}
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden ${
-          room.won
-            ? "bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200"
-            : "bg-gradient-to-br from-slate-100 to-slate-200"
-        }`}
-      >
-        {categoryIcon ? (
-          <img 
-            src={categoryIcon} 
-            alt={room.category_name || ""} 
-            className="w-6 h-6 object-contain"
-          />
-        ) : room.won ? (
-          <Trophy className="w-5 h-5 text-emerald-600" />
-        ) : (
-          <X className="w-5 h-5 text-slate-500" />
+      {/* Category icon with opponent avatar overlay */}
+      <div className="relative flex-shrink-0">
+        {/* Category icon background */}
+        <div
+          className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden ${
+            room.won
+              ? "bg-gradient-to-br from-emerald-50 to-emerald-100"
+              : "bg-gradient-to-br from-slate-100 to-slate-200"
+          }`}
+        >
+          {categoryIcon ? (
+            <img 
+              src={categoryIcon} 
+              alt={room.category_name || ""} 
+              className="w-7 h-7 object-contain"
+            />
+          ) : (
+            <Trophy className="w-6 h-6 text-slate-400" />
+          )}
+        </div>
+        
+        {/* Opponent avatar overlay */}
+        {mainOpponent && (
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full overflow-hidden border-2 border-white bg-slate-200 shadow-sm">
+            {mainOpponent.avatar_url ? (
+              <img 
+                src={mainOpponent.avatar_url} 
+                alt={mainOpponent.nickname}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-bold">
+                {mainOpponent.nickname?.charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Category and time */}
+      {/* Category name, room code, and time */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-slate-800 text-sm truncate">
           {room.category_name || "თამაში"}
         </p>
-        <p className="text-xs text-slate-500">{timeAgo}</p>
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
+            {room.room_code}
+          </span>
+          <span>•</span>
+          <span>{timeAgo}</span>
+        </div>
       </div>
 
-      {/* Score */}
+      {/* Score comparison */}
       <div className="text-center px-2">
-        <p
-          className={`font-bold text-lg ${
-            room.won ? "text-emerald-600" : "text-slate-600"
-          }`}
-        >
-          {room.my_score}/{room.total_questions}
-        </p>
+        <div className="flex items-center gap-1">
+          <span className={`font-bold text-base ${room.won ? "text-emerald-600" : "text-slate-600"}`}>
+            {room.my_score}
+          </span>
+          <span className="text-slate-400 text-sm">-</span>
+          <span className="font-bold text-base text-slate-500">
+            {opponentScore}
+          </span>
+        </div>
       </div>
 
-      {/* Opponents */}
-      <div className="flex -space-x-2 flex-shrink-0 items-center">
-        {opponents.slice(0, 3).map((opponent) => (
-          <div 
-            key={opponent.user_id} 
-            className="w-8 h-8 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
-          >
-            {opponent.avatar_url ? (
-              <img 
-                src={opponent.avatar_url} 
-                alt={opponent.nickname}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-                {opponent.nickname?.charAt(0).toUpperCase() || "?"}
-              </div>
-            )}
-          </div>
-        ))}
-        {opponents.length > 3 && (
-          <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium text-slate-600">
-              +{opponents.length - 3}
-            </span>
-          </div>
+      {/* Outcome badge */}
+      <div
+        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          room.won
+            ? "bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-sm shadow-emerald-200"
+            : "bg-gradient-to-br from-rose-400 to-rose-500 shadow-sm shadow-rose-200"
+        }`}
+      >
+        {room.won ? (
+          <Trophy className="w-4 h-4 text-white" />
+        ) : (
+          <X className="w-4 h-4 text-white" />
         )}
       </div>
     </motion.div>
