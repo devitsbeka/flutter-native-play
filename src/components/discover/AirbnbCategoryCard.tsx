@@ -182,7 +182,17 @@ export function AirbnbCategoryCard({
 
             {/* Video (ping-pong seamless loop) or Icon */}
             {videoUrl ? (
-              <PingPongVideo src={videoUrl} />
+              <>
+                <PingPongVideo src={videoUrl} />
+                {/* Gradient mask overlay on bottom of video */}
+                <div 
+                  className="absolute inset-x-0 bottom-0 pointer-events-none z-[1]"
+                  style={{
+                    height: isFull ? '50%' : '45%',
+                    background: `linear-gradient(180deg, transparent 0%, ${pastel.base}50 30%, ${pastel.base}90 55%, ${pastel.base}cc 75%, ${pastel.base} 100%)`,
+                  }}
+                />
+              </>
             ) : (
               <motion.div
                 className="absolute inset-0 flex items-center justify-center"
