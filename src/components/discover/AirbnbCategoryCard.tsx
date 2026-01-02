@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -69,6 +69,7 @@ export function AirbnbCategoryCard({
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
   const iconSize = 128;
+  const [isPressed, setIsPressed] = React.useState(false);
 
   const particles = useMemo(
     () =>
@@ -100,189 +101,210 @@ export function AirbnbCategoryCard({
     <motion.button
       onClick={onClick}
       whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      onPointerDown={() => setIsPressed(true)}
+      onPointerUp={() => setIsPressed(false)}
+      onPointerLeave={() => setIsPressed(false)}
       className="flex-shrink-0 w-full text-left"
+      style={{
+        transform: isPressed ? "translateY(4px)" : "translateY(0px)",
+        touchAction: "manipulation",
+      }}
     >
-      <div className={`relative w-full rounded-xl overflow-hidden ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
-        {/* Pastel Gradient Background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, ${pastel.base}, ${pastel.accent})`,
-          }}
-        />
+      {/* 3D Chunky Container */}
+      <div 
+        className={`relative w-full rounded-3xl overflow-hidden transition-shadow ${
+          isPressed 
+            ? 'shadow-[0_3px_0_0_rgba(0,0,0,0.15)]' 
+            : 'shadow-[0_8px_0_0_rgba(0,0,0,0.15)]'
+        }`}
+        style={{
+          background: `linear-gradient(135deg, ${pastel.base}, ${pastel.accent})`,
+        }}
+      >
+        {/* Video/Icon Area */}
+        <div className={`relative w-full ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+          {/* Subtle inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/20" />
 
-        {/* Subtle inner glow */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-white/20" />
-
-        {/* Floating Particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          {particles.map((particle) => (
-            <motion.div
-              key={particle.id}
-              className="absolute rounded-full bg-white/50"
-              style={{
-                width: particle.size,
-                height: particle.size,
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-              }}
-              animate={{
-                y: [0, -25, 0],
-                x: [0, particle.drift, 0],
-                opacity: [0.3, 0.7, 0.3],
-                scale: [1, 1.3, 1],
-              }}
-              transition={{
-                duration: particle.duration,
-                delay: particle.delay,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Video (ping-pong seamless loop) or Icon */}
-        {videoUrl ? (
-          <PingPongVideo src={videoUrl} />
-        ) : (
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <DynamicIcon
-              slug={iconSlug || undefined}
-              categoryId={categoryId}
-              size={iconSize}
-              className="drop-shadow-lg filter brightness-110"
-            />
-          </motion.div>
-        )}
-
-        {/* Heart/Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onFavoriteClick?.(e);
-          }}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-colors z-10 flex items-center justify-center"
-        >
-          <Heart
-            className={`w-4 h-4 transition-colors ${
-              isFavorite ? "fill-red-500 text-red-500" : "text-slate-600"
-            }`}
-          />
-        </button>
-
-        {/* Badge - only show if no leaderboard rank */}
-        {badge && !leaderboardRank && (
-          <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center">
-            <span className="text-[10px] font-semibold text-slate-700 leading-none">
-              {badge}
-            </span>
-          </div>
-        )}
-
-        {/* Leaderboard Rank Badge */}
-        {leaderboardRank && leaderboardRank > 0 && (
-          <div 
-            className="absolute top-2 left-2 h-8 px-2.5 rounded-full flex items-center gap-1.5 z-10 bg-white/90 backdrop-blur-sm"
-            style={{ boxShadow: '0 2px 0 rgba(0,0,0,0.08)' }}
-          >
-            <Trophy className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-bold text-slate-700 leading-none">
-              #{leaderboardRank}
-            </span>
-          </div>
-        )}
-
-        {/* Completed Checkmark */}
-        {isCompleted && (
-          <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-            <span className="text-white text-xs">✓</span>
-          </div>
-        )}
-
-        {/* Progress Bar */}
-        <div className={`absolute left-3 right-3 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <div 
-                className={`absolute inset-0 rounded-full ${isFull ? 'h-4' : 'h-3.5'}`}
+          {/* Floating Particles */}
+          <div className="absolute inset-0 overflow-hidden">
+            {particles.map((particle) => (
+              <motion.div
+                key={particle.id}
+                className="absolute rounded-full bg-white/50"
                 style={{
-                  background: 'rgba(0,0,0,0.15)',
-                  transform: 'translateY(2px)',
-                  filter: 'blur(2px)',
+                  width: particle.size,
+                  height: particle.size,
+                  left: `${particle.x}%`,
+                  top: `${particle.y}%`,
+                }}
+                animate={{
+                  y: [0, -25, 0],
+                  x: [0, particle.drift, 0],
+                  opacity: [0.3, 0.7, 0.3],
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: particle.duration,
+                  delay: particle.delay,
+                  repeat: Infinity,
+                  ease: "easeInOut",
                 }}
               />
-              <div 
-                className={`relative rounded-full overflow-hidden ${isFull ? 'h-4' : 'h-3.5'}`}
-                style={{
-                  background: 'rgba(255,255,255,0.35)',
-                  backdropFilter: 'blur(4px)',
-                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15), 0 1px 0 rgba(255,255,255,0.3)',
-                }}
-              >
-                <motion.div 
-                  className="h-full rounded-full relative overflow-hidden"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressPercent}%` }}
-                  transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                  style={{ 
-                    background: 'linear-gradient(180deg, #FFD666 0%, #FFAA00 50%, #E69500 100%)',
-                    boxShadow: progressPercent > 0 
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.5), 0 0 12px rgba(255,170,0,0.4)' 
-                      : 'none',
+            ))}
+          </div>
+
+          {/* Video (ping-pong seamless loop) or Icon */}
+          {videoUrl ? (
+            <PingPongVideo src={videoUrl} />
+          ) : (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <DynamicIcon
+                slug={iconSlug || undefined}
+                categoryId={categoryId}
+                size={iconSize}
+                className="drop-shadow-lg filter brightness-110"
+              />
+            </motion.div>
+          )}
+
+          {/* Heart/Favorite Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onFavoriteClick?.(e);
+            }}
+            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 backdrop-blur-sm hover:bg-white transition-colors z-10 flex items-center justify-center shadow-[0_3px_0_0_rgba(0,0,0,0.1)]"
+          >
+            <Heart
+              className={`w-4 h-4 transition-colors ${
+                isFavorite ? "fill-red-500 text-red-500" : "text-slate-600"
+              }`}
+            />
+          </button>
+
+          {/* Badge - only show if no leaderboard rank */}
+          {badge && !leaderboardRank && (
+            <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-[0_3px_0_0_rgba(0,0,0,0.1)]">
+              <span className="text-xs font-semibold text-slate-700 leading-none">
+                {badge}
+              </span>
+            </div>
+          )}
+
+          {/* Leaderboard Rank Badge */}
+          {leaderboardRank && leaderboardRank > 0 && (
+            <div 
+              className="absolute top-3 left-3 h-9 px-3 rounded-full flex items-center gap-1.5 z-10 bg-white/95 backdrop-blur-sm shadow-[0_3px_0_0_rgba(0,0,0,0.1)]"
+            >
+              <Trophy className="w-4 h-4 text-amber-500" />
+              <span className="text-sm font-bold text-slate-700 leading-none">
+                #{leaderboardRank}
+              </span>
+            </div>
+          )}
+
+          {/* Completed Checkmark */}
+          {isCompleted && (
+            <div className="absolute bottom-3 right-3 w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_3px_0_0_rgba(0,0,0,0.15)]">
+              <span className="text-white text-sm">✓</span>
+            </div>
+          )}
+
+          {/* Progress Bar */}
+          <div className={`absolute left-4 right-4 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <div 
+                  className={`absolute inset-0 rounded-full ${isFull ? 'h-4' : 'h-3.5'}`}
+                  style={{
+                    background: 'rgba(0,0,0,0.15)',
+                    transform: 'translateY(2px)',
+                    filter: 'blur(2px)',
+                  }}
+                />
+                <div 
+                  className={`relative rounded-full overflow-hidden ${isFull ? 'h-4' : 'h-3.5'}`}
+                  style={{
+                    background: 'rgba(255,255,255,0.35)',
+                    backdropFilter: 'blur(4px)',
+                    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15), 0 1px 0 rgba(255,255,255,0.3)',
                   }}
                 >
-                  <div 
-                    className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)',
+                  <motion.div 
+                    className="h-full rounded-full relative overflow-hidden"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                    style={{ 
+                      background: 'linear-gradient(180deg, #FFD666 0%, #FFAA00 50%, #E69500 100%)',
+                      boxShadow: progressPercent > 0 
+                        ? 'inset 0 1px 0 rgba(255,255,255,0.5), 0 0 12px rgba(255,170,0,0.4)' 
+                        : 'none',
                     }}
-                  />
-                  {progressPercent > 10 && progressParticles.map((p) => (
-                    <motion.div
-                      key={p.id}
-                      className="absolute rounded-full bg-white/70"
+                  >
+                    <div 
+                      className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
                       style={{
-                        width: p.size,
-                        height: p.size,
-                        top: '50%',
-                        marginTop: -p.size / 2,
-                      }}
-                      animate={{
-                        left: ['-5%', '105%'],
-                        opacity: [0, 1, 1, 0],
-                        scale: [0.5, 1, 1, 0.5],
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        delay: p.delay,
-                        repeat: Infinity,
-                        ease: "easeInOut",
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)',
                       }}
                     />
-                  ))}
-                </motion.div>
+                    {progressPercent > 10 && progressParticles.map((p) => (
+                      <motion.div
+                        key={p.id}
+                        className="absolute rounded-full bg-white/70"
+                        style={{
+                          width: p.size,
+                          height: p.size,
+                          top: '50%',
+                          marginTop: -p.size / 2,
+                        }}
+                        animate={{
+                          left: ['-5%', '105%'],
+                          opacity: [0, 1, 1, 0],
+                          scale: [0.5, 1, 1, 0.5],
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          delay: p.delay,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                </div>
               </div>
+              <span 
+                className={`font-bold text-white whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}
+                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
+              >
+                {progress}/{totalLevels}
+              </span>
             </div>
-            <span 
-              className={`font-bold text-white whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}
-              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
-            >
-              {progress}/{totalLevels}
-            </span>
           </div>
         </div>
-      </div>
 
-      <h3 className={`mt-2 font-bold text-slate-800 line-clamp-1 ${isFull ? 'text-xl' : 'text-base'}`}>
-        {name}
-      </h3>
+        {/* Name Section - Inside the chunky container */}
+        <div 
+          className="px-4 py-3 flex items-center gap-2"
+          style={{
+            background: 'rgba(255,255,255,0.25)',
+            borderTop: '1px solid rgba(255,255,255,0.3)',
+          }}
+        >
+          <div className="w-6 h-0.5 bg-slate-400/50 rounded-full" />
+          <h3 className={`font-bold text-slate-800 line-clamp-1 flex-1 ${isFull ? 'text-lg' : 'text-base'}`}>
+            {name}
+          </h3>
+        </div>
+      </div>
     </motion.button>
   );
 }
