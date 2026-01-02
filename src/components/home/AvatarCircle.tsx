@@ -270,8 +270,8 @@ export function AvatarCircle({
         <div 
           className="relative flex flex-col items-center px-5 py-2 rounded-full whitespace-nowrap overflow-hidden"
           style={{
-            background: "linear-gradient(180deg, #9B87F5 0%, #7E69AB 50%, #6E59A5 100%)",
-            boxShadow: "inset 0 4px 8px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.2), 0 5px 0 #4A3D70, 0 8px 16px rgba(0,0,0,0.25)",
+            background: "linear-gradient(180deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
+            boxShadow: "inset 0 4px 8px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.2), 0 5px 0 #7C3AED, 0 8px 16px rgba(0,0,0,0.25)",
             border: "3px solid rgba(255,255,255,0.3)",
           }}
         >
