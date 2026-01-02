@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2 } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +29,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const [generatedAvatar, setGeneratedAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -281,6 +282,46 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
   };
 
+  const animateAvatar = async () => {
+    if (!profile?.avatar_url || !user) {
+      toast.error("No avatar to animate");
+      return;
+    }
+
+    setIsAnimating(true);
+    toast.info("Starting avatar animation... This takes 10-15 minutes", { duration: 5000 });
+
+    try {
+      const { data, error } = await supabase.functions.invoke("animate-avatar", {
+        body: { 
+          imageUrl: profile.avatar_url,
+          userId: user.id
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || "Failed to animate avatar");
+
+      // Update profile with animated avatar URL
+      await updateProfile({ animated_avatar_url: data.videoUrl });
+      
+      toast.success("Avatar animated! 🎬", { duration: 5000 });
+      
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#A855F7", "#EC4899", "#3B82F6"],
+      });
+
+    } catch (error) {
+      console.error("Error animating avatar:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to animate avatar");
+    } finally {
+      setIsAnimating(false);
+    }
+  };
+
   // Content based on step
   const renderContent = () => {
     if (step === "gallery") {
@@ -300,8 +341,36 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   <ImageIcon className="w-10 h-10 text-muted-foreground" />
                 </div>
               )}
+              {profile?.animated_avatar_url && (
+                <div className="absolute top-0 right-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+                  <Play className="w-2.5 h-2.5 text-primary-foreground" fill="currentColor" />
+                </div>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">Current Avatar</p>
+            
+            {/* Animate Avatar Button */}
+            {profile?.avatar_url && (
+              <motion.button
+                onClick={animateAvatar}
+                disabled={isAnimating}
+                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 text-xs font-medium text-primary hover:from-primary/30 hover:to-accent/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isAnimating ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Animating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3" />
+                    <span>{profile?.animated_avatar_url ? "Re-animate" : "Animate Avatar"}</span>
+                  </>
+                )}
+              </motion.button>
+            )}
           </div>
 
           {/* Previous Generations */}
