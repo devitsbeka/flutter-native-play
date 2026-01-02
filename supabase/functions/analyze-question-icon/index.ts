@@ -29,48 +29,52 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an icon matching assistant. Your job is to analyze trivia questions (in any language including Georgian) and identify a GENERAL TOPIC icon - NOT the specific answer.
+    const systemPrompt = `You are an icon matching assistant for trivia games. Analyze questions in ANY language (English, Georgian, Spanish, etc.).
 
-CRITICAL RULES:
-- NEVER suggest icons that could hint at the answer
-- Focus on the CATEGORY or GENERAL THEME (science, history, geography, animals, insects, sports, etc.)
-- For a question about "which animal has the longest tongue?" - suggest "animal", "wildlife", "nature" - NOT the specific animal
-- For a question about "who invented the telephone?" - suggest "history", "invention", "technology" - NOT "telephone" or the inventor
-- For a question about insects/bugs - suggest "insect", "bug", "beetle", "nature" - NOT the specific insect
-- The icon should represent the SUBJECT AREA, not the specific answer
+ABSOLUTE RULE: Return ONLY broad category icons. NEVER specific animals, objects, or entities.
 
-Return ONLY valid JSON with no markdown formatting.`;
+ALLOWED ICONS (use ONLY these types):
+- Animals category: "animal", "wildlife", "nature", "paw", "creature"
+- Insects category: "insect", "bug", "nature"  
+- Marine category: "fish", "ocean", "marine-life", "water"
+- Birds category: "bird", "feather", "wildlife"
+- Science category: "science", "atom", "chemistry", "biology", "lab"
+- History category: "history", "clock", "scroll", "book"
+- Geography category: "globe", "map", "earth", "compass"
+- Sports category: "trophy", "medal", "sports", "ball"
+- Technology category: "technology", "computer", "gear"
+- Art category: "art", "palette", "brush", "music"
+- Food category: "food", "restaurant", "utensils"
 
-    const userPrompt = `Analyze this trivia question and identify a GENERAL TOPIC icon.
+BANNED: deer, lion, elephant, dog, cat, mosquito, butterfly, eagle, shark, any specific animal/insect/bird name
 
-Question: "${question}"
+Return ONLY valid JSON with no markdown.`;
+
+    const userPrompt = `Question: "${question}"
 ${category ? `Category: "${category}"` : ''}
 
-IMPORTANT: The icon must NOT hint at the answer. Focus only on the broad topic/category.
-The question may be in Georgian (ქართული) or any other language - analyze the meaning, not just the words.
+This question may be in Georgian (ქართული) or any language. Understand the MEANING.
 
-Return JSON in this exact format:
+Return JSON:
 {
-  "slugs": ["slug1", "slug2", "slug3"],
-  "keywords": ["keyword1", "keyword2", "keyword3"],
-  "mainConcept": "broad topic description"
+  "slugs": ["icon1", "icon2", "icon3"],
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+  "mainConcept": "General Topic Name"
 }
 
-Rules:
-- slugs: 3-5 GENERAL topic icon slugs in English (e.g., "animal", "insect", "science", "globe", "trophy")
-- keywords: 5-10 BROAD category keywords in English (e.g., "wildlife", "biology", "geography", "bug")
-- mainConcept: The general topic in 2-4 words in English (e.g., "Animal Kingdom", "Insects and Bugs")
+CRITICAL RULES:
+1. slugs MUST be generic category icons (animal, insect, bird, science, etc.)
+2. NEVER use specific creature names (no deer, lion, mosquito, eagle, etc.)
+3. If question is about ANY animal → use "animal", "wildlife", "paw", "creature"
+4. If question is about ANY insect → use "insect", "bug", "nature"
+5. If question is about ANY bird → use "bird", "feather", "wildlife"
+6. If question is about ANY fish → use "fish", "ocean", "marine-life"
 
 Examples:
-- Question about which insect spreads disease → slugs: ["insect", "bug", "beetle", "nature"], keywords: ["insect", "bug", "biology", "creature", "nature"]
-- Question about octopus blood → slugs: ["animal", "marine-life", "ocean"], keywords: ["sea", "wildlife", "creature", "biology"]
-- Question about Einstein → slugs: ["science", "physics", "atom"], keywords: ["scientist", "history", "discovery"]
-- Question about Eiffel Tower → slugs: ["landmark", "travel", "architecture"], keywords: ["building", "city", "monument"]
-- Question about birds → slugs: ["bird", "animal", "nature", "wildlife"], keywords: ["bird", "flying", "feather", "nature"]
-
-WRONG: Suggesting the specific answer (like "mosquito", "einstein", "eiffel-tower") - these hint at the answer!
-CORRECT: Suggesting general category icons like "insect", "science", "landmark"`;
-
+- Question about deer antlers → slugs: ["animal", "wildlife", "nature", "paw"]
+- Question about mosquito disease → slugs: ["insect", "bug", "nature", "biology"]
+- Question about eagle flight → slugs: ["bird", "wildlife", "feather", "nature"]
+- Question about shark teeth → slugs: ["fish", "ocean", "marine-life", "water"]`;
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
