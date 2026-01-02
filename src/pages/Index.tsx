@@ -497,73 +497,87 @@ export default function Index() {
                           </motion.div>
                         )}
                         
-                        {/* XP text - dual layer for contrast */}
-                        {/* Dark text layer (visible on grey background) */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="text-sm font-bold text-gray-700 drop-shadow-sm">
+                        {/* XP text - single layer with drop shadow for visibility */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                          <span className="text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                             {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
                           </span>
                         </div>
-                        
-                        {/* White text layer - clipped to purple fill width */}
-                        <motion.div 
-                          className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
-                          style={{ 
-                            width: `${levelInfo.progress}%`,
-                            minWidth: 0
-                          }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${levelInfo.progress}%` }}
-                          transition={{ duration: 1, delay: 0.5 }}
-                        >
-                          <span 
-                            className="text-sm font-bold text-white drop-shadow-md whitespace-nowrap"
-                            style={{ 
-                              width: '100%',
-                              position: 'absolute',
-                              left: 0,
-                              right: 0,
-                              textAlign: 'center',
-                              minWidth: 300
-                            }}
-                          >
-                            {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel} XP
-                          </span>
-                        </motion.div>
                       </div>
                       
-                      {/* Power badges in a row below progress bar */}
+                      {/* Action buttons row - Gift, Mission, Chest, Help */}
                       <div 
-                        className="flex items-center justify-center gap-2 mt-4 pointer-events-auto" 
+                        className="flex items-center justify-center gap-3 mt-4 pointer-events-auto" 
                         data-walkthrough="powerups"
                       >
-                        {(["fifty-fifty", "freeze", "replace", "time-drain"] as const).map((type, index) => (
-                          <motion.div
-                            key={type}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.4 + index * 0.08, type: "spring", stiffness: 200 }}
-                          >
-                            <PowerUpBadge 
-                              type={type} 
-                              size="sm" 
-                              index={index} 
-                              count={3}
-                              onClick={() => setSelectedPowerUp(type)}
-                            />
-                          </motion.div>
-                        ))}
-                        {/* Help button */}
+                        {/* Gift Button */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.72, type: "spring", stiffness: 200 }}
+                          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                          onClick={() => setIsDailyRewardsOpen(true)}
+                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          style={{
+                            background: "linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FDBA74",
+                            border: "3px solid rgba(255,255,255,0.9)",
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <img src={giftBottleIcon} alt="Gift" className="w-8 h-8 object-contain" />
+                          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
+                        </motion.button>
+
+                        {/* Mission Button */}
+                        <motion.button
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.48, type: "spring", stiffness: 200 }}
+                          onClick={() => setShowMissionsModal(true)}
+                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          style={{
+                            background: "linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #7DD3FC",
+                            border: "3px solid rgba(255,255,255,0.9)",
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <img src={missionCrystalIcon} alt="Mission" className="w-8 h-8 object-contain" />
+                          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md">2</span>
+                        </motion.button>
+
+                        {/* Chest Button */}
+                        <motion.button
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.56, type: "spring", stiffness: 200 }}
+                          onClick={() => setIsChestModalOpen(true)}
+                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          style={{
+                            background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FCD34D",
+                            border: "3px solid rgba(255,255,255,0.9)",
+                          }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <img src={chestBoxIcon} alt="Chest" className="w-8 h-8 object-contain" />
+                          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
+                        </motion.button>
+
+                        {/* Help Button */}
+                        <motion.button
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.64, type: "spring", stiffness: 200 }}
                           onClick={() => setShowHelpModal(true)}
-                          className="w-12 h-12 rounded-full flex items-center justify-center"
+                          className="w-14 h-14 rounded-full flex items-center justify-center"
                           style={{
                             background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #D1D5DB",
-                            border: "2px solid rgba(255,255,255,0.9)",
+                            border: "3px solid rgba(255,255,255,0.9)",
                           }}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
