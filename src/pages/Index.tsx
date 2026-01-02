@@ -266,9 +266,9 @@ export default function Index() {
             <motion.button
             className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
               style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FDFCFF 50%, #FAF8FF 100%)",
-                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,1), 0 4px 0 #E8E0F5, 0 6px 12px rgba(0,0,0,0.12)",
-                border: "3px solid rgba(200,180,220,0.35)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
+                border: "2px solid #E8E0F5",
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -282,9 +282,9 @@ export default function Index() {
             <motion.div 
               className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
               style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FDFCFF 50%, #FAF8FF 100%)",
-                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,1), 0 4px 0 #E8E0F5, 0 6px 12px rgba(0,0,0,0.12)",
-                border: "3px solid rgba(200,180,220,0.35)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
+                border: "2px solid #E8E0F5",
               }}
             >
               {/* Ad-Free button */}
@@ -351,7 +351,7 @@ export default function Index() {
                     particleColor="rgba(253, 186, 116, 0.9)"
                     glowColor="rgba(253, 186, 116, 0.5)"
                     idleOffset={0}
-                    size={73}
+                    size={62}
                     badge={
                       <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
                     }
@@ -375,7 +375,7 @@ export default function Index() {
                     particleColor="rgba(125, 211, 252, 0.9)"
                     glowColor="rgba(125, 211, 252, 0.5)"
                     idleOffset={0.7}
-                    size={73}
+                    size={62}
                     badge={
                       <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">2</span>
                     }
@@ -399,7 +399,7 @@ export default function Index() {
                     particleColor="rgba(252, 211, 77, 0.9)"
                     glowColor="rgba(252, 211, 77, 0.5)"
                     idleOffset={1.4}
-                    size={73}
+                    size={62}
                     badge={
                       <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
                     }
@@ -423,7 +423,7 @@ export default function Index() {
                     particleColor="rgba(196, 181, 253, 0.9)"
                     glowColor="rgba(196, 181, 253, 0.5)"
                     idleOffset={2.1}
-                    size={73}
+                    size={62}
                     badge={
                       totalPowerUps > 0 ? (
                         <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
@@ -484,7 +484,7 @@ export default function Index() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, type: "spring" }}
-              className="flex flex-col items-center mt-6 pointer-events-auto"
+              className="flex flex-col items-center mt-11 pointer-events-auto"
             >
               {isRefreshing ? (
                 <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
