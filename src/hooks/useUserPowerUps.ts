@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -16,15 +16,33 @@ const DEFAULT_POWER_UPS: Record<PowerUpType, number> = {
   "time-drain": 1,
 };
 
+// Shared cache to persist data across component instances
+let cachedPowerUps: Record<PowerUpType, number> | null = null;
+let cachedUserId: string | null = null;
+
 export function useUserPowerUps() {
   const { user } = useAuth();
-  const [powerUps, setPowerUps] = useState<Record<PowerUpType, number>>(DEFAULT_POWER_UPS);
-  const [isLoading, setIsLoading] = useState(true);
+  const [powerUps, setPowerUps] = useState<Record<PowerUpType, number>>(
+    // Use cached data if available for the same user
+    cachedUserId === user?.id && cachedPowerUps ? cachedPowerUps : DEFAULT_POWER_UPS
+  );
+  const [isLoading, setIsLoading] = useState(
+    // Not loading if we have cached data for this user
+    !(cachedUserId === user?.id && cachedPowerUps)
+  );
   const [error, setError] = useState<Error | null>(null);
+  const fetchedRef = useRef(false);
 
   // Fetch power-ups from database
   const fetchPowerUps = useCallback(async () => {
     if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Skip if already fetched for this user in this session
+    if (fetchedRef.current && cachedUserId === user.id && cachedPowerUps) {
+      setPowerUps(cachedPowerUps);
       setIsLoading(false);
       return;
     }
@@ -40,9 +58,13 @@ export function useUserPowerUps() {
       if (data && data.length > 0) {
         const powerUpMap: Record<PowerUpType, number> = { ...DEFAULT_POWER_UPS };
         data.forEach((item) => {
-          powerUpMap[item.power_up_type as PowerUpType] = item.quantity;
+          powerUpMap[item.power_up_type as PowerUpType] = item.quantity ?? 0;
         });
         setPowerUps(powerUpMap);
+        // Cache the result
+        cachedPowerUps = powerUpMap;
+        cachedUserId = user.id;
+        fetchedRef.current = true;
       } else {
         // Initialize power-ups for new user
         await initializePowerUps();
@@ -73,6 +95,8 @@ export function useUserPowerUps() {
       console.error("Error initializing power-ups:", insertError);
     } else {
       setPowerUps(DEFAULT_POWER_UPS);
+      cachedPowerUps = DEFAULT_POWER_UPS;
+      cachedUserId = user.id;
     }
   };
 
@@ -93,7 +117,9 @@ export function useUserPowerUps() {
       return false;
     }
 
-    setPowerUps((prev) => ({ ...prev, [type]: newQuantity }));
+    const updated = { ...powerUps, [type]: newQuantity };
+    setPowerUps(updated);
+    cachedPowerUps = updated;
     return true;
   };
 
@@ -114,7 +140,9 @@ export function useUserPowerUps() {
       return false;
     }
 
-    setPowerUps((prev) => ({ ...prev, [type]: newQuantity }));
+    const updated = { ...powerUps, [type]: newQuantity };
+    setPowerUps(updated);
+    cachedPowerUps = updated;
     return true;
   };
 
