@@ -350,18 +350,8 @@ export default function PowerUps() {
               მაღაზია
             </h1>
 
-            {/* Right side: Help + Gems */}
+            {/* Right side: Gems + Help */}
             <div className="flex items-center gap-2">
-              <motion.button
-                onClick={() => setShowTutorialModal(true)}
-                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
-                style={{ boxShadow: "0 3px 0 #D1D5DB" }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95, y: 2 }}
-              >
-                <HelpCircle className="w-5 h-5 text-gray-600" />
-              </motion.button>
-              
               <motion.div 
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
                 style={{
@@ -373,6 +363,16 @@ export default function PowerUps() {
                 <img src={gemIcon} alt="" className="w-5 h-5" />
                 <span className="font-bold text-purple-700">{gems}</span>
               </motion.div>
+
+              <motion.button
+                onClick={() => setShowTutorialModal(true)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
+                style={{ boxShadow: "0 3px 0 #D1D5DB" }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95, y: 2 }}
+              >
+                <HelpCircle className="w-5 h-5 text-gray-600" />
+              </motion.button>
             </div>
           </div>
 
