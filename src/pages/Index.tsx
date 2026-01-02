@@ -303,12 +303,12 @@ export default function Index() {
 
         {/* ===== CURRENCY ROW - Below Header ===== */}
         <div className="relative z-20 flex items-center justify-center gap-3 mt-4 px-4">
-          {/* Coins - Green */}
+          {/* Coins - Yellow */}
           <motion.div 
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
             style={{
-              background: "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
-              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #15803D, 0 4px 8px rgba(22,163,74,0.3)",
+              background: "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
+              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #CA8A04, 0 4px 8px rgba(234,179,8,0.3)",
               border: "2px solid rgba(255,255,255,0.4)",
             }}
             whileHover={{ scale: 1.05 }}
