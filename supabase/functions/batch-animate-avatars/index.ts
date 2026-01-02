@@ -107,9 +107,8 @@ async function animateAvatar(imageUrl: string): Promise<string> {
   formData.append("image", imageBlob, "avatar.png");
   formData.append("prompt", "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly and calm expression. Smooth natural animation.");
   formData.append("negative_prompt", "sudden movements, distortion, morphing, unnatural expressions, glitches, artifacts");
-  formData.append("duration", "3");
+  formData.append("style", "kling-1.0-pro");
   formData.append("aspect_ratio", "1:1");
-  formData.append("style", "realistic");
 
   const response = await fetch("https://api.vyro.ai/v2/video/image-to-video", {
     method: "POST",
@@ -128,15 +127,17 @@ async function animateAvatar(imageUrl: string): Promise<string> {
   const data = await response.json();
   console.log("Vyro API response:", JSON.stringify(data));
 
-  if (data.request_id) {
-    return await pollForResult(data.request_id);
+  // Check for request_id or id (Vyro uses 'id' for async requests)
+  if (data.request_id || data.id) {
+    const requestId = data.request_id || data.id;
+    return await pollForResult(requestId);
   }
 
   if (data.result) {
     return data.result;
   }
 
-  throw new Error("Unexpected response format from Vyro API");
+  throw new Error("Unexpected response format from Vyro API: " + JSON.stringify(data));
 }
 
 serve(async (req) => {

@@ -129,9 +129,8 @@ serve(async (req) => {
     // Animation prompt for subtle avatar movements
     formData.append("prompt", "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly and calm expression. Smooth natural animation.");
     formData.append("negative_prompt", "sudden movements, distortion, morphing, unnatural expressions, glitches, artifacts");
-    formData.append("duration", "3"); // 3 seconds
-    formData.append("aspect_ratio", "1:1"); // Square for avatar
-    formData.append("style", "realistic");
+    formData.append("style", "kling-1.0-pro");
+    formData.append("aspect_ratio", "1:1");
 
     console.log("Sending request to Vyro API...");
 
@@ -153,10 +152,11 @@ serve(async (req) => {
     const data = await response.json();
     console.log("Vyro API response:", JSON.stringify(data));
 
-    // Check if we got a request_id for async processing
-    if (data.request_id) {
-      console.log("Got request_id, polling for result:", data.request_id);
-      const videoUrl = await pollForResult(data.request_id);
+    // Check for request_id or id (Vyro uses 'id' for async requests)
+    if (data.request_id || data.id) {
+      const requestId = data.request_id || data.id;
+      console.log("Got request ID, polling for result:", requestId);
+      const videoUrl = await pollForResult(requestId);
       
       // If userId provided, upload to storage
       if (userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
@@ -193,7 +193,7 @@ serve(async (req) => {
       );
     }
 
-    throw new Error("Unexpected response format from Vyro API");
+    throw new Error("Unexpected response format from Vyro API: " + JSON.stringify(data));
 
   } catch (error) {
     console.error('Error animating avatar:', error);
