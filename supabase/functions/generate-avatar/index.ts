@@ -91,15 +91,19 @@ serve(async (req) => {
     const message = data.choices?.[0]?.message;
     const images = message?.images;
     
+    console.log("Message content:", message?.content ? "has content" : "no content");
+    console.log("Images array:", images ? `found ${images.length} images` : "no images");
+    
     let avatarUrl = "";
     
     if (images && images.length > 0) {
       // Get the image URL from the images array
       avatarUrl = images[0]?.image_url?.url || "";
+      console.log("Extracted avatar URL length:", avatarUrl.length);
     }
     
     if (!avatarUrl) {
-      console.error("Could not extract image from response:", JSON.stringify(data));
+      console.error("Could not extract image from response. Message:", JSON.stringify(message).substring(0, 500));
       throw new Error("Could not extract generated image from response");
     }
 
