@@ -38,6 +38,11 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   modern_technologies: "/videos/modern-technologies.mp4",
   myths_or_reality: "/videos/myths-or-reality.mp4",
   paparazzi: "/videos/paparazzi.mp4",
+  astronomy: "/videos/astrology.mp4",
+  chemistry: "/videos/chemistry.mp4",
+  medicine: "/videos/medicine.mp4",
+  robotics_ai: "/videos/robotics-ai.mp4",
+  social_media: "/videos/social-media.mp4",
 };
 
 // Get all video URLs for preloading
