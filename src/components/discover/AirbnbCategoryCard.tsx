@@ -248,87 +248,98 @@ export function AirbnbCategoryCard({
               </div>
             )}
 
-            {/* Progress Bar - Chunky style */}
-            <div className={`absolute left-4 right-4 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  {/* Progress bar container - chunky */}
-                  <div 
-                    className={`relative rounded-full overflow-hidden ${isFull ? 'h-5' : 'h-4'} border-2 border-white/50`}
-                    style={{
-                      background: 'rgba(255,255,255,0.4)',
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), 0 2px 0 rgba(255,255,255,0.3)',
-                    }}
-                  >
-                    <motion.div 
-                      className="h-full rounded-full relative overflow-hidden"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPercent}%` }}
-                      transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                      style={{ 
-                        background: 'linear-gradient(180deg, #FFD666 0%, #FFAA00 50%, #E69500 100%)',
-                        boxShadow: progressPercent > 0 
-                          ? 'inset 0 2px 0 rgba(255,255,255,0.5), 0 0 12px rgba(255,170,0,0.4)' 
-                          : 'none',
-                      }}
-                    >
-                      {/* Shine on progress */}
-                      <div 
-                        className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
-                        style={{
-                          background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)',
-                        }}
-                      />
-                      {progressPercent > 10 && progressParticles.map((p) => (
-                        <motion.div
-                          key={p.id}
-                          className="absolute rounded-full bg-white/70"
-                          style={{
-                            width: p.size,
-                            height: p.size,
-                            top: '50%',
-                            marginTop: -p.size / 2,
-                          }}
-                          animate={{
-                            left: ['-5%', '105%'],
-                            opacity: [0, 1, 1, 0],
-                            scale: [0.5, 1, 1, 0.5],
-                          }}
-                          transition={{
-                            duration: 2.5,
-                            delay: p.delay,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        />
-                      ))}
-                    </motion.div>
-                  </div>
-                </div>
-                {/* Progress count - chunky badge */}
+            {/* Progress Bar Area with gradient mask */}
+            <div className={`absolute left-0 right-0 ${isFull ? 'bottom-0' : 'bottom-0'}`}>
+              {/* Gradient mask matching container color */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `linear-gradient(180deg, transparent 0%, ${pastel.base}ee 40%, ${pastel.base} 100%)`,
+                }}
+              />
+              
+              {/* Progress bar content */}
+              <div className={`relative px-4 ${isFull ? 'pb-4 pt-8' : 'pb-3 pt-6'}`}>
+                {/* Progress bar with integrated count */}
                 <div 
-                  className="px-2 py-1 rounded-full bg-white/90 border border-white/50"
+                  className={`relative rounded-full overflow-hidden ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70`}
                   style={{
-                    boxShadow: '0 2px 0 rgba(0,0,0,0.08)',
+                    background: 'rgba(255,255,255,0.5)',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), 0 3px 0 rgba(0,0,0,0.06)',
                   }}
                 >
-                  <span className={`font-bold text-slate-700 whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}>
-                    {progress}/{totalLevels}
-                  </span>
+                  {/* Progress fill */}
+                  <motion.div 
+                    className="h-full rounded-full relative overflow-hidden"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                    style={{ 
+                      background: 'linear-gradient(180deg, #FFE066 0%, #FFB800 40%, #FF9500 100%)',
+                      boxShadow: progressPercent > 0 
+                        ? 'inset 0 2px 0 rgba(255,255,255,0.6), 0 0 16px rgba(255,170,0,0.5)' 
+                        : 'none',
+                    }}
+                  >
+                    {/* Shine on progress */}
+                    <div 
+                      className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)',
+                      }}
+                    />
+                    {progressPercent > 10 && progressParticles.map((p) => (
+                      <motion.div
+                        key={p.id}
+                        className="absolute rounded-full bg-white/80"
+                        style={{
+                          width: p.size,
+                          height: p.size,
+                          top: '50%',
+                          marginTop: -p.size / 2,
+                        }}
+                        animate={{
+                          left: ['-5%', '105%'],
+                          opacity: [0, 1, 1, 0],
+                          scale: [0.5, 1, 1, 0.5],
+                        }}
+                        transition={{
+                          duration: 2.5,
+                          delay: p.delay,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                  
+                  {/* Progress count inside the bar */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span 
+                      className={`font-bold tracking-wide ${isFull ? 'text-sm' : 'text-xs'}`}
+                      style={{
+                        color: '#5a4a20',
+                        textShadow: '0 1px 0 rgba(255,255,255,0.8)',
+                      }}
+                    >
+                      {progress}/{totalLevels}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Name Section - Direct text on the chunky container */}
-          <div className="px-5 py-3.5">
+          <div className="px-5 py-3">
             <h3 
-              className="font-bold uppercase tracking-wide line-clamp-1 text-left"
+              className="font-bold uppercase tracking-wider line-clamp-1 text-left"
               style={{
                 fontFamily: "'Google Sans', sans-serif",
-                fontSize: isFull ? '1rem' : '0.9rem',
-                color: 'rgba(50, 50, 70, 0.85)',
-                textShadow: '0 1px 0 rgba(255,255,255,0.6)',
+                fontSize: isFull ? '0.95rem' : '0.85rem',
+                color: '#2a2a3a',
+                textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                letterSpacing: '0.05em',
               }}
             >
               {name}
