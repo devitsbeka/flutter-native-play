@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.batch-assign-icons]
 verify_jwt = false
+
+[functions.animate-avatar]
+verify_jwt = true
