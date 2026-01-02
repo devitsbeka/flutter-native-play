@@ -39,7 +39,9 @@ export function AvatarCircle({
 }: AvatarCircleProps) {
   const [showVideo, setShowVideo] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isReversing, setIsReversing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const progressRingWidth = 10;
   const whiteRingWidth = 24; // Thick white chunky ring
   const ringGap = 6;
@@ -56,6 +58,42 @@ export function AvatarCircle({
   
   // Start angle adjusted to go behind chip
   const startAngle = 115;
+
+  // Ping-pong reverse playback
+  const reversePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const step = () => {
+      if (video.currentTime <= 0.05) {
+        video.currentTime = 0;
+        setIsReversing(false);
+        video.play().catch(console.error);
+        return;
+      }
+      video.currentTime = Math.max(0, video.currentTime - 0.033);
+      animationFrameRef.current = requestAnimationFrame(step);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(step);
+  };
+
+  const handleVideoEnded = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsReversing(true);
+      reversePlay();
+    }
+  };
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
   
   return (
     <div 
@@ -194,7 +232,7 @@ export function AvatarCircle({
                 }}
                 muted
                 playsInline
-                loop
+                onEnded={handleVideoEnded}
                 onLoadedData={() => {
                   if (videoRef.current) {
                     videoRef.current.play().catch(console.error);
