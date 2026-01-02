@@ -376,7 +376,7 @@ export default function Index() {
                   <div className="flex items-center justify-center gap-3 mt-3">
                     {/* Coins - Yellow */}
                     <motion.div 
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 h-9 rounded-full cursor-pointer"
                       style={{
                         background: "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
                         boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #CA8A04, 0 4px 8px rgba(234,179,8,0.3)",
@@ -386,13 +386,13 @@ export default function Index() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsGemShopOpen(true)}
                     >
-                      <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+                      <img src={coinIcon} alt="Coins" className="w-5 h-5 object-contain" />
                       <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{coins.toLocaleString()}</span>
                     </motion.div>
 
                     {/* Gems - Purple */}
                     <motion.div 
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 h-9 rounded-full cursor-pointer"
                       style={{
                         background: "linear-gradient(180deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
                         boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #7E22CE, 0 4px 8px rgba(168,85,247,0.3)",
@@ -402,13 +402,13 @@ export default function Index() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsGemShopOpen(true)}
                     >
-                      <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+                      <img src={gemIcon} alt="Gems" className="w-5 h-5 object-contain" />
                       <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{gems.toLocaleString()}</span>
                     </motion.div>
 
                     {/* XP - Green with star */}
                     <motion.div 
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                      className="flex items-center gap-1.5 px-3 h-9 rounded-full cursor-pointer"
                       style={{
                         background: "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
                         boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #15803D, 0 4px 8px rgba(22,163,74,0.3)",
@@ -417,7 +417,7 @@ export default function Index() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <img src={xpIcon} alt="XP" className="w-5 h-5" />
+                      <img src={xpIcon} alt="XP" className="w-5 h-5 object-contain" />
                       <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{(profile?.total_points || 0).toLocaleString()}</span>
                     </motion.div>
                   </div>
