@@ -330,7 +330,7 @@ export default function Discover() {
               />
               {favoriteCategories.length === 0 && (
                 <div className="text-center py-12 px-4">
-                  <p className="text-white/70">
+                  <p className="text-slate-500">
                     ჯერ არაფერი დაგიმატებია ფავორიტებში
                   </p>
                 </div>
@@ -352,7 +352,7 @@ export default function Discover() {
               />
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12 px-4">
-                  <p className="text-white/70">
+                  <p className="text-slate-500">
                     ამ კატეგორიაში ჯერ არაფერია
                   </p>
                 </div>

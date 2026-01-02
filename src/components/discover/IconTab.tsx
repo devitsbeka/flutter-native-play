@@ -11,7 +11,7 @@ export function IconTab({ label, isActive, onClick }: IconTabProps) {
       className={`px-4 py-2 rounded-full transition-all whitespace-nowrap uppercase ${
         isActive 
           ? "bg-white/95 text-slate-800 font-semibold shadow-sm" 
-          : "text-white hover:text-white font-medium"
+          : "text-slate-600 hover:text-slate-800 font-medium"
       }`}
     >
       {label}
