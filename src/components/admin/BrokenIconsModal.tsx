@@ -93,10 +93,23 @@ export function BrokenIconsModal({
     );
   }, [icons, brokenIcons, searchTerm, fixedIcons]);
 
-  // Recently fixed icons
+  // Recently fixed icons - show first
   const recentlyFixed = useMemo(() => {
     return icons.filter(icon => fixedIcons.has(icon.slug));
   }, [icons, fixedIcons]);
+
+  // Working icons (not broken, not fixed in this session)
+  const workingIcons = useMemo(() => {
+    const working = icons.filter(icon => !brokenIcons.has(icon.slug) && !fixedIcons.has(icon.slug));
+    if (!searchTerm) return working.slice(0, 20); // Show limited preview
+    
+    const term = searchTerm.toLowerCase();
+    return working.filter(icon => 
+      icon.slug.toLowerCase().includes(term) ||
+      icon.title.toLowerCase().includes(term) ||
+      icon.category.toLowerCase().includes(term)
+    ).slice(0, 20);
+  }, [icons, brokenIcons, searchTerm, fixedIcons]);
 
   // Toggle icon selection
   const toggleSelect = (slug: string) => {
@@ -476,6 +489,43 @@ export function BrokenIconsModal({
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 ძიებით ვერ მოიძებნა
+              </div>
+            )}
+            
+            {/* Working Icons Preview */}
+            {workingIcons.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-border/50">
+                <h3 className="text-sm font-medium text-green-600 mb-3 flex items-center gap-2">
+                  <Check className="h-4 w-4" />
+                  მუშა აიკონები (პირველი 20)
+                </h3>
+                <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                  {workingIcons.map(icon => (
+                    <div
+                      key={icon.slug}
+                      className="relative rounded-xl border border-border/50 bg-background/50 p-3"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="h-14 w-14 rounded-lg bg-background flex items-center justify-center p-1.5">
+                          <img 
+                            src={icon.url} 
+                            alt={icon.title}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="text-center w-full">
+                          <p className="text-xs font-medium truncate" title={icon.slug}>
+                            {icon.slug}
+                          </p>
+                          <Badge variant="secondary" className="text-[9px] px-1 py-0 mt-1">
+                            {icon.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
