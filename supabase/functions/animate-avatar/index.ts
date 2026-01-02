@@ -166,7 +166,7 @@ serve(async (req) => {
     
     // Correct style parameter for Vyro API: "veo-2"
     formData.append("style", "veo-2");
-    formData.append("aspect_ratio", "1:1");
+    // Note: aspect_ratio omitted - veo-2 uses image's native aspect ratio
 
     console.log("Sending request to Vyro API with style: veo-2");
 
