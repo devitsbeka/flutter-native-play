@@ -17,7 +17,8 @@ interface HelpItemProps {
 
 const HelpItem = ({ icon, title, description, gradient, index }: HelpItemProps) => (
   <motion.div
-    className="flex items-start gap-3 p-3 rounded-xl bg-white/5"
+    className="flex items-start gap-3 p-3 rounded-xl bg-gray-50"
+    style={{ boxShadow: "0 2px 0 #E5E7EB" }}
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay: index * 0.1 }}
@@ -29,8 +30,8 @@ const HelpItem = ({ icon, title, description, gradient, index }: HelpItemProps) 
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <h4 className="font-bold text-white text-sm">{title}</h4>
-      <p className="text-white/70 text-xs mt-0.5 leading-relaxed">{description}</p>
+      <h4 className="font-bold text-gray-900 text-sm">{title}</h4>
+      <p className="text-gray-600 text-xs mt-0.5 leading-relaxed">{description}</p>
     </div>
   </motion.div>
 );

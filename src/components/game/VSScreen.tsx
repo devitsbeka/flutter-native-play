@@ -206,7 +206,7 @@ export function VSScreen() {
             {profile?.nickname || "შენ"}
           </h2>
           <p className="text-white/70 text-sm">
-            Lvl.{playerLevelInfo.level}
+            დონე {playerLevelInfo.level}
           </p>
         </motion.div>
 
@@ -252,7 +252,7 @@ export function VSScreen() {
             {opponentName}
           </h2>
           <p className="text-white/70 text-sm">
-            {opponentLevelDisplay}
+            {isMatchFound ? `დონე ${opponentLevelInfo.level}` : "დონე ?"}
           </p>
         </motion.div>
       </div>
