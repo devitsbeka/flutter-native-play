@@ -3,36 +3,34 @@ import { motion } from "framer-motion";
 interface AvatarCircleProps {
   avatarUrl?: string | null;
   size?: number;
+  level?: number;
 }
 
-export function AvatarCircle({ avatarUrl, size = 320 }: AvatarCircleProps) {
+export function AvatarCircle({ avatarUrl, size = 320, level }: AvatarCircleProps) {
+  const ringWidth = 8;
+  
   return (
     <div 
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
     >
-      {/* Main circle with 3D chunky styling */}
+      {/* Multicolor gradient ring */}
       <div 
-        className="absolute inset-0 rounded-full overflow-hidden"
+        className="absolute inset-0 rounded-full"
         style={{
-          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+          background: "conic-gradient(from 180deg, #3B82F6 0deg, #06B6D4 90deg, #EF4444 180deg, #EC4899 270deg, #3B82F6 360deg)",
           boxShadow: `
-            inset 0 6px 12px rgba(140,120,180,0.15),
-            inset 0 -3px 6px rgba(255,255,255,0.9),
-            0 8px 0 #D8D0E8,
-            0 12px 24px rgba(0,0,0,0.12),
-            0 0 40px rgba(147,112,219,0.15)
+            0 8px 24px rgba(59,130,246,0.3),
+            0 0 40px rgba(236,72,153,0.2)
           `,
-          border: "4px solid rgba(255,255,255,0.95)",
         }}
       />
 
-      {/* Inner subtle glow */}
+      {/* Inner white background circle */}
       <div 
-        className="absolute rounded-full"
+        className="absolute rounded-full bg-white"
         style={{
-          inset: 8,
-          background: "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, transparent 60%)",
+          inset: ringWidth,
         }}
       />
 
@@ -43,8 +41,8 @@ export function AvatarCircle({ avatarUrl, size = 320 }: AvatarCircleProps) {
           alt="Avatar" 
           className="relative z-10 rounded-full object-cover"
           style={{
-            width: size - 16,
-            height: size - 16,
+            width: size - ringWidth * 2 - 8,
+            height: size - ringWidth * 2 - 8,
           }}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -54,12 +52,28 @@ export function AvatarCircle({ avatarUrl, size = 320 }: AvatarCircleProps) {
         <div 
           className="relative z-10 rounded-full flex items-center justify-center"
           style={{
-            width: size - 16,
-            height: size - 16,
-            background: "rgba(255,255,255,0.3)",
+            width: size - ringWidth * 2 - 8,
+            height: size - ringWidth * 2 - 8,
+            background: "rgba(240,240,245,1)",
           }}
         >
           <span className="text-7xl">🎮</span>
+        </div>
+      )}
+
+      {/* Level badge at bottom center */}
+      {level !== undefined && (
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20">
+          <div 
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full shadow-lg"
+            style={{
+              background: "linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            <span className="text-lg">🎂</span>
+            <span className="font-bold text-gray-800 text-sm">დონე: {level}</span>
+          </div>
         </div>
       )}
     </div>
