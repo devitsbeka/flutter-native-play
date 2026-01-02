@@ -87,7 +87,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "High quality 3D cartoon avatar, Disney Pixar animation style, friendly welcoming expression, soft studio lighting, vibrant colors, detailed facial features, smooth skin texture, expressive eyes, centered face composition",
+        textPrompt: "Ultra high quality 3D Disney Pixar character portrait, cute adorable stylized cartoon avatar, big beautiful glossy eyes with sparkle reflections and catchlights, perfectly smooth porcelain skin with soft subsurface scattering, gentle warm studio lighting with soft rim light from behind, subtle purple and pink color grading, hyper detailed hair strands with volume, friendly warm genuine smile, soft ambient occlusion, cinematic depth of field, professional character design, Pixar movie quality rendering, extremely clean sharp details, magical dreamy atmosphere, pastel gradient background, octane render, volumetric lighting, 8K ultra HD",
       }),
     });
 
