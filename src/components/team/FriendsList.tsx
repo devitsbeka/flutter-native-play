@@ -187,20 +187,23 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ delay: index * 0.05 }}
-      className="flex-shrink-0 w-56 p-4 rounded-2xl bg-white shadow-xl shadow-purple-900/15 border border-white/60"
+      className="flex-shrink-0 w-56 p-4 rounded-2xl bg-gradient-to-br from-white via-white to-purple-50 shadow-xl shadow-purple-500/20 border-2 border-purple-200/60 relative overflow-hidden"
     >
+      {/* Decorative gradient orb */}
+      <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-purple-300/30 to-pink-300/30 rounded-full blur-xl" />
+      
       {/* Row with avatar left, content right */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 relative z-10">
         {/* Avatar with purple ring and online dot */}
         <div className="relative flex-shrink-0">
-          <Avatar className="w-14 h-14 ring-2 ring-purple-400">
+          <Avatar className="w-14 h-14 ring-[3px] ring-purple-400 shadow-lg shadow-purple-400/30">
             <AvatarImage src={friend.avatarUrl || undefined} />
             <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
               {friend.nickname.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <motion.div 
-            className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${
+            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[3px] border-white shadow-sm ${
               friend.isOnline ? "bg-green-400" : "bg-gray-400"
             }`}
             animate={friend.isOnline ? { scale: [1, 1.2, 1] } : {}}
@@ -216,7 +219,7 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1 rounded-lg text-gray-400 hover:text-gray-600">
+                <button className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-purple-100 transition-colors">
                   <MoreVertical className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
@@ -234,18 +237,18 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
           {friend.countryCode && (
             <div className="flex items-center gap-1.5 text-sm text-gray-600 mt-0.5">
               <span>{getCountryFlag(friend.countryCode)}</span>
-              <span>{friend.countryCode.toUpperCase()}</span>
+              <span className="font-medium">{friend.countryCode.toUpperCase()}</span>
             </div>
           )}
         </div>
       </div>
       
       {/* Buttons row at bottom */}
-      <div className="flex gap-2 mt-3">
+      <div className="flex gap-2 mt-4 relative z-10">
         <motion.button
           onClick={onQuickPlay}
-          className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-sm font-bold bg-orange-500 text-white shadow-md shadow-orange-500/30"
-          whileHover={{ scale: 1.02 }}
+          className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/40"
+          whileHover={{ scale: 1.02, boxShadow: "0 10px 20px -5px rgba(249, 115, 22, 0.5)" }}
           whileTap={{ scale: 0.98 }}
         >
           + თამაში
@@ -253,8 +256,8 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
 
         <motion.button
           onClick={onChat}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium border border-gray-200"
-          whileHover={{ scale: 1.02 }}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200 shadow-sm"
+          whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
           whileTap={{ scale: 0.98 }}
         >
           <MessageCircle className="w-4 h-4" />
