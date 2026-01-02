@@ -87,7 +87,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
       </motion.div>
       
       {/* Separator line */}
-      <div className="mx-4 mt-2 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+      <div className="mx-4 mt-3 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
     </div>
   );
 }
