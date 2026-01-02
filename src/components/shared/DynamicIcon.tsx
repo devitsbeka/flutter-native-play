@@ -79,6 +79,12 @@ export function DynamicIcon({
       if (match && shouldRetryUrl(match.iconUrl)) {
         return match.iconUrl;
       }
+    } else if (categoryId) {
+      // No slug provided - try findIcon with empty keywords to trigger category fallback
+      const match = findIcon([], categoryId);
+      if (match && shouldRetryUrl(match.iconUrl)) {
+        return match.iconUrl;
+      }
     }
 
     // Priority 2: Try category-based lookup
