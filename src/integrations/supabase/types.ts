@@ -346,6 +346,53 @@ export type Database = {
         }
         Relationships: []
       }
+      icon_assignment_history: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          assignment_method: string
+          category_id: string | null
+          category_name: string | null
+          id: string
+          new_icon_slug: string | null
+          old_icon_slug: string | null
+          question_id: string | null
+          question_text: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          assignment_method: string
+          category_id?: string | null
+          category_name?: string | null
+          id?: string
+          new_icon_slug?: string | null
+          old_icon_slug?: string | null
+          question_id?: string | null
+          question_text?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          assignment_method?: string
+          category_id?: string | null
+          category_name?: string | null
+          id?: string
+          new_icon_slug?: string | null
+          old_icon_slug?: string | null
+          question_id?: string | null
+          question_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "icon_assignment_history_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       icon_fix_history: {
         Row: {
           fixed_at: string
