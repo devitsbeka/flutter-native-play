@@ -37,17 +37,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
 
   // Custom header icon
   const headerIcon = (
-    <motion.div
-      className="relative w-16 h-16 rounded-full flex items-center justify-center"
-      style={{
-        background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
-        boxShadow: "0 4px 0 #6EE7B7, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
-      }}
-      animate={{ rotate: [-5, 5, -5], y: [0, -2, 0] }}
-      transition={{ duration: 2, repeat: Infinity }}
-    >
-      <img src={missionCrystalIcon} alt="" className="w-10 h-10 object-contain" />
-    </motion.div>
+    <img src={missionCrystalIcon} alt="" className="w-20 h-20 object-contain" />
   );
 
   // Footer with reset info
