@@ -4,9 +4,10 @@ interface AvatarCircleProps {
   avatarUrl?: string | null;
   size?: number;
   level?: number;
+  totalStars?: number;
 }
 
-export function AvatarCircle({ avatarUrl, size = 320, level }: AvatarCircleProps) {
+export function AvatarCircle({ avatarUrl, size = 320, level, totalStars }: AvatarCircleProps) {
   const ringWidth = 8;
   
   return (
@@ -61,17 +62,31 @@ export function AvatarCircle({ avatarUrl, size = 320, level }: AvatarCircleProps
         </div>
       )}
 
-      {/* Level badge at bottom center */}
+      {/* Level + Stars badge at bottom center - 3D chunky white style */}
       {level !== undefined && (
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20">
           <div 
-            className="flex items-center px-4 py-2 rounded-full shadow-lg whitespace-nowrap"
+            className="flex items-center gap-3 px-5 py-2.5 rounded-full whitespace-nowrap"
             style={{
-              background: "linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1)",
+              background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
+              boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
+              border: "3px solid rgba(255,255,255,0.95)",
             }}
           >
-            <span className="font-bold text-gray-800 text-sm">დონე {level}</span>
+            {/* Level section */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">🎮</span>
+              <span className="font-bold text-gray-700 text-sm">დონე {level}</span>
+            </div>
+            
+            {/* Separator */}
+            <div className="w-px h-4 bg-gray-300" />
+            
+            {/* Stars section */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">⭐</span>
+              <span className="font-bold text-gray-700 text-sm">{totalStars ?? 0}</span>
+            </div>
           </div>
         </div>
       )}
