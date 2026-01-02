@@ -41,7 +41,7 @@ export function AvatarCircle({
   const [isReversing, setIsReversing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const progressRingWidth = 10;
+  const progressRingWidth = 20;
   const whiteRingWidth = 24; // Thick white chunky ring
   const ringGap = 6;
   
