@@ -76,26 +76,18 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
               <span 
                 className="text-[11px] font-bold leading-tight text-center whitespace-nowrap"
                 style={{
-                  color: isActive ? "#8B5CF6" : "#64748B",
-                  textShadow: isActive ? "0 0 8px rgba(139, 92, 246, 0.3)" : "none",
+                  color: isActive ? "#6D28D9" : "#475569",
                 }}
               >
                 {tab.label}
               </span>
-              
-              {/* Active indicator dot */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeTabDot"
-                  className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-violet-500"
-                  initial={false}
-                  transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
-                />
-              )}
             </motion.button>
           );
         })}
       </motion.div>
+      
+      {/* Separator line */}
+      <div className="mx-4 mt-2 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
     </div>
   );
 }
