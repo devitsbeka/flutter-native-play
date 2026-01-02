@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
 
 export interface Profile {
   id: string;
@@ -52,6 +53,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       setProfile(data as Profile);
+      
+      // Auto-detect and set country code if not already set
+      if (!data.country_code) {
+        getCountryCodeFromIP().then(async (detectedCountry) => {
+          if (detectedCountry) {
+            const { data: updatedProfile } = await supabase
+              .from("profiles")
+              .update({ country_code: detectedCountry })
+              .eq("user_id", userId)
+              .select()
+              .single();
+            
+            if (updatedProfile) {
+              setProfile(updatedProfile as Profile);
+            }
+          }
+        });
+      }
     }
   }, []);
 
