@@ -10,12 +10,21 @@ interface GameHistoryTableProps {
   onViewAll?: () => void;
 }
 
+// Shimmer skeleton component
+function ShimmerSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden bg-slate-200/60 ${className}`}>
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+    </div>
+  );
+}
+
 export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
   const { rooms, loading } = useRecentRooms(10);
 
-  // Get unique category IDs for icon resolution
+  // Get unique category IDs for icon resolution - using category_id now
   const categoryIds = useMemo(() => {
-    return [...new Set(rooms.map(r => r.category_name).filter(Boolean))] as string[];
+    return [...new Set(rooms.map(r => r.category_id).filter(Boolean))] as string[];
   }, [rooms]);
 
   const { getIcon } = useCategoryIconResolver(categoryIds);
@@ -54,7 +63,7 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
       </div>
 
       {/* Streak Bar */}
-      {rooms.length > 0 && <StreakBar rooms={rooms} />}
+      <StreakBar rooms={rooms} />
 
       {/* Games List */}
       {rooms.length === 0 ? (
@@ -77,13 +86,16 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
   );
 }
 
-// Streak bar component
+// Streak bar component with shimmer skeletons
 function StreakBar({ rooms }: { rooms: RecentRoom[] }) {
   // Take last 10 games for streak display
   const streakGames = rooms.slice(0, 10);
+  const showSkeletons = streakGames.length < 10;
+  const skeletonCount = Math.min(5, 10 - streakGames.length);
   
   // Count current streak
   const currentStreak = useMemo(() => {
+    if (streakGames.length === 0) return { count: 0, isWinStreak: false };
     let streak = 0;
     const firstResult = streakGames[0]?.won;
     for (const room of streakGames) {
@@ -96,7 +108,7 @@ function StreakBar({ rooms }: { rooms: RecentRoom[] }) {
   return (
     <div className="flex items-center gap-2 py-2">
       {/* Streak squares */}
-      <div className="flex gap-1.5">
+      <div className="flex gap-1.5 relative">
         {streakGames.map((room, index) => (
           <motion.div
             key={room.id}
@@ -112,6 +124,23 @@ function StreakBar({ rooms }: { rooms: RecentRoom[] }) {
             {room.won ? "W" : "L"}
           </motion.div>
         ))}
+        
+        {/* Shimmer skeleton placeholders with fade-out */}
+        {showSkeletons && (
+          <div className="flex gap-1.5 relative">
+            {Array.from({ length: skeletonCount }).map((_, index) => (
+              <div
+                key={`skeleton-${index}`}
+                className="relative overflow-hidden"
+                style={{ opacity: 1 - (index * 0.2) }}
+              >
+                <ShimmerSkeleton className="w-8 h-8 rounded-lg" />
+              </div>
+            ))}
+            {/* Gradient fade overlay */}
+            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+          </div>
+        )}
       </div>
       
       {/* Current streak indicator */}
@@ -146,8 +175,8 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
   // Get opponents (other participants)
   const opponents = room.participants.filter(p => p.user_id !== room.participants[0]?.user_id);
   
-  // Get category icon
-  const categoryIcon = room.category_name ? getIcon(room.category_name) : null;
+  // Get category icon using category_id instead of category_name
+  const categoryIcon = room.category_id ? getIcon(room.category_id) : null;
 
   return (
     <motion.div
