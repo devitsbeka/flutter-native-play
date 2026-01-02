@@ -5,41 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const STABILITY_API_KEY = Deno.env.get('STABILITY_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
-}
-
-// Convert image to PNG format by fetching and re-encoding
-async function fetchImageAsBlob(imageUrl: string): Promise<{ blob: Blob; mimeType: string }> {
-  console.log("Fetching image from URL:", imageUrl.substring(0, 100));
-  
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.status}`);
-  }
-  
-  const contentType = response.headers.get('content-type') || 'image/png';
-  const arrayBuffer = await response.arrayBuffer();
-  
-  console.log("Fetched image, content-type:", contentType, "size:", arrayBuffer.byteLength);
-  
-  // If the image is already in a supported format, use it directly
-  if (contentType.includes('jpeg') || contentType.includes('jpg')) {
-    return { blob: new Blob([arrayBuffer], { type: 'image/jpeg' }), mimeType: 'image/jpeg' };
-  } else if (contentType.includes('png')) {
-    return { blob: new Blob([arrayBuffer], { type: 'image/png' }), mimeType: 'image/png' };
-  } else if (contentType.includes('webp')) {
-    return { blob: new Blob([arrayBuffer], { type: 'image/webp' }), mimeType: 'image/webp' };
-  }
-  
-  // For unsupported formats (like AVIF), we need to use a workaround
-  // Since Deno doesn't have native image conversion, we'll convert via base64 and send as PNG
-  console.log("Unsupported format detected:", contentType, "- will attempt to process anyway");
-  
-  // Try sending as PNG - Stability might be able to handle the raw bytes
-  return { blob: new Blob([arrayBuffer], { type: 'image/png' }), mimeType: 'image/png' };
 }
 
 serve(async (req) => {
@@ -48,8 +17,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!STABILITY_API_KEY) {
-      throw new Error("STABILITY_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const { imageUrl }: AvatarRequest = await req.json();
@@ -58,50 +27,75 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation with Stability AI for image:", imageUrl.substring(0, 100));
+    console.log("Starting avatar generation with Lovable AI for image:", imageUrl.substring(0, 100));
 
-    // Fetch and prepare the image
-    const { blob: imageBlob, mimeType } = await fetchImageAsBlob(imageUrl);
-    console.log("Image prepared, mimeType:", mimeType, "size:", imageBlob.size);
-
-    // Build FormData for multipart request
-    const formData = new FormData();
-    formData.append('image', imageBlob, 'source.png');
-    formData.append('prompt', '3D Pixar Disney cartoon character portrait avatar, big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression, soft violet and pink accent lighting on hair and face edges, dark navy gradient background, high quality Pixar Disney 3D render, charming lovable character design');
-    formData.append('negative_prompt', 'ugly, deformed, blurry, low quality, realistic photo, photorealistic');
-    formData.append('strength', '0.65');
-    formData.append('output_format', 'png');
-    formData.append('aspect_ratio', '1:1');
-
-    // Use Stable Image Ultra endpoint for image-to-image
-    const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/ultra", {
+    // Use Lovable AI's Gemini image generation model
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${STABILITY_API_KEY}`,
-        "Accept": "application/json",
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: formData
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: { url: imageUrl }
+              },
+              {
+                type: "text",
+                text: "Transform this photo into a cute 3D Pixar/Disney style cartoon character avatar. Make it have big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression. Use soft violet and pink accent lighting on hair and face edges. Keep a dark navy gradient background. Make it look like a high quality Pixar Disney 3D render with charming lovable character design. Keep the same person's likeness but make them look adorable and cartoon-like."
+              }
+            ]
+          }
+        ]
+      })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Stability AI error response:", response.status, errorText);
-      throw new Error(`Stability AI API error: ${response.status} - ${errorText}`);
+      console.error("Lovable AI error response:", response.status, errorText);
+      throw new Error(`Lovable AI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log("Stability AI response received");
+    console.log("Lovable AI response received");
 
-    // Extract the generated image - Ultra returns base64 in JSON when accept is application/json
-    const generatedImage = data.image;
+    // Extract the generated image from the response
+    const content = data.choices?.[0]?.message?.content;
     
-    if (!generatedImage) {
-      console.error("No image in response:", JSON.stringify(data));
+    if (!content) {
+      console.error("No content in response:", JSON.stringify(data));
       throw new Error("No image generated in response");
     }
 
-    // Return as data URL
-    const avatarUrl = `data:image/png;base64,${generatedImage}`;
+    // The response may contain the image as base64 in inline_data or as a URL
+    let avatarUrl = "";
+    
+    if (Array.isArray(content)) {
+      for (const part of content) {
+        if (part.type === "image" && part.image?.base64) {
+          avatarUrl = `data:image/png;base64,${part.image.base64}`;
+          break;
+        }
+        if (part.inline_data?.data) {
+          avatarUrl = `data:${part.inline_data.mime_type || 'image/png'};base64,${part.inline_data.data}`;
+          break;
+        }
+      }
+    } else if (typeof content === "string" && content.startsWith("data:image")) {
+      avatarUrl = content;
+    }
+
+    if (!avatarUrl) {
+      console.error("Could not extract image from response:", JSON.stringify(data));
+      throw new Error("Could not extract generated image from response");
+    }
+
     console.log("Avatar generated successfully");
 
     return new Response(
