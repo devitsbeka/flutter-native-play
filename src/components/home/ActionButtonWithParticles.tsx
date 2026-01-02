@@ -65,35 +65,14 @@ export function ActionButtonWithParticles({
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay, type: "spring", stiffness: 200 }}
       onClick={onClick}
-      className="relative rounded-full flex items-center justify-center"
+      className="relative flex items-center justify-center"
       style={{
         width: size,
         height: size,
-        background,
-        boxShadow: `0 4px 12px rgba(0,0,0,0.1), 0 3px 0 ${shadowColor}`,
-        border: "3px solid rgba(255,255,255,0.9)",
       }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
-      {/* Pulsing Glow Aura */}
-      <motion.div
-        className="absolute inset-0 rounded-full pointer-events-none"
-        style={{
-          background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
-        }}
-        animate={{
-          scale: [1, 1.3, 1],
-          opacity: [0.4, 0.8, 0.4],
-        }}
-        transition={{
-          duration: 2 + idleOffset * 0.3,
-          delay: idleOffset * 0.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
       {/* Star Sparkle Particles */}
       {particles.map((particle) => (
         <motion.div
@@ -123,12 +102,16 @@ export function ActionButtonWithParticles({
         </motion.div>
       ))}
 
-      {/* Floating Icon with unique timing */}
+      {/* Icon with drop shadow - no container */}
       <motion.img
         src={iconSrc}
         alt={alt}
-        className="object-contain relative z-10"
-        style={{ width: iconSize, height: iconSize }}
+        className="object-contain relative z-10 drop-shadow-lg"
+        style={{ 
+          width: size, 
+          height: size,
+          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.15))",
+        }}
         animate={{
           y: [0, -2, 0],
           rotate: [-2, 2, -2],
