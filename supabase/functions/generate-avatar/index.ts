@@ -11,33 +11,33 @@ interface AvatarRequest {
   imageUrl: string;
 }
 
-const AVATAR_PROMPT = `Create a 3D avatar portrait based on this photo.
+const AVATAR_PROMPT = `Create a fun, friendly 3D avatar portrait based on this photo.
 
-CRITICAL - LIKENESS ACCURACY (90% priority):
-- This MUST look like the EXACT same person in the photo
-- Copy their precise facial bone structure, face shape, and proportions EXACTLY
-- Match their exact eye shape, eye spacing, eye color, eyebrow shape and thickness
-- Replicate their exact nose shape, size, and position
-- Copy their exact lip shape, mouth width, and smile
-- Match their exact jawline, chin shape, and cheekbone structure
-- Preserve their exact skin tone, undertones, and any distinctive marks
-- Copy their exact hairstyle, hair color, hair texture, and hairline
-- If they have accessories (earrings, glasses), include them
-- The result must be IMMEDIATELY recognizable as this specific person
+EXPRESSION (Very Important):
+- Give them a warm, friendly SMILE - they should look happy and approachable
+- Bright, sparkling eyes with a hint of joy
+- Confident, positive expression - NOT sad or neutral
+- Think "profile picture you'd be proud of"
 
-STYLE (10% - subtle enhancement only):
-- Apply smooth, polished 3D rendering to the skin
-- Add subtle professional lighting
-- Keep all facial proportions 100% accurate to the photo
-- NO exaggeration of any features
-- Clean, professional finish
+LIKENESS (Important):
+- Preserve their face shape, jawline, and bone structure
+- Match their exact skin tone, hair color, and hairstyle
+- Keep their eye color and general facial features recognizable
+- The person should be recognizable but idealized
+
+STYLE - Fun & Appealing:
+- Slightly larger, more expressive eyes (15-20% bigger)
+- Smooth, polished 3D cartoon render like a Pixar character
+- Vibrant, flattering colors
+- Youthful, energetic appearance
+- Clean, professional finish with soft lighting
 
 TECHNICAL:
 - Dark gradient background (teal to navy)
 - Head and shoulders composition
-- Soft studio lighting
+- Soft, warm studio lighting that flatters
 
-The avatar must look like a 3D scan of this exact person - not a generic stylized character.`;
+The result should be a fun, game-ready avatar that captures the person's essence while making them look their best - happy, confident, and approachable.`;
 
 // Fetch image and convert to base64 data URL using chunked approach
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
