@@ -33,18 +33,6 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
 
   return (
     <div className="relative -mx-4">
-      {/* Beautiful glassmorphism backdrop */}
-      <div 
-        className="absolute inset-0 mx-2 rounded-2xl"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(243,232,255,0.6) 50%, rgba(255,255,255,0.5) 100%)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.6)',
-          boxShadow: '0 4px 24px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.8)',
-        }}
-      />
-      
       <motion.div 
         ref={containerRef}
         className="relative flex items-center gap-4 py-3 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
@@ -86,11 +74,12 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
               
               {/* Label - Google Sans, uppercase */}
               <span 
-                className="text-[10px] font-semibold leading-tight text-center whitespace-nowrap uppercase tracking-wide"
+                className="font-semibold leading-tight text-center whitespace-nowrap uppercase"
                 style={{
                   fontFamily: "'Google Sans', sans-serif",
+                  fontSize: '12px',
+                  letterSpacing: '0',
                   color: isActive ? "#6D28D9" : "#64748b",
-                  letterSpacing: '0.05em',
                 }}
               >
                 {tab.label}
