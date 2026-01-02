@@ -11,9 +11,29 @@ interface AvatarRequest {
   imageUrl: string;
 }
 
-const AVATAR_PROMPT = "Create a high-quality 3D rendered portrait based on this photo. CRITICAL: Preserve the person's exact facial structure, eye shape, nose, mouth, jawline, skin tone, hair style, hair color, and overall likeness with very high accuracy - this must clearly look like them. Apply subtle 3D rendering with smooth but natural skin texture, as if this were a high-end video game character or Metahuman render. Use professional studio lighting with soft violet/blue rim lighting on hair and face edges. Keep proportions realistic with only minimal stylization. Clean dark navy gradient background. The result should look like a premium 3D avatar portrait suitable for gaming or professional use.";
+const AVATAR_PROMPT = `Create a stylized cartoon avatar portrait based on this photo.
 
-// Fetch image and convert to base64 data URL
+STYLE:
+- Pixar/Disney-style 3D cartoon look with smooth, soft features
+- Exaggerated but flattering proportions (slightly larger eyes, smaller nose)
+- Vibrant, saturated colors with warm skin tones
+- Smooth, clean cel-shaded appearance (not realistic textures)
+- Fun, friendly, and approachable character design
+
+LIKENESS (Important):
+- Preserve the person's key distinguishing features: face shape, eye color, hair style and color, skin tone
+- Capture their expression and personality
+- Make them recognizable but stylized/idealized
+
+TECHNICAL:
+- Clean gradient background (dark teal to navy blue)
+- Professional portrait composition (head and shoulders)
+- Soft, pleasant studio lighting
+- High-quality 3D cartoon render
+
+The result should look like a premium mobile game or Pixar-style character portrait.`;
+
+// Fetch image and convert to base64 data URL using chunked approach
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
   console.log("Fetching image from URL:", imageUrl.substring(0, 100));
   
@@ -23,9 +43,18 @@ async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
   }
   
   const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  const uint8Array = new Uint8Array(arrayBuffer);
   
-  // Always use PNG MIME type - Lovable AI will handle the conversion
+  // Convert to base64 in chunks to avoid stack overflow
+  let binary = '';
+  const chunkSize = 8192; // Process 8KB at a time
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.slice(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  const base64 = btoa(binary);
+  
+  console.log("Image converted to base64, length:", base64.length);
   return `data:image/png;base64,${base64}`;
 }
 
@@ -49,7 +78,7 @@ serve(async (req) => {
 
     // Fetch the image and convert to base64 data URL
     const imageDataUrl = await fetchImageAsDataUrl(imageUrl);
-    console.log("Image converted to data URL, length:", imageDataUrl.length);
+    console.log("Image data URL ready, length:", imageDataUrl.length);
 
     // Use Lovable AI's Gemini image generation model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -89,7 +118,6 @@ serve(async (req) => {
     console.log("Lovable AI response received");
 
     // Extract the generated image from the response
-    // Lovable AI returns images in message.images array
     const message = data.choices?.[0]?.message;
     const images = message?.images;
     
@@ -99,7 +127,6 @@ serve(async (req) => {
     let avatarUrl = "";
     
     if (images && images.length > 0) {
-      // Get the image URL from the images array
       avatarUrl = images[0]?.image_url?.url || "";
       console.log("Extracted avatar URL length:", avatarUrl.length);
     }
@@ -123,10 +150,22 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error generating avatar:', error);
+    
+    let errorMessage = 'Unknown error';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Provide user-friendly messages
+      if (errorMessage.includes('Maximum call stack')) {
+        errorMessage = 'Image too large. Please try a smaller photo.';
+      } else if (errorMessage.includes('Failed to fetch')) {
+        errorMessage = 'Could not load your image. Please try uploading again.';
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: errorMessage 
       }),
       { 
         status: 500, 
