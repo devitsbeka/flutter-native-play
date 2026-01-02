@@ -127,12 +127,12 @@ export function ActionButtonWithParticles({
         className="object-contain relative z-10"
         style={{ width: 52, height: 52 }}
         animate={{
-          y: [0, -5, 0],
-          rotate: [0, 3, 0, -3, 0],
+          y: [0, -2, 0],
+          rotate: [-2, 2, -2],
           scale: [1, 1.02, 1],
         }}
         transition={{
-          duration: 3 + idleOffset * 0.5,
+          duration: 2.5 + idleOffset * 0.4,
           delay: idleOffset * 0.15,
           repeat: Infinity,
           ease: "easeInOut",
