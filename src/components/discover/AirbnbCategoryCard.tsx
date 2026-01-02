@@ -189,9 +189,9 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Video with Float Animation - Ping Pong Loop */}
+        {/* Video - Full Width with Float Animation - Ping Pong Loop */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center px-4 py-8"
           animate={{ y: [0, -4, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         >
@@ -201,7 +201,7 @@ export function AirbnbCategoryCard({
             autoPlay
             muted
             playsInline
-            className="w-32 h-32 object-contain drop-shadow-lg"
+            className="w-full h-full object-contain drop-shadow-lg rounded-lg"
             style={{ filter: 'brightness(1.1)' }}
           />
         </motion.div>
