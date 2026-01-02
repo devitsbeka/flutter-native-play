@@ -78,26 +78,35 @@ export function AirbnbCategoryCard({
     const video = videoRef.current;
     if (!video) return;
 
+    let lastTime = 0;
+
     const reversePlay = () => {
-      if (!video || video.currentTime <= 0.05) {
+      if (!video || video.currentTime <= 0.02) {
         isReversingRef.current = false;
         video.currentTime = 0;
         video.play();
         return;
       }
-      video.currentTime -= 0.04; // ~25fps step backward
+      video.currentTime -= 0.033; // ~30fps step backward
       reverseAnimationRef.current = requestAnimationFrame(reversePlay);
     };
 
-    const handleEnded = () => {
-      isReversingRef.current = true;
-      reversePlay();
+    const handleTimeUpdate = () => {
+      if (isReversingRef.current) return;
+      
+      // Detect when video is near the end or has stopped progressing
+      if (video.duration && video.currentTime >= video.duration - 0.1) {
+        video.pause();
+        isReversingRef.current = true;
+        reversePlay();
+      }
+      lastTime = video.currentTime;
     };
 
-    video.addEventListener('ended', handleEnded);
+    video.addEventListener('timeupdate', handleTimeUpdate);
 
     return () => {
-      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
       if (reverseAnimationRef.current) {
         cancelAnimationFrame(reverseAnimationRef.current);
       }
