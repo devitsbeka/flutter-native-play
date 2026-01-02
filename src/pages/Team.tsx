@@ -25,6 +25,7 @@ import { AllRecentPlayersModal } from "@/components/team/AllRecentPlayersModal";
 import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
@@ -185,7 +186,7 @@ function TeamContent() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-28">
+    <div className="min-h-screen relative overflow-hidden pb-24">
       {/* Header */}
       <PageHeader
         title="მეგობრები"
@@ -202,6 +203,27 @@ function TeamContent() {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col px-4 pb-6">
+
+        {/* Create Game Button - Right after header */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-lg border border-slate-200 shadow-lg">
+            <ChunkyButton
+              variant="success"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                playSound("button-click");
+                setShowCreateModal(true);
+              }}
+            >
+              + თამაშის შექმნა
+            </ChunkyButton>
+          </div>
+        </motion.div>
 
         {/* Friends Section */}
         <motion.div
@@ -292,26 +314,8 @@ function TeamContent() {
         onClose={() => setShowAllPlayersModal(false)}
       />
 
-      {/* Fixed Bottom Create Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-6 left-4 right-4 z-20"
-      >
-        <div className="p-3 rounded-2xl bg-white/90 backdrop-blur-lg border border-slate-200 shadow-lg">
-          <ChunkyButton
-            variant="success"
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              playSound("button-click");
-              setShowCreateModal(true);
-            }}
-          >
-            + თამაშის შექმნა
-          </ChunkyButton>
-        </div>
-      </motion.div>
+      {/* Bottom Navigation */}
+      <UniversalBottomNav />
     </div>
   );
 }
