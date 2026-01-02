@@ -12,6 +12,7 @@ import confetti from "canvas-confetti";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { TabBar } from "@/components/shared/TabBar";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
@@ -236,10 +237,10 @@ const SHOP_ITEMS: ShopItem[] = [
 ];
 
 const TABS = [
-  { id: "my-powers", name: "ჩემი ძალები", icon: "⚡" },
-  { id: "coins", name: "მონეტები", icon: "🪙" },
-  { id: "powerup", name: "ძალები", icon: "🎯" },
-  { id: "vip", name: "VIP", icon: "👑" },
+  { id: "my-powers", label: "ჩემი ძალები", icon: "⚡" },
+  { id: "coins", label: "მონეტები", icon: "🪙" },
+  { id: "powerup", label: "ძალები", icon: "🎯" },
+  { id: "vip", label: "VIP", icon: "👑" },
 ];
 
 export default function PowerUps() {
@@ -394,30 +395,11 @@ export default function PowerUps() {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {TABS.map((tab) => (
-              <motion.button
-                key={tab.id}
-                onClick={() => setSelectedTab(tab.id)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all"
-                style={{
-                  background: selectedTab === tab.id
-                    ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                    : "#F3F4F6",
-                  boxShadow: selectedTab === tab.id
-                    ? "0 3px 0 #C4B5FD"
-                    : "0 2px 0 #E5E7EB",
-                  color: selectedTab === tab.id
-                    ? "#7C3AED"
-                    : "#6B7280",
-                }}
-                whileTap={{ scale: 0.95, y: 2 }}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.name}</span>
-              </motion.button>
-            ))}
-          </div>
+          <TabBar
+            tabs={TABS}
+            activeTab={selectedTab}
+            onTabChange={setSelectedTab}
+          />
         </div>
       </div>
 

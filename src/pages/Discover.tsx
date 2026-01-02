@@ -7,7 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
-import { IconTab } from "@/components/discover/IconTab";
+import { TabBar } from "@/components/shared/TabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { CategoryGrid } from "@/components/discover/CategoryGrid";
@@ -184,18 +184,13 @@ export default function Discover() {
             )}
           </AnimatePresence>
 
-          {/* Icon Tabs */}
-          <div className="px-4">
-            <div className="flex overflow-x-auto scrollbar-hide pt-2 pb-2 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
-              {tabs.map((tab) => (
-                <IconTab
-                  key={tab.id}
-                  label={tab.label}
-                  isActive={activeTab === tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                />
-              ))}
-            </div>
+          {/* Tabs */}
+          <div className="px-4 pb-4">
+            <TabBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
         </div>
 
