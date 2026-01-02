@@ -121,7 +121,7 @@ function NavButton({
   return (
     <motion.button
       onClick={onClick}
-      className="relative flex items-center justify-center w-14 h-12 flex-shrink-0"
+      className="relative flex flex-col items-center justify-center w-14 h-12 flex-shrink-0 gap-1"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
@@ -148,6 +148,21 @@ function NavButton({
           </motion.div>
         )}
       </div>
+      
+      {/* Active indicator dot */}
+      <motion.div
+        initial={false}
+        animate={{ 
+          scale: isActive ? 1 : 0,
+          opacity: isActive ? 1 : 0 
+        }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        className="w-1 h-1 rounded-full"
+        style={{
+          background: "linear-gradient(180deg, #5EE8B5 0%, #3FC99A 100%)",
+          boxShadow: "0 0 4px rgba(94, 232, 181, 0.6)",
+        }}
+      />
     </motion.button>
   );
 }
