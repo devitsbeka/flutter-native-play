@@ -109,6 +109,7 @@ export function GlobalSplineBackground() {
           muted
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: "blur(8px)" }}
         >
           <source src="/videos/floating-blob.mp4" type="video/mp4" />
         </video>
@@ -119,7 +120,7 @@ export function GlobalSplineBackground() {
         <div 
           className="fixed inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 35%, rgba(255,255,255,0.4) 55%, rgba(255,255,255,0.75) 75%, rgba(255,255,255,1) 95%)",
+            background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.6) 80%, rgba(255,255,255,1) 100%)",
             zIndex: -25,
           }}
         />
