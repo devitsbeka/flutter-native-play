@@ -16,19 +16,21 @@ export function PingPongVideo({ src, className = "" }: PingPongVideoProps) {
     if (!video) return;
 
     let isMounted = true;
+    let reversing = false;
 
     const reversePlayback = () => {
       if (!isMounted || !video) return;
       
       const now = performance.now();
-      const delta = (now - lastTimeRef.current) / 1000; // Convert to seconds
+      const delta = (now - lastTimeRef.current) / 1000;
       lastTimeRef.current = now;
 
       // Move backwards at normal speed
       video.currentTime = Math.max(0, video.currentTime - delta);
 
-      if (video.currentTime <= 0.05) {
+      if (video.currentTime <= 0.02) {
         // Reached the start, switch to forward
+        reversing = false;
         setIsReversing(false);
         video.currentTime = 0;
         video.play().catch(() => {});
@@ -37,21 +39,25 @@ export function PingPongVideo({ src, className = "" }: PingPongVideoProps) {
       }
     };
 
-    const handleEnded = () => {
-      if (!isMounted) return;
-      // Video reached the end, start reversing
-      video.pause();
-      setIsReversing(true);
-      lastTimeRef.current = performance.now();
-      rafRef.current = requestAnimationFrame(reversePlayback);
+    const handleTimeUpdate = () => {
+      if (!isMounted || reversing) return;
+      
+      // Start reversing when we're very close to the end (within 50ms)
+      if (video.duration && video.currentTime >= video.duration - 0.05) {
+        video.pause();
+        reversing = true;
+        setIsReversing(true);
+        lastTimeRef.current = performance.now();
+        rafRef.current = requestAnimationFrame(reversePlayback);
+      }
     };
 
-    video.addEventListener("ended", handleEnded);
+    video.addEventListener("timeupdate", handleTimeUpdate);
     video.play().catch(() => {});
 
     return () => {
       isMounted = false;
-      video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [src]);
