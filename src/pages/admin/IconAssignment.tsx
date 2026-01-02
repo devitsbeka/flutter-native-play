@@ -72,6 +72,8 @@ export default function IconAssignment() {
   const [batchStats, setBatchStats] = useState({ processed: 0, assigned: 0, uniqueIcons: 0 });
   const [shouldStop, setShouldStop] = useState(false);
   const [methodBreakdown, setMethodBreakdown] = useState<Record<string, number>>({});
+  const [batchMode, setBatchMode] = useState<'assign' | 'diversify'>('assign');
+  const [overusedIcons, setOverusedIcons] = useState<{ slug: string; count: number }[]>([]);
   
   // Fast mode (no longer toggleable - always uses fast batch)
 
@@ -223,35 +225,32 @@ export default function IconAssignment() {
   };
 
   // Run batch assignment by category
-  const runBatchAssignment = async () => {
+  const runBatchAssignment = async (mode: 'assign' | 'diversify' = 'assign') => {
     setBatchRunning(true);
+    setBatchMode(mode);
     setShouldStop(false);
     setBatchProgress(0);
     setBatchStats({ processed: 0, assigned: 0, uniqueIcons: 0 });
-    setMethodBreakdown({}); // Reset method breakdown
+    setMethodBreakdown({});
 
-    const totalWithoutIcons = stats.withoutIcons;
     let totalProcessed = 0;
     let totalAssigned = 0;
-    let offset = 0;
-    const batchSize = 250; // Fast mode: 5x batch size
+    const batchSize = 250;
     const accumulatedMethods: Record<string, number> = {};
 
-    // Always use fast batch-assign-icons (no AI)
     const functionName = 'batch-assign-icons';
-    
-    // Get array of broken icon slugs to exclude
     const brokenSlugsArray = Array.from(brokenIcons);
-    console.log(`Passing ${brokenSlugsArray.length} broken icons to exclude`);
     
-    toast.info(`სწრაფი მინიჭება დაიწყო... (${brokenSlugsArray.length} გატეხილი გამორიცხულია)`);
+    const modeLabel = mode === 'diversify' ? 'დივერსიფიკაცია' : 'სწრაფი მინიჭება';
+    toast.info(`${modeLabel} დაიწყო... (${brokenSlugsArray.length} გატეხილი გამორიცხულია)`);
 
     try {
       while (!shouldStop) {
         const { data, error } = await supabase.functions.invoke(functionName, {
           body: { 
             categoryId: categoryFilter, 
-            brokenSlugs: brokenSlugsArray
+            brokenSlugs: brokenSlugsArray,
+            mode
           }
         });
 
@@ -262,7 +261,12 @@ export default function IconAssignment() {
         }
 
         totalProcessed += data.processed;
-        totalAssigned += data.assigned;
+        totalAssigned += mode === 'diversify' ? data.diversified : data.assigned;
+        
+        // Update overused icons list (for diversify mode)
+        if (data.overusedIcons) {
+          setOverusedIcons(data.overusedIcons);
+        }
         
         // Accumulate method breakdown
         if (data.methodBreakdown) {
@@ -278,20 +282,22 @@ export default function IconAssignment() {
           uniqueIcons: data.uniqueIcons || 0
         });
         
-        const progress = totalWithoutIcons > 0 
-          ? Math.min(100, (totalProcessed / totalWithoutIcons) * 100)
+        const total = mode === 'diversify' 
+          ? (data.overusedIcons?.[0]?.count || 100)
+          : stats.withoutIcons;
+        const progress = total > 0 
+          ? Math.min(100, (totalProcessed / total) * 100)
           : 100;
         setBatchProgress(progress);
 
-        // If no more questions or remaining is 0, stop
-        if (data.remaining === 0 || data.processed === 0) {
-          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი`);
+        // If done, stop
+        if (data.done || data.processed === 0) {
+          const successLabel = mode === 'diversify' ? 'დივერსიფიცირებულია' : 'მინიჭებულია';
+          toast.success(`დასრულდა! ${successLabel} ${totalAssigned} აიკონი`);
           break;
         }
 
-        offset += batchSize;
-
-        // Short delay for fast mode (no AI)
+        // Short delay
         await new Promise(r => setTimeout(r, 200));
       }
     } catch (err) {
@@ -390,16 +396,20 @@ export default function IconAssignment() {
 
         {/* Fast Assignment Controls */}
         <div className="mt-4 space-y-3">
-          {/* Assignment Button */}
+          {/* Assignment Buttons */}
           <div className="flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
             <Wand2 className="h-5 w-5 text-violet-500" />
             <div className="flex-1">
-              <p className="text-sm font-medium">სწრაფი მინიჭება (5x)</p>
+              <p className="text-sm font-medium">
+                {batchMode === 'diversify' ? 'დივერსიფიკაცია' : 'სწრაფი მინიჭება (5x)'}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {categoryFilter 
-                  ? `არჩეული კატეგორიის ${stats.withoutIcons} კითხვას დაამუშავებს`
-                  : `ყველა ${stats.withoutIcons} კითხვას დაამუშავებს`
-                } • Keyword + Category fallback (AI გამორთულია)
+                {batchMode === 'diversify'
+                  ? 'ზედმეტად გამოყენებული აიკონები შეიცვლება უფრო სპეციფიკურით'
+                  : categoryFilter 
+                    ? `არჩეული კატეგორიის ${stats.withoutIcons} კითხვას დაამუშავებს`
+                    : `ყველა ${stats.withoutIcons} კითხვას დაამუშავებს`
+                } • Keyword + Category fallback
               </p>
             </div>
             
@@ -408,7 +418,7 @@ export default function IconAssignment() {
                 <div className="w-72">
                   <Progress value={batchProgress} className="h-2" />
                   <p className="text-xs text-muted-foreground mt-1">
-                    {batchStats.processed} დამუშავებული • {batchStats.assigned} მინიჭებული
+                    {batchStats.processed} დამუშავებული • {batchStats.assigned} {batchMode === 'diversify' ? 'შეცვლილი' : 'მინიჭებული'}
                     {batchStats.uniqueIcons > 0 && (
                       <span className="text-amber-500 ml-1">• {batchStats.uniqueIcons} უნიკალური</span>
                     )}
@@ -420,9 +430,24 @@ export default function IconAssignment() {
                           topic: {methodBreakdown['topic-mapping']}
                         </span>
                       )}
+                      {methodBreakdown['title-match'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                          title: {methodBreakdown['title-match']}
+                        </span>
+                      )}
+                      {methodBreakdown['tag-match'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">
+                          tag: {methodBreakdown['tag-match']}
+                        </span>
+                      )}
                       {methodBreakdown['exact-slug'] && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
                           exact: {methodBreakdown['exact-slug']}
+                        </span>
+                      )}
+                      {methodBreakdown['topic-diversify'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
+                          diversify: {methodBreakdown['topic-diversify']}
                         </span>
                       )}
                       {methodBreakdown['category-fallback'] && (
@@ -430,9 +455,14 @@ export default function IconAssignment() {
                           fallback: {methodBreakdown['category-fallback']}
                         </span>
                       )}
-                      {methodBreakdown['none'] && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
-                          none: {methodBreakdown['none']}
+                      {methodBreakdown['diversify-to-default'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                          to-default: {methodBreakdown['diversify-to-default']}
+                        </span>
+                      )}
+                      {methodBreakdown['already-optimal'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400">
+                          optimal: {methodBreakdown['already-optimal']}
                         </span>
                       )}
                     </div>
@@ -448,14 +478,24 @@ export default function IconAssignment() {
                 </Button>
               </div>
             ) : (
-              <Button
-                onClick={runBatchAssignment}
-                disabled={stats.withoutIcons === 0}
-                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-              >
-                <Play className="h-4 w-4 mr-1" />
-                მინიჭება ({stats.withoutIcons.toLocaleString()})
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => runBatchAssignment('assign')}
+                  disabled={stats.withoutIcons === 0}
+                  className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+                >
+                  <Play className="h-4 w-4 mr-1" />
+                  მინიჭება ({stats.withoutIcons.toLocaleString()})
+                </Button>
+                <Button
+                  onClick={() => runBatchAssignment('diversify')}
+                  variant="outline"
+                  className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                >
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  დივერსიფიკაცია
+                </Button>
+              </div>
             )}
           </div>
           
