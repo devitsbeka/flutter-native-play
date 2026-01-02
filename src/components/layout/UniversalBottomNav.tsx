@@ -51,49 +51,55 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
         }}
       >
         {/* Navigation items container */}
-        <div className="flex items-center justify-between px-4 py-4">
+        <div className="flex items-center py-4">
           {/* Explore */}
-          <NavButton
-            onClick={() => navigate("/discover")}
-            isActive={isActive("/discover")}
-            icon={Compass}
-            label="აღმოჩენა"
-          />
+          <div className="flex-1 flex justify-center">
+            <NavButton
+              onClick={() => navigate("/discover")}
+              isActive={isActive("/discover")}
+              icon={Compass}
+            />
+          </div>
 
-          {/* Map */}
-        <NavButton
-          onClick={() => navigate("/power-ups")}
-          isActive={isActive("/power-ups")}
-          icon={ShoppingBag}
-          label="მაღაზია"
-        />
+          {/* Shop */}
+          <div className="flex-1 flex justify-center">
+            <NavButton
+              onClick={() => navigate("/power-ups")}
+              isActive={isActive("/power-ups")}
+              icon={ShoppingBag}
+            />
+          </div>
 
           {/* Center Play Button - floats above, overlapping nav bar */}
-          <div className="relative flex flex-col items-center justify-center" style={{ width: 72, height: 48 }}>
-            <div className="absolute" style={{ bottom: -8 }}>
-              <Hex3DPlayButton 
-                onClick={handleCenterClick}
-                isPlayButton={isHome}
-              />
+          <div className="flex-1 flex justify-center">
+            <div className="relative" style={{ width: 72, height: 48 }}>
+              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -8 }}>
+                <Hex3DPlayButton 
+                  onClick={handleCenterClick}
+                  isPlayButton={isHome}
+                />
+              </div>
             </div>
           </div>
 
           {/* Rank */}
-          <NavButton
-            onClick={() => navigate("/leaderboards")}
-            isActive={isActive("/leaderboards")}
-            icon={Trophy}
-            label="რანგი"
-          />
+          <div className="flex-1 flex justify-center">
+            <NavButton
+              onClick={() => navigate("/leaderboards")}
+              isActive={isActive("/leaderboards")}
+              icon={Trophy}
+            />
+          </div>
 
           {/* Team */}
-          <NavButton
-            onClick={onTeamClick || (() => navigate("/team"))}
-            isActive={isActive("/team")}
-            icon={Headphones}
-            label="გუნდი"
-            badgeCount={pendingChallenges.length}
-          />
+          <div className="flex-1 flex justify-center">
+            <NavButton
+              onClick={onTeamClick || (() => navigate("/team"))}
+              isActive={isActive("/team")}
+              icon={Headphones}
+              badgeCount={pendingChallenges.length}
+            />
+          </div>
         </div>
       </div>
     </div>
