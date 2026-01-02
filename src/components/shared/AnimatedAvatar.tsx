@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,12 +38,76 @@ export function AnimatedAvatar({
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(animatedVideoUrl || null);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playbackDirectionRef = useRef<1 | -1>(1); // 1 = forward, -1 = backward
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (animatedVideoUrl) {
       setLocalVideoUrl(animatedVideoUrl);
     }
   }, [animatedVideoUrl]);
+
+  // Smooth ping-pong playback using requestAnimationFrame
+  const pingPongLoop = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || video.paused || !loop) return;
+
+    const playbackSpeed = 1; // Normal speed
+    const frameTime = 1 / 60; // ~60fps
+    const step = frameTime * playbackSpeed;
+
+    if (playbackDirectionRef.current === 1) {
+      // Forward playback
+      if (video.currentTime >= video.duration - 0.05) {
+        // Reached end, reverse
+        playbackDirectionRef.current = -1;
+      }
+    } else {
+      // Backward playback
+      video.currentTime = Math.max(0, video.currentTime - step * 2);
+      if (video.currentTime <= 0.05) {
+        // Reached start, go forward
+        playbackDirectionRef.current = 1;
+        video.currentTime = 0;
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(pingPongLoop);
+  }, [loop]);
+
+  // Start/stop ping-pong animation
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !localVideoUrl || !loop) return;
+
+    const handlePlay = () => {
+      playbackDirectionRef.current = 1;
+      animationFrameRef.current = requestAnimationFrame(pingPongLoop);
+    };
+
+    const handlePause = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('ended', handlePause);
+
+    // If already playing, start the loop
+    if (!video.paused) {
+      handlePlay();
+    }
+
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('ended', handlePause);
+      handlePause();
+    };
+  }, [localVideoUrl, loop, pingPongLoop]);
 
   const generateAnimation = async () => {
     if (!avatarUrl || isGenerating) return;
@@ -120,7 +184,7 @@ export function AnimatedAvatar({
           )}
         />
 
-        {/* Animated video overlay */}
+        {/* Animated video overlay - using manual ping-pong, not native loop */}
         {localVideoUrl && (
           <video
             ref={videoRef}
@@ -132,7 +196,7 @@ export function AnimatedAvatar({
             muted
             playsInline
             autoPlay={autoPlay}
-            loop={loop}
+            loop={false} // Disable native loop - we handle ping-pong manually
             onEnded={handleVideoEnded}
             onLoadedData={() => {
               if (autoPlay && videoRef.current) {
