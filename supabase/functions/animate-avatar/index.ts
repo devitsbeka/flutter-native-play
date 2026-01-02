@@ -150,23 +150,15 @@ serve(async (req) => {
 
     console.log("Starting avatar animation for image:", imageUrl.substring(0, 100));
 
-    // Fetch the image first
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to fetch source image: ${imageResponse.status}`);
-    }
-    const imageBlob = await imageResponse.blob();
-
-    // Create FormData for the request
+    // Create FormData for the request - Vyro expects image_url as a URL string
     const formData = new FormData();
-    formData.append("image_url", imageBlob, "avatar.png");
+    formData.append("image_url", imageUrl);
     
     // Animation prompt for subtle avatar movements
     formData.append("prompt", "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly and calm expression. Smooth natural animation.");
     
     // Correct style parameter for Vyro API: "veo-2"
     formData.append("style", "veo-2");
-    // Note: aspect_ratio omitted - veo-2 uses image's native aspect ratio
 
     console.log("Sending request to Vyro API with style: veo-2");
 
