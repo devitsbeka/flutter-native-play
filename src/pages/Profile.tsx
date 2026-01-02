@@ -2,11 +2,10 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Settings, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar } from "@/components/shared/Avatar";
 import { HexBadge } from "@/components/shared/HexBadge";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { getRankFromPoints } from "@/data/opponents";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
 const badges = [
@@ -27,6 +26,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Badge");
   const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
@@ -72,15 +73,56 @@ export default function Profile() {
           className="bg-card rounded-3xl shadow-lg p-6 mb-6"
         >
           <div className="flex flex-col items-center">
-            <div className="relative">
-              <Avatar
-                emoji="😎"
-                countryCode={profile.country_code || "US"}
-                size="xl"
-                showRing
-                ringColor="ring-primary"
-                imageUrl={profile.avatar_url || undefined}
-              />
+            <div 
+              className="relative"
+              onMouseEnter={() => {
+                if (profile.animated_avatar_url && videoRef.current) {
+                  setShowVideo(true);
+                  videoRef.current.currentTime = 0;
+                  videoRef.current.play().catch(console.error);
+                }
+              }}
+              onMouseLeave={() => setShowVideo(false)}
+            >
+              {/* Static Avatar */}
+              <div className="relative w-28 h-28 rounded-full ring-4 ring-primary overflow-hidden">
+                <img 
+                  src={profile.avatar_url || "/placeholder.svg"}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  style={{ opacity: showVideo && profile.animated_avatar_url ? 0 : 1, transition: "opacity 0.3s" }}
+                />
+                {/* Animated video overlay */}
+                {profile.animated_avatar_url && (
+                  <video
+                    ref={videoRef}
+                    src={profile.animated_avatar_url}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ opacity: showVideo ? 1 : 0, transition: "opacity 0.3s" }}
+                    muted
+                    playsInline
+                    loop
+                    onLoadedData={() => {
+                      if (videoRef.current) {
+                        videoRef.current.play().catch(console.error);
+                        setShowVideo(true);
+                      }
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* Sparkle indicator for animated avatars */}
+              {profile.animated_avatar_url && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg z-20"
+                >
+                  <Sparkles className="w-3 h-3 text-white" />
+                </motion.div>
+              )}
+              
               <button
                 onClick={() => setShowAvatarGenerator(true)}
                 className="absolute -bottom-1 -right-1 p-2 bg-primary rounded-full shadow-lg hover:scale-110 transition-transform"

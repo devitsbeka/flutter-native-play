@@ -464,6 +464,7 @@ export default function Index() {
                 >
                   <AvatarCircle 
                     avatarUrl={profile?.avatar_url} 
+                    animatedAvatarUrl={profile?.animated_avatar_url}
                     size={280} 
                     coins={coins}
                     gems={gems}

@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 
@@ -14,6 +16,7 @@ const formatNumber = (num: number): string => {
 
 interface AvatarCircleProps {
   avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
   size?: number;
   coins?: number;
   gems?: number;
@@ -25,6 +28,7 @@ interface AvatarCircleProps {
 
 export function AvatarCircle({ 
   avatarUrl, 
+  animatedAvatarUrl,
   size = 320, 
   coins = 0,
   gems = 0,
@@ -33,6 +37,9 @@ export function AvatarCircle({
   xpCurrent,
   xpTotal,
 }: AvatarCircleProps) {
+  const [showVideo, setShowVideo] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const progressRingWidth = 10;
   const whiteRingWidth = 24; // Thick white chunky ring
   const ringGap = 6;
@@ -135,34 +142,94 @@ export function AvatarCircle({
         }}
       />
 
-      {/* Avatar image */}
-      {avatarUrl ? (
-        <motion.img 
-          src={avatarUrl} 
-          alt="Avatar" 
-          className="relative z-10 rounded-full object-cover"
-          style={{
-            width: size - (progressRingWidth + ringGap) * 2 - 8,
-            height: size - (progressRingWidth + ringGap) * 2 - 8,
-          }}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        />
-      ) : (
-        <div 
-          className="relative z-10 rounded-full flex items-center justify-center"
-          style={{
-            width: size - (progressRingWidth + ringGap) * 2 - 8,
-            height: size - (progressRingWidth + ringGap) * 2 - 8,
-            background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
-            boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
-            border: "3px solid rgba(255,255,255,0.95)",
-          }}
-        >
-          <span className="text-6xl">🎮</span>
-        </div>
-      )}
+      {/* Avatar image/video container */}
+      <div 
+        className="relative z-10"
+        onMouseEnter={() => {
+          setIsHovering(true);
+          if (animatedAvatarUrl && videoRef.current) {
+            setShowVideo(true);
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(console.error);
+          }
+        }}
+        onMouseLeave={() => setIsHovering(false)}
+        onTouchStart={() => {
+          if (animatedAvatarUrl && videoRef.current) {
+            setShowVideo(true);
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(console.error);
+          }
+        }}
+      >
+        {avatarUrl ? (
+          <>
+            {/* Static avatar image */}
+            <motion.img 
+              src={avatarUrl} 
+              alt="Avatar" 
+              className="rounded-full object-cover"
+              style={{
+                width: size - (progressRingWidth + ringGap) * 2 - 8,
+                height: size - (progressRingWidth + ringGap) * 2 - 8,
+                opacity: showVideo && animatedAvatarUrl ? 0 : 1,
+                transition: "opacity 0.3s ease",
+              }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: showVideo && animatedAvatarUrl ? 0 : 1 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+            
+            {/* Animated video overlay */}
+            {animatedAvatarUrl && (
+              <video
+                ref={videoRef}
+                src={animatedAvatarUrl}
+                className="absolute inset-0 rounded-full object-cover"
+                style={{
+                  width: size - (progressRingWidth + ringGap) * 2 - 8,
+                  height: size - (progressRingWidth + ringGap) * 2 - 8,
+                  opacity: showVideo ? 1 : 0,
+                  transition: "opacity 0.3s ease",
+                }}
+                muted
+                playsInline
+                loop
+                onLoadedData={() => {
+                  if (videoRef.current) {
+                    videoRef.current.play().catch(console.error);
+                    setShowVideo(true);
+                  }
+                }}
+              />
+            )}
+
+            {/* Sparkle indicator for animated avatars */}
+            {animatedAvatarUrl && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg z-20"
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+              </motion.div>
+            )}
+          </>
+        ) : (
+          <div 
+            className="rounded-full flex items-center justify-center"
+            style={{
+              width: size - (progressRingWidth + ringGap) * 2 - 8,
+              height: size - (progressRingWidth + ringGap) * 2 - 8,
+              background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
+              boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
+              border: "3px solid rgba(255,255,255,0.95)",
+            }}
+          >
+            <span className="text-6xl">🎮</span>
+          </div>
+        )}
+      </div>
 
 
       {/* Level badge at bottom center - 3D chunky white style */}

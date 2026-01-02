@@ -48,3 +48,6 @@ verify_jwt = false
 
 [functions.animate-avatar]
 verify_jwt = true
+
+[functions.batch-animate-avatars]
+verify_jwt = false
