@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useRef } from "react";
 
 // Import tab icons
 import allIcon from "@/assets/tabs/all.png";
@@ -28,57 +29,73 @@ interface IconTabBarProps {
 }
 
 export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="flex items-center justify-center gap-2 py-2">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
-        const iconSrc = iconMap[tab.id];
-        
-        return (
-          <motion.button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className="relative flex flex-col items-center gap-1 px-2 py-1"
-            whileHover={{ scale: 1.08, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {/* Icon */}
-            <div className="relative w-12 h-12 flex items-center justify-center">
-              <img 
-                src={iconSrc} 
-                alt={tab.label}
-                className="w-12 h-12 object-contain"
-                style={{
-                  filter: isActive ? "drop-shadow(0 4px 8px rgba(139, 92, 246, 0.4))" : "none",
-                  transform: isActive ? "scale(1.1)" : "scale(1)",
-                  transition: "all 0.2s ease",
-                }}
-              />
-            </div>
-            
-            {/* Label */}
-            <span 
-              className="text-[11px] font-bold leading-tight text-center whitespace-nowrap"
-              style={{
-                color: isActive ? "#8B5CF6" : "#64748B",
-                textShadow: isActive ? "0 0 8px rgba(139, 92, 246, 0.3)" : "none",
-              }}
+    <div className="relative -mx-4">
+      <motion.div 
+        ref={containerRef}
+        className="flex items-center gap-4 py-2 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+        style={{
+          paddingLeft: 16,
+          paddingRight: 16,
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+        drag="x"
+        dragConstraints={containerRef}
+        dragElastic={0.1}
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const iconSrc = iconMap[tab.id];
+          
+          return (
+            <motion.button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className="relative flex flex-col items-center gap-1 px-2 py-1 flex-shrink-0"
+              whileHover={{ scale: 1.08, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {tab.label}
-            </span>
-            
-            {/* Active indicator dot */}
-            {isActive && (
-              <motion.div
-                layoutId="activeTabDot"
-                className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-violet-500"
-                initial={false}
-                transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
-              />
-            )}
-          </motion.button>
-        );
-      })}
+              {/* Icon */}
+              <div className="relative w-12 h-12 flex items-center justify-center">
+                <img 
+                  src={iconSrc} 
+                  alt={tab.label}
+                  className="w-12 h-12 object-contain"
+                  style={{
+                    filter: isActive ? "drop-shadow(0 4px 8px rgba(139, 92, 246, 0.4))" : "none",
+                    transform: isActive ? "scale(1.1)" : "scale(1)",
+                    transition: "all 0.2s ease",
+                  }}
+                />
+              </div>
+              
+              {/* Label */}
+              <span 
+                className="text-[11px] font-bold leading-tight text-center whitespace-nowrap"
+                style={{
+                  color: isActive ? "#8B5CF6" : "#64748B",
+                  textShadow: isActive ? "0 0 8px rgba(139, 92, 246, 0.3)" : "none",
+                }}
+              >
+                {tab.label}
+              </span>
+              
+              {/* Active indicator dot */}
+              {isActive && (
+                <motion.div
+                  layoutId="activeTabDot"
+                  className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-violet-500"
+                  initial={false}
+                  transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
+                />
+              )}
+            </motion.button>
+          );
+        })}
+      </motion.div>
     </div>
   );
 }
