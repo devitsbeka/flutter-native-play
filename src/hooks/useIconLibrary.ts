@@ -360,16 +360,18 @@ export function useIconLibrary() {
     keywords: string[],
     category?: string
   ): IconMatch | null => {
-    if (iconIndex.length === 0 || keywords.length === 0) return null;
+    if (iconIndex.length === 0) return null;
     
     let bestMatch: IconItem | null = null;
     let bestScore = 0;
     
-    for (const icon of iconIndex) {
-      const score = scoreMatch(icon, keywords, category);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = icon;
+    if (keywords.length > 0) {
+      for (const icon of iconIndex) {
+        const score = scoreMatch(icon, keywords, category);
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = icon;
+        }
       }
     }
     
@@ -380,6 +382,36 @@ export function useIconLibrary() {
         iconUrl: getIconUrl(bestMatch.file_name),
         matchScore: bestScore,
       };
+    }
+    
+    // HARDCODED FALLBACK: Use first icon from CATEGORY_ICON_MAP for the category
+    if (category) {
+      const categoryKey = category.toLowerCase();
+      const categoryKeywords = CATEGORY_ICON_MAP[categoryKey] || [];
+      
+      // Try each slug from the category map until we find one that exists
+      for (const slug of categoryKeywords) {
+        // Exact match
+        const exactIcon = iconIndex.find(i => i.slug === slug);
+        if (exactIcon) {
+          return {
+            slug: exactIcon.slug,
+            title: exactIcon.title,
+            iconUrl: getIconUrl(exactIcon.file_name),
+            matchScore: 10, // Low score indicates fallback
+          };
+        }
+        // Partial match (slug contains keyword)
+        const partialIcon = iconIndex.find(i => i.slug.includes(slug));
+        if (partialIcon) {
+          return {
+            slug: partialIcon.slug,
+            title: partialIcon.title,
+            iconUrl: getIconUrl(partialIcon.file_name),
+            matchScore: 10,
+          };
+        }
+      }
     }
     
     return null;
