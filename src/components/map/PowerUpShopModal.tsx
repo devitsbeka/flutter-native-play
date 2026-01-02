@@ -284,17 +284,89 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-background/90 rounded-2xl z-20"
+              className="absolute inset-0 flex items-center justify-center bg-background/95 rounded-2xl z-20 overflow-hidden"
             >
-              <div className="text-center">
+              {/* Animated rings */}
+              {[...Array(3)].map((_, i) => (
                 <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ repeat: 2, duration: 0.3 }}
-                  className="text-6xl mb-2"
+                  key={i}
+                  initial={{ scale: 0.3, opacity: 0.6 }}
+                  animate={{ scale: 2.5 + i * 0.5, opacity: 0 }}
+                  transition={{
+                    duration: 1.2,
+                    delay: i * 0.2,
+                    ease: "easeOut",
+                    repeat: 1,
+                  }}
+                  className="absolute rounded-full border-4 border-primary/40"
+                  style={{ width: 80, height: 80 }}
+                />
+              ))}
+              
+              <div className="text-center relative z-10">
+                {/* Bouncing emoji */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: [0, 1.3, 1], rotate: 0 }}
+                  transition={{ 
+                    duration: 0.6,
+                    times: [0, 0.6, 1],
+                    type: "spring",
+                    stiffness: 200,
+                  }}
+                  className="text-7xl mb-3"
                 >
-                  ✨
+                  ⚡
                 </motion.div>
-                <p className="text-lg font-bold text-foreground">წარმატებით შეიძინე!</p>
+                
+                {/* Success text */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-xl font-bold text-foreground"
+                >
+                  წარმატებით შეიძინე!
+                </motion.p>
+                
+                {/* Quantity badge */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                  className="mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10"
+                >
+                  <span className="text-lg font-bold text-primary">
+                    +{quantity}x {selectedInfo.name}
+                  </span>
+                </motion.div>
+
+                {/* Floating particles */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={`particle-${i}`}
+                    initial={{ 
+                      opacity: 0, 
+                      x: 0, 
+                      y: 0,
+                      scale: 0,
+                    }}
+                    animate={{ 
+                      opacity: [0, 1, 0],
+                      x: Math.cos((i * 45 * Math.PI) / 180) * 80,
+                      y: Math.sin((i * 45 * Math.PI) / 180) * 80,
+                      scale: [0, 1, 0.5],
+                    }}
+                    transition={{ 
+                      duration: 1,
+                      delay: 0.2 + i * 0.05,
+                      ease: "easeOut",
+                    }}
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xl"
+                  >
+                    ✨
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
           )}
