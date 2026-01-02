@@ -382,7 +382,7 @@ export default function Index() {
                         {getFlagEmoji(profile.country_code)}
                       </span>
                     )}
-                    <span className="font-display font-bold text-white drop-shadow-md" style={{ fontSize: 32 }}>
+                    <span className="font-sans font-medium text-white drop-shadow-md capitalize" style={{ fontSize: 32 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
