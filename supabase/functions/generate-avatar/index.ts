@@ -83,7 +83,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: "https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com/images/avatar-style-reference.jpg",
-        textPrompt: "Transform this person into a high quality 3D Pixar Disney style character portrait, PRESERVE their exact face shape nose shape and unique facial features, smooth stylized 3D rendered skin but keep any freckles or distinctive marks, slightly enlarged expressive eyes with glossy reflections and soft catchlights keeping original eye color, natural closed mouth expression, same hair color and style as original rendered in detailed 3D, soft warm cinematic studio lighting with gentle shadows, head and upper shoulders only, clean neutral gray or brown gradient background, Pixar movie quality 3D render, maintain the persons recognizable identity and likeness, 8K ultra detailed",
+        textPrompt: "Create an illustrated 3D cartoon avatar in Pixar Disney animation style, NOT photorealistic, MUST look like an illustrated cartoon character with stylized features, keep the person's face shape and distinctive features but make them look like a cute animated character, large expressive cartoon eyes with bright highlights, smooth matte cartoon skin with NO realistic pores or textures, simplified stylized nose and lips, hair rendered as stylized 3D cartoon hair with clean shapes, warm soft animation studio lighting, head and shoulders portrait, clean gradient background, must look like a character from a Pixar or Disney animated movie NOT a realistic 3D render, illustrated cartoon style is mandatory",
       }),
     });
 
