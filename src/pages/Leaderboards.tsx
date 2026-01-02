@@ -8,6 +8,7 @@ import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { TabBar } from "@/components/shared/TabBar";
 
 interface LeaderboardEntry {
   id: string;
@@ -172,38 +173,13 @@ export default function Leaderboards() {
           {/* Header - Title */}
           <PageHeader title="რეიტინგი" showBack={false} />
 
-          {/* Tabs - 3D Chunky Active Style */}
+          {/* Tabs */}
           <div className="px-4 pb-4">
-            <div className="flex gap-1 p-1.5 rounded-2xl bg-white/60 backdrop-blur-sm">
-              {tabs.map((tab) => (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => setTimeFilter(tab.id)}
-                  className="flex-1 relative"
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {timeFilter === tab.id ? (
-                    // 3D Chunky Active State
-                    <div className="relative">
-                      {/* 3D depth shadow */}
-                      <div 
-                        className="absolute inset-0 rounded-xl bg-primary/80"
-                        style={{ top: 3 }}
-                      />
-                      {/* Main face */}
-                      <div className="relative px-4 py-2.5 rounded-xl text-sm font-bold text-primary-foreground bg-primary shadow-md">
-                        {tab.label}
-                      </div>
-                    </div>
-                  ) : (
-                    // Inactive state
-                    <div className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white/80 transition-colors">
-                      {tab.label}
-                    </div>
-                  )}
-                </motion.button>
-              ))}
-            </div>
+            <TabBar
+              tabs={tabs}
+              activeTab={timeFilter}
+              onTabChange={(id) => setTimeFilter(id as TimeFilter)}
+            />
           </div>
         </div>
 
