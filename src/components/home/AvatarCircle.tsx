@@ -28,13 +28,13 @@ export function AvatarCircle({
   const progressRadius = outerRadius - progressRingWidth / 2 - 2;
   
   // Arc goes from bottom-left to bottom-right
-  // Leave a smaller gap at the bottom for the level badge
-  const totalArcDegrees = 290;
+  // Extends behind the level badge chip
+  const totalArcDegrees = 310;
   const arcCircumference = (totalArcDegrees / 360) * 2 * Math.PI * progressRadius;
   const progressOffset = arcCircumference - (xpProgress / 100) * arcCircumference;
   
-  // Start angle adjusted for smaller gap
-  const startAngle = 125;
+  // Start angle adjusted to go behind chip
+  const startAngle = 115;
   
   return (
     <div 
