@@ -301,9 +301,59 @@ export default function Index() {
           </div>
         </header>
 
+        {/* ===== CURRENCY ROW - Below Header ===== */}
+        <div className="relative z-20 flex items-center justify-center gap-2 mt-3 px-4">
+          {/* Coins - Green */}
+          <motion.div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+            style={{
+              background: "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
+              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #15803D, 0 4px 8px rgba(22,163,74,0.3)",
+              border: "2px solid rgba(255,255,255,0.4)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsGemShopOpen(true)}
+          >
+            <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+            <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{coins.toLocaleString()}</span>
+          </motion.div>
 
-        {/* ===== CENTER: AVATAR WITH ARC BADGES ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -210 }}>
+          {/* Gems - Blue/Cyan */}
+          <motion.div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
+            style={{
+              background: "linear-gradient(180deg, #22D3EE 0%, #06B6D4 50%, #0891B2 100%)",
+              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #0E7490, 0 4px 8px rgba(6,182,212,0.3)",
+              border: "2px solid rgba(255,255,255,0.4)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsGemShopOpen(true)}
+          >
+            <img src={gemIcon} alt="Gems" className="w-5 h-5" />
+            <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{gems.toLocaleString()}</span>
+          </motion.div>
+
+          {/* XP - Green with star */}
+          <motion.div 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+            style={{
+              background: "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
+              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #15803D, 0 4px 8px rgba(22,163,74,0.3)",
+              border: "2px solid rgba(255,255,255,0.4)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <img src={xpIcon} alt="XP" className="w-5 h-5" />
+            <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{(profile?.total_points || 0).toLocaleString()}</span>
+          </motion.div>
+        </div>
+
+
+        {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -120 }}>
           <motion.div 
             className="flex flex-col items-center w-full max-w-[360px] px-4"
             initial={{ scale: 0.8, opacity: 0 }}
@@ -313,116 +363,126 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar section with side buttons in a row */}
-            <motion.div 
-              className="flex items-center justify-center gap-3"
-              animate={isRefreshing ? {
-                rotateY: [0, 360],
-                y: [0, -10, 0],
-              } : { 
-                y: [0, -8, 0],
-                rotateY: 0,
-              }}
-              transition={isRefreshing ? {
-                rotateY: { duration: 0.8, ease: "easeInOut" },
-                y: { duration: 0.4, ease: "easeOut" },
-              } : { 
-                duration: 4, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
-              style={{ 
-                perspective: 1000,
-                transformStyle: "preserve-3d",
-              }}
-            >
-              {/* LEFT - Two action buttons in column */}
-              <div className="flex flex-col gap-2 pointer-events-auto">
-                <motion.button
-                  onClick={() => setIsDailyRewardsOpen(true)}
-                  className="relative w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
-                    border: "2px solid rgba(255,255,255,0.9)",
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <img src={giftBottleIcon} alt="Gift" className="w-6 h-6 object-contain" />
-                  <motion.div 
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
-                    style={{ 
-                      background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
-                      boxShadow: "0 2px 4px rgba(239,68,68,0.4)"
-                    }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <span className="text-white text-[9px] font-bold">1</span>
-                  </motion.div>
-                </motion.button>
-                <motion.button
-                  onClick={() => setShowMissionsModal(true)}
-                  className="relative w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
-                    border: "2px solid rgba(255,255,255,0.9)",
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <img src={missionCrystalIcon} alt="Missions" className="w-6 h-6 object-contain" />
-                </motion.button>
-              </div>
-
-              {/* CENTER - Avatar */}
-              <div 
-                data-walkthrough="avatar" 
-                className="pointer-events-auto cursor-pointer"
-                onClick={() => user && setIsAvatarModalOpen(true)}
+            {/* Avatar section with orbiting buttons */}
+            <div className="relative">
+              <motion.div 
+                animate={isRefreshing ? {
+                  rotateY: [0, 360],
+                  y: [0, -10, 0],
+                } : { 
+                  y: [0, -8, 0],
+                  rotateY: 0,
+                }}
+                transition={isRefreshing ? {
+                  rotateY: { duration: 0.8, ease: "easeInOut" },
+                  y: { duration: 0.4, ease: "easeOut" },
+                } : { 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+                style={{ 
+                  perspective: 1000,
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <AvatarCircle avatarUrl={profile?.avatar_url} size={219} />
-              </div>
+                {/* Avatar */}
+                <div 
+                  data-walkthrough="avatar" 
+                  className="pointer-events-auto cursor-pointer"
+                  onClick={() => user && setIsAvatarModalOpen(true)}
+                >
+                  <AvatarCircle avatarUrl={profile?.avatar_url} size={200} />
+                </div>
+              </motion.div>
 
-              {/* RIGHT - Two action buttons in column */}
-              <div className="flex flex-col gap-2 pointer-events-auto">
-                <motion.button
-                  onClick={() => setIsChestModalOpen(true)}
-                  className="relative w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
-                    border: "2px solid rgba(255,255,255,0.9)",
+              {/* Orbiting Action Buttons - positioned around the avatar */}
+              {/* Top-Left: Gift */}
+              <motion.button
+                onClick={() => setIsDailyRewardsOpen(true)}
+                className="absolute pointer-events-auto w-12 h-12 rounded-full flex items-center justify-center"
+                style={{
+                  top: 10,
+                  left: -20,
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                  border: "2px solid rgba(255,255,255,0.9)",
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <img src={giftBottleIcon} alt="Gift" className="w-7 h-7 object-contain" />
+                <motion.div 
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ 
+                    background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
+                    boxShadow: "0 2px 4px rgba(239,68,68,0.4)"
                   }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <img src={chestBoxIcon} alt="Chest" className="w-6 h-6 object-contain" />
-                </motion.button>
-                <motion.button
-                  onClick={() => setShowHelpModal(true)}
-                  className="relative w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
-                    border: "2px solid rgba(255,255,255,0.9)",
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <HelpCircle className="w-5 h-5" style={{ color: "#7C3AED" }} />
-                </motion.button>
-              </div>
-            </motion.div>
+                  <span className="text-white text-[10px] font-bold">1</span>
+                </motion.div>
+              </motion.button>
+
+              {/* Bottom-Left: Mission */}
+              <motion.button
+                onClick={() => setShowMissionsModal(true)}
+                className="absolute pointer-events-auto w-12 h-12 rounded-full flex items-center justify-center"
+                style={{
+                  bottom: 10,
+                  left: -20,
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                  border: "2px solid rgba(255,255,255,0.9)",
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <img src={missionCrystalIcon} alt="Missions" className="w-7 h-7 object-contain" />
+              </motion.button>
+
+              {/* Top-Right: Chest */}
+              <motion.button
+                onClick={() => setIsChestModalOpen(true)}
+                className="absolute pointer-events-auto w-12 h-12 rounded-full flex items-center justify-center"
+                style={{
+                  top: 10,
+                  right: -20,
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                  border: "2px solid rgba(255,255,255,0.9)",
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <img src={chestBoxIcon} alt="Chest" className="w-7 h-7 object-contain" />
+              </motion.button>
+
+              {/* Bottom-Right: Help */}
+              <motion.button
+                onClick={() => setShowHelpModal(true)}
+                className="absolute pointer-events-auto w-12 h-12 rounded-full flex items-center justify-center"
+                style={{
+                  bottom: 10,
+                  right: -20,
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 3px 0 #D1D5DB",
+                  border: "2px solid rgba(255,255,255,0.9)",
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <HelpCircle className="w-6 h-6" style={{ color: "#7C3AED" }} />
+              </motion.button>
+            </div>
 
             {/* User info section - below avatar */}
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, type: "spring" }}
-              className="flex flex-col items-center mt-3 pointer-events-auto"
+              className="flex flex-col items-center mt-4 pointer-events-auto"
             >
               {isRefreshing ? (
                 <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
@@ -430,7 +490,7 @@ export default function Index() {
                 <>
                   {/* Name, Flag, Level row */}
                   <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                    <span className="font-display font-bold text-white drop-shadow-md" style={{ fontSize: 26 }}>
+                    <span className="font-display font-bold text-white drop-shadow-md" style={{ fontSize: 28 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                     {profile?.country_code && (
@@ -439,64 +499,14 @@ export default function Index() {
                       </span>
                     )}
                     <div 
-                      className="px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                      className="px-2.5 py-1 rounded-full text-xs font-bold text-white"
                       style={{
-                        background: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
-                        boxShadow: "0 2px 8px rgba(139,92,246,0.4)",
+                        background: "linear-gradient(135deg, #F97316 0%, #EA580C 100%)",
+                        boxShadow: "0 2px 8px rgba(249,115,22,0.4), 0 2px 0 #C2410C",
                       }}
                     >
                       Lv. {levelInfo.level}
                     </div>
-                  </div>
-                  
-                  {/* Currency Row */}
-                  <div className="flex items-center justify-center gap-1.5 mt-2 flex-nowrap">
-                    {/* Coins */}
-                    <motion.div 
-                      className="flex items-center gap-1 px-2 py-1 rounded-full cursor-pointer"
-                      style={{
-                        background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FCD34D 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(251,191,36,0.3), 0 2px 0 #D97706",
-                        border: "1px solid rgba(255,255,255,0.5)",
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsGemShopOpen(true)}
-                    >
-                      <img src={coinIcon} alt="Coins" className="w-4 h-4" />
-                      <span className="text-xs font-bold text-amber-900 whitespace-nowrap">{coins.toLocaleString()}</span>
-                    </motion.div>
-
-                    {/* Gems */}
-                    <motion.div 
-                      className="flex items-center gap-1 px-2 py-1 rounded-full cursor-pointer"
-                      style={{
-                        background: "linear-gradient(180deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(139,92,246,0.3), 0 2px 0 #7C3AED",
-                        border: "1px solid rgba(255,255,255,0.5)",
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsGemShopOpen(true)}
-                    >
-                      <img src={gemIcon} alt="Gems" className="w-4 h-4" />
-                      <span className="text-xs font-bold text-purple-900 whitespace-nowrap">{gems.toLocaleString()}</span>
-                    </motion.div>
-
-                    {/* XP */}
-                    <motion.div 
-                      className="flex items-center gap-1 px-2 py-1 rounded-full"
-                      style={{
-                        background: "linear-gradient(180deg, #BBF7D0 0%, #86EFAC 50%, #4ADE80 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(34,197,94,0.3), 0 2px 0 #16A34A",
-                        border: "1px solid rgba(255,255,255,0.5)",
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <img src={xpIcon} alt="XP" className="w-4 h-4" />
-                      <span className="text-xs font-bold text-green-900 whitespace-nowrap">{(profile?.total_points || 0).toLocaleString()}</span>
-                    </motion.div>
                   </div>
                   
                   {/* 3D Chunky Progress bar */}
