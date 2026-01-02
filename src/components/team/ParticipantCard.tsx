@@ -43,19 +43,19 @@ export function ParticipantCard({ participant, isCurrentUser }: ParticipantCardP
       )}
 
       <div className="flex items-center gap-3">
-        {/* Avatar */}
+        {/* Avatar - 40% larger */}
         <div className="relative">
           <SmartAvatar
             avatarUrl={participant.avatar_url}
             fallback={participant.nickname}
-            size="lg"
-            className="border-2 border-border"
+            size="2xl"
+            className=""
             showSparkle={false}
             playOnHover={true}
           />
           
           {/* Country flag */}
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
+          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-card border-2 border-border flex items-center justify-center text-base">
             {getFlagEmoji(participant.country_code)}
           </div>
         </div>

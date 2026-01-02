@@ -127,47 +127,42 @@ export function RoomLobby() {
           </div>
         </div>
 
-        {/* Room Code */}
+        {/* Room Code - Single Line */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
+          className="mb-6"
         >
-          <p className="text-white/80 text-sm mb-2">ოთახის კოდი</p>
-          <div className="flex items-center justify-center gap-3">
+          <p className="text-white/80 text-sm mb-2 text-center">ოთახის კოდი</p>
+          <div className="flex items-center justify-center gap-2">
             <motion.div
-              className="px-6 py-3 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30"
+              className="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30"
               animate={{ 
-                boxShadow: ["0 0 20px rgba(255,255,255,0.2)", "0 0 30px rgba(255,255,255,0.4)", "0 0 20px rgba(255,255,255,0.2)"]
+                boxShadow: ["0 0 15px rgba(255,255,255,0.2)", "0 0 25px rgba(255,255,255,0.4)", "0 0 15px rgba(255,255,255,0.2)"]
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <span className="font-display text-3xl font-bold text-white tracking-[0.3em]">
+              <span className="font-display text-2xl font-bold text-white tracking-[0.2em]">
                 {room.room_code}
               </span>
             </motion.div>
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex items-center justify-center gap-2 mt-3">
+            
             <motion.button
               onClick={handleCopyCode}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 text-white text-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 text-white"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? "დაკოპირდა!" : "კოპირება"}
             </motion.button>
             
             <motion.button
               onClick={handleShare}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/20 text-white text-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 text-white"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Share2 className="w-4 h-4" />
-              გაზიარება
             </motion.button>
           </div>
         </motion.div>
