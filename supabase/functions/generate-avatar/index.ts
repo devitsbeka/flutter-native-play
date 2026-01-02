@@ -82,7 +82,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         imageUrl: imageUrl,
-        styleImageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+        styleImageUrl: "https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com/images/avatar-style-reference.jpg",
         textPrompt: "Transform this person into a high quality 3D Pixar Disney style character portrait, PRESERVE their exact face shape nose shape and unique facial features, smooth stylized 3D rendered skin but keep any freckles or distinctive marks, slightly enlarged expressive eyes with glossy reflections and soft catchlights keeping original eye color, natural closed mouth expression, same hair color and style as original rendered in detailed 3D, soft warm cinematic studio lighting with gentle shadows, head and upper shoulders only, clean neutral gray or brown gradient background, Pixar movie quality 3D render, maintain the persons recognizable identity and likeness, 8K ultra detailed",
       }),
     });
