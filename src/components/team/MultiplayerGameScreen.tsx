@@ -1,16 +1,23 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
-import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { Check, X, Crown, User, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
+import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
+import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
+import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
+import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { cn } from "@/lib/utils";
 
-type AnswerState = "idle" | "selected" | "revealed";
+// Georgian answer labels
+const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
 
 export function MultiplayerGameScreen() {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
   const {
@@ -35,10 +42,11 @@ export function MultiplayerGameScreen() {
 
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [answerState, setAnswerState] = useState<AnswerState>("idle");
+  const [answerRevealed, setAnswerRevealed] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
   
   // Get all other players (opponents)
   const opponents = participants.filter(p => p.user_id !== user?.id);
@@ -46,15 +54,30 @@ export function MultiplayerGameScreen() {
   // Sort participants by score for leaderboard
   const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
 
+  // Build progress results for dots
+  const progressResults = useMemo(() => {
+    const results: ("correct" | "wrong" | null)[] = [];
+    for (let i = 0; i < questions.length; i++) {
+      if (i < currentQuestionIndex) {
+        // Past questions - we don't have history, so mark as null for now
+        // In a real implementation, you'd track answer history
+        results.push(null);
+      } else {
+        results.push(null);
+      }
+    }
+    return results;
+  }, [questions.length, currentQuestionIndex]);
+
   // Sync state with phase changes
   useEffect(() => {
     if (phase === "playing") {
-      setAnswerState("idle");
+      setAnswerRevealed(false);
       setSelectedAnswer(null);
       setTimeRemaining(timePerQuestion);
       playSound("game-start");
     } else if (phase === "question-result") {
-      setAnswerState("revealed");
+      setAnswerRevealed(true);
       if (lastAnswerCorrect) {
         playSound("correct-answer");
         vibrate(50);
@@ -67,17 +90,17 @@ export function MultiplayerGameScreen() {
 
   // Reset on question change
   useEffect(() => {
-    setAnswerState("idle");
+    setAnswerRevealed(false);
     setSelectedAnswer(null);
     setTimeRemaining(timePerQuestion);
   }, [currentQuestionIndex, timePerQuestion]);
 
   const handleAnswer = useCallback((answer: string) => {
-    if (answerState !== "idle") return;
+    if (answerRevealed) return;
     setSelectedAnswer(answer);
-    setAnswerState("selected");
+    setAnswerRevealed(true);
     submitAnswer(answer, timeRemaining);
-  }, [answerState, submitAnswer, timeRemaining]);
+  }, [answerRevealed, submitAnswer, timeRemaining]);
 
   const handleNext = useCallback(() => {
     nextQuestion();
@@ -85,7 +108,7 @@ export function MultiplayerGameScreen() {
 
   // Timer
   useEffect(() => {
-    if (answerState !== "idle" || phase !== "playing") return;
+    if (answerRevealed || phase !== "playing") return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -98,40 +121,61 @@ export function MultiplayerGameScreen() {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [answerState, handleAnswer, phase]);
+  }, [answerRevealed, handleAnswer, phase]);
+
+  // Get answer button state
+  const getAnswerState = useCallback(
+    (answer: string): QuizAnswerState => {
+      if (!answerRevealed) {
+        return "default";
+      }
+
+      const isCorrect = answer === currentQuestion?.correctAnswer;
+      const isSelected = answer === selectedAnswer;
+
+      if (isCorrect) return "correct";
+      if (isSelected && !isCorrect) return "wrong";
+      return "default";
+    },
+    [answerRevealed, currentQuestion, selectedAnswer]
+  );
+
+  // Get player avatar state
+  const getPlayerState = useCallback(() => {
+    if (!answerRevealed) return "active";
+    return lastAnswerCorrect ? "correct" : "wrong";
+  }, [answerRevealed, lastAnswerCorrect]);
+
+  // Get opponent avatar states - pick top opponent
+  const topOpponent = opponents[0];
+  const getOpponentState = useCallback(() => {
+    if (!answerRevealed || !topOpponent) return "default";
+    const oppAnswer = opponentAnswers[topOpponent.user_id];
+    if (!oppAnswer) return "default";
+    return oppAnswer.is_correct ? "correct" : "wrong";
+  }, [answerRevealed, topOpponent, opponentAnswers]);
 
   if (!currentQuestion) return null;
 
-  const timerPercentage = (timeRemaining / timePerQuestion) * 100;
-  const isRevealed = answerState === "revealed";
-  const letters = ["A", "B", "C", "D"];
+  const progressPercent = (timeRemaining / timePerQuestion) * 100;
 
   // Count how many opponents have answered
   const answeredCount = Object.keys(opponentAnswers).length;
 
-  const progressPercent = isRevealed ? 100 : timerPercentage;
-
   return (
-    <div className="w-full h-[100dvh] flex flex-col bg-[#7E7BDC]">
-      {/* Header with avatars and scores */}
-      <div className="px-4 py-3 flex items-center justify-between flex-shrink-0 pt-[calc(env(safe-area-inset-top)+12px)]">
-        {/* Player */}
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-[#5B4BC4] border-2 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full">
-            <Crown className="w-3 h-3 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold text-sm">{myScore}</span>
-          </div>
-        </div>
+    <div className="w-full h-[100dvh] flex flex-col bg-[#7E7BDC] overflow-hidden">
+      {/* Safe area padding for notched phones */}
+      <div className="pt-[env(safe-area-inset-top)]" />
 
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+        <button
+          onClick={() => navigate("/team")}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+        
         {/* Question counter */}
         <div className="flex items-center gap-1 bg-white/10 px-4 py-2 rounded-full">
           <span className="text-white font-bold text-lg">{currentQuestionIndex + 1}</span>
@@ -139,7 +183,7 @@ export function MultiplayerGameScreen() {
           <span className="text-white/60 font-bold text-lg">{questions.length}</span>
         </div>
 
-        {/* Leaderboard toggle / opponent count */}
+        {/* Leaderboard toggle */}
         <motion.button
           onClick={() => setShowLeaderboard(!showLeaderboard)}
           className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/10"
@@ -207,7 +251,7 @@ export function MultiplayerGameScreen() {
       </AnimatePresence>
 
       {/* Answered indicator */}
-      {answeredCount > 0 && !isRevealed && (
+      {answeredCount > 0 && !answerRevealed && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -221,212 +265,134 @@ export function MultiplayerGameScreen() {
         </motion.div>
       )}
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden min-h-0">
-        {/* Question card */}
-        <div 
-          className="rounded-3xl overflow-hidden mb-3 flex-shrink-0"
-          style={{
-            backgroundColor: "#6B5FA8",
-            boxShadow: "0 6px 0 #4A4080",
-          }}
-        >
-          {/* Progress bar */}
-          <div className="h-2 bg-white/20 w-full">
-            <motion.div
-              className={cn(
-                "h-full rounded-r-full transition-colors",
-                isRevealed ? "bg-green-400" :
-                timerPercentage > 50 ? "" : 
-                timerPercentage > 25 ? "bg-amber-400" : "bg-red-500"
-              )}
-              style={{ 
-                background: isRevealed ? "#4ADE80" : timerPercentage > 50 ? "linear-gradient(90deg, #F5A623 0%, #F7C948 100%)" : undefined,
-                width: `${progressPercent}%` 
-              }}
-              transition={{ duration: 0.1 }}
-            />
-          </div>
+      {/* Players Row */}
+      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
+        {/* Player (Left) */}
+        <QuizPlayerAvatar
+          avatarUrl={profile?.avatar_url}
+          animatedAvatarUrl={profile?.animated_avatar_url}
+          score={myScore}
+          position="left"
+          state={getPlayerState()}
+          size="large"
+        />
 
-          {/* Result banner */}
-          <div className="min-h-[40px] px-4 pt-2">
-            <AnimatePresence>
-              {isRevealed && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={cn(
-                    "py-1.5 px-3 rounded-xl flex items-center justify-center gap-2",
-                    lastAnswerCorrect ? "bg-green-500/20" : "bg-red-500/20"
-                  )}
-                >
-                  <div className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center",
-                    lastAnswerCorrect ? "bg-green-500" : "bg-red-500"
-                  )}>
-                    {lastAnswerCorrect ? <Check className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-white" />}
-                  </div>
-                  <span className="text-white font-bold text-sm">
-                    {lastAnswerCorrect ? `+${lastPointsEarned} ქულა!` : "არასწორია!"}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        {/* Top Opponent (Right) */}
+        {topOpponent && (
+          <QuizPlayerAvatar
+            avatarUrl={topOpponent.avatar_url}
+            score={topOpponent.score || 0}
+            position="right"
+            state={getOpponentState()}
+            size="large"
+          />
+        )}
+      </div>
 
-          {/* Question text */}
-          <div className="px-5 pb-5">
-            <p className="text-white text-lg font-semibold text-center leading-snug">
-              {currentQuestion.question}
-            </p>
-          </div>
-        </div>
+      {/* Question Card */}
+      <div className="px-4 flex-shrink-0 mt-3 relative">
+        <QuizQuestionCard
+          questionText={currentQuestion.question}
+          progressPercent={progressPercent}
+          state="default"
+          timerSeconds={Math.ceil(timeRemaining)}
+          timerMaxSeconds={timePerQuestion}
+        />
+      </div>
 
-        {/* Answer buttons */}
-        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
+      {/* Progress Dots */}
+      <div className="flex justify-center my-2 flex-shrink-0">
+        <QuizProgressDots
+          total={questions.length}
+          current={currentQuestionIndex}
+          results={progressResults}
+        />
+      </div>
+
+      {/* Answer Buttons */}
+      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
+        <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
-            const isThisSelected = selectedAnswer === answer;
-            const isCorrect = answer === currentQuestion.correctAnswer;
-            
-            // Find all opponents who chose this answer
-            const opponentsWhoChoseThis = isRevealed 
+            // Find opponents who chose this answer (only show when revealed)
+            const opponentsWhoChoseThis = answerRevealed 
               ? Object.entries(opponentAnswers)
                   .filter(([_, ans]) => ans.answer === answer)
-                  .map(([userId, ans]) => ({
-                    ...participants.find(p => p.user_id === userId),
-                    isCorrect: ans.is_correct,
-                  }))
+                  .map(([userId]) => participants.find(p => p.user_id === userId))
+                  .filter(Boolean)
               : [];
 
-            let bgColor = "#FFFFFF";
-            let depthColor = "#CBD5E1";
-            let textColor = "#2A2550";
-            let labelBg = "#7DD3FC";
-            let labelText = "#FFFFFF";
-
-            if (answerState !== "idle") {
-              if (isRevealed) {
-                if (isCorrect) {
-                  bgColor = "#4ADE80";
-                  depthColor = "#22C55E";
-                  textColor = "#FFFFFF";
-                  labelBg = "#FFFFFF";
-                  labelText = "#22C55E";
-                } else if (isThisSelected && !isCorrect) {
-                  bgColor = "#EF4444";
-                  depthColor = "#DC2626";
-                  textColor = "#FFFFFF";
-                  labelBg = "#FFFFFF";
-                  labelText = "#EF4444";
-                }
-              } else if (isThisSelected) {
-                bgColor = "#7DD3FC";
-                depthColor = "#38BDF8";
-                textColor = "#FFFFFF";
-                labelBg = "#FFFFFF";
-                labelText = "#7DD3FC";
-              }
-            }
-
             return (
-              <motion.button
+              <motion.div
                 key={`${currentQuestionIndex}-${index}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
                 transition={{ delay: index * 0.05 }}
-                onClick={() => handleAnswer(answer)}
-                disabled={answerState !== "idle"}
-                className="w-full rounded-2xl text-left font-bold text-base disabled:cursor-not-allowed relative min-h-[56px]"
-                style={{ marginBottom: 4 }}
+                className="flex-shrink-0 relative"
               >
-                {/* Depth layer */}
-                <div
-                  className="absolute inset-0 rounded-2xl"
-                  style={{ background: depthColor, transform: "translateY(4px)" }}
+                <QuizAnswerButton
+                  label={ANSWER_LABELS[index]}
+                  text={answer}
+                  state={getAnswerState(answer)}
+                  onClick={() => handleAnswer(answer)}
+                  disabled={answerRevealed}
+                  showLabel={true}
                 />
                 
-                {/* Main face */}
-                <div
-                  className="relative flex items-center min-h-[56px] py-3 rounded-2xl"
-                  style={{ background: bgColor }}
-                >
-                  <div
-                    className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base flex-shrink-0"
-                    style={{ background: labelBg, color: labelText }}
-                  >
-                    {isRevealed && isCorrect ? (
-                      <Check className="w-5 h-5" />
-                    ) : isRevealed && isThisSelected && !isCorrect ? (
-                      <X className="w-5 h-5" />
-                    ) : (
-                      letters[index]
+                {/* Opponent avatars overlay */}
+                {opponentsWhoChoseThis.length > 0 && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5">
+                    {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
+                      <Avatar 
+                        key={opp?.id || i} 
+                        className={cn(
+                          "w-7 h-7 border-2",
+                          opponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
+                        )}
+                      >
+                        <AvatarImage src={opp?.avatar_url || undefined} />
+                        <AvatarFallback className="bg-purple-500 text-white text-[10px]">
+                          {opp?.nickname?.charAt(0) || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {opponentsWhoChoseThis.length > 4 && (
+                      <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
+                        +{opponentsWhoChoseThis.length - 4}
+                      </div>
                     )}
                   </div>
-                  <span className="flex-1 px-3" style={{ color: textColor }}>
-                    {answer}
-                  </span>
-
-                  {/* Opponent avatars who chose this answer */}
-                  {opponentsWhoChoseThis.length > 0 && (
-                    <div className="flex -space-x-1.5 mr-3">
-                      {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
-                        <Avatar 
-                          key={opp?.id || i} 
-                          className={cn(
-                            "w-7 h-7 border-2",
-                            opp?.isCorrect ? "border-green-500" : "border-red-500"
-                          )}
-                        >
-                          <AvatarImage src={opp?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                            {opp?.nickname?.charAt(0) || "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {opponentsWhoChoseThis.length > 4 && (
-                        <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
-                          +{opponentsWhoChoseThis.length - 4}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </motion.button>
+                )}
+              </motion.div>
             );
           })}
-        </div>
-
-        {/* Next Button */}
-        <div className="mt-3 flex-shrink-0">
-          <div className={cn(
-            "transition-opacity duration-200",
-            isRevealed ? "opacity-100" : "opacity-0 pointer-events-none h-0"
-          )}>
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={handleNext}
-              className="w-full rounded-2xl font-bold text-lg relative"
-              style={{ marginBottom: 4 }}
-            >
-              <div
-                className="absolute inset-0 rounded-2xl"
-                style={{ background: "#22C55E", transform: "translateY(4px)" }}
-              />
-              <div
-                className="relative flex items-center justify-center min-h-[56px] py-3 rounded-2xl text-white"
-                style={{ background: "#4ADE80" }}
-              >
-                {currentQuestionIndex < questions.length - 1 ? "შემდეგი კითხვა" : "შედეგები"}
-              </div>
-            </motion.button>
-          </div>
-        </div>
+        </AnimatePresence>
       </div>
 
-      {/* Safe area bottom padding */}
-      <div className="pb-[env(safe-area-inset-bottom)]" />
+      {/* Bottom Area - Next Button */}
+      <div className="px-4 pb-4 pt-2 flex-shrink-0">
+        <div className="pb-[env(safe-area-inset-bottom)]">
+          <AnimatePresence mode="wait">
+            {answerRevealed && (
+              <motion.div
+                key="next-button"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <ChunkyButton
+                  variant="white"
+                  size="xl"
+                  onClick={handleNext}
+                  className="w-full"
+                >
+                  {isLastQuestion ? "შედეგები" : "შემდეგი კითხვა"}
+                </ChunkyButton>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }
