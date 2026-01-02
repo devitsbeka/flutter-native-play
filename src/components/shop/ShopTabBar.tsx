@@ -24,6 +24,12 @@ const TABS: Tab[] = [
     gradient: "linear-gradient(135deg, hsl(263 60% 55%) 0%, hsl(280 70% 50%) 100%)",
   },
   {
+    id: "frames",
+    label: "ჩარჩოები",
+    icon: <Frame className="w-4 h-4" />,
+    gradient: "linear-gradient(135deg, hsl(280 70% 55%) 0%, hsl(320 75% 50%) 100%)",
+  },
+  {
     id: "coins",
     label: "მონეტები",
     icon: <Coins className="w-4 h-4" />,
