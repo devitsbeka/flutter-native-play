@@ -14,16 +14,20 @@ interface AvatarRequest {
 const AVATAR_PROMPT = `Create a fun, friendly 3D avatar portrait based on this photo.
 
 EXPRESSION (Very Important):
-- Give them a warm, friendly toothless SMILE - they should look happy and approachable
+- Gentle, warm CLOSED-MOUTH smile - lips together, NO TEETH SHOWING
 - Bright, big and wide open sparkling eyes with a hint of joy
 - Confident, positive expression - NOT sad or neutral
-- Think "profile picture you'd be proud of"
+- Subtle, pleasant smile like Mona Lisa - friendly but lips closed
 
-LIKENESS (Important):
-- Preserve their face shape, jawline, and bone structure but make more beautiful
-- Match their exact skin tone, hair color, and hairstyle but make more beautiful
-- Keep their eye color and general facial features recognizable
-- The person should be recognizable but idealized
+LIKENESS (CRITICAL - Must be recognizable):
+- COPY their EXACT face shape and jawline precisely from the photo
+- COPY their EXACT nose shape and size
+- COPY their EXACT eye shape, spacing, and eye color
+- COPY their EXACT eyebrow shape and thickness
+- COPY their EXACT lip shape and mouth width
+- COPY their EXACT hairstyle, hair color, and hair texture
+- COPY their EXACT skin tone
+- The avatar MUST look like THIS SPECIFIC PERSON, not a generic character
 
 STYLE - Fun & Appealing:
 - Slightly larger, more expressive eyes (15-20% bigger)
@@ -37,7 +41,7 @@ TECHNICAL:
 - Head and shoulders composition
 - Soft, warm studio lighting that flatters
 
-The result should be a fun, game-ready avatar that captures the person's essence while making them look their best - happy, confident, and approachable.`;
+The result should be a fun avatar that is CLEARLY RECOGNIZABLE as this specific person - just stylized and beautified.`;
 
 // Fetch image and convert to base64 data URL using chunked approach
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
