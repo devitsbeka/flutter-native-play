@@ -62,22 +62,25 @@ export function SmartAvatar({
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Ping-pong reverse playback using requestAnimationFrame
+  // Ping-pong reverse playback with delta time for normal speed
   const reversePlay = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    const step = () => {
+    let lastTime = performance.now();
+
+    const step = (currentTime: number) => {
+      const delta = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
       if (video.currentTime <= 0.05) {
-        // Reached start, switch to forward
         video.currentTime = 0;
         setIsReversing(false);
         video.play().catch(() => setVideoError(true));
         return;
       }
       
-      // Move backwards (~60fps equivalent)
-      video.currentTime = Math.max(0, video.currentTime - 0.033);
+      video.currentTime = Math.max(0, video.currentTime - delta);
       animationFrameRef.current = requestAnimationFrame(step);
     };
 
