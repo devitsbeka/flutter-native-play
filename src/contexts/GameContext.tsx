@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
+import { missionTracker } from "@/services/missionTracker";
 
 export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
@@ -109,6 +110,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const startMatchmaking = useCallback(async () => {
     setState(prev => ({ ...prev, phase: "matchmaking" }));
+    
+    // Reset mission tracker for new game session
+    missionTracker.resetSession();
     
     // Generate opponent while starting to fetch questions
     const opponent = generateFakeOpponent();
@@ -245,6 +249,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (!currentQuestion) return prev;
 
       const isCorrect = answer === currentQuestion.correctAnswer;
+      
+      // Track mission progress
+      if (isCorrect) {
+        missionTracker.recordCorrectAnswer();
+      }
+      // Track category played
+      const categoryId = currentQuestion.categoryId || currentQuestion.category;
+      missionTracker.recordCategoryPlayed(categoryId);
+      
       const points = calculateScore(
         isCorrect,
         timeRemaining,

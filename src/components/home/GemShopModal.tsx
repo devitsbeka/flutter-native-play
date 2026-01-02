@@ -127,7 +127,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
 
   const handlePurchase = async (item: ShopItem) => {
     if (gems < item.price) {
-      toast.error("არ გაქვს საკმარისი ლალი!");
+      toast.error("არ გაქვს საკმარისი ალმასი!");
       playSound("wrong-answer");
       return;
     }

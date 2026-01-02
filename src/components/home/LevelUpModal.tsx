@@ -125,7 +125,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
             <div className="text-center">
               <img src={gemIcon} alt="" className="w-8 h-8 mx-auto" />
               <p className="font-bold text-lg text-amber-800">+{levelUpGems}</p>
-              <p className="text-sm font-medium text-amber-700">ლალი</p>
+              <p className="text-sm font-medium text-amber-700">ალმასი</p>
             </div>
           )}
           <div className="text-center">
