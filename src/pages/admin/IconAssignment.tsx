@@ -282,6 +282,10 @@ export default function IconAssignment() {
               <div className="text-lg font-bold text-orange-500">{stats.withoutIcons.toLocaleString()}</div>
               <div className="text-xs text-muted-foreground">უიკონო</div>
             </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-red-500">{brokenIcons.size.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">გატეხილი</div>
+            </div>
           </div>
         </div>
         
@@ -603,6 +607,7 @@ export default function IconAssignment() {
             brokenIcons={brokenIcons}
             icons={icons}
             onIconFixed={handleIconFixed}
+            totalIconsInLibrary={icons.length}
           />
 
           {/* Icon Grid */}

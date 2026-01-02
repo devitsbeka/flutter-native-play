@@ -1,10 +1,11 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, AlertTriangle, Upload, Check, Loader2, X, CheckSquare, Square, FolderUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +24,7 @@ interface BrokenIconsModalProps {
   brokenIcons: Set<string>;
   icons: IconItem[];
   onIconFixed: (slug: string, newUrl: string) => void;
+  totalIconsInLibrary: number;
 }
 
 interface FixedIcon {
@@ -30,18 +32,53 @@ interface FixedIcon {
   newUrl: string;
 }
 
+interface PersistentStats {
+  totalFixed: number;
+  fixedSlugs: Set<string>;
+}
+
 export function BrokenIconsModal({ 
   open, 
   onOpenChange, 
   brokenIcons, 
   icons,
-  onIconFixed 
+  onIconFixed,
+  totalIconsInLibrary
 }: BrokenIconsModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIcons, setSelectedIcons] = useState<Set<string>>(new Set());
   const [uploadingIcons, setUploadingIcons] = useState<Set<string>>(new Set());
   const [fixedIcons, setFixedIcons] = useState<Map<string, string>>(new Map());
+  const [persistentStats, setPersistentStats] = useState<PersistentStats>({ totalFixed: 0, fixedSlugs: new Set() });
+  const [loadingStats, setLoadingStats] = useState(true);
   const bulkInputRef = useRef<HTMLInputElement>(null);
+
+  // Load persistent fix history from database
+  useEffect(() => {
+    const loadFixHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('icon_fix_history')
+          .select('icon_slug');
+        
+        if (error) throw error;
+        
+        const slugs = new Set((data || []).map(d => d.icon_slug));
+        setPersistentStats({
+          totalFixed: slugs.size,
+          fixedSlugs: slugs
+        });
+      } catch (error) {
+        console.error('Error loading fix history:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    
+    if (open) {
+      loadFixHistory();
+    }
+  }, [open]);
 
   // Get broken icon details with search filter
   const brokenIconDetails = useMemo(() => {
@@ -83,7 +120,7 @@ export function BrokenIconsModal({
     }
   };
 
-  // Upload single icon
+  // Upload single icon and save to fix history
   const uploadSingleIcon = async (slug: string, file: File) => {
     if (!file || !file.type.includes('png')) {
       toast.error('მხოლოდ PNG ფაილები დაშვებულია');
@@ -94,6 +131,8 @@ export function BrokenIconsModal({
     
     try {
       const fileName = `${slug}.png`;
+      const icon = icons.find(i => i.slug === slug);
+      const oldUrl = icon?.url || null;
       
       const { error: uploadError } = await supabase.storage
         .from('icon-library')
@@ -110,6 +149,7 @@ export function BrokenIconsModal({
       
       const newUrl = urlData.publicUrl + '?t=' + Date.now();
       
+      // Update icon_library table
       const { error: updateError } = await supabase
         .from('icon_library')
         .update({ 
@@ -120,7 +160,24 @@ export function BrokenIconsModal({
       
       if (updateError) throw updateError;
       
+      // Save to fix history for persistent tracking
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase
+        .from('icon_fix_history')
+        .upsert({ 
+          icon_slug: slug,
+          old_url: oldUrl,
+          new_url: newUrl,
+          fixed_by: user?.id
+        }, { onConflict: 'icon_slug' });
+      
+      // Update local state
       setFixedIcons(prev => new Map(prev).set(slug, newUrl));
+      setPersistentStats(prev => ({
+        totalFixed: prev.totalFixed + (prev.fixedSlugs.has(slug) ? 0 : 1),
+        fixedSlugs: new Set([...prev.fixedSlugs, slug])
+      }));
+      
       onIconFixed(slug, newUrl);
       toast.success(`აიკონი ატვირთულია: ${slug}`);
     } catch (error) {
@@ -164,6 +221,11 @@ export function BrokenIconsModal({
   };
 
   const remainingCount = brokenIcons.size - fixedIcons.size;
+  const sessionFixedCount = fixedIcons.size;
+  const workingIconsCount = totalIconsInLibrary - brokenIcons.size + sessionFixedCount;
+  const healthPercentage = totalIconsInLibrary > 0 
+    ? Math.round((workingIconsCount / totalIconsInLibrary) * 100)
+    : 100;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -177,8 +239,52 @@ export function BrokenIconsModal({
               <div>
                 <DialogTitle className="text-lg">გატეხილი აიკონები</DialogTitle>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {remainingCount} დარჩენილი • {fixedIcons.size} გამოსწორებული
+                  {remainingCount} დარჩენილი • {sessionFixedCount} გამოსწორებული ამ სესიაში
                 </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Persistent Progress Stats */}
+          <div className="mt-4 space-y-3">
+            {/* Health Progress Bar */}
+            <div className="rounded-lg border border-border/50 bg-background/50 p-3">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-muted-foreground">ბიბლიოთეკის ჯანმრთელობა</span>
+                <span className="font-medium">
+                  {workingIconsCount.toLocaleString()} / {totalIconsInLibrary.toLocaleString()} მუშა
+                  <span className={cn(
+                    "ml-2 font-bold",
+                    healthPercentage >= 90 ? "text-green-500" :
+                    healthPercentage >= 70 ? "text-yellow-500" : "text-orange-500"
+                  )}>
+                    ({healthPercentage}%)
+                  </span>
+                </span>
+              </div>
+              <Progress 
+                value={healthPercentage} 
+                className="h-2"
+              />
+            </div>
+            
+            {/* Stats Summary */}
+            <div className="grid grid-cols-4 gap-3 text-center">
+              <div className="rounded-lg border border-border/50 bg-background/50 p-2">
+                <div className="text-lg font-bold text-foreground">{totalIconsInLibrary.toLocaleString()}</div>
+                <div className="text-[10px] text-muted-foreground">სულ აიკონი</div>
+              </div>
+              <div className="rounded-lg border border-border/50 bg-background/50 p-2">
+                <div className="text-lg font-bold text-green-500">{workingIconsCount.toLocaleString()}</div>
+                <div className="text-[10px] text-muted-foreground">მუშა</div>
+              </div>
+              <div className="rounded-lg border border-border/50 bg-background/50 p-2">
+                <div className="text-lg font-bold text-orange-500">{remainingCount.toLocaleString()}</div>
+                <div className="text-[10px] text-muted-foreground">გატეხილი</div>
+              </div>
+              <div className="rounded-lg border border-border/50 bg-background/50 p-2">
+                <div className="text-lg font-bold text-violet-500">{persistentStats.totalFixed.toLocaleString()}</div>
+                <div className="text-[10px] text-muted-foreground">სულ გამოსწორ.</div>
               </div>
             </div>
           </div>

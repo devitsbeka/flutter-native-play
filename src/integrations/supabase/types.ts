@@ -346,6 +346,33 @@ export type Database = {
         }
         Relationships: []
       }
+      icon_fix_history: {
+        Row: {
+          fixed_at: string
+          fixed_by: string | null
+          icon_slug: string
+          id: string
+          new_url: string
+          old_url: string | null
+        }
+        Insert: {
+          fixed_at?: string
+          fixed_by?: string | null
+          icon_slug: string
+          id?: string
+          new_url: string
+          old_url?: string | null
+        }
+        Update: {
+          fixed_at?: string
+          fixed_by?: string | null
+          icon_slug?: string
+          id?: string
+          new_url?: string
+          old_url?: string | null
+        }
+        Relationships: []
+      }
       icon_library: {
         Row: {
           category: string
