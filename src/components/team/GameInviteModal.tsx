@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Gamepad2, X, Check, Clock } from "lucide-react";
 import { GameInvitation } from "@/hooks/useGameInvitations";
 import { useSound } from "@/contexts/SoundContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface GameInviteModalProps {
@@ -177,17 +177,14 @@ export function GameInviteModal({
                     boxShadow: "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
                   }}
                 >
-                  <Avatar className="w-14 h-14 border-2 border-white shadow-md">
-                    <AvatarImage src={invitation.sender?.avatar_url || undefined} />
-                    <AvatarFallback 
-                      className="text-white text-lg font-bold"
-                      style={{
-                        background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
-                      }}
-                    >
-                      {invitation.sender?.nickname?.charAt(0).toUpperCase() || "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <SmartAvatar
+                    avatarUrl={invitation.sender?.avatar_url}
+                    fallback={invitation.sender?.nickname || "?"}
+                    size="lg"
+                    className="border-2 border-white shadow-md"
+                    showSparkle={false}
+                    autoPlay={false}
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-gray-800">

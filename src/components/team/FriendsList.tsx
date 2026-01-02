@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Mail, Gamepad2, Check, X, Users, MessageCircle, MoreVertical, UserMinus } from "lucide-react";
+import { UserPlus, Mail, Check, X, Users, MessageCircle, MoreVertical, UserMinus } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
 import { useSound } from "@/contexts/SoundContext";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import {
@@ -196,18 +197,15 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
       <div className="flex gap-3 relative z-10">
         {/* Avatar with purple ring and online dot */}
         <div className="relative flex-shrink-0">
-          <Avatar className="w-14 h-14 ring-[3px] ring-purple-400 shadow-lg shadow-purple-400/30">
-            <AvatarImage src={friend.avatarUrl || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-lg font-bold">
-              {friend.nickname.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <motion.div 
-            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-[3px] border-white shadow-sm ${
-              friend.isOnline ? "bg-green-400" : "bg-gray-400"
-            }`}
-            animate={friend.isOnline ? { scale: [1, 1.2, 1] } : {}}
-            transition={{ duration: 2, repeat: Infinity }}
+          <SmartAvatar
+            avatarUrl={friend.avatarUrl}
+            animatedAvatarUrl={friend.animatedAvatarUrl}
+            fallback={friend.nickname}
+            size="lg"
+            className="ring-[3px] ring-purple-400 shadow-lg shadow-purple-400/30"
+            showSparkle={true}
+            playOnHover={true}
+            onlineStatus={friend.isOnline}
           />
         </div>
         
