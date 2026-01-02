@@ -1,5 +1,11 @@
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 
+// Map category IDs to their video URLs
+const CATEGORY_VIDEOS: Record<string, string> = {
+  "khelovneba": "/videos/painting.mp4",
+  "saqartvelos-istoria": "/videos/geo-battle-2.mp4",
+};
+
 interface Category {
   id: string;
   uuid?: string; // The actual UUID from database
@@ -60,6 +66,7 @@ export function CategoryGrid({
             imageUrl={category.image_url}
             isFavorite={favorites.has(favoriteId)}
             leaderboardRank={leaderboardRanks[category.id]}
+            videoUrl={CATEGORY_VIDEOS[category.id]}
             onFavoriteClick={(e) => {
               e.stopPropagation();
               onFavoriteToggle(favoriteId);

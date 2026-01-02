@@ -72,48 +72,44 @@ export function AirbnbCategoryCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Ping-pong video: play forward, then step backward frame by frame, repeat
-  useEffect(() => {
-    if (!videoUrl) return;
-    
+  // Ping-pong reverse playback with delta time for smooth speed
+  const reversePlay = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    let isReversing = false;
+    let lastTime = performance.now();
 
-    const reverseStep = () => {
-      if (!video) return;
-      
+    const step = (currentTime: number) => {
+      const delta = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
       if (video.currentTime <= 0.05) {
-        // Reached start, play forward again
-        isReversing = false;
         video.currentTime = 0;
         video.play().catch(() => {});
         return;
       }
-      
-      // Step backward
-      video.currentTime = Math.max(0, video.currentTime - 0.033);
-      animationFrameRef.current = requestAnimationFrame(reverseStep);
+      video.currentTime = Math.max(0, video.currentTime - delta);
+      animationFrameRef.current = requestAnimationFrame(step);
     };
 
-    const onEnded = () => {
-      if (!isReversing) {
-        isReversing = true;
-        video.pause();
-        reverseStep();
-      }
-    };
+    animationFrameRef.current = requestAnimationFrame(step);
+  };
 
-    video.addEventListener('ended', onEnded);
+  const handleVideoEnded = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      reversePlay();
+    }
+  };
 
+  // Cleanup animation frame on unmount
+  useEffect(() => {
     return () => {
-      video.removeEventListener('ended', onEnded);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [videoUrl]);
+  }, []);
 
   const particles = useMemo(
     () =>
@@ -196,6 +192,7 @@ export function AirbnbCategoryCard({
             autoPlay
             muted
             playsInline
+            onEnded={handleVideoEnded}
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
