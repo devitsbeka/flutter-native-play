@@ -161,11 +161,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       )}
                       
                       {/* Icon */}
-                      <div className="h-12 w-12 flex items-center justify-center">
+                      <div className="h-16 w-16 flex items-center justify-center">
                         <img 
                           src={item.icon} 
                           alt={item.label}
-                          className="h-10 w-10 object-contain"
+                          className="h-14 w-14 object-contain"
                         />
                       </div>
                       
