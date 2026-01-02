@@ -67,7 +67,7 @@ export function CategoryGrid({
             imageUrl={category.image_url}
             isFavorite={favorites.has(favoriteId)}
             leaderboardRank={leaderboardRanks[category.id]}
-            videoUrl={CATEGORY_VIDEOS[category.id]}
+            videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
             onFavoriteClick={(e) => {
               e.stopPropagation();
               onFavoriteToggle(favoriteId);
