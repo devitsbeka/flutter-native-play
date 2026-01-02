@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useState } from "react";
-import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
-import { PowerUpDetailModal, PowerUpType as DetailPowerUpType } from "@/components/game/PowerUpDetailModal";
+import { GemShopModal } from "@/components/home/GemShopModal";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -52,36 +51,6 @@ export default function PowerUps() {
   const { powerUps, isLoading } = useUserPowerUps();
   const [showShopModal, setShowShopModal] = useState(false);
   const [showTutorialModal, setShowTutorialModal] = useState(false);
-  const [selectedPowerUp, setSelectedPowerUp] = useState<DetailPowerUpType | null>(null);
-  const [shopInitialType, setShopInitialType] = useState<PowerUpType | undefined>();
-
-  // Map hook power-up type to detail modal power-up type
-  const typeToDetailType: Record<PowerUpType, DetailPowerUpType> = {
-    "5050": "fifty-fifty",
-    "freeze": "freeze",
-    "replace": "replace",
-    "time-drain": "time-drain",
-  };
-  
-  // Map detail modal type back to hook type
-  const detailTypeToType: Record<DetailPowerUpType, PowerUpType> = {
-    "fifty-fifty": "5050",
-    "freeze": "freeze",
-    "replace": "replace",
-    "time-drain": "time-drain",
-    "add-power": "5050", // fallback
-  };
-
-  const handlePowerUpClick = (type: PowerUpType) => {
-    setSelectedPowerUp(typeToDetailType[type]);
-  };
-  
-  const handleAddFromDetail = () => {
-    if (selectedPowerUp) {
-      setShopInitialType(detailTypeToType[selectedPowerUp]);
-    }
-    setShowShopModal(true);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-indigo-900 relative overflow-hidden">
@@ -129,16 +98,15 @@ export default function PowerUps() {
             const isEmpty = count === 0;
             
             return (
-              <motion.button
+              <motion.div
                 key={powerUp.type}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 + index * 0.1 }}
-                onClick={() => handlePowerUpClick(powerUp.type)}
-                className={`relative p-6 rounded-3xl backdrop-blur-sm transition-all ${
+                className={`relative p-6 rounded-3xl backdrop-blur-sm ${
                   isEmpty 
                     ? "bg-white/5 opacity-60" 
-                    : "bg-white/10 hover:bg-white/15 active:scale-95"
+                    : "bg-white/10"
                 }`}
                 style={{
                   boxShadow: isEmpty ? "none" : "0 8px 32px rgba(0, 0, 0, 0.2)",
@@ -168,15 +136,15 @@ export default function PowerUps() {
                 </div>
 
                 {/* Name */}
-                <h3 className="text-white font-bold text-lg mb-1">
+                <h3 className="text-white font-bold text-lg mb-1 text-center">
                   {powerUp.name}
                 </h3>
 
                 {/* Description */}
-                <p className="text-white/60 text-sm">
+                <p className="text-white/60 text-sm text-center">
                   {powerUp.description}
                 </p>
-              </motion.button>
+              </motion.div>
             );
           })}
         </motion.div>
@@ -199,25 +167,12 @@ export default function PowerUps() {
         </motion.button>
       </div>
 
-      {/* Shop Modal */}
-      <PowerUpShopModal
+      {/* Gem Shop Modal with powerup tab */}
+      <GemShopModal
         isOpen={showShopModal}
-        onClose={() => {
-          setShowShopModal(false);
-          setShopInitialType(undefined);
-        }}
-        initialSelectedType={shopInitialType}
+        onClose={() => setShowShopModal(false)}
+        defaultCategory="powerup"
       />
-
-      {/* Power-up Detail Modal */}
-      {selectedPowerUp && (
-        <PowerUpDetailModal
-          isOpen={!!selectedPowerUp}
-          onClose={() => setSelectedPowerUp(null)}
-          type={selectedPowerUp}
-          onAddClick={handleAddFromDetail}
-        />
-      )}
       
       {/* Tutorial Modal */}
       <PowerUpTutorialModal
