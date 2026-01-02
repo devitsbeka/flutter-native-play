@@ -190,6 +190,7 @@ export function VSScreen() {
         >
           <QuizPlayerAvatar
             avatarUrl={profile?.avatar_url}
+            animatedAvatarUrl={profile?.animated_avatar_url}
             score={playerPoints}
             position="left"
             state="active"
