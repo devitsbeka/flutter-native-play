@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 
 // Import tab icons
 import allIcon from "@/assets/tabs/all.png";
@@ -30,21 +30,130 @@ interface IconTabBarProps {
 
 export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const velocityRef = useRef(0);
+  const lastTouchRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const animationRef = useRef<number>();
+  const isDraggingRef = useRef(false);
+
+  // Momentum animation
+  const animateMomentum = useCallback(() => {
+    const slider = containerRef.current;
+    if (!slider) return;
+
+    if (Math.abs(velocityRef.current) > 0.5) {
+      slider.scrollLeft += velocityRef.current;
+      velocityRef.current *= 0.92; // Friction
+      animationRef.current = requestAnimationFrame(animateMomentum);
+    }
+  }, []);
+
+  // Touch handlers for mobile momentum
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    isDraggingRef.current = false;
+    velocityRef.current = 0;
+    lastTouchRef.current = e.touches[0].clientX;
+    lastTimeRef.current = Date.now();
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0].clientX;
+    const time = Date.now();
+    const deltaX = lastTouchRef.current - touch;
+    const deltaTime = time - lastTimeRef.current;
+
+    if (Math.abs(deltaX) > 5) {
+      isDraggingRef.current = true;
+    }
+
+    if (deltaTime > 0) {
+      velocityRef.current = deltaX / deltaTime * 15;
+    }
+
+    lastTouchRef.current = touch;
+    lastTimeRef.current = time;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (Math.abs(velocityRef.current) > 1) {
+      animationRef.current = requestAnimationFrame(animateMomentum);
+    }
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 50);
+  }, [animateMomentum]);
+
+  // Mouse drag handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const slider = containerRef.current;
+    if (!slider) return;
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    isDraggingRef.current = false;
+    let startX = e.pageX - slider.offsetLeft;
+    let scrollLeft = slider.scrollLeft;
+    let lastX = e.pageX;
+    let lastTime = Date.now();
+    
+    const onMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      
+      if (Math.abs(walk) > 5) {
+        isDraggingRef.current = true;
+      }
+      
+      slider.scrollLeft = scrollLeft - walk;
+      
+      const time = Date.now();
+      const deltaTime = time - lastTime;
+      if (deltaTime > 0) {
+        velocityRef.current = (lastX - e.pageX) / deltaTime * 15;
+      }
+      lastX = e.pageX;
+      lastTime = time;
+    };
+    
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      
+      if (Math.abs(velocityRef.current) > 1) {
+        animationRef.current = requestAnimationFrame(animateMomentum);
+      }
+      
+      setTimeout(() => {
+        isDraggingRef.current = false;
+      }, 50);
+    };
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [animateMomentum]);
 
   return (
     <div className="relative -mx-4">
-      <motion.div 
+      <div
         ref={containerRef}
-        className="relative flex items-center gap-4 py-3 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+        className="relative flex items-center gap-4 py-3 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing select-none"
         style={{
           paddingLeft: 16,
           paddingRight: 16,
           scrollbarWidth: "none",
           msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
         }}
-        drag="x"
-        dragConstraints={containerRef}
-        dragElastic={0.1}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -53,7 +162,13 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
           return (
             <motion.button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
+              onClick={(e) => {
+                if (isDraggingRef.current) {
+                  e.preventDefault();
+                  return;
+                }
+                onTabChange(tab.id);
+              }}
               className="relative flex flex-col items-center gap-1.5 px-2 py-1 flex-shrink-0"
               whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.95 }}
@@ -77,7 +192,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
                 className="font-semibold leading-tight text-center whitespace-nowrap uppercase"
                 style={{
                   fontFamily: "'Google Sans', sans-serif",
-                  fontSize: '12px',
+                  fontSize: '14px',
                   letterSpacing: '0',
                   color: isActive ? "#6D28D9" : "#64748b",
                 }}
@@ -87,7 +202,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
             </motion.button>
           );
         })}
-      </motion.div>
+      </div>
       
       {/* Separator line */}
       <div className="mx-4 mt-2 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
