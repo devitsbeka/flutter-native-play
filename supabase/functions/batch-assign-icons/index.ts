@@ -410,15 +410,34 @@ serve(async (req) => {
         query = query.eq('category_id', categoryId);
       }
       
-      const { data: questions } = await query;
+      const { data: questions, error: queryError } = await query;
       
-      if (!questions || questions.length === 0) {
+      if (queryError) {
+        console.error(`Query error for icon ${targetIcon.slug}:`, queryError.message);
+        // Skip this icon and try the next one
         return new Response(
           JSON.stringify({ 
             processed: 0, 
             diversified: 0,
-            overusedIcons,
-            done: false
+            overusedIcons: overusedIcons.slice(1),
+            skippedIcon: targetIcon.slug,
+            error: queryError.message,
+            done: overusedIcons.length <= 1
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (!questions || questions.length === 0) {
+        console.log(`No questions found for icon ${targetIcon.slug}, skipping to next...`);
+        // Skip to next overused icon
+        return new Response(
+          JSON.stringify({ 
+            processed: 0, 
+            diversified: 0,
+            overusedIcons: overusedIcons.slice(1),
+            skippedIcon: targetIcon.slug,
+            done: overusedIcons.length <= 1
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
