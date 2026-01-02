@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -74,6 +74,7 @@ export default function IconAssignment() {
   const [methodBreakdown, setMethodBreakdown] = useState<Record<string, number>>({});
   const [batchMode, setBatchMode] = useState<'assign' | 'diversify'>('assign');
   const [overusedIcons, setOverusedIcons] = useState<{ slug: string; count: number }[]>([]);
+  const [resetting, setResetting] = useState(false);
   
   // Fast mode (no longer toggleable - always uses fast batch)
 
@@ -315,6 +316,31 @@ export default function IconAssignment() {
     toast.info('შეჩერება...');
   };
 
+  // Reset all icons
+  const resetAllIcons = async () => {
+    if (!confirm('ნამდვილად გსურთ ყველა აიკონის წაშლა? ეს მოქმედება შეუქცევადია!')) {
+      return;
+    }
+    
+    setResetting(true);
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ icon_slug: null })
+        .not('icon_slug', 'is', null);
+      
+      if (error) throw error;
+      
+      toast.success('ყველა აიკონი წაიშალა');
+      refetch();
+    } catch (err) {
+      console.error('Reset error:', err);
+      toast.error('შეცდომა აიკონების წაშლისას');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   // Get icon URL for a slug
   const getIconUrl = (slug: string | null) => {
     if (!slug) return null;
@@ -494,6 +520,19 @@ export default function IconAssignment() {
                 >
                   <Sparkles className="h-4 w-4 mr-1" />
                   დივერსიფიკაცია
+                </Button>
+                <Button
+                  onClick={resetAllIcons}
+                  disabled={resetting || stats.withIcons === 0}
+                  variant="outline"
+                  className="border-red-500/50 text-red-500 hover:bg-red-500/10"
+                >
+                  {resetting ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-1" />
+                  )}
+                  რესეტი
                 </Button>
               </div>
             )}

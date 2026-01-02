@@ -339,15 +339,30 @@ serve(async (req) => {
       console.log('Running DIVERSIFY mode...');
       
       // Find overused icons (used more than threshold times)
-      const { data: iconCounts } = await supabase
-        .from('questions')
-        .select('icon_slug')
-        .eq('is_active', true)
-        .not('icon_slug', 'is', null);
+      // Need to fetch all questions with icons to count manually
+      const allIconQuestions: { icon_slug: string }[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      
+      while (true) {
+        const { data: batch } = await supabase
+          .from('questions')
+          .select('icon_slug')
+          .eq('is_active', true)
+          .not('icon_slug', 'is', null)
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        
+        if (!batch || batch.length === 0) break;
+        allIconQuestions.push(...batch.filter(q => q.icon_slug));
+        page++;
+        if (batch.length < pageSize) break;
+      }
+      
+      console.log(`Fetched ${allIconQuestions.length} questions with icons for counting`);
       
       // Count icon usage
       const usageCount = new Map<string, number>();
-      (iconCounts || []).forEach(q => {
+      allIconQuestions.forEach(q => {
         if (q.icon_slug) {
           usageCount.set(q.icon_slug, (usageCount.get(q.icon_slug) || 0) + 1);
         }
@@ -359,7 +374,7 @@ serve(async (req) => {
         .sort((a, b) => b[1] - a[1])
         .map(([slug, count]) => ({ slug, count }));
       
-      console.log(`Found ${overusedIcons.length} overused icons`);
+      console.log(`Found ${overusedIcons.length} overused icons: ${overusedIcons.slice(0, 5).map(i => `${i.slug}(${i.count})`).join(', ')}`);
       
       if (overusedIcons.length === 0) {
         return new Response(
