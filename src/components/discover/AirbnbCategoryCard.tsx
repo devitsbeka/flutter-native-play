@@ -2,12 +2,11 @@ import { useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import geoBattleVideo from "@/assets/videos/geo-battle.mp4";
 
 interface AirbnbCategoryCardProps {
   id: string;
-  categoryId?: string; // ASCII category_id like 'world_history' for icon lookup
-  iconSlug?: string | null; // Direct icon slug from database (highest priority)
+  categoryId?: string;
+  iconSlug?: string | null;
   name: string;
   icon: string;
   color: string;
@@ -18,27 +17,26 @@ interface AirbnbCategoryCardProps {
   badge?: string;
   imageUrl?: string;
   isFavorite?: boolean;
-  leaderboardRank?: number | null; // User's rank in this category
+  leaderboardRank?: number | null;
+  videoUrl?: string; // Optional video URL for specific categories
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
-  variant?: "compact" | "full"; // compact = carousel, full = single column grid
+  variant?: "compact" | "full";
 }
 
-// Pastel color palette for category cards - light whitish with soft color hints
 const PASTEL_PALETTES = [
-  { base: "hsl(200 70% 85%)", accent: "hsl(180 50% 75%)" },  // Soft sky blue / teal
-  { base: "hsl(280 50% 88%)", accent: "hsl(260 40% 80%)" },  // Lavender / purple
-  { base: "hsl(160 50% 85%)", accent: "hsl(140 40% 78%)" },  // Mint / seafoam
-  { base: "hsl(340 50% 88%)", accent: "hsl(320 40% 82%)" },  // Soft pink / rose
-  { base: "hsl(40 60% 88%)", accent: "hsl(25 50% 82%)" },    // Cream / peach
-  { base: "hsl(220 55% 87%)", accent: "hsl(240 45% 82%)" },  // Soft blue / periwinkle
-  { base: "hsl(120 40% 86%)", accent: "hsl(100 35% 80%)" },  // Sage / lime
-  { base: "hsl(15 60% 88%)", accent: "hsl(0 45% 85%)" },     // Peach / coral
-  { base: "hsl(190 55% 85%)", accent: "hsl(170 45% 78%)" },  // Aqua / cyan
-  { base: "hsl(300 40% 88%)", accent: "hsl(280 35% 82%)" },  // Light magenta / orchid
+  { base: "hsl(200 70% 85%)", accent: "hsl(180 50% 75%)" },
+  { base: "hsl(280 50% 88%)", accent: "hsl(260 40% 80%)" },
+  { base: "hsl(160 50% 85%)", accent: "hsl(140 40% 78%)" },
+  { base: "hsl(340 50% 88%)", accent: "hsl(320 40% 82%)" },
+  { base: "hsl(40 60% 88%)", accent: "hsl(25 50% 82%)" },
+  { base: "hsl(220 55% 87%)", accent: "hsl(240 45% 82%)" },
+  { base: "hsl(120 40% 86%)", accent: "hsl(100 35% 80%)" },
+  { base: "hsl(15 60% 88%)", accent: "hsl(0 45% 85%)" },
+  { base: "hsl(190 55% 85%)", accent: "hsl(170 45% 78%)" },
+  { base: "hsl(300 40% 88%)", accent: "hsl(280 35% 82%)" },
 ];
 
-// Generate consistent pastel colors based on category id
 const getPastelColors = (id: string): { base: string; accent: string } => {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
@@ -61,6 +59,7 @@ export function AirbnbCategoryCard({
   badge,
   isFavorite = false,
   leaderboardRank,
+  videoUrl,
   onFavoriteClick,
   onClick,
   variant = "compact",
@@ -69,49 +68,53 @@ export function AirbnbCategoryCard({
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
   const iconSize = 128;
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Ping-pong reverse playback with delta time for normal speed
-  const reversePlay = () => {
+  // Ping-pong video: play forward, then step backward frame by frame, repeat
+  useEffect(() => {
+    if (!videoUrl) return;
+    
     const video = videoRef.current;
     if (!video) return;
 
-    let lastTime = performance.now();
+    let isReversing = false;
 
-    const step = (currentTime: number) => {
-      const delta = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
+    const reverseStep = () => {
+      if (!video) return;
+      
       if (video.currentTime <= 0.05) {
+        // Reached start, play forward again
+        isReversing = false;
         video.currentTime = 0;
-        video.play().catch(console.error);
+        video.play().catch(() => {});
         return;
       }
-      video.currentTime = Math.max(0, video.currentTime - delta);
-      animationFrameRef.current = requestAnimationFrame(step);
+      
+      // Step backward
+      video.currentTime = Math.max(0, video.currentTime - 0.033);
+      animationFrameRef.current = requestAnimationFrame(reverseStep);
     };
 
-    animationFrameRef.current = requestAnimationFrame(step);
-  };
+    const onEnded = () => {
+      if (!isReversing) {
+        isReversing = true;
+        video.pause();
+        reverseStep();
+      }
+    };
 
-  const handleVideoEnded = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      reversePlay();
-    }
-  };
+    video.addEventListener('ended', onEnded);
 
-  // Cleanup animation frame on unmount
-  useEffect(() => {
     return () => {
+      video.removeEventListener('ended', onEnded);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [videoUrl]);
 
-  // Generate floating particles
   const particles = useMemo(
     () =>
       Array.from({ length: 12 }, (_, i) => ({
@@ -126,7 +129,6 @@ export function AirbnbCategoryCard({
     []
   );
 
-  // Progress bar particles
   const progressParticles = useMemo(
     () =>
       Array.from({ length: 6 }, (_, i) => ({
@@ -146,7 +148,6 @@ export function AirbnbCategoryCard({
       whileTap={{ scale: 0.98 }}
       className="flex-shrink-0 w-full text-left"
     >
-      {/* Animated Gradient + Particle Area */}
       <div className={`relative w-full rounded-xl overflow-hidden ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
         {/* Pastel Gradient Background */}
         <div
@@ -187,16 +188,30 @@ export function AirbnbCategoryCard({
           ))}
         </div>
 
-        {/* Video - Full Width Background - Ping Pong Loop */}
-        <video
-          ref={videoRef}
-          src={geoBattleVideo}
-          autoPlay
-          muted
-          playsInline
-          onEnded={handleVideoEnded}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {/* Video (if provided) or Icon */}
+        {videoUrl ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            autoPlay
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <DynamicIcon
+              slug={iconSlug || undefined}
+              categoryId={categoryId}
+              size={iconSize}
+              className="drop-shadow-lg filter brightness-110"
+            />
+          </motion.div>
+        )}
 
         {/* Heart/Favorite Button */}
         <button
@@ -223,13 +238,11 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
-        {/* Leaderboard Rank Badge - same height as heart button */}
+        {/* Leaderboard Rank Badge */}
         {leaderboardRank && leaderboardRank > 0 && (
           <div 
             className="absolute top-2 left-2 h-8 px-2.5 rounded-full flex items-center gap-1.5 z-10 bg-white/90 backdrop-blur-sm"
-            style={{
-              boxShadow: '0 2px 0 rgba(0,0,0,0.08)',
-            }}
+            style={{ boxShadow: '0 2px 0 rgba(0,0,0,0.08)' }}
           >
             <Trophy className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-bold text-slate-700 leading-none">
@@ -245,12 +258,10 @@ export function AirbnbCategoryCard({
           </div>
         )}
 
-        {/* Elegant 3D Progress Bar with Particles */}
+        {/* Progress Bar */}
         <div className={`absolute left-3 right-3 ${isFull ? 'bottom-4' : 'bottom-3'}`}>
           <div className="flex items-center gap-2">
-            {/* Elegant Progress Bar Container */}
             <div className="flex-1 relative">
-              {/* Soft shadow underneath */}
               <div 
                 className={`absolute inset-0 rounded-full ${isFull ? 'h-4' : 'h-3.5'}`}
                 style={{
@@ -259,7 +270,6 @@ export function AirbnbCategoryCard({
                   filter: 'blur(2px)',
                 }}
               />
-              {/* Track - elegant frosted glass */}
               <div 
                 className={`relative rounded-full overflow-hidden ${isFull ? 'h-4' : 'h-3.5'}`}
                 style={{
@@ -268,7 +278,6 @@ export function AirbnbCategoryCard({
                   boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.15), 0 1px 0 rgba(255,255,255,0.3)',
                 }}
               >
-                {/* Progress Fill - golden gradient with glow */}
                 <motion.div 
                   className="h-full rounded-full relative overflow-hidden"
                   initial={{ width: 0 }}
@@ -281,14 +290,12 @@ export function AirbnbCategoryCard({
                       : 'none',
                   }}
                 >
-                  {/* Top shine */}
                   <div 
                     className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
                     style={{
                       background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)',
                     }}
                   />
-                  {/* Animated particles inside progress */}
                   {progressPercent > 10 && progressParticles.map((p) => (
                     <motion.div
                       key={p.id}
@@ -315,12 +322,9 @@ export function AirbnbCategoryCard({
                 </motion.div>
               </div>
             </div>
-            {/* Progress Text */}
             <span 
               className={`font-bold text-white whitespace-nowrap ${isFull ? 'text-sm' : 'text-xs'}`}
-              style={{
-                textShadow: '0 1px 3px rgba(0,0,0,0.4)',
-              }}
+              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
             >
               {progress}/{totalLevels}
             </span>
@@ -328,10 +332,7 @@ export function AirbnbCategoryCard({
         </div>
       </div>
 
-      {/* Title - Larger text */}
-      <h3 
-        className={`mt-2 font-bold text-slate-800 line-clamp-1 ${isFull ? 'text-xl' : 'text-base'}`}
-      >
+      <h3 className={`mt-2 font-bold text-slate-800 line-clamp-1 ${isFull ? 'text-xl' : 'text-base'}`}>
         {name}
       </h3>
     </motion.button>
