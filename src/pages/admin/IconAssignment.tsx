@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -69,6 +69,7 @@ export default function IconAssignment() {
   const [batchProgress, setBatchProgress] = useState(0);
   const [batchStats, setBatchStats] = useState({ processed: 0, assigned: 0, uniqueIcons: 0 });
   const [shouldStop, setShouldStop] = useState(false);
+  const [methodBreakdown, setMethodBreakdown] = useState<Record<string, number>>({});
   
   // Smart assignment mode
   const [useSmartAssignment, setUseSmartAssignment] = useState(true);
@@ -213,12 +214,14 @@ export default function IconAssignment() {
     setShouldStop(false);
     setBatchProgress(0);
     setBatchStats({ processed: 0, assigned: 0, uniqueIcons: 0 });
+    setMethodBreakdown({}); // Reset method breakdown
 
     const totalWithoutIcons = stats.withoutIcons;
     let totalProcessed = 0;
     let totalAssigned = 0;
     let offset = 0;
     const batchSize = useSmartAssignment ? 20 : 100; // Smaller batches for smart mode
+    const accumulatedMethods: Record<string, number> = {};
 
     const functionName = useSmartAssignment ? 'smart-assign-icons' : 'batch-assign-icons';
     
@@ -249,6 +252,14 @@ export default function IconAssignment() {
         totalProcessed += data.processed;
         totalAssigned += data.assigned;
         
+        // Accumulate method breakdown
+        if (data.methodBreakdown) {
+          Object.entries(data.methodBreakdown).forEach(([method, count]) => {
+            accumulatedMethods[method] = (accumulatedMethods[method] || 0) + (count as number);
+          });
+          setMethodBreakdown({ ...accumulatedMethods });
+        }
+        
         setBatchStats({ 
           processed: totalProcessed, 
           assigned: totalAssigned,
@@ -262,10 +273,7 @@ export default function IconAssignment() {
 
         // If no more questions or remaining is 0, stop
         if (data.remaining === 0 || data.processed === 0) {
-          const varietyMsg = data.uniqueIcons 
-            ? ` (${data.uniqueIcons} უნიკალური აიკონი)`
-            : '';
-          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი${varietyMsg}`);
+          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი`);
           break;
         }
 
@@ -401,7 +409,7 @@ export default function IconAssignment() {
             
             {batchRunning ? (
               <div className="flex items-center gap-3">
-                <div className="w-56">
+                <div className="w-72">
                   <Progress value={batchProgress} className="h-2" />
                   <p className="text-xs text-muted-foreground mt-1">
                     {batchStats.processed} დამუშავებული • {batchStats.assigned} მინიჭებული
@@ -409,6 +417,35 @@ export default function IconAssignment() {
                       <span className="text-amber-500 ml-1">• {batchStats.uniqueIcons} უნიკალური</span>
                     )}
                   </p>
+                  {Object.keys(methodBreakdown).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-1.5">
+                      {methodBreakdown['exact-slug'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">
+                          exact: {methodBreakdown['exact-slug']}
+                        </span>
+                      )}
+                      {methodBreakdown['partial-slug'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                          partial: {methodBreakdown['partial-slug']}
+                        </span>
+                      )}
+                      {methodBreakdown['tag-match'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">
+                          tag: {methodBreakdown['tag-match']}
+                        </span>
+                      )}
+                      {methodBreakdown['category-fallback'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">
+                          fallback: {methodBreakdown['category-fallback']}
+                        </span>
+                      )}
+                      {methodBreakdown['none'] && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                          none: {methodBreakdown['none']}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Button
                   variant="destructive"
@@ -438,6 +475,51 @@ export default function IconAssignment() {
               </Button>
             )}
           </div>
+          
+          {/* Method Breakdown Summary - shown after batch completion */}
+          {!batchRunning && Object.keys(methodBreakdown).length > 0 && batchStats.processed > 0 && (
+            <div className="flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-3">
+              <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-400">ბოლო მინიჭების შედეგი</p>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {methodBreakdown['exact-slug'] && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400">
+                      ზუსტი მატჩი: {methodBreakdown['exact-slug']}
+                    </span>
+                  )}
+                  {methodBreakdown['partial-slug'] && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                      ნაწილობრივი: {methodBreakdown['partial-slug']}
+                    </span>
+                  )}
+                  {methodBreakdown['tag-match'] && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400">
+                      თეგი: {methodBreakdown['tag-match']}
+                    </span>
+                  )}
+                  {methodBreakdown['category-fallback'] && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-400">
+                      კატეგორია fallback: {methodBreakdown['category-fallback']}
+                    </span>
+                  )}
+                  {methodBreakdown['none'] && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400">
+                      მატჩი ვერ მოიძებნა: {methodBreakdown['none']}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMethodBreakdown({})}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
