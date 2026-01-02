@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.batch-assign-icons-category]
 verify_jwt = false
+
+[functions.smart-assign-icons]
+verify_jwt = false
