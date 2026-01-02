@@ -31,50 +31,57 @@ serve(async (req) => {
 
     const systemPrompt = `You are an icon matching assistant for trivia games. Analyze questions in ANY language (English, Georgian, Spanish, etc.).
 
-ABSOLUTE RULE: Return ONLY broad category icons. NEVER specific animals, objects, or entities.
+Your job is to return GENERIC CATEGORY KEYWORDS that will be used to search an icon library.
+The keywords will match icons via partial matching (e.g., "animal" matches "forest-full-of-animals", "paw" matches "cat-paw-print").
 
-ALLOWED ICONS (use ONLY these types):
-- Animals category: "animal", "wildlife", "nature", "paw", "creature"
-- Insects category: "insect", "bug", "nature"  
-- Marine category: "fish", "ocean", "marine-life", "water"
-- Birds category: "bird", "feather", "wildlife"
-- Science category: "science", "atom", "chemistry", "biology", "lab"
-- History category: "history", "clock", "scroll", "book"
-- Geography category: "globe", "map", "earth", "compass"
-- Sports category: "trophy", "medal", "sports", "ball"
-- Technology category: "technology", "computer", "gear"
-- Art category: "art", "palette", "brush", "music"
-- Food category: "food", "restaurant", "utensils"
+ABSOLUTE RULE: Return BROAD CATEGORY keywords only. NEVER return specific answer words.
 
-BANNED: deer, lion, elephant, dog, cat, mosquito, butterfly, eagle, shark, any specific animal/insect/bird name
+KEYWORD MAPPING:
+- Any animal question → "animal", "wildlife", "paw", "creature", "forest"
+- Insect/bug question → "insect", "bug", "beetle", "ant"  
+- Marine/fish question → "fish", "ocean", "marine", "sea", "water"
+- Bird question → "bird", "feather", "wing", "flying"
+- Science question → "science", "atom", "lab", "microscope", "chemistry"
+- History question → "history", "scroll", "castle", "ancient", "medieval"
+- Geography question → "globe", "map", "earth", "compass", "world"
+- Sports question → "trophy", "ball", "medal", "sport", "athlete"
+- Technology question → "computer", "laptop", "phone", "tech", "gear"
+- Art question → "art", "palette", "paint", "brush", "canvas"
+- Food question → "food", "cooking", "chef", "restaurant", "kitchen"
+- Music question → "music", "guitar", "microphone", "piano", "note"
+- Movie/TV question → "movie", "film", "camera", "clapperboard", "cinema"
+
+BANNED words (never use): specific animal names (deer, lion, elephant, mosquito, eagle, shark), answer-hinting words
 
 Return ONLY valid JSON with no markdown.`;
 
     const userPrompt = `Question: "${question}"
 ${category ? `Category: "${category}"` : ''}
 
-This question may be in Georgian (ქართული) or any language. Understand the MEANING.
+This question may be in Georgian or any language. Understand the MEANING.
 
 Return JSON:
 {
-  "slugs": ["icon1", "icon2", "icon3"],
+  "slugs": ["keyword1", "keyword2", "keyword3"],
   "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
   "mainConcept": "General Topic Name"
 }
 
-CRITICAL RULES:
-1. slugs MUST be generic category icons (animal, insect, bird, science, etc.)
-2. NEVER use specific creature names (no deer, lion, mosquito, eagle, etc.)
-3. If question is about ANY animal → use "animal", "wildlife", "paw", "creature"
-4. If question is about ANY insect → use "insect", "bug", "nature"
-5. If question is about ANY bird → use "bird", "feather", "wildlife"
-6. If question is about ANY fish → use "fish", "ocean", "marine-life"
+RULES:
+1. slugs = 3-5 broad search keywords (will partial-match icon slugs)
+2. keywords = 5-10 broader keywords for fallback matching
+3. For ANY animal question → slugs: ["animal", "wildlife", "paw", "creature"]
+4. For ANY insect question → slugs: ["insect", "bug", "beetle", "nature"]
+5. For ANY bird question → slugs: ["bird", "feather", "wing", "wildlife"]
+6. For ANY fish/marine question → slugs: ["fish", "ocean", "marine", "sea"]
+7. mainConcept = short English description of the topic
 
 Examples:
-- Question about deer antlers → slugs: ["animal", "wildlife", "nature", "paw"]
-- Question about mosquito disease → slugs: ["insect", "bug", "nature", "biology"]
-- Question about eagle flight → slugs: ["bird", "wildlife", "feather", "nature"]
-- Question about shark teeth → slugs: ["fish", "ocean", "marine-life", "water"]`;
+- Question about deer antlers → slugs: ["animal", "wildlife", "paw", "creature"]
+- Question about mosquito disease → slugs: ["insect", "bug", "beetle", "nature"]
+- Question about eagle flight → slugs: ["bird", "feather", "wing", "wildlife"]
+- Question about shark teeth → slugs: ["fish", "ocean", "marine", "sea"]`;
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
