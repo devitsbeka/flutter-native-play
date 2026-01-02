@@ -19,7 +19,7 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
       <div className="px-4 pt-4 pb-3">
         {/* Top Row: Title + Help */}
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-2xl font-display font-bold text-foreground">
+          <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
             მაღაზია
           </h1>
 
