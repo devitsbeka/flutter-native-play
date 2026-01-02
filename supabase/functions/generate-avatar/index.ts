@@ -11,6 +11,22 @@ interface AvatarRequest {
   imageUrl: string;
 }
 
+// Fetch image and convert to base64 data URL
+async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
+  console.log("Fetching image from URL:", imageUrl.substring(0, 100));
+  
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status}`);
+  }
+  
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+  
+  // Always use PNG MIME type - Lovable AI will handle the conversion
+  return `data:image/png;base64,${base64}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -29,6 +45,10 @@ serve(async (req) => {
 
     console.log("Starting avatar generation with Lovable AI for image:", imageUrl.substring(0, 100));
 
+    // Fetch the image and convert to base64 data URL
+    const imageDataUrl = await fetchImageAsDataUrl(imageUrl);
+    console.log("Image converted to data URL, length:", imageDataUrl.length);
+
     // Use Lovable AI's Gemini image generation model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -37,14 +57,15 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
+        model: "google/gemini-2.5-flash-image-preview",
+        modalities: ["image", "text"],
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "image_url",
-                image_url: { url: imageUrl }
+                image_url: { url: imageDataUrl }
               },
               {
                 type: "text",
@@ -66,31 +87,17 @@ serve(async (req) => {
     console.log("Lovable AI response received");
 
     // Extract the generated image from the response
-    const content = data.choices?.[0]?.message?.content;
+    // Lovable AI returns images in message.images array
+    const message = data.choices?.[0]?.message;
+    const images = message?.images;
     
-    if (!content) {
-      console.error("No content in response:", JSON.stringify(data));
-      throw new Error("No image generated in response");
-    }
-
-    // The response may contain the image as base64 in inline_data or as a URL
     let avatarUrl = "";
     
-    if (Array.isArray(content)) {
-      for (const part of content) {
-        if (part.type === "image" && part.image?.base64) {
-          avatarUrl = `data:image/png;base64,${part.image.base64}`;
-          break;
-        }
-        if (part.inline_data?.data) {
-          avatarUrl = `data:${part.inline_data.mime_type || 'image/png'};base64,${part.inline_data.data}`;
-          break;
-        }
-      }
-    } else if (typeof content === "string" && content.startsWith("data:image")) {
-      avatarUrl = content;
+    if (images && images.length > 0) {
+      // Get the image URL from the images array
+      avatarUrl = images[0]?.image_url?.url || "";
     }
-
+    
     if (!avatarUrl) {
       console.error("Could not extract image from response:", JSON.stringify(data));
       throw new Error("Could not extract generated image from response");
