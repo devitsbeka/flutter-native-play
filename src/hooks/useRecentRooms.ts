@@ -15,6 +15,8 @@ export interface RecentRoom {
   my_placement: number;
   total_players: number;
   won: boolean;
+  correct_count: number;
+  wrong_count: number;
   participants: {
     user_id: string;
     nickname: string;
@@ -73,6 +75,24 @@ export function useRecentRooms(limit: number = 10) {
 
       if (allPartError) throw allPartError;
 
+      // Fetch my answers to get correct/wrong counts
+      const { data: myAnswers, error: answersError } = await supabase
+        .from("player_answers")
+        .select("room_id, is_correct")
+        .eq("user_id", user.id)
+        .in("room_id", roomIds);
+
+      if (answersError) throw answersError;
+
+      // Group answers by room
+      const answersByRoom = new Map<string, { correct: number; wrong: number }>();
+      myAnswers?.forEach((a) => {
+        const existing = answersByRoom.get(a.room_id) || { correct: 0, wrong: 0 };
+        if (a.is_correct) existing.correct++;
+        else existing.wrong++;
+        answersByRoom.set(a.room_id, existing);
+      });
+
       // Group participants by room
       const participantsByRoom = new Map<string, typeof allParticipants>();
       allParticipants?.forEach((p) => {
@@ -93,6 +113,8 @@ export function useRecentRooms(limit: number = 10) {
         
         const myPlacement =
           sortedParticipants.findIndex((p) => p.user_id === user.id) + 1;
+
+        const myAnswerStats = answersByRoom.get(room.id) || { correct: 0, wrong: 0 };
         
         return {
           id: room.id,
@@ -107,6 +129,8 @@ export function useRecentRooms(limit: number = 10) {
           my_placement: myPlacement,
           total_players: participants.length,
           won: myPlacement === 1,
+          correct_count: myAnswerStats.correct,
+          wrong_count: myAnswerStats.wrong,
           participants: sortedParticipants.map((p) => ({
             user_id: p.user_id,
             nickname: p.nickname,

@@ -244,16 +244,14 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
         </div>
       </div>
 
-      {/* Score comparison */}
-      <div className="text-center px-2">
-        <div className="flex items-center gap-1">
-          <span className={`font-bold text-base ${room.won ? "text-emerald-600" : "text-slate-600"}`}>
-            {room.my_score}
-          </span>
-          <span className="text-slate-400 text-sm">-</span>
-          <span className="font-bold text-base text-slate-500">
-            {opponentScore}
-          </span>
+      {/* Points earned and correct/wrong */}
+      <div className="text-right flex-shrink-0">
+        <div className={`font-bold text-sm ${room.won ? "text-emerald-600" : "text-slate-600"}`}>
+          +{room.my_score} pts
+        </div>
+        <div className="flex items-center gap-1 text-[10px]">
+          <span className="text-emerald-500 font-semibold">{room.correct_count || 0}✓</span>
+          <span className="text-rose-400 font-semibold">{room.wrong_count || 0}✗</span>
         </div>
       </div>
 
