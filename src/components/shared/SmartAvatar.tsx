@@ -59,7 +59,49 @@ export function SmartAvatar({
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [isReversing, setIsReversing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // Ping-pong reverse playback using requestAnimationFrame
+  const reversePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const step = () => {
+      if (video.currentTime <= 0.05) {
+        // Reached start, switch to forward
+        video.currentTime = 0;
+        setIsReversing(false);
+        video.play().catch(() => setVideoError(true));
+        return;
+      }
+      
+      // Move backwards (~60fps equivalent)
+      video.currentTime = Math.max(0, video.currentTime - 0.033);
+      animationFrameRef.current = requestAnimationFrame(step);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(step);
+  };
+
+  // Handle video ending - start reverse playback
+  const handleVideoEnded = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsReversing(true);
+      reversePlay();
+    }
+  };
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   // Auto-play video if autoPlay is true
   useEffect(() => {
@@ -72,6 +114,12 @@ export function SmartAvatar({
   const handleMouseEnter = () => {
     if (playOnHover && animatedAvatarUrl && videoRef.current && !videoError) {
       setShowVideo(true);
+      // Cancel any ongoing reverse animation
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      setIsReversing(false);
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => setVideoError(true));
     }
@@ -79,13 +127,18 @@ export function SmartAvatar({
 
   const handleMouseLeave = () => {
     if (playOnHover && !autoPlay) {
-      // Keep showing video but let it finish current loop
+      // Keep showing video but let it finish current ping-pong cycle
     }
   };
 
   const handleTouchStart = () => {
     if (animatedAvatarUrl && videoRef.current && !videoError) {
       setShowVideo(true);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      setIsReversing(false);
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => setVideoError(true));
     }
@@ -119,7 +172,6 @@ export function SmartAvatar({
             )}
             muted
             playsInline
-            loop
             onLoadedData={() => {
               setVideoLoaded(true);
               if (autoPlay && videoRef.current) {
@@ -127,6 +179,7 @@ export function SmartAvatar({
                 setShowVideo(true);
               }
             }}
+            onEnded={handleVideoEnded}
             onError={() => setVideoError(true)}
           />
         )}
