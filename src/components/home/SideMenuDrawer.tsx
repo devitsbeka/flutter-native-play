@@ -6,6 +6,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
 import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
+import { SettingsModal } from "./SettingsModal";
+import { HelpModal } from "./HelpModal";
+import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
@@ -40,6 +43,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const { user, profile, signOut } = useAuth();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
@@ -50,6 +56,18 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     }
     if (action === "avatar") {
       setIsAvatarModalOpen(true);
+      return;
+    }
+    if (action === "settings") {
+      setIsSettingsOpen(true);
+      return;
+    }
+    if (action === "help") {
+      setIsHelpOpen(true);
+      return;
+    }
+    if (action === "privacy") {
+      setIsPrivacyOpen(true);
       return;
     }
     if (action === "logout") {
@@ -73,6 +91,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     <>
       <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
       <AvatarGeneratorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
       <AnimatePresence>
         {isOpen && (
           <>
