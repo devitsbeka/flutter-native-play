@@ -75,16 +75,16 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
       icon={<UserPlus className="w-8 h-8" />}
       variant="success"
     >
-      <div className="space-y-4 px-1">
+      <div className="space-y-4 pt-2 px-1">
         {/* Search Input */}
-        <div className="relative px-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <div className="relative px-1 py-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
             placeholder="მომხმარებლის ძებნა..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white/10 border-white/20 text-foreground placeholder:text-muted-foreground"
+            className="pl-10 bg-white/10 border-white/20 text-foreground placeholder:text-muted-foreground focus:ring-offset-0"
             autoFocus
           />
           {searching && (
