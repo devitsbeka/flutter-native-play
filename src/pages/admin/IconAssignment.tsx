@@ -242,6 +242,23 @@ export default function IconAssignment() {
             </div>
           </div>
         </div>
+        
+        {/* Visual Progress Bar */}
+        <div className="mt-4 rounded-lg border border-border/50 bg-background/50 p-3">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-muted-foreground">მინიჭების პროგრესი</span>
+            <span className="font-medium">
+              {stats.withIcons.toLocaleString()} / {stats.total.toLocaleString()} 
+              <span className="ml-2 text-muted-foreground">
+                ({stats.total > 0 ? Math.round((stats.withIcons / stats.total) * 100) : 0}%)
+              </span>
+            </span>
+          </div>
+          <Progress 
+            value={stats.total > 0 ? (stats.withIcons / stats.total) * 100 : 0} 
+            className="h-3"
+          />
+        </div>
 
         {/* Batch Assignment Controls */}
         <div className="mt-4 flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
@@ -342,24 +359,31 @@ export default function IconAssignment() {
                     "w-full text-left p-3 rounded-lg border transition-all",
                     selectedQuestion?.id === question.id
                       ? "border-primary bg-primary/10"
-                      : "border-transparent hover:bg-accent/50"
+                      : question.icon_slug 
+                        ? "border-l-4 border-l-green-500 border-y-transparent border-r-transparent bg-green-500/5 hover:bg-green-500/10"
+                        : "border-transparent hover:bg-accent/50 opacity-70"
                   )}
                 >
                   <div className="flex items-start gap-3">
                     {/* Icon Preview */}
                     <div className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                      question.icon_slug ? "bg-background" : "bg-muted border-2 border-dashed border-muted-foreground/30"
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg relative",
+                      question.icon_slug ? "bg-background shadow-sm" : "bg-muted border-2 border-dashed border-muted-foreground/30"
                     )}>
                       {question.icon_slug ? (
-                        <img 
-                          src={getIconUrl(question.icon_slug) || ''} 
-                          alt="" 
-                          className="h-8 w-8 object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
+                        <>
+                          <img 
+                            src={getIconUrl(question.icon_slug) || ''} 
+                            alt="" 
+                            className="h-8 w-8 object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
+                            <Check className="h-2.5 w-2.5 text-white" />
+                          </div>
+                        </>
                       ) : (
                         <Image className="h-4 w-4 text-muted-foreground/50" />
                       )}
@@ -372,7 +396,7 @@ export default function IconAssignment() {
                           {question.category_name}
                         </Badge>
                         {question.icon_slug && (
-                          <span className="text-[10px] text-muted-foreground">{question.icon_slug}</span>
+                          <span className="text-[10px] text-green-600 font-medium">{question.icon_slug}</span>
                         )}
                       </div>
                     </div>

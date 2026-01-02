@@ -59,6 +59,7 @@ export function useAdminIconAssignment() {
       .from('questions')
       .select('id, question_text, icon_slug, category_id')
       .eq('is_active', true)
+      .order('icon_slug', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
 
