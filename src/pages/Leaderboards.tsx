@@ -345,13 +345,13 @@ export default function Leaderboards() {
                 className="mb-4"
               >
                 <ChunkyButton
-                  variant="primary"
+                  variant="success"
                   size="lg"
-                  className="w-full"
+                  className="w-full whitespace-nowrap"
                   icon={<Play className="w-5 h-5 fill-current" />}
                   onClick={() => navigate("/")}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 whitespace-nowrap">
                     ითამაშე და აიმაღლე რეიტინგი
                     <TrendingUp className="w-4 h-4" />
                   </span>
