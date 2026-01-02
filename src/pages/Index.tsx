@@ -326,10 +326,10 @@ export default function Index() {
             <div className="relative">
               {/* Curved action buttons above avatar */}
               <div 
-                className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-3 pointer-events-auto z-20"
+                className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
                 style={{ 
-                  top: -45,
-                  width: 320,
+                  top: -75,
+                  width: 340,
                 }}
                 data-walkthrough="powerups"
               >
@@ -338,7 +338,7 @@ export default function Index() {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring" }}
-                  style={{ marginBottom: 12 }}
+                  style={{ marginBottom: 0 }}
                 >
                   <ActionButtonWithParticles
                     iconSrc={giftBottleIcon}
@@ -350,19 +350,19 @@ export default function Index() {
                     particleColor="rgba(253, 186, 116, 0.9)"
                     glowColor="rgba(253, 186, 116, 0.5)"
                     idleOffset={0}
-                    size={56}
+                    size={73}
                     badge={
                       <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
                     }
                   />
                 </motion.div>
 
-                {/* Mission Button - left-center, higher */}
+                {/* Mission Button - left-center, much higher for curve */}
                 <motion.div 
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.35, type: "spring" }}
-                  style={{ marginBottom: 24 }}
+                  style={{ marginBottom: 32 }}
                 >
                   <ActionButtonWithParticles
                     iconSrc={missionCrystalIcon}
@@ -374,19 +374,19 @@ export default function Index() {
                     particleColor="rgba(125, 211, 252, 0.9)"
                     glowColor="rgba(125, 211, 252, 0.5)"
                     idleOffset={0.7}
-                    size={56}
+                    size={73}
                     badge={
                       <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">2</span>
                     }
                   />
                 </motion.div>
 
-                {/* Chest Button - right-center, higher */}
+                {/* Chest Button - right-center, much higher for curve */}
                 <motion.div 
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.4, type: "spring" }}
-                  style={{ marginBottom: 24 }}
+                  style={{ marginBottom: 32 }}
                 >
                   <ActionButtonWithParticles
                     iconSrc={chestBoxIcon}
@@ -398,7 +398,7 @@ export default function Index() {
                     particleColor="rgba(252, 211, 77, 0.9)"
                     glowColor="rgba(252, 211, 77, 0.5)"
                     idleOffset={1.4}
-                    size={56}
+                    size={73}
                     badge={
                       <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
                     }
@@ -410,7 +410,7 @@ export default function Index() {
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.45, type: "spring" }}
-                  style={{ marginBottom: 12 }}
+                  style={{ marginBottom: 0 }}
                 >
                   <ActionButtonWithParticles
                     iconSrc={powersIcon}
@@ -422,7 +422,7 @@ export default function Index() {
                     particleColor="rgba(196, 181, 253, 0.9)"
                     glowColor="rgba(196, 181, 253, 0.5)"
                     idleOffset={2.1}
-                    size={56}
+                    size={73}
                     badge={
                       totalPowerUps > 0 ? (
                         <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
