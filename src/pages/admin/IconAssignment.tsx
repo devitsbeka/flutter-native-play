@@ -64,19 +64,23 @@ export default function IconAssignment() {
   // Smart assignment mode
   const [useSmartAssignment, setUseSmartAssignment] = useState(true);
 
-  // Load icons from JSON
+  // Load icons from database
   useEffect(() => {
     const loadIcons = async () => {
       try {
-        const response = await fetch('/data/icon-library-meta.json');
-        const data = await response.json();
+        const { data, error } = await supabase
+          .from('icon_library')
+          .select('slug, title, category, tags, icon_url, file_name')
+          .order('title');
         
-        const iconList: IconItem[] = data.items.map((icon: any) => ({
+        if (error) throw error;
+        
+        const iconList: IconItem[] = (data || []).map((icon: any) => ({
           slug: icon.slug,
           title: icon.title,
           category: icon.category,
           tags: icon.tags || [],
-          url: `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${icon.file_name}`
+          url: icon.icon_url || `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${icon.file_name}`
         }));
         
         setIcons(iconList);
