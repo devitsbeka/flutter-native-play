@@ -380,10 +380,10 @@ export default function Index() {
                   </div>
                   
                   {/* Currency badges row - white 3D chunky style, coins and gems only */}
-                  <div className="flex items-center justify-center gap-4 mt-3">
-                    {/* Coins - White 3D Chunky with larger icon */}
+                  <div className="flex items-center justify-center gap-3 mt-3">
+                    {/* Coins - White 3D Chunky */}
                     <motion.div 
-                      className="flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
                       style={{
                         background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
                         boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
@@ -394,12 +394,12 @@ export default function Index() {
                       onClick={() => setIsGemShopOpen(true)}
                     >
                       <img src={coinIcon} alt="Coins" className="w-7 h-7 object-contain" />
-                      <span className="text-base font-bold text-gray-700 whitespace-nowrap">{coins.toLocaleString()}</span>
+                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{coins.toLocaleString()}</span>
                     </motion.div>
 
-                    {/* Gems - White 3D Chunky with larger icon */}
+                    {/* Gems - White 3D Chunky */}
                     <motion.div 
-                      className="flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
                       style={{
                         background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
                         boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
@@ -410,7 +410,7 @@ export default function Index() {
                       onClick={() => setIsGemShopOpen(true)}
                     >
                       <img src={gemIcon} alt="Gems" className="w-7 h-7 object-contain" />
-                      <span className="text-base font-bold text-gray-700 whitespace-nowrap">{gems.toLocaleString()}</span>
+                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{gems.toLocaleString()}</span>
                     </motion.div>
                   </div>
                   
