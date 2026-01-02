@@ -302,7 +302,7 @@ export default function Index() {
         </header>
 
         {/* ===== CURRENCY ROW - Below Header ===== */}
-        <div className="relative z-20 flex items-center justify-center gap-2 mt-3 px-4">
+        <div className="relative z-20 flex items-center justify-center gap-3 mt-4 px-4">
           {/* Coins - Green */}
           <motion.div 
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer"
@@ -353,7 +353,7 @@ export default function Index() {
 
 
         {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -120 }}>
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -80 }}>
           <motion.div 
             className="flex flex-col items-center w-full max-w-[360px] px-4"
             initial={{ scale: 0.8, opacity: 0 }}
@@ -403,7 +403,7 @@ export default function Index() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, type: "spring" }}
-              className="flex flex-col items-center mt-4 pointer-events-auto"
+              className="flex flex-col items-center mt-6 pointer-events-auto"
             >
               {isRefreshing ? (
                 <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
@@ -423,7 +423,7 @@ export default function Index() {
                   
                   {/* 3D Chunky Progress bar */}
                   <div 
-                    className="relative h-9 rounded-full overflow-hidden w-[280px] mt-2"
+                    className="relative h-9 rounded-full overflow-hidden w-[280px] mt-4"
                     style={{
                       background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
                       boxShadow: "inset 0 4px 8px rgba(140,120,180,0.2), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
@@ -507,7 +507,7 @@ export default function Index() {
                       
                       {/* Action buttons row - Gift, Mission, Chest, Help */}
                       <div 
-                        className="flex items-center justify-center gap-3 mt-4 pointer-events-auto" 
+                        className="flex items-center justify-center gap-4 mt-6 pointer-events-auto" 
                         data-walkthrough="powerups"
                       >
                         {/* Gift Button */}
