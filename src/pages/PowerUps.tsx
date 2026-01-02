@@ -436,7 +436,7 @@ export default function PowerUps() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              className="grid grid-cols-2 gap-3"
+              className="grid grid-cols-2 gap-5"
             >
               {powerUpsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
@@ -513,7 +513,7 @@ export default function PowerUps() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-2 gap-3"
+              className="grid grid-cols-2 gap-5"
             >
               {filteredItems.map((item, index) => {
                 const canAfford = gems >= item.price;
@@ -587,10 +587,10 @@ export default function PowerUps() {
                         {item.description}
                       </p>
 
-                      {/* Price / Status */}
-                      <div className="flex justify-center">
+                      {/* Price / Status - Fixed height container for consistent card heights */}
+                      <div className="flex justify-center items-center h-10">
                         {isPurchased ? (
-                          <div className="flex items-center gap-1 text-green-600 font-bold text-sm">
+                          <div className="flex items-center gap-1 text-green-600 font-bold text-sm px-3 py-1.5">
                             <Check className="w-4 h-4" />
                             <span>შეძენილი</span>
                           </div>
