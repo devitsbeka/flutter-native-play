@@ -24,6 +24,7 @@ import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
+import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
 
 import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
@@ -393,92 +394,64 @@ export default function Index() {
                         data-walkthrough="powerups"
                       >
                         {/* Gift Button */}
-                        <motion.button
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                        <ActionButtonWithParticles
+                          iconSrc={giftBottleIcon}
+                          alt="Gift"
                           onClick={() => setIsDailyRewardsOpen(true)}
-                          className="relative rounded-full flex items-center justify-center"
-                          style={{
-                            width: 73,
-                            height: 73,
-                            background: "linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FDBA74",
-                            border: "3px solid rgba(255,255,255,0.9)",
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <img src={giftBottleIcon} alt="Gift" className="object-contain" style={{ width: 52, height: 52 }} />
-                          <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
-                        </motion.button>
+                          background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
+                          shadowColor="#FDBA74"
+                          delay={0.4}
+                          particleColor="rgba(253, 186, 116, 0.8)"
+                          badge={
+                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">1</span>
+                          }
+                        />
 
                         {/* Mission Button */}
-                        <motion.button
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.48, type: "spring", stiffness: 200 }}
+                        <ActionButtonWithParticles
+                          iconSrc={missionCrystalIcon}
+                          alt="Mission"
                           onClick={() => setShowMissionsModal(true)}
-                          className="relative rounded-full flex items-center justify-center"
-                          style={{
-                            width: 73,
-                            height: 73,
-                            background: "linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #7DD3FC",
-                            border: "3px solid rgba(255,255,255,0.9)",
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <img src={missionCrystalIcon} alt="Mission" className="object-contain" style={{ width: 52, height: 52 }} />
-                          <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md">2</span>
-                        </motion.button>
+                          background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
+                          shadowColor="#7DD3FC"
+                          delay={0.48}
+                          particleColor="rgba(125, 211, 252, 0.8)"
+                          badge={
+                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">2</span>
+                          }
+                        />
 
                         {/* Chest Button */}
-                        <motion.button
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.56, type: "spring", stiffness: 200 }}
+                        <ActionButtonWithParticles
+                          iconSrc={chestBoxIcon}
+                          alt="Chest"
                           onClick={() => setIsChestModalOpen(true)}
-                          className="relative rounded-full flex items-center justify-center"
-                          style={{
-                            width: 73,
-                            height: 73,
-                            background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FCD34D",
-                            border: "3px solid rgba(255,255,255,0.9)",
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <img src={chestBoxIcon} alt="Chest" className="object-contain" style={{ width: 52, height: 52 }} />
-                          <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
-                        </motion.button>
+                          background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
+                          shadowColor="#FCD34D"
+                          delay={0.56}
+                          particleColor="rgba(252, 211, 77, 0.8)"
+                          badge={
+                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">1</span>
+                          }
+                        />
 
                         {/* Powers Button */}
-                        <motion.button
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.64, type: "spring", stiffness: 200 }}
+                        <ActionButtonWithParticles
+                          iconSrc={powersIcon}
+                          alt="Powers"
                           onClick={() => setShowMyPowersModal(true)}
-                          className="relative rounded-full flex items-center justify-center"
-                          style={{
-                            width: 73,
-                            height: 73,
-                            background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #C4B5FD",
-                            border: "3px solid rgba(255,255,255,0.9)",
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <img src={powersIcon} alt="Powers" className="object-contain" style={{ width: 52, height: 52 }} />
-                          {totalPowerUps > 0 && (
-                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md">
-                              {totalPowerUps}
-                            </span>
-                          )}
-                        </motion.button>
+                          background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                          shadowColor="#C4B5FD"
+                          delay={0.64}
+                          particleColor="rgba(196, 181, 253, 0.8)"
+                          badge={
+                            totalPowerUps > 0 ? (
+                              <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md z-20">
+                                {totalPowerUps}
+                              </span>
+                            ) : undefined
+                          }
+                        />
                       </div>
                     </>
                   )}
