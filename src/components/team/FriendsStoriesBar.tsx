@@ -86,7 +86,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
 
         {/* Shimmer skeleton placeholders with fade-out */}
         {sortedFriends.length > 0 && skeletonCount > 0 && (
-          <div className="flex gap-4 relative">
+          <>
             {Array.from({ length: skeletonCount }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
@@ -97,9 +97,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
                 <ShimmerSkeleton className="w-12 h-3 rounded" />
               </div>
             ))}
-            {/* Gradient fade overlay */}
-            <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-          </div>
+          </>
         )}
       </div>
       <ScrollBar orientation="horizontal" className="invisible" />

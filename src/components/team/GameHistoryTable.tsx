@@ -130,19 +130,16 @@ function StreakBar({ rooms }: { rooms: RecentRoom[] }) {
         
         {/* Shimmer skeleton placeholders with fade-out */}
         {showSkeletons && (
-          <div className="flex gap-1.5 relative">
+          <>
             {Array.from({ length: skeletonCount }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
-                className="relative overflow-hidden"
                 style={{ opacity: 1 - (index * 0.2) }}
               >
                 <ShimmerSkeleton className="w-8 h-8 rounded-lg" />
               </div>
             ))}
-            {/* Gradient fade overlay */}
-            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-          </div>
+          </>
         )}
       </div>
       
