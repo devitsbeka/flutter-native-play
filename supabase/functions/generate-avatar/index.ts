@@ -83,7 +83,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: "https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com/images/avatar-style-reference.jpg",
-        textPrompt: "Transform into a high-quality 3D Pixar Disney animated character matching the style reference exactly, beautiful expressive cartoon eyes with bright catchlights, perfectly smooth matte skin like a premium animated character, soft violet and magenta lighting on the left side of face and hair edges, stylized wavy 3D hair, warm friendly expression, dark navy gradient background, clean professional Pixar movie quality, no artifacts or distortions",
+        textPrompt: "Create a cute adorable 3D cartoon character portrait exactly like the style reference, big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression, soft violet and pink accent lighting on hair and face edges, dark navy gradient background, Pixar Disney animation quality, charming lovable character design",
       }),
     });
 
