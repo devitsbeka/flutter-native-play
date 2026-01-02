@@ -104,10 +104,16 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get category info
+    // Get category info - support both UUID (id) and string (category_id)
     let categoryQuery = supabase.from('categories').select('id, category_id, name, icon_slug');
     if (categoryId) {
-      categoryQuery = categoryQuery.eq('category_id', categoryId);
+      // Check if it's a UUID format
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
+      if (isUuid) {
+        categoryQuery = categoryQuery.eq('id', categoryId);
+      } else {
+        categoryQuery = categoryQuery.eq('category_id', categoryId);
+      }
     }
     const { data: categories, error: catError } = await categoryQuery;
     
