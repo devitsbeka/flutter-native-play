@@ -11,12 +11,21 @@ const BATCH_SIZE = 250;
 const TEST_BATCH_SIZE = 25;
 const PARALLEL_LIMIT = 10;
 const CHUNK_DELAY_MS = 50;
+const OVERUSE_THRESHOLD = 50; // Icons used more than this are considered overused
 
 interface Question {
   id: string;
   question_text: string;
   category_id?: string;
   category_name?: string;
+  icon_slug?: string | null;
+}
+
+interface IconWithTags {
+  slug: string;
+  title: string;
+  tags: string[];
+  category: string;
 }
 
 // Topic to icon mappings for keyword-based matching
@@ -213,6 +222,64 @@ function matchIconForQuestion(
   return { slug: null, method: 'none' };
 }
 
+// Find better icon match using icon library titles and tags
+function findBetterIconMatch(
+  questionText: string,
+  currentIcon: string,
+  iconLibrary: IconWithTags[],
+  categoryDefaultIcon: string | undefined,
+  iconSlugs: Set<string>
+): { slug: string | null; method: string } {
+  const keywords = extractKeywords(questionText);
+  const lowerText = questionText.toLowerCase();
+  
+  // Skip if current icon is already the category default
+  if (currentIcon === categoryDefaultIcon) {
+    return { slug: null, method: 'already-optimal' };
+  }
+  
+  // 1. Check for exact icon title match in question
+  for (const icon of iconLibrary) {
+    if (icon.slug === currentIcon) continue;
+    const titleWords = icon.title.toLowerCase().split(/[\s-]+/);
+    for (const word of titleWords) {
+      if (word.length >= 4 && lowerText.includes(word)) {
+        return { slug: icon.slug, method: 'title-match' };
+      }
+    }
+  }
+  
+  // 2. Check icon tags for keyword match
+  for (const icon of iconLibrary) {
+    if (icon.slug === currentIcon) continue;
+    for (const tag of icon.tags) {
+      const normalizedTag = tag.toLowerCase();
+      if (keywords.includes(normalizedTag) && normalizedTag.length >= 3) {
+        return { slug: icon.slug, method: 'tag-match' };
+      }
+    }
+  }
+  
+  // 3. Use topic mappings (expanded)
+  for (const keyword of keywords) {
+    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const topicIcons = TOPIC_TO_ICONS[normalizedKw];
+    if (topicIcons) {
+      const validIcon = topicIcons.find(slug => iconSlugs.has(slug) && slug !== currentIcon);
+      if (validIcon) {
+        return { slug: validIcon, method: 'topic-diversify' };
+      }
+    }
+  }
+  
+  // 4. No better match - return category default
+  if (categoryDefaultIcon) {
+    return { slug: categoryDefaultIcon, method: 'diversify-to-default' };
+  }
+  
+  return { slug: null, method: 'no-better-match' };
+}
+
 // Chunk array into smaller arrays
 function chunkArray<T>(array: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -228,7 +295,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, testMode, brokenSlugs = [] } = await req.json();
+    const { categoryId, testMode, brokenSlugs = [], mode = 'assign' } = await req.json();
     const batchSize = testMode ? TEST_BATCH_SIZE : BATCH_SIZE;
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -255,17 +322,184 @@ serve(async (req) => {
     });
     console.log(`Category fallback map has ${categoryIconMap.size} valid icons`);
 
-    // Get all valid icon slugs from library
-    const { data: iconLibrary } = await supabase
+    // Get all valid icons from library (with tags for diversify mode)
+    const { data: iconLibraryData } = await supabase
       .from('icon_library')
-      .select('slug');
+      .select('slug, title, tags, category');
     
-    const validIconSlugs = new Set<string>(
-      (iconLibrary || [])
-        .map(i => i.slug)
-        .filter(slug => !brokenSet.has(slug))
-    );
+    const iconLibrary: IconWithTags[] = (iconLibraryData || [])
+      .filter(i => !brokenSet.has(i.slug))
+      .map(i => ({ slug: i.slug, title: i.title, tags: i.tags || [], category: i.category }));
+    
+    const validIconSlugs = new Set<string>(iconLibrary.map(i => i.slug));
     console.log(`${validIconSlugs.size} valid icons in library`);
+
+    // DIVERSIFY MODE: Find overused icons and try to assign better matches
+    if (mode === 'diversify') {
+      console.log('Running DIVERSIFY mode...');
+      
+      // Find overused icons (used more than threshold times)
+      const { data: iconCounts } = await supabase
+        .from('questions')
+        .select('icon_slug')
+        .eq('is_active', true)
+        .not('icon_slug', 'is', null);
+      
+      // Count icon usage
+      const usageCount = new Map<string, number>();
+      (iconCounts || []).forEach(q => {
+        if (q.icon_slug) {
+          usageCount.set(q.icon_slug, (usageCount.get(q.icon_slug) || 0) + 1);
+        }
+      });
+      
+      // Get overused icons
+      const overusedIcons = Array.from(usageCount.entries())
+        .filter(([_, count]) => count > OVERUSE_THRESHOLD)
+        .sort((a, b) => b[1] - a[1])
+        .map(([slug, count]) => ({ slug, count }));
+      
+      console.log(`Found ${overusedIcons.length} overused icons`);
+      
+      if (overusedIcons.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            processed: 0, 
+            diversified: 0,
+            overusedIcons: [],
+            done: true,
+            message: 'No overused icons found'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Process questions with overused icons
+      const results: { id: string; old_icon: string; new_icon: string | null; method: string }[] = [];
+      const methodBreakdown: Record<string, number> = {};
+      let totalDiversified = 0;
+      
+      // Process one overused icon at a time (the most overused first)
+      const targetIcon = overusedIcons[0];
+      console.log(`Processing overused icon: ${targetIcon.slug} (${targetIcon.count} uses)`);
+      
+      // Get questions with this icon
+      let query = supabase
+        .from('questions')
+        .select('id, question_text, category_id, icon_slug')
+        .eq('icon_slug', targetIcon.slug)
+        .eq('is_active', true)
+        .limit(batchSize);
+      
+      if (categoryId && categoryId !== 'all') {
+        query = query.eq('category_id', categoryId);
+      }
+      
+      const { data: questions } = await query;
+      
+      if (!questions || questions.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            processed: 0, 
+            diversified: 0,
+            overusedIcons,
+            done: false
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      console.log(`Processing ${questions.length} questions with icon ${targetIcon.slug}`);
+      
+      // Process in chunks
+      const chunks = chunkArray(questions, PARALLEL_LIMIT);
+      
+      for (const chunk of chunks) {
+        const chunkResults = await Promise.all(
+          chunk.map(async (question) => {
+            const categoryDefault = question.category_id ? categoryIconMap.get(question.category_id) : undefined;
+            
+            const match = findBetterIconMatch(
+              question.question_text,
+              question.icon_slug!,
+              iconLibrary,
+              categoryDefault,
+              validIconSlugs
+            );
+            
+            return {
+              id: question.id,
+              category_id: question.category_id,
+              question_text: question.question_text,
+              old_icon: question.icon_slug!,
+              new_icon: match.slug,
+              method: match.method
+            };
+          })
+        );
+        
+        // Update questions with new icons
+        for (const result of chunkResults) {
+          methodBreakdown[result.method] = (methodBreakdown[result.method] || 0) + 1;
+          
+          if (result.new_icon && result.new_icon !== result.old_icon) {
+            await supabase
+              .from('questions')
+              .update({ icon_slug: result.new_icon })
+              .eq('id', result.id);
+            
+            // Log to assignment history
+            await supabase
+              .from('icon_assignment_history')
+              .insert({
+                question_id: result.id,
+                question_text: result.question_text?.substring(0, 200),
+                old_icon_slug: result.old_icon,
+                new_icon_slug: result.new_icon,
+                assignment_method: `diversify:${result.method}`,
+                category_id: result.category_id,
+                category_name: categoryNameMap.get(result.category_id || ''),
+                assigned_by: null
+              });
+            
+            totalDiversified++;
+          }
+          
+          results.push({
+            id: result.id,
+            old_icon: result.old_icon,
+            new_icon: result.new_icon,
+            method: result.method
+          });
+        }
+        
+        if (chunks.indexOf(chunk) < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, CHUNK_DELAY_MS));
+        }
+      }
+      
+      // Get remaining count for this icon
+      const { count: remaining } = await supabase
+        .from('questions')
+        .select('id', { count: 'exact', head: true })
+        .eq('icon_slug', targetIcon.slug)
+        .eq('is_active', true);
+      
+      console.log(`Diversify batch complete: ${totalDiversified} icons changed, ${remaining} remaining for ${targetIcon.slug}`);
+      
+      return new Response(
+        JSON.stringify({
+          processed: results.length,
+          diversified: totalDiversified,
+          remaining: remaining || 0,
+          targetIcon: targetIcon.slug,
+          overusedIcons,
+          methodBreakdown,
+          done: (remaining || 0) === 0
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Build query for questions without icons
     let query = supabase
