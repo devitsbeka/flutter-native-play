@@ -248,13 +248,13 @@ export default function Index() {
       />
       
       
-      <div 
-        ref={containerRef}
-        className="relative h-screen w-full overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+        <div 
+          ref={containerRef}
+          className="relative h-screen w-full"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
         {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
 
         {/* ===== TOP BAR ===== */}
@@ -313,7 +313,7 @@ export default function Index() {
         {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -20 }}>
           <motion.div 
-            className="flex flex-col items-center w-full max-w-[360px] px-4"
+            className="flex flex-col items-center w-full px-4"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
@@ -352,7 +352,7 @@ export default function Index() {
                 >
                   <AvatarCircle 
                     avatarUrl={profile?.avatar_url} 
-                    size={280} 
+                    size={Math.min(window.innerWidth * 0.9, 380)} 
                     coins={coins}
                     gems={gems}
                     xpProgress={levelInfo.progress}
@@ -382,7 +382,7 @@ export default function Index() {
                         {getFlagEmoji(profile.country_code)}
                       </span>
                     )}
-                    <span className="font-sans font-medium text-white drop-shadow-md capitalize" style={{ fontSize: 32 }}>
+                    <span className="text-white drop-shadow-md capitalize" style={{ fontSize: 32, fontFamily: "'Lato', sans-serif", fontWeight: 700 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
