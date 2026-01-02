@@ -95,15 +95,24 @@ export function GlobalSplineBackground() {
 
   return (
     <>
-      {/* Very light purple/lavender background */}
+      {/* Video background */}
       <div 
         className="fixed inset-0 pointer-events-none transition-opacity duration-500"
         style={{
-          background: "#7E7BDC",
           opacity: shouldShow ? 1 : 0,
           zIndex: -30,
         }}
-      />
+      >
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/videos/floating-blob.mp4" type="video/mp4" />
+        </video>
+      </div>
       
       {/* Subtle gradient overlay for depth */}
       {shouldShow && (
