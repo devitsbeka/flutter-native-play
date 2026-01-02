@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
 import { Trophy, X, Clock, ChevronRight } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
-import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
+import { useCategoryIconResolver } from "@/hooks/useCategoryIconResolver";
+import { useMemo } from "react";
 
 interface GameHistoryTableProps {
   onViewAll?: () => void;
@@ -11,6 +12,13 @@ interface GameHistoryTableProps {
 
 export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
   const { rooms, loading } = useRecentRooms(10);
+
+  // Get unique category IDs for icon resolution
+  const categoryIds = useMemo(() => {
+    return [...new Set(rooms.map(r => r.category_name).filter(Boolean))] as string[];
+  }, [rooms]);
+
+  const { getIcon } = useCategoryIconResolver(categoryIds);
 
   if (loading) {
     return (
@@ -45,6 +53,9 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
         )}
       </div>
 
+      {/* Streak Bar */}
+      {rooms.length > 0 && <StreakBar rooms={rooms} />}
+
       {/* Games List */}
       {rooms.length === 0 ? (
         <motion.div
@@ -58,9 +69,64 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
       ) : (
         <div className="space-y-2">
           {rooms.map((room, index) => (
-            <GameHistoryRow key={room.id} room={room} index={index} />
+            <GameHistoryRow key={room.id} room={room} index={index} getIcon={getIcon} />
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+// Streak bar component
+function StreakBar({ rooms }: { rooms: RecentRoom[] }) {
+  // Take last 10 games for streak display
+  const streakGames = rooms.slice(0, 10);
+  
+  // Count current streak
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    const firstResult = streakGames[0]?.won;
+    for (const room of streakGames) {
+      if (room.won === firstResult) streak++;
+      else break;
+    }
+    return { count: streak, isWinStreak: firstResult };
+  }, [streakGames]);
+
+  return (
+    <div className="flex items-center gap-2 py-2">
+      {/* Streak squares */}
+      <div className="flex gap-1.5">
+        {streakGames.map((room, index) => (
+          <motion.div
+            key={room.id}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.03 }}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm ${
+              room.won 
+                ? "bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-emerald-200" 
+                : "bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-rose-200"
+            }`}
+          >
+            {room.won ? "W" : "L"}
+          </motion.div>
+        ))}
+      </div>
+      
+      {/* Current streak indicator */}
+      {currentStreak.count >= 2 && (
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className={`ml-auto px-2.5 py-1 rounded-full text-xs font-bold ${
+            currentStreak.isWinStreak 
+              ? "bg-emerald-100 text-emerald-700" 
+              : "bg-rose-100 text-rose-700"
+          }`}
+        >
+          {currentStreak.count}x {currentStreak.isWinStreak ? "🔥" : ""}
+        </motion.div>
       )}
     </div>
   );
@@ -69,15 +135,19 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
 interface GameHistoryRowProps {
   room: RecentRoom;
   index: number;
+  getIcon: (categoryId: string) => string | null;
 }
 
-function GameHistoryRow({ room, index }: GameHistoryRowProps) {
+function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
   const timeAgo = room.completed_at
     ? formatDistanceToNow(new Date(room.completed_at), { addSuffix: true, locale: ka })
     : "";
 
   // Get opponents (other participants)
   const opponents = room.participants.filter(p => p.user_id !== room.participants[0]?.user_id);
+  
+  // Get category icon
+  const categoryIcon = room.category_name ? getIcon(room.category_name) : null;
 
   return (
     <motion.div
@@ -86,16 +156,22 @@ function GameHistoryRow({ room, index }: GameHistoryRowProps) {
       transition={{ delay: index * 0.03 }}
       className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-100 hover:border-slate-200 transition-colors"
     >
-      {/* Result indicator */}
+      {/* Category icon or result indicator */}
       <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden ${
           room.won
-            ? "bg-gradient-to-br from-amber-100 to-amber-200"
+            ? "bg-gradient-to-br from-emerald-50 to-emerald-100 ring-2 ring-emerald-200"
             : "bg-gradient-to-br from-slate-100 to-slate-200"
         }`}
       >
-        {room.won ? (
-          <Trophy className="w-5 h-5 text-amber-600" />
+        {categoryIcon ? (
+          <img 
+            src={categoryIcon} 
+            alt={room.category_name || ""} 
+            className="w-6 h-6 object-contain"
+          />
+        ) : room.won ? (
+          <Trophy className="w-5 h-5 text-emerald-600" />
         ) : (
           <X className="w-5 h-5 text-slate-500" />
         )}
@@ -113,7 +189,7 @@ function GameHistoryRow({ room, index }: GameHistoryRowProps) {
       <div className="text-center px-2">
         <p
           className={`font-bold text-lg ${
-            room.won ? "text-green-600" : "text-slate-600"
+            room.won ? "text-emerald-600" : "text-slate-600"
           }`}
         >
           {room.my_score}/{room.total_questions}
