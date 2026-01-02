@@ -36,6 +36,7 @@ import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
+import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 
 // Import bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -88,6 +89,7 @@ export default function CategoryQuizPage() {
   const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
   const [timerBonus, setTimerBonus] = useState(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [activePowerUpEffect, setActivePowerUpEffect] = useState<PowerUpType | null>(null);
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
@@ -531,6 +533,9 @@ export default function CategoryQuizPage() {
     // Mark as used this question
     setUsedPowerUpsThisQuestion(prev => new Set(prev).add(type));
 
+    // Show power-up effect animation
+    setActivePowerUpEffect(type);
+
     // Apply power-up effect
     switch (type) {
       case "5050": {
@@ -545,7 +550,6 @@ export default function CategoryQuizPage() {
       case "freeze": {
         // Freeze opponent (in this simple version, just reduce their score chance)
         // Effect is visual - opponent won't gain score this round
-        toast.success("❄️ მოწინააღმდეგე გაყინულია!");
         break;
       }
       case "replace": {
@@ -562,7 +566,6 @@ export default function CategoryQuizPage() {
         // Add 5 seconds to timer
         setTimerBonus(prev => prev + 5);
         setTimeRemaining(prev => prev + 5);
-        toast.success("⏱️ +5 წამი დამატებულია!");
         break;
       }
     }
@@ -1040,6 +1043,12 @@ export default function CategoryQuizPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Power-up effect overlay */}
+      <PowerUpEffectOverlay
+        activeEffect={activePowerUpEffect}
+        onComplete={() => setActivePowerUpEffect(null)}
+      />
     </div>
   );
 }
