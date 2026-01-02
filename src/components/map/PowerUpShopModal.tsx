@@ -171,6 +171,25 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       title="ძალები"
       subtitle="შეიძინე სუპერ ძალები"
       showSparkles
+      footer={
+        <ChunkyButton
+          onClick={handlePurchase}
+          disabled={isPurchasing || !canAfford}
+          variant={canAfford ? "success" : "secondary"}
+          className="w-full"
+        >
+          {isPurchasing ? (
+            "იძენება..."
+          ) : !canAfford ? (
+            "არ გაქვს საკმარისი მონეტები"
+          ) : (
+            <>
+              <img src={coinIcon} alt="" className="w-5 h-5 mr-2" />
+              შეიძინე
+            </>
+          )}
+        </ChunkyButton>
+      }
     >
       <div className="relative">
         {/* Power-up preview */}
@@ -238,37 +257,25 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
           </motion.button>
         </div>
 
-        {/* Total price */}
-        <div className="text-center mb-4">
-          <div className="flex items-center justify-center gap-2">
-            <img src={coinIcon} alt="coins" className="w-6 h-6" />
-            <span className="text-2xl font-bold text-amber-500">
+        {/* Total price with chunky coin badge */}
+        <div className="text-center">
+          <div 
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full"
+            style={{
+              background: "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
+              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #CA8A04, 0 4px 8px rgba(234,179,8,0.3)",
+              border: "2px solid rgba(255,255,255,0.4)",
+            }}
+          >
+            <img src={coinIcon} alt="coins" className="w-5 h-5" />
+            <span className="text-xl font-bold text-white drop-shadow-sm">
               {totalPrice.toLocaleString()}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-2">
             {POWER_UP_PRICES[selectedType]} × {quantity}
           </p>
         </div>
-
-        {/* Purchase button */}
-        <ChunkyButton
-          onClick={handlePurchase}
-          disabled={isPurchasing || !canAfford}
-          variant={canAfford ? "success" : "secondary"}
-          className="w-full"
-        >
-          {isPurchasing ? (
-            "იძენება..."
-          ) : !canAfford ? (
-            "არ გაქვს საკმარისი მონეტები"
-          ) : (
-            <>
-              <img src={coinIcon} alt="" className="w-5 h-5 mr-2" />
-              შეიძინე
-            </>
-          )}
-        </ChunkyButton>
 
         {/* Success animation overlay */}
         <AnimatePresence>
