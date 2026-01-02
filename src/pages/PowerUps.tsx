@@ -1,15 +1,17 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, Crown, Zap, Star, Check } from "lucide-react";
+import { HelpCircle, Crown, Zap, Star, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
 import { useSound } from "@/contexts/SoundContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
+import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
@@ -242,7 +244,8 @@ const TABS = [
 
 export default function PowerUps() {
   const navigate = useNavigate();
-  const { powerUps, isLoading: powerUpsLoading, addPowerUp } = useUserPowerUps();
+  const { user } = useAuth();
+  const { powerUps, isLoading: powerUpsLoading, addPowerUp, refetch } = useUserPowerUps();
   const { gems, spendGems, addCoins } = useCurrency();
   const { activateVip, isVip, getDaysRemaining } = useVipStatus();
   const { playSound } = useSound();
@@ -255,6 +258,13 @@ export default function PowerUps() {
   const filteredItems = SHOP_ITEMS.filter(item => item.category === selectedTab);
 
   const handlePurchase = async (item: ShopItem) => {
+    // Check authentication
+    if (!user) {
+      toast.error("შესვლა საჭიროა შეძენისთვის!");
+      navigate("/auth");
+      return;
+    }
+
     if (gems < item.price) {
       toast.error("არ გაქვს საკმარისი ალმასი!");
       playSound("wrong-answer");
@@ -284,6 +294,8 @@ export default function PowerUps() {
           await addPowerUp("replace", bundleAmount);
           await addPowerUp("time-drain", bundleAmount);
         }
+        // Refetch power-ups to update counts
+        await refetch();
       }
 
       playSound("reward");
@@ -328,102 +340,94 @@ export default function PowerUps() {
         background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
       }}
     >
-      {/* Header */}
-      <div className="px-4 pt-4 pb-2 flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          {/* Back Button */}
-          <motion.button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
-            style={{ boxShadow: "0 3px 0 #D1D5DB" }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95, y: 2 }}
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-700" />
-          </motion.button>
+      {/* Sticky Header + Tabs */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm">
+        {/* Header */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between mb-3">
+            {/* Title - Left */}
+            <h1 className="text-xl font-display font-bold text-gray-900">
+              მაღაზია
+            </h1>
 
-          {/* Title */}
-          <h1 className="text-xl font-display font-bold text-gray-900">
-            მაღაზია
-          </h1>
-
-          {/* Right side: Help + Gems */}
-          <div className="flex items-center gap-2">
-            <motion.button
-              onClick={() => setShowTutorialModal(true)}
-              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
-              style={{ boxShadow: "0 3px 0 #D1D5DB" }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95, y: 2 }}
-            >
-              <HelpCircle className="w-5 h-5 text-gray-600" />
-            </motion.button>
-            
-            <motion.div 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-              style={{
-                background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
-                boxShadow: "0 3px 0 #C4B5FD",
-                border: "2px solid #A78BFA",
-              }}
-            >
-              <img src={gemIcon} alt="" className="w-5 h-5" />
-              <span className="font-bold text-purple-700">{gems}</span>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* VIP Status Banner */}
-        {isVip && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-3 px-4 py-2 rounded-xl flex items-center justify-between"
-            style={{
-              background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-              boxShadow: "0 2px 0 #F59E0B",
-              border: "2px solid #FBBF24",
-            }}
-          >
+            {/* Right side: Help + Gems */}
             <div className="flex items-center gap-2">
-              <Crown className="w-5 h-5 text-amber-600" />
-              <span className="text-amber-800 font-semibold">VIP აქტიური</span>
+              <motion.button
+                onClick={() => setShowTutorialModal(true)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
+                style={{ boxShadow: "0 3px 0 #D1D5DB" }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95, y: 2 }}
+              >
+                <HelpCircle className="w-5 h-5 text-gray-600" />
+              </motion.button>
+              
+              <motion.div 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                style={{
+                  background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
+                  boxShadow: "0 3px 0 #C4B5FD",
+                  border: "2px solid #A78BFA",
+                }}
+              >
+                <img src={gemIcon} alt="" className="w-5 h-5" />
+                <span className="font-bold text-purple-700">{gems}</span>
+              </motion.div>
             </div>
-            <span className="text-amber-700 text-sm font-bold">
-              {getDaysRemaining()} დღე დარჩენილი
-            </span>
-          </motion.div>
-        )}
+          </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {TABS.map((tab) => (
-            <motion.button
-              key={tab.id}
-              onClick={() => setSelectedTab(tab.id)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all"
+          {/* VIP Status Banner */}
+          {isVip && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 px-4 py-2 rounded-xl flex items-center justify-between"
               style={{
-                background: selectedTab === tab.id
-                  ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                  : "#F3F4F6",
-                boxShadow: selectedTab === tab.id
-                  ? "0 3px 0 #C4B5FD"
-                  : "0 2px 0 #E5E7EB",
-                color: selectedTab === tab.id
-                  ? "#7C3AED"
-                  : "#6B7280",
+                background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
+                boxShadow: "0 2px 0 #F59E0B",
+                border: "2px solid #FBBF24",
               }}
-              whileTap={{ scale: 0.95, y: 2 }}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.name}</span>
-            </motion.button>
-          ))}
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-amber-600" />
+                <span className="text-amber-800 font-semibold">VIP აქტიური</span>
+              </div>
+              <span className="text-amber-700 text-sm font-bold">
+                {getDaysRemaining()} დღე დარჩენილი
+              </span>
+            </motion.div>
+          )}
+
+          {/* Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {TABS.map((tab) => (
+              <motion.button
+                key={tab.id}
+                onClick={() => setSelectedTab(tab.id)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all"
+                style={{
+                  background: selectedTab === tab.id
+                    ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                    : "#F3F4F6",
+                  boxShadow: selectedTab === tab.id
+                    ? "0 3px 0 #C4B5FD"
+                    : "0 2px 0 #E5E7EB",
+                  color: selectedTab === tab.id
+                    ? "#7C3AED"
+                    : "#6B7280",
+                }}
+                whileTap={{ scale: 0.95, y: 2 }}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.name}</span>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6 pt-3">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-4 pb-24 pt-3">
         <AnimatePresence mode="wait">
           {selectedTab === "my-powers" ? (
             /* My Powers Tab */
@@ -623,6 +627,9 @@ export default function PowerUps() {
         isOpen={showTutorialModal}
         onClose={() => setShowTutorialModal(false)}
       />
+
+      {/* Bottom Navigation */}
+      <UniversalBottomNav />
     </div>
   );
 }
