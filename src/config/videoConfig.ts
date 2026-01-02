@@ -48,7 +48,9 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   robotics_ai: "/videos/robotics-ai.mp4",
   social_media: "/videos/social-media.mp4",
   coding: "/videos/coding.mp4",
+  programming: "/videos/coding.mp4",
   ecology: "/videos/ecology.mp4",
+  nature: "/videos/nature.mp4",
   religion: "/videos/religion.mp4",
   religion_mythology: "/videos/religion.mp4",
 };
