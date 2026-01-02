@@ -22,7 +22,7 @@ const POWER_UP_INFO: Record<PowerUpType, { name: string; description: string }> 
   },
   "time-drain": {
     name: "დრო+",
-    description: "დაემატება 15 დამატებითი წამი დროს. გამოიყენე როცა დრო იწურება!",
+    description: "დაემატება 10 წამი დროს. გამოიყენე როცა დრო იწურება!",
   },
 };
 
