@@ -62,25 +62,28 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex-shrink-0 w-48 p-4 rounded-2xl bg-white shadow-xl shadow-purple-900/15 border border-white/60"
+      className="flex-shrink-0 w-48 p-4 rounded-2xl bg-gradient-to-br from-white via-white to-purple-50 shadow-xl shadow-purple-500/20 border-2 border-purple-200/60 relative overflow-hidden"
     >
+      {/* Decorative gradient orb */}
+      <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-purple-300/30 to-pink-300/30 rounded-full blur-xl" />
+      
       {/* Header with squad name and more button */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 relative z-10">
         <span className="text-gray-800 font-bold text-sm uppercase tracking-wide">
           {squadName}
         </span>
-        <button className="p-1 text-gray-400 hover:text-gray-600">
+        <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-purple-100 rounded-lg transition-colors">
           <MoreVertical className="w-4 h-4" />
         </button>
       </div>
 
       {/* Participants avatars row */}
-      <div className="flex items-center mb-4">
+      <div className="flex items-center mb-4 relative z-10">
         <div className="flex -space-x-2">
           {room.participants.slice(0, 4).map((p, i) => (
             <Avatar 
               key={p.user_id} 
-              className="w-8 h-8 border-2 border-white ring-1 ring-purple-300"
+              className="w-9 h-9 border-[3px] border-white ring-2 ring-purple-300 shadow-md"
               style={{ zIndex: 4 - i }}
             >
               <AvatarImage src={p.avatar_url || undefined} />
@@ -91,7 +94,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
           ))}
           {room.participants.length > 4 && (
             <div 
-              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium border-2 border-white"
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-xs text-gray-600 font-bold border-[3px] border-white shadow-md"
               style={{ zIndex: 0 }}
             >
               +{room.participants.length - 4}
@@ -101,18 +104,18 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative z-10">
         <motion.button
-          className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-sm font-bold bg-orange-500 text-white shadow-md shadow-orange-500/30"
-          whileHover={{ scale: 1.02 }}
+          className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/40"
+          whileHover={{ scale: 1.02, boxShadow: "0 10px 20px -5px rgba(249, 115, 22, 0.5)" }}
           whileTap={{ scale: 0.98 }}
         >
           + თამაში
         </motion.button>
 
         <motion.button
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium border border-gray-200"
-          whileHover={{ scale: 1.02 }}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200 shadow-sm"
+          whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
           whileTap={{ scale: 0.98 }}
         >
           <MessageCircle className="w-4 h-4" />

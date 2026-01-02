@@ -227,7 +227,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
+          className="mb-6"
         >
           <FriendsList
             onAddFriendClick={() => setShowAddFriendModal(true)}
@@ -241,7 +241,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12 }}
-          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
+          className="mb-6"
         >
           <RecentRoomsSection onViewAll={() => setShowAllRoomsModal(true)} />
         </motion.div>
@@ -251,7 +251,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14 }}
-          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
+          className="mb-6"
         >
           <PendingChallengesSection onAcceptChallenge={handleAcceptChallenge} />
         </motion.div>
@@ -261,7 +261,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16 }}
-          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
+          className="mb-6"
         >
           <RecentPlayersList onViewAll={() => setShowAllPlayersModal(true)} />
         </motion.div>
