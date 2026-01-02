@@ -375,51 +375,23 @@ export default function Index() {
                 <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
               ) : (
                 <>
-                  {/* Name and Flag row - level badge is now on avatar */}
-                  <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                    <span className="font-display font-bold text-white drop-shadow-md" style={{ fontSize: 28 }}>
-                      {profile?.nickname || t("game.guest")}
-                    </span>
+                  {/* Name with Flag in white 3D chunky placeholder */}
+                  <div 
+                    className="flex items-center justify-center gap-3 px-6 py-3 rounded-full"
+                    style={{
+                      background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                      boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                      border: "3px solid rgba(255,255,255,0.9)",
+                    }}
+                  >
                     {profile?.country_code && (
-                      <span className="text-xl">
+                      <span className="text-2xl">
                         {getFlagEmoji(profile.country_code)}
                       </span>
                     )}
-                  </div>
-                  
-                  {/* Currency badges row - white 3D chunky style, coins and gems only */}
-                  <div className="flex items-center justify-center gap-3 mt-3">
-                    {/* Coins - White 3D Chunky */}
-                    <motion.div 
-                      className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
-                      style={{
-                        background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                        boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-                        border: "3px solid rgba(255,255,255,0.9)",
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsGemShopOpen(true)}
-                    >
-                      <img src={coinIcon} alt="Coins" className="w-7 h-7 object-contain" />
-                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{coins.toLocaleString()}</span>
-                    </motion.div>
-
-                    {/* Gems - White 3D Chunky */}
-                    <motion.div 
-                      className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
-                      style={{
-                        background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                        boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-                        border: "3px solid rgba(255,255,255,0.9)",
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsGemShopOpen(true)}
-                    >
-                      <img src={gemIcon} alt="Gems" className="w-7 h-7 object-contain" />
-                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{gems.toLocaleString()}</span>
-                    </motion.div>
+                    <span className="font-display font-bold text-gray-700" style={{ fontSize: 24 }}>
+                      {profile?.nickname || t("game.guest")}
+                    </span>
                   </div>
                       
                       {/* Action buttons row - Gift, Mission, Chest, Help */}
