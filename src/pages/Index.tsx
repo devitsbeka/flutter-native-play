@@ -392,14 +392,16 @@ export default function Index() {
                         className="flex items-center justify-center gap-4 mt-6 pointer-events-auto" 
                         data-walkthrough="powerups"
                       >
-                        {/* Gift Button */}
+                        {/* Gift Button - base size */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
                           onClick={() => setIsDailyRewardsOpen(true)}
-                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          className="relative rounded-full flex items-center justify-center"
                           style={{
+                            width: 56,
+                            height: 56,
                             background: "linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FDBA74",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -411,14 +413,16 @@ export default function Index() {
                           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
-                        {/* Mission Button */}
+                        {/* Mission Button - 20% larger */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.48, type: "spring", stiffness: 200 }}
                           onClick={() => setShowMissionsModal(true)}
-                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          className="relative rounded-full flex items-center justify-center"
                           style={{
+                            width: 67,
+                            height: 67,
                             background: "linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #7DD3FC",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -426,18 +430,20 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={missionCrystalIcon} alt="Mission" className="w-8 h-8 object-contain" />
+                          <img src={missionCrystalIcon} alt="Mission" className="w-10 h-10 object-contain" />
                           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md">2</span>
                         </motion.button>
 
-                        {/* Chest Button */}
+                        {/* Chest Button - 40% larger */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.56, type: "spring", stiffness: 200 }}
                           onClick={() => setIsChestModalOpen(true)}
-                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          className="relative rounded-full flex items-center justify-center"
                           style={{
+                            width: 78,
+                            height: 78,
                             background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FCD34D",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -445,18 +451,20 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={chestBoxIcon} alt="Chest" className="w-8 h-8 object-contain" />
+                          <img src={chestBoxIcon} alt="Chest" className="w-11 h-11 object-contain" />
                           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
-                        {/* Powers Button */}
+                        {/* Powers Button - 60% larger */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.64, type: "spring", stiffness: 200 }}
                           onClick={() => setShowMyPowersModal(true)}
-                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                          className="relative rounded-full flex items-center justify-center"
                           style={{
+                            width: 90,
+                            height: 90,
                             background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #C4B5FD",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -464,7 +472,7 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={powersIcon} alt="Powers" className="w-8 h-8 object-contain" />
+                          <img src={powersIcon} alt="Powers" className="w-12 h-12 object-contain" />
                           {totalPowerUps > 0 && (
                             <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
                               {totalPowerUps}
