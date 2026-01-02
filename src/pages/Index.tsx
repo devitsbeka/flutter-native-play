@@ -268,7 +268,7 @@ export default function Index() {
               style={{
                 background: "linear-gradient(180deg, #FFFFFF 0%, #FDFCFF 50%, #FAF8FF 100%)",
                 boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,1), 0 4px 0 #E8E0F5, 0 6px 12px rgba(0,0,0,0.12)",
-                border: "3px solid rgba(255,255,255,1)",
+                border: "3px solid rgba(200,180,220,0.35)",
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -284,7 +284,7 @@ export default function Index() {
               style={{
                 background: "linear-gradient(180deg, #FFFFFF 0%, #FDFCFF 50%, #FAF8FF 100%)",
                 boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,1), 0 4px 0 #E8E0F5, 0 6px 12px rgba(0,0,0,0.12)",
-                border: "3px solid rgba(255,255,255,1)",
+                border: "3px solid rgba(200,180,220,0.35)",
               }}
             >
               {/* Ad-Free button */}
