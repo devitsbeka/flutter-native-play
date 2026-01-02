@@ -1,83 +1,120 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
 interface PingPongVideoProps {
   src: string;
   className?: string;
-  segmentDuration?: number; // Duration of the ping-pong segment in seconds
+  segmentDuration?: number;
 }
 
 export function PingPongVideo({ 
   src, 
   className = "",
-  segmentDuration = 2.5 // Use 2.5 seconds of the video
+  segmentDuration = 2.5
 }: PingPongVideoProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const framesRef = useRef<ImageData[]>([]);
+  const [isReady, setIsReady] = useState(false);
   const rafRef = useRef<number | null>(null);
-  const directionRef = useRef<1 | -1>(1); // 1 = forward, -1 = backward
-  const lastFrameTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
 
     let isMounted = true;
 
-    const animate = (timestamp: number) => {
-      if (!isMounted || !video) return;
+    // Create hidden video element
+    const video = document.createElement("video");
+    video.src = src;
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.crossOrigin = "anonymous";
+    videoRef.current = video;
 
-      // Calculate delta time
-      const delta = lastFrameTimeRef.current ? (timestamp - lastFrameTimeRef.current) / 1000 : 0;
-      lastFrameTimeRef.current = timestamp;
+    const captureFrames = async () => {
+      if (!isMounted) return;
 
-      // Clamp delta to avoid large jumps
-      const clampedDelta = Math.min(delta, 0.1);
+      // Set canvas size to match video
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 360;
 
-      // Update video time based on direction
-      const newTime = video.currentTime + (clampedDelta * directionRef.current);
-
-      // Check bounds and reverse direction
-      if (newTime >= segmentDuration) {
-        video.currentTime = segmentDuration;
-        directionRef.current = -1; // Start going backward
-      } else if (newTime <= 0) {
-        video.currentTime = 0;
-        directionRef.current = 1; // Start going forward
-      } else {
-        video.currentTime = newTime;
+      const frames: ImageData[] = [];
+      const fps = 30;
+      const totalFrames = Math.floor(segmentDuration * fps);
+      
+      // Capture frames by seeking through the video
+      for (let i = 0; i < totalFrames && isMounted; i++) {
+        const time = (i / fps);
+        video.currentTime = time;
+        
+        await new Promise<void>((resolve) => {
+          const onSeeked = () => {
+            video.removeEventListener("seeked", onSeeked);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            resolve();
+          };
+          video.addEventListener("seeked", onSeeked);
+        });
       }
 
+      if (!isMounted) return;
+
+      // Create ping-pong sequence: forward + reverse (excluding first and last to avoid pause)
+      const reversedFrames = frames.slice(1, -1).reverse();
+      framesRef.current = [...frames, ...reversedFrames];
+      setIsReady(true);
+
+      // Start playback loop
+      let frameIndex = 0;
+      const frameInterval = 1000 / fps;
+      let lastTime = performance.now();
+
+      const animate = (timestamp: number) => {
+        if (!isMounted) return;
+
+        const elapsed = timestamp - lastTime;
+        
+        if (elapsed >= frameInterval) {
+          lastTime = timestamp - (elapsed % frameInterval);
+          
+          if (framesRef.current.length > 0) {
+            ctx.putImageData(framesRef.current[frameIndex], 0, 0);
+            frameIndex = (frameIndex + 1) % framesRef.current.length;
+          }
+        }
+
+        rafRef.current = requestAnimationFrame(animate);
+      };
+
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    const startAnimation = () => {
-      video.pause(); // We control playback manually
-      video.currentTime = 0;
-      directionRef.current = 1;
-      lastFrameTimeRef.current = 0;
-      rafRef.current = requestAnimationFrame(animate);
-    };
+    video.addEventListener("loadeddata", () => {
+      if (video.readyState >= 2) {
+        captureFrames();
+      }
+    });
 
-    // Wait for video to be ready
-    if (video.readyState >= 2) {
-      startAnimation();
-    } else {
-      video.addEventListener("loadeddata", startAnimation, { once: true });
-    }
+    video.load();
 
     return () => {
       isMounted = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      video.src = "";
+      framesRef.current = [];
     };
   }, [src, segmentDuration]);
 
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      muted
-      playsInline
-      preload="auto"
+    <canvas
+      ref={canvasRef}
       className={`absolute inset-0 w-full h-full object-cover ${className}`}
+      style={{ opacity: isReady ? 1 : 0 }}
     />
   );
 }
