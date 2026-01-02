@@ -37,6 +37,8 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
+import { preloadQuestionIcons } from "@/hooks/useAIIcon";
+import { useAIIconSlug } from "@/hooks/useAIIconSlug";
 
 // Import bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -319,6 +321,14 @@ export default function CategoryQuizPage() {
       setQuestionIds(shuffledDbQuestions.map(q => q.id));
       setQuestions(shuffledDbQuestions);
       setLoading(false);
+      
+      // Trigger background AI icon analysis for all questions
+      preloadQuestionIcons(
+        shuffledDbQuestions.map(q => ({
+          question: q.question,
+          category: categoryData.name || categoryId
+        }))
+      );
     };
 
     fetchQuestions();
@@ -588,6 +598,9 @@ export default function CategoryQuizPage() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const stars = Math.min(3, Math.floor((score / Math.max(questions.length, 1)) * 4));
+  
+  // Get AI-analyzed icon slug for current question (highest priority)
+  const aiIconSlug = useAIIconSlug(currentQuestion?.question, dbCategory?.name);
 
   // Georgian answer labels
   const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
@@ -920,10 +933,10 @@ export default function CategoryQuizPage() {
 
       {/* Question Card with Overlapping Icon - same as QuizGameScreenProd */}
       <div className="px-4 flex-shrink-0 mt-4 relative">
-        {/* Category Icon - Positioned above question card, overlapping players */}
+        {/* Category Icon - AI-analyzed slug has priority, then question slug, then category */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20">
           <DynamicIcon 
-            slug={currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
+            slug={aiIconSlug || currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
             categoryId={categoryId}
             size={128}
             className="drop-shadow-2xl"
