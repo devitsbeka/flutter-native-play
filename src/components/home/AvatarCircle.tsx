@@ -162,20 +162,6 @@ export function AvatarCircle({
         </div>
       )}
 
-      {/* XP text overlay at top */}
-      {xpCurrent !== undefined && xpTotal !== undefined && (
-        <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20 px-4 py-1.5 rounded-full"
-          style={{
-            background: "linear-gradient(180deg, rgba(168,85,247,0.95) 0%, rgba(147,51,234,0.95) 100%)",
-            boxShadow: "0 2px 8px rgba(147,51,234,0.4)",
-          }}
-        >
-          <span className="text-xs font-bold text-white whitespace-nowrap">
-            {xpCurrent} / {xpTotal} XP
-          </span>
-        </div>
-      )}
 
       {/* Coins & Gems badge at bottom center - 3D chunky white style */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20">
