@@ -17,19 +17,14 @@ interface AnimateRequest {
   requestId?: string;
 }
 
-interface VyroStatusResponse {
-  status: string;
-  result?: string;
-  error?: string;
-}
-
-// Check status and upload if ready
+// Check status using correct Vyro API endpoint
 async function checkAndUpload(requestId: string, userId: string): Promise<{ status: string; videoUrl?: string }> {
-  const statusUrl = "https://api.vyro.ai/v2/video/status";
+  // Correct Vyro status endpoint: GET https://api.vyro.ai/v2/assets/{id}/status
+  const statusUrl = `https://api.vyro.ai/v2/assets/${requestId}/status`;
   
-  console.log(`Checking status for request ${requestId}`);
+  console.log(`Checking status at: ${statusUrl}`);
   
-  const response = await fetch(`${statusUrl}?request_id=${requestId}`, {
+  const response = await fetch(statusUrl, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${VYRO_API_KEY}`,
@@ -37,82 +32,95 @@ async function checkAndUpload(requestId: string, userId: string): Promise<{ stat
   });
 
   if (!response.ok) {
-    console.error("Status check failed:", response.status);
-    throw new Error(`Status check failed: ${response.status}`);
+    const errorText = await response.text();
+    console.error("Status check failed:", response.status, errorText);
+    throw new Error(`Status check failed: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
   console.log(`Full status response:`, JSON.stringify(data));
 
-  // Vyro API may return video URL directly in result field when completed
-  // Status can be: processing, success (still processing), completed, or result may appear directly
-  const videoResult = data.result || data.video_url || data.output;
-  
-  if (videoResult && typeof videoResult === 'string' && videoResult.startsWith('http')) {
-    console.log("Video generation completed! URL:", videoResult.substring(0, 100));
+  // Vyro API response format: {"status": "success", "video": {"status": "finished", "url": {"generation": "<video-url>"}}}
+  if (data.status === "success" && data.video) {
+    const videoStatus = data.video.status;
     
-    // Upload to storage
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (videoStatus === "finished" && data.video.url?.generation) {
+      const videoUrl = data.video.url.generation;
+      console.log("Video generation completed! URL:", videoUrl.substring(0, 100));
       
-      // Download video
-      console.log("Downloading video...");
-      const videoResponse = await fetch(videoResult);
-      if (!videoResponse.ok) {
-        throw new Error(`Failed to download video: ${videoResponse.status}`);
+      // Upload to storage
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && userId) {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        
+        // Download video
+        console.log("Downloading video...");
+        const videoResponse = await fetch(videoUrl);
+        if (!videoResponse.ok) {
+          throw new Error(`Failed to download video: ${videoResponse.status}`);
+        }
+
+        const videoBlob = await videoResponse.blob();
+        const fileName = `${userId}/animated-avatar-${Date.now()}.mp4`;
+
+        console.log("Uploading video to storage:", fileName);
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, videoBlob, {
+            contentType: 'video/mp4',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError);
+          throw new Error(`Failed to upload video: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        const storedUrl = publicUrlData.publicUrl;
+        console.log("Video uploaded successfully:", storedUrl);
+
+        // Update user profile with animated avatar URL
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ animated_avatar_url: storedUrl })
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error("Profile update error:", updateError);
+        } else {
+          console.log("Profile updated with animated avatar URL");
+        }
+
+        return { status: "completed", videoUrl: storedUrl };
       }
-
-      const videoBlob = await videoResponse.blob();
-      const fileName = `${userId}/animated-avatar-${Date.now()}.mp4`;
-
-      console.log("Uploading video to storage:", fileName);
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, videoBlob, {
-          contentType: 'video/mp4',
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        throw new Error(`Failed to upload video: ${uploadError.message}`);
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      const storedUrl = publicUrlData.publicUrl;
-      console.log("Video uploaded successfully:", storedUrl);
-
-      // Update user profile with animated avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ animated_avatar_url: storedUrl })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error("Profile update error:", updateError);
-      } else {
-        console.log("Profile updated with animated avatar URL");
-      }
-
-      return { status: "completed", videoUrl: storedUrl };
+      
+      return { status: "completed", videoUrl: videoUrl };
     }
     
-    return { status: "completed", videoUrl: videoResult };
+    // Video still processing
+    if (videoStatus === "processing" || videoStatus === "pending" || videoStatus === "queued") {
+      console.log(`Video still processing, status: ${videoStatus}`);
+      return { status: "processing" };
+    }
+    
+    // Video failed
+    if (videoStatus === "failed" || videoStatus === "error") {
+      throw new Error(`Video generation failed with status: ${videoStatus}`);
+    }
   }
 
-  // Check for failure
-  if (data.status === "failed" || data.error) {
-    throw new Error(`Video generation failed: ${data.error || 'Unknown error'}`);
+  // Check for error response
+  if (data.status === "error" || data.error) {
+    throw new Error(`Video generation failed: ${data.error || data.message || 'Unknown error'}`);
   }
 
-  // Still processing - return current status
-  const currentStatus = data.status || "processing";
-  console.log(`Still processing, status: ${currentStatus}`);
-  return { status: currentStatus };
+  // Default to processing if we can't determine status
+  console.log(`Unknown status format, assuming still processing:`, JSON.stringify(data));
+  return { status: "processing" };
 }
 
 serve(async (req) => {
@@ -142,26 +150,27 @@ serve(async (req) => {
 
     console.log("Starting avatar animation for image:", imageUrl.substring(0, 100));
 
-    // Create FormData for the request
-    const formData = new FormData();
-    
-    // Fetch the image and add as blob
+    // Fetch the image first
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch source image: ${imageResponse.status}`);
     }
     const imageBlob = await imageResponse.blob();
+
+    // Create FormData for the request
+    const formData = new FormData();
     formData.append("image", imageBlob, "avatar.png");
     
     // Animation prompt for subtle avatar movements
     formData.append("prompt", "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly and calm expression. Smooth natural animation.");
-    formData.append("negative_prompt", "sudden movements, distortion, morphing, unnatural expressions, glitches, artifacts");
-    formData.append("style", "kling-1.0-pro");
+    
+    // Correct style parameter for Vyro API: "veo-2"
+    formData.append("style", "veo-2");
     formData.append("aspect_ratio", "1:1");
 
-    console.log("Sending request to Vyro API...");
+    console.log("Sending request to Vyro API with style: veo-2");
 
-    // Start video generation
+    // Start video generation: POST https://api.vyro.ai/v2/video/image-to-video
     const response = await fetch("https://api.vyro.ai/v2/video/image-to-video", {
       method: "POST",
       headers: {
@@ -179,8 +188,8 @@ serve(async (req) => {
     const data = await response.json();
     console.log("Vyro API response:", JSON.stringify(data));
 
-    // Return request ID immediately - client will poll for status
-    const generatedRequestId = data.request_id || data.id;
+    // Response format: {"id": "<video-id>", "status": "processing"}
+    const generatedRequestId = data.id;
     if (generatedRequestId) {
       console.log("Returning request ID for polling:", generatedRequestId);
       return new Response(
@@ -194,19 +203,7 @@ serve(async (req) => {
       );
     }
 
-    // If result is returned directly (unlikely for video generation)
-    if (data.result) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          status: "completed",
-          videoUrl: data.result,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    throw new Error("Unexpected response format from Vyro API: " + JSON.stringify(data));
+    throw new Error("No request ID returned from Vyro API: " + JSON.stringify(data));
 
   } catch (error) {
     console.error('Error animating avatar:', error);
