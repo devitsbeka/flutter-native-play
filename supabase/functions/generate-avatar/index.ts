@@ -39,20 +39,16 @@ serve(async (req) => {
 
     // Fetch the source image
     const imageBlob = await fetchImageAsBlob(imageUrl);
-    console.log("Fetched source image, size:", imageBlob.size);
+    console.log("Fetched source image, size:", imageBlob.size, "type:", imageBlob.type);
 
-    // Create form data for Stability AI
+    // Create form data for Stability AI Creative Upscale (more reliable for transformations)
     const formData = new FormData();
     formData.append("image", imageBlob, "source.png");
-    formData.append("prompt", "Cute adorable 3D Pixar Disney cartoon character portrait, big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression, soft violet and pink accent lighting on hair and face edges, dark navy gradient background, Pixar Disney animation quality, charming lovable character design, high quality 3D render");
-    formData.append("mode", "image-to-image");
-    formData.append("strength", "0.7");
-    formData.append("model", "sd3-large"); // Use sd3-large which supports image-to-image properly
+    formData.append("prompt", "3D Pixar Disney cartoon character portrait, big expressive shiny cartoon eyes, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair, sweet friendly expression, soft violet and pink lighting, dark navy gradient background, high quality 3D render, charming character design");
     formData.append("output_format", "png");
-    formData.append("negative_prompt", "realistic, photo, photograph, ugly, deformed, noisy, blurry, low quality, distorted face, bad anatomy");
 
-    // Call Stability AI SD3 image-to-image endpoint
-    const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/sd3", {
+    // Try the image-to-image endpoint with a simpler approach
+    const response = await fetch("https://api.stability.ai/v2beta/stable-image/control/sketch", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${STABILITY_API_KEY}`,
@@ -64,19 +60,58 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Stability AI error response:", response.status, errorText);
-      throw new Error(`Stability AI API error: ${response.status} - ${errorText}`);
+      
+      // If sketch endpoint fails, try structure endpoint
+      console.log("Trying structure endpoint instead...");
+      
+      const formData2 = new FormData();
+      formData2.append("image", imageBlob, "source.png");
+      formData2.append("prompt", "3D Pixar Disney cartoon character portrait, big expressive shiny cartoon eyes, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair, sweet friendly expression, soft violet and pink lighting, dark navy gradient background, high quality 3D render");
+      formData2.append("control_strength", "0.6");
+      formData2.append("output_format", "png");
+
+      const response2 = await fetch("https://api.stability.ai/v2beta/stable-image/control/structure", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${STABILITY_API_KEY}`,
+          "Accept": "application/json",
+        },
+        body: formData2,
+      });
+
+      if (!response2.ok) {
+        const errorText2 = await response2.text();
+        console.error("Structure endpoint also failed:", response2.status, errorText2);
+        throw new Error(`Stability AI API error: ${response2.status} - ${errorText2}`);
+      }
+
+      const data2 = await response2.json();
+      if (!data2.image) {
+        throw new Error("No image in response");
+      }
+
+      const avatarUrl = `data:image/png;base64,${data2.image}`;
+      console.log("Avatar generated successfully via structure endpoint");
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          avatarUrl: avatarUrl,
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     const data = await response.json();
     console.log("Stability AI response received");
 
-    // The response contains base64 encoded image
     if (!data.image) {
       console.error("Unexpected response format:", JSON.stringify(data));
       throw new Error("No image in response");
     }
 
-    // Return the base64 image as a data URL
     const avatarUrl = `data:image/png;base64,${data.image}`;
     console.log("Avatar generated successfully");
 
