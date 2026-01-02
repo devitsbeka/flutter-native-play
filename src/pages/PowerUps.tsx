@@ -498,9 +498,22 @@ export default function PowerUps() {
                       </h3>
 
                       {/* Description */}
-                      <p className="text-gray-500 text-xs text-center">
+                      <p className="text-gray-500 text-xs text-center mb-3">
                         {powerUp.description}
                       </p>
+
+                      {/* Add More Button */}
+                      <button
+                        onClick={() => setSelectedTab("powerups")}
+                        className="w-full py-1.5 rounded-full text-xs font-bold transition-all"
+                        style={{
+                          background: `linear-gradient(135deg, ${getGradientColors(powerUp.gradient)})`,
+                          color: "white",
+                          boxShadow: "0 2px 0 rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        + დამატება
+                      </button>
                     </motion.div>
                   );
                 })
