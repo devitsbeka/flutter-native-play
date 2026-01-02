@@ -5,57 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const FAL_KEY = Deno.env.get('FAL_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
-}
-
-// Poll for result with timeout
-async function pollForResult(requestId: string, maxAttempts = 60): Promise<any> {
-  const statusUrl = `https://queue.fal.run/fal-ai/cartoonify/requests/${requestId}/status`;
-  const resultUrl = `https://queue.fal.run/fal-ai/cartoonify/requests/${requestId}`;
-  
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    console.log(`Polling attempt ${attempt + 1}/${maxAttempts}`);
-    
-    const statusResponse = await fetch(statusUrl, {
-      headers: {
-        "Authorization": `Key ${FAL_KEY}`,
-      },
-    });
-    
-    if (!statusResponse.ok) {
-      throw new Error(`Status check failed: ${statusResponse.status}`);
-    }
-    
-    const status = await statusResponse.json();
-    console.log("Status:", status.status);
-    
-    if (status.status === "COMPLETED") {
-      // Fetch the actual result
-      const resultResponse = await fetch(resultUrl, {
-        headers: {
-          "Authorization": `Key ${FAL_KEY}`,
-        },
-      });
-      
-      if (!resultResponse.ok) {
-        throw new Error(`Result fetch failed: ${resultResponse.status}`);
-      }
-      
-      return await resultResponse.json();
-    }
-    
-    if (status.status === "FAILED") {
-      throw new Error("Avatar generation failed: " + (status.error || "Unknown error"));
-    }
-    
-    // Wait 2 seconds before next poll
-    await new Promise(resolve => setTimeout(resolve, 2000));
-  }
-  
-  throw new Error("Avatar generation timed out");
 }
 
 serve(async (req) => {
@@ -64,8 +17,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!FAL_KEY) {
-      throw new Error("FAL_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     const { imageUrl }: AvatarRequest = await req.json();
@@ -74,47 +27,74 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation with Fal.ai cartoonify for:", imageUrl.substring(0, 100));
+    console.log("Starting avatar generation with Lovable AI for:", imageUrl.substring(0, 100));
 
-    // Submit the job to Fal.ai cartoonify queue
-    const submitResponse = await fetch("https://queue.fal.run/fal-ai/cartoonify", {
+    // Use Lovable AI's image editing model with a prompt that maintains adult proportions
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Key ${FAL_KEY}`,
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        image_url: imageUrl
+        model: "google/gemini-2.5-flash-image-preview",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Transform this photo into a high-quality 3D rendered avatar portrait in modern Pixar/Disney animation style. 
+
+CRITICAL REQUIREMENTS:
+- PRESERVE the person's ACTUAL AGE - if they are an adult, make them look like an adult, NOT a child
+- Keep REALISTIC eye proportions - do NOT enlarge the eyes
+- Maintain the person's exact facial structure, bone structure, and proportions
+- Keep their actual nose size, jaw shape, and face width
+- Preserve their expression, clothing, accessories, and hairstyle exactly
+- Use soft studio lighting with subtle rim lighting
+- Clean, solid color background (light gray or soft gradient)
+- High detail 3D rendering with realistic skin textures
+- Professional portrait framing (head and shoulders)
+
+The result should look like a premium 3D character portrait that accurately represents the person's real age and features.`
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: imageUrl
+                }
+              }
+            ]
+          }
+        ],
+        modalities: ["image", "text"]
       })
     });
 
-    if (!submitResponse.ok) {
-      const errorText = await submitResponse.text();
-      console.error("Fal.ai submit error:", submitResponse.status, errorText);
-      throw new Error(`Fal.ai API error: ${submitResponse.status} - ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Lovable AI error:", response.status, errorText);
+      throw new Error(`AI API error: ${response.status} - ${errorText}`);
     }
 
-    const submitResult = await submitResponse.json();
-    console.log("Job submitted, request_id:", submitResult.request_id);
-
-    // Poll for the result
-    const result = await pollForResult(submitResult.request_id);
+    const result = await response.json();
     console.log("Generation complete");
 
-    // Extract the generated image URL - Fal.ai returns images array
-    const avatarUrl = result.images?.[0]?.url;
+    // Extract the generated image from Lovable AI response
+    const generatedImage = result.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
-    if (!avatarUrl) {
+    if (!generatedImage) {
       console.error("Could not extract image from result:", JSON.stringify(result).substring(0, 500));
       throw new Error("Could not extract generated image from response");
     }
 
-    console.log("Avatar generated successfully:", avatarUrl.substring(0, 100));
+    console.log("Avatar generated successfully");
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        avatarUrl: avatarUrl,
+        avatarUrl: generatedImage, // This is a base64 data URL
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
