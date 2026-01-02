@@ -189,13 +189,13 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
-      className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-100 hover:border-slate-200 transition-colors"
+      className="flex items-center gap-2 p-2.5 rounded-xl bg-white/80 backdrop-blur-sm border border-slate-100 hover:border-slate-200 transition-colors"
     >
       {/* Category icon with opponent avatar overlay */}
       <div className="relative flex-shrink-0">
         {/* Category icon background */}
         <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden ${
+          className={`w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden ${
             room.won
               ? "bg-gradient-to-br from-emerald-50 to-emerald-100"
               : "bg-gradient-to-br from-slate-100 to-slate-200"
@@ -205,16 +205,16 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
             <img 
               src={categoryIcon} 
               alt={room.category_name || ""} 
-              className="w-7 h-7 object-contain"
+              className="w-6 h-6 object-contain"
             />
           ) : (
-            <Trophy className="w-6 h-6 text-slate-400" />
+            <Trophy className="w-5 h-5 text-slate-400" />
           )}
         </div>
         
         {/* Opponent avatar overlay */}
         {mainOpponent && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full overflow-hidden border-2 border-white bg-slate-200 shadow-sm">
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full overflow-hidden border-2 border-white bg-slate-200 shadow-sm">
             {mainOpponent.avatar_url ? (
               <img 
                 src={mainOpponent.avatar_url} 
@@ -222,7 +222,7 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-bold">
+              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[8px] font-bold">
                 {mainOpponent.nickname?.charAt(0).toUpperCase() || "?"}
               </div>
             )}
@@ -231,42 +231,41 @@ function GameHistoryRow({ room, index, getIcon }: GameHistoryRowProps) {
       </div>
 
       {/* Category name, room code, and time */}
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 text-sm truncate">
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <p className="font-semibold text-slate-800 text-xs truncate">
           {room.category_name || "თამაში"}
         </p>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-[9px]">
             {room.room_code}
           </span>
-          <span>•</span>
-          <span>{timeAgo}</span>
+          <span className="truncate">{timeAgo}</span>
         </div>
       </div>
 
       {/* Points earned and correct/wrong */}
-      <div className="text-right flex-shrink-0">
-        <div className={`font-bold text-sm ${room.won ? "text-emerald-600" : "text-slate-600"}`}>
-          +{room.my_score} pts
+      <div className="text-right flex-shrink-0 min-w-fit">
+        <div className={`font-bold text-xs ${room.won ? "text-emerald-600" : "text-slate-600"}`}>
+          +{room.my_score}
         </div>
-        <div className="flex items-center gap-1 text-[10px]">
-          <span className="text-emerald-500 font-semibold">{room.correct_count || 0}✓</span>
-          <span className="text-rose-400 font-semibold">{room.wrong_count || 0}✗</span>
+        <div className="flex items-center justify-end gap-1 text-[9px]">
+          <span className="text-emerald-500 font-medium">{room.correct_count || 0}✓</span>
+          <span className="text-rose-400 font-medium">{room.wrong_count || 0}✗</span>
         </div>
       </div>
 
       {/* Outcome badge */}
       <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
           room.won
             ? "bg-gradient-to-br from-emerald-400 to-emerald-500 shadow-sm shadow-emerald-200"
             : "bg-gradient-to-br from-rose-400 to-rose-500 shadow-sm shadow-rose-200"
         }`}
       >
         {room.won ? (
-          <Trophy className="w-4 h-4 text-white" />
+          <Trophy className="w-3.5 h-3.5 text-white" />
         ) : (
-          <X className="w-4 h-4 text-white" />
+          <X className="w-3.5 h-3.5 text-white" />
         )}
       </div>
     </motion.div>

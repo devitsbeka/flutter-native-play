@@ -2,8 +2,6 @@ import { motion } from "framer-motion";
 import { Plus, Users, Gamepad2 } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
-import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface MyRoomsSectionProps {
@@ -57,8 +55,8 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
           )}
         </motion.div>
       ) : (
-        <ScrollArea className="w-full -mx-4 px-4">
-          <div className="flex gap-3 pb-2">
+        <div className="overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
+          <div className="flex gap-3 pr-4">
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}
@@ -68,8 +66,7 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
               />
             ))}
           </div>
-          <ScrollBar orientation="horizontal" className="invisible" />
-        </ScrollArea>
+        </div>
       )}
     </div>
   );
