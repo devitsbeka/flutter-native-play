@@ -289,7 +289,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
 
     setIsAnimating(true);
-    toast.info("Starting avatar animation... This takes 10-15 minutes. We'll keep checking!", { duration: 5000 });
+    toast.info("Starting avatar animation... This takes 1-2 minutes with Fal.ai!", { duration: 5000 });
 
     try {
       // Start the animation
@@ -323,10 +323,10 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
       toast.info("Animation started! Checking progress...", { duration: 3000 });
 
-      // Poll every 10 seconds for up to 15 minutes (90 attempts)
-      const maxAttempts = 90;
+      // Poll every 5 seconds for up to 3 minutes (36 attempts) - Fal.ai is faster
+      const maxAttempts = 36;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
 
         const { data: statusData, error: statusError } = await supabase.functions.invoke("animate-avatar", {
           body: { 
@@ -355,9 +355,9 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           return;
         }
 
-        // Show progress every 30 seconds (every 3rd attempt)
+        // Show progress every 15 seconds (every 3rd attempt)
         if ((attempt + 1) % 3 === 0) {
-          toast.info(`Still processing... (${Math.round((attempt + 1) / 6)} min)`, { duration: 2000 });
+          toast.info(`Still processing... (${Math.round((attempt + 1) * 5 / 60)} min)`, { duration: 2000 });
         }
       }
 

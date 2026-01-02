@@ -8,6 +8,7 @@ export interface Friend {
   friendId: string;
   nickname: string;
   avatarUrl: string | null;
+  animatedAvatarUrl: string | null;
   countryCode: string | null;
   status: "pending" | "accepted" | "blocked";
   isOnline?: boolean;
@@ -55,7 +56,7 @@ export function useFriends() {
       // Fetch profiles for all friends
       const { data: profiles, error: profileError } = await supabase
         .from("profiles")
-        .select("user_id, nickname, avatar_url, country_code")
+        .select("user_id, nickname, avatar_url, animated_avatar_url, country_code")
         .in("user_id", friendIds);
 
       if (profileError) throw profileError;
@@ -72,6 +73,7 @@ export function useFriends() {
           friendId,
           nickname: profile?.nickname || "მოთამაშე",
           avatarUrl: profile?.avatar_url || null,
+          animatedAvatarUrl: profile?.animated_avatar_url || null,
           countryCode: profile?.country_code || null,
           status: f.status as "pending" | "accepted" | "blocked",
           isOutgoing,

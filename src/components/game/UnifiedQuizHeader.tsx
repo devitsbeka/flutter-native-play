@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, ChevronDown, Crown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { cn } from "@/lib/utils";
 
 interface UnifiedQuizHeaderProps {
   avatarUrl?: string | null;
+  animatedAvatarUrl?: string | null;
   score: number;
   questionNumber: number;
   totalQuestions: number;
@@ -15,6 +16,7 @@ interface UnifiedQuizHeaderProps {
 
 export function UnifiedQuizHeader({
   avatarUrl,
+  animatedAvatarUrl,
   score,
   questionNumber,
   totalQuestions,
@@ -36,12 +38,15 @@ export function UnifiedQuizHeader({
         )}
         
         <div className="relative">
-          <Avatar className="w-12 h-12 border-2 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]">
-            <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-lg">
-              👤
-            </AvatarFallback>
-          </Avatar>
+          <SmartAvatar
+            avatarUrl={avatarUrl}
+            animatedAvatarUrl={animatedAvatarUrl}
+            fallback="👤"
+            size="md"
+            className="border-2 border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]"
+            showSparkle={false}
+            autoPlay={true}
+          />
           
           {/* Score badge */}
           <motion.div

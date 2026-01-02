@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { Crown, Check, Clock, User } from "lucide-react";
+import { Crown, Check, Clock } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 
 interface ParticipantCardProps {
   participant: RoomParticipant;
@@ -44,19 +45,14 @@ export function ParticipantCard({ participant, isCurrentUser }: ParticipantCardP
       <div className="flex items-center gap-3">
         {/* Avatar */}
         <div className="relative">
-          <div className="w-14 h-14 rounded-full overflow-hidden bg-muted border-2 border-border">
-            {participant.avatar_url ? (
-              <img 
-                src={participant.avatar_url} 
-                alt={participant.nickname}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/30 to-primary/10">
-                <User className="w-6 h-6 text-primary" />
-              </div>
-            )}
-          </div>
+          <SmartAvatar
+            avatarUrl={participant.avatar_url}
+            fallback={participant.nickname}
+            size="lg"
+            className="border-2 border-border"
+            showSparkle={false}
+            playOnHover={true}
+          />
           
           {/* Country flag */}
           <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">

@@ -6,6 +6,7 @@ export interface RecentPlayer {
   oderId: string;
   odername: string;
   oderAvatarUrl: string | null;
+  oderAnimatedAvatarUrl: string | null;
   oderCountryCode: string | null;
   lastPlayedAt: string;
   gamesPlayed: number;
@@ -81,6 +82,7 @@ export function useRecentPlayers() {
             oderId: name, // Using name as ID since these are bot opponents
             odername: stats.opponentName,
             oderAvatarUrl: null,
+            oderAnimatedAvatarUrl: null,
             oderCountryCode: null,
             lastPlayedAt: stats.lastPlayedAt,
             gamesPlayed: stats.gamesPlayed,

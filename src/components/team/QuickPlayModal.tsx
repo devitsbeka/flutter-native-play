@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gamepad2, Clock, Zap } from "lucide-react";
 import { Friend } from "@/hooks/useFriends";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { categories, Category } from "@/data/categories";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -82,15 +82,15 @@ export function QuickPlayModal({
                 style={{ borderBottom: "2px solid #E5E7EB" }}
               >
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <Avatar className="w-16 h-16 ring-2 ring-purple-200">
-                    <AvatarImage src={friend.avatarUrl || undefined} />
-                    <AvatarFallback 
-                      className="text-xl font-bold"
-                      style={{ background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)", color: "#5B21B6" }}
-                    >
-                      {friend.nickname.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <SmartAvatar
+                    avatarUrl={friend.avatarUrl}
+                    animatedAvatarUrl={friend.animatedAvatarUrl}
+                    fallback={friend.nickname}
+                    size="xl"
+                    className="ring-2 ring-purple-200"
+                    showSparkle={true}
+                    autoPlay={true}
+                  />
                   <div className="text-left">
                     <h2 className="font-display text-xl text-gray-900 flex items-center gap-2">
                       {friend.nickname}

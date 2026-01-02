@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useRecentPlayers } from "@/hooks/useRecentPlayers";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 
 interface RecentPlayersListProps {
   onViewAll?: () => void;
@@ -46,12 +46,15 @@ export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
               transition={{ delay: index * 0.05 }}
               className="flex-shrink-0 flex flex-col items-center p-2 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
             >
-              <Avatar className="w-16 h-16 ring-3 ring-purple-400/40 shadow-lg shadow-purple-500/25 mb-2">
-                <AvatarImage src={player.oderAvatarUrl || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold text-lg">
-                  {player.odername.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <SmartAvatar
+                avatarUrl={player.oderAvatarUrl}
+                animatedAvatarUrl={player.oderAnimatedAvatarUrl}
+                fallback={player.odername}
+                size="xl"
+                className="ring-3 ring-purple-400/40 shadow-lg shadow-purple-500/25 mb-2"
+                showSparkle={true}
+                playOnHover={true}
+              />
               <p className="text-slate-800 text-xs font-bold uppercase tracking-wide text-center max-w-[70px] truncate">
                 {player.odername}
               </p>
