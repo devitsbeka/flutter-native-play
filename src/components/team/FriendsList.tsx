@@ -59,13 +59,13 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
 
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-white/80">მეგობრები</span>
+          <span className="text-sm font-bold text-white tracking-wide">მეგობრები</span>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex-shrink-0 w-40 h-48 animate-pulse rounded-2xl bg-white/10" />
+            <div key={i} className="flex-shrink-0 w-40 h-48 animate-pulse rounded-2xl bg-white/20" />
           ))}
         </div>
       </div>
@@ -97,10 +97,10 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
 
       {/* Friends List Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-white/80">მეგობრები</span>
+        <span className="text-sm font-bold text-white tracking-wide">მეგობრები</span>
         <motion.button
           onClick={onAddFriendClick}
-          className="text-sm font-medium text-orange-400"
+          className="text-sm font-semibold text-orange-400 px-3 py-1 rounded-full bg-orange-400/15 hover:bg-orange-400/25 transition-colors"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -127,7 +127,7 @@ export function FriendsList({ onAddFriendClick, onQuickPlay, onStartChat }: Frie
           </ChunkyButton>
         </motion.div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           <AnimatePresence>
             {/* Sort online friends first */}
             {[...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).map((friend, index) => (
@@ -187,7 +187,7 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ delay: index * 0.05 }}
-      className="flex-shrink-0 w-56 p-4 rounded-2xl bg-white/90"
+      className="flex-shrink-0 w-56 p-4 rounded-2xl bg-white shadow-xl shadow-purple-900/15 border border-white/60"
     >
       {/* Row with avatar left, content right */}
       <div className="flex gap-3">
@@ -244,7 +244,7 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
       <div className="flex gap-2 mt-3">
         <motion.button
           onClick={onQuickPlay}
-          className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-sm font-bold bg-orange-500 text-white"
+          className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-sm font-bold bg-orange-500 text-white shadow-md shadow-orange-500/30"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -253,7 +253,7 @@ function FriendCard({ friend, index, onQuickPlay, onChat, onRemove }: FriendCard
 
         <motion.button
           onClick={onChat}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-200 text-gray-700 text-sm font-medium"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium border border-gray-200"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >

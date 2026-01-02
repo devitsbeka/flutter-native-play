@@ -18,9 +18,9 @@ export function PendingChallengesSection({ onAcceptChallenge }: PendingChallenge
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-amber-300">
           <Sparkles className="w-4 h-4" />
-          <span className="text-sm font-medium">გამოწვევები</span>
+          <span className="text-sm font-bold tracking-wide">გამოწვევები</span>
         </div>
-        <div className="animate-pulse rounded-2xl bg-white/10 h-24" />
+        <div className="animate-pulse rounded-2xl bg-white/20 h-24" />
       </div>
     );
   }
@@ -37,7 +37,7 @@ export function PendingChallengesSection({ onAcceptChallenge }: PendingChallenge
     >
       <div className="flex items-center gap-2 text-amber-300">
         <Sparkles className="w-4 h-4" />
-        <span className="text-sm font-medium">მომლოდინე გამოწვევები ({pendingChallenges.length})</span>
+        <span className="text-sm font-bold tracking-wide">მომლოდინე გამოწვევები ({pendingChallenges.length})</span>
       </div>
 
       <div className="space-y-3">
@@ -132,10 +132,10 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, x: -100 }}
       className={cn(
-        "relative p-4 rounded-2xl backdrop-blur-sm border",
+        "relative p-4 rounded-2xl backdrop-blur-sm border shadow-lg",
         isUrgent 
-          ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30" 
-          : "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30"
+          ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30 shadow-red-500/20" 
+          : "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 shadow-amber-500/20"
       )}
     >
       {/* Decline button in top right */}

@@ -12,11 +12,11 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
 
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-white/80">ბოლო თამაშები</span>
+          <span className="text-sm font-bold text-white tracking-wide">ბოლო თამაშები</span>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2, 3].map((i) => (
             <div 
               key={i} 
@@ -33,13 +33,13 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-white/80">ბოლო თამაშები</span>
-        <button onClick={onViewAll} className="text-sm font-medium text-orange-400">ყველა</button>
+        <span className="text-sm font-bold text-white tracking-wide">ბოლო თამაშები</span>
+        <button onClick={onViewAll} className="text-sm font-semibold text-orange-400 px-3 py-1 rounded-full bg-orange-400/15 hover:bg-orange-400/25 transition-colors">ყველა</button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         {rooms.map((room, index) => (
           <RecentRoomCard key={room.id} room={room} index={index} />
         ))}
@@ -62,7 +62,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="flex-shrink-0 w-48 p-4 rounded-2xl bg-white/90"
+      className="flex-shrink-0 w-48 p-4 rounded-2xl bg-white shadow-xl shadow-purple-900/15 border border-white/60"
     >
       {/* Header with squad name and more button */}
       <div className="flex items-center justify-between mb-3">
@@ -103,7 +103,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
       {/* Action Buttons */}
       <div className="flex items-center gap-2">
         <motion.button
-          className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-sm font-bold bg-orange-500 text-white"
+          className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-sm font-bold bg-orange-500 text-white shadow-md shadow-orange-500/30"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -111,7 +111,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
         </motion.button>
 
         <motion.button
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gray-200 text-gray-700 text-sm font-medium"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-medium border border-gray-200"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >

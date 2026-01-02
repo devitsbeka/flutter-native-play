@@ -11,13 +11,13 @@ export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
 
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-white/80">ბოლო მოთამაშეები</span>
+          <span className="text-sm font-bold text-white tracking-wide">ბოლო მოთამაშეები</span>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex-shrink-0 w-20 h-24 animate-pulse rounded-2xl bg-white/10" />
+            <div key={i} className="flex-shrink-0 w-20 h-28 animate-pulse rounded-2xl bg-white/20" />
           ))}
         </div>
       </div>
@@ -29,13 +29,13 @@ export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-white/80">ბოლო მოთამაშეები</span>
-        <button onClick={onViewAll} className="text-sm font-medium text-orange-400">ყველა</button>
+        <span className="text-sm font-bold text-white tracking-wide">ბოლო მოთამაშეები</span>
+        <button onClick={onViewAll} className="text-sm font-semibold text-orange-400 px-3 py-1 rounded-full bg-orange-400/15 hover:bg-orange-400/25 transition-colors">ყველა</button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         <AnimatePresence>
           {recentPlayers.map((player, index) => (
             <motion.div
@@ -44,9 +44,9 @@ export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: index * 0.05 }}
-              className="flex-shrink-0 flex flex-col items-center"
+              className="flex-shrink-0 flex flex-col items-center p-2 rounded-xl bg-white/5"
             >
-              <Avatar className="w-16 h-16 border-2 border-white/20 mb-2">
+              <Avatar className="w-16 h-16 ring-3 ring-purple-400/40 shadow-lg shadow-purple-500/25 mb-2">
                 <AvatarImage src={player.oderAvatarUrl || undefined} />
                 <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-bold text-lg">
                   {player.odername.charAt(0).toUpperCase()}
