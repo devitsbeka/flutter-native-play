@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, ChevronDown, Loader2 } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
 import { useIconLibrary } from '@/hooks/useIconLibrary';
+import { supabase } from '@/integrations/supabase/client';
 
 interface IconItem {
   slug: string;
@@ -41,7 +43,8 @@ export default function IconAssignment() {
     loadMore,
     assignIcon,
     removeIcon,
-    categories
+    categories,
+    refetch
   } = useAdminIconAssignment();
 
   const { getIconBySlug } = useIconLibrary();
@@ -51,6 +54,12 @@ export default function IconAssignment() {
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [iconsLoading, setIconsLoading] = useState(true);
   const [autoAdvance, setAutoAdvance] = useState(true);
+  
+  // Batch assignment state
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [batchProgress, setBatchProgress] = useState(0);
+  const [batchStats, setBatchStats] = useState({ processed: 0, assigned: 0 });
+  const [shouldStop, setShouldStop] = useState(false);
 
   // Load icons from JSON
   useEffect(() => {
@@ -129,6 +138,73 @@ export default function IconAssignment() {
     }
   };
 
+  // Run batch assignment by category
+  const runBatchAssignment = async () => {
+    setBatchRunning(true);
+    setShouldStop(false);
+    setBatchProgress(0);
+    setBatchStats({ processed: 0, assigned: 0 });
+
+    const totalWithoutIcons = stats.withoutIcons;
+    let totalProcessed = 0;
+    let totalAssigned = 0;
+    let offset = 0;
+    const batchSize = 100;
+
+    toast.info('ბეჩ მინიჭება დაიწყო...');
+
+    try {
+      while (!shouldStop) {
+        const { data, error } = await supabase.functions.invoke('batch-assign-icons-category', {
+          body: { 
+            categoryId: categoryFilter, 
+            batchSize, 
+            offset 
+          }
+        });
+
+        if (error) {
+          console.error('Batch error:', error);
+          toast.error(`შეცდომა: ${error.message}`);
+          break;
+        }
+
+        totalProcessed += data.processed;
+        totalAssigned += data.assigned;
+        
+        setBatchStats({ processed: totalProcessed, assigned: totalAssigned });
+        
+        const progress = totalWithoutIcons > 0 
+          ? Math.min(100, (totalProcessed / totalWithoutIcons) * 100)
+          : 100;
+        setBatchProgress(progress);
+
+        // If no more questions or remaining is 0, stop
+        if (data.remaining === 0 || data.processed === 0) {
+          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი`);
+          break;
+        }
+
+        offset += batchSize;
+
+        // Small delay between batches
+        await new Promise(r => setTimeout(r, 500));
+      }
+    } catch (err) {
+      console.error('Batch assignment error:', err);
+      toast.error('ბეჩ მინიჭება შეფერხდა');
+    } finally {
+      setBatchRunning(false);
+      setShouldStop(false);
+      refetch(); // Refresh the stats and questions
+    }
+  };
+
+  const stopBatchAssignment = () => {
+    setShouldStop(true);
+    toast.info('შეჩერება...');
+  };
+
   // Get icon URL for a slug
   const getIconUrl = (slug: string | null) => {
     if (!slug) return null;
@@ -138,7 +214,7 @@ export default function IconAssignment() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Header with Stats */}
+      {/* Header with Stats and Batch Controls */}
       <div className="border-b border-border/50 bg-card/30 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -165,6 +241,48 @@ export default function IconAssignment() {
               <div className="text-xs text-muted-foreground">უიკონო</div>
             </div>
           </div>
+        </div>
+
+        {/* Batch Assignment Controls */}
+        <div className="mt-4 flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
+          <Wand2 className="h-5 w-5 text-violet-500" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">ავტომატური მინიჭება კატეგორიის მიხედვით</p>
+            <p className="text-xs text-muted-foreground">
+              {categoryFilter 
+                ? `არჩეული კატეგორიის კითხვებს მიანიჭებს აიკონებს`
+                : `ყველა კითხვას მიანიჭებს შესაბამის აიკონებს კატეგორიის მიხედვით`
+              }
+            </p>
+          </div>
+          
+          {batchRunning ? (
+            <div className="flex items-center gap-3">
+              <div className="w-48">
+                <Progress value={batchProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {batchStats.processed} დამუშავებული • {batchStats.assigned} მინიჭებული
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={stopBatchAssignment}
+              >
+                <StopCircle className="h-4 w-4 mr-1" />
+                გაჩერება
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={runBatchAssignment}
+              disabled={stats.withoutIcons === 0}
+              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+            >
+              <Play className="h-4 w-4 mr-1" />
+              მინიჭება ({stats.withoutIcons.toLocaleString()})
+            </Button>
+          )}
         </div>
       </div>
 
