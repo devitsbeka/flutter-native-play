@@ -290,7 +290,7 @@ export function GameModal({
               {/* Content area - scrollable */}
               {children && (
                 <motion.div 
-                  className="px-5 pb-5 max-h-[45vh] overflow-y-auto"
+                  className="px-5 pb-5 max-h-[60vh] overflow-y-auto"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.25 }}
