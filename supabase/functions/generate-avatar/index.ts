@@ -73,10 +73,7 @@ serve(async (req) => {
 
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
 
-    // Single API call: Generate 3D avatar with style image and text prompt
-    // Use a proper 3D Pixar-style avatar as the style reference
-    const styleImageUrl = "https://cdn.pixabay.com/photo/2024/01/16/10/47/ai-generated-8512466_1280.jpg";
-    
+    // Single API call: Generate stylized avatar - subtle artistic enhancement, NOT cartoon
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
       headers: {
@@ -85,8 +82,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         imageUrl: imageUrl,
-        styleImageUrl: styleImageUrl,
-        textPrompt: "Transform this exact person into a 3D Disney Pixar style portrait, PRESERVE their exact facial features and likeness, keep their same face shape nose shape and eye shape, just apply Pixar cartoon rendering style, beautiful glossy eyes with soft catchlight reflections while keeping their original eye color and shape, smooth stylized skin with subtle glow, soft closed-lip smile NO teeth, gentle cinematic lighting with soft purple pink rim light, same hairstyle as the original photo, close-up face portrait NO neck NO shoulders NO clothing, soft gradient background, Pixar movie quality 3D render, maintain the persons identity and recognizable features, 8K quality",
+        textPrompt: "Create a stylized digital art portrait of this person, keep their EXACT facial features face shape and proportions, apply subtle artistic enhancement NOT cartoon, natural looking skin with soft artistic glow, eyes with gentle sparkle keeping original size and color, soft natural smile, gentle warm studio lighting, same hair style and color as original, head and face only cropped tight, clean simple gradient background, professional artistic portrait style like Artgerm or Loish, maintain recognizable likeness, high quality digital illustration",
       }),
     });
 
