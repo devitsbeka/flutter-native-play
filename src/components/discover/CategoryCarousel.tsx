@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
@@ -36,6 +36,10 @@ export function CategoryCarousel({
   getBadge,
 }: CategoryCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const velocityRef = useRef(0);
+  const lastTouchRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const animationRef = useRef<number>();
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -46,6 +50,96 @@ export function CategoryCarousel({
       });
     }
   };
+
+  // Momentum animation
+  const animateMomentum = useCallback(() => {
+    const slider = scrollRef.current;
+    if (!slider) return;
+
+    if (Math.abs(velocityRef.current) > 0.5) {
+      slider.scrollLeft += velocityRef.current;
+      velocityRef.current *= 0.95; // Friction
+      animationRef.current = requestAnimationFrame(animateMomentum);
+    }
+  }, []);
+
+  // Touch handlers for mobile momentum
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    velocityRef.current = 0;
+    lastTouchRef.current = e.touches[0].clientX;
+    lastTimeRef.current = Date.now();
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0].clientX;
+    const time = Date.now();
+    const deltaX = lastTouchRef.current - touch;
+    const deltaTime = time - lastTimeRef.current;
+
+    if (deltaTime > 0) {
+      velocityRef.current = deltaX / deltaTime * 15; // Scale velocity
+    }
+
+    lastTouchRef.current = touch;
+    lastTimeRef.current = time;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    // Apply momentum after touch ends
+    if (Math.abs(velocityRef.current) > 1) {
+      animationRef.current = requestAnimationFrame(animateMomentum);
+    }
+  }, [animateMomentum]);
+
+  // Mouse drag handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const slider = scrollRef.current;
+    if (!slider) return;
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    let isDown = true;
+    let startX = e.pageX - slider.offsetLeft;
+    let scrollLeft = slider.scrollLeft;
+    let lastX = e.pageX;
+    let lastTime = Date.now();
+    
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      slider.scrollLeft = scrollLeft - walk;
+      
+      // Track velocity
+      const time = Date.now();
+      const deltaTime = time - lastTime;
+      if (deltaTime > 0) {
+        velocityRef.current = (lastX - e.pageX) / deltaTime * 15;
+      }
+      lastX = e.pageX;
+      lastTime = time;
+    };
+    
+    const onMouseUp = () => {
+      isDown = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      
+      // Apply momentum
+      if (Math.abs(velocityRef.current) > 1) {
+        animationRef.current = requestAnimationFrame(animateMomentum);
+      }
+    };
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }, [animateMomentum]);
 
   if (categories.length === 0) return null;
 
@@ -65,35 +159,15 @@ export function CategoryCarousel({
         <ChevronRight className="w-4 h-4" />
       </button>
 
-      {/* Scrollable Container - Draggable */}
+      {/* Scrollable Container - Draggable with momentum */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 cursor-grab active:cursor-grabbing select-none touch-pan-x"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        onMouseDown={(e) => {
-          const slider = scrollRef.current;
-          if (!slider) return;
-          let isDown = true;
-          let startX = e.pageX - slider.offsetLeft;
-          let scrollLeft = slider.scrollLeft;
-          
-          const onMouseMove = (e: MouseEvent) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 1.5;
-            slider.scrollLeft = scrollLeft - walk;
-          };
-          
-          const onMouseUp = () => {
-            isDown = false;
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-          };
-          
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
-        }}
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 cursor-grab active:cursor-grabbing select-none"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {categories.map((category, index) => {
           // Use uuid for favorites if available, fallback to id
