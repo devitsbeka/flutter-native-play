@@ -264,11 +264,11 @@ export default function Index() {
           <div className="flex items-center justify-between">
             {/* Burger menu chip - same style as currency */}
             <motion.button
-              className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
+            className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
               style={{
-                background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-                border: "3px solid rgba(255,255,255,0.9)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FDFCFF 50%, #FAF8FF 100%)",
+                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,1), 0 4px 0 #E8E0F5, 0 6px 12px rgba(0,0,0,0.12)",
+                border: "3px solid rgba(255,255,255,1)",
               }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -282,9 +282,9 @@ export default function Index() {
             <motion.div 
               className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
               style={{
-                background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-                border: "3px solid rgba(255,255,255,0.9)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FDFCFF 50%, #FAF8FF 100%)",
+                boxShadow: "inset 0 4px 8px rgba(140,120,180,0.08), inset 0 -2px 4px rgba(255,255,255,1), 0 4px 0 #E8E0F5, 0 6px 12px rgba(0,0,0,0.12)",
+                border: "3px solid rgba(255,255,255,1)",
               }}
             >
               {/* Ad-Free button */}
