@@ -61,6 +61,9 @@ export default function IconAssignment() {
   const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
   const [showBrokenIconsModal, setShowBrokenIconsModal] = useState(false);
   
+  // Track recently fixed icons to show them first
+  const [recentlyFixedSlugs, setRecentlyFixedSlugs] = useState<Set<string>>(new Set());
+  
   // Batch assignment state
   const [batchRunning, setBatchRunning] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
@@ -119,21 +122,31 @@ export default function IconAssignment() {
     loadIcons();
   }, []);
 
-  // Filter icons based on search and exclude broken ones
+  // Filter icons based on search and exclude broken ones, show recently fixed first
   const filteredIcons = useMemo(() => {
     // First filter out broken icons
     const validIcons = icons.filter(icon => !brokenIcons.has(icon.slug));
     
-    if (!iconSearchTerm) return validIcons;
+    let result = validIcons;
+    if (iconSearchTerm) {
+      const term = iconSearchTerm.toLowerCase();
+      result = validIcons.filter(icon => 
+        icon.slug.toLowerCase().includes(term) ||
+        icon.title.toLowerCase().includes(term) ||
+        icon.category.toLowerCase().includes(term) ||
+        icon.tags.some(tag => tag.toLowerCase().includes(term))
+      );
+    }
     
-    const term = iconSearchTerm.toLowerCase();
-    return validIcons.filter(icon => 
-      icon.slug.toLowerCase().includes(term) ||
-      icon.title.toLowerCase().includes(term) ||
-      icon.category.toLowerCase().includes(term) ||
-      icon.tags.some(tag => tag.toLowerCase().includes(term))
-    );
-  }, [icons, iconSearchTerm, brokenIcons]);
+    // Sort: recently fixed first, then keep original order
+    return result.sort((a, b) => {
+      const aRecent = recentlyFixedSlugs.has(a.slug);
+      const bRecent = recentlyFixedSlugs.has(b.slug);
+      if (aRecent && !bRecent) return -1;
+      if (!aRecent && bRecent) return 1;
+      return 0;
+    });
+  }, [icons, iconSearchTerm, brokenIcons, recentlyFixedSlugs]);
 
   // Handle icon load error - mark as broken
   const handleIconError = (slug: string) => {
@@ -151,6 +164,8 @@ export default function IconAssignment() {
       newSet.delete(slug);
       return newSet;
     });
+    // Track as recently fixed to show first in grid
+    setRecentlyFixedSlugs(prev => new Set([slug, ...prev]));
   };
 
   // Handle icon assignment
@@ -609,6 +624,15 @@ export default function IconAssignment() {
             </div>
             <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
               <span>{filteredIcons.length.toLocaleString()} აიკონი</span>
+              {recentlyFixedSlugs.size > 0 && (
+                <button
+                  onClick={() => setRecentlyFixedSlugs(new Set())}
+                  className="text-green-500 hover:text-green-600 flex items-center gap-1.5 font-medium"
+                >
+                  <Check className="h-3 w-3" />
+                  {recentlyFixedSlugs.size} გასწორებული
+                </button>
+              )}
               {brokenIcons.size > 0 && (
                 <button
                   onClick={() => setShowBrokenIconsModal(true)}
@@ -662,6 +686,11 @@ export default function IconAssignment() {
                         loading="lazy"
                         onError={() => handleIconError(icon.slug)}
                       />
+                      {recentlyFixedSlugs.has(icon.slug) && (
+                        <div className="absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                          <Check className="h-3 w-3 text-white" />
+                        </div>
+                      )}
                       {selectedQuestion?.icon_slug === icon.slug && (
                         <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
                           <Check className="h-3 w-3 text-primary-foreground" />
