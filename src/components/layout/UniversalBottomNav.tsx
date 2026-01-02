@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, ShoppingBag, Trophy, Headphones } from "lucide-react";
+import { Home, Play, Compass, ShoppingBag, Trophy, Headphones, Plus } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 
@@ -84,7 +84,8 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick, onTeamPlayClick }
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -8 }}>
                 <Hex3DPlayButton 
                   onClick={handleCenterClick}
-                  isPlayButton={showPlayButton}
+                  isPlayButton={showPlayButton && !isTeam}
+                  isPlusIcon={isTeam}
                   variant={isPurpleVariant ? "purple" : "mint"}
                 />
               </div>
@@ -179,10 +180,11 @@ function NavButton({
 interface Hex3DPlayButtonProps {
   onClick: () => void;
   isPlayButton: boolean;
+  isPlusIcon?: boolean;
   variant?: "mint" | "purple";
 }
 
-function Hex3DPlayButton({ onClick, isPlayButton, variant = "mint" }: Hex3DPlayButtonProps) {
+function Hex3DPlayButton({ onClick, isPlayButton, isPlusIcon = false, variant = "mint" }: Hex3DPlayButtonProps) {
   const colorSchemes = {
     mint: {
       depth: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
@@ -276,7 +278,13 @@ function Hex3DPlayButton({ onClick, isPlayButton, variant = "mint" }: Hex3DPlayB
           className="absolute inset-0 flex items-center justify-center"
           style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
         >
-          {isPlayButton ? (
+          {isPlusIcon ? (
+            <Plus 
+              className="w-8 h-8" 
+              color="#ffffff"
+              strokeWidth={3}
+            />
+          ) : isPlayButton ? (
             <Play 
               className="w-8 h-8 ml-1" 
               fill="#ffffff"
