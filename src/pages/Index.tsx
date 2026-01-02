@@ -35,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -106,6 +107,8 @@ export default function Index() {
   const { profile, user, fetchProfile } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, needsWalkthrough, setStep, hasCompletedOnboarding } = useOnboarding();
   const { coins, gems } = useCurrency();
+  const { powerUps } = useUserPowerUps();
+  const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
@@ -573,7 +576,7 @@ export default function Index() {
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.64, type: "spring", stiffness: 200 }}
                           onClick={() => setShowMyPowersModal(true)}
-                          className="w-14 h-14 rounded-full flex items-center justify-center"
+                          className="relative w-14 h-14 rounded-full flex items-center justify-center"
                           style={{
                             background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #C4B5FD",
@@ -583,6 +586,11 @@ export default function Index() {
                           whileTap={{ scale: 0.9 }}
                         >
                           <img src={powersIcon} alt="Powers" className="w-8 h-8 object-contain" />
+                          {totalPowerUps > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
+                              {totalPowerUps}
+                            </span>
+                          )}
                         </motion.button>
                       </div>
                     </>

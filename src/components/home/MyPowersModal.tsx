@@ -51,30 +51,40 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
         <div className="space-y-6">
           {/* Power-ups grid */}
           <div className="grid grid-cols-4 gap-3 p-2 overflow-visible">
-            {POWER_UP_ORDER.map((powerUp) => (
-              <motion.div
-                key={powerUp.hookType}
-                className="flex flex-col items-center gap-2"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <div 
-                  onClick={() => setSelectedPowerUp(powerUp.badgeType)}
-                  className="cursor-pointer"
-                >
-                  <PowerUpBadge
-                    type={powerUp.badgeType}
-                    size="md"
-                    count={powerUps[powerUp.hookType] || 0}
-                    disabled={isLoading}
-                  />
+            {isLoading ? (
+              // Loading skeletons
+              [1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <div className="w-[69px] h-[69px] rounded-full bg-muted animate-pulse" />
+                  <div className="w-12 h-3 rounded bg-muted animate-pulse" />
                 </div>
-                <span className="text-xs font-medium text-gray-600 text-center">
-                  {powerUp.name}
-                </span>
-              </motion.div>
-            ))}
+              ))
+            ) : (
+              POWER_UP_ORDER.map((powerUp) => (
+                <motion.div
+                  key={powerUp.hookType}
+                  className="flex flex-col items-center gap-2"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <div 
+                    onClick={() => setSelectedPowerUp(powerUp.badgeType)}
+                    className="cursor-pointer"
+                  >
+                    <PowerUpBadge
+                      type={powerUp.badgeType}
+                      size="md"
+                      count={powerUps[powerUp.hookType] || 0}
+                      disabled={false}
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground text-center">
+                    {powerUp.name}
+                  </span>
+                </motion.div>
+              ))
+            )}
           </div>
 
           {/* Divider */}
