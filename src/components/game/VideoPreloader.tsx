@@ -6,7 +6,7 @@ const videoLoadCallbacks: (() => void)[] = [];
 
 // Map video paths
 export const MAP_VIDEOS = {
-  default: "/videos/map-background.mp4",
+  default: "/videos/floating-blob.mp4",
   videoB: "/videos/map-video-b.mp4",
   videoC: "/videos/map-video-c.mp4",
 };
