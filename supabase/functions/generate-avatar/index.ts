@@ -11,27 +11,29 @@ interface AvatarRequest {
   imageUrl: string;
 }
 
-const AVATAR_PROMPT = `Create a stylized cartoon avatar portrait based on this photo.
+const AVATAR_PROMPT = `Create a stylized 3D avatar portrait based on this photo.
 
-STYLE:
-- Pixar/Disney-style 3D cartoon look with smooth, soft features
-- Exaggerated but flattering proportions (slightly larger eyes, smaller nose)
-- Vibrant, saturated colors with warm skin tones
-- Smooth, clean cel-shaded appearance (not realistic textures)
-- Fun, friendly, and approachable character design
+LIKENESS (MOST IMPORTANT - 70%):
+- Preserve the person's EXACT facial structure, proportions, and unique features
+- Match their eye shape, nose shape, mouth, jawline, and face shape precisely
+- Keep their exact skin tone, hair color, and hairstyle
+- The person MUST be immediately recognizable from the avatar
+- Capture their specific expression and personality
 
-LIKENESS (Important):
-- Preserve the person's key distinguishing features: face shape, eye color, hair style and color, skin tone
-- Capture their expression and personality
-- Make them recognizable but stylized/idealized
+STYLE (30%):
+- High-quality 3D render with smooth, polished skin texture
+- Subtle stylization - like a premium video game character or Memoji
+- Professional lighting with soft highlights
+- Clean, modern aesthetic but NOT overly cartoonish
+- Keep proportions close to reality - no exaggerated eyes or features
 
 TECHNICAL:
 - Clean gradient background (dark teal to navy blue)
 - Professional portrait composition (head and shoulders)
-- Soft, pleasant studio lighting
-- High-quality 3D cartoon render
+- Soft, pleasant studio lighting with subtle rim light
+- High-quality 3D render suitable for a profile picture
 
-The result should look like a premium mobile game or Pixar-style character portrait.`;
+The result should look like the person's premium 3D avatar - clearly them, just stylized. Think Apple Memoji quality, not Pixar cartoon.`;
 
 // Fetch image and convert to base64 data URL using chunked approach
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
