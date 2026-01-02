@@ -4,6 +4,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { usePingPongVideo } from "@/hooks/usePingPongVideo";
 
 interface AnimatedAvatarProps {
   avatarUrl: string | null;
@@ -23,6 +24,14 @@ const sizeClasses = {
   xl: "w-32 h-32",
 };
 
+// Canvas sizes for different avatar sizes (2x for retina)
+const canvasSizes = {
+  sm: 96,
+  md: 128,
+  lg: 192,
+  xl: 256,
+};
+
 export function AnimatedAvatar({
   avatarUrl,
   animatedVideoUrl,
@@ -37,13 +46,30 @@ export function AnimatedAvatar({
   const [isGenerating, setIsGenerating] = useState(false);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(animatedVideoUrl || null);
   const [showVideo, setShowVideo] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const canvasSize = canvasSizes[size];
+  
+  // Use ping-pong video hook for smooth bidirectional playback
+  const { canvasRef, isReady, play, pause, reset } = usePingPongVideo({
+    videoUrl: localVideoUrl,
+    canvasSize,
+    fps: 30,
+    autoPlay,
+    loop,
+  });
 
   useEffect(() => {
     if (animatedVideoUrl) {
       setLocalVideoUrl(animatedVideoUrl);
     }
   }, [animatedVideoUrl]);
+
+  // Auto-show video when ready
+  useEffect(() => {
+    if (isReady && autoPlay) {
+      setShowVideo(true);
+    }
+  }, [isReady, autoPlay]);
 
   const generateAnimation = async () => {
     if (!avatarUrl || isGenerating) return;
@@ -74,25 +100,20 @@ export function AnimatedAvatar({
   };
 
   const handleMouseEnter = () => {
-    if (localVideoUrl && videoRef.current) {
+    if (isReady) {
       setShowVideo(true);
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(console.error);
+      reset();
+      play();
     }
     setIsAnimating(true);
   };
 
   const handleMouseLeave = () => {
-    if (!loop && videoRef.current) {
+    if (!loop) {
+      pause();
       setShowVideo(false);
     }
     setIsAnimating(false);
-  };
-
-  const handleVideoEnded = () => {
-    if (!loop) {
-      setShowVideo(false);
-    }
   };
 
   return (
@@ -116,34 +137,38 @@ export function AnimatedAvatar({
           alt="Avatar"
           className={cn(
             "w-full h-full object-cover transition-opacity duration-300",
-            showVideo && localVideoUrl ? "opacity-0" : "opacity-100"
+            showVideo && isReady ? "opacity-0" : "opacity-100"
           )}
         />
 
-        {/* Animated video overlay - simple forward loop (smooth) */}
+        {/* Canvas-based ping-pong animation for seamless looping */}
         {localVideoUrl && (
-          <video
-            ref={videoRef}
-            src={localVideoUrl}
+          <canvas
+            ref={canvasRef}
+            width={canvasSize}
+            height={canvasSize}
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
-              showVideo ? "opacity-100" : "opacity-0"
+              "absolute inset-0 w-full h-full object-cover transition-opacity duration-300 rounded-full",
+              showVideo && isReady ? "opacity-100" : "opacity-0"
             )}
-            muted
-            playsInline
-            autoPlay={autoPlay}
-            loop={loop}
-            onEnded={handleVideoEnded}
-            onLoadedData={() => {
-              if (autoPlay && videoRef.current) {
-                videoRef.current.play().catch(console.error);
-                setShowVideo(true);
-              }
-            }}
           />
         )}
 
-        {/* Loading overlay */}
+        {/* Loading frames indicator */}
+        <AnimatePresence>
+          {localVideoUrl && !isReady && !isGenerating && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center"
+            >
+              <Loader2 className="w-4 h-4 animate-spin text-primary/70" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Generating overlay */}
         <AnimatePresence>
           {isGenerating && (
             <motion.div
