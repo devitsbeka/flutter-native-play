@@ -40,36 +40,22 @@ export function AvatarCircle({
       className="relative flex items-center justify-center"
       style={{ width: size, height: size }}
     >
-      {/* Background track for progress ring - 3D chunky white style */}
+      {/* Background track for progress ring */}
       <svg 
         className="absolute inset-0"
         width={size} 
         height={size}
         style={{ transform: `rotate(${startAngle}deg)` }}
       >
-        <defs>
-          <linearGradient id="trackGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="50%" stopColor="#F5F3FA" />
-            <stop offset="100%" stopColor="#EDE8F5" />
-          </linearGradient>
-          <filter id="trackShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="3" stdDeviation="2" floodColor="#D8D0E8" floodOpacity="0.8"/>
-          </filter>
-        </defs>
         <circle
           cx={outerRadius}
           cy={outerRadius}
           r={progressRadius}
           fill="none"
-          stroke="url(#trackGradient)"
-          strokeWidth={progressRingWidth + 4}
+          stroke="#E5DEF0"
+          strokeWidth={progressRingWidth}
           strokeLinecap="round"
           strokeDasharray={`${arcCircumference} ${2 * Math.PI * progressRadius}`}
-          filter="url(#trackShadow)"
-          style={{
-            paintOrder: "stroke",
-          }}
         />
       </svg>
       
