@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, RefreshCcw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -58,8 +58,11 @@ export default function IconAssignment() {
   // Batch assignment state
   const [batchRunning, setBatchRunning] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
-  const [batchStats, setBatchStats] = useState({ processed: 0, assigned: 0 });
+  const [batchStats, setBatchStats] = useState({ processed: 0, assigned: 0, uniqueIcons: 0 });
   const [shouldStop, setShouldStop] = useState(false);
+  
+  // Smart assignment mode
+  const [useSmartAssignment, setUseSmartAssignment] = useState(true);
 
   // Load icons from JSON
   useEffect(() => {
@@ -143,23 +146,25 @@ export default function IconAssignment() {
     setBatchRunning(true);
     setShouldStop(false);
     setBatchProgress(0);
-    setBatchStats({ processed: 0, assigned: 0 });
+    setBatchStats({ processed: 0, assigned: 0, uniqueIcons: 0 });
 
     const totalWithoutIcons = stats.withoutIcons;
     let totalProcessed = 0;
     let totalAssigned = 0;
     let offset = 0;
-    const batchSize = 100;
+    const batchSize = useSmartAssignment ? 20 : 100; // Smaller batches for smart mode
 
-    toast.info('ბეჩ მინიჭება დაიწყო...');
+    const functionName = useSmartAssignment ? 'smart-assign-icons' : 'batch-assign-icons-category';
+    toast.info(`${useSmartAssignment ? 'ჭკვიანი' : 'ბეჩ'} მინიჭება დაიწყო...`);
 
     try {
       while (!shouldStop) {
-        const { data, error } = await supabase.functions.invoke('batch-assign-icons-category', {
+        const { data, error } = await supabase.functions.invoke(functionName, {
           body: { 
             categoryId: categoryFilter, 
             batchSize, 
-            offset 
+            offset,
+            resetFirst: offset === 0 && useSmartAssignment // Reset only on first batch in smart mode
           }
         });
 
@@ -172,7 +177,11 @@ export default function IconAssignment() {
         totalProcessed += data.processed;
         totalAssigned += data.assigned;
         
-        setBatchStats({ processed: totalProcessed, assigned: totalAssigned });
+        setBatchStats({ 
+          processed: totalProcessed, 
+          assigned: totalAssigned,
+          uniqueIcons: data.uniqueIcons || 0
+        });
         
         const progress = totalWithoutIcons > 0 
           ? Math.min(100, (totalProcessed / totalWithoutIcons) * 100)
@@ -181,22 +190,25 @@ export default function IconAssignment() {
 
         // If no more questions or remaining is 0, stop
         if (data.remaining === 0 || data.processed === 0) {
-          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი`);
+          const varietyMsg = data.uniqueIcons 
+            ? ` (${data.uniqueIcons} უნიკალური აიკონი)`
+            : '';
+          toast.success(`დასრულდა! მინიჭებულია ${totalAssigned} აიკონი${varietyMsg}`);
           break;
         }
 
         offset += batchSize;
 
-        // Small delay between batches
-        await new Promise(r => setTimeout(r, 500));
+        // Longer delay for smart mode (AI calls)
+        await new Promise(r => setTimeout(r, useSmartAssignment ? 1000 : 500));
       }
     } catch (err) {
       console.error('Batch assignment error:', err);
-      toast.error('ბეჩ მინიჭება შეფერხდა');
+      toast.error('მინიჭება შეფერხდა');
     } finally {
       setBatchRunning(false);
       setShouldStop(false);
-      refetch(); // Refresh the stats and questions
+      refetch();
     }
   };
 
@@ -260,46 +272,96 @@ export default function IconAssignment() {
           />
         </div>
 
-        {/* Batch Assignment Controls */}
-        <div className="mt-4 flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
-          <Wand2 className="h-5 w-5 text-violet-500" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">ავტომატური მინიჭება კატეგორიის მიხედვით</p>
-            <p className="text-xs text-muted-foreground">
-              {categoryFilter 
-                ? `არჩეული კატეგორიის კითხვებს მიანიჭებს აიკონებს`
-                : `ყველა კითხვას მიანიჭებს შესაბამის აიკონებს კატეგორიის მიხედვით`
+        {/* Smart/Batch Assignment Controls */}
+        <div className="mt-4 space-y-3">
+          {/* Mode Toggle */}
+          <div className="flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="smart-mode"
+                checked={useSmartAssignment}
+                onCheckedChange={setUseSmartAssignment}
+              />
+              <Label htmlFor="smart-mode" className="flex items-center gap-2 cursor-pointer">
+                {useSmartAssignment ? (
+                  <>
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm font-medium">ჭკვიანი რეჟიმი</span>
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4 text-violet-500" />
+                    <span className="text-sm font-medium">კატეგორიის რეჟიმი</span>
+                  </>
+                )}
+              </Label>
+            </div>
+            <div className="flex-1 text-xs text-muted-foreground">
+              {useSmartAssignment 
+                ? 'AI აანალიზებს თითოეულ კითხვას და პოულობს შესაბამის აიკონს (პირამიდა, ხმალი, და ა.შ.)'
+                : 'ყველა კითხვას მიანიჭებს კატეგორიის საერთო აიკონს'
               }
-            </p>
+            </div>
           </div>
           
-          {batchRunning ? (
-            <div className="flex items-center gap-3">
-              <div className="w-48">
-                <Progress value={batchProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {batchStats.processed} დამუშავებული • {batchStats.assigned} მინიჭებული
-                </p>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={stopBatchAssignment}
-              >
-                <StopCircle className="h-4 w-4 mr-1" />
-                გაჩერება
-              </Button>
+          {/* Assignment Button */}
+          <div className="flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
+            {useSmartAssignment ? (
+              <Sparkles className="h-5 w-5 text-amber-500" />
+            ) : (
+              <Wand2 className="h-5 w-5 text-violet-500" />
+            )}
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                {useSmartAssignment ? 'ჭკვიანი მინიჭება' : 'კატეგორიის მინიჭება'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {categoryFilter 
+                  ? `არჩეული კატეგორიის ${stats.withoutIcons} კითხვას დაამუშავებს`
+                  : `ყველა ${stats.withoutIcons} კითხვას დაამუშავებს`
+                }
+              </p>
             </div>
-          ) : (
-            <Button
-              onClick={runBatchAssignment}
-              disabled={stats.withoutIcons === 0}
-              className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-            >
-              <Play className="h-4 w-4 mr-1" />
-              მინიჭება ({stats.withoutIcons.toLocaleString()})
-            </Button>
-          )}
+            
+            {batchRunning ? (
+              <div className="flex items-center gap-3">
+                <div className="w-56">
+                  <Progress value={batchProgress} className="h-2" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {batchStats.processed} დამუშავებული • {batchStats.assigned} მინიჭებული
+                    {batchStats.uniqueIcons > 0 && (
+                      <span className="text-amber-500 ml-1">• {batchStats.uniqueIcons} უნიკალური</span>
+                    )}
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={stopBatchAssignment}
+                >
+                  <StopCircle className="h-4 w-4 mr-1" />
+                  გაჩერება
+                </Button>
+              </div>
+            ) : (
+              <Button
+                onClick={runBatchAssignment}
+                disabled={stats.withoutIcons === 0}
+                className={cn(
+                  useSmartAssignment 
+                    ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                    : "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+                )}
+              >
+                {useSmartAssignment ? (
+                  <Sparkles className="h-4 w-4 mr-1" />
+                ) : (
+                  <Play className="h-4 w-4 mr-1" />
+                )}
+                მინიჭება ({stats.withoutIcons.toLocaleString()})
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
