@@ -41,19 +41,23 @@ async function checkAndUpload(requestId: string, userId: string): Promise<{ stat
     throw new Error(`Status check failed: ${response.status}`);
   }
 
-  const data: VyroStatusResponse = await response.json();
-  console.log(`Status: ${data.status}`, data);
+  const data = await response.json();
+  console.log(`Full status response:`, JSON.stringify(data));
 
-  if (data.status === "completed" && data.result) {
-    console.log("Video generation completed!");
+  // Vyro API may return video URL directly in result field when completed
+  // Status can be: processing, success (still processing), completed, or result may appear directly
+  const videoResult = data.result || data.video_url || data.output;
+  
+  if (videoResult && typeof videoResult === 'string' && videoResult.startsWith('http')) {
+    console.log("Video generation completed! URL:", videoResult.substring(0, 100));
     
     // Upload to storage
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       
       // Download video
-      console.log("Downloading video from:", data.result.substring(0, 100));
-      const videoResponse = await fetch(data.result);
+      console.log("Downloading video...");
+      const videoResponse = await fetch(videoResult);
       if (!videoResponse.ok) {
         throw new Error(`Failed to download video: ${videoResponse.status}`);
       }
@@ -97,14 +101,18 @@ async function checkAndUpload(requestId: string, userId: string): Promise<{ stat
       return { status: "completed", videoUrl: storedUrl };
     }
     
-    return { status: "completed", videoUrl: data.result };
+    return { status: "completed", videoUrl: videoResult };
   }
 
+  // Check for failure
   if (data.status === "failed" || data.error) {
     throw new Error(`Video generation failed: ${data.error || 'Unknown error'}`);
   }
 
-  return { status: data.status || "processing" };
+  // Still processing - return current status
+  const currentStatus = data.status || "processing";
+  console.log(`Still processing, status: ${currentStatus}`);
+  return { status: currentStatus };
 }
 
 serve(async (req) => {
