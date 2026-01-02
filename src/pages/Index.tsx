@@ -503,7 +503,13 @@ export default function Index() {
                   {/* Coins & Gems */}
                   <div className="flex items-center gap-6 mt-1">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full border-2 border-gray-400/60 flex items-center justify-center">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "linear-gradient(145deg, #ffffff, #e6e6e6)",
+                          boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff",
+                        }}
+                      >
                         <img src={coinIcon} alt="Coins" className="w-7 h-7" />
                       </div>
                       <span className="font-bold text-gray-700 text-lg">
@@ -511,7 +517,13 @@ export default function Index() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full border-2 border-gray-400/60 flex items-center justify-center">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "linear-gradient(145deg, #ffffff, #e6e6e6)",
+                          boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff",
+                        }}
+                      >
                         <img src={gemIcon} alt="Gems" className="w-7 h-7" />
                       </div>
                       <span className="font-bold text-gray-700 text-lg">
