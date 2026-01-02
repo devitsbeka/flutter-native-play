@@ -353,7 +353,7 @@ export default function Index() {
 
 
         {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -80 }}>
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -40 }}>
           <motion.div 
             className="flex flex-col items-center w-full max-w-[360px] px-4"
             initial={{ scale: 0.8, opacity: 0 }}
@@ -392,7 +392,7 @@ export default function Index() {
                   className="pointer-events-auto cursor-pointer"
                   onClick={() => user && setIsAvatarModalOpen(true)}
                 >
-                  <AvatarCircle avatarUrl={profile?.avatar_url} size={200} level={levelInfo.level} />
+                  <AvatarCircle avatarUrl={profile?.avatar_url} size={250} level={levelInfo.level} />
                 </div>
               </motion.div>
 
