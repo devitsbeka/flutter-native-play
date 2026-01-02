@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, Users, Diamond, Loader2 } from "lucide-react";
+import { Clock, Users, Diamond, Loader2, Play, TrendingUp } from "lucide-react";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -335,6 +336,27 @@ export default function Leaderboards() {
                   </div>
                 </motion.div>
               )}
+
+              {/* Play More CTA Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mb-4"
+              >
+                <ChunkyButton
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  icon={<Play className="w-5 h-5 fill-current" />}
+                  onClick={() => navigate("/")}
+                >
+                  <span className="flex items-center gap-2">
+                    ითამაშე და აიმაღლე რეიტინგი
+                    <TrendingUp className="w-4 h-4" />
+                  </span>
+                </ChunkyButton>
+              </motion.div>
 
               {/* Divider with label */}
               <div className="flex items-center gap-3 py-3">
