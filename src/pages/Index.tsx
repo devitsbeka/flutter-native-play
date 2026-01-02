@@ -353,8 +353,8 @@ export default function Index() {
                   <AvatarCircle 
                     avatarUrl={profile?.avatar_url} 
                     size={280} 
-                    level={levelInfo.level} 
-                    totalStars={totalStars}
+                    coins={coins}
+                    gems={gems}
                     xpProgress={levelInfo.progress}
                     xpCurrent={levelInfo.xpInCurrentLevel}
                     xpTotal={levelInfo.xpNeededForNextLevel}
