@@ -227,7 +227,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
+          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
         >
           <FriendsList
             onAddFriendClick={() => setShowAddFriendModal(true)}
@@ -241,7 +241,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12 }}
-          className="mb-6"
+          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
         >
           <RecentRoomsSection onViewAll={() => setShowAllRoomsModal(true)} />
         </motion.div>
@@ -251,7 +251,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14 }}
-          className="mb-6"
+          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
         >
           <PendingChallengesSection onAcceptChallenge={handleAcceptChallenge} />
         </motion.div>
@@ -261,7 +261,7 @@ function TeamContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.16 }}
-          className="mb-6"
+          className="mb-5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
         >
           <RecentPlayersList onViewAll={() => setShowAllPlayersModal(true)} />
         </motion.div>
@@ -317,17 +317,19 @@ function TeamContent() {
         animate={{ opacity: 1, y: 0 }}
         className="fixed bottom-6 left-4 right-4 z-20"
       >
-        <ChunkyButton
-          variant="purple"
-          size="lg"
-          className="w-full"
-          onClick={() => {
-            playSound("button-click");
-            setShowCreateModal(true);
-          }}
-        >
-          + თამაშის შექმნა
-        </ChunkyButton>
+        <div className="p-3 rounded-2xl bg-gray-900/90 backdrop-blur-lg border border-white/10 shadow-2xl">
+          <ChunkyButton
+            variant="purple"
+            size="lg"
+            className="w-full"
+            onClick={() => {
+              playSound("button-click");
+              setShowCreateModal(true);
+            }}
+          >
+            + თამაშის შექმნა
+          </ChunkyButton>
+        </div>
       </motion.div>
     </div>
   );
