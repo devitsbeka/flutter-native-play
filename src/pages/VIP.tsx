@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Crown, Zap, Palette, Gift, Shield, Sparkles } from "lucide-react";
+import { Star, Crown, Zap, Palette, Gift, Shield, Sparkles } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const vipBenefits = [
   {
@@ -48,20 +49,9 @@ export default function VIP() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="flex items-center justify-between p-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="font-display text-lg font-bold">VIP</h1>
-          <div className="w-10" />
-        </div>
-      </header>
+      <PageHeader title="მაღაზია" />
 
       {/* Content */}
       <div className="p-4 pb-8">
@@ -104,14 +94,14 @@ export default function VIP() {
         </motion.div>
 
         {/* Benefits */}
-        <h3 className="text-lg font-display font-bold text-foreground mb-4">
+        <h3 className="text-lg font-display font-bold text-slate-800 mb-4">
           VIP უპირატესობები
         </h3>
         <div className="grid gap-3 mb-6">
           {vipBenefits.map((benefit, i) => (
             <motion.div
               key={benefit.title}
-              className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border border-border"
+              className="flex items-center gap-4 p-4 rounded-xl bg-white/90 backdrop-blur-sm border border-slate-200"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
@@ -122,8 +112,8 @@ export default function VIP() {
                 <benefit.icon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h4 className="font-semibold text-foreground">{benefit.title}</h4>
-                <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                <h4 className="font-semibold text-slate-800">{benefit.title}</h4>
+                <p className="text-sm text-slate-600">{benefit.description}</p>
               </div>
             </motion.div>
           ))}
@@ -131,19 +121,19 @@ export default function VIP() {
 
         {/* Pricing */}
         <motion.div
-          className="bg-muted rounded-2xl p-4 mb-6"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-slate-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-muted-foreground">თვიური გამოწერა</p>
-              <p className="text-2xl font-display font-bold text-foreground">
-                ₾9.99<span className="text-sm text-muted-foreground font-normal">/თვე</span>
+              <p className="text-sm text-slate-600">თვიური გამოწერა</p>
+              <p className="text-2xl font-display font-bold text-slate-800">
+                ₾9.99<span className="text-sm text-slate-600 font-normal">/თვე</span>
               </p>
             </div>
-            <div className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold">
+            <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
               -40% დაზოგვა
             </div>
           </div>
@@ -165,28 +155,28 @@ export default function VIP() {
 
         {/* Annual option */}
         <motion.div
-          className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-2xl p-4 border border-amber-200 dark:border-amber-800"
+          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-amber-500" />
-            <span className="font-semibold text-foreground">წლიური გამოწერა</span>
+            <span className="font-semibold text-slate-800">წლიური გამოწერა</span>
             <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
               საუკეთესო ფასი
             </span>
           </div>
-          <p className="text-2xl font-display font-bold text-foreground mb-1">
-            ₾79.99<span className="text-sm text-muted-foreground font-normal">/წელი</span>
+          <p className="text-2xl font-display font-bold text-slate-800 mb-1">
+            ₾79.99<span className="text-sm text-slate-600 font-normal">/წელი</span>
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-600">
             ₾6.67/თვე • დაზოგე ₾40
           </p>
         </motion.div>
 
         {/* Terms */}
-        <p className="text-xs text-center text-muted-foreground mt-6 px-4">
+        <p className="text-xs text-center text-slate-500 mt-6 px-4">
           გამოწერის გაუქმება შესაძლებელია ნებისმიერ დროს.
           გამოწერა ავტომატურად განახლდება, თუ არ გააუქმებთ.
         </p>

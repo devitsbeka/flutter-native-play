@@ -254,10 +254,7 @@ export function AirbnbCategoryCard({
 
       {/* Title - Larger text */}
       <h3 
-        className={`mt-2 font-bold text-white line-clamp-1 ${isFull ? 'text-xl' : 'text-base'}`}
-        style={{
-          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
-        }}
+        className={`mt-2 font-bold text-slate-800 line-clamp-1 ${isFull ? 'text-xl' : 'text-base'}`}
       >
         {name}
       </h3>
