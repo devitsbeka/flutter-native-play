@@ -55,7 +55,7 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
           )}
         </motion.div>
       ) : (
-        <div className="overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
+        <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
           <div className="flex gap-3 pr-4">
             {rooms.map((room, index) => (
               <RoomCard

@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Users } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 // Shimmer skeleton component
 function ShimmerSkeleton({ className }: { className?: string }) {
@@ -44,8 +43,8 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
   }
 
   return (
-    <ScrollArea className="w-full -mx-4 px-4">
-      <div className="flex gap-4 pb-3 relative">
+    <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+      <div className="flex gap-4 pb-3 pr-4">
         {/* Add Friend Button */}
         <motion.button
           onClick={onAddFriendClick}
@@ -100,8 +99,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
           </>
         )}
       </div>
-      <ScrollBar orientation="horizontal" className="invisible" />
-    </ScrollArea>
+    </div>
   );
 }
 
