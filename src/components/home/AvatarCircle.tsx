@@ -19,15 +19,21 @@ export function AvatarCircle({
   xpCurrent,
   xpTotal,
 }: AvatarCircleProps) {
-  const ringWidth = 12;
   const progressRingWidth = 10;
-  const progressRingGap = 4;
+  const ringGap = 6;
   
   // Calculate SVG dimensions for circular progress
   const outerRadius = size / 2;
   const progressRadius = outerRadius - progressRingWidth / 2 - 2;
-  const circumference = 2 * Math.PI * progressRadius;
-  const progressOffset = circumference - (xpProgress / 100) * circumference;
+  
+  // Arc goes from bottom-left (135deg) to bottom-right (45deg) = 270 degrees total arc
+  // We leave a 90-degree gap at the bottom for the level badge
+  const totalArcDegrees = 270;
+  const arcCircumference = (totalArcDegrees / 360) * 2 * Math.PI * progressRadius;
+  const progressOffset = arcCircumference - (xpProgress / 100) * arcCircumference;
+  
+  // Start angle: 135 degrees (bottom-left), rotating from there
+  const startAngle = 135;
   
   return (
     <div 
@@ -35,21 +41,33 @@ export function AvatarCircle({
       style={{ width: size, height: size }}
     >
       {/* Background track for progress ring - 3D chunky white style */}
-      <div 
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
-          boxShadow: "inset 0 4px 8px rgba(140,120,180,0.2), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
-          border: "3px solid rgba(255,255,255,0.9)",
-        }}
-      />
+      <svg 
+        className="absolute inset-0"
+        width={size} 
+        height={size}
+        style={{ transform: `rotate(${startAngle}deg)` }}
+      >
+        <circle
+          cx={outerRadius}
+          cy={outerRadius}
+          r={progressRadius}
+          fill="none"
+          stroke="#E5DEF0"
+          strokeWidth={progressRingWidth}
+          strokeLinecap="round"
+          strokeDasharray={`${arcCircumference} ${2 * Math.PI * progressRadius}`}
+          style={{
+            filter: "drop-shadow(0 2px 4px rgba(140,120,180,0.2))",
+          }}
+        />
+      </svg>
       
       {/* Purple progress ring SVG */}
       <svg 
-        className="absolute inset-0 -rotate-90"
+        className="absolute inset-0"
         width={size} 
         height={size}
-        style={{ zIndex: 1 }}
+        style={{ transform: `rotate(${startAngle}deg)`, zIndex: 1 }}
       >
         <defs>
           <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -75,32 +93,20 @@ export function AvatarCircle({
           stroke="url(#progressGradient)"
           strokeWidth={progressRingWidth - 2}
           strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
+          strokeDasharray={`${arcCircumference} ${2 * Math.PI * progressRadius}`}
+          initial={{ strokeDashoffset: arcCircumference }}
           animate={{ strokeDashoffset: progressOffset }}
           transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
           filter="url(#progressGlow)"
         />
       </svg>
 
-      {/* Inner colored gradient ring (original multicolor) */}
-      <div 
-        className="absolute rounded-full"
-        style={{
-          inset: progressRingWidth + progressRingGap,
-          background: "conic-gradient(from 180deg, #3B82F6 0deg, #06B6D4 90deg, #EF4444 180deg, #EC4899 270deg, #3B82F6 360deg)",
-          boxShadow: `
-            0 4px 12px rgba(59,130,246,0.2),
-            0 0 20px rgba(236,72,153,0.15)
-          `,
-        }}
-      />
-
       {/* Inner white background circle */}
       <div 
         className="absolute rounded-full bg-white"
         style={{
-          inset: progressRingWidth + progressRingGap + ringWidth,
+          inset: progressRingWidth + ringGap,
+          boxShadow: "inset 0 2px 8px rgba(0,0,0,0.05)",
         }}
       />
 
@@ -111,8 +117,8 @@ export function AvatarCircle({
           alt="Avatar" 
           className="relative z-10 rounded-full object-cover"
           style={{
-            width: size - (progressRingWidth + progressRingGap + ringWidth) * 2 - 8,
-            height: size - (progressRingWidth + progressRingGap + ringWidth) * 2 - 8,
+            width: size - (progressRingWidth + ringGap) * 2 - 8,
+            height: size - (progressRingWidth + ringGap) * 2 - 8,
           }}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -122,8 +128,8 @@ export function AvatarCircle({
         <div 
           className="relative z-10 rounded-full flex items-center justify-center"
           style={{
-            width: size - (progressRingWidth + progressRingGap + ringWidth) * 2 - 8,
-            height: size - (progressRingWidth + progressRingGap + ringWidth) * 2 - 8,
+            width: size - (progressRingWidth + ringGap) * 2 - 8,
+            height: size - (progressRingWidth + ringGap) * 2 - 8,
             background: "rgba(240,240,245,1)",
           }}
         >
@@ -134,7 +140,7 @@ export function AvatarCircle({
       {/* XP text overlay at top */}
       {xpCurrent !== undefined && xpTotal !== undefined && (
         <div 
-          className="absolute top-1 left-1/2 -translate-x-1/2 z-20 px-3 py-1 rounded-full"
+          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20 px-4 py-1.5 rounded-full"
           style={{
             background: "linear-gradient(180deg, rgba(168,85,247,0.95) 0%, rgba(147,51,234,0.95) 100%)",
             boxShadow: "0 2px 8px rgba(147,51,234,0.4)",
@@ -148,7 +154,7 @@ export function AvatarCircle({
 
       {/* Level + Stars badge at bottom center - 3D chunky white style */}
       {level !== undefined && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20">
           <div 
             className="flex items-center px-4 py-2 rounded-full whitespace-nowrap"
             style={{
