@@ -17,6 +17,12 @@ interface GemShopModalProps {
   defaultCategory?: string;
 }
 
+import powerIcon5050 from "@/assets/powers/5050.png";
+import powerIconFreeze from "@/assets/powers/freeze.png";
+import powerIconReplace from "@/assets/powers/replace.png";
+import powerIconTimeDrain from "@/assets/powers/time-drain.png";
+import { PowerUpType } from "@/hooks/useUserPowerUps";
+
 interface ShopItem {
   id: string;
   name: string;
@@ -28,10 +34,22 @@ interface ShopItem {
   gradient: string;
   popular?: boolean;
   vipDuration?: VipDuration;
+  powerType?: PowerUpType;
+  amount?: number;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
   // Coin Packs
+  {
+    id: "coins_100",
+    name: "100 მონეტა",
+    description: "მცირე პაკეტი",
+    price: 2,
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    category: "coins",
+    value: 100,
+    gradient: "from-yellow-300 to-amber-400",
+  },
   {
     id: "coins_500",
     name: "500 მონეტა",
@@ -63,22 +81,106 @@ const SHOP_ITEMS: ShopItem[] = [
     value: 5000,
     gradient: "from-orange-500 to-red-500",
   },
-  // Premium Power-ups
+  {
+    id: "coins_10000",
+    name: "10000 მონეტა",
+    description: "უზარმაზარი +70% ბონუსი",
+    price: 60,
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    category: "coins",
+    value: 10000,
+    gradient: "from-red-500 to-rose-600",
+  },
+  // Individual Power-Ups
+  {
+    id: "power_5050",
+    name: "50/50 ×3",
+    description: "წაშალე 2 არასწორი პასუხი",
+    price: 8,
+    icon: <img src={powerIcon5050} alt="" className="w-8 h-8" />,
+    category: "powerup",
+    gradient: "from-rose-400 to-pink-500",
+    powerType: "5050",
+    amount: 3,
+  },
+  {
+    id: "power_freeze",
+    name: "გაყინვა ×3",
+    description: "გააყინე დრო 10 წამით",
+    price: 8,
+    icon: <img src={powerIconFreeze} alt="" className="w-8 h-8" />,
+    category: "powerup",
+    gradient: "from-cyan-400 to-blue-500",
+    powerType: "freeze",
+    amount: 3,
+  },
+  {
+    id: "power_replace",
+    name: "შეცვლა ×3",
+    description: "შეცვალე კითხვა ახლით",
+    price: 8,
+    icon: <img src={powerIconReplace} alt="" className="w-8 h-8" />,
+    category: "powerup",
+    gradient: "from-emerald-400 to-green-500",
+    powerType: "replace",
+    amount: 3,
+  },
+  {
+    id: "power_timedrain",
+    name: "დრო+ ×3",
+    description: "დაამატე 10 წამი დროს",
+    price: 8,
+    icon: <img src={powerIconTimeDrain} alt="" className="w-8 h-8" />,
+    category: "powerup",
+    gradient: "from-violet-400 to-purple-500",
+    powerType: "time-drain",
+    amount: 3,
+  },
+  // Power Bundles
+  {
+    id: "power_bundle_small",
+    name: "მცირე პაკეტი",
+    description: "2x ყველა ძალა",
+    price: 8,
+    icon: <Zap className="w-8 h-8 text-blue-400" />,
+    category: "powerup",
+    gradient: "from-sky-300 to-blue-400",
+  },
   {
     id: "power_bundle",
-    name: "ძალების პაკეტი",
+    name: "საშუალო პაკეტი",
     description: "5x ყველა ძალა",
     price: 15,
     icon: <Zap className="w-8 h-8 text-blue-500" />,
     category: "powerup",
     gradient: "from-blue-400 to-cyan-500",
+    popular: true,
+  },
+  {
+    id: "power_bundle_large",
+    name: "დიდი პაკეტი",
+    description: "10x ყველა ძალა",
+    price: 25,
+    icon: <Zap className="w-8 h-8 text-indigo-500" />,
+    category: "powerup",
+    gradient: "from-indigo-500 to-purple-600",
   },
   // VIP Features
+  {
+    id: "vip_day",
+    name: "VIP დღე",
+    description: "ყველა VIP ბენეფიტი 1 დღე",
+    price: 5,
+    icon: <Crown className="w-8 h-8 text-amber-400" />,
+    category: "vip",
+    gradient: "from-amber-300 to-yellow-500",
+    vipDuration: "day",
+  },
   {
     id: "vip_week",
     name: "VIP კვირა",
     description: "2x XP, +3 სპინი, ექსკლუზიური აქსესუარები",
-    price: VIP_PRICES.week,
+    price: 15,
     icon: <Crown className="w-8 h-8 text-amber-500" />,
     category: "vip",
     gradient: "from-purple-500 to-pink-500",
@@ -89,7 +191,7 @@ const SHOP_ITEMS: ShopItem[] = [
     id: "vip_month",
     name: "VIP თვე",
     description: "ყველა VIP ბენეფიტი 30 დღე",
-    price: VIP_PRICES.month,
+    price: 40,
     icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" />,
     category: "vip",
     gradient: "from-amber-400 to-pink-500",
@@ -147,11 +249,17 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
       } else if (item.category === "vip" && item.vipDuration) {
         await activateVip(item.vipDuration);
       } else if (item.category === "powerup") {
-        // Add 5 of each power-up for the bundle
-        await addPowerUp("5050", 5);
-        await addPowerUp("freeze", 5);
-        await addPowerUp("replace", 5);
-        await addPowerUp("time-drain", 5);
+        if (item.powerType && item.amount) {
+          // Individual power-up
+          await addPowerUp(item.powerType, item.amount);
+        } else {
+          // Bundle - determine amount based on bundle type
+          const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
+          await addPowerUp("5050", bundleAmount);
+          await addPowerUp("freeze", bundleAmount);
+          await addPowerUp("replace", bundleAmount);
+          await addPowerUp("time-drain", bundleAmount);
+        }
       }
 
       // Success animation
@@ -218,9 +326,9 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
-                      <span>💎</span> ლალების მაღაზია
+                      <span>💎</span> ალმასების მაღაზია
                     </h2>
-                    <p className="text-gray-500 text-sm">პრემიუმ აითემები ლალებით</p>
+                    <p className="text-gray-500 text-sm">პრემიუმ აითემები ალმასებით</p>
                   </div>
                   
                   {/* Gem Balance */}

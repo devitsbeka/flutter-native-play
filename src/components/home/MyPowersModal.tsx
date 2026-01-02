@@ -5,7 +5,6 @@ import { PowerUpBadge, PowerUpType as BadgePowerUpType } from "@/components/game
 import { useUserPowerUps, PowerUpType as HookPowerUpType } from "@/hooks/useUserPowerUps";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
-import { PowerUpTutorialModal } from "@/components/home/PowerUpTutorialModal";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import powerBottleIcon from "@/assets/icons/icon-power-bottle.png";
@@ -27,7 +26,6 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
   const { powerUps, isLoading } = useUserPowerUps();
   const [showCoinShop, setShowCoinShop] = useState(false);
   const [showGemShop, setShowGemShop] = useState(false);
-  const [selectedPowerUp, setSelectedPowerUp] = useState<BadgePowerUpType | null>(null);
 
   const handleBuyWithCoins = () => {
     onClose();
@@ -68,17 +66,12 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                  <div 
-                    onClick={() => setSelectedPowerUp(powerUp.badgeType)}
-                    className="cursor-pointer"
-                  >
-                    <PowerUpBadge
-                      type={powerUp.badgeType}
-                      size="md"
-                      count={powerUps[powerUp.hookType] || 0}
-                      disabled={false}
-                    />
-                  </div>
+                  <PowerUpBadge
+                    type={powerUp.badgeType}
+                    size="md"
+                    count={powerUps[powerUp.hookType] || 0}
+                    disabled={false}
+                  />
                   <span className="text-xs font-medium text-muted-foreground text-center">
                     {powerUp.name}
                   </span>
@@ -138,13 +131,6 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
         isOpen={showGemShop}
         onClose={() => setShowGemShop(false)}
         defaultCategory="powerup"
-      />
-
-      {/* Power-up Tutorial Modal */}
-      <PowerUpTutorialModal
-        isOpen={!!selectedPowerUp}
-        onClose={() => setSelectedPowerUp(null)}
-        powerUpType={selectedPowerUp}
       />
     </>
   );
