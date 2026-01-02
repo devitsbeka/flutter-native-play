@@ -101,8 +101,8 @@ serve(async (req) => {
     const result = await pollForResult(submitResult.request_id);
     console.log("Generation complete");
 
-    // Extract the generated image URL
-    const avatarUrl = result.image?.url;
+    // Extract the generated image URL - Fal.ai returns images array
+    const avatarUrl = result.images?.[0]?.url;
     
     if (!avatarUrl) {
       console.error("Could not extract image from result:", JSON.stringify(result).substring(0, 500));
