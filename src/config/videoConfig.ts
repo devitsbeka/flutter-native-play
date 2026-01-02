@@ -7,7 +7,7 @@ export const MAP_VIDEOS = {
   videoC: "/videos/map-video-c.mp4",
 };
 
-// Category card background videos - v2 cache bust for updated files
+// Category card background videos - v3 cache bust for updated files
 export const CATEGORY_VIDEOS: Record<string, string> = {
   art: "/videos/art.mp4?v=2",
   georgian_history: "/videos/geo-history.mp4?v=2",
@@ -20,6 +20,16 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   archaeology: "/videos/archeology.mp4",
   fun_facts: "/videos/funny-facts.mp4",
   world_history: "/videos/world-history.mp4",
+  animals: "/videos/animals.mp4",
+  anime: "/videos/anime.mp4",
+  architecture: "/videos/architecture.mp4",
+  economics: "/videos/economics.mp4",
+  fashion: "/videos/fashion.mp4",
+  mathematics: "/videos/mathematics.mp4",
+  military_history: "/videos/military-history.mp4",
+  movies: "/videos/movies.mp4",
+  music: "/videos/music.mp4",
+  tv_shows: "/videos/tvshows.mp4",
 };
 
 // Get all video URLs for preloading
