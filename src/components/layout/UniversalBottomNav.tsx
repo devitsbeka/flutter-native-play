@@ -62,7 +62,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           </div>
 
           {/* Shop */}
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center pr-4">
             <NavButton
               onClick={() => navigate("/power-ups")}
               isActive={isActive("/power-ups")}
@@ -83,7 +83,7 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick }: UniversalBottom
           </div>
 
           {/* Rank */}
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center pl-4">
             <NavButton
               onClick={() => navigate("/leaderboards")}
               isActive={isActive("/leaderboards")}
