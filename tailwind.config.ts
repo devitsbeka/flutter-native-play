@@ -141,6 +141,10 @@ export default {
           'TASolivare',
           'Nunito',
           'sans-serif'
+        ],
+        slackey: [
+          'Slackey',
+          'sans-serif'
         ]
       },
       boxShadow: {
