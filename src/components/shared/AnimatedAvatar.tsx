@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,14 @@ const sizeClasses = {
   xl: "w-32 h-32",
 };
 
+// Get pixel size from size class
+const sizePx = {
+  sm: 48,
+  md: 64,
+  lg: 96,
+  xl: 128,
+};
+
 export function AnimatedAvatar({
   avatarUrl,
   animatedVideoUrl,
@@ -37,9 +45,14 @@ export function AnimatedAvatar({
   const [isGenerating, setIsGenerating] = useState(false);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(animatedVideoUrl || null);
   const [showVideo, setShowVideo] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playbackDirectionRef = useRef<1 | -1>(1); // 1 = forward, -1 = backward
-  const animationFrameRef = useRef<number | null>(null);
+  const [framesReady, setFramesReady] = useState(false);
+  
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const framesRef = useRef<ImageData[]>([]);
+  const animationRef = useRef<number | null>(null);
+  const frameIndexRef = useRef(0);
+  const directionRef = useRef<1 | -1>(1);
+  const isPlayingRef = useRef(false);
 
   useEffect(() => {
     if (animatedVideoUrl) {
@@ -47,67 +60,126 @@ export function AnimatedAvatar({
     }
   }, [animatedVideoUrl]);
 
-  // Smooth ping-pong playback using requestAnimationFrame
-  const pingPongLoop = useCallback(() => {
-    const video = videoRef.current;
-    if (!video || video.paused || !loop) return;
-
-    const playbackSpeed = 1; // Normal speed
-    const frameTime = 1 / 60; // ~60fps
-    const step = frameTime * playbackSpeed;
-
-    if (playbackDirectionRef.current === 1) {
-      // Forward playback
-      if (video.currentTime >= video.duration - 0.05) {
-        // Reached end, reverse
-        playbackDirectionRef.current = -1;
-      }
-    } else {
-      // Backward playback
-      video.currentTime = Math.max(0, video.currentTime - step * 2);
-      if (video.currentTime <= 0.05) {
-        // Reached start, go forward
-        playbackDirectionRef.current = 1;
-        video.currentTime = 0;
-      }
-    }
-
-    animationFrameRef.current = requestAnimationFrame(pingPongLoop);
-  }, [loop]);
-
-  // Start/stop ping-pong animation
+  // Extract frames from video into memory for smooth bidirectional playback
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !localVideoUrl || !loop) return;
+    if (!localVideoUrl) return;
 
-    const handlePlay = () => {
-      playbackDirectionRef.current = 1;
-      animationFrameRef.current = requestAnimationFrame(pingPongLoop);
-    };
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
 
-    const handlePause = () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
+    const extractFrames = async () => {
+      const frames: ImageData[] = [];
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return;
+
+      const pixelSize = sizePx[size] * 2; // 2x for retina
+      tempCanvas.width = pixelSize;
+      tempCanvas.height = pixelSize;
+
+      // Wait for video metadata
+      await new Promise<void>((resolve) => {
+        video.onloadedmetadata = () => resolve();
+        video.src = localVideoUrl;
+      });
+
+      const duration = video.duration;
+      const fps = 30;
+      const frameCount = Math.min(Math.floor(duration * fps), 90); // Cap at 90 frames (3 sec @ 30fps)
+      const frameInterval = duration / frameCount;
+
+      // Extract frames by seeking
+      for (let i = 0; i < frameCount; i++) {
+        video.currentTime = i * frameInterval;
+        await new Promise<void>((resolve) => {
+          video.onseeked = () => {
+            tempCtx.drawImage(video, 0, 0, pixelSize, pixelSize);
+            frames.push(tempCtx.getImageData(0, 0, pixelSize, pixelSize));
+            resolve();
+          };
+        });
+      }
+
+      framesRef.current = frames;
+      frameIndexRef.current = 0;
+      directionRef.current = 1;
+      setFramesReady(true);
+
+      // Auto-play if enabled
+      if (autoPlay && frames.length > 0) {
+        setShowVideo(true);
+        startAnimation();
       }
     };
 
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('ended', handlePause);
-
-    // If already playing, start the loop
-    if (!video.paused) {
-      handlePlay();
-    }
+    extractFrames().catch(console.error);
 
     return () => {
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('ended', handlePause);
-      handlePause();
+      video.src = '';
+      stopAnimation();
     };
-  }, [localVideoUrl, loop, pingPongLoop]);
+  }, [localVideoUrl, size, autoPlay]);
+
+  const startAnimation = () => {
+    if (isPlayingRef.current || framesRef.current.length === 0) return;
+    isPlayingRef.current = true;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    const fps = 30;
+    const frameTime = 1000 / fps;
+    let lastTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      if (!isPlayingRef.current) return;
+
+      const elapsed = currentTime - lastTime;
+      if (elapsed >= frameTime) {
+        lastTime = currentTime - (elapsed % frameTime);
+
+        const frames = framesRef.current;
+        if (frames.length === 0) return;
+
+        // Draw current frame
+        ctx.putImageData(frames[frameIndexRef.current], 0, 0);
+
+        // Move to next frame
+        frameIndexRef.current += directionRef.current;
+
+        // Handle ping-pong
+        if (frameIndexRef.current >= frames.length - 1) {
+          frameIndexRef.current = frames.length - 1;
+          directionRef.current = -1;
+        } else if (frameIndexRef.current <= 0) {
+          frameIndexRef.current = 0;
+          if (loop) {
+            directionRef.current = 1;
+          } else {
+            isPlayingRef.current = false;
+            setShowVideo(false);
+            return;
+          }
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+  };
+
+  const stopAnimation = () => {
+    isPlayingRef.current = false;
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  };
 
   const generateAnimation = async () => {
     if (!avatarUrl || isGenerating) return;
@@ -138,26 +210,24 @@ export function AnimatedAvatar({
   };
 
   const handleMouseEnter = () => {
-    if (localVideoUrl && videoRef.current) {
+    if (framesReady) {
       setShowVideo(true);
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(console.error);
+      frameIndexRef.current = 0;
+      directionRef.current = 1;
+      startAnimation();
     }
     setIsAnimating(true);
   };
 
   const handleMouseLeave = () => {
-    if (!loop && videoRef.current) {
+    if (!loop) {
+      stopAnimation();
       setShowVideo(false);
     }
     setIsAnimating(false);
   };
 
-  const handleVideoEnded = () => {
-    if (!loop) {
-      setShowVideo(false);
-    }
-  };
+  const canvasSize = sizePx[size] * 2; // Retina
 
   return (
     <div className={cn("relative", className)}>
@@ -180,30 +250,20 @@ export function AnimatedAvatar({
           alt="Avatar"
           className={cn(
             "w-full h-full object-cover transition-opacity duration-300",
-            showVideo && localVideoUrl ? "opacity-0" : "opacity-100"
+            showVideo && framesReady ? "opacity-0" : "opacity-100"
           )}
         />
 
-        {/* Animated video overlay - using manual ping-pong, not native loop */}
-        {localVideoUrl && (
-          <video
-            ref={videoRef}
-            src={localVideoUrl}
+        {/* Canvas-based animation for smooth ping-pong */}
+        {framesReady && (
+          <canvas
+            ref={canvasRef}
+            width={canvasSize}
+            height={canvasSize}
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
+              "absolute inset-0 w-full h-full object-cover transition-opacity duration-300 rounded-full",
               showVideo ? "opacity-100" : "opacity-0"
             )}
-            muted
-            playsInline
-            autoPlay={autoPlay}
-            loop={false} // Disable native loop - we handle ping-pong manually
-            onEnded={handleVideoEnded}
-            onLoadedData={() => {
-              if (autoPlay && videoRef.current) {
-                videoRef.current.play().catch(console.error);
-                setShowVideo(true);
-              }
-            }}
           />
         )}
 
