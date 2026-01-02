@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Crown, Zap, Star, Check } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useVipStatus, VipDuration, VIP_PRICES } from "@/hooks/useVipStatus";
+import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { AvatarFrameShop } from "@/components/home/AvatarFrameShop";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -13,6 +14,7 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 interface GemShopModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultCategory?: string;
 }
 
 interface ShopItem {
@@ -103,13 +105,21 @@ const CATEGORIES = [
   { id: "frames", name: "ჩარჩოები", icon: "🎨" },
 ];
 
-export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
+export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalProps) {
   const { gems, spendGems, addCoins } = useCurrency();
   const { playSound } = useSound();
   const { activateVip, isVip, getDaysRemaining } = useVipStatus();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const { addPowerUp } = useUserPowerUps();
+  const [selectedCategory, setSelectedCategory] = useState(defaultCategory || "all");
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
+
+  // Reset category when modal opens with a default
+  useEffect(() => {
+    if (isOpen && defaultCategory) {
+      setSelectedCategory(defaultCategory);
+    }
+  }, [isOpen, defaultCategory]);
 
   const filteredItems = selectedCategory === "all" 
     ? SHOP_ITEMS 
@@ -136,8 +146,13 @@ export function GemShopModal({ isOpen, onClose }: GemShopModalProps) {
         await addCoins(item.value);
       } else if (item.category === "vip" && item.vipDuration) {
         await activateVip(item.vipDuration);
+      } else if (item.category === "powerup") {
+        // Add 5 of each power-up for the bundle
+        await addPowerUp("5050", 5);
+        await addPowerUp("freeze", 5);
+        await addPowerUp("replace", 5);
+        await addPowerUp("time-drain", 5);
       }
-      // For power-ups, you'd add them to user's inventory
 
       // Success animation
       playSound("reward");

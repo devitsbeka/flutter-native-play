@@ -1,10 +1,11 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { Bell, Menu, HelpCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Menu } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
+import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
@@ -22,6 +23,7 @@ import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthr
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
+import { MyPowersModal } from "@/components/home/MyPowersModal";
 
 import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
@@ -115,7 +117,7 @@ export default function Index() {
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
   const [showMissionsModal, setShowMissionsModal] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
-  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -235,9 +237,9 @@ export default function Index() {
           navigate("/game");
         }}
       />
-      <AdventureHelpModal
-        isOpen={showHelpModal}
-        onClose={() => setShowHelpModal(false)}
+      <MyPowersModal
+        isOpen={showMyPowersModal}
+        onClose={() => setShowMyPowersModal(false)}
       />
       
       
@@ -565,22 +567,22 @@ export default function Index() {
                           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
-                        {/* Help Button */}
+                        {/* Powers Button */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ delay: 0.64, type: "spring", stiffness: 200 }}
-                          onClick={() => setShowHelpModal(true)}
+                          onClick={() => setShowMyPowersModal(true)}
                           className="w-14 h-14 rounded-full flex items-center justify-center"
                           style={{
-                            background: "linear-gradient(180deg, #FFFFFF 0%, #F3F4F6 100%)",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #D1D5DB",
+                            background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #C4B5FD",
                             border: "3px solid rgba(255,255,255,0.9)",
                           }}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <span className="text-2xl font-bold" style={{ color: "#7C3AED" }}>?</span>
+                          <img src={powersIcon} alt="Powers" className="w-8 h-8 object-contain" />
                         </motion.button>
                       </div>
                     </>
