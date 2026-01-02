@@ -7,6 +7,7 @@ export interface Profile {
   user_id: string;
   nickname: string;
   avatar_url: string | null;
+  animated_avatar_url: string | null;
   country_code: string;
   total_points: number;
   games_played: number;
