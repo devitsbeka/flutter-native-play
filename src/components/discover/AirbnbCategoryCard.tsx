@@ -70,45 +70,43 @@ export function AirbnbCategoryCard({
   const isFull = variant === "full";
   const iconSize = 128;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const reverseAnimationRef = useRef<number | null>(null);
-  const isReversingRef = useRef(false);
+  const animationFrameRef = useRef<number | null>(null);
 
-  // Ping-pong video playback - forward then backward seamlessly
-  useEffect(() => {
+  // Ping-pong reverse playback with delta time for normal speed
+  const reversePlay = () => {
     const video = videoRef.current;
     if (!video) return;
 
-    let lastTime = 0;
+    let lastTime = performance.now();
 
-    const reversePlay = () => {
-      if (!video || video.currentTime <= 0.02) {
-        isReversingRef.current = false;
+    const step = (currentTime: number) => {
+      const delta = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
+      if (video.currentTime <= 0.05) {
         video.currentTime = 0;
-        video.play();
+        video.play().catch(console.error);
         return;
       }
-      video.currentTime -= 0.033; // ~30fps step backward
-      reverseAnimationRef.current = requestAnimationFrame(reversePlay);
+      video.currentTime = Math.max(0, video.currentTime - delta);
+      animationFrameRef.current = requestAnimationFrame(step);
     };
 
-    const handleTimeUpdate = () => {
-      if (isReversingRef.current) return;
-      
-      // Detect when video is near the end or has stopped progressing
-      if (video.duration && video.currentTime >= video.duration - 0.1) {
-        video.pause();
-        isReversingRef.current = true;
-        reversePlay();
-      }
-      lastTime = video.currentTime;
-    };
+    animationFrameRef.current = requestAnimationFrame(step);
+  };
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
+  const handleVideoEnded = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      reversePlay();
+    }
+  };
 
+  // Cleanup animation frame on unmount
+  useEffect(() => {
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      if (reverseAnimationRef.current) {
-        cancelAnimationFrame(reverseAnimationRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
@@ -196,6 +194,7 @@ export function AirbnbCategoryCard({
           autoPlay
           muted
           playsInline
+          onEnded={handleVideoEnded}
           className="absolute inset-0 w-full h-full object-cover"
         />
 
