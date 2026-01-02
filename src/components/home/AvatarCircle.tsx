@@ -20,6 +20,7 @@ export function AvatarCircle({
   xpTotal,
 }: AvatarCircleProps) {
   const progressRingWidth = 10;
+  const whiteRingWidth = 24; // Thick white chunky ring
   const ringGap = 6;
   
   // Calculate SVG dimensions for circular progress
@@ -44,11 +45,12 @@ export function AvatarCircle({
       <div 
         className="absolute rounded-full"
         style={{
-          width: size - 4,
-          height: size - 4,
+          width: size,
+          height: size,
           background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FC 50%, #F0ECF8 100%)",
-          boxShadow: "inset 0 2px 6px rgba(140,120,180,0.15), 0 4px 12px rgba(0,0,0,0.1)",
-          border: "4px solid rgba(255,255,255,0.9)",
+          boxShadow: "inset 0 3px 8px rgba(140,120,180,0.2), 0 6px 16px rgba(0,0,0,0.12)",
+          border: `${whiteRingWidth}px solid rgba(255,255,255,0.95)`,
+          boxSizing: "border-box",
         }}
       />
 
