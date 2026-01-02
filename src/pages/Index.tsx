@@ -392,7 +392,7 @@ export default function Index() {
                         className="flex items-center justify-center gap-4 mt-6 pointer-events-auto" 
                         data-walkthrough="powerups"
                       >
-                        {/* Gift Button - base size */}
+                        {/* Gift Button */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -400,8 +400,8 @@ export default function Index() {
                           onClick={() => setIsDailyRewardsOpen(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 56,
-                            height: 56,
+                            width: 90,
+                            height: 90,
                             background: "linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FDBA74",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -409,11 +409,11 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={giftBottleIcon} alt="Gift" className="w-8 h-8 object-contain" />
-                          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
+                          <img src={giftBottleIcon} alt="Gift" className="w-12 h-12 object-contain" />
+                          <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
-                        {/* Mission Button - 20% larger */}
+                        {/* Mission Button */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -421,8 +421,8 @@ export default function Index() {
                           onClick={() => setShowMissionsModal(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 67,
-                            height: 67,
+                            width: 90,
+                            height: 90,
                             background: "linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #7DD3FC",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -430,11 +430,11 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={missionCrystalIcon} alt="Mission" className="w-10 h-10 object-contain" />
-                          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md">2</span>
+                          <img src={missionCrystalIcon} alt="Mission" className="w-12 h-12 object-contain" />
+                          <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-sky-500 text-white text-sm font-bold flex items-center justify-center shadow-md">2</span>
                         </motion.button>
 
-                        {/* Chest Button - 40% larger */}
+                        {/* Chest Button */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -442,8 +442,8 @@ export default function Index() {
                           onClick={() => setIsChestModalOpen(true)}
                           className="relative rounded-full flex items-center justify-center"
                           style={{
-                            width: 78,
-                            height: 78,
+                            width: 90,
+                            height: 90,
                             background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
                             boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 3px 0 #FCD34D",
                             border: "3px solid rgba(255,255,255,0.9)",
@@ -451,11 +451,11 @@ export default function Index() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
-                          <img src={chestBoxIcon} alt="Chest" className="w-11 h-11 object-contain" />
-                          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md">1</span>
+                          <img src={chestBoxIcon} alt="Chest" className="w-12 h-12 object-contain" />
+                          <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center shadow-md">1</span>
                         </motion.button>
 
-                        {/* Powers Button - 60% larger */}
+                        {/* Powers Button */}
                         <motion.button
                           initial={{ scale: 0, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
@@ -474,7 +474,7 @@ export default function Index() {
                         >
                           <img src={powersIcon} alt="Powers" className="w-12 h-12 object-contain" />
                           {totalPowerUps > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md">
+                            <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md">
                               {totalPowerUps}
                             </span>
                           )}
