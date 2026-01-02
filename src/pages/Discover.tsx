@@ -7,7 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
-import { TabBar } from "@/components/shared/TabBar";
+import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { CategoryGrid } from "@/components/discover/CategoryGrid";
@@ -186,7 +186,7 @@ export default function Discover() {
 
           {/* Tabs */}
           <div className="px-4 pb-4">
-            <TabBar
+            <IconTabBar
               tabs={tabs}
               activeTab={activeTab}
               onTabChange={setActiveTab}
