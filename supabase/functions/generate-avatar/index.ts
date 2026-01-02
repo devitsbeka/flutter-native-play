@@ -74,9 +74,8 @@ serve(async (req) => {
     console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
 
     // Single API call: Generate 3D avatar with style image and text prompt
-    // Use a 3D Pixar-style avatar as the style reference
-    // This is a publicly accessible placeholder image in the same style we want
-    const styleImageUrl = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=512&h=512&fit=crop";
+    // Use a proper 3D Pixar-style avatar as the style reference
+    const styleImageUrl = "https://cdn.pixabay.com/photo/2024/01/16/10/47/ai-generated-8512466_1280.jpg";
     
     const response = await fetch("https://api.lightxeditor.com/external/api/v1/avatar", {
       method: "POST",
@@ -87,7 +86,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "Ultra high quality 3D Disney Pixar character portrait, cute adorable stylized cartoon avatar, big beautiful glossy eyes with sparkle reflections and catchlights, perfectly smooth porcelain skin with soft subsurface scattering, gentle warm studio lighting with soft rim light from behind, subtle purple and pink color grading, hyper detailed hair strands with volume, friendly warm genuine smile, soft ambient occlusion, cinematic depth of field, professional character design, Pixar movie quality rendering, extremely clean sharp details, magical dreamy atmosphere, pastel gradient background, octane render, volumetric lighting, 8K ultra HD",
+        textPrompt: "Extreme close-up portrait of face only, 3D Disney Pixar animated movie character, adorable cute stylized cartoon avatar with exaggerated features, HUGE gorgeous glossy sparkling eyes with beautiful iris details and bright white catchlight reflections, flawless smooth porcelain baby-soft skin with subtle blush on cheeks, gentle closed-lip warm smile with NO teeth showing, soft dreamy volumetric lighting from front with magical purple and pink rim lighting, perfectly styled voluminous hair with individual strands, face fills entire frame with NO neck NO shoulders NO clothing visible, pure gradient pastel lavender pink background, hyperdetailed Pixar movie quality 3D render, magical fairy tale princess aesthetic, soft bokeh glow effect, 8K ultra detailed, Octane render, Unreal Engine 5 quality",
       }),
     });
 
