@@ -33,9 +33,21 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
 
   return (
     <div className="relative -mx-4">
+      {/* Beautiful glassmorphism backdrop */}
+      <div 
+        className="absolute inset-0 mx-2 rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(243,232,255,0.6) 50%, rgba(255,255,255,0.5) 100%)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.6)',
+          boxShadow: '0 4px 24px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.8)',
+        }}
+      />
+      
       <motion.div 
         ref={containerRef}
-        className="flex items-center gap-4 py-2 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+        className="relative flex items-center gap-4 py-3 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
         style={{
           paddingLeft: 16,
           paddingRight: 16,
@@ -54,7 +66,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
             <motion.button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className="relative flex flex-col items-center gap-1 px-2 py-1 flex-shrink-0"
+              className="relative flex flex-col items-center gap-1.5 px-2 py-1 flex-shrink-0"
               whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -72,11 +84,13 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
                 />
               </div>
               
-              {/* Label */}
+              {/* Label - Google Sans, uppercase */}
               <span 
-                className="text-[11px] font-bold leading-tight text-center whitespace-nowrap"
+                className="text-[10px] font-semibold leading-tight text-center whitespace-nowrap uppercase tracking-wide"
                 style={{
-                  color: isActive ? "#6D28D9" : "#475569",
+                  fontFamily: "'Google Sans', sans-serif",
+                  color: isActive ? "#6D28D9" : "#64748b",
+                  letterSpacing: '0.05em',
                 }}
               >
                 {tab.label}
@@ -87,7 +101,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
       </motion.div>
       
       {/* Separator line */}
-      <div className="mx-4 mt-3 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+      <div className="mx-4 mt-2 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
     </div>
   );
 }
