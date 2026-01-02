@@ -7,9 +7,20 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+type AvatarStyle = 'realistic' | 'cartoon' | 'artistic';
+
 interface AvatarRequest {
   imageUrl: string;
+  style?: AvatarStyle;
 }
+
+const STYLE_PROMPTS: Record<AvatarStyle, string> = {
+  realistic: "Create a professional 3D rendered portrait based on this photo. CRITICAL: Preserve the person's exact facial structure, eye shape, nose, mouth, skin tone, and overall likeness with high accuracy - this must clearly look like them. Apply subtle 3D rendering with natural skin texture, professional studio lighting, and a clean dark gradient background. Keep all proportions completely realistic with no stylization or exaggeration. Add soft professional rim lighting. The result should look like a high-end corporate headshot or LinkedIn photo with subtle 3D polish.",
+  
+  cartoon: "Transform this photo into a fun 3D Pixar/Disney style cartoon character. Give them big expressive cartoon eyes with sparkle highlights, smooth stylized skin, cute rounded features, and voluminous stylized hair. Keep a friendly cheerful expression. Use soft violet and pink accent lighting. Dark navy gradient background. Make it look like a charming Pixar character while maintaining some resemblance to the original person.",
+  
+  artistic: "Transform this photo into a stylized digital art portrait. Create an artistic interpretation with bold colors, dramatic lighting, and painterly textures. Use vibrant color grading with teal and orange tones. Add artistic brush stroke effects and dynamic shadows. Keep the person recognizable but with an artistic, illustration-style finish. Dark moody background with color splashes."
+};
 
 // Fetch image and convert to base64 data URL
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
@@ -37,13 +48,14 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { imageUrl }: AvatarRequest = await req.json();
+    const { imageUrl, style = 'realistic' }: AvatarRequest = await req.json();
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
     }
 
-    console.log("Starting avatar generation with Lovable AI for image:", imageUrl.substring(0, 100));
+    const prompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.realistic;
+    console.log("Starting avatar generation with style:", style, "for image:", imageUrl.substring(0, 100));
 
     // Fetch the image and convert to base64 data URL
     const imageDataUrl = await fetchImageAsDataUrl(imageUrl);
@@ -69,7 +81,7 @@ serve(async (req) => {
               },
               {
                 type: "text",
-                text: "Create a stylized 3D portrait avatar based on this photo. CRITICAL: Preserve the person's exact facial features, face shape, eye shape, nose, mouth, and overall likeness - this must still look like them. Apply a subtle 3D rendered style with smooth skin texture, soft studio lighting, and a clean dark gradient background. Keep proportions realistic (no exaggerated cartoon eyes or features). Add subtle rim lighting in soft violet/blue tones. The result should look like a professional 3D rendered portrait that clearly resembles the original person, not a cartoon character."
+                text: prompt
               }
             ]
           }
