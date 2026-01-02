@@ -44,19 +44,23 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Transform this photo into a FUN, EXPRESSIVE 3D cartoon avatar in Pixar/Disney animation style.
+                text: `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait.
 
 STYLE REQUIREMENTS:
-- BIG, WIDE, SPARKLING EYES with beautiful reflections and catchlights - make them expressive and full of life!
-- JOYFUL, PLAYFUL EXPRESSION - a warm genuine smile, raised eyebrows, happy and approachable
-- Stylized cartoon proportions - slightly larger head, expressive features
-- Smooth, polished 3D render like a Pixar movie character
-- Vibrant, saturated colors
-- Soft, dreamy lighting with a subtle glow
-- Keep their hairstyle, hair color, clothing and accessories recognizable
-- Clean gradient background (soft purple, pink or blue tones)
+- SEMI-REALISTIC 3D render like a modern video game character (Unreal Engine, Final Fantasy style)
+- REALISTIC eye proportions - NOT cartoon-style big eyes
+- Highly detailed, realistic skin with subtle subsurface scattering
+- Dramatic, moody lighting with dark atmosphere
+- DARK GRADIENT BACKGROUND (charcoal gray to black)
+- Preserve the person's EXACT facial structure, features, and proportions
+- Add subtle violet/purple color tones to the hair for artistic flair
+- Soft hair rendering with realistic strand details
+- Keep their exact hairstyle, hair color base, clothing and accessories
+- Professional portrait composition (head and shoulders, slightly angled)
+- Cinematic quality with depth of field effect
+- Mature, sophisticated aesthetic - NOT cartoonish or childish
 
-The avatar should feel ALIVE, CUTE and FULL OF PERSONALITY - like a beloved animated movie character! Make it fun and charming, not serious or realistic.`
+The result should look like a premium AAA video game character portrait - realistic but stylized, dramatic lighting, dark moody atmosphere.`
               },
               {
                 type: "image_url",
