@@ -156,7 +156,7 @@ export default function Discover() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden px-4"
+                className="overflow-hidden px-4 pt-2"
               >
                 <div
                   className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm mb-2 ${
