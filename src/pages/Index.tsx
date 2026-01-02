@@ -495,27 +495,27 @@ export default function Index() {
                         {getFlagEmoji(profile.country_code)}
                       </span>
                     )}
-                    <span className="font-sans font-medium text-white drop-shadow-md capitalize" style={{ fontSize: 32 }}>
+                    <span className="font-sans font-medium text-gray-800 capitalize" style={{ fontSize: 32 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
                   {/* Coins & Gems below name */}
                   <div 
-                    className="flex items-center gap-3 px-4 py-2 rounded-full whitespace-nowrap mt-2"
+                    className="flex items-center gap-3 px-5 py-2.5 rounded-full whitespace-nowrap mt-2"
                     style={{
-                      background: "rgba(255,255,255,0.1)",
-                      border: "1.5px solid rgba(255,255,255,0.3)",
+                      background: "rgba(255,255,255,0.85)",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06)",
                       backdropFilter: "blur(8px)",
                     }}
                   >
                     <div className="flex items-center gap-1.5">
                       <img src={coinIcon} alt="Coins" className="w-5 h-5" />
-                      <span className="font-bold text-white text-sm drop-shadow-md">{coins.toLocaleString()}</span>
+                      <span className="font-bold text-gray-800 text-sm">{coins.toLocaleString()}</span>
                     </div>
-                    <div className="w-px h-4 bg-white/30" />
+                    <div className="w-px h-4 bg-gray-300" />
                     <div className="flex items-center gap-1.5">
                       <img src={gemIcon} alt="Gems" className="w-5 h-5" />
-                      <span className="font-bold text-white text-sm drop-shadow-md">{gems.toLocaleString()}</span>
+                      <span className="font-bold text-gray-800 text-sm">{gems.toLocaleString()}</span>
                     </div>
                   </div>
                 </>
