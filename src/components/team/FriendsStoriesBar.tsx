@@ -7,8 +7,11 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 // Shimmer skeleton component
 function ShimmerSkeleton({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden bg-slate-200/60 ${className}`}>
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+    <div 
+      className={`relative overflow-hidden ${className}`}
+      style={{ backgroundColor: '#ECCCF2' }}
+    >
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
     </div>
   );
 }
