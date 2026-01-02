@@ -38,7 +38,7 @@ function ActionButton({ icon, label, onClick, index, badge }: ActionButtonProps)
           boxShadow: "0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05)",
         }}
       >
-        <img src={icon} alt={label} className="w-10 h-10 object-contain" />
+        <img src={icon} alt={label} className="w-12 h-12 object-contain" />
         
         {/* Badge */}
         {badge !== undefined && badge > 0 && (
