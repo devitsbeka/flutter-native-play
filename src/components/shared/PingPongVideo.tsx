@@ -1,66 +1,74 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 
 interface PingPongVideoProps {
   src: string;
   className?: string;
+  segmentDuration?: number; // Duration of the ping-pong segment in seconds
 }
 
-export function PingPongVideo({ src, className = "" }: PingPongVideoProps) {
+export function PingPongVideo({ 
+  src, 
+  className = "",
+  segmentDuration = 2.5 // Use 2.5 seconds of the video
+}: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isReversing, setIsReversing] = useState(false);
   const rafRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number>(0);
+  const directionRef = useRef<1 | -1>(1); // 1 = forward, -1 = backward
+  const lastFrameTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     let isMounted = true;
-    let reversing = false;
 
-    const reversePlayback = () => {
+    const animate = (timestamp: number) => {
       if (!isMounted || !video) return;
-      
-      const now = performance.now();
-      const delta = (now - lastTimeRef.current) / 1000;
-      lastTimeRef.current = now;
 
-      // Move backwards at normal speed
-      video.currentTime = Math.max(0, video.currentTime - delta);
+      // Calculate delta time
+      const delta = lastFrameTimeRef.current ? (timestamp - lastFrameTimeRef.current) / 1000 : 0;
+      lastFrameTimeRef.current = timestamp;
 
-      if (video.currentTime <= 0.02) {
-        // Reached the start, switch to forward
-        reversing = false;
-        setIsReversing(false);
+      // Clamp delta to avoid large jumps
+      const clampedDelta = Math.min(delta, 0.1);
+
+      // Update video time based on direction
+      const newTime = video.currentTime + (clampedDelta * directionRef.current);
+
+      // Check bounds and reverse direction
+      if (newTime >= segmentDuration) {
+        video.currentTime = segmentDuration;
+        directionRef.current = -1; // Start going backward
+      } else if (newTime <= 0) {
         video.currentTime = 0;
-        video.play().catch(() => {});
+        directionRef.current = 1; // Start going forward
       } else {
-        rafRef.current = requestAnimationFrame(reversePlayback);
+        video.currentTime = newTime;
       }
+
+      rafRef.current = requestAnimationFrame(animate);
     };
 
-    const handleTimeUpdate = () => {
-      if (!isMounted || reversing) return;
-      
-      // Start reversing when we're very close to the end (within 50ms)
-      if (video.duration && video.currentTime >= video.duration - 0.05) {
-        video.pause();
-        reversing = true;
-        setIsReversing(true);
-        lastTimeRef.current = performance.now();
-        rafRef.current = requestAnimationFrame(reversePlayback);
-      }
+    const startAnimation = () => {
+      video.pause(); // We control playback manually
+      video.currentTime = 0;
+      directionRef.current = 1;
+      lastFrameTimeRef.current = 0;
+      rafRef.current = requestAnimationFrame(animate);
     };
 
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.play().catch(() => {});
+    // Wait for video to be ready
+    if (video.readyState >= 2) {
+      startAnimation();
+    } else {
+      video.addEventListener("loadeddata", startAnimation, { once: true });
+    }
 
     return () => {
       isMounted = false;
-      video.removeEventListener("timeupdate", handleTimeUpdate);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [src]);
+  }, [src, segmentDuration]);
 
   return (
     <video
@@ -68,6 +76,7 @@ export function PingPongVideo({ src, className = "" }: PingPongVideoProps) {
       src={src}
       muted
       playsInline
+      preload="auto"
       className={`absolute inset-0 w-full h-full object-cover ${className}`}
     />
   );
