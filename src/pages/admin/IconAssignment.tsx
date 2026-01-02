@@ -55,6 +55,9 @@ export default function IconAssignment() {
   const [iconsLoading, setIconsLoading] = useState(true);
   const [autoAdvance, setAutoAdvance] = useState(true);
   
+  // Track broken icons
+  const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
+  
   // Batch assignment state
   const [batchRunning, setBatchRunning] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
@@ -93,18 +96,26 @@ export default function IconAssignment() {
     loadIcons();
   }, []);
 
-  // Filter icons based on search
+  // Filter icons based on search and exclude broken ones
   const filteredIcons = useMemo(() => {
-    if (!iconSearchTerm) return icons;
+    // First filter out broken icons
+    const validIcons = icons.filter(icon => !brokenIcons.has(icon.slug));
+    
+    if (!iconSearchTerm) return validIcons;
     
     const term = iconSearchTerm.toLowerCase();
-    return icons.filter(icon => 
+    return validIcons.filter(icon => 
       icon.slug.toLowerCase().includes(term) ||
       icon.title.toLowerCase().includes(term) ||
       icon.category.toLowerCase().includes(term) ||
       icon.tags.some(tag => tag.toLowerCase().includes(term))
     );
-  }, [icons, iconSearchTerm]);
+  }, [icons, iconSearchTerm, brokenIcons]);
+
+  // Handle icon load error - mark as broken
+  const handleIconError = (slug: string) => {
+    setBrokenIcons(prev => new Set([...prev, slug]));
+  };
 
   // Handle icon assignment
   const handleAssignIcon = async (iconSlug: string) => {
@@ -556,8 +567,13 @@ export default function IconAssignment() {
                 className="pl-9"
               />
             </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              {filteredIcons.length.toLocaleString()} აიკონი
+            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+              <span>{filteredIcons.length.toLocaleString()} აიკონი</span>
+              {brokenIcons.size > 0 && (
+                <span className="text-orange-500">
+                  ({brokenIcons.size} გატეხილი დამალულია)
+                </span>
+              )}
             </div>
           </div>
 
@@ -587,6 +603,7 @@ export default function IconAssignment() {
                         alt={icon.title}
                         className="h-full w-full object-contain"
                         loading="lazy"
+                        onError={() => handleIconError(icon.slug)}
                       />
                       {selectedQuestion?.icon_slug === icon.slug && (
                         <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
