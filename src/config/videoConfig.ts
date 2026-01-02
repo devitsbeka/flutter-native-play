@@ -47,6 +47,9 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   medicine: "/videos/medicine.mp4",
   robotics_ai: "/videos/robotics-ai.mp4",
   social_media: "/videos/social-media.mp4",
+  coding: "/videos/coding.mp4",
+  ecology: "/videos/ecology.mp4",
+  religion: "/videos/religion.mp4",
 };
 
 // Get all video URLs for preloading
