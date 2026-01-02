@@ -44,7 +44,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
 
   return (
     <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-      <div className="flex gap-4 pb-3 pr-4">
+      <div className="flex gap-4 pt-2 pb-3 pr-4">
         {/* Add Friend Button */}
         <motion.button
           onClick={onAddFriendClick}
