@@ -11,29 +11,33 @@ interface AvatarRequest {
   imageUrl: string;
 }
 
-const AVATAR_PROMPT = `Create a stylized 3D avatar portrait based on this photo.
+const AVATAR_PROMPT = `Create a 3D avatar portrait based on this photo.
 
-LIKENESS (MOST IMPORTANT - 70%):
-- Preserve the person's EXACT facial structure, proportions, and unique features
-- Match their eye shape, nose shape, mouth, jawline, and face shape precisely
-- Keep their exact skin tone, hair color, and hairstyle
-- The person MUST be immediately recognizable from the avatar
-- Capture their specific expression and personality
+CRITICAL - LIKENESS ACCURACY (90% priority):
+- This MUST look like the EXACT same person in the photo
+- Copy their precise facial bone structure, face shape, and proportions EXACTLY
+- Match their exact eye shape, eye spacing, eye color, eyebrow shape and thickness
+- Replicate their exact nose shape, size, and position
+- Copy their exact lip shape, mouth width, and smile
+- Match their exact jawline, chin shape, and cheekbone structure
+- Preserve their exact skin tone, undertones, and any distinctive marks
+- Copy their exact hairstyle, hair color, hair texture, and hairline
+- If they have accessories (earrings, glasses), include them
+- The result must be IMMEDIATELY recognizable as this specific person
 
-STYLE (30%):
-- High-quality 3D render with smooth, polished skin texture
-- Subtle stylization - like a premium video game character or Memoji
-- Professional lighting with soft highlights
-- Clean, modern aesthetic but NOT overly cartoonish
-- Keep proportions close to reality - no exaggerated eyes or features
+STYLE (10% - subtle enhancement only):
+- Apply smooth, polished 3D rendering to the skin
+- Add subtle professional lighting
+- Keep all facial proportions 100% accurate to the photo
+- NO exaggeration of any features
+- Clean, professional finish
 
 TECHNICAL:
-- Clean gradient background (dark teal to navy blue)
-- Professional portrait composition (head and shoulders)
-- Soft, pleasant studio lighting with subtle rim light
-- High-quality 3D render suitable for a profile picture
+- Dark gradient background (teal to navy)
+- Head and shoulders composition
+- Soft studio lighting
 
-The result should look like the person's premium 3D avatar - clearly them, just stylized. Think Apple Memoji quality, not Pixar cartoon.`;
+The avatar must look like a 3D scan of this exact person - not a generic stylized character.`;
 
 // Fetch image and convert to base64 data URL using chunked approach
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
