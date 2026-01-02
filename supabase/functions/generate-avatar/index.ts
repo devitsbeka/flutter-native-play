@@ -69,7 +69,7 @@ serve(async (req) => {
               },
               {
                 type: "text",
-                text: "Transform this photo into a cute 3D Pixar/Disney style cartoon character avatar. Make it have big expressive shiny cartoon eyes with sparkle catchlights, smooth soft matte cartoon skin, cute rounded facial features, stylized cartoon hair with volume, sweet friendly expression. Use soft violet and pink accent lighting on hair and face edges. Keep a dark navy gradient background. Make it look like a high quality Pixar Disney 3D render with charming lovable character design. Keep the same person's likeness but make them look adorable and cartoon-like."
+                text: "Create a stylized 3D portrait avatar based on this photo. CRITICAL: Preserve the person's exact facial features, face shape, eye shape, nose, mouth, and overall likeness - this must still look like them. Apply a subtle 3D rendered style with smooth skin texture, soft studio lighting, and a clean dark gradient background. Keep proportions realistic (no exaggerated cartoon eyes or features). Add subtle rim lighting in soft violet/blue tones. The result should look like a professional 3D rendered portrait that clearly resembles the original person, not a cartoon character."
               }
             ]
           }
