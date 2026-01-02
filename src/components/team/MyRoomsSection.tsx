@@ -118,14 +118,22 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       {/* Participants */}
       <div className="flex items-center gap-1 mb-4">
         <div className="flex -space-x-2">
-          {room.participants.slice(0, 4).map((p, i) => (
-            <div key={p.user_id} className="w-7 h-7 rounded-full overflow-hidden border-2 border-white flex-shrink-0">
-              <SmartAvatar
-                avatarUrl={p.avatar_url}
-                fallback={p.nickname}
-                size="sm"
-                className="w-full h-full object-cover"
-              />
+          {room.participants.slice(0, 4).map((p) => (
+            <div 
+              key={p.user_id} 
+              className="w-7 h-7 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
+            >
+              {p.avatar_url ? (
+                <img 
+                  src={p.avatar_url} 
+                  alt={p.nickname}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                  {p.nickname?.charAt(0).toUpperCase() || "?"}
+                </div>
+              )}
             </div>
           ))}
         </div>

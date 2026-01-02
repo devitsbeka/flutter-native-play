@@ -123,13 +123,21 @@ function GameHistoryRow({ room, index }: GameHistoryRowProps) {
       {/* Opponents */}
       <div className="flex -space-x-2 flex-shrink-0 items-center">
         {opponents.slice(0, 3).map((opponent) => (
-          <div key={opponent.user_id} className="w-8 h-8 rounded-full overflow-hidden border-2 border-white flex-shrink-0">
-            <SmartAvatar
-              avatarUrl={opponent.avatar_url}
-              fallback={opponent.nickname}
-              size="sm"
-              className="w-full h-full object-cover"
-            />
+          <div 
+            key={opponent.user_id} 
+            className="w-8 h-8 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
+          >
+            {opponent.avatar_url ? (
+              <img 
+                src={opponent.avatar_url} 
+                alt={opponent.nickname}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                {opponent.nickname?.charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
           </div>
         ))}
         {opponents.length > 3 && (
