@@ -11,7 +11,7 @@ import { IconTab } from "@/components/discover/IconTab";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { CategoryGrid } from "@/components/discover/CategoryGrid";
-import { PageTransition } from "@/components/shared/PageTransition";
+
 import { PageHeader } from "@/components/shared/PageHeader";
 
 const tabs = [
@@ -129,8 +129,7 @@ export default function Discover() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <PageTransition>
-      <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24">
       {/* Subtle overlay for depth - keeping purple background visible */}
       <div className="fixed inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/10 pointer-events-none z-0" />
 
@@ -394,6 +393,5 @@ export default function Discover() {
 
         <UniversalBottomNav />
       </div>
-    </PageTransition>
   );
 }
