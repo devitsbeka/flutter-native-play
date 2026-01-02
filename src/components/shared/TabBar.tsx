@@ -14,7 +14,7 @@ interface TabBarProps {
 
 export function TabBar({ tabs, activeTab, onTabChange }: TabBarProps) {
   return (
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         
@@ -22,30 +22,30 @@ export function TabBar({ tabs, activeTab, onTabChange }: TabBarProps) {
           <motion.button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className="relative flex-shrink-0"
+            className="relative flex-shrink-0 mb-1"
             whileTap={{ scale: 0.96 }}
           >
             {/* 3D depth layer - darker purple shadow */}
             <div 
-              className="absolute inset-0 rounded-full transition-all duration-150"
+              className="absolute inset-0 rounded-full"
               style={{
                 background: isActive 
                   ? 'linear-gradient(180deg, #5B21B6 0%, #4C1D95 100%)' 
-                  : 'rgba(0,0,0,0.15)',
+                  : 'rgba(0,0,0,0.12)',
                 transform: 'translateY(4px)',
               }}
             />
             
             {/* Main tab surface */}
             <div 
-              className="relative px-6 py-3 rounded-full transition-all duration-150 border-2"
+              className="relative px-6 py-3 rounded-full border-2"
               style={{
                 background: isActive 
                   ? 'linear-gradient(180deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)',
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.92) 100%)',
                 borderColor: isActive 
                   ? 'rgba(255,255,255,0.4)' 
-                  : 'rgba(255,255,255,0.6)',
+                  : 'rgba(255,255,255,0.7)',
                 boxShadow: isActive
                   ? 'inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.15), 0 4px 12px rgba(124, 58, 237, 0.3)'
                   : 'inset 0 2px 4px rgba(255,255,255,0.8), inset 0 -1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.08)',
