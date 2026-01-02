@@ -9,7 +9,7 @@ export const MAP_VIDEOS = {
 
 // Category card background videos
 export const CATEGORY_VIDEOS: Record<string, string> = {
-  art: "/videos/painting.mp4",
+  art: "/videos/art.mp4",
   georgian_history: "/videos/geo-history.mp4",
   sports: "/videos/sport-final.mp4",
   space: "/videos/galaxy.mp4",
