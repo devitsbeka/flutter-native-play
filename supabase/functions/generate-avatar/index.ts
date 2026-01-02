@@ -44,20 +44,19 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: `Transform this photo into a high-quality 3D rendered avatar portrait in modern Pixar/Disney animation style. 
+                text: `Transform this photo into a FUN, EXPRESSIVE 3D cartoon avatar in Pixar/Disney animation style.
 
-CRITICAL REQUIREMENTS:
-- PRESERVE the person's ACTUAL AGE - if they are an adult, make them look like an adult, NOT a child
-- Keep REALISTIC eye proportions - do NOT enlarge the eyes
-- Maintain the person's exact facial structure, bone structure, and proportions
-- Keep their actual nose size, jaw shape, and face width
-- Preserve their expression, clothing, accessories, and hairstyle exactly
-- Use soft studio lighting with subtle rim lighting
-- Clean, solid color background (light gray or soft gradient)
-- High detail 3D rendering with realistic skin textures
-- Professional portrait framing (head and shoulders)
+STYLE REQUIREMENTS:
+- BIG, WIDE, SPARKLING EYES with beautiful reflections and catchlights - make them expressive and full of life!
+- JOYFUL, PLAYFUL EXPRESSION - a warm genuine smile, raised eyebrows, happy and approachable
+- Stylized cartoon proportions - slightly larger head, expressive features
+- Smooth, polished 3D render like a Pixar movie character
+- Vibrant, saturated colors
+- Soft, dreamy lighting with a subtle glow
+- Keep their hairstyle, hair color, clothing and accessories recognizable
+- Clean gradient background (soft purple, pink or blue tones)
 
-The result should look like a premium 3D character portrait that accurately represents the person's real age and features.`
+The avatar should feel ALIVE, CUTE and FULL OF PERSONALITY - like a beloved animated movie character! Make it fun and charming, not serious or realistic.`
               },
               {
                 type: "image_url",
