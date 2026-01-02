@@ -40,15 +40,15 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
           <motion.div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
             style={{
-              background: "linear-gradient(180deg, hsl(45 90% 88%) 0%, hsl(40 85% 80%) 100%)",
-              boxShadow: "0 3px 0 hsl(35 80% 60%)",
-              border: "2px solid hsl(45 80% 75%)",
+              background: "linear-gradient(180deg, hsl(160 60% 88%) 0%, hsl(155 55% 78%) 100%)",
+              boxShadow: "0 3px 0 hsl(150 50% 55%)",
+              border: "2px solid hsl(155 50% 70%)",
             }}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
             <img src={coinIcon} alt="" className="w-5 h-5" />
-            <span className="font-bold text-amber-800">{coins.toLocaleString()}</span>
+            <span className="font-bold text-emerald-800">{coins.toLocaleString()}</span>
           </motion.div>
 
           {/* Gems Balance with Add Button */}
