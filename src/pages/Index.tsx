@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Menu } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
-import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
+import chestBoxIcon from "@/assets/icons/icon-chest-tablet.png";
 import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
