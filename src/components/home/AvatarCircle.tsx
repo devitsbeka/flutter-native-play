@@ -17,6 +17,7 @@ interface AvatarCircleProps {
   size?: number;
   coins?: number;
   gems?: number;
+  level?: number;
   xpProgress?: number; // 0-100 percentage
   xpCurrent?: number;
   xpTotal?: number;
@@ -27,6 +28,7 @@ export function AvatarCircle({
   size = 320, 
   coins = 0,
   gems = 0,
+  level = 1,
   xpProgress = 0,
   xpCurrent,
   xpTotal,
@@ -163,17 +165,18 @@ export function AvatarCircle({
       )}
 
 
-      {/* XP badge at bottom center - 3D chunky white style */}
+      {/* Level badge at bottom center - 3D chunky white style */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 z-20">
         <div 
-          className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap"
+          className="flex flex-col items-center px-5 py-2 rounded-full whitespace-nowrap"
           style={{
             background: "linear-gradient(180deg, #FFFFFF 0%, #F5F3FA 50%, #EDE8F5 100%)",
             boxShadow: "inset 0 4px 8px rgba(140,120,180,0.1), inset 0 -2px 4px rgba(255,255,255,0.9), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.12)",
             border: "3px solid rgba(255,255,255,0.95)",
           }}
         >
-          <span className="font-bold text-gray-700 text-sm">
+          <span className="font-bold text-gray-800 text-base">Level {level}</span>
+          <span className="text-gray-500 text-xs">
             {xpCurrent !== undefined ? xpCurrent.toLocaleString() : 0} / {xpTotal !== undefined ? xpTotal.toLocaleString() : 0} XP
           </span>
         </div>

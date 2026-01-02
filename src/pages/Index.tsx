@@ -467,6 +467,7 @@ export default function Index() {
                     size={280} 
                     coins={coins}
                     gems={gems}
+                    level={levelInfo.level}
                     xpProgress={levelInfo.progress}
                     xpCurrent={levelInfo.xpInCurrentLevel}
                     xpTotal={levelInfo.xpNeededForNextLevel}
