@@ -4,6 +4,15 @@ import { Friend, useFriends } from "@/hooks/useFriends";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
+// Shimmer skeleton component
+function ShimmerSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden bg-slate-200/60 ${className}`}>
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+    </div>
+  );
+}
+
 interface FriendsStoriesBarProps {
   onAddFriendClick: () => void;
   onFriendClick: (friend: Friend) => void;
@@ -15,13 +24,16 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
   // Sort online friends first
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
 
+  // Calculate skeleton count - show fewer when there are more friends
+  const skeletonCount = Math.min(4, Math.max(0, 5 - sortedFriends.length));
+
   if (loading) {
     return (
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
-            <div className="w-16 h-16 rounded-full animate-pulse bg-slate-200" />
-            <div className="w-12 h-3 rounded animate-pulse bg-slate-200" />
+            <ShimmerSkeleton className="w-16 h-16 rounded-full" />
+            <ShimmerSkeleton className="w-12 h-3 rounded" />
           </div>
         ))}
       </div>
@@ -30,7 +42,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
 
   return (
     <ScrollArea className="w-full -mx-4 px-4">
-      <div className="flex gap-4 pb-3">
+      <div className="flex gap-4 pb-3 relative">
         {/* Add Friend Button */}
         <motion.button
           onClick={onAddFriendClick}
@@ -68,6 +80,24 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
             ))
           )}
         </AnimatePresence>
+
+        {/* Shimmer skeleton placeholders with fade-out */}
+        {sortedFriends.length > 0 && skeletonCount > 0 && (
+          <div className="flex gap-4 relative">
+            {Array.from({ length: skeletonCount }).map((_, index) => (
+              <div
+                key={`skeleton-${index}`}
+                className="flex flex-col items-center gap-2 flex-shrink-0"
+                style={{ opacity: 0.6 - (index * 0.15) }}
+              >
+                <ShimmerSkeleton className="w-16 h-16 rounded-full" />
+                <ShimmerSkeleton className="w-12 h-3 rounded" />
+              </div>
+            ))}
+            {/* Gradient fade overlay */}
+            <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+          </div>
+        )}
       </div>
       <ScrollBar orientation="horizontal" className="invisible" />
     </ScrollArea>

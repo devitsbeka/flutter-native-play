@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface RecentRoom {
   id: string;
   room_code: string;
+  category_id: string | null;
   category_name: string | null;
   status: string;
   created_at: string;
@@ -96,6 +97,7 @@ export function useRecentRooms(limit: number = 10) {
         return {
           id: room.id,
           room_code: room.room_code,
+          category_id: room.category_id,
           category_name: room.category_name,
           status: room.status || "completed",
           created_at: room.created_at || "",
