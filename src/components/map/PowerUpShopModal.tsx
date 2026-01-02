@@ -13,18 +13,8 @@ import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { REWARDS } from "@/config/rewardConfig";
 
-// Power-up images for header
-import power5050 from "@/assets/powers/5050.png";
-import powerFreeze from "@/assets/powers/freeze.png";
-import powerReplace from "@/assets/powers/replace.png";
-import powerTimeDrain from "@/assets/powers/time-drain.png";
-
-const POWER_UP_IMAGES: Record<PowerUpType, string> = {
-  "5050": power5050,
-  "freeze": powerFreeze,
-  "replace": powerReplace,
-  "time-drain": powerTimeDrain,
-};
+// Power icon for header
+import powerIcon from "@/assets/icons/icon-powers.png";
 
 interface PowerUpShopModalProps {
   isOpen: boolean;
@@ -153,13 +143,10 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
     }
   };
 
-  // Custom header icon with coin balance - shows selected power-up
+  // Custom header icon with coin balance - shows power bottle icon
   const headerIcon = (
     <div className="flex flex-col items-center gap-2">
       <motion.div
-        key={selectedType}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
         className="relative w-16 h-16 rounded-full flex items-center justify-center"
         style={{
           background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
@@ -167,9 +154,9 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
         }}
       >
         <motion.img
-          src={POWER_UP_IMAGES[selectedType]}
-          alt={selectedType}
-          className="w-10 h-10 object-contain drop-shadow-md"
+          src={powerIcon}
+          alt="Powers"
+          className="w-12 h-12 object-contain drop-shadow-md"
           animate={{ y: [0, -3, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
