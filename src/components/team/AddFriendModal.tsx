@@ -75,9 +75,9 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
       icon={<UserPlus className="w-8 h-8" />}
       variant="success"
     >
-      <div className="space-y-4 px-2">
+      <div className="space-y-4 px-1">
         {/* Search Input */}
-        <div className="relative">
+        <div className="relative px-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
