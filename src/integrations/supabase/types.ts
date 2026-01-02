@@ -455,6 +455,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          animated_avatar_url: string | null
           avatar_url: string | null
           best_streak: number | null
           coins: number
@@ -471,6 +472,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          animated_avatar_url?: string | null
           avatar_url?: string | null
           best_streak?: number | null
           coins?: number
@@ -487,6 +489,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          animated_avatar_url?: string | null
           avatar_url?: string | null
           best_streak?: number | null
           coins?: number
