@@ -2,7 +2,14 @@ import { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import splashBackground from '@/assets/splash-background.png';
 import logoImage from '@/assets/logo-worldquizzes.png';
-import { onVideosLoaded, areVideosLoaded } from '@/components/game/VideoPreloader';
+import { 
+  onVideosLoaded, 
+  areVideosLoaded, 
+  onVideoLoadProgress, 
+  offVideoLoadProgress,
+  getVideoLoadProgress,
+  VideoLoadProgress 
+} from '@/components/game/VideoPreloader';
 import { preloadCategoryIcons } from '@/hooks/useCategoryIconResolver';
 import { CATEGORY_ICON_KEYWORDS } from '@/data/categoryIconKeywords';
 
@@ -12,10 +19,10 @@ interface SplashScreenProps {
 
 export function SplashScreen({ children }: SplashScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [iconsLoaded, setIconsLoaded] = useState(false);
   const [videosReady, setVideosReady] = useState(areVideosLoaded());
+  const [videoProgress, setVideoProgress] = useState<VideoLoadProgress>(getVideoLoadProgress());
 
   // Preload splash images before starting the loading animation
   useEffect(() => {
@@ -56,51 +63,52 @@ export function SplashScreen({ children }: SplashScreenProps) {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Listen for video preloading completion
+  // Listen for video preloading progress and completion
   useEffect(() => {
     if (areVideosLoaded()) {
       setVideosReady(true);
+      setVideoProgress({ loaded: 1, total: 1, percentage: 100, currentVideo: '' });
       return;
     }
     
+    const handleProgress = (progress: VideoLoadProgress) => {
+      setVideoProgress(progress);
+    };
+    
+    onVideoLoadProgress(handleProgress);
     onVideosLoaded(() => {
       setVideosReady(true);
     });
+
+    return () => {
+      offVideoLoadProgress(handleProgress);
+    };
   }, []);
 
-  // Start progress animation only after images are loaded
-  // Complete only after images, icons, AND videos are ready
+  // Complete loading when all assets are ready
   useEffect(() => {
-    if (!imagesLoaded) return;
-
-    const duration = 3000; // 3 seconds total loading time
-    const interval = 50; // Update every 50ms
-    const increment = (100 / duration) * interval;
-    
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        const next = prev + increment;
-        if (next >= 100) {
-          clearInterval(timer);
-          // Only finish loading when videos and icons are also ready
-          if (videosReady && iconsLoaded) {
-            setTimeout(() => setIsLoading(false), 400);
-          }
-          return 100;
-        }
-        return next;
-      });
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [imagesLoaded, videosReady, iconsLoaded]);
-
-  // Handle case where progress finishes before videos/icons
-  useEffect(() => {
-    if (progress >= 100 && videosReady && iconsLoaded && isLoading) {
+    if (imagesLoaded && iconsLoaded && videosReady) {
+      // Small delay for smooth transition
       setTimeout(() => setIsLoading(false), 400);
     }
-  }, [progress, videosReady, iconsLoaded, isLoading]);
+  }, [imagesLoaded, iconsLoaded, videosReady]);
+
+  // Fallback timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('[SplashScreen] Fallback timeout triggered');
+        setIsLoading(false);
+      }
+    }, 30000); // 30 second maximum
+
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
+
+  // Calculate combined progress (icons + videos)
+  const combinedProgress = videosReady 
+    ? 100 
+    : Math.min(99, videoProgress.percentage);
 
   return (
     <>
@@ -181,8 +189,8 @@ export function SplashScreen({ children }: SplashScreenProps) {
                     <motion.div
                       className="absolute inset-y-0 left-0 rounded-lg"
                       initial={{ width: '0%' }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.1, ease: 'linear' }}
+                      animate={{ width: `${combinedProgress}%` }}
+                      transition={{ duration: 0.2, ease: 'linear' }}
                       style={{
                         background: 'linear-gradient(180deg, hsl(45 100% 60%) 0%, hsl(40 100% 50%) 50%, hsl(35 100% 45%) 100%)',
                         boxShadow: `
@@ -227,7 +235,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
                     />
                   </div>
 
-                  {/* Percentage display */}
+                  {/* Progress display with video count */}
                   <motion.div
                     className="mt-4 text-center"
                     initial={{ opacity: 0 }}
@@ -245,8 +253,21 @@ export function SplashScreen({ children }: SplashScreenProps) {
                         `,
                       }}
                     >
-                      {Math.round(progress)}%
+                      {combinedProgress}%
                     </span>
+                    
+                    {/* Video count indicator */}
+                    {videoProgress.total > 0 && !videosReady && (
+                      <div 
+                        className="mt-1 text-sm font-medium"
+                        style={{
+                          color: 'hsl(0 0% 80%)',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                        }}
+                      >
+                        {videoProgress.loaded}/{videoProgress.total} ვიდეო
+                      </div>
+                    )}
                   </motion.div>
 
                   {/* Loading text */}
