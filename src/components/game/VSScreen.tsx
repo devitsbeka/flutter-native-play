@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
+import { VSMatchHelpModal } from "./VSMatchHelpModal";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -63,6 +64,7 @@ export function VSScreen() {
   const [slotPhase, setSlotPhase] = useState<SlotPhase>("searching");
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -167,7 +169,11 @@ export function VSScreen() {
           <ArrowLeft className="w-6 h-6 text-white" strokeWidth={2.5} />
         </motion.button>
         
-        <motion.button className="p-2" whileTap={{ scale: 0.95 }}>
+        <motion.button 
+          className="p-2" 
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowHelpModal(true)}
+        >
           <HelpCircle className="w-6 h-6 text-white/80" strokeWidth={2} />
         </motion.button>
       </motion.div>
@@ -273,6 +279,12 @@ export function VSScreen() {
           </ChunkyButton>
         </motion.div>
       </div>
+
+      {/* Help Modal */}
+      <VSMatchHelpModal 
+        isOpen={showHelpModal} 
+        onClose={() => setShowHelpModal(false)} 
+      />
     </div>
   );
 }
