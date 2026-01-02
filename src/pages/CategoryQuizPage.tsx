@@ -304,8 +304,9 @@ export default function CategoryQuizPage() {
             icon_slug: q.icon_slug,
           };
         })
-        // Filter out questions/answers that are too long for viewport
+        // Filter out questions without icons or that are too long for viewport
         .filter((q) => {
+          if (!q.icon_slug) return false; // Require icon
           if (q.question.length > QUESTION_MAX_LENGTH) return false;
           if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
           if (q.incorrect_answers.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;

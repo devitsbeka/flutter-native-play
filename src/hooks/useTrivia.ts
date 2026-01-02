@@ -114,8 +114,9 @@ export function useTrivia() {
               .limit(50); // Increased from 10 to ensure we have enough after filtering
             
             if (data && data.length > 0) {
-              // Filter by length first, then pick random
+              // Filter by length and icon first, then pick random
               const validQuestions = data.filter(q => {
+                if (!q.icon_slug) return false; // Require icon
                 if (q.question_text.length > QUESTION_MAX_LENGTH) return false;
                 if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
                 const incorrects = Array.isArray(q.incorrect_answers) 
@@ -200,8 +201,9 @@ export function useTrivia() {
               hash: questionHash,
             };
           })
-          // Filter out questions/answers that are too long for viewport
+          // Filter out questions without icons or that are too long for viewport
           .filter((q: TriviaQuestion & { hash: string }) => {
+            if (!q.questionIconSlug) return false; // Require icon
             if (q.question.length > QUESTION_MAX_LENGTH) return false;
             if (q.correctAnswer.length > ANSWER_MAX_LENGTH) return false;
             if (q.incorrectAnswers.some(a => a.length > ANSWER_MAX_LENGTH)) return false;
