@@ -312,7 +312,7 @@ export default function Index() {
 
 
         {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: -20 }}>
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 10 }}>
           <motion.div 
             className="flex flex-col items-center w-full max-w-[360px] px-4"
             initial={{ scale: 0.8, opacity: 0 }}
