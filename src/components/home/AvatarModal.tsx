@@ -289,7 +289,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
 
     setIsAnimating(true);
-    toast.info("Starting avatar animation... This takes 1-2 minutes with Fal.ai!", { duration: 5000 });
+    toast.info("Starting avatar animation... This takes 1-2 minutes!", { duration: 5000 });
 
     try {
       // Start the animation
@@ -304,7 +304,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       if (!data.success) throw new Error(data.error || "Failed to start animation");
 
       // If completed immediately (unlikely)
-      if (data.status === "completed" && data.videoUrl) {
+      if (data.videoUrl) {
         await updateProfile({ animated_avatar_url: data.videoUrl });
         toast.success("Avatar animated! 🎬", { duration: 5000 });
         confetti({
@@ -317,21 +317,27 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         return;
       }
 
-      // Poll for status
+      // Get polling info
       const requestId = data.requestId;
-      if (!requestId) throw new Error("No request ID received");
+      const statusUrl = data.statusUrl;
+      const responseUrl = data.responseUrl;
+      
+      if (!requestId || !statusUrl || !responseUrl) {
+        throw new Error("No request ID or URLs received");
+      }
 
       toast.info("Animation started! Checking progress...", { duration: 3000 });
 
-      // Poll every 5 seconds for up to 3 minutes (36 attempts) - Fal.ai is faster
+      // Poll every 5 seconds for up to 3 minutes (36 attempts)
       const maxAttempts = 36;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
         const { data: statusData, error: statusError } = await supabase.functions.invoke("animate-avatar", {
           body: { 
-            checkStatus: true,
             requestId,
+            statusUrl,
+            responseUrl,
             userId: user.id
           },
         });
@@ -341,7 +347,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           continue;
         }
 
-        if (statusData?.status === "completed" && statusData?.videoUrl) {
+        if (statusData?.success && statusData?.videoUrl) {
           toast.success("Avatar animated! 🎬", { duration: 5000 });
           confetti({
             particleCount: 100,
@@ -349,8 +355,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             origin: { y: 0.6 },
             colors: ["#A855F7", "#EC4899", "#3B82F6"],
           });
-          // Profile is updated by the edge function
-          // Trigger a refresh
+          // Profile is updated by the edge function, trigger a refresh
           window.location.reload();
           return;
         }
