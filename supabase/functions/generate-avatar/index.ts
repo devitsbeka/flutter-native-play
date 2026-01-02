@@ -86,7 +86,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: styleImageUrl,
-        textPrompt: "Extreme close-up portrait of face only, 3D Disney Pixar animated movie character, adorable cute stylized cartoon avatar with exaggerated features, HUGE gorgeous glossy sparkling eyes with beautiful iris details and bright white catchlight reflections, flawless smooth porcelain baby-soft skin with subtle blush on cheeks, gentle closed-lip warm smile with NO teeth showing, soft dreamy volumetric lighting from front with magical purple and pink rim lighting, perfectly styled voluminous hair with individual strands, face fills entire frame with NO neck NO shoulders NO clothing visible, pure gradient pastel lavender pink background, hyperdetailed Pixar movie quality 3D render, magical fairy tale princess aesthetic, soft bokeh glow effect, 8K ultra detailed, Octane render, Unreal Engine 5 quality",
+        textPrompt: "Transform this exact person into a 3D Disney Pixar style portrait, PRESERVE their exact facial features and likeness, keep their same face shape nose shape and eye shape, just apply Pixar cartoon rendering style, beautiful glossy eyes with soft catchlight reflections while keeping their original eye color and shape, smooth stylized skin with subtle glow, soft closed-lip smile NO teeth, gentle cinematic lighting with soft purple pink rim light, same hairstyle as the original photo, close-up face portrait NO neck NO shoulders NO clothing, soft gradient background, Pixar movie quality 3D render, maintain the persons identity and recognizable features, 8K quality",
       }),
     });
 
