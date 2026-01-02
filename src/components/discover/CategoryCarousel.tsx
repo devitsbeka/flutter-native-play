@@ -65,11 +65,35 @@ export function CategoryCarousel({
         <ChevronRight className="w-4 h-4" />
       </button>
 
-      {/* Scrollable Container */}
+      {/* Scrollable Container - Draggable */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 cursor-grab active:cursor-grabbing select-none touch-pan-x"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        onMouseDown={(e) => {
+          const slider = scrollRef.current;
+          if (!slider) return;
+          let isDown = true;
+          let startX = e.pageX - slider.offsetLeft;
+          let scrollLeft = slider.scrollLeft;
+          
+          const onMouseMove = (e: MouseEvent) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            slider.scrollLeft = scrollLeft - walk;
+          };
+          
+          const onMouseUp = () => {
+            isDown = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+          };
+          
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+        }}
       >
         {categories.map((category, index) => {
           // Use uuid for favorites if available, fallback to id

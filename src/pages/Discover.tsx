@@ -137,7 +137,7 @@ export default function Discover() {
         <div className="relative z-10">
           {/* Header with Page Title */}
           <PageHeader
-            title="ძებნა"
+            title="აღმოაჩინე"
             showBack={false}
             rightElements={
               <button
