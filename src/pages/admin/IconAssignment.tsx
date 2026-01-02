@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, RefreshCcw } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, RefreshCcw, AlertTriangle, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,6 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
@@ -57,6 +62,8 @@ export default function IconAssignment() {
   
   // Track broken icons
   const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
+  const [showBrokenIcons, setShowBrokenIcons] = useState(false);
+  const [deletingBroken, setDeletingBroken] = useState(false);
   
   // Batch assignment state
   const [batchRunning, setBatchRunning] = useState(false);
@@ -115,6 +122,60 @@ export default function IconAssignment() {
   // Handle icon load error - mark as broken
   const handleIconError = (slug: string) => {
     setBrokenIcons(prev => new Set([...prev, slug]));
+  };
+
+  // Get broken icon details for display
+  const brokenIconDetails = useMemo(() => {
+    return icons.filter(icon => brokenIcons.has(icon.slug));
+  }, [icons, brokenIcons]);
+
+  // Delete broken icons from database
+  const deleteBrokenIcons = async () => {
+    if (brokenIcons.size === 0) return;
+    
+    setDeletingBroken(true);
+    try {
+      const slugsToDelete = Array.from(brokenIcons);
+      const { error } = await supabase
+        .from('icon_library')
+        .delete()
+        .in('slug', slugsToDelete);
+      
+      if (error) throw error;
+      
+      // Remove from local state
+      setIcons(prev => prev.filter(icon => !brokenIcons.has(icon.slug)));
+      setBrokenIcons(new Set());
+      toast.success(`${slugsToDelete.length} გატეხილი აიკონი წაიშალა`);
+    } catch (error) {
+      console.error('Error deleting broken icons:', error);
+      toast.error('შეცდომა წაშლისას');
+    } finally {
+      setDeletingBroken(false);
+    }
+  };
+
+  // Delete single broken icon
+  const deleteSingleBrokenIcon = async (slug: string) => {
+    try {
+      const { error } = await supabase
+        .from('icon_library')
+        .delete()
+        .eq('slug', slug);
+      
+      if (error) throw error;
+      
+      setIcons(prev => prev.filter(icon => icon.slug !== slug));
+      setBrokenIcons(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(slug);
+        return newSet;
+      });
+      toast.success(`აიკონი წაიშალა: ${slug}`);
+    } catch (error) {
+      console.error('Error deleting icon:', error);
+      toast.error('შეცდომა წაშლისას');
+    }
   };
 
   // Handle icon assignment
@@ -570,11 +631,62 @@ export default function IconAssignment() {
             <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
               <span>{filteredIcons.length.toLocaleString()} აიკონი</span>
               {brokenIcons.size > 0 && (
-                <span className="text-orange-500">
-                  ({brokenIcons.size} გატეხილი დამალულია)
-                </span>
+                <button
+                  onClick={() => setShowBrokenIcons(!showBrokenIcons)}
+                  className="text-orange-500 hover:text-orange-600 flex items-center gap-1"
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  {brokenIcons.size} გატეხილი
+                  {showBrokenIcons ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
               )}
             </div>
+            
+            {/* Broken Icons Panel */}
+            <Collapsible open={showBrokenIcons} onOpenChange={setShowBrokenIcons}>
+              <CollapsibleContent>
+                <div className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-orange-600">გატეხილი აიკონები</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={deleteBrokenIcons}
+                      disabled={deletingBroken || brokenIcons.size === 0}
+                      className="h-7 text-xs"
+                    >
+                      {deletingBroken ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                      ) : (
+                        <Trash2 className="h-3 w-3 mr-1" />
+                      )}
+                      ყველას წაშლა ({brokenIcons.size})
+                    </Button>
+                  </div>
+                  <ScrollArea className="max-h-40">
+                    <div className="space-y-1">
+                      {brokenIconDetails.map(icon => (
+                        <div key={icon.slug} className="flex items-center justify-between py-1 px-2 rounded bg-background/50">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <AlertTriangle className="h-3 w-3 text-orange-500 shrink-0" />
+                            <span className="text-xs truncate">{icon.slug}</span>
+                            <Badge variant="outline" className="text-[10px] px-1">{icon.category}</Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteSingleBrokenIcon(icon.slug)}
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           {/* Icon Grid */}
