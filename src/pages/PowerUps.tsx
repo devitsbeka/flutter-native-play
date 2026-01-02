@@ -29,6 +29,7 @@ import replaceIcon from "@/assets/powers/replace.png";
 import timeDrainIcon from "@/assets/powers/time-drain.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 interface ShopItem {
   id: string;
@@ -254,78 +255,37 @@ const SHOP_ITEMS: ShopItem[] = [
     savings: 35,
     vipDuration: "month",
   },
-  // Frames
-  {
-    id: "frame_galaxy",
-    name: "Galaxy",
-    description: "კოსმოსური ჩარჩო ვარსკვლავებით",
-    price: 20,
-    currency: "gems",
-    icon: <Frame className="w-8 h-8 text-purple-200" />,
-    gradient: "linear-gradient(135deg, hsl(263 70% 55%) 0%, hsl(320 75% 50%) 100%)",
-    category: "frames",
-    frameId: "galaxy",
-    badge: "new",
-  },
-  {
-    id: "frame_fire",
-    name: "Fire",
-    description: "ცეცხლოვანი ანიმაციური ჩარჩო",
-    price: 30,
-    currency: "gems",
-    icon: <Frame className="w-8 h-8 text-orange-200" />,
-    gradient: "linear-gradient(135deg, hsl(25 90% 55%) 0%, hsl(350 80% 50%) 100%)",
-    category: "frames",
-    frameId: "fire",
-    badge: "popular",
-  },
-  {
-    id: "frame_ice",
-    name: "Ice",
-    description: "ყინულოვანი ბრჭყვიალა ჩარჩო",
-    price: 25,
-    currency: "gems",
-    icon: <Frame className="w-8 h-8 text-cyan-200" />,
-    gradient: "linear-gradient(135deg, hsl(190 80% 55%) 0%, hsl(210 75% 50%) 100%)",
-    category: "frames",
-    frameId: "ice",
-  },
-  {
-    id: "frame_golden",
-    name: "Golden Crown",
-    description: "ლეგენდარული ოქროს გვირგვინი",
-    price: 50,
-    currency: "gems",
-    icon: <Frame className="w-8 h-8 text-amber-200" />,
-    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(35 85% 45%) 100%)",
-    category: "frames",
-    frameId: "golden",
-    badge: "best-value",
-  },
-  {
-    id: "frame_neon",
-    name: "Neon Glow",
-    description: "ნეონის ბრწყინვალე ჩარჩო",
-    price: 35,
-    currency: "gems",
-    icon: <Frame className="w-8 h-8 text-green-200" />,
-    gradient: "linear-gradient(135deg, hsl(150 70% 50%) 0%, hsl(180 75% 45%) 100%)",
-    category: "frames",
-    frameId: "neon",
-  },
-  {
-    id: "frame_rainbow",
-    name: "Rainbow",
-    description: "ცისარტყელას მრავალფერი ჩარჩო",
-    price: 40,
-    currency: "gems",
-    icon: <Frame className="w-8 h-8 text-pink-200" />,
-    gradient: "linear-gradient(135deg, hsl(350 80% 55%) 0%, hsl(45 90% 55%) 50%, hsl(180 70% 50%) 100%)",
-    category: "frames",
-    frameId: "rainbow",
-    badge: "popular",
-  },
 ];
+
+// Helper function to get frame data by ID
+const getFrameById = (frameId: string) => AVATAR_FRAMES.find(f => f.id === frameId);
+
+// Frame Preview Component for shop
+const FramePreviewIcon = ({ frameId }: { frameId: string }) => {
+  const frame = getFrameById(frameId);
+  return (
+    <AvatarWithFrame
+      emoji="👤"
+      size="sm"
+      showVipBadge={false}
+      frameOverride={frame}
+    />
+  );
+};
+
+// Frame shop items - generated from AVATAR_FRAMES
+const FRAME_SHOP_ITEMS: ShopItem[] = AVATAR_FRAMES.map((frame, index) => ({
+  id: `frame_${frame.id}`,
+  name: frame.name,
+  description: frame.description,
+  price: frame.price,
+  currency: "gems" as const,
+  icon: <FramePreviewIcon frameId={frame.id} />,
+  gradient: "transparent", // Frame preview shows the actual frame, no need for gradient
+  category: "frames" as const,
+  frameId: frame.id,
+  badge: index === 0 ? "new" as const : index === 1 ? "popular" as const : frame.rarity === "legendary" ? "best-value" as const : null,
+}));
 
 export default function PowerUps() {
   const navigate = useNavigate();
@@ -345,7 +305,9 @@ export default function PowerUps() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
 
-  const filteredItems = SHOP_ITEMS.filter((item) => item.category === activeTab);
+  // Combine shop items with frame items
+  const allItems = [...SHOP_ITEMS, ...FRAME_SHOP_ITEMS];
+  const filteredItems = allItems.filter((item) => item.category === activeTab);
 
   const handlePowerClick = (type: PowerUpType) => {
     setSelectedPowerType(type);
@@ -353,7 +315,7 @@ export default function PowerUps() {
   };
 
   const handleDealClick = (dealId: string) => {
-    const item = SHOP_ITEMS.find((i) => i.id === dealId);
+    const item = allItems.find((i) => i.id === dealId);
     if (item) handlePurchase(item);
   };
 
