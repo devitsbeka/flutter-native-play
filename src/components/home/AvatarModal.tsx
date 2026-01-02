@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, Sparkles, RefreshCw, Loader2, Check, ImageIcon, User, Palette, Wand2 } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2 } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,14 +20,6 @@ interface AvatarGeneration {
   created_at: string;
 }
 
-type AvatarStyle = 'realistic' | 'cartoon' | 'artistic';
-
-const AVATAR_STYLES: { id: AvatarStyle; label: string; description: string; icon: React.ReactNode }[] = [
-  { id: 'realistic', label: 'Realistic', description: 'Professional headshot', icon: <User className="w-4 h-4" /> },
-  { id: 'cartoon', label: 'Cartoon', description: 'Pixar/Disney style', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'artistic', label: 'Artistic', description: 'Digital art style', icon: <Palette className="w-4 h-4" /> },
-];
-
 export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const { user, profile, updateProfile } = useAuth();
   const [step, setStep] = useState<"gallery" | "upload" | "camera" | "generating" | "preview">("gallery");
@@ -35,7 +27,6 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [generatedAvatar, setGeneratedAvatar] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<AvatarStyle>('realistic');
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   
@@ -188,7 +179,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
       // Generate avatar via edge function
       const { data, error } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl, style: selectedStyle },
+        body: { imageUrl },
       });
 
       if (error) throw new Error(error.message);
@@ -388,37 +379,13 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     if (step === "upload" && uploadedImage) {
       return (
         <div className="flex flex-col items-center gap-4">
-          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary/30">
+          <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/30">
             <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
           </div>
           
-          {/* Style Selector */}
-          <div className="w-full">
-            <p className="text-sm font-medium text-foreground mb-2">Choose Style</p>
-            <div className="grid grid-cols-3 gap-2">
-              {AVATAR_STYLES.map((style) => (
-                <motion.button
-                  key={style.id}
-                  onClick={() => setSelectedStyle(style.id)}
-                  className={`p-3 rounded-xl border-2 transition-all text-center ${
-                    selectedStyle === style.id
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-1 ${
-                    selectedStyle === style.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  }`}>
-                    {style.icon}
-                  </div>
-                  <p className="text-xs font-medium text-foreground">{style.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{style.description}</p>
-                </motion.button>
-              ))}
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground text-center">
+            Your photo will be transformed into a premium 3D avatar
+          </p>
 
           <div className="flex gap-2 w-full">
             <ChunkyButton
