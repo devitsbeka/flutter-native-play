@@ -491,25 +491,30 @@ export default function Index() {
               ) : (
                 <>
                   {/* Flag and Name */}
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2.5">
                     {profile?.country_code && (
-                      <FlagIcon countryCode={profile.country_code} size="lg" />
+                      <FlagIcon countryCode={profile.country_code} size="md" />
                     )}
                     <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
-                  {/* Coins & Gems below name - no container */}
-                  <div className="flex items-center gap-5 mt-2">
+                  
+                  {/* Coins & Gems */}
+                  <div className="flex items-center gap-6 mt-4">
                     <div className="flex items-center gap-2">
-                      <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                      <span className="font-bold text-gray-700 text-base drop-shadow-sm">
+                      <div className="w-9 h-9 rounded-full border border-gray-300/50 flex items-center justify-center">
+                        <img src={coinIcon} alt="Coins" className="w-7 h-7" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-lg">
                         {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                      <span className="font-bold text-gray-700 text-base drop-shadow-sm">
+                      <div className="w-9 h-9 rounded-full border border-gray-300/50 flex items-center justify-center">
+                        <img src={gemIcon} alt="Gems" className="w-7 h-7" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-lg">
                         {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
                       </span>
                     </div>
