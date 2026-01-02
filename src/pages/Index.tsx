@@ -498,8 +498,12 @@ export default function Index() {
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
-                    </>
-                  )}
+                  {/* XP Progress Text */}
+                  <span className="text-white/80 text-sm font-medium mt-1">
+                    {levelInfo.xpInCurrentLevel.toLocaleString()} / {levelInfo.xpNeededForNextLevel.toLocaleString()} XP
+                  </span>
+                </>
+              )}
                 </motion.div>
           </motion.div>
         </div>
