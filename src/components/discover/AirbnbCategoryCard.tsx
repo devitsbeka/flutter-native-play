@@ -323,10 +323,10 @@ export function AirbnbCategoryCard({
           {/* Name Section - Direct text on the chunky container */}
           <div className="px-5 py-3.5">
             <h3 
-              className="uppercase tracking-wide line-clamp-1 text-center"
+              className="font-bold uppercase tracking-wide line-clamp-1 text-left"
               style={{
-                fontFamily: "'TASolivare', sans-serif",
-                fontSize: isFull ? '1.25rem' : '1.1rem',
+                fontFamily: "'Google Sans', sans-serif",
+                fontSize: isFull ? '1rem' : '0.9rem',
                 color: 'rgba(50, 50, 70, 0.85)',
                 textShadow: '0 1px 0 rgba(255,255,255,0.6)',
               }}
