@@ -65,14 +65,13 @@ export function AvatarCircle({ avatarUrl, size = 320, level }: AvatarCircleProps
       {level !== undefined && (
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20">
           <div 
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full shadow-lg"
+            className="flex items-center px-4 py-2 rounded-full shadow-lg whitespace-nowrap"
             style={{
               background: "linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)",
               boxShadow: "0 4px 12px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
-            <span className="text-lg">🎂</span>
-            <span className="font-bold text-gray-800 text-sm">დონე: {level}</span>
+            <span className="font-bold text-gray-800 text-sm">დონე {level}</span>
           </div>
         </div>
       )}
