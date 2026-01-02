@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
-import { Sparkles } from "lucide-react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 
@@ -243,15 +242,6 @@ export function AvatarCircle({
             )}
 
             {/* Sparkle indicator for animated avatars */}
-            {animatedAvatarUrl && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg z-20"
-              >
-                <Sparkles className="w-4 h-4 text-white" />
-              </motion.div>
-            )}
           </>
         ) : (
           <div 

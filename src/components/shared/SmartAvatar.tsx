@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -197,19 +196,6 @@ export function SmartAvatar({
         </AvatarFallback>
       </Avatar>
 
-      {/* Sparkle indicator for animated avatars */}
-      {showSparkle && hasAnimatedAvatar && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className={cn(
-            "absolute bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg z-20",
-            sparkleContainerSizes[size]
-          )}
-        >
-          <Sparkles className={cn("text-white", sparkleSizes[size])} />
-        </motion.div>
-      )}
 
       {/* Online status indicator */}
       {onlineStatus !== undefined && onlineStatus !== null && (
