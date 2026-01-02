@@ -7,6 +7,7 @@ export interface RecentRoom {
   room_code: string;
   category_id: string | null;
   category_name: string | null;
+  category_icon_slug: string | null;
   status: string;
   created_at: string;
   completed_at: string | null;
@@ -67,6 +68,17 @@ export function useRecentRooms(limit: number = 10) {
 
       if (roomsError) throw roomsError;
 
+      // Fetch category icon_slugs
+      const categoryIds = [...new Set(roomsData?.map(r => r.category_id).filter(Boolean) || [])];
+      const { data: categoriesData } = await supabase
+        .from("categories")
+        .select("category_id, icon_slug")
+        .in("category_id", categoryIds);
+      
+      const categoryIconMap = new Map(
+        (categoriesData || []).map(c => [c.category_id, c.icon_slug])
+      );
+
       // Fetch all participants for these rooms
       const { data: allParticipants, error: allPartError } = await supabase
         .from("room_participants")
@@ -121,6 +133,7 @@ export function useRecentRooms(limit: number = 10) {
           room_code: room.room_code,
           category_id: room.category_id,
           category_name: room.category_name,
+          category_icon_slug: room.category_id ? categoryIconMap.get(room.category_id) || null : null,
           status: room.status || "completed",
           created_at: room.created_at || "",
           completed_at: room.completed_at,
