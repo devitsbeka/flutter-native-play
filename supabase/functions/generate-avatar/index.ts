@@ -7,20 +7,11 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-type AvatarStyle = 'realistic' | 'cartoon' | 'artistic';
-
 interface AvatarRequest {
   imageUrl: string;
-  style?: AvatarStyle;
 }
 
-const STYLE_PROMPTS: Record<AvatarStyle, string> = {
-  realistic: "Create a professional 3D rendered portrait based on this photo. CRITICAL: Preserve the person's exact facial structure, eye shape, nose, mouth, skin tone, and overall likeness with high accuracy - this must clearly look like them. Apply subtle 3D rendering with natural skin texture, professional studio lighting, and a clean dark gradient background. Keep all proportions completely realistic with no stylization or exaggeration. Add soft professional rim lighting. The result should look like a high-end corporate headshot or LinkedIn photo with subtle 3D polish.",
-  
-  cartoon: "Transform this photo into a fun 3D Pixar/Disney style cartoon character. Give them big expressive cartoon eyes with sparkle highlights, smooth stylized skin, cute rounded features, and voluminous stylized hair. Keep a friendly cheerful expression. Use soft violet and pink accent lighting. Dark navy gradient background. Make it look like a charming Pixar character while maintaining some resemblance to the original person.",
-  
-  artistic: "Transform this photo into a stylized digital art portrait. Create an artistic interpretation with bold colors, dramatic lighting, and painterly textures. Use vibrant color grading with teal and orange tones. Add artistic brush stroke effects and dynamic shadows. Keep the person recognizable but with an artistic, illustration-style finish. Dark moody background with color splashes."
-};
+const AVATAR_PROMPT = "Create a high-quality 3D rendered portrait based on this photo. CRITICAL: Preserve the person's exact facial structure, eye shape, nose, mouth, jawline, skin tone, hair style, hair color, and overall likeness with very high accuracy - this must clearly look like them. Apply subtle 3D rendering with smooth but natural skin texture, as if this were a high-end video game character or Metahuman render. Use professional studio lighting with soft violet/blue rim lighting on hair and face edges. Keep proportions realistic with only minimal stylization. Clean dark navy gradient background. The result should look like a premium 3D avatar portrait suitable for gaming or professional use.";
 
 // Fetch image and convert to base64 data URL
 async function fetchImageAsDataUrl(imageUrl: string): Promise<string> {
@@ -48,14 +39,13 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { imageUrl, style = 'realistic' }: AvatarRequest = await req.json();
+    const { imageUrl }: AvatarRequest = await req.json();
 
     if (!imageUrl) {
       throw new Error("imageUrl is required");
     }
 
-    const prompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.realistic;
-    console.log("Starting avatar generation with style:", style, "for image:", imageUrl.substring(0, 100));
+    console.log("Starting avatar generation for image:", imageUrl.substring(0, 100));
 
     // Fetch the image and convert to base64 data URL
     const imageDataUrl = await fetchImageAsDataUrl(imageUrl);
@@ -81,7 +71,7 @@ serve(async (req) => {
               },
               {
                 type: "text",
-                text: prompt
+                text: AVATAR_PROMPT
               }
             ]
           }
