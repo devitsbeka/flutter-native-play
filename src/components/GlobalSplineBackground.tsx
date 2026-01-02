@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 // Pages where the background should be visible
-const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile", "/category"];
+const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/team", "/profile", "/category", "/auth", "/vip", "/power-ups"];
 
 // Pages where particles should be disabled for performance
 const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/team"];

@@ -16,11 +16,11 @@ export function PendingChallengesSection({ onAcceptChallenge }: PendingChallenge
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-amber-300">
+        <div className="flex items-center gap-2 text-amber-600">
           <Sparkles className="w-4 h-4" />
           <span className="text-sm font-bold tracking-wide">გამოწვევები</span>
         </div>
-        <div className="animate-pulse rounded-2xl bg-white/20 h-24" />
+        <div className="animate-pulse rounded-2xl bg-slate-200 h-24" />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function PendingChallengesSection({ onAcceptChallenge }: PendingChallenge
       animate={{ opacity: 1, y: 0 }}
       className="space-y-3"
     >
-      <div className="flex items-center gap-2 text-amber-300">
+      <div className="flex items-center gap-2 text-amber-600">
         <Sparkles className="w-4 h-4" />
         <span className="text-sm font-bold tracking-wide">მომლოდინე გამოწვევები ({pendingChallenges.length})</span>
       </div>
@@ -134,8 +134,8 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
       className={cn(
         "relative p-4 rounded-2xl backdrop-blur-sm border shadow-lg",
         isUrgent 
-          ? "bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30 shadow-red-500/20" 
-          : "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 shadow-amber-500/20"
+          ? "bg-gradient-to-r from-red-100 to-orange-100 border-red-300 shadow-red-200" 
+          : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 shadow-amber-200"
       )}
     >
       {/* Decline button in top right */}
@@ -144,7 +144,7 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
         disabled={isDeclining}
         className={cn(
           "absolute top-2 right-2 p-1.5 rounded-full transition-colors",
-          "bg-white/10 hover:bg-red-500/30 text-white/60 hover:text-white",
+          "bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-600",
           isDeclining && "opacity-50 cursor-not-allowed"
         )}
         whileHover={{ scale: 1.1 }}
@@ -156,8 +156,8 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
       <div className={cn(
         "absolute inset-0 rounded-2xl animate-pulse",
         isUrgent 
-          ? "bg-gradient-to-r from-red-400/10 to-orange-400/10" 
-          : "bg-gradient-to-r from-amber-400/10 to-orange-400/10"
+          ? "bg-gradient-to-r from-red-200/30 to-orange-200/30" 
+          : "bg-gradient-to-r from-amber-200/30 to-orange-200/30"
       )} />
       
       <div className="relative flex items-center gap-4">
@@ -165,7 +165,7 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
         <div className="relative">
           <Avatar className={cn(
             "w-14 h-14 border-2",
-            isUrgent ? "border-red-400/50" : "border-amber-400/50"
+            isUrgent ? "border-red-300" : "border-amber-300"
           )}>
             <AvatarImage src={challenge.challengerAvatar || undefined} />
             <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold">
@@ -182,23 +182,23 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
         {/* Challenge Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="font-medium text-white truncate">{challenge.challengerNickname}</p>
+            <p className="font-medium text-slate-800 truncate">{challenge.challengerNickname}</p>
           </div>
           
           {/* Show challenger's score prominently if they've already played */}
           {challenge.challengerScore !== null ? (
             <div className="flex items-center gap-2 mb-1">
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/30 text-amber-200 text-sm font-semibold">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold">
                 <Trophy className="w-3.5 h-3.5" />
                 {challenge.challengerScore} ქულა
               </div>
-              <span className="text-white/60 text-sm">- გადააჯობე!</span>
+              <span className="text-slate-500 text-sm">- გადააჯობე!</span>
             </div>
           ) : (
-            <p className="text-amber-300 text-sm mb-1">გამოგიწვია!</p>
+            <p className="text-amber-600 text-sm mb-1">გამოგიწვია!</p>
           )}
           
-          <div className="flex items-center gap-3 text-sm text-white/70">
+          <div className="flex items-center gap-3 text-sm text-slate-600">
             <span className="flex items-center gap-1">
               <Gamepad2 className="w-3.5 h-3.5" />
               {challenge.categoryName || "ზოგადი"}
@@ -208,7 +208,7 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
           {/* Countdown Timer */}
           <div className={cn(
             "flex items-center gap-1 mt-1 text-xs font-medium",
-            isUrgent ? "text-red-300" : "text-amber-300/80"
+            isUrgent ? "text-red-600" : "text-amber-600"
           )}>
             {isUrgent ? (
               <AlertTriangle className="w-3 h-3 animate-pulse" />

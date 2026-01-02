@@ -165,22 +165,16 @@ function TeamContent() {
   if (!user) {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div 
-          className="fixed inset-0 z-0"
-          style={{
-            background: "#7E7BDC"
-          }}
-        />
         <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-6"
+            className="w-24 h-24 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center mb-6 shadow-lg"
           >
-            <Users className="w-12 h-12 text-white" />
+            <Users className="w-12 h-12 text-slate-700" />
           </motion.div>
-          <h1 className="font-display text-2xl text-white mb-3">მულტიპლეიერი</h1>
-          <p className="text-white/80 text-center mb-6">შედი ანგარიშზე მეგობრებთან სათამაშოდ</p>
+          <h1 className="font-display text-2xl text-slate-800 mb-3">მულტიპლეიერი</h1>
+          <p className="text-slate-600 text-center mb-6">შედი ანგარიშზე მეგობრებთან სათამაშოდ</p>
           <ChunkyButton variant="secondary" onClick={() => navigate("/auth")}>
             შესვლა
           </ChunkyButton>
@@ -191,14 +185,6 @@ function TeamContent() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-28">
-      {/* Background */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          background: "#7E7BDC"
-        }}
-      />
-
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
@@ -207,7 +193,7 @@ function TeamContent() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => navigate("/")}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
@@ -216,7 +202,7 @@ function TeamContent() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => setShowHelpModal(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white text-lg font-bold"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm"
           >
             ?
           </motion.button>

@@ -14,13 +14,13 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-white tracking-wide">ბოლო თამაშები</span>
+          <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2, 3].map((i) => (
             <div 
               key={i} 
-              className="flex-shrink-0 w-44 h-40 animate-pulse rounded-2xl bg-white/10"
+              className="flex-shrink-0 w-44 h-40 animate-pulse rounded-2xl bg-slate-200"
             />
           ))}
         </div>
@@ -35,8 +35,8 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-white tracking-wide">ბოლო თამაშები</span>
-        <button onClick={onViewAll} className="text-sm font-semibold text-orange-400 px-3 py-1 rounded-full bg-orange-400/15 hover:bg-orange-400/25 transition-colors">ყველა</button>
+        <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
+        <button onClick={onViewAll} className="text-sm font-semibold text-orange-600 px-3 py-1 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors">ყველა</button>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">

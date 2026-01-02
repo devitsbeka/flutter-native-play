@@ -164,14 +164,14 @@ export default function CategoryPage() {
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={() => navigate("/discover")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm"
             >
-              <ArrowLeft className="h-5 w-5 text-white" />
+              <ArrowLeft className="h-5 w-5 text-slate-700" />
             </button>
             {!user && (
               <button
                 onClick={() => navigate("/auth")}
-                className="flex items-center gap-1.5 text-sm text-white font-medium bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+                className="flex items-center gap-1.5 text-sm text-slate-700 font-medium bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm"
               >
                 <LogIn className="h-4 w-4" />
                 შესვლა
@@ -190,20 +190,20 @@ export default function CategoryPage() {
                 className="drop-shadow-lg"
               />
             </div>
-            <h1 className="text-2xl font-bold text-white">{category.name}</h1>
-            <p className="text-white/80">{category.description}</p>
+            <h1 className="text-2xl font-bold text-slate-800">{category.name}</h1>
+            <p className="text-slate-600">{category.description}</p>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="px-5 mb-4">
-          <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-full p-1">
+          <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
             <button
               onClick={() => setActiveTab("leaderboard")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
                 activeTab === "leaderboard"
                   ? "bg-white text-slate-800 shadow-md"
-                  : "text-white/70 hover:text-white"
+                  : "text-slate-600 hover:text-slate-800"
               }`}
             >
               <Trophy className="h-4 w-4" />
@@ -214,7 +214,7 @@ export default function CategoryPage() {
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
                 activeTab === "map"
                   ? "bg-white text-slate-800 shadow-md"
-                  : "text-white/70 hover:text-white"
+                  : "text-slate-600 hover:text-slate-800"
               }`}
             >
               <Map className="h-4 w-4" />
