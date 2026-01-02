@@ -13,11 +13,12 @@ export interface VipSubscription {
   auto_renew: boolean;
 }
 
-export type VipDuration = "week" | "month";
+export type VipDuration = "day" | "week" | "month";
 
 export const VIP_PRICES: Record<VipDuration, number> = {
-  week: 25,
-  month: 80,
+  day: 5,
+  week: 15,
+  month: 40,
 };
 
 export const VIP_BENEFITS = [
@@ -78,18 +79,22 @@ export function useVipStatus() {
 
     try {
       const now = new Date();
-      const expiresAt = duration === "week" 
-        ? addDays(now, 7) 
-        : addMonths(now, 1);
+      const expiresAt = duration === "day" 
+        ? addDays(now, 1) 
+        : duration === "week" 
+          ? addDays(now, 7) 
+          : addMonths(now, 1);
 
       // Check if user already has a subscription
       if (subscription) {
         // Extend existing subscription
         const currentExpiry = new Date(subscription.expires_at);
         const newExpiry = isAfter(currentExpiry, now) 
-          ? duration === "week" 
-            ? addDays(currentExpiry, 7) 
-            : addMonths(currentExpiry, 1)
+          ? duration === "day" 
+            ? addDays(currentExpiry, 1) 
+            : duration === "week" 
+              ? addDays(currentExpiry, 7) 
+              : addMonths(currentExpiry, 1)
           : expiresAt;
 
         const { error } = await supabase
