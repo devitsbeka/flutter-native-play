@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Heart, Trophy, Menu } from "lucide-react";
+import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 
@@ -320,19 +320,19 @@ export function AirbnbCategoryCard({
             </div>
           </div>
 
-          {/* Name Section - Chunky pill inside the container */}
-          <div className="px-4 py-3">
-            <div 
-              className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-white/80 border-2 border-white/60"
+          {/* Name Section - Direct text on the chunky container */}
+          <div className="px-5 py-3.5">
+            <h3 
+              className="uppercase tracking-wide line-clamp-1 text-center"
               style={{
-                boxShadow: '0 3px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)',
+                fontFamily: "'TASolivare', sans-serif",
+                fontSize: isFull ? '1.25rem' : '1.1rem',
+                color: 'rgba(50, 50, 70, 0.85)',
+                textShadow: '0 1px 0 rgba(255,255,255,0.6)',
               }}
             >
-              <Menu className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <h3 className={`font-bold text-slate-700 line-clamp-1 flex-1 ${isFull ? 'text-base' : 'text-sm'}`}>
-                {name}
-              </h3>
-            </div>
+              {name}
+            </h3>
           </div>
         </div>
       </div>
