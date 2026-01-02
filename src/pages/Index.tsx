@@ -377,50 +377,53 @@ export default function Index() {
                     )}
                   </div>
                   
-                  {/* Currency badges row - between name and progress bar */}
+                  {/* Currency badges row - white 3D chunky style matching menu/notification chips */}
                   <div className="flex items-center justify-center gap-3 mt-3">
-                    {/* Coins - Yellow */}
+                    {/* Coins - White 3D Chunky */}
                     <motion.div 
                       className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
                       style={{
-                        background: "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #CA8A04, 0 4px 8px rgba(234,179,8,0.3)",
+                        background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                        boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                        border: "3px solid rgba(255,255,255,0.9)",
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsGemShopOpen(true)}
                     >
                       <img src={coinIcon} alt="Coins" className="w-5 h-5 object-contain" />
-                      <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{coins.toLocaleString()}</span>
+                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{coins.toLocaleString()}</span>
                     </motion.div>
 
-                    {/* Gems - Purple */}
+                    {/* Gems - White 3D Chunky */}
                     <motion.div 
                       className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
                       style={{
-                        background: "linear-gradient(180deg, #60A5FA 0%, #3B82F6 50%, #2563EB 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #1D4ED8, 0 4px 8px rgba(59,130,246,0.3)",
+                        background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                        boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                        border: "3px solid rgba(255,255,255,0.9)",
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsGemShopOpen(true)}
                     >
                       <img src={gemIcon} alt="Gems" className="w-5 h-5 object-contain" />
-                      <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{gems.toLocaleString()}</span>
+                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{gems.toLocaleString()}</span>
                     </motion.div>
 
-                    {/* XP - Green with star */}
+                    {/* XP - White 3D Chunky */}
                     <motion.div 
                       className="flex items-center justify-center gap-2 px-5 py-2 rounded-full cursor-pointer"
                       style={{
-                        background: "linear-gradient(180deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
-                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #15803D, 0 4px 8px rgba(22,163,74,0.3)",
+                        background: "linear-gradient(180deg, #F8F6FC 0%, #EDE8F5 50%, #E5DEF0 100%)",
+                        boxShadow: "inset 0 4px 8px rgba(140,120,180,0.15), inset 0 -2px 4px rgba(255,255,255,0.8), 0 4px 0 #D8D0E8, 0 6px 12px rgba(0,0,0,0.1)",
+                        border: "3px solid rgba(255,255,255,0.9)",
                       }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
                       <img src={xpIcon} alt="XP" className="w-5 h-5 object-contain" />
-                      <span className="text-sm font-bold text-white drop-shadow-sm whitespace-nowrap">{(profile?.total_points || 0).toLocaleString()}</span>
+                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{(profile?.total_points || 0).toLocaleString()}</span>
                     </motion.div>
                   </div>
                   
