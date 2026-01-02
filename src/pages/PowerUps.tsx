@@ -334,14 +334,9 @@ export default function PowerUps() {
   };
 
   return (
-    <div 
-      className="min-h-screen flex flex-col"
-      style={{
-        background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
-      }}
-    >
+    <div className="min-h-screen flex flex-col pb-24">
       {/* Sticky Header + Tabs */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm">
+      <div className="sticky top-0 z-30 backdrop-blur-md">
         {/* Header */}
         <div className="px-4 pt-4 pb-2">
           <div className="flex items-center justify-between mb-3">
