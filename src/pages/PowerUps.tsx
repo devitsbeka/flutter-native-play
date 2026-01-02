@@ -1,18 +1,25 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, Crown, Zap, Star, Check } from "lucide-react";
+import { Crown, Zap, Sparkles, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
-import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
-import { TabBar } from "@/components/shared/TabBar";
+import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
+import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
+import { ShopHeader } from "@/components/shop/ShopHeader";
+import { ShopFeaturedCarousel } from "@/components/shop/ShopFeaturedCarousel";
+import { MyPowersBar } from "@/components/shop/MyPowersBar";
+import { ShopTabBar, ShopTab } from "@/components/shop/ShopTabBar";
+import { ShopItemCard, ShopItemBadge } from "@/components/shop/ShopItemCard";
+import { ShopBundleCard } from "@/components/shop/ShopBundleCard";
+import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
@@ -21,196 +28,202 @@ import timeDrainIcon from "@/assets/powers/time-drain.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
-interface PowerUpInfo {
-  type: PowerUpType;
-  name: string;
-  description: string;
-  icon: string;
-  gradient: string;
-}
-
-const POWER_UP_INFO: PowerUpInfo[] = [
-  {
-    type: "5050",
-    name: "50/50",
-    description: "წაშალე 2 არასწორი პასუხი",
-    icon: fiftyFiftyIcon,
-    gradient: "from-rose-400 to-pink-500",
-  },
-  {
-    type: "freeze",
-    name: "გაყინვა",
-    description: "გააყინე დრო 10 წამით",
-    icon: freezeIcon,
-    gradient: "from-cyan-400 to-blue-500",
-  },
-  {
-    type: "replace",
-    name: "შეცვლა",
-    description: "შეცვალე კითხვა ახლით",
-    icon: replaceIcon,
-    gradient: "from-emerald-400 to-green-500",
-  },
-  {
-    type: "time-drain",
-    name: "დრო+",
-    description: "დაამატე 10 წამი დროს",
-    icon: timeDrainIcon,
-    gradient: "from-violet-400 to-purple-500",
-  },
-];
-
 interface ShopItem {
   id: string;
   name: string;
   description: string;
   price: number;
+  currency: "gems" | "coins";
   icon: React.ReactNode;
-  category: "powerup" | "vip" | "coins";
-  value?: number;
   gradient: string;
-  popular?: boolean;
+  category: "hot" | "powers" | "coins" | "vip";
+  badge?: ShopItemBadge;
+  savings?: number;
   vipDuration?: VipDuration;
   powerType?: PowerUpType;
   amount?: number;
+  value?: number;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
-  // Coin Packs
+  // Hot Deals
   {
-    id: "coins_100",
-    name: "100 მონეტა",
-    description: "მცირე პაკეტი",
-    price: 2,
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    category: "coins",
-    value: 100,
-    gradient: "from-yellow-300 to-amber-400",
-  },
-  {
-    id: "coins_500",
-    name: "500 მონეტა",
-    description: "საშუალო პაკეტი",
-    price: 5,
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    category: "coins",
-    value: 500,
-    gradient: "from-amber-400 to-yellow-500",
-  },
-  {
-    id: "coins_1500",
-    name: "1500 მონეტა",
-    description: "დიდი პაკეტი +20% ბონუსი",
-    price: 12,
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    category: "coins",
-    value: 1500,
-    gradient: "from-amber-500 to-orange-500",
-    popular: true,
-  },
-  {
-    id: "coins_5000",
-    name: "5000 მონეტა",
-    description: "მეგა პაკეტი +50% ბონუსი",
-    price: 35,
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    category: "coins",
-    value: 5000,
-    gradient: "from-orange-500 to-red-500",
-  },
-  {
-    id: "coins_10000",
-    name: "10000 მონეტა",
-    description: "უზარმაზარი +70% ბონუსი",
-    price: 60,
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    category: "coins",
-    value: 10000,
-    gradient: "from-red-500 to-rose-600",
-  },
-  // Individual Power-Ups
-  {
-    id: "power_5050",
-    name: "50/50 ×3",
-    description: "წაშალე 2 არასწორი პასუხი",
+    id: "starter_bundle",
+    name: "სტარტერ პაკეტი",
+    description: "2x ყველა ძალა + 200 მონეტა",
     price: 8,
+    currency: "gems",
+    icon: <Sparkles className="w-8 h-8 text-sky-200" />,
+    gradient: "linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(180 70% 45%) 100%)",
+    category: "hot",
+    badge: "new",
+  },
+  {
+    id: "mega_power_bundle",
+    name: "მეგა ძალების პაკეტი",
+    description: "5x ყველა ძალა",
+    price: 15,
+    currency: "gems",
+    icon: <Zap className="w-8 h-8 text-purple-200" />,
+    gradient: "linear-gradient(135deg, hsl(263 60% 55%) 0%, hsl(280 70% 50%) 100%)",
+    category: "hot",
+    badge: "popular",
+    savings: 25,
+  },
+  {
+    id: "vip_week_deal",
+    name: "VIP კვირა",
+    description: "2x XP • უსასრულო სპინი",
+    price: 15,
+    currency: "gems",
+    icon: <Crown className="w-8 h-8 text-amber-200" />,
+    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(340 80% 55%) 100%)",
+    category: "hot",
+    badge: "best-value",
+    savings: 30,
+    vipDuration: "week",
+  },
+  // Power-Ups
+  {
+    id: "power_5050_3",
+    name: "50/50 ×3",
+    description: "წაშლის 2 არასწორ პასუხს",
+    price: 8,
+    currency: "gems",
     icon: <img src={fiftyFiftyIcon} alt="" className="w-8 h-8" />,
-    category: "powerup",
-    gradient: "from-rose-400 to-pink-500",
+    gradient: "linear-gradient(135deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
+    category: "powers",
     powerType: "5050",
     amount: 3,
   },
   {
-    id: "power_freeze",
+    id: "power_freeze_3",
     name: "გაყინვა ×3",
-    description: "გააყინე დრო 10 წამით",
+    description: "დრო გაიყინება 10 წამით",
     price: 8,
+    currency: "gems",
     icon: <img src={freezeIcon} alt="" className="w-8 h-8" />,
-    category: "powerup",
-    gradient: "from-cyan-400 to-blue-500",
+    gradient: "linear-gradient(135deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
+    category: "powers",
     powerType: "freeze",
     amount: 3,
   },
   {
-    id: "power_replace",
+    id: "power_replace_3",
     name: "შეცვლა ×3",
-    description: "შეცვალე კითხვა ახლით",
+    description: "შეცვლის კითხვას ახლით",
     price: 8,
+    currency: "gems",
     icon: <img src={replaceIcon} alt="" className="w-8 h-8" />,
-    category: "powerup",
-    gradient: "from-emerald-400 to-green-500",
+    gradient: "linear-gradient(135deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
+    category: "powers",
     powerType: "replace",
     amount: 3,
   },
   {
-    id: "power_timedrain",
+    id: "power_timedrain_3",
     name: "დრო+ ×3",
-    description: "დაამატე 10 წამი დროს",
+    description: "ამატებს 10 წამს",
     price: 8,
+    currency: "gems",
     icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
-    category: "powerup",
-    gradient: "from-violet-400 to-purple-500",
+    gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
+    category: "powers",
     powerType: "time-drain",
     amount: 3,
   },
-  // Power Bundles
   {
     id: "power_bundle_small",
     name: "მცირე პაკეტი",
     description: "2x ყველა ძალა",
     price: 8,
-    icon: <Zap className="w-8 h-8 text-blue-400" />,
-    category: "powerup",
-    gradient: "from-sky-300 to-blue-400",
+    currency: "gems",
+    icon: <Zap className="w-8 h-8 text-blue-200" />,
+    gradient: "linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(220 70% 50%) 100%)",
+    category: "powers",
   },
   {
-    id: "power_bundle",
+    id: "power_bundle_medium",
     name: "საშუალო პაკეტი",
     description: "5x ყველა ძალა",
     price: 15,
-    icon: <Zap className="w-8 h-8 text-blue-500" />,
-    category: "powerup",
-    gradient: "from-blue-400 to-cyan-500",
-    popular: true,
+    currency: "gems",
+    icon: <Zap className="w-8 h-8 text-indigo-200" />,
+    gradient: "linear-gradient(135deg, hsl(240 70% 55%) 0%, hsl(260 65% 50%) 100%)",
+    category: "powers",
+    badge: "popular",
   },
   {
     id: "power_bundle_large",
     name: "დიდი პაკეტი",
     description: "10x ყველა ძალა",
     price: 25,
-    icon: <Zap className="w-8 h-8 text-indigo-500" />,
-    category: "powerup",
-    gradient: "from-indigo-500 to-purple-600",
+    currency: "gems",
+    icon: <Zap className="w-8 h-8 text-purple-200" />,
+    gradient: "linear-gradient(135deg, hsl(270 70% 55%) 0%, hsl(290 65% 50%) 100%)",
+    category: "powers",
+    badge: "best-value",
+    savings: 20,
   },
-  // VIP Features
+  // Coins
+  {
+    id: "coins_100",
+    name: "100 მონეტა",
+    description: "მცირე პაკეტი",
+    price: 2,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
+    category: "coins",
+    value: 100,
+  },
+  {
+    id: "coins_500",
+    name: "500 მონეტა",
+    description: "საშუალო პაკეტი",
+    price: 5,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
+    category: "coins",
+    value: 500,
+  },
+  {
+    id: "coins_1500",
+    name: "1500 მონეტა",
+    description: "დიდი პაკეტი +20% ბონუსი",
+    price: 12,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
+    category: "coins",
+    value: 1500,
+    badge: "popular",
+    savings: 20,
+  },
+  {
+    id: "coins_5000",
+    name: "5000 მონეტა",
+    description: "მეგა პაკეტი +50% ბონუსი",
+    price: 35,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
+    category: "coins",
+    value: 5000,
+    badge: "best-value",
+    savings: 50,
+  },
+  // VIP
   {
     id: "vip_day",
     name: "VIP დღე",
     description: "ყველა VIP ბენეფიტი 1 დღე",
     price: 5,
-    icon: <Crown className="w-8 h-8 text-amber-400" />,
+    currency: "gems",
+    icon: <Crown className="w-8 h-8 text-amber-200" />,
+    gradient: "linear-gradient(135deg, hsl(45 85% 55%) 0%, hsl(40 80% 48%) 100%)",
     category: "vip",
-    gradient: "from-amber-300 to-yellow-500",
     vipDuration: "day",
   },
   {
@@ -218,10 +231,11 @@ const SHOP_ITEMS: ShopItem[] = [
     name: "VIP კვირა",
     description: "2x XP, +3 სპინი, ექსკლუზიური აქსესუარები",
     price: 15,
-    icon: <Crown className="w-8 h-8 text-amber-500" />,
+    currency: "gems",
+    icon: <Crown className="w-8 h-8 text-amber-200" />,
+    gradient: "linear-gradient(135deg, hsl(280 70% 55%) 0%, hsl(330 75% 50%) 100%)",
     category: "vip",
-    gradient: "from-purple-500 to-pink-500",
-    popular: true,
+    badge: "popular",
     vipDuration: "week",
   },
   {
@@ -229,37 +243,46 @@ const SHOP_ITEMS: ShopItem[] = [
     name: "VIP თვე",
     description: "ყველა VIP ბენეფიტი 30 დღე",
     price: 40,
-    icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" />,
+    currency: "gems",
+    icon: <Crown className="w-8 h-8 text-amber-200" />,
+    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(25 85% 50%) 100%)",
     category: "vip",
-    gradient: "from-amber-400 to-pink-500",
+    badge: "best-value",
+    savings: 35,
     vipDuration: "month",
   },
-];
-
-const TABS = [
-  { id: "my-powers", label: "ჩემი ძალები", icon: "⚡" },
-  { id: "coins", label: "მონეტები", icon: "🪙" },
-  { id: "powerup", label: "ძალები", icon: "🎯" },
-  { id: "vip", label: "VIP", icon: "👑" },
 ];
 
 export default function PowerUps() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { powerUps, isLoading: powerUpsLoading, addPowerUp, refetch } = useUserPowerUps();
+  const { addPowerUp, refetch } = useUserPowerUps();
   const { gems, spendGems, addCoins } = useCurrency();
-  const { activateVip, isVip, getDaysRemaining } = useVipStatus();
+  const { activateVip } = useVipStatus();
   const { playSound } = useSound();
-  
-  const [selectedTab, setSelectedTab] = useState("my-powers");
+
+  const [activeTab, setActiveTab] = useState<ShopTab>("hot");
   const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const [showPowerShopModal, setShowPowerShopModal] = useState(false);
+  const [selectedPowerType, setSelectedPowerType] = useState<PowerUpType>("5050");
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
 
-  const filteredItems = SHOP_ITEMS.filter(item => item.category === selectedTab);
+  const filteredItems = SHOP_ITEMS.filter((item) => item.category === activeTab);
+
+  const handlePowerClick = (type: PowerUpType) => {
+    setSelectedPowerType(type);
+    setShowPowerShopModal(true);
+  };
+
+  const handleDealClick = (dealId: string) => {
+    const item = SHOP_ITEMS.find((i) => i.id === dealId);
+    if (item) handlePurchase(item);
+  };
 
   const handlePurchase = async (item: ShopItem) => {
-    // Check authentication
     if (!user) {
       toast.error("შესვლა საჭიროა შეძენისთვის!");
       navigate("/auth");
@@ -281,35 +304,29 @@ export default function PowerUps() {
         return;
       }
 
-      if (item.category === "coins" && item.value) {
+      if (item.value) {
         await addCoins(item.value);
-      } else if (item.category === "vip" && item.vipDuration) {
+      } else if (item.vipDuration) {
         await activateVip(item.vipDuration);
-      } else if (item.category === "powerup") {
-        if (item.powerType && item.amount) {
-          await addPowerUp(item.powerType, item.amount);
-        } else {
-          const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
-          await addPowerUp("5050", bundleAmount);
-          await addPowerUp("freeze", bundleAmount);
-          await addPowerUp("replace", bundleAmount);
-          await addPowerUp("time-drain", bundleAmount);
+      } else if (item.powerType && item.amount) {
+        await addPowerUp(item.powerType, item.amount);
+        await refetch();
+      } else if (item.id.includes("bundle")) {
+        const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
+        await addPowerUp("5050", bundleAmount);
+        await addPowerUp("freeze", bundleAmount);
+        await addPowerUp("replace", bundleAmount);
+        await addPowerUp("time-drain", bundleAmount);
+        if (item.id === "starter_bundle") {
+          await addCoins(200);
         }
-        // Refetch power-ups to update counts
         await refetch();
       }
 
       playSound("reward");
-      confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: ["#A855F7", "#EC4899", "#8B5CF6"],
-        zIndex: 9999,
-      });
-
-      setPurchasedItems(prev => new Set([...prev, item.id]));
-      toast.success(`${item.name} შეძენილია! 🎉`);
+      setPurchasedItems((prev) => new Set([...prev, item.id]));
+      setSuccessItem({ name: item.name, quantity: item.amount || 1 });
+      setShowSuccess(true);
     } catch (error) {
       console.error("Purchase failed:", error);
       toast.error("შეძენა ვერ მოხერხდა");
@@ -318,304 +335,81 @@ export default function PowerUps() {
     }
   };
 
-  const getGradientColors = (gradient: string) => {
-    if (gradient.includes("rose")) return "#FB7185, #EC4899";
-    if (gradient.includes("cyan")) return "#22D3EE, #3B82F6";
-    if (gradient.includes("emerald")) return "#34D399, #22C55E";
-    if (gradient.includes("violet")) return "#A78BFA, #8B5CF6";
-    if (gradient.includes("yellow")) return "#FDE047, #F59E0B";
-    if (gradient.includes("amber")) return "#FBBF24, #F97316";
-    if (gradient.includes("orange")) return "#FB923C, #EF4444";
-    if (gradient.includes("red")) return "#F87171, #E11D48";
-    if (gradient.includes("sky")) return "#7DD3FC, #60A5FA";
-    if (gradient.includes("blue")) return "#60A5FA, #06B6D4";
-    if (gradient.includes("indigo")) return "#818CF8, #A855F7";
-    if (gradient.includes("purple")) return "#A855F7, #EC4899";
-    return "#A78BFA, #8B5CF6";
-  };
-
   return (
-    <div className="min-h-screen flex flex-col pb-24">
-      {/* Sticky Header + Tabs */}
-      <div className="sticky top-0 z-30 backdrop-blur-md">
-        {/* Header */}
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center justify-between mb-3">
-            {/* Title - Left */}
-            <h1 className="text-xl font-display font-bold text-gray-900">
-              მაღაზია
-            </h1>
-
-            {/* Right side: Gems + Help */}
-            <div className="flex items-center gap-2">
-              <motion.div 
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                style={{
-                  background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
-                  boxShadow: "0 3px 0 #C4B5FD",
-                  border: "2px solid #A78BFA",
-                }}
-              >
-                <img src={gemIcon} alt="" className="w-5 h-5" />
-                <span className="font-bold text-purple-700">{gems}</span>
-              </motion.div>
-
-              <motion.button
-                onClick={() => setShowTutorialModal(true)}
-                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
-                style={{ boxShadow: "0 3px 0 #D1D5DB" }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95, y: 2 }}
-              >
-                <HelpCircle className="w-5 h-5 text-gray-600" />
-              </motion.button>
-            </div>
-          </div>
-
-          {/* VIP Status Banner */}
-          {isVip && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-3 px-4 py-2 rounded-xl flex items-center justify-between"
-              style={{
-                background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                boxShadow: "0 2px 0 #F59E0B",
-                border: "2px solid #FBBF24",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Crown className="w-5 h-5 text-amber-600" />
-                <span className="text-amber-800 font-semibold">VIP აქტიური</span>
-              </div>
-              <span className="text-amber-700 text-sm font-bold">
-                {getDaysRemaining()} დღე დარჩენილი
-              </span>
-            </motion.div>
-          )}
-
-          {/* Tabs */}
-          <TabBar
-            tabs={TABS}
-            activeTab={selectedTab}
-            onTabChange={setSelectedTab}
-          />
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col bg-background pb-24">
+      {/* Sticky Header */}
+      <ShopHeader
+        onHelpClick={() => setShowTutorialModal(true)}
+        onBuyGemsClick={() => toast.info("ალმასების შეძენა მალე!")}
+      />
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24 pt-3">
-        <AnimatePresence mode="wait">
-          {selectedTab === "my-powers" ? (
-            /* My Powers Tab */
+      <div className="flex-1 overflow-y-auto">
+        {/* Featured Carousel */}
+        <ShopFeaturedCarousel onDealClick={handleDealClick} />
+
+        {/* My Powers Bar */}
+        <MyPowersBar onPowerClick={handlePowerClick} />
+
+        {/* Tab Navigation */}
+        <ShopTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* Shop Grid */}
+        <div className="px-4 pb-8">
+          <AnimatePresence mode="wait">
             <motion.div
-              key="my-powers"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="grid grid-cols-2 gap-5"
-            >
-              {powerUpsLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-40 rounded-2xl animate-pulse"
-                    style={{ background: "#F3F4F6" }}
-                  />
-                ))
-              ) : (
-                POWER_UP_INFO.map((powerUp, index) => {
-                  const count = powerUps[powerUp.type] || 0;
-                  const isEmpty = count === 0;
-                  
-                  return (
-                    <motion.div
-                      key={powerUp.type}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="relative p-4 rounded-2xl"
-                      style={{
-                        background: isEmpty 
-                          ? "#F9FAFB" 
-                          : "linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)",
-                        boxShadow: isEmpty 
-                          ? "0 2px 0 #E5E7EB" 
-                          : "0 4px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
-                        opacity: isEmpty ? 0.6 : 1,
-                        border: "2px solid transparent",
-                      }}
-                    >
-                      {/* Count Badge */}
-                      <div 
-                        className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                        style={{
-                          background: isEmpty 
-                            ? "#9CA3AF" 
-                            : `linear-gradient(135deg, ${getGradientColors(powerUp.gradient)})`,
-                          boxShadow: "0 2px 0 rgba(0,0,0,0.2)",
-                        }}
-                      >
-                        {count}
-                      </div>
-
-                      {/* Icon */}
-                      <div className="flex justify-center mb-3">
-                        <img 
-                          src={powerUp.icon} 
-                          alt={powerUp.name}
-                          className="w-14 h-14 object-contain"
-                          style={{ filter: isEmpty ? "grayscale(1)" : "none" }}
-                        />
-                      </div>
-
-                      {/* Name */}
-                      <h3 className="text-gray-900 font-bold text-base mb-1 text-center">
-                        {powerUp.name}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-gray-500 text-xs text-center mb-3">
-                        {powerUp.description}
-                      </p>
-
-                      {/* Add More Button */}
-                      <button
-                        onClick={() => setSelectedTab("powerups")}
-                        className="w-full py-1.5 rounded-full text-xs font-bold transition-all"
-                        style={{
-                          background: `linear-gradient(135deg, ${getGradientColors(powerUp.gradient)})`,
-                          color: "white",
-                          boxShadow: "0 2px 0 rgba(0,0,0,0.15)",
-                        }}
-                      >
-                        + დამატება
-                      </button>
-                    </motion.div>
-                  );
-                })
-              )}
-            </motion.div>
-          ) : (
-            /* Shop Tabs */
-            <motion.div
-              key={selectedTab}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-2 gap-5"
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-2 gap-4"
             >
               {filteredItems.map((item, index) => {
                 const canAfford = gems >= item.price;
                 const isPurchased = purchasedItems.has(item.id);
-                const isItemLoading = isPurchasing === item.id;
 
                 return (
-                  <motion.div
+                  <ShopItemCard
                     key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="relative"
-                  >
-                    {/* Popular badge */}
-                    {item.popular && (
-                      <motion.div 
-                        className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
-                        style={{ 
-                          background: "linear-gradient(135deg, #EC4899 0%, #F97316 100%)",
-                          boxShadow: "0 2px 0 #BE185D",
-                        }}
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        პოპულარული
-                      </motion.div>
-                    )}
-
-                    <motion.button
-                      onClick={() => !isPurchased && !isItemLoading && handlePurchase(item)}
-                      disabled={isPurchased || isItemLoading}
-                      className="w-full p-4 rounded-2xl text-left transition-all"
-                      style={{
-                        background: isPurchased 
-                          ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)" 
-                          : canAfford 
-                            ? "#F9FAFB" 
-                            : "#F3F4F6",
-                        boxShadow: isPurchased
-                          ? "0 3px 0 #6EE7B7"
-                          : canAfford
-                            ? "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)"
-                            : "0 2px 0 #E5E7EB",
-                        border: isPurchased 
-                          ? "2px solid #34D399" 
-                          : "2px solid transparent",
-                        opacity: !canAfford && !isPurchased ? 0.6 : 1,
-                      }}
-                      whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
-                      whileTap={!isPurchased && canAfford ? { scale: 0.98 } : {}}
-                    >
-                      {/* Icon */}
-                      <div 
-                        className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-3"
-                        style={{
-                          background: `linear-gradient(135deg, ${getGradientColors(item.gradient)})`,
-                          boxShadow: "0 3px 8px rgba(0,0,0,0.15)",
-                        }}
-                      >
-                        {item.icon}
-                      </div>
-
-                      {/* Name */}
-                      <h3 className="text-gray-900 font-bold text-sm text-center mb-1">
-                        {item.name}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-gray-500 text-xs text-center mb-3 line-clamp-2">
-                        {item.description}
-                      </p>
-
-                      {/* Price / Status - Fixed height container for consistent card heights */}
-                      <div className="flex justify-center items-center h-10">
-                        {isPurchased ? (
-                          <div className="flex items-center gap-1 text-green-600 font-bold text-sm px-3 py-1.5">
-                            <Check className="w-4 h-4" />
-                            <span>შეძენილი</span>
-                          </div>
-                        ) : isItemLoading ? (
-                          <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <div 
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                            style={{
-                              background: canAfford 
-                                ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                                : "#E5E7EB",
-                              boxShadow: canAfford ? "0 2px 0 #C4B5FD" : "none",
-                            }}
-                          >
-                            <img src={gemIcon} alt="" className="w-4 h-4" />
-                            <span className={`font-bold text-sm ${canAfford ? "text-purple-700" : "text-gray-500"}`}>
-                              {item.price}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </motion.button>
-                  </motion.div>
+                    id={item.id}
+                    name={item.name}
+                    description={item.description}
+                    price={item.price}
+                    currency={item.currency}
+                    icon={item.icon}
+                    gradient={item.gradient}
+                    badge={item.badge}
+                    savings={item.savings}
+                    isPurchased={isPurchased}
+                    isLoading={isPurchasing === item.id}
+                    canAfford={canAfford}
+                    index={index}
+                    onClick={() => !isPurchased && handlePurchase(item)}
+                  />
                 );
               })}
             </motion.div>
-          )}
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Tutorial Modal */}
+      {/* Modals */}
       <PowerUpTutorialModal
         isOpen={showTutorialModal}
         onClose={() => setShowTutorialModal(false)}
+      />
+
+      <PowerUpShopModal
+        isOpen={showPowerShopModal}
+        onClose={() => setShowPowerShopModal(false)}
+        initialSelectedType={selectedPowerType}
+      />
+
+      <PurchaseSuccessModal
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        itemName={successItem.name}
+        quantity={successItem.quantity}
       />
 
       {/* Bottom Navigation */}
