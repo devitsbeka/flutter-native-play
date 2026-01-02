@@ -6,6 +6,8 @@ const CATEGORY_VIDEOS: Record<string, string> = {
   "georgian_history": "/videos/geo-battle-2.mp4",
   "sports": "/videos/sport.mp4",
   "space": "/videos/galaxy.mp4",
+  "georgian_literature": "/videos/literature.mp4",
+  "psychology": "/videos/psyc.mp4",
 };
 
 interface Category {
