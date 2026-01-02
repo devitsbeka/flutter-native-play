@@ -116,10 +116,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { imageUrl, userId, requestId, statusUrl, responseUrl } = await req.json();
+    const body = await req.json();
+    const { imageUrl, userId, requestId, statusUrl, responseUrl } = body;
+    
+    console.log("Request body:", JSON.stringify(body));
 
-    // If we have a requestId, we're polling for status
-    if (requestId && statusUrl && responseUrl) {
+    // If we have statusUrl and responseUrl, we're polling for status
+    if (statusUrl && responseUrl && userId) {
+      console.log("Polling for status with URLs:", { statusUrl, responseUrl });
       const result = await checkAndUpload(statusUrl, responseUrl, supabase, userId, falKey);
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -128,6 +132,7 @@ serve(async (req) => {
 
     // Otherwise, start a new animation request
     if (!imageUrl || !userId) {
+      console.log("Missing required fields:", { imageUrl: !!imageUrl, userId: !!userId });
       throw new Error("Missing imageUrl or userId");
     }
 
