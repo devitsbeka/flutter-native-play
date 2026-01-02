@@ -83,7 +83,7 @@ serve(async (req) => {
       body: JSON.stringify({
         imageUrl: imageUrl,
         styleImageUrl: "https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com/images/avatar-style-reference.jpg",
-        textPrompt: "3D Pixar Disney animated character, IMPOSSIBLY HUGE cartoon eyes taking up 40% of the face with massive bright sparkly catchlights like anime characters, absolutely smooth plastic toy-like skin with NO pores or realistic texture whatsoever, strong violet and purple glow illuminating the entire face including cheeks nose bridge and forehead not just hair, extremely cute exaggerated cartoon proportions with tiny nose and lips, stylized wavy 3D hair with purple highlights, warm friendly expression, dark navy gradient background, must look like a cartoon toy figure NOT a real person at all, Pixar movie quality character design",
+        textPrompt: "Transform into a high-quality 3D Pixar Disney animated character matching the style reference exactly, beautiful expressive cartoon eyes with bright catchlights, perfectly smooth matte skin like a premium animated character, soft violet and magenta lighting on the left side of face and hair edges, stylized wavy 3D hair, warm friendly expression, dark navy gradient background, clean professional Pixar movie quality, no artifacts or distortions",
       }),
     });
 
