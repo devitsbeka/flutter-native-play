@@ -22,6 +22,7 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   world_history: "/videos/world-history.mp4",
   animals: "/videos/animals.mp4",
   anime: "/videos/anime.mp4",
+  anime_manga: "/videos/anime.mp4",
   architecture: "/videos/architecture.mp4",
   economics: "/videos/economics.mp4",
   fashion: "/videos/fashion.mp4",
