@@ -2,6 +2,16 @@ import { motion } from "framer-motion";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 
+const formatNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toString();
+};
+
 interface AvatarCircleProps {
   avatarUrl?: string | null;
   size?: number;
@@ -179,12 +189,12 @@ export function AvatarCircle({
         >
           <div className="flex items-center gap-1">
             <img src={iconCoin} alt="Coins" className="w-5 h-5" />
-            <span className="font-bold text-gray-700 text-sm">{coins}</span>
+            <span className="font-bold text-gray-700 text-sm">{formatNumber(coins)}</span>
           </div>
           <div className="w-px h-4 bg-gray-300" />
           <div className="flex items-center gap-1">
             <img src={iconGem} alt="Gems" className="w-5 h-5" />
-            <span className="font-bold text-gray-700 text-sm">{gems}</span>
+            <span className="font-bold text-gray-700 text-sm">{formatNumber(gems)}</span>
           </div>
         </div>
       </div>
