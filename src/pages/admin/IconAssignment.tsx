@@ -73,8 +73,7 @@ export default function IconAssignment() {
   const [shouldStop, setShouldStop] = useState(false);
   const [methodBreakdown, setMethodBreakdown] = useState<Record<string, number>>({});
   
-  // Smart assignment mode
-  const [useSmartAssignment, setUseSmartAssignment] = useState(true);
+  // Fast mode (no longer toggleable - always uses fast batch)
 
   // Load ALL icons from database with pagination
   useEffect(() => {
@@ -235,25 +234,23 @@ export default function IconAssignment() {
     let totalProcessed = 0;
     let totalAssigned = 0;
     let offset = 0;
-    const batchSize = useSmartAssignment ? 20 : 100; // Smaller batches for smart mode
+    const batchSize = 250; // Fast mode: 5x batch size
     const accumulatedMethods: Record<string, number> = {};
 
-    const functionName = useSmartAssignment ? 'smart-assign-icons' : 'batch-assign-icons';
+    // Always use fast batch-assign-icons (no AI)
+    const functionName = 'batch-assign-icons';
     
     // Get array of broken icon slugs to exclude
     const brokenSlugsArray = Array.from(brokenIcons);
     console.log(`Passing ${brokenSlugsArray.length} broken icons to exclude`);
     
-    toast.info(`${useSmartAssignment ? 'ჭკვიანი AI' : 'ბეჩ'} მინიჭება დაიწყო... (${brokenSlugsArray.length} გატეხილი გამორიცხულია)`);
+    toast.info(`სწრაფი მინიჭება დაიწყო... (${brokenSlugsArray.length} გატეხილი გამორიცხულია)`);
 
     try {
       while (!shouldStop) {
         const { data, error } = await supabase.functions.invoke(functionName, {
           body: { 
             categoryId: categoryFilter, 
-            batchSize, 
-            offset,
-            resetFirst: offset === 0 && useSmartAssignment,
             brokenSlugs: brokenSlugsArray
           }
         });
@@ -294,8 +291,8 @@ export default function IconAssignment() {
 
         offset += batchSize;
 
-        // Longer delay for smart mode (AI calls)
-        await new Promise(r => setTimeout(r, useSmartAssignment ? 1000 : 500));
+        // Short delay for fast mode (no AI)
+        await new Promise(r => setTimeout(r, 200));
       }
     } catch (err) {
       console.error('Batch assignment error:', err);
@@ -391,54 +388,18 @@ export default function IconAssignment() {
           />
         </div>
 
-        {/* Smart/Batch Assignment Controls */}
+        {/* Fast Assignment Controls */}
         <div className="mt-4 space-y-3">
-          {/* Mode Toggle */}
-          <div className="flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
-            <div className="flex items-center gap-3">
-              <Switch
-                id="smart-mode"
-                checked={useSmartAssignment}
-                onCheckedChange={setUseSmartAssignment}
-              />
-              <Label htmlFor="smart-mode" className="flex items-center gap-2 cursor-pointer">
-                {useSmartAssignment ? (
-                  <>
-                    <Sparkles className="h-4 w-4 text-amber-500" />
-                    <span className="text-sm font-medium">ჭკვიანი რეჟიმი</span>
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-4 w-4 text-violet-500" />
-                    <span className="text-sm font-medium">კატეგორიის რეჟიმი</span>
-                  </>
-                )}
-              </Label>
-            </div>
-            <div className="flex-1 text-xs text-muted-foreground">
-              {useSmartAssignment 
-                ? 'AI ანალიზი + კატეგორიის აიკონი fallback (გატეხილი აიკონები გამორიცხულია)'
-                : 'ყველა კითხვას მიანიჭებს კატეგორიის საერთო აიკონს'
-              }
-            </div>
-          </div>
-          
           {/* Assignment Button */}
           <div className="flex items-center gap-4 rounded-lg border border-border/50 bg-background/50 p-3">
-            {useSmartAssignment ? (
-              <Sparkles className="h-5 w-5 text-amber-500" />
-            ) : (
-              <Wand2 className="h-5 w-5 text-violet-500" />
-            )}
+            <Wand2 className="h-5 w-5 text-violet-500" />
             <div className="flex-1">
-              <p className="text-sm font-medium">
-                {useSmartAssignment ? 'ჭკვიანი მინიჭება' : 'კატეგორიის მინიჭება'}
-              </p>
+              <p className="text-sm font-medium">სწრაფი მინიჭება (5x)</p>
               <p className="text-xs text-muted-foreground">
                 {categoryFilter 
                   ? `არჩეული კატეგორიის ${stats.withoutIcons} კითხვას დაამუშავებს`
                   : `ყველა ${stats.withoutIcons} კითხვას დაამუშავებს`
-                }
+                } • Keyword + Category fallback (AI გამორთულია)
               </p>
             </div>
             
@@ -454,19 +415,14 @@ export default function IconAssignment() {
                   </p>
                   {Object.keys(methodBreakdown).length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-1.5">
-                      {methodBreakdown['exact-slug'] && (
+                      {methodBreakdown['topic-mapping'] && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">
-                          exact: {methodBreakdown['exact-slug']}
+                          topic: {methodBreakdown['topic-mapping']}
                         </span>
                       )}
-                      {methodBreakdown['partial-slug'] && (
+                      {methodBreakdown['exact-slug'] && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
-                          partial: {methodBreakdown['partial-slug']}
-                        </span>
-                      )}
-                      {methodBreakdown['tag-match'] && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">
-                          tag: {methodBreakdown['tag-match']}
+                          exact: {methodBreakdown['exact-slug']}
                         </span>
                       )}
                       {methodBreakdown['category-fallback'] && (
@@ -495,17 +451,9 @@ export default function IconAssignment() {
               <Button
                 onClick={runBatchAssignment}
                 disabled={stats.withoutIcons === 0}
-                className={cn(
-                  useSmartAssignment 
-                    ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
-                    : "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-                )}
+                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
               >
-                {useSmartAssignment ? (
-                  <Sparkles className="h-4 w-4 mr-1" />
-                ) : (
-                  <Play className="h-4 w-4 mr-1" />
-                )}
+                <Play className="h-4 w-4 mr-1" />
                 მინიჭება ({stats.withoutIcons.toLocaleString()})
               </Button>
             )}

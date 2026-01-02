@@ -6,9 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const BATCH_SIZE = 50;
-const TEST_BATCH_SIZE = 10;
-const PARALLEL_LIMIT = 5;
+// FAST MODE: 5x batch size, no AI calls
+const BATCH_SIZE = 250;
+const TEST_BATCH_SIZE = 25;
+const PARALLEL_LIMIT = 10;
+const CHUNK_DELAY_MS = 50;
 
 interface Question {
   id: string;
@@ -17,10 +19,198 @@ interface Question {
   category_name?: string;
 }
 
-interface AIIconResult {
-  slugs: string[];
-  keywords: string[];
-  mainConcept: string;
+// Topic to icon mappings for keyword-based matching
+const TOPIC_TO_ICONS: Record<string, string[]> = {
+  // Ancient civilizations
+  egypt: ['pharaoh-death-mask', 'pyramid', 'egyptian-scarab', 'egyptian-mummy', 'nefertiti', 'sphinx'],
+  pharaoh: ['pharaoh-death-mask', 'pyramid', 'egyptian-mummy', 'nefertiti'],
+  rome: ['roman-gladiator-helmet', 'roman-laurel-wreath', 'colosseum', 'roman-toga'],
+  roman: ['roman-gladiator-helmet', 'roman-laurel-wreath', 'colosseum'],
+  greece: ['greek-amphitheater', 'greek-amphora', 'parthenon', 'greek-lyra'],
+  greek: ['greek-amphitheater', 'greek-amphora', 'parthenon'],
+  china: ['great-wall-of-china', 'chinese-dragon', 'pagoda', 'forbidden-city'],
+  chinese: ['great-wall-of-china', 'chinese-dragon', 'pagoda'],
+  viking: ['viking-shield', 'viking-long-boat', 'viking-helmet'],
+  medieval: ['castle', 'crown', 'sword', 'knight', 'shield'],
+  aztec: ['aztec-sun-stone', 'aztec-mask', 'mayan-pyramid'],
+  maya: ['mayan-pyramid', 'mayan-calendar'],
+  inca: ['machu-picchu'],
+  
+  // Wars
+  war: ['world-war-ii-sherman-tank', 'world-war-ii-spitfire-fighter', 'pineapple-hand-grenade', 'helmet'],
+  battle: ['sword', 'shield', 'helmet', 'cannon'],
+  military: ['tank', 'rifle', 'helmet', 'medal'],
+  army: ['helmet', 'rifle', 'tank', 'soldier'],
+  navy: ['battleship', 'submarine', 'anchor', 'ship'],
+  ww1: ['trench', 'helmet', 'cannon', 'biplane'],
+  ww2: ['world-war-ii-sherman-tank', 'world-war-ii-spitfire-fighter', 'tank'],
+  
+  // Politics & Revolution
+  revolution: ['guillotine', 'flag', 'torch', 'fist'],
+  napoleon: ['napoleon', 'tricorn-hat', 'cannon'],
+  independence: ['flag', 'liberty-bell', 'torch'],
+  communist: ['hammer-and-sickle', 'red-star'],
+  soviet: ['hammer-and-sickle', 'red-star', 'kremlin'],
+  democracy: ['vote', 'ballot', 'parliament'],
+  
+  // Exploration
+  explorer: ['compass', 'ship', 'telescope', 'map'],
+  discovery: ['compass', 'magnifying-glass', 'ship'],
+  columbus: ['ship', 'compass'],
+  voyage: ['ship', 'anchor', 'compass'],
+  
+  // Culture & Religion
+  church: ['cross', 'church', 'cathedral'],
+  christianity: ['cross', 'bible', 'church'],
+  islam: ['crescent', 'mosque'],
+  buddhism: ['buddha', 'lotus', 'temple'],
+  renaissance: ['mona-lisa', 'paintbrush', 'palette'],
+  
+  // Science & Invention
+  invention: ['lightbulb', 'gear', 'cog'],
+  science: ['atom', 'flask', 'microscope'],
+  industrial: ['factory', 'gear', 'steam-engine'],
+  
+  // Historical figures
+  cleopatra: ['nefertiti', 'egyptian-scarab', 'crown'],
+  alexander: ['macedonian', 'helmet', 'sword'],
+  genghis: ['mongol', 'horse', 'bow'],
+  ottoman: ['crescent', 'sword', 'sultan'],
+  king: ['crown', 'throne', 'scepter'],
+  queen: ['crown', 'tiara', 'throne'],
+  emperor: ['crown', 'scepter', 'throne'],
+  
+  // Georgian specific
+  georgia: ['cross', 'church', 'sword'],
+  bagrationi: ['crown', 'cross', 'lion'],
+  tamar: ['crown', 'cross', 'scepter'],
+  david: ['sword', 'crown', 'church'],
+  mongol: ['mongol', 'horse', 'bow'],
+  wine: ['wine', 'grape', 'vineyard'],
+  alphabet: ['letter', 'script', 'book'],
+  
+  // Programming & Technology
+  code: ['code', 'terminal', 'laptop'],
+  programming: ['code', 'terminal', 'laptop', 'developer'],
+  computer: ['computer', 'laptop', 'desktop', 'monitor'],
+  software: ['code', 'app', 'software'],
+  algorithm: ['flowchart', 'code', 'algorithm'],
+  database: ['database', 'server', 'storage'],
+  web: ['globe', 'browser', 'internet'],
+  python: ['snake', 'code', 'python'],
+  javascript: ['code', 'browser', 'web'],
+  
+  // Geography
+  mountain: ['mountain', 'peak', 'summit'],
+  ocean: ['ocean', 'wave', 'sea'],
+  river: ['river', 'water', 'stream'],
+  desert: ['desert', 'cactus', 'sand'],
+  forest: ['forest', 'tree', 'nature'],
+  island: ['island', 'palm', 'beach'],
+  continent: ['globe', 'map', 'world'],
+  country: ['flag', 'map', 'globe'],
+  capital: ['building', 'city', 'capitol'],
+  
+  // Sports
+  football: ['football', 'soccer', 'goal'],
+  basketball: ['basketball', 'hoop', 'court'],
+  tennis: ['tennis', 'racket', 'ball'],
+  olympics: ['medal', 'torch', 'rings'],
+  athlete: ['runner', 'medal', 'trophy'],
+  
+  // Music & Art
+  music: ['music', 'note', 'headphones'],
+  art: ['palette', 'brush', 'canvas'],
+  painting: ['paint', 'brush', 'canvas'],
+  sculpture: ['statue', 'art', 'museum'],
+  film: ['film', 'camera', 'movie'],
+  theater: ['mask', 'stage', 'drama'],
+};
+
+// Georgian to English keyword mapping
+const GEORGIAN_KEYWORDS: Record<string, string> = {
+  'ეგვიპტე': 'egypt', 'ფარაონ': 'pharaoh', 'პირამიდა': 'pyramid',
+  'რომ': 'rome', 'იმპერატორ': 'emperor', 'კეისარ': 'caesar',
+  'საბერძნეთ': 'greece', 'ათენ': 'athens', 'სპარტ': 'sparta',
+  'ჩინეთ': 'china', 'კედელ': 'wall',
+  'ვიკინგ': 'viking', 'შუასაუკუნ': 'medieval',
+  'ომ': 'war', 'ბრძოლა': 'battle', 'ჯარ': 'army',
+  'რევოლუცია': 'revolution', 'დამოუკიდებლობ': 'independence',
+  'მეფე': 'king', 'დედოფალ': 'queen', 'გვირგვინ': 'crown',
+  'ეკლესია': 'church', 'მონასტ': 'monastery',
+  'აღმოჩენა': 'discovery', 'გეოგრაფ': 'geography',
+  'გამოგონება': 'invention', 'მეცნიერ': 'science',
+  'ნაპოლეონ': 'napoleon', 'ჰიტლერ': 'hitler',
+  'ალექსანდრე': 'alexander', 'კლეოპატრა': 'cleopatra',
+  'თამარ': 'tamar', 'დავით': 'david', 'ბაგრატ': 'bagrationi',
+  'მსოფლიო': 'world', 'საქართველო': 'georgia',
+  'თურქ': 'ottoman', 'სპარს': 'persia', 'მონღოლ': 'mongol',
+  'ხმალ': 'sword', 'ფარ': 'shield', 'ჯავშან': 'armor',
+  'პროგრამირება': 'programming', 'კოდ': 'code', 'კომპიუტერ': 'computer',
+  'ალგორითმ': 'algorithm', 'მონაცემთა': 'database',
+  'მთა': 'mountain', 'ზღვა': 'ocean', 'მდინარე': 'river',
+  'ფეხბურთ': 'football', 'კალათბურთ': 'basketball',
+  'მუსიკა': 'music', 'ხელოვნება': 'art', 'ფილმ': 'film',
+};
+
+// Extract keywords from question text
+function extractKeywords(text: string): string[] {
+  const keywords: string[] = [];
+  const lowerText = text.toLowerCase();
+
+  // Check Georgian keywords
+  for (const [ge, en] of Object.entries(GEORGIAN_KEYWORDS)) {
+    if (lowerText.includes(ge.toLowerCase())) {
+      keywords.push(en);
+    }
+  }
+
+  // Extract potential English words (4+ chars)
+  const englishWords = text.match(/[a-zA-Z]{4,}/g) || [];
+  keywords.push(...englishWords.map(w => w.toLowerCase()));
+
+  return [...new Set(keywords)];
+}
+
+// Match icon for question using keywords (NO AI)
+function matchIconForQuestion(
+  questionText: string,
+  categoryId: string | undefined,
+  iconSlugs: Set<string>,
+  categoryIconMap: Map<string, string>
+): { slug: string | null; method: string } {
+  // 1. Extract keywords from question (no AI)
+  const keywords = extractKeywords(questionText);
+  
+  // 2. Check topic mappings (FAST, RELIABLE)
+  for (const keyword of keywords) {
+    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const topicIcons = TOPIC_TO_ICONS[normalizedKw];
+    if (topicIcons) {
+      const validIcon = topicIcons.find(slug => iconSlugs.has(slug));
+      if (validIcon) {
+        return { slug: validIcon, method: 'topic-mapping' };
+      }
+    }
+  }
+  
+  // 3. Check exact slug match
+  for (const keyword of keywords) {
+    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (iconSlugs.has(normalizedKw)) {
+      return { slug: normalizedKw, method: 'exact-slug' };
+    }
+  }
+  
+  // 4. Use category default (RELIABLE)
+  if (categoryId) {
+    const categoryFallback = categoryIconMap.get(categoryId);
+    if (categoryFallback) {
+      return { slug: categoryFallback, method: 'category-fallback' };
+    }
+  }
+  
+  return { slug: null, method: 'none' };
 }
 
 // Chunk array into smaller arrays
@@ -32,135 +222,6 @@ function chunkArray<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-// Analyze a single question using AI
-async function analyzeQuestion(
-  question: string,
-  category: string | undefined,
-  apiKey: string
-): Promise<AIIconResult | null> {
-  const systemPrompt = `You are an icon matching assistant. Your job is to analyze trivia questions and identify a GENERAL TOPIC icon - NOT the specific answer.
-
-CRITICAL RULES:
-- NEVER suggest icons that could hint at the answer
-- Focus on the CATEGORY or GENERAL THEME (science, history, geography, animals, sports, etc.)
-- For a question about "which animal has the longest tongue?" - suggest "animal", "wildlife", "nature" - NOT the specific animal
-- For a question about "who invented the telephone?" - suggest "history", "invention", "technology" - NOT "telephone" or the inventor
-- The icon should represent the SUBJECT AREA, not the specific answer
-
-Return ONLY valid JSON with no markdown formatting.`;
-
-  const userPrompt = `Analyze this trivia question and identify a GENERAL TOPIC icon.
-
-Question: "${question}"
-${category ? `Category: "${category}"` : ''}
-
-IMPORTANT: The icon must NOT hint at the answer. Focus only on the broad topic/category.
-
-Return JSON in this exact format:
-{
-  "slugs": ["slug1", "slug2", "slug3"],
-  "keywords": ["keyword1", "keyword2", "keyword3"],
-  "mainConcept": "broad topic description"
-}
-
-Rules:
-- slugs: 3-5 GENERAL topic icon slugs (e.g., "animal", "science", "globe", "trophy")
-- keywords: 5-10 BROAD category keywords (e.g., "wildlife", "biology", "geography")
-- mainConcept: The general topic in 2-4 words (e.g., "Animal Kingdom", "World History")
-
-Examples:
-- Question about octopus blood → slugs: ["animal", "marine-life", "ocean"], keywords: ["sea", "wildlife", "creature", "biology"]
-- Question about Einstein → slugs: ["science", "physics", "atom"], keywords: ["scientist", "history", "discovery"]
-- Question about Eiffel Tower → slugs: ["landmark", "travel", "architecture"], keywords: ["building", "city", "monument"]
-
-WRONG: Suggesting "octopus", "einstein", "eiffel-tower" - these hint at the answer!
-CORRECT: Suggesting general category icons like "science", "animal", "landmark"`;
-
-  try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        console.warn('Rate limited, will retry');
-        return null;
-      }
-      console.error('AI gateway error:', response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-
-    if (!content) return null;
-
-    const cleanContent = content
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-
-    return JSON.parse(cleanContent);
-  } catch (error) {
-    console.error('Error analyzing question:', error);
-    return null;
-  }
-}
-
-// Find best matching icon from library - STRICT matching only (exact slug or exact topic mapping)
-async function findBestIcon(
-  supabase: any,
-  aiResult: AIIconResult,
-  brokenSet: Set<string>
-): Promise<{ slug: string; method: string } | null> {
-  // Helper to check if slug is valid (not broken)
-  const isValid = (slug: string) => !brokenSet.has(slug);
-
-  // 1. Try exact slug matches ONLY - no partial matching
-  for (const slug of aiResult.slugs) {
-    if (brokenSet.has(slug)) continue;
-    const { data } = await supabase
-      .from('icon_library')
-      .select('slug')
-      .eq('slug', slug)
-      .limit(1);
-    
-    if (data && data.length > 0 && isValid(data[0].slug)) {
-      return { slug: data[0].slug, method: 'exact-slug' };
-    }
-  }
-
-  // 2. Try slug-starts-with match ONLY for exact AI suggestions (e.g., "king" → "king-chess-piece")
-  for (const slug of aiResult.slugs) {
-    const { data } = await supabase
-      .from('icon_library')
-      .select('slug')
-      .ilike('slug', `${slug}-%`)
-      .limit(1);
-    
-    const validMatch = data?.find((d: any) => isValid(d.slug));
-    if (validMatch) {
-      return { slug: validMatch.slug, method: 'prefix-match' };
-    }
-  }
-
-  // REMOVED: title search, tag search, partial slug matching
-  // These were too aggressive and caused wrong assignments (e.g., vinyl-record for food questions)
-
-  return null;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -170,11 +231,6 @@ serve(async (req) => {
     const { categoryId, testMode, brokenSlugs = [] } = await req.json();
     const batchSize = testMode ? TEST_BATCH_SIZE : BATCH_SIZE;
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -186,26 +242,35 @@ serve(async (req) => {
     // Get ALL categories for fallback lookup
     const { data: allCategories } = await supabase
       .from('categories')
-      .select('id, icon_slug');
+      .select('id, name, icon_slug');
     
     // Build category icon lookup map (category_id -> icon_slug)
     const categoryIconMap = new Map<string, string>();
+    const categoryNameMap = new Map<string, string>();
     allCategories?.forEach(cat => {
       if (cat.icon_slug && !brokenSet.has(cat.icon_slug)) {
         categoryIconMap.set(cat.id, cat.icon_slug);
       }
+      categoryNameMap.set(cat.id, cat.name);
     });
     console.log(`Category fallback map has ${categoryIconMap.size} valid icons`);
+
+    // Get all valid icon slugs from library
+    const { data: iconLibrary } = await supabase
+      .from('icon_library')
+      .select('slug');
+    
+    const validIconSlugs = new Set<string>(
+      (iconLibrary || [])
+        .map(i => i.slug)
+        .filter(slug => !brokenSet.has(slug))
+    );
+    console.log(`${validIconSlugs.size} valid icons in library`);
 
     // Build query for questions without icons
     let query = supabase
       .from('questions')
-      .select(`
-        id,
-        question_text,
-        category_id,
-        category:categories!inner(name)
-      `)
+      .select('id, question_text, category_id')
       .or('icon_slug.is.null,icon_slug.eq.')
       .eq('is_active', true)
       .limit(batchSize);
@@ -245,100 +310,66 @@ serve(async (req) => {
       );
     }
 
-    // Format questions for processing
-    const formattedQuestions: Question[] = questions.map((q: any) => ({
-      id: q.id,
-      question_text: q.question_text,
-      category_id: q.category_id,
-      category_name: q.category?.name
-    }));
+    console.log(`Processing ${questions.length} questions (fast mode, no AI)`);
 
-    // Process in parallel chunks
-    const chunks = chunkArray(formattedQuestions, PARALLEL_LIMIT);
-    const results: { id: string; icon_slug: string | null; success: boolean; method: string }[] = [];
-    let rateLimited = false;
+    // Process questions in parallel chunks
+    const chunks = chunkArray(questions, PARALLEL_LIMIT);
+    const results: { id: string; icon_slug: string | null; method: string }[] = [];
 
     for (const chunk of chunks) {
-      if (rateLimited) break;
-
       const chunkResults = await Promise.all(
         chunk.map(async (question) => {
-          const aiResult = await analyzeQuestion(
+          const match = matchIconForQuestion(
             question.question_text,
-            question.category_name,
-            LOVABLE_API_KEY
+            question.category_id,
+            validIconSlugs,
+            categoryIconMap
           );
-
-          let iconSlug: string | null = null;
-          let method = 'none';
-
-          if (aiResult) {
-            const match = await findBestIcon(supabase, aiResult, brokenSet);
-            if (match) {
-              iconSlug = match.slug;
-              method = match.method;
-            }
-          }
-
-          // Fallback to category icon if no strong AI match
-          if (!iconSlug && question.category_id) {
-            const categoryFallback = categoryIconMap.get(question.category_id);
-            if (categoryFallback) {
-              iconSlug = categoryFallback;
-              method = 'category-fallback';
-            }
-          }
 
           return { 
             id: question.id, 
-            icon_slug: iconSlug, 
-            success: aiResult !== null || iconSlug !== null,
-            method
+            category_id: question.category_id,
+            question_text: question.question_text,
+            icon_slug: match.slug, 
+            method: match.method
           };
         })
       );
 
-      // Check for rate limiting
-      const failedCount = chunkResults.filter(r => !r.success).length;
-      if (failedCount === chunk.length) {
-        rateLimited = true;
-        console.warn('All requests in chunk failed, likely rate limited');
+      results.push(...chunkResults.map(r => ({ id: r.id, icon_slug: r.icon_slug, method: r.method })));
+
+      // Bulk update and log history
+      for (const result of chunkResults) {
+        if (result.icon_slug) {
+          await supabase
+            .from('questions')
+            .update({ icon_slug: result.icon_slug })
+            .eq('id', result.id);
+          
+          // Log to assignment history
+          await supabase
+            .from('icon_assignment_history')
+            .insert({
+              question_id: result.id,
+              question_text: result.question_text?.substring(0, 200),
+              old_icon_slug: null,
+              new_icon_slug: result.icon_slug,
+              assignment_method: result.method,
+              category_id: result.category_id,
+              category_name: categoryNameMap.get(result.category_id || ''),
+              assigned_by: null
+            });
+        }
       }
 
-      results.push(...chunkResults);
-
-      // Small delay between chunks to avoid rate limiting
+      // Small delay between chunks
       if (chunks.indexOf(chunk) < chunks.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, CHUNK_DELAY_MS));
       }
     }
 
-    // Bulk update successful results and log to history
-    const successfulResults = results.filter(r => r.success && r.icon_slug);
-    
-    for (const result of successfulResults) {
-      // Get question details for history
-      const question = formattedQuestions.find(q => q.id === result.id);
-      
-      await supabase
-        .from('questions')
-        .update({ icon_slug: result.icon_slug })
-        .eq('id', result.id);
-      
-      // Log to assignment history
-      await supabase
-        .from('icon_assignment_history')
-        .insert({
-          question_id: result.id,
-          question_text: question?.question_text?.substring(0, 200),
-          old_icon_slug: null, // batch assigns to questions without icons
-          new_icon_slug: result.icon_slug,
-          assignment_method: result.method,
-          category_id: question?.category_id,
-          category_name: question?.category_name,
-          assigned_by: null // batch job
-        });
-    }
+    // Count successful assignments
+    const successfulResults = results.filter(r => r.icon_slug !== null);
 
     // Get remaining count
     let remainingQuery = supabase
@@ -368,7 +399,6 @@ serve(async (req) => {
         processed: results.length,
         assigned: successfulResults.length,
         remaining: remaining || 0,
-        rateLimited,
         methodBreakdown,
         results: results.map(r => ({ id: r.id, icon_slug: r.icon_slug, method: r.method })),
         done: (remaining || 0) === 0
