@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, Trophy } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -70,48 +70,39 @@ export function AirbnbCategoryCard({
   const isFull = variant === "full";
   const iconSize = 128;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playbackDirection, setPlaybackDirection] = useState<'forward' | 'backward'>('forward');
+  const reverseAnimationRef = useRef<number | null>(null);
+  const isReversingRef = useRef(false);
 
-  // Ping-pong video playback
+  // Ping-pong video playback - forward then backward seamlessly
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleTimeUpdate = () => {
-      if (playbackDirection === 'backward' && video.currentTime <= 0.05) {
-        setPlaybackDirection('forward');
-        video.playbackRate = 1;
+    const reversePlay = () => {
+      if (!video || video.currentTime <= 0.05) {
+        isReversingRef.current = false;
+        video.currentTime = 0;
         video.play();
+        return;
       }
+      video.currentTime -= 0.04; // ~25fps step backward
+      reverseAnimationRef.current = requestAnimationFrame(reversePlay);
     };
 
     const handleEnded = () => {
-      if (playbackDirection === 'forward') {
-        setPlaybackDirection('backward');
-        video.playbackRate = -1;
-        // Manually reverse by stepping backward
-        const reverseStep = () => {
-          if (video.currentTime > 0.05) {
-            video.currentTime -= 0.033; // ~30fps step
-            requestAnimationFrame(reverseStep);
-          } else {
-            setPlaybackDirection('forward');
-            video.currentTime = 0;
-            video.play();
-          }
-        };
-        reverseStep();
-      }
+      isReversingRef.current = true;
+      reversePlay();
     };
 
     video.addEventListener('ended', handleEnded);
-    video.addEventListener('timeupdate', handleTimeUpdate);
 
     return () => {
       video.removeEventListener('ended', handleEnded);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
+      if (reverseAnimationRef.current) {
+        cancelAnimationFrame(reverseAnimationRef.current);
+      }
     };
-  }, [playbackDirection]);
+  }, []);
 
   // Generate floating particles
   const particles = useMemo(
