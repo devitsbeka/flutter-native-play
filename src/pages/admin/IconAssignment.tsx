@@ -330,7 +330,7 @@ export default function IconAssignment() {
                 <SelectContent>
                   <SelectItem value="all">ყველა კატეგორია</SelectItem>
                   {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id}>
+                    <SelectItem key={(cat as any).uuid || cat.id} value={(cat as any).uuid || cat.id}>
                       {cat.icon} {cat.name}
                     </SelectItem>
                   ))}

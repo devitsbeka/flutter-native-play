@@ -88,10 +88,10 @@ export function useAdminIconAssignment() {
       return;
     }
 
-    // Map category names
+    // Map category names - use uuid to match since questions have UUID category_id
     const questionsWithCategories = (data || []).map(q => ({
       ...q,
-      category_name: categories.find(c => c.id === q.category_id)?.name || 'უცნობი'
+      category_name: categories.find(c => (c as any).uuid === q.category_id)?.name || 'უცნობი'
     }));
 
     if (reset) {
