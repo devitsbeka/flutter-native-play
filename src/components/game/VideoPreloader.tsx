@@ -1,15 +1,12 @@
 import { useEffect } from "react";
+import { MAP_VIDEOS, getAllVideoUrls } from "@/config/videoConfig";
 
 // Global video preloading state
 let videosLoaded = false;
 const videoLoadCallbacks: (() => void)[] = [];
 
-// Map video paths
-export const MAP_VIDEOS = {
-  default: "/videos/floating-blob.mp4",
-  videoB: "/videos/map-video-b.mp4",
-  videoC: "/videos/map-video-c.mp4",
-};
+// Re-export MAP_VIDEOS for backward compatibility
+export { MAP_VIDEOS };
 
 // Check if videos are loaded
 export function areVideosLoaded(): boolean {
@@ -30,7 +27,7 @@ export function VideoPreloader() {
   useEffect(() => {
     if (videosLoaded) return;
 
-    const videoUrls = Object.values(MAP_VIDEOS);
+    const videoUrls = getAllVideoUrls();
     let loadedCount = 0;
     const totalVideos = videoUrls.length;
 
@@ -67,7 +64,7 @@ export function VideoPreloader() {
         if (loadedCount < totalVideos) {
           checkAllLoaded();
         }
-      }, 8000);
+      }, 10000);
 
       video.src = url;
       document.body.appendChild(video);
@@ -83,7 +80,7 @@ export function VideoPreloader() {
         videoLoadCallbacks.forEach((cb) => cb());
         videoLoadCallbacks.length = 0;
       }
-    }, 10000);
+    }, 15000);
 
     return () => {
       clearTimeout(fallbackTimeout);
