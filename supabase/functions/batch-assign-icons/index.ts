@@ -118,16 +118,16 @@ CORRECT: Suggesting general category icons like "science", "animal", "landmark"`
   }
 }
 
-// Find best matching icon from library with improved matching
+// Find best matching icon from library - STRICT matching only (exact slug or exact topic mapping)
 async function findBestIcon(
   supabase: any,
   aiResult: AIIconResult,
   brokenSet: Set<string>
-): Promise<string | null> {
+): Promise<{ slug: string; method: string } | null> {
   // Helper to check if slug is valid (not broken)
   const isValid = (slug: string) => !brokenSet.has(slug);
 
-  // 1. Try exact slug matches first
+  // 1. Try exact slug matches ONLY - no partial matching
   for (const slug of aiResult.slugs) {
     if (brokenSet.has(slug)) continue;
     const { data } = await supabase
@@ -137,65 +137,26 @@ async function findBestIcon(
       .limit(1);
     
     if (data && data.length > 0 && isValid(data[0].slug)) {
-      return data[0].slug;
+      return { slug: data[0].slug, method: 'exact-slug' };
     }
   }
 
-  // 2. Try slug-starts-with match (e.g., "king" → "king-chess-piece")
+  // 2. Try slug-starts-with match ONLY for exact AI suggestions (e.g., "king" → "king-chess-piece")
   for (const slug of aiResult.slugs) {
     const { data } = await supabase
       .from('icon_library')
       .select('slug')
       .ilike('slug', `${slug}-%`)
-      .limit(5);
+      .limit(1);
     
     const validMatch = data?.find((d: any) => isValid(d.slug));
     if (validMatch) {
-      return validMatch.slug;
+      return { slug: validMatch.slug, method: 'prefix-match' };
     }
   }
 
-  // 3. Try title search (case-insensitive)
-  for (const keyword of aiResult.keywords.slice(0, 3)) {
-    const { data } = await supabase
-      .from('icon_library')
-      .select('slug, title')
-      .ilike('title', `%${keyword}%`)
-      .limit(5);
-    
-    const validMatch = data?.find((d: any) => isValid(d.slug));
-    if (validMatch) {
-      return validMatch.slug;
-    }
-  }
-
-  // 4. Try keyword search in tags
-  for (const keyword of aiResult.keywords.slice(0, 5)) {
-    const { data } = await supabase
-      .from('icon_library')
-      .select('slug, tags')
-      .contains('tags', [keyword.toLowerCase()])
-      .limit(5);
-    
-    const validMatch = data?.find((d: any) => isValid(d.slug));
-    if (validMatch) {
-      return validMatch.slug;
-    }
-  }
-
-  // 5. Try partial slug match as fallback
-  for (const slug of aiResult.slugs) {
-    const { data } = await supabase
-      .from('icon_library')
-      .select('slug')
-      .ilike('slug', `%${slug}%`)
-      .limit(5);
-    
-    const validMatch = data?.find((d: any) => isValid(d.slug));
-    if (validMatch) {
-      return validMatch.slug;
-    }
-  }
+  // REMOVED: title search, tag search, partial slug matching
+  // These were too aggressive and caused wrong assignments (e.g., vinyl-record for food questions)
 
   return null;
 }
@@ -294,7 +255,7 @@ serve(async (req) => {
 
     // Process in parallel chunks
     const chunks = chunkArray(formattedQuestions, PARALLEL_LIMIT);
-    const results: { id: string; icon_slug: string | null; success: boolean }[] = [];
+    const results: { id: string; icon_slug: string | null; success: boolean; method: string }[] = [];
     let rateLimited = false;
 
     for (const chunk of chunks) {
@@ -312,13 +273,14 @@ serve(async (req) => {
           let method = 'none';
 
           if (aiResult) {
-            iconSlug = await findBestIcon(supabase, aiResult, brokenSet);
-            if (iconSlug) {
-              method = 'ai-match';
+            const match = await findBestIcon(supabase, aiResult, brokenSet);
+            if (match) {
+              iconSlug = match.slug;
+              method = match.method;
             }
           }
 
-          // Fallback to category icon if no AI match
+          // Fallback to category icon if no strong AI match
           if (!iconSlug && question.category_id) {
             const categoryFallback = categoryIconMap.get(question.category_id);
             if (categoryFallback) {
@@ -376,13 +338,22 @@ serve(async (req) => {
 
     console.log(`Batch complete: ${successfulResults.length} icons assigned, ${remaining} remaining`);
 
+    // Calculate method breakdown
+    const methodBreakdown = results.reduce((acc, r) => {
+      acc[r.method] = (acc[r.method] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    console.log('Method breakdown:', methodBreakdown);
+
     return new Response(
       JSON.stringify({
         processed: results.length,
         assigned: successfulResults.length,
         remaining: remaining || 0,
         rateLimited,
-        results: results.map(r => ({ id: r.id, icon_slug: r.icon_slug })),
+        methodBreakdown,
+        results: results.map(r => ({ id: r.id, icon_slug: r.icon_slug, method: r.method })),
         done: (remaining || 0) === 0
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

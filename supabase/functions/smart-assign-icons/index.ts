@@ -266,22 +266,8 @@ serve(async (req) => {
           break;
         }
 
-        // Check partial slug match
-        const partialMatch = [...iconSlugs].find(slug => 
-          slug.includes(normalizedKw) || normalizedKw.includes(slug)
-        );
-        if (partialMatch) {
-          matchedIcon = partialMatch;
-          matchMethod = 'partial-slug';
-          break;
-        }
-
-        // Check tag index
-        if (iconsByTag[normalizedKw]?.length > 0) {
-          matchedIcon = iconsByTag[normalizedKw][0];
-          matchMethod = 'tag-match';
-          break;
-        }
+        // REMOVED: partial-slug and tag-match - too weak/generic, causes wrong assignments
+        // These were matching icons like "vinyl-record" to unrelated categories
       }
 
       // Step 4: Use category default as fallback (works for ALL questions, not just filtered category)
