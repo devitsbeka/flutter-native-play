@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Bell, BellOff, CheckCheck, Check, Trash2 } from 'lucide-react';
+import { ArrowLeft, BellOff, CheckCheck, Check, Trash2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
+import { Button } from '@/components/ui/button';
 
 type FilterType = 'all' | 'unread' | 'friends' | 'games';
 
@@ -91,29 +92,31 @@ function NotificationCard({
       {/* Actions row */}
       <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-border/30">
         {isUnread && (
-          <motion.button
-            whileTap={{ scale: 0.95 }}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               onMarkRead(notification.id);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+            className="h-8 px-3 text-xs gap-1.5"
           >
             <Check className="w-3.5 h-3.5" />
-            წაკითხულად მონიშვნა
-          </motion.button>
+            წაკითხულად
+          </Button>
         )}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(notification.id);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
+          className="h-8 px-3 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
         >
           <Trash2 className="w-3.5 h-3.5" />
           წაშლა
-        </motion.button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -138,7 +141,6 @@ export default function Notifications() {
   });
 
   const handleNavigate = (notification: Notification) => {
-    // Navigate based on notification type
     switch (notification.type) {
       case 'friend_request':
       case 'friend_accepted':
@@ -170,69 +172,60 @@ export default function Notifications() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/50">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => navigate(-1)}
-              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </motion.button>
-            <div>
-              <h1 className="font-bold text-xl">შეტყობინებები</h1>
-              {unreadCount > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {unreadCount} წაუკითხავი
-                </p>
-              )}
-            </div>
+        <div className="flex items-center gap-3 p-4">
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="font-bold text-xl">შეტყობინებები</h1>
+            {unreadCount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {unreadCount} წაუკითხავი
+              </p>
+            )}
           </div>
-
-          {unreadCount > 0 && (
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={markAllAsRead}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-            >
-              <CheckCheck className="w-5 h-5" />
-              <span className="text-sm font-medium">ყველას წაკითხვა</span>
-            </motion.button>
-          )}
         </div>
 
         {/* Filter tabs */}
         <div className="flex gap-2 px-4 pb-4 overflow-x-auto scrollbar-hide">
           {filters.map((f) => (
-            <motion.button
+            <Button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className="px-4 py-2.5 rounded-full text-sm font-semibold transition-all flex-shrink-0"
-              style={{
-                background: filter === f.key
-                  ? "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(280 65% 50%) 100%)"
-                  : "hsl(var(--muted))",
-                color: filter === f.key ? "white" : "hsl(var(--muted-foreground))",
-                boxShadow: filter === f.key
-                  ? "0 4px 0 hsl(var(--primary) / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.2)"
-                  : "0 2px 0 hsl(var(--border))",
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              variant={filter === f.key ? "default" : "secondary"}
+              size="sm"
+              className="rounded-full flex-shrink-0"
             >
               {f.label}
               {f.key === 'unread' && unreadCount > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary-foreground/20 text-xs">
                   {unreadCount}
                 </span>
               )}
-            </motion.button>
+            </Button>
           ))}
         </div>
       </div>
 
       {/* Content */}
       <div className="p-4 space-y-3">
+        {/* Mark all as read button - moved here */}
+        {unreadCount > 0 && (
+          <Button
+            variant="outline"
+            onClick={markAllAsRead}
+            className="w-full gap-2"
+          >
+            <CheckCheck className="w-4 h-4" />
+            ყველას წაკითხულად მონიშვნა
+          </Button>
+        )}
+
         {loading ? (
           <div className="flex flex-col items-center py-12">
             <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
