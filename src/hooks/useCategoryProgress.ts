@@ -209,7 +209,10 @@ export function useCategoryProgress() {
   const isLevelCompleted = (categoryId: string, levelNumber: number): boolean => {
     const catProgress = progress[categoryId];
     if (!catProgress) return false;
-    return catProgress.completedLevels.some((l) => l.level_number === levelNumber);
+    // Only consider completed if at least 1 star was earned
+    return catProgress.completedLevels.some(
+      (l) => l.level_number === levelNumber && l.stars_earned >= 1
+    );
   };
 
   const isCategoryUnlocked = (categoryId: string): boolean => {
