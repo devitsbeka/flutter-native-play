@@ -975,6 +975,11 @@ export type Database = {
           mission_description: string | null
           mission_id: string
           mission_title: string
+          reward_claimed: boolean
+          reward_coins: number
+          reward_gems: number
+          reward_power_up: string | null
+          reward_power_up_count: number
           reward_xp: number
           target_value: number
           updated_at: string
@@ -990,6 +995,11 @@ export type Database = {
           mission_description?: string | null
           mission_id: string
           mission_title: string
+          reward_claimed?: boolean
+          reward_coins?: number
+          reward_gems?: number
+          reward_power_up?: string | null
+          reward_power_up_count?: number
           reward_xp?: number
           target_value?: number
           updated_at?: string
@@ -1005,6 +1015,11 @@ export type Database = {
           mission_description?: string | null
           mission_id?: string
           mission_title?: string
+          reward_claimed?: boolean
+          reward_coins?: number
+          reward_gems?: number
+          reward_power_up?: string | null
+          reward_power_up_count?: number
           reward_xp?: number
           target_value?: number
           updated_at?: string
