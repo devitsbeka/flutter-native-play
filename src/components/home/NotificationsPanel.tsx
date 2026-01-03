@@ -170,7 +170,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-3xl bg-card border-t border-border shadow-2xl overflow-hidden"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-3xl bg-card border-t border-border shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/50">
