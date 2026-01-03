@@ -65,11 +65,11 @@ export function CategoryLeaderboard({
       <div className="mb-6">
         <ChunkyButton
           onClick={onPlay}
-          className="w-full whitespace-nowrap"
+          className="w-full"
           size="lg"
           variant="mint"
+          icon={<Play className="h-5 w-5 fill-current" />}
         >
-          <Play className="h-5 w-5 mr-2 fill-current" />
           ითამაშე
         </ChunkyButton>
 
