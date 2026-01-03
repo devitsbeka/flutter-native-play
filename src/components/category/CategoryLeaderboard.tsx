@@ -37,31 +37,41 @@ export function CategoryLeaderboard({
     }
   };
 
-  const getRankStyle = (rank: number) => {
-    switch (rank) {
-      case 1:
+  const getRankStyle = (rank: number, isCurrentUser: boolean) => {
+    // Base styles for top 3
+    const baseStyles = {
+      1: {
+        background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
+        border: "2px solid #34D399",
+        boxShadow: "0 2px 8px rgba(52, 211, 153, 0.3)",
+      },
+      2: {
+        background: "linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)",
+        border: "2px solid #60A5FA",
+        boxShadow: "0 2px 8px rgba(96, 165, 250, 0.3)",
+      },
+      3: {
+        background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
+        border: "2px solid #FBBF24",
+        boxShadow: "0 2px 8px rgba(251, 191, 36, 0.3)",
+      },
+    };
+
+    if (rank >= 1 && rank <= 3) {
+      const style = baseStyles[rank as 1 | 2 | 3];
+      // Add current user ring if needed
+      if (isCurrentUser) {
         return {
-          background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
-          border: "2px solid #34D399",
-          boxShadow: "0 2px 8px rgba(52, 211, 153, 0.3)",
+          ...style,
+          boxShadow: `${style.boxShadow}, 0 0 0 3px rgba(139, 92, 246, 0.4)`,
         };
-      case 2:
-        return {
-          background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
-          border: "2px solid #A78BFA",
-          boxShadow: "0 2px 8px rgba(167, 139, 250, 0.3)",
-        };
-      case 3:
-        return {
-          background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
-          border: "2px solid #FBBF24",
-          boxShadow: "0 2px 8px rgba(251, 191, 36, 0.3)",
-        };
-      default:
-        return lightMode
-          ? { background: "rgba(255,255,255,0.6)", border: "1px solid #E2E8F0" }
-          : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" };
+      }
+      return style;
     }
+
+    return lightMode
+      ? { background: "rgba(255,255,255,0.6)", border: "1px solid #E2E8F0" }
+      : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" };
   };
 
   return (
@@ -170,17 +180,14 @@ export function CategoryLeaderboard({
                       layout: { type: "spring", stiffness: 300, damping: 30 },
                       scale: { duration: 0.3 }
                     }}
-                    className={`p-3 rounded-xl flex items-center gap-3 relative overflow-hidden ${
+                    className={`p-4 rounded-xl flex items-center gap-3 relative overflow-hidden ${
                       hasRankChange ? "ring-2 ring-offset-1 ring-offset-transparent" : ""
                     } ${
                       hasRankChange === "up" ? "ring-emerald-400/50" : 
                       hasRankChange === "down" ? "ring-rose-400/50" : 
                       hasRankChange === "new" ? "ring-amber-400/50" : ""
-                    } ${isCurrentUser ? "ring-2 ring-primary/30" : ""}`}
-                    style={isCurrentUser 
-                      ? { background: "rgba(var(--primary-rgb), 0.2)", border: "2px solid rgba(var(--primary-rgb), 0.4)" }
-                      : getRankStyle(entry.rank)
-                    }
+                    }`}
+                    style={getRankStyle(entry.rank, isCurrentUser)}
                   >
                     {/* Rank change indicator */}
                     {hasRankChange && (
@@ -257,16 +264,11 @@ export function CategoryLeaderboard({
                       animate={hasRankChange ? { scale: [1, 1.15, 1] } : {}}
                       transition={{ duration: 0.3, delay: 0.1 }}
                     >
-                      <Star className={`h-4 w-4 ${
-                        entry.rank === 1 ? "text-amber-400 fill-amber-400" : 
-                        entry.rank === 2 ? "text-slate-300 fill-slate-300" :
-                        entry.rank === 3 ? "text-amber-600 fill-amber-600" :
-                        "text-amber-400 fill-amber-400"
-                      }`} />
+                      <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                       <p className={`font-bold ${
-                        entry.rank === 1 ? "text-amber-500" : 
-                        entry.rank === 2 ? "text-slate-400" :
-                        entry.rank === 3 ? "text-amber-600" :
+                        entry.rank === 1 ? "text-emerald-700" : 
+                        entry.rank === 2 ? "text-blue-700" :
+                        entry.rank === 3 ? "text-amber-700" :
                         lightMode ? "text-slate-700" : "text-white"
                       }`}>
                         {entry.total_stars}
