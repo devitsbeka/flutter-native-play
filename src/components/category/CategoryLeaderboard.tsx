@@ -9,12 +9,14 @@ interface CategoryLeaderboardProps {
   categoryId: string;
   categoryName: string;
   onPlay: () => void;
+  lightMode?: boolean;
 }
 
 export function CategoryLeaderboard({
   categoryId,
   categoryName,
   onPlay,
+  lightMode = false,
 }: CategoryLeaderboardProps) {
   const { user } = useAuth();
   const { leaderboard, isLoading, userRank } = useCategoryLeaderboard(categoryId);
@@ -33,6 +35,18 @@ export function CategoryLeaderboard({
   };
 
   const getRankBackground = (rank: number) => {
+    if (lightMode) {
+      switch (rank) {
+        case 1:
+          return "bg-gradient-to-r from-amber-500/20 to-amber-400/10 border-amber-400/40";
+        case 2:
+          return "bg-gradient-to-r from-slate-400/20 to-slate-300/10 border-slate-400/40";
+        case 3:
+          return "bg-gradient-to-r from-amber-700/20 to-amber-600/10 border-amber-600/40";
+        default:
+          return "bg-white/60 border-slate-200";
+      }
+    }
     switch (rank) {
       case 1:
         return "bg-gradient-to-r from-amber-500/20 to-amber-400/10 border-amber-400/30";
@@ -63,23 +77,29 @@ export function CategoryLeaderboard({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 rounded-2xl bg-primary/10 border border-primary/20"
+            className={`mt-4 p-4 rounded-2xl border ${
+              lightMode 
+                ? "bg-primary/10 border-primary/30" 
+                : "bg-primary/10 border-primary/20"
+            }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  lightMode ? "bg-primary/20" : "bg-primary/20"
+                }`}>
                   <Trophy className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-white/60">შენი პოზიცია</p>
-                  <p className="text-xl font-bold text-white">#{userRank.rank}</p>
+                  <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>შენი პოზიცია</p>
+                  <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-white/60">ვარსკვლავები</p>
+                <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>ვარსკვლავები</p>
                 <div className="flex items-center gap-1 justify-end">
                   <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                  <p className="text-xl font-bold text-amber-400">{userRank.total_stars}</p>
+                  <p className="text-xl font-bold text-amber-500">{userRank.total_stars}</p>
                 </div>
               </div>
             </div>
@@ -90,9 +110,13 @@ export function CategoryLeaderboard({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-center"
+            className={`mt-4 p-4 rounded-2xl border text-center ${
+              lightMode 
+                ? "bg-white/60 border-slate-200" 
+                : "bg-white/5 border-white/10"
+            }`}
           >
-            <p className="text-white/60 text-sm">
+            <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>
               ითამაშე რათა გამოჩნდე ლიდერბორდზე!
             </p>
           </motion.div>
@@ -102,8 +126,8 @@ export function CategoryLeaderboard({
       {/* Leaderboard Header */}
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="h-5 w-5 text-amber-400" />
-        <h3 className="text-lg font-bold text-white">ლიდერბორდი</h3>
-        <span className="text-sm text-white/50">• {categoryName}</span>
+        <h3 className={`text-lg font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>ლიდერბორდი</h3>
+        <span className={`text-sm ${lightMode ? "text-slate-500" : "text-white/50"}`}>• {categoryName}</span>
       </div>
 
       {/* Leaderboard List */}
@@ -114,9 +138,9 @@ export function CategoryLeaderboard({
           ))
         ) : leaderboard.length === 0 ? (
           <div className="text-center py-12">
-            <Trophy className="h-12 w-12 text-white/20 mx-auto mb-3" />
-            <p className="text-white/50">ჯერ არავინ არ ითამაშა</p>
-            <p className="text-white/30 text-sm mt-1">იყავი პირველი!</p>
+            <Trophy className={`h-12 w-12 mx-auto mb-3 ${lightMode ? "text-slate-300" : "text-white/20"}`} />
+            <p className={lightMode ? "text-slate-500" : "text-white/50"}>ჯერ არავინ არ ითამაშა</p>
+            <p className={`text-sm mt-1 ${lightMode ? "text-slate-400" : "text-white/30"}`}>იყავი პირველი!</p>
           </div>
         ) : (
           <>
@@ -181,17 +205,21 @@ export function CategoryLeaderboard({
 
                     {/* Rank */}
                     <motion.div 
-                      className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        lightMode ? "bg-slate-200/80" : "bg-white/10"
+                      }`}
                       animate={hasRankChange ? { scale: [1, 1.2, 1] } : {}}
                       transition={{ duration: 0.3 }}
                     >
                       {getRankIcon(entry.rank) || (
-                        <span className="text-sm font-bold text-white/70">{entry.rank}</span>
+                        <span className={`text-sm font-bold ${lightMode ? "text-slate-600" : "text-white/70"}`}>{entry.rank}</span>
                       )}
                     </motion.div>
 
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${
+                      lightMode ? "bg-slate-200/80" : "bg-white/10"
+                    }`}>
                       {entry.avatar_url ? (
                         <img
                           src={entry.avatar_url}
@@ -199,19 +227,19 @@ export function CategoryLeaderboard({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User className="h-5 w-5 text-white/50" />
+                        <User className={`h-5 w-5 ${lightMode ? "text-slate-400" : "text-white/50"}`} />
                       )}
                     </div>
 
                     {/* Name & Stats */}
                     <div className="flex-1 min-w-0">
                       <p className={`font-semibold truncate ${
-                        isCurrentUser ? "text-primary" : "text-white"
+                        isCurrentUser ? "text-primary" : lightMode ? "text-slate-800" : "text-white"
                       }`}>
                         {entry.nickname}
                         {isCurrentUser && " (შენ)"}
                       </p>
-                      <p className="text-xs text-white/50">
+                      <p className={`text-xs ${lightMode ? "text-slate-500" : "text-white/50"}`}>
                         {entry.levels_completed} დონე დასრულებული
                       </p>
                     </div>
@@ -229,10 +257,10 @@ export function CategoryLeaderboard({
                         "text-amber-400 fill-amber-400"
                       }`} />
                       <p className={`font-bold ${
-                        entry.rank === 1 ? "text-amber-400" : 
-                        entry.rank === 2 ? "text-slate-300" :
+                        entry.rank === 1 ? "text-amber-500" : 
+                        entry.rank === 2 ? "text-slate-400" :
                         entry.rank === 3 ? "text-amber-600" :
-                        "text-white"
+                        lightMode ? "text-slate-700" : "text-white"
                       }`}>
                         {entry.total_stars}
                       </p>
@@ -246,28 +274,32 @@ export function CategoryLeaderboard({
             {user && userRank && userRank.rank > 100 && (
               <>
                 <div className="flex items-center gap-2 py-2">
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-xs text-white/30">...</span>
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className={`flex-1 h-px ${lightMode ? "bg-slate-200" : "bg-white/10"}`} />
+                  <span className={`text-xs ${lightMode ? "text-slate-400" : "text-white/30"}`}>...</span>
+                  <div className={`flex-1 h-px ${lightMode ? "bg-slate-200" : "bg-white/10"}`} />
                 </div>
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="p-3 rounded-xl border bg-primary/20 border-primary/40 ring-2 ring-primary/30 flex items-center gap-3"
                 >
-                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-white/70">{userRank.rank}</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    lightMode ? "bg-slate-200/80" : "bg-white/10"
+                  }`}>
+                    <span className={`text-sm font-bold ${lightMode ? "text-slate-600" : "text-white/70"}`}>{userRank.rank}</span>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    <User className="h-5 w-5 text-white/50" />
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${
+                    lightMode ? "bg-slate-200/80" : "bg-white/10"
+                  }`}>
+                    <User className={`h-5 w-5 ${lightMode ? "text-slate-400" : "text-white/50"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-primary truncate">შენ</p>
-                    <p className="text-xs text-white/50">{userRank.levels_completed} დონე</p>
+                    <p className={`text-xs ${lightMode ? "text-slate-500" : "text-white/50"}`}>{userRank.levels_completed} დონე</p>
                   </div>
                   <div className="text-right flex items-center gap-1">
                     <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                    <p className="font-bold text-white">{userRank.total_stars}</p>
+                    <p className={`font-bold ${lightMode ? "text-slate-700" : "text-white"}`}>{userRank.total_stars}</p>
                   </div>
                 </motion.div>
               </>
