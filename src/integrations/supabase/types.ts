@@ -722,6 +722,30 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          created_at: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          created_at?: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          created_at?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_avatar_frames: {
         Row: {
           created_at: string
@@ -964,6 +988,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mission_streaks: {
+        Row: {
+          best_streak: number
+          created_at: string
+          current_streak: number
+          id: string
+          last_completion_date: string | null
+          streak_bonus_claimed: boolean
+          total_completions: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_completion_date?: string | null
+          streak_bonus_claimed?: boolean
+          total_completions?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          best_streak?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_completion_date?: string | null
+          streak_bonus_claimed?: boolean
+          total_completions?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_missions: {
         Row: {
           completed: boolean
@@ -975,6 +1035,7 @@ export type Database = {
           mission_description: string | null
           mission_id: string
           mission_title: string
+          mission_type: string
           reward_claimed: boolean
           reward_coins: number
           reward_gems: number
@@ -995,6 +1056,7 @@ export type Database = {
           mission_description?: string | null
           mission_id: string
           mission_title: string
+          mission_type?: string
           reward_claimed?: boolean
           reward_coins?: number
           reward_gems?: number
@@ -1015,6 +1077,7 @@ export type Database = {
           mission_description?: string | null
           mission_id?: string
           mission_title?: string
+          mission_type?: string
           reward_claimed?: boolean
           reward_coins?: number
           reward_gems?: number
