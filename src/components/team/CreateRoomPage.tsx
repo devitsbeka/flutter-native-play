@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
-import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown } from "lucide-react";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
@@ -220,12 +220,13 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                         />
                       </div>
                       
-                      {/* Subtle gradient mask overlay - less opacity */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-white/20 to-transparent" />
+                      {/* Netflix-style gradient overlay - left to right fade */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent" />
                       
-                      {/* Category Name - centered, two lines if needed */}
-                      <div className="absolute inset-0 flex items-center justify-center p-3">
-                        <span className="text-sm font-bold text-foreground text-center leading-tight line-clamp-2">
+                      {/* Category Name - bottom left, Netflix style */}
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <span className="text-sm font-bold text-foreground leading-tight line-clamp-2 drop-shadow-sm">
                           {category.name}
                         </span>
                       </div>
@@ -334,26 +335,121 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         )}
       </div>
 
-      {/* Footer - Central 3D Purple Checkmark Button */}
+      {/* Footer - Central 3D Purple Button (same as bottom nav but purple with check icon) */}
       <div className="px-4 py-6 flex justify-center">
-        <motion.button
+        <Hex3DCreateButton 
           onClick={handleCreate}
           disabled={!selectedCategory || loading || isCreating}
-          className="relative w-20 h-20 rounded-full flex items-center justify-center disabled:opacity-50"
-          style={{
-            background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)",
-            boxShadow: "0 8px 0 hsl(var(--primary) / 0.4), 0 12px 20px hsl(var(--primary) / 0.3)",
-          }}
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95, y: 4, boxShadow: "0 2px 0 hsl(var(--primary) / 0.4)" }}
-        >
-          {loading || isCreating ? (
-            <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
-          ) : (
-            <Check className="w-10 h-10 text-primary-foreground stroke-[3]" />
-          )}
-        </motion.button>
+          isLoading={loading || isCreating}
+        />
       </div>
     </motion.div>
+  );
+}
+
+// Reusing the exact same 3D button style from UniversalBottomNav but with purple variant and check icon
+function Hex3DCreateButton({ 
+  onClick, 
+  disabled = false,
+  isLoading = false,
+}: { 
+  onClick: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+}) {
+  const colors = {
+    depth: "linear-gradient(180deg, #6B21A8 0%, #581C87 50%, #4C1D95 100%)",
+    bevel: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+    face: "radial-gradient(circle at 40% 35%, #C084FC 0%, #A855F7 25%, #9333EA 50%, #7C3AED 75%, #6D28D9 100%)",
+    sparkle: "rgba(220,180,255,0.95)",
+    sparkleShadow: "0 0 6px rgba(200,150,255,0.9), 0 0 10px rgba(160,100,230,0.6)",
+  };
+
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      className="relative disabled:opacity-50"
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.92, y: 4 }}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      style={{ width: 90, height: 90 }}
+    >
+      {/* Bottom 3D depth layer */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          inset: 0,
+          top: 6,
+          background: colors.depth,
+        }}
+      />
+      
+      {/* Middle bevel layer */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          inset: 3,
+          top: 4,
+          bottom: 8,
+          background: colors.bevel,
+        }}
+      />
+      
+      {/* Main face - radial gradient */}
+      <div
+        className="absolute rounded-full overflow-hidden"
+        style={{
+          inset: 4,
+          top: 0,
+          bottom: 12,
+          background: colors.face,
+        }}
+      >
+        {/* Sparkle particles */}
+        {!isLoading && [...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: i % 2 === 0 ? 4 : 3,
+              height: i % 2 === 0 ? 4 : 3,
+              background: colors.sparkle,
+              boxShadow: colors.sparkleShadow,
+              left: `${20 + (i * 12)}%`,
+              top: `${25 + ((i % 3) * 18)}%`,
+            }}
+            animate={{
+              y: [-5, 5, -5],
+              x: [i % 2 === 0 ? -3 : 3, i % 2 === 0 ? 3 : -3, i % 2 === 0 ? -3 : 3],
+              opacity: [0.4, 1, 0.4],
+              scale: [0.8, 1.3, 0.8],
+            }}
+            transition={{
+              duration: 1.5 + (i * 0.25),
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.15,
+            }}
+          />
+        ))}
+        
+        {/* Icon */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+        >
+          {isLoading ? (
+            <Loader2 className="w-8 h-8 animate-spin text-white" />
+          ) : (
+            <Check 
+              className="w-8 h-8" 
+              color="#ffffff"
+              strokeWidth={3}
+            />
+          )}
+        </div>
+      </div>
+    </motion.button>
   );
 }
