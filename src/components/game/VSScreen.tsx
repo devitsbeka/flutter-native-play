@@ -8,7 +8,7 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
-import { CategoryWheelModal } from "./CategoryWheelModal";
+import { CloudCategoryFlight } from "./CloudCategoryFlight";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -322,12 +322,10 @@ export function VSScreen() {
         onClose={() => setShowHelpModal(false)} 
       />
 
-      {/* Category Wheel Modal */}
-      <CategoryWheelModal
+      {/* Cloud Category Flight */}
+      <CloudCategoryFlight
         isOpen={showWheel}
         onCategorySelected={handleCategorySelected}
-        playerAvatar={profile?.avatar_url}
-        opponentAvatar={opponent?.avatarUrl}
       />
     </div>
   );
