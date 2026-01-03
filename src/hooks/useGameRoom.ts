@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-
+import { generateRoomName } from "@/utils/roomNameGenerator";
 export type RoomStatus = "waiting" | "ready" | "playing" | "completed" | "cancelled";
 export type ParticipantStatus = "joined" | "ready" | "playing" | "finished" | "disconnected";
 
@@ -80,7 +80,8 @@ export function useGameRoom() {
         attempts++;
       }
 
-      // Create the room
+      // Create the room with a random room name
+      const roomName = generateRoomName();
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
         .insert({
@@ -89,6 +90,7 @@ export function useGameRoom() {
           category_id: categoryId || null,
           category_name: categoryName || null,
           status: "waiting" as RoomStatus,
+          room_name: roomName,
         })
         .select()
         .single();
@@ -158,31 +160,20 @@ export function useGameRoom() {
 
     setLoading(true);
     try {
-      // Find the room - allow joining rooms in waiting or ready status
+      // Find the room - allow all active statuses for re-entry check
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
         .select("*")
         .eq("room_code", roomCode.toUpperCase())
-        .in("status", ["waiting", "ready"])
+        .in("status", ["waiting", "ready", "playing"])
         .maybeSingle();
 
       if (roomError || !room) {
-        toast.error("ოთახი ვერ მოიძებნა ან უკვე დაწყებულია");
+        toast.error("ოთახი ვერ მოიძებნა ან დასრულებულია");
         return null;
       }
 
-      // Check participant count
-      const { count } = await supabase
-        .from("room_participants")
-        .select("*", { count: "exact", head: true })
-        .eq("room_id", room.id);
-
-      if (count && count >= room.max_players) {
-        toast.error("ოთახი სავსეა");
-        return null;
-      }
-
-      // Check if already in room
+      // Check if already in room (for re-entry)
       const { data: existingParticipant } = await supabase
         .from("room_participants")
         .select("id")
@@ -190,8 +181,27 @@ export function useGameRoom() {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      // If not already a participant and room is playing, block new joins
+      if (!existingParticipant && room.status === "playing") {
+        toast.error("თამაში უკვე დაწყებულია");
+        return null;
+      }
+
+      // Check participant count (only for new joins, not re-entry)
+      if (!existingParticipant) {
+        const { count } = await supabase
+          .from("room_participants")
+          .select("*", { count: "exact", head: true })
+          .eq("room_id", room.id);
+
+        if (count && count >= room.max_players) {
+          toast.error("ოთახი სავსეა");
+          return null;
+        }
+      }
+
+      // If already in room, just return for re-entry
       if (existingParticipant) {
-        toast.info("უკვე ხარ ამ ოთახში");
         const typedRoom: GameRoom = {
           id: room.id,
           room_code: room.room_code,
@@ -211,6 +221,7 @@ export function useGameRoom() {
           challenger_completed_at: room.challenger_completed_at,
         };
         setCurrentRoom(typedRoom);
+        toast.success("წარმატებით დაბრუნდი ოთახში!");
         return typedRoom;
       }
 
@@ -268,20 +279,46 @@ export function useGameRoom() {
     if (!user) return;
 
     try {
+      const isHost = currentRoom?.host_user_id === user.id;
+
+      // If host, try to transfer host status before leaving
+      if (isHost) {
+        // Find another participant to make host
+        const { data: otherParticipants } = await supabase
+          .from("room_participants")
+          .select("user_id")
+          .eq("room_id", roomId)
+          .neq("user_id", user.id)
+          .limit(1);
+
+        if (otherParticipants && otherParticipants.length > 0) {
+          // Transfer host to another participant
+          const newHostId = otherParticipants[0].user_id;
+          await supabase
+            .from("game_rooms")
+            .update({ host_user_id: newHostId })
+            .eq("id", roomId);
+          
+          await supabase
+            .from("room_participants")
+            .update({ is_host: true })
+            .eq("room_id", roomId)
+            .eq("user_id", newHostId);
+        } else {
+          // No other participants, cancel the room
+          await supabase
+            .from("game_rooms")
+            .update({ status: "cancelled" as RoomStatus })
+            .eq("id", roomId);
+        }
+      }
+
       // Remove participant
       await supabase
         .from("room_participants")
         .delete()
         .eq("room_id", roomId)
         .eq("user_id", user.id);
-
-      // If host, cancel the room
-      if (currentRoom?.host_user_id === user.id) {
-        await supabase
-          .from("game_rooms")
-          .update({ status: "cancelled" as RoomStatus })
-          .eq("id", roomId);
-      }
 
       setCurrentRoom(null);
     } catch (error) {

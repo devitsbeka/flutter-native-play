@@ -5,12 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface MyRoom {
   id: string;
   room_code: string;
+  room_name: string | null;
   category_name: string | null;
   category_id: string | null;
   status: string;
   created_at: string;
   is_host: boolean;
   game_type: string;
+  has_unread_activity: boolean;
   participants: {
     user_id: string;
     nickname: string;
@@ -84,18 +86,20 @@ export function useMyRooms() {
       });
 
       // Build my rooms with all data
-      const myRooms: MyRoom[] = (roomsData || []).map((room) => {
+      const myRooms: MyRoom[] = (roomsData || []).map((room: any) => {
         const participants = participantsByRoom.get(room.id) || [];
         
         return {
           id: room.id,
           room_code: room.room_code,
+          room_name: room.room_name,
           category_name: room.category_name,
           category_id: room.category_id,
           status: room.status || "waiting",
           created_at: room.created_at || "",
           is_host: hostMap.get(room.id) || false,
           game_type: room.game_type,
+          has_unread_activity: room.has_unread_activity || false,
           participants: participants.map((p) => ({
             user_id: p.user_id,
             nickname: p.nickname,

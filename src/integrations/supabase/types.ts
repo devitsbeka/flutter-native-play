@@ -305,11 +305,14 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           game_type: Database["public"]["Enums"]["game_type"]
+          has_unread_activity: boolean | null
           host_user_id: string
           id: string
+          last_activity_at: string | null
           max_players: number | null
           min_players: number | null
           room_code: string
+          room_name: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["room_status"] | null
           total_questions: number | null
@@ -323,11 +326,14 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
+          has_unread_activity?: boolean | null
           host_user_id: string
           id?: string
+          last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
           room_code: string
+          room_name?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
@@ -341,11 +347,14 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
+          has_unread_activity?: boolean | null
           host_user_id?: string
           id?: string
+          last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
           room_code?: string
+          room_name?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
