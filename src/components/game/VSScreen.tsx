@@ -291,21 +291,38 @@ export function VSScreen() {
         {selectedCategoryName && (
           <div className="flex-1 flex flex-col justify-between py-4">
             
-            {/* Opponent - Top Right */}
+            {/* Opponent - Top Left */}
             <motion.div 
-              className="flex justify-end"
-              initial={{ opacity: 0, x: 50 }}
+              className="flex justify-start"
+              initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             >
               <div className="flex items-center gap-3">
-                {/* Text Info - Left of avatar */}
-                <div className="flex flex-col items-end">
+                {/* Avatar with golden gradient stroke */}
+                <div className="relative">
+                  <div 
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
+                      padding: "4px",
+                    }}
+                  />
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden m-1">
+                    <img 
+                      src={opponent?.avatarUrl || currentAvatar || slotAvatars[0]} 
+                      alt="Opponent"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                {/* Text Info - Right of avatar */}
+                <div className="flex flex-col">
                   <h3
-                    className="text-lg font-bold text-white"
+                    className="text-2xl font-black text-white"
                     style={{
                       fontFamily: "'TASolivare', sans-serif",
-                      textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                      textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                     }}
                   >
                     {opponent?.name || "მოწინააღმდეგე"}
@@ -316,14 +333,6 @@ export function VSScreen() {
                   <p className="text-amber-300 text-sm font-medium">
                     {opponentPoints.toLocaleString()}
                   </p>
-                </div>
-                {/* Avatar */}
-                <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-white/30 shadow-lg">
-                  <img 
-                    src={opponent?.avatarUrl || currentAvatar || slotAvatars[0]} 
-                    alt="Opponent"
-                    className="w-full h-full object-cover"
-                  />
                 </div>
               </div>
             </motion.div>
@@ -374,29 +383,21 @@ export function VSScreen() {
               </h2>
             </motion.div>
 
-            {/* Player - Bottom Left */}
+            {/* Player - Bottom Right */}
             <motion.div 
-              className="flex justify-start"
-              initial={{ opacity: 0, x: -50 }}
+              className="flex justify-end"
+              initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             >
               <div className="flex items-center gap-3">
-                {/* Avatar */}
-                <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-white/30 shadow-lg">
-                  <img 
-                    src={profile?.animated_avatar_url || profile?.avatar_url || "/placeholder.svg"} 
-                    alt="Player"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {/* Text Info - Right of avatar */}
-                <div className="flex flex-col">
+                {/* Text Info - Left of avatar */}
+                <div className="flex flex-col items-end">
                   <h3
-                    className="text-lg font-bold text-white"
+                    className="text-2xl font-black text-white"
                     style={{
                       fontFamily: "'TASolivare', sans-serif",
-                      textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                      textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                     }}
                   >
                     {profile?.nickname || "შენ"}
@@ -407,6 +408,23 @@ export function VSScreen() {
                   <p className="text-amber-300 text-sm font-medium">
                     {playerPoints.toLocaleString()}
                   </p>
+                </div>
+                {/* Avatar with golden gradient stroke */}
+                <div className="relative">
+                  <div 
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
+                      padding: "4px",
+                    }}
+                  />
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden m-1">
+                    <img 
+                      src={profile?.animated_avatar_url || profile?.avatar_url || "/placeholder.svg"} 
+                      alt="Player"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>
