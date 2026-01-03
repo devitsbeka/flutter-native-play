@@ -132,13 +132,15 @@ export function ShopItemCard({
 
         {/* Icon Container */}
         <motion.div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 relative"
+          className={`flex items-center justify-center mx-auto mb-3 relative ${
+            gradient === "transparent" ? "w-[50px] h-[50px]" : "w-14 h-14 rounded-2xl"
+          }`}
           style={{
             background: gradient === "transparent" ? "transparent" : gradient,
             boxShadow: gradient === "transparent" ? "none" : "0 4px 8px hsl(0 0% 0% / 0.15), inset 0 1px 2px hsl(0 0% 100% / 0.3)",
           }}
-          whileHover={{ rotate: gradient === "transparent" ? [0, 0] : [0, -5, 5, 0] }}
-          transition={{ duration: 0.5 }}
+          whileHover={{ scale: gradient === "transparent" ? 1.05 : 1, rotate: gradient === "transparent" ? 0 : [0, -5, 5, 0] }}
+          transition={{ duration: 0.3 }}
         >
           {icon}
           {isPurchased && (

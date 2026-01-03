@@ -1,5 +1,10 @@
 import { motion } from "framer-motion";
-import { Crown, Zap, Coins, Flame, Frame } from "lucide-react";
+import { Coins } from "lucide-react";
+
+import iconFireDeals from "@/assets/icons/icon-fire-deals.png";
+import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
+import iconFramesLantern from "@/assets/icons/icon-frames-lantern.png";
+import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
 
 export type ShopTab = "hot" | "powers" | "coins" | "vip" | "frames";
 
@@ -14,19 +19,19 @@ const TABS: Tab[] = [
   {
     id: "hot",
     label: "🔥 ფასდაკლება",
-    icon: <Flame className="w-4 h-4" />,
+    icon: <img src={iconFireDeals} alt="" className="w-5 h-5 object-contain" />,
     gradient: "linear-gradient(135deg, hsl(25 95% 55%) 0%, hsl(350 80% 55%) 100%)",
   },
   {
     id: "powers",
     label: "ძალები",
-    icon: <Zap className="w-4 h-4" />,
+    icon: <img src={iconPowersBottle} alt="" className="w-5 h-5 object-contain" />,
     gradient: "linear-gradient(135deg, hsl(263 60% 55%) 0%, hsl(280 70% 50%) 100%)",
   },
   {
     id: "frames",
     label: "ჩარჩოები",
-    icon: <Frame className="w-4 h-4" />,
+    icon: <img src={iconFramesLantern} alt="" className="w-5 h-5 object-contain" />,
     gradient: "linear-gradient(135deg, hsl(280 70% 55%) 0%, hsl(320 75% 50%) 100%)",
   },
   {
@@ -38,7 +43,7 @@ const TABS: Tab[] = [
   {
     id: "vip",
     label: "VIP",
-    icon: <Crown className="w-4 h-4" />,
+    icon: <img src={iconVipCrown} alt="" className="w-5 h-5 object-contain" />,
     gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(340 80% 55%) 100%)",
   },
 ];
