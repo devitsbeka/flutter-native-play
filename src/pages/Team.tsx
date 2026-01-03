@@ -292,13 +292,15 @@ function TeamContent() {
         onClose={() => setShowAllGamesModal(false)}
       />
 
-      {/* Bottom Navigation */}
-      <UniversalBottomNav 
-        onTeamPlayClick={() => {
-          playSound("button-click");
-          setShowCreateModal(true);
-        }}
-      />
+      {/* Bottom Navigation - hide when CreateRoomPage is open */}
+      {!showCreateModal && (
+        <UniversalBottomNav 
+          onTeamPlayClick={() => {
+            playSound("button-click");
+            setShowCreateModal(true);
+          }}
+        />
+      )}
     </div>
   );
 }
