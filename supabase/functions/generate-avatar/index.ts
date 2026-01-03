@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,10 +7,33 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 interface AvatarRequest {
   imageUrl: string;
 }
+
+// Default prompt if database fetch fails
+const DEFAULT_PROMPT = `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait.
+
+STYLE REQUIREMENTS:
+- SEMI-REALISTIC 3D render like a modern video game character (Unreal Engine, Final Fantasy style)
+- REALISTIC eye proportions - NOT cartoon-style big eyes
+- Highly detailed, realistic skin with subtle subsurface scattering
+- Dramatic, moody lighting with dark atmosphere
+- DARK GRADIENT BACKGROUND (charcoal gray to black)
+- Preserve the person's EXACT facial structure, features, and proportions
+- Add subtle violet/purple color tones to the hair for artistic flair
+- Soft hair rendering with realistic strand details
+- Keep their exact hairstyle, hair color base, clothing and accessories
+- Professional portrait composition (head and shoulders, slightly angled)
+- Cinematic quality with depth of field effect
+- Mature, sophisticated aesthetic - NOT cartoonish or childish
+
+The result should look like a premium AAA video game character portrait - realistic but stylized, dramatic lighting, dark moody atmosphere.`;
+
+const DEFAULT_MODEL = "google/gemini-2.5-flash-image-preview";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -29,7 +53,33 @@ serve(async (req) => {
 
     console.log("Starting avatar generation with Lovable AI for:", imageUrl.substring(0, 100));
 
-    // Use Lovable AI's image editing model with a prompt that maintains adult proportions
+    // Fetch settings from database
+    let prompt = DEFAULT_PROMPT;
+    let model = DEFAULT_MODEL;
+
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: settings, error } = await supabase
+          .from('ai_generation_settings')
+          .select('prompt, model')
+          .eq('setting_type', 'avatar_static')
+          .eq('is_active', true)
+          .single();
+
+        if (!error && settings) {
+          prompt = settings.prompt || DEFAULT_PROMPT;
+          model = settings.model || DEFAULT_MODEL;
+          console.log("Using database settings for avatar generation");
+        } else {
+          console.log("Using default settings, DB error:", error?.message);
+        }
+      } catch (dbError) {
+        console.log("Using default settings due to DB fetch error:", dbError);
+      }
+    }
+
+    // Use Lovable AI's image editing model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -37,30 +87,14 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
+        model: model,
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait.
-
-STYLE REQUIREMENTS:
-- SEMI-REALISTIC 3D render like a modern video game character (Unreal Engine, Final Fantasy style)
-- REALISTIC eye proportions - NOT cartoon-style big eyes
-- Highly detailed, realistic skin with subtle subsurface scattering
-- Dramatic, moody lighting with dark atmosphere
-- DARK GRADIENT BACKGROUND (charcoal gray to black)
-- Preserve the person's EXACT facial structure, features, and proportions
-- Add subtle violet/purple color tones to the hair for artistic flair
-- Soft hair rendering with realistic strand details
-- Keep their exact hairstyle, hair color base, clothing and accessories
-- Professional portrait composition (head and shoulders, slightly angled)
-- Cinematic quality with depth of field effect
-- Mature, sophisticated aesthetic - NOT cartoonish or childish
-
-The result should look like a premium AAA video game character portrait - realistic but stylized, dramatic lighting, dark moody atmosphere.`
+                text: prompt
               },
               {
                 type: "image_url",

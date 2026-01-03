@@ -6,6 +6,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Default settings if database fetch fails
+const DEFAULT_PROMPT = "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly calm expression. Smooth natural animation.";
+const DEFAULT_SETTINGS = {
+  duration: 4,
+  resolution: "720p",
+  movement_amplitude: "small",
+};
+
+async function fetchAnimationSettings(supabase: any): Promise<{ prompt: string; settings: typeof DEFAULT_SETTINGS }> {
+  try {
+    const { data, error } = await supabase
+      .from('ai_generation_settings')
+      .select('prompt, model_settings')
+      .eq('setting_type', 'avatar_animation')
+      .eq('is_active', true)
+      .single();
+
+    if (!error && data) {
+      console.log("Using database settings for animation");
+      const modelSettings = data.model_settings || {};
+      return {
+        prompt: data.prompt || DEFAULT_PROMPT,
+        settings: {
+          duration: modelSettings.duration || DEFAULT_SETTINGS.duration,
+          resolution: modelSettings.resolution || DEFAULT_SETTINGS.resolution,
+          movement_amplitude: modelSettings.movement_amplitude || DEFAULT_SETTINGS.movement_amplitude,
+        },
+      };
+    }
+    console.log("Using default animation settings, DB error:", error?.message);
+  } catch (dbError) {
+    console.log("Using default animation settings due to fetch error:", dbError);
+  }
+  return { prompt: DEFAULT_PROMPT, settings: DEFAULT_SETTINGS };
+}
+
 async function checkAndUpload(
   statusUrl: string,
   responseUrl: string,
@@ -138,6 +174,9 @@ serve(async (req) => {
 
     console.log("Starting avatar animation with Fal.ai for image:", imageUrl.substring(0, 100));
 
+    // Fetch settings from database
+    const { prompt, settings } = await fetchAnimationSettings(supabase);
+
     // Submit to Fal.ai queue
     const submitRes = await fetch("https://queue.fal.run/fal-ai/vidu/q2/image-to-video/turbo", {
       method: "POST",
@@ -146,11 +185,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        prompt: "The person gently smiles and looks around naturally with subtle head movements, blinking eyes, maintaining a friendly calm expression. Smooth natural animation.",
+        prompt: prompt,
         image_url: imageUrl,
-        duration: 4,
-        resolution: "720p",
-        movement_amplitude: "small",
+        duration: settings.duration,
+        resolution: settings.resolution,
+        movement_amplitude: settings.movement_amplitude,
       }),
     });
 
