@@ -264,7 +264,7 @@ const SHOP_SECTIONS = [
     id: "starter",
     title: "სტარტერ პაკეტი",
     description: "დამწყებთათვის",
-    videoSrc: "/videos/galaxy.mp4",
+    videoSrc: "/videos/promo-starter-pack.mp4",
     items: STARTER_PACK_ITEMS,
   },
   {
