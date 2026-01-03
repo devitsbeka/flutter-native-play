@@ -6,7 +6,7 @@ import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 
 interface CloudCategoryFlightProps {
   isOpen: boolean;
-  onCategorySelected: (categoryId: string, categoryName: string) => void;
+  onCategorySelected: (categoryId: string, categoryName: string, videoUrl: string) => void;
 }
 
 type Phase = "floating" | "focusing" | "revealed" | "transitioning";
@@ -65,7 +65,8 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
     // Phase 4: Complete and callback
     const completeTimer = setTimeout(() => {
       const winner = displayCategories[winnerIndex];
-      onCategorySelected(winner.uuid, winner.name);
+      const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.mp4";
+      onCategorySelected(winner.uuid, winner.name, videoUrl);
     }, 4600);
 
     return () => {
