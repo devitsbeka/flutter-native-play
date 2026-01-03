@@ -3,10 +3,13 @@ import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 // Pages where the background should be visible
-const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/category", "/auth", "/vip", "/power-ups"];
+const BACKGROUND_PAGES = ["/game", "/discover", "/leaderboards", "/profile", "/category", "/auth", "/vip", "/power-ups"];
+
+// Pages to explicitly exclude (takes priority)
+const EXCLUDED_PAGES = ["/team"];
 
 // Pages where particles should be disabled for performance
-const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/team"];
+const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards"];
 
 // White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
@@ -64,8 +67,11 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
 export function GlobalSplineBackground() {
   const location = useLocation();
   
+  // Check if page is explicitly excluded
+  const isExcluded = EXCLUDED_PAGES.some(page => location.pathname.startsWith(page));
+  
   // Check if current page should show background - use exact match for "/" and startsWith for others
-  const shouldShow = BACKGROUND_PAGES.some(page => {
+  const shouldShow = !isExcluded && BACKGROUND_PAGES.some(page => {
     if (page === "/") return location.pathname === "/";
     return location.pathname.startsWith(page);
   });
