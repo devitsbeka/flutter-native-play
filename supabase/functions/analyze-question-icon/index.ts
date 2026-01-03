@@ -12,7 +12,6 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    // Accept both 'question' and 'questionText' for compatibility
     const question = body.question || body.questionText;
     const category = body.category;
     
@@ -29,58 +28,23 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an icon matching assistant for trivia games. Analyze questions in ANY language (English, Georgian, Spanish, etc.).
+    const systemPrompt = `You are an icon keyword extractor. Return ONLY a JSON object, nothing else.`;
 
-Your job is to return GENERIC CATEGORY KEYWORDS that will be used to search an icon library.
-The keywords will match icons via partial matching (e.g., "animal" matches "forest-full-of-animals", "paw" matches "cat-paw-print").
+    const userPrompt = `Analyze this trivia question and return search keywords for finding a matching icon.
 
-ABSOLUTE RULE: Return BROAD CATEGORY keywords only. NEVER return specific answer words.
-
-KEYWORD MAPPING:
-- Any animal question → "animal", "wildlife", "paw", "creature", "forest"
-- Insect/bug question → "insect", "bug", "beetle", "ant"  
-- Marine/fish question → "fish", "ocean", "marine", "sea", "water"
-- Bird question → "bird", "feather", "wing", "flying"
-- Science question → "science", "atom", "lab", "microscope", "chemistry"
-- History question → "history", "scroll", "castle", "ancient", "medieval"
-- Geography question → "globe", "map", "earth", "compass", "world"
-- Sports question → "trophy", "ball", "medal", "sport", "athlete"
-- Technology question → "computer", "laptop", "phone", "tech", "gear"
-- Art question → "art", "palette", "paint", "brush", "canvas"
-- Food question → "food", "cooking", "chef", "restaurant", "kitchen"
-- Music question → "music", "guitar", "microphone", "piano", "note"
-- Movie/TV question → "movie", "film", "camera", "clapperboard", "cinema"
-
-BANNED words (never use): specific animal names (deer, lion, elephant, mosquito, eagle, shark), answer-hinting words
-
-Return ONLY valid JSON with no markdown.`;
-
-    const userPrompt = `Question: "${question}"
+Question: "${question}"
 ${category ? `Category: "${category}"` : ''}
 
-This question may be in Georgian or any language. Understand the MEANING.
+Return ONLY this JSON format (no markdown, no explanation):
+{"slugs":["keyword1","keyword2","keyword3"],"keywords":["keyword1","keyword2","keyword3","keyword4"],"mainConcept":"Topic"}
 
-Return JSON:
-{
-  "slugs": ["keyword1", "keyword2", "keyword3"],
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-  "mainConcept": "General Topic Name"
-}
-
-RULES:
-1. slugs = 3-5 broad search keywords (will partial-match icon slugs)
-2. keywords = 5-10 broader keywords for fallback matching
-3. For ANY animal question → slugs: ["animal", "wildlife", "paw", "creature"]
-4. For ANY insect question → slugs: ["insect", "bug", "beetle", "nature"]
-5. For ANY bird question → slugs: ["bird", "feather", "wing", "wildlife"]
-6. For ANY fish/marine question → slugs: ["fish", "ocean", "marine", "sea"]
-7. mainConcept = short English description of the topic
-
-Examples:
-- Question about deer antlers → slugs: ["animal", "wildlife", "paw", "creature"]
-- Question about mosquito disease → slugs: ["insect", "bug", "beetle", "nature"]
-- Question about eagle flight → slugs: ["bird", "feather", "wing", "wildlife"]
-- Question about shark teeth → slugs: ["fish", "ocean", "marine", "sea"]`;
+Rules:
+- slugs: 3-5 broad category keywords (animal, science, history, sport, music, movie, food, tech, art, geography)
+- keywords: 5-8 related search terms
+- mainConcept: short topic name in English
+- For animals use: animal, wildlife, paw, creature
+- For science use: science, atom, lab, chemistry
+- For sports use: trophy, ball, medal, sport`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -94,6 +58,36 @@ Examples:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "extract_icon_keywords",
+              description: "Extract keywords for icon matching",
+              parameters: {
+                type: "object",
+                properties: {
+                  slugs: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "3-5 broad category keywords"
+                  },
+                  keywords: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "5-8 related search terms"
+                  },
+                  mainConcept: {
+                    type: "string",
+                    description: "Short topic name in English"
+                  }
+                },
+                required: ["slugs", "keywords", "mainConcept"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "extract_icon_keywords" } }
       }),
     });
 
@@ -115,35 +109,60 @@ Examples:
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    
+    // Try tool call response first
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      try {
+        const parsed = JSON.parse(toolCall.function.arguments);
+        const result = {
+          slugs: Array.isArray(parsed.slugs) ? parsed.slugs.slice(0, 5) : [],
+          keywords: Array.isArray(parsed.keywords) ? parsed.keywords.slice(0, 10) : [],
+          mainConcept: typeof parsed.mainConcept === 'string' ? parsed.mainConcept : '',
+        };
+        console.log('Analyzed question:', question.substring(0, 50), '→', result.slugs);
+        return new Response(
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (e) {
+        console.error('Failed to parse tool call:', e);
+      }
+    }
 
+    // Fallback to content parsing
+    const content = data.choices?.[0]?.message?.content;
     if (!content) {
-      console.error('No content in AI response');
+      console.error('No content in AI response:', JSON.stringify(data));
       return new Response(
         JSON.stringify({ error: 'No AI response', fallback: true }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Parse the JSON response, handling potential markdown formatting
+    // Try to extract JSON from content
     let parsed;
     try {
-      // Remove potential markdown code blocks
-      const cleanContent = content
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim();
-      
-      parsed = JSON.parse(cleanContent);
+      // Find JSON object in the response
+      const jsonMatch = content.match(/\{[\s\S]*"slugs"[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        // Clean and try parsing directly
+        const cleanContent = content
+          .replace(/```json\n?/g, '')
+          .replace(/```\n?/g, '')
+          .trim();
+        parsed = JSON.parse(cleanContent);
+      }
     } catch (parseError) {
-      console.error('Failed to parse AI response:', content, parseError);
+      console.error('Failed to parse AI response:', content.substring(0, 200));
       return new Response(
         JSON.stringify({ error: 'Invalid AI response format', fallback: true }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate response structure
     const result = {
       slugs: Array.isArray(parsed.slugs) ? parsed.slugs.slice(0, 5) : [],
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords.slice(0, 10) : [],
