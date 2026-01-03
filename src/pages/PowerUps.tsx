@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Zap, Sparkles, Check, Frame } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -9,7 +8,6 @@ import { useAvatarFrames, AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
 
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
@@ -30,6 +28,11 @@ import timeDrainIcon from "@/assets/powers/time-drain.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import powerBottleIcon from "@/assets/icons/icon-power-bottle.png";
+import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
+import iconFireDeals from "@/assets/icons/icon-fire-deals.png";
+import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
+import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
+import iconFramesLantern from "@/assets/icons/icon-frames-lantern.png";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 interface ShopItem {
@@ -58,8 +61,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "2x ყველა ძალა + 200 მონეტა",
     price: 8,
     currency: "gems",
-    icon: <Sparkles className="w-8 h-8 text-sky-200" />,
-    gradient: "linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(180 70% 45%) 100%)",
+    icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "hot",
     badge: "new",
   },
@@ -69,8 +72,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "5x ყველა ძალა",
     price: 15,
     currency: "gems",
-    icon: <Zap className="w-8 h-8 text-purple-200" />,
-    gradient: "linear-gradient(135deg, hsl(263 60% 55%) 0%, hsl(280 70% 50%) 100%)",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "hot",
     badge: "popular",
     savings: 25,
@@ -81,8 +84,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "2x XP • უსასრულო სპინი",
     price: 15,
     currency: "gems",
-    icon: <Crown className="w-8 h-8 text-amber-200" />,
-    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(340 80% 55%) 100%)",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "hot",
     badge: "best-value",
     savings: 30,
@@ -143,8 +146,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "2x ყველა ძალა",
     price: 8,
     currency: "gems",
-    icon: <img src={powerBottleIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(220 70% 50%) 100%)",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "powers",
   },
   {
@@ -153,8 +156,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "5x ყველა ძალა",
     price: 15,
     currency: "gems",
-    icon: <img src={powerBottleIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(240 70% 55%) 0%, hsl(260 65% 50%) 100%)",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "powers",
     badge: "popular",
   },
@@ -164,8 +167,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "10x ყველა ძალა",
     price: 25,
     currency: "gems",
-    icon: <img src={powerBottleIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(270 70% 55%) 0%, hsl(290 65% 50%) 100%)",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "powers",
     badge: "best-value",
     savings: 20,
@@ -226,8 +229,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "ყველა VIP ბენეფიტი 1 დღე",
     price: 5,
     currency: "gems",
-    icon: <Crown className="w-8 h-8 text-amber-200" />,
-    gradient: "linear-gradient(135deg, hsl(45 85% 55%) 0%, hsl(40 80% 48%) 100%)",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "vip",
     vipDuration: "day",
   },
@@ -237,8 +240,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "2x XP, +3 სპინი, ექსკლუზიური აქსესუარები",
     price: 15,
     currency: "gems",
-    icon: <Crown className="w-8 h-8 text-amber-200" />,
-    gradient: "linear-gradient(135deg, hsl(280 70% 55%) 0%, hsl(330 75% 50%) 100%)",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "vip",
     badge: "popular",
     vipDuration: "week",
@@ -249,8 +252,8 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "ყველა VIP ბენეფიტი 30 დღე",
     price: 40,
     currency: "gems",
-    icon: <Crown className="w-8 h-8 text-amber-200" />,
-    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(25 85% 50%) 100%)",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
     category: "vip",
     badge: "best-value",
     savings: 35,
