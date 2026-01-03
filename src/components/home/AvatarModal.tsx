@@ -288,8 +288,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // Set selected as current
       await supabase.from('avatar_generations').update({ is_current: true }).eq('avatar_url', avatarUrl);
       
-      // Update profile - check for error!
-      const result = await updateProfile({ avatar_url: avatarUrl });
+      // Update profile - clear animated_avatar_url since we're switching to a different avatar
+      const result = await updateProfile({ 
+        avatar_url: avatarUrl,
+        animated_avatar_url: null 
+      });
       
       if (result?.error) {
         throw result.error;
@@ -314,8 +317,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     
     setIsLoading(true);
     try {
-      // Update profile directly with the default avatar path
-      const result = await updateProfile({ avatar_url: avatarPath });
+      // Update profile - clear animated_avatar_url since default avatars don't have animations
+      const result = await updateProfile({ 
+        avatar_url: avatarPath,
+        animated_avatar_url: null 
+      });
       
       if (result?.error) {
         throw result.error;
