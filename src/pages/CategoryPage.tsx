@@ -280,13 +280,13 @@ export default function CategoryPage() {
                           case 3: return "linear-gradient(135deg, #A855F7, #9333EA)"; // Purple
                           case 2: return "linear-gradient(135deg, #60A5FA, #3B82F6)"; // Blue
                           case 1: return "linear-gradient(135deg, #FCD34D, #F59E0B)"; // Yellow
-                          default: return "linear-gradient(135deg, #10B981, #059669)"; // Green fallback
+                          default: return undefined; // No color for 0 stars
                         }
                       };
                       
                       const getLevelBackground = () => {
                         if (!isUnlocked) return undefined;
-                        if (isCompleted) return getCompletedGradient(stars);
+                        if (isCompleted && stars > 0) return getCompletedGradient(stars);
                         return `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})`;
                       };
                       
@@ -321,7 +321,7 @@ export default function CategoryPage() {
                           ) : (
                             <>
                               <span className="font-bold text-white text-lg drop-shadow-md">{level}</span>
-                              {isCompleted && (
+                              {isCompleted && stars > 0 && (
                                 <div className="flex gap-0.5 mt-1">
                                   {[...Array(3)].map((_, i) => (
                                     <Star
