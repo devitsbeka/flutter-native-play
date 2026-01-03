@@ -65,11 +65,12 @@ export function CategoryLeaderboard({
       <div className="mb-6">
         <ChunkyButton
           onClick={onPlay}
-          className="w-full"
+          className="w-full whitespace-nowrap"
           size="lg"
+          variant="mint"
         >
           <Play className="h-5 w-5 mr-2 fill-current" />
-          თამაშის დაწყება
+          ითამაშე
         </ChunkyButton>
 
         {/* User's Current Position */}

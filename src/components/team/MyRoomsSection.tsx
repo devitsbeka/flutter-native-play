@@ -160,14 +160,14 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       </div>
 
       {/* Join button */}
-      <motion.button
+      <ChunkyButton
         onClick={onJoin}
-        className="w-full py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        className="w-full whitespace-nowrap"
+        size="sm"
+        variant="purple"
       >
         {room.status === "playing" ? "გაგრძელება" : "შეუერთდი"}
-      </motion.button>
+      </ChunkyButton>
     </motion.div>
   );
 }

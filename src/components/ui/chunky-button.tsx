@@ -140,7 +140,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
           "relative inline-flex items-center justify-center gap-2.5 font-semibold",
           "disabled:opacity-50 disabled:pointer-events-none",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "overflow-visible",
+          "overflow-visible whitespace-nowrap",
           styles.face,
           styles.textColor,
           sizeStyles[size],
