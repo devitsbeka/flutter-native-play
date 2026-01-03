@@ -11,7 +11,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { CategoryLeaderboard } from "@/components/category/CategoryLeaderboard";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { CATEGORY_VIDEOS, MAP_VIDEOS } from "@/config/videoConfig";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
@@ -160,167 +160,194 @@ export default function CategoryPage() {
       />
 
 
-      <div className="min-h-screen flex flex-col relative">
-        {/* Full-page Video Background */}
-        <div className="absolute inset-0 z-0">
-          <PingPongVideo 
-            src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
-          />
+      <div className="min-h-screen flex flex-col">
+        {/* Category Video Header Section (top 1/3) */}
+        <div className="relative h-[240px] overflow-hidden">
+          <div className="absolute inset-0">
+            <PingPongVideo 
+              src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
+            />
+          </div>
           {/* Dark gradient overlay for text readability */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.7) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.6) 100%)',
             }}
           />
-        </div>
 
-        {/* Navigation buttons */}
-        <div className="relative z-10 px-5 pt-12 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/discover")}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
-          >
-            <ArrowLeft className="h-5 w-5 text-white" />
-          </button>
-          {!user && (
+          {/* Navigation buttons */}
+          <div className="absolute top-12 left-5 right-5 z-10 flex items-center justify-between">
             <button
-              onClick={() => navigate("/auth")}
-              className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              onClick={() => navigate("/discover")}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
             >
-              <LogIn className="h-4 w-4" />
-              შესვლა
+              <ArrowLeft className="h-5 w-5 text-white" />
             </button>
-          )}
-        </div>
+            {!user && (
+              <button
+                onClick={() => navigate("/auth")}
+                className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              >
+                <LogIn className="h-4 w-4" />
+                შესვლა
+              </button>
+            )}
+          </div>
 
-        {/* Title and description */}
-        <div className="relative z-10 px-5 pt-6 pb-8">
-          <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
-          <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
-        </div>
-
-        {/* Tabs - with more spacing from header */}
-        <div className="relative px-5 mb-4 mt-2 z-10">
-          <div className="flex gap-2 bg-black/30 backdrop-blur-sm rounded-full p-1">
-            <button
-              onClick={() => setActiveTab("leaderboard")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
-                activeTab === "leaderboard"
-                  ? "bg-white/20 text-white"
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              <Trophy className="h-4 w-4" />
-              ლიდერბორდი
-            </button>
-            <button
-              onClick={() => setActiveTab("map")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
-                activeTab === "map"
-                  ? "bg-white/20 text-white"
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              <Map className="h-4 w-4" />
-              რუკა
-            </button>
+          {/* Title and description at bottom */}
+          <div className="absolute bottom-4 left-5 right-5 z-10">
+            <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
+            <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 relative px-5 pt-4 pb-8 z-10 overflow-hidden">
-          {activeTab === "leaderboard" ? (
-            <CategoryLeaderboard
-              categoryId={categoryId || ""}
-              categoryName={category.name}
-              onPlay={handlePlayFromLeaderboard}
+        {/* Main Content Section with Homepage Video Background */}
+        <div className="flex-1 relative overflow-hidden">
+          {/* Homepage-style floating blob video background */}
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover scale-125"
+              style={{ filter: "blur(8px)" }}
+            >
+              <source src={MAP_VIDEOS.default} type="video/mp4" />
+            </video>
+            {/* Light overlay for readability */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.85) 100%)',
+              }}
             />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white">
-                  აირჩიე დონე
-                </h2>
-              </div>
+          </div>
 
-              {loading ? (
-                <div className="grid grid-cols-4 gap-3">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <Skeleton key={i} className="aspect-square rounded-2xl" />
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-3">
-                  {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => {
-                    const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
-                    
-                    return (
-                      <motion.button
-                        key={level}
-                        onClick={() => handleLevelClick(level, isUnlocked)}
-                        disabled={!isUnlocked}
-                        whileHover={isUnlocked ? { scale: 1.05 } : undefined}
-                        whileTap={isUnlocked ? { scale: 0.95 } : undefined}
-                        initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
-                        animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
-                        transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
-                        className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
-                          isCurrent
-                            ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
-                            : ""
-                        } ${
-                          !isUnlocked
-                            ? "bg-muted opacity-50 cursor-not-allowed"
-                            : isCompleted
-                            ? "bg-success"
-                            : ""
-                        }`}
-                        style={{
-                          boxShadow: isUnlocked 
-                            ? "0 4px 0 0 hsl(0 0% 0% / 0.15)"
-                            : "0 2px 0 0 hsl(var(--border))",
-                          ...(!isUnlocked || isCompleted ? {} : { background: `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})` }),
-                        }}
-                      >
-                        {!isUnlocked ? (
-                          <Lock className="h-5 w-5 text-muted-foreground" />
-                        ) : (
-                          <>
-                            <span className="font-bold text-white text-lg">{level}</span>
-                            {isCompleted && (
-                              <div className="flex gap-0.5 mt-1">
-                                {[...Array(3)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`h-3 w-3 ${
-                                      i < stars
-                                        ? "fill-amber-300 text-amber-300"
-                                        : "fill-white/30 text-white/30"
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            )}
-                          </>
-                        )}
+          {/* Tabs */}
+          <div className="relative px-5 pt-5 mb-4 z-10">
+            <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
+              <button
+                onClick={() => setActiveTab("leaderboard")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+                  activeTab === "leaderboard"
+                    ? "bg-white text-slate-800 shadow-md"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                <Trophy className="h-4 w-4" />
+                ლიდერბორდი
+              </button>
+              <button
+                onClick={() => setActiveTab("map")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+                  activeTab === "map"
+                    ? "bg-white text-slate-800 shadow-md"
+                    : "text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                <Map className="h-4 w-4" />
+                რუკა
+              </button>
+            </div>
+          </div>
 
-                        {isCurrent && isUnlocked && (
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
-                          >
-                            <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
-                          </motion.div>
-                        )}
-                      </motion.button>
-                    );
-                  })}
+          {/* Content */}
+          <div className="relative px-5 pt-2 pb-8 z-10 overflow-auto">
+            {activeTab === "leaderboard" ? (
+              <CategoryLeaderboard
+                categoryId={categoryId || ""}
+                categoryName={category.name}
+                onPlay={handlePlayFromLeaderboard}
+                lightMode
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-slate-800">
+                    აირჩიე დონე
+                  </h2>
                 </div>
-              )}
-            </>
-          )}
+
+                {loading ? (
+                  <div className="grid grid-cols-4 gap-3">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <Skeleton key={i} className="aspect-square rounded-2xl" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-3">
+                    {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => {
+                      const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
+                      
+                      return (
+                        <motion.button
+                          key={level}
+                          onClick={() => handleLevelClick(level, isUnlocked)}
+                          disabled={!isUnlocked}
+                          whileHover={isUnlocked ? { scale: 1.05 } : undefined}
+                          whileTap={isUnlocked ? { scale: 0.95 } : undefined}
+                          initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
+                          animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
+                          transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
+                          className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center shadow-md ${
+                            isCurrent
+                              ? "ring-4 ring-primary ring-offset-2 ring-offset-white"
+                              : ""
+                          } ${
+                            !isUnlocked
+                              ? "bg-slate-200/80 opacity-60 cursor-not-allowed"
+                              : isCompleted
+                              ? "bg-emerald-500"
+                              : ""
+                          }`}
+                          style={{
+                            boxShadow: isUnlocked 
+                              ? "0 4px 0 0 hsl(0 0% 0% / 0.1)"
+                              : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
+                            ...(!isUnlocked || isCompleted ? {} : { background: `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})` }),
+                          }}
+                        >
+                          {!isUnlocked ? (
+                            <Lock className="h-5 w-5 text-slate-400" />
+                          ) : (
+                            <>
+                              <span className="font-bold text-white text-lg drop-shadow">{level}</span>
+                              {isCompleted && (
+                                <div className="flex gap-0.5 mt-1">
+                                  {[...Array(3)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`h-3 w-3 ${
+                                        i < stars
+                                          ? "fill-amber-300 text-amber-300"
+                                          : "fill-white/40 text-white/40"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {isCurrent && isUnlocked && (
+                            <motion.div
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                              className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-md"
+                            >
+                              <Play className="h-3 w-3 text-primary-foreground fill-primary-foreground" />
+                            </motion.div>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </PageTransition>
