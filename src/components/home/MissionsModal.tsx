@@ -293,7 +293,7 @@ function MissionCarouselCard({
           </div>
 
           {/* Title */}
-          <h3 className={`font-black text-lg mb-1 ${isClaimed ? "text-muted-foreground line-through" : theme.text}`}>
+          <h3 className={`font-black text-lg mb-1 ${isClaimed ? "text-muted-foreground" : theme.text}`}>
             {mission.mission_title}
           </h3>
           
@@ -303,7 +303,7 @@ function MissionCarouselCard({
             </p>
           )}
 
-          {/* Progress Bar */}
+          {/* Progress Bar - only show if not claimed */}
           {!isClaimed && (
             <div className="w-full mb-4">
               <div className="h-3 rounded-full overflow-hidden bg-black/10">
@@ -320,33 +320,65 @@ function MissionCarouselCard({
             </div>
           )}
 
-          {/* Rewards Preview */}
-          <div className="flex flex-wrap gap-2 justify-center mb-4">
-            {mission.reward_coins > 0 && (
-              <div className="flex items-center gap-1.5 bg-amber-100 rounded-full px-3 py-1.5">
-                <img src={coinIcon} alt="" className="w-5 h-5" />
-                <span className="text-sm font-bold text-amber-700">{mission.reward_coins}</span>
-              </div>
-            )}
-            {mission.reward_gems > 0 && (
-              <div className="flex items-center gap-1.5 bg-cyan-100 rounded-full px-3 py-1.5">
-                <img src={gemIcon} alt="" className="w-5 h-5" />
-                <span className="text-sm font-bold text-cyan-700">{mission.reward_gems}</span>
-              </div>
-            )}
-            {mission.reward_xp > 0 && (
-              <div className="flex items-center gap-1.5 bg-violet-100 rounded-full px-3 py-1.5">
-                <Sparkles className="w-4 h-4 text-violet-600" />
-                <span className="text-sm font-bold text-violet-700">{mission.reward_xp} XP</span>
-              </div>
-            )}
-            {mission.reward_power_up && mission.reward_power_up_count > 0 && (
-              <div className="flex items-center gap-1.5 bg-rose-100 rounded-full px-3 py-1.5">
-                <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-5 h-5" />
-                <span className="text-sm font-bold text-rose-700">{mission.reward_power_up_count}x</span>
-              </div>
-            )}
-          </div>
+          {/* Rewards Preview - show inline for claimed */}
+          {!isClaimed && (
+            <div className="flex flex-wrap gap-2 justify-center mb-4">
+              {mission.reward_coins > 0 && (
+                <div className="flex items-center gap-1.5 bg-amber-100 rounded-full px-3 py-1.5">
+                  <img src={coinIcon} alt="" className="w-5 h-5" />
+                  <span className="text-sm font-bold text-amber-700">{mission.reward_coins}</span>
+                </div>
+              )}
+              {mission.reward_gems > 0 && (
+                <div className="flex items-center gap-1.5 bg-cyan-100 rounded-full px-3 py-1.5">
+                  <img src={gemIcon} alt="" className="w-5 h-5" />
+                  <span className="text-sm font-bold text-cyan-700">{mission.reward_gems}</span>
+                </div>
+              )}
+              {mission.reward_xp > 0 && (
+                <div className="flex items-center gap-1.5 bg-violet-100 rounded-full px-3 py-1.5">
+                  <Sparkles className="w-4 h-4 text-violet-600" />
+                  <span className="text-sm font-bold text-violet-700">{mission.reward_xp} XP</span>
+                </div>
+              )}
+              {mission.reward_power_up && mission.reward_power_up_count > 0 && (
+                <div className="flex items-center gap-1.5 bg-rose-100 rounded-full px-3 py-1.5">
+                  <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-5 h-5" />
+                  <span className="text-sm font-bold text-rose-700">{mission.reward_power_up_count}x</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Claimed rewards on single line */}
+          {isClaimed && (
+            <div className="flex items-center gap-2 justify-center mb-4 flex-wrap">
+              {mission.reward_coins > 0 && (
+                <div className="flex items-center gap-1">
+                  <img src={coinIcon} alt="" className="w-4 h-4" />
+                  <span className="text-xs font-bold text-amber-600">{mission.reward_coins}</span>
+                </div>
+              )}
+              {mission.reward_gems > 0 && (
+                <div className="flex items-center gap-1">
+                  <img src={gemIcon} alt="" className="w-4 h-4" />
+                  <span className="text-xs font-bold text-cyan-600">{mission.reward_gems}</span>
+                </div>
+              )}
+              {mission.reward_xp > 0 && (
+                <div className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-violet-500" />
+                  <span className="text-xs font-bold text-violet-600">{mission.reward_xp} XP</span>
+                </div>
+              )}
+              {mission.reward_power_up && mission.reward_power_up_count > 0 && (
+                <div className="flex items-center gap-1">
+                  <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-4 h-4" />
+                  <span className="text-xs font-bold text-rose-600">{mission.reward_power_up_count}x</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Claim Button */}
           {canClaim ? (
@@ -375,9 +407,9 @@ function MissionCarouselCard({
               </Button>
             </motion.div>
           ) : isClaimed ? (
-            <div className="flex items-center gap-2 text-emerald-600 bg-emerald-100 rounded-full px-6 py-3">
+            <div className="flex items-center justify-center gap-2 text-emerald-600 bg-emerald-100 rounded-full px-8 py-3">
               <Check className="w-5 h-5" />
-              <span className="font-bold">აღებულია</span>
+              <span className="font-bold text-lg">აღებულია</span>
             </div>
           ) : null}
         </div>
@@ -615,25 +647,18 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-orange-500">საუკეთესო: {bestStreak}</p>
-              {canClaimStreakBonus ? (
-                <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
-                  <Button
-                    size="sm"
-                    onClick={handleClaimStreakBonus}
-                    className="mt-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs"
-                  >
-                    <Gift className="w-3 h-3 mr-1" />
-                    +{streakBonus.coins} • +{streakBonus.gems} 💎
-                  </Button>
-                </motion.div>
-              ) : allDailyComplete && !allDailyClaimed ? (
-                <p className="text-xs text-orange-600 mt-1">აიღე ჯილდოები!</p>
-              ) : (
-                <p className="text-xs text-orange-500 mt-1">შეასრულე ყველა მისია</p>
-              )}
-            </div>
+            {canClaimStreakBonus && (
+              <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                <Button
+                  size="sm"
+                  onClick={handleClaimStreakBonus}
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs"
+                >
+                  <Gift className="w-3 h-3 mr-1" />
+                  +{streakBonus.coins} • +{streakBonus.gems} 💎
+                </Button>
+              </motion.div>
+            )}
           </div>
         </div>
 
