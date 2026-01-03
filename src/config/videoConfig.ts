@@ -65,6 +65,8 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   georgian_cuisine: "/videos/georgian-cuisine.mp4",
   georgian_culture: "/videos/georgian-culture.mp4",
   geology: "/videos/geology.mp4",
+  languages: "/videos/languages.mp4",
+  linguistics: "/videos/languages.mp4",
 };
 
 // Get all video URLs for preloading
