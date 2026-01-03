@@ -32,18 +32,13 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, rgba(124,90,252,0.15) 0%, rgba(168,85,247,0.1) 100%)",
-        border: "2px solid rgba(124,90,252,0.2)",
-        boxShadow: "0 8px 32px rgba(124,90,252,0.15)",
-      }}
+      className="rounded-3xl overflow-hidden bg-card border border-border shadow-lg"
     >
       {/* Header */}
-      <div className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-purple-500/20 to-violet-500/20 border-b border-purple-200/30">
-        <Trophy className="w-5 h-5 text-amber-500" />
+      <div className="flex items-center justify-center gap-2 py-3 bg-primary/10 border-b border-border">
+        <Trophy className="w-5 h-5 text-primary" />
         <span className="font-display font-bold text-foreground">ქულების ცხრილი</span>
-        <Trophy className="w-5 h-5 text-amber-500" />
+        <Trophy className="w-5 h-5 text-primary" />
       </div>
 
       {/* Scoreboard Content */}
@@ -58,7 +53,6 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
                   avatarUrl={sortedParticipants[0].avatar_url}
                   fallback={sortedParticipants[0].nickname}
                   size="xl"
-                  className={sortedParticipants[0].user_id === currentUserId ? "ring-2 ring-cyan-400" : ""}
                 />
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                   {getFlagEmoji(sortedParticipants[0].country_code || "GE")}
@@ -68,8 +62,8 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
                 {sortedParticipants[0].user_id === currentUserId ? "შენ" : sortedParticipants[0].nickname}
               </p>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
-                <span className="text-2xl font-display font-bold text-amber-600">
+                <Crown className="w-5 h-5 text-primary fill-primary/50" />
+                <span className="text-3xl font-display font-bold text-foreground">
                   {sortedParticipants[0].total_wins || 0}
                 </span>
               </div>
@@ -98,7 +92,6 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
                   avatarUrl={sortedParticipants[1].avatar_url}
                   fallback={sortedParticipants[1].nickname}
                   size="xl"
-                  className={sortedParticipants[1].user_id === currentUserId ? "ring-2 ring-cyan-400" : ""}
                 />
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                   {getFlagEmoji(sortedParticipants[1].country_code || "GE")}
@@ -108,8 +101,8 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
                 {sortedParticipants[1].user_id === currentUserId ? "შენ" : sortedParticipants[1].nickname}
               </p>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
-                <span className="text-2xl font-display font-bold text-amber-600">
+                <Crown className="w-5 h-5 text-primary fill-primary/50" />
+                <span className="text-3xl font-display font-bold text-foreground">
                   {sortedParticipants[1].total_wins || 0}
                 </span>
               </div>
@@ -140,8 +133,8 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Crown className="w-4 h-4 text-amber-500 fill-amber-400" />
-                  <span className="font-bold text-amber-600">{p.total_wins || 0}</span>
+                  <Crown className="w-4 h-4 text-primary fill-primary/50" />
+                  <span className="font-bold text-foreground">{p.total_wins || 0}</span>
                 </div>
               </div>
             ))}
