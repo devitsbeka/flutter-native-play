@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Share2, Users, Play, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2 } from "lucide-react";
+import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2 } from "lucide-react";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -13,6 +13,8 @@ import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 
 export function RoomLobby() {
   const navigate = useNavigate();
@@ -168,6 +170,35 @@ export function RoomLobby() {
     await startGame();
   };
 
+  const handleDeleteRoom = async () => {
+    if (!room || !isHost) return;
+    
+    const confirmed = window.confirm("დარწმუნებული ხარ რომ გინდა ოთახის წაშლა?");
+    if (!confirmed) return;
+    
+    try {
+      await supabase
+        .from("game_rooms")
+        .delete()
+        .eq("id", room.id);
+      
+      toast.success("ოთახი წაიშალა!");
+      navigate("/team");
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      toast.error("ოთახის წაშლა ვერ მოხერხდა");
+    }
+  };
+
+  // Get category video URL
+  const getCategoryVideo = () => {
+    if (!room?.category_id) return null;
+    const categorySlug = room.category_id.toLowerCase().replace(/-/g, "_");
+    return CATEGORY_VIDEOS[categorySlug] || null;
+  };
+
+  const categoryVideo = getCategoryVideo();
+
   const handleSaveRoomName = async () => {
     if (!room || !editedName.trim()) return;
     
@@ -232,6 +263,18 @@ export function RoomLobby() {
               )}
             </motion.button>
 
+            {/* Delete room button for host */}
+            {isHost && (
+              <motion.button
+                onClick={handleDeleteRoom}
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-destructive/10 border border-destructive/20 hover:bg-destructive/20"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </motion.button>
+            )}
+
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border">
               <Users className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">{participants.length}/{room.max_players}</span>
@@ -239,16 +282,26 @@ export function RoomLobby() {
           </div>
         </div>
 
-        {/* Category */}
+        {/* Category with video circle */}
         {room.category_name && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto px-4 py-2 rounded-full mb-3 bg-card border border-border"
+            className="flex flex-col items-center gap-2 mb-4"
           >
-            <span className="text-sm text-muted-foreground">
-              კატეგორია: <strong className="text-primary">{room.category_name}</strong>
-            </span>
+            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/30 bg-card">
+              {categoryVideo ? (
+                <PingPongVideo 
+                  src={categoryVideo} 
+                  className="w-full h-full object-cover scale-125" 
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                  <Gamepad2 className="w-8 h-8 text-primary/50" />
+                </div>
+              )}
+            </div>
+            <span className="text-lg font-bold text-primary">{room.category_name}</span>
           </motion.div>
         )}
 
@@ -276,7 +329,7 @@ export function RoomLobby() {
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
-              <h2 className="text-xl font-bold text-foreground">
+              <h2 className="text-2xl font-bold text-foreground">
                 {room.room_name || `ოთახი #${room.room_code.slice(-4)}`}
               </h2>
               {isHost && (
@@ -293,31 +346,29 @@ export function RoomLobby() {
           )}
         </motion.div>
 
-        {/* Copy/Share Buttons */}
+        {/* Copy/Share Buttons - 3D Chunky Style */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-center gap-3 mb-4"
         >
-          <motion.button
+          <ChunkyButton
+            variant="secondary"
+            size="sm"
             onClick={handleCopyCode}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
           >
-            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-            <span className="text-sm font-medium text-foreground">ლინკი</span>
-          </motion.button>
+            ლინკი
+          </ChunkyButton>
           
-          <motion.button
+          <ChunkyButton
+            variant="secondary"
+            size="sm"
             onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            icon={<Share2 className="w-4 h-4" />}
           >
-            <Share2 className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">გაზიარება</span>
-          </motion.button>
+            გაზიარება
+          </ChunkyButton>
         </motion.div>
 
         {/* Chat Panel */}
@@ -407,7 +458,6 @@ export function RoomLobby() {
                   avatarUrl={p.avatar_url}
                   fallback={p.nickname}
                   size="lg"
-                  className={p.user_id === user?.id ? "ring-2 ring-primary" : ""}
                 />
                 {p.is_host && (
                   <Crown className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 text-amber-500 fill-amber-400" />
