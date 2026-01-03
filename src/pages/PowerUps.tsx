@@ -285,7 +285,7 @@ const SHOP_SECTIONS = [
     id: "powers",
     title: "ძალები",
     description: "უპირატესობა თამაშში",
-    videoSrc: "/videos/science.mp4",
+    videoSrc: "/videos/powers.mp4",
     items: POWERS_ITEMS,
   },
   {
@@ -299,7 +299,7 @@ const SHOP_SECTIONS = [
     id: "coins",
     title: "მონეტები",
     description: "ბონუსებით",
-    videoSrc: "/videos/economics.mp4",
+    videoSrc: "/videos/coins.mp4",
     items: COINS_ITEMS,
   },
 ];
