@@ -77,7 +77,7 @@ export function UniversalBottomNav({
         }}
       >
         {/* Navigation items container */}
-        <div className="flex items-center py-4 overflow-visible">
+        <div className="flex items-center py-5 min-h-[80px] overflow-visible">
           {/* Explore */}
           <div className="flex-1 flex justify-center">
             <NavButton
