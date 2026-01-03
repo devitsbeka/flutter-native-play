@@ -8,6 +8,7 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
+import { CategoryWheelModal } from "./CategoryWheelModal";
 
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -56,7 +57,7 @@ const WavePattern = () => (
 type SlotPhase = "searching" | "slowing" | "found" | "ready";
 
 export function VSScreen() {
-  const { opponent, startMatch, phase } = useGame();
+  const { opponent, startMatch, beginPlaying, phase } = useGame();
   const { profile } = useAuth();
   const navigate = useNavigate();
   
@@ -65,6 +66,7 @@ export function VSScreen() {
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -143,7 +145,15 @@ export function VSScreen() {
   }, [slotPhase]);
 
   const handleStart = () => {
+    // Show wheel first, then startMatch will transition to category-wheel phase
     startMatch();
+    setShowWheel(true);
+  };
+
+  const handleCategorySelected = (categoryId: string, categoryName: string) => {
+    setShowWheel(false);
+    // Start playing after category is selected
+    beginPlaying();
   };
 
   return (
@@ -285,6 +295,14 @@ export function VSScreen() {
       <VSMatchHelpModal 
         isOpen={showHelpModal} 
         onClose={() => setShowHelpModal(false)} 
+      />
+
+      {/* Category Wheel Modal */}
+      <CategoryWheelModal
+        isOpen={showWheel}
+        onCategorySelected={handleCategorySelected}
+        playerAvatar={profile?.avatar_url}
+        opponentAvatar={opponent?.avatarUrl}
       />
     </div>
   );

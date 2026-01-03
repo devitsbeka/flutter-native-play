@@ -851,6 +851,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_plays: {
+        Row: {
+          created_at: string
+          id: string
+          last_ad_watched_at: string | null
+          play_date: string
+          plays_from_ads: number
+          plays_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_ad_watched_at?: string | null
+          play_date?: string
+          plays_from_ads?: number
+          plays_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_ad_watched_at?: string | null
+          play_date?: string
+          plays_from_ads?: number
+          plays_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_daily_rewards: {
         Row: {
           chest_claimed: boolean | null

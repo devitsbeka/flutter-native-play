@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, Store, Trophy, Headphones, Plus } from "lucide-react";
+import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 
@@ -8,9 +8,23 @@ interface UniversalBottomNavProps {
   onPlayClick?: () => void;
   onTeamClick?: () => void;
   onTeamPlayClick?: () => void;
+  playsRemaining?: number;
+  maxPlays?: number;
+  canPlay?: boolean;
+  isVip?: boolean;
+  onWatchAdClick?: () => void;
 }
 
-export function UniversalBottomNav({ onPlayClick, onTeamClick, onTeamPlayClick }: UniversalBottomNavProps) {
+export function UniversalBottomNav({ 
+  onPlayClick, 
+  onTeamClick, 
+  onTeamPlayClick,
+  playsRemaining = 5,
+  maxPlays = 5,
+  canPlay = true,
+  isVip = false,
+  onWatchAdClick,
+}: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingChallenges } = usePendingChallenges();
@@ -25,7 +39,11 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick, onTeamPlayClick }
 
   const handleCenterClick = () => {
     if (isHome) {
-      onPlayClick?.();
+      if (canPlay) {
+        onPlayClick?.();
+      } else {
+        onWatchAdClick?.();
+      }
     } else if (isTeam) {
       onTeamPlayClick?.();
     } else {
@@ -86,7 +104,11 @@ export function UniversalBottomNav({ onPlayClick, onTeamClick, onTeamPlayClick }
                   onClick={handleCenterClick}
                   isPlayButton={showPlayButton && !isTeam}
                   isPlusIcon={isTeam}
-                  variant={isPurpleVariant ? "purple" : "mint"}
+                  variant={isPurpleVariant ? "purple" : isVip ? "gold" : canPlay ? "mint" : "exhausted"}
+                  playsRemaining={playsRemaining}
+                  maxPlays={maxPlays}
+                  isVip={isVip}
+                  canPlay={canPlay}
                 />
               </div>
             </div>
@@ -181,10 +203,23 @@ interface Hex3DPlayButtonProps {
   onClick: () => void;
   isPlayButton: boolean;
   isPlusIcon?: boolean;
-  variant?: "mint" | "purple";
+  variant?: "mint" | "purple" | "gold" | "exhausted";
+  playsRemaining?: number;
+  maxPlays?: number;
+  isVip?: boolean;
+  canPlay?: boolean;
 }
 
-function Hex3DPlayButton({ onClick, isPlayButton, isPlusIcon = false, variant = "mint" }: Hex3DPlayButtonProps) {
+function Hex3DPlayButton({ 
+  onClick, 
+  isPlayButton, 
+  isPlusIcon = false, 
+  variant = "mint",
+  playsRemaining = 5,
+  maxPlays = 5,
+  isVip = false,
+  canPlay = true,
+}: Hex3DPlayButtonProps) {
   const colorSchemes = {
     mint: {
       depth: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
@@ -200,106 +235,231 @@ function Hex3DPlayButton({ onClick, isPlayButton, isPlusIcon = false, variant = 
       sparkle: "rgba(220,180,255,0.95)",
       sparkleShadow: "0 0 6px rgba(200,150,255,0.9), 0 0 10px rgba(160,100,230,0.6)",
     },
+    gold: {
+      depth: "linear-gradient(180deg, #D97706 0%, #B45309 50%, #92400E 100%)",
+      bevel: "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)",
+      face: "radial-gradient(circle at 40% 35%, #FDE68A 0%, #FCD34D 25%, #FBBF24 50%, #F59E0B 75%, #D97706 100%)",
+      sparkle: "rgba(255,230,150,0.95)",
+      sparkleShadow: "0 0 6px rgba(255,220,100,0.9), 0 0 10px rgba(250,200,80,0.6)",
+    },
+    exhausted: {
+      depth: "linear-gradient(180deg, #6B7280 0%, #4B5563 50%, #374151 100%)",
+      bevel: "linear-gradient(180deg, #9CA3AF 0%, #6B7280 100%)",
+      face: "radial-gradient(circle at 40% 35%, #D1D5DB 0%, #9CA3AF 25%, #6B7280 50%, #4B5563 75%, #374151 100%)",
+      sparkle: "rgba(200,200,200,0.5)",
+      sparkleShadow: "0 0 4px rgba(180,180,180,0.5)",
+    },
   };
 
   const colors = colorSchemes[variant];
+  const showExhausted = variant === "exhausted" && isPlayButton;
 
   return (
-    <motion.button
-      onClick={onClick}
-      className="relative"
-      whileHover={{ scale: 1.05, y: -2 }}
-      whileTap={{ scale: 0.92, y: 4 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      style={{ width: 90, height: 90 }}
-    >
-      {/* Bottom 3D depth layer */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          inset: 0,
-          top: 6,
-          background: colors.depth,
-        }}
-      />
-      
-      {/* Middle bevel layer */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          inset: 3,
-          top: 4,
-          bottom: 8,
-          background: colors.bevel,
-        }}
-      />
-      
-      {/* Main face - radial gradient */}
-      <div
-        className="absolute rounded-full overflow-hidden"
-        style={{
-          inset: 4,
-          top: 0,
-          bottom: 12,
-          background: colors.face,
-        }}
-      >
-        
-        {/* Sparkle particles */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: i % 2 === 0 ? 4 : 3,
-              height: i % 2 === 0 ? 4 : 3,
-              background: colors.sparkle,
-              boxShadow: colors.sparkleShadow,
-              left: `${20 + (i * 12)}%`,
-              top: `${25 + ((i % 3) * 18)}%`,
-            }}
-            animate={{
-              y: [-5, 5, -5],
-              x: [i % 2 === 0 ? -3 : 3, i % 2 === 0 ? 3 : -3, i % 2 === 0 ? -3 : 3],
-              opacity: [0.4, 1, 0.4],
-              scale: [0.8, 1.3, 0.8],
-            }}
-            transition={{
-              duration: 1.5 + (i * 0.25),
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.15,
-            }}
-          />
-        ))}
-        
-        {/* Icon */}
-        <div 
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+    <div className="relative">
+      {/* Badge above button */}
+      {isPlayButton && !isPlusIcon && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 z-20"
         >
-          {isPlusIcon ? (
-            <Plus 
-              className="w-8 h-8" 
-              color="#ffffff"
-              strokeWidth={3}
-            />
-          ) : isPlayButton ? (
-            <Play 
-              className="w-8 h-8 ml-1" 
-              fill="#ffffff"
-              stroke="#ffffff"
-              strokeWidth={0}
-            />
+          {isVip ? (
+            // VIP badge with crown
+            <div 
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+              style={{
+                background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
+                boxShadow: "0 2px 6px rgba(217, 119, 6, 0.5)",
+              }}
+            >
+              <Crown className="w-3 h-3 text-white" />
+              <span className="text-[10px] font-bold text-white">∞</span>
+            </div>
+          ) : canPlay ? (
+            // Plays remaining badge
+            <div 
+              className="flex items-center gap-0.5 px-2 py-0.5 rounded-full"
+              style={{
+                background: "linear-gradient(180deg, #5EE8B5 0%, #3FC99A 100%)",
+                boxShadow: "0 2px 6px rgba(94, 232, 181, 0.4)",
+              }}
+            >
+              <span className="text-[10px] font-bold text-white">{playsRemaining}/{maxPlays}</span>
+            </div>
           ) : (
-            <Home 
-              className="w-7 h-7" 
-              color="#ffffff"
-              strokeWidth={2.5}
-            />
+            // Exhausted badge
+            <motion.div 
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+              style={{
+                background: "linear-gradient(180deg, #6B7280 0%, #4B5563 100%)",
+                boxShadow: "0 2px 6px rgba(75, 85, 99, 0.4)",
+              }}
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <Hourglass className="w-3 h-3 text-white" />
+              <span className="text-[10px] font-bold text-white">0</span>
+            </motion.div>
           )}
+        </motion.div>
+      )}
+
+      <motion.button
+        onClick={onClick}
+        className="relative"
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.92, y: 4 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        style={{ width: 90, height: 90 }}
+      >
+        {/* Bottom 3D depth layer */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            inset: 0,
+            top: 6,
+            background: colors.depth,
+          }}
+        />
+        
+        {/* Middle bevel layer */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            inset: 3,
+            top: 4,
+            bottom: 8,
+            background: colors.bevel,
+          }}
+        />
+        
+        {/* Main face - radial gradient */}
+        <div
+          className="absolute rounded-full overflow-hidden"
+          style={{
+            inset: 4,
+            top: 0,
+            bottom: 12,
+            background: colors.face,
+          }}
+        >
+          
+          {/* Sparkle particles */}
+          {variant !== "exhausted" && [...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: i % 2 === 0 ? 4 : 3,
+                height: i % 2 === 0 ? 4 : 3,
+                background: colors.sparkle,
+                boxShadow: colors.sparkleShadow,
+                left: `${20 + (i * 12)}%`,
+                top: `${25 + ((i % 3) * 18)}%`,
+              }}
+              animate={{
+                y: [-5, 5, -5],
+                x: [i % 2 === 0 ? -3 : 3, i % 2 === 0 ? 3 : -3, i % 2 === 0 ? -3 : 3],
+                opacity: [0.4, 1, 0.4],
+                scale: [0.8, 1.3, 0.8],
+              }}
+              transition={{
+                duration: 1.5 + (i * 0.25),
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.15,
+              }}
+            />
+          ))}
+          
+          {/* Icon */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+          >
+            {isPlusIcon ? (
+              <Plus 
+                className="w-8 h-8" 
+                color="#ffffff"
+                strokeWidth={3}
+              />
+            ) : showExhausted ? (
+              <motion.div
+                animate={{ rotate: [0, 180] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Hourglass 
+                  className="w-7 h-7" 
+                  color="#ffffff"
+                  strokeWidth={2.5}
+                />
+              </motion.div>
+            ) : isVip ? (
+              <Crown 
+                className="w-7 h-7" 
+                color="#ffffff"
+                strokeWidth={2.5}
+              />
+            ) : isPlayButton ? (
+              <Play 
+                className="w-8 h-8 ml-1" 
+                fill="#ffffff"
+                stroke="#ffffff"
+                strokeWidth={0}
+              />
+            ) : (
+              <Home 
+                className="w-7 h-7" 
+                color="#ffffff"
+                strokeWidth={2.5}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </motion.button>
+
+        {/* Progress ring for exhausted state */}
+        {showExhausted && (
+          <svg 
+            className="absolute inset-0 w-full h-full" 
+            style={{ transform: "rotate(-90deg)" }}
+          >
+            <circle
+              cx="45"
+              cy="45"
+              r="40"
+              fill="none"
+              stroke="rgba(94, 232, 181, 0.3)"
+              strokeWidth="4"
+            />
+            <motion.circle
+              cx="45"
+              cy="45"
+              r="40"
+              fill="none"
+              stroke="#5EE8B5"
+              strokeWidth="4"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+              style={{ 
+                strokeDasharray: "251.2",
+              }}
+            />
+          </svg>
+        )}
+      </motion.button>
+
+      {/* Watch ad text below when exhausted */}
+      {showExhausted && (
+        <motion.p
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-medium text-gray-600 whitespace-nowrap"
+        >
+          უყურე რეკლამას
+        </motion.p>
+      )}
+    </div>
   );
 }
