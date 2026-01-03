@@ -53,9 +53,9 @@ export function ShopPromoSection({
       ref={sectionRef}
       className="mx-4 mb-4 rounded-3xl relative overflow-x-clip overflow-y-visible"
       style={{ 
-        height: "42vh",
-        minHeight: "300px",
-        maxHeight: "380px",
+        height: "28vh",
+        minHeight: "180px",
+        maxHeight: "200px",
         scrollSnapAlign: "center",
       }}
       initial={{ opacity: 0.6, scale: 0.92 }}
@@ -125,7 +125,7 @@ export function ShopPromoSection({
                 return (
                   <CarouselItem 
                     key={item.id} 
-                    className="pl-0 basis-[75%] pr-3 overflow-visible"
+                    className="pl-0 basis-[85%] pr-3 overflow-visible"
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
