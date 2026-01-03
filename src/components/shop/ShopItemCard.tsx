@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { Check, Clock, Flame, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import { cn } from "@/lib/utils";
 
 export type ShopItemBadge = "popular" | "best-value" | "limited" | "new" | null;
 
@@ -99,19 +100,22 @@ export function ShopItemCard({
       <motion.button
         onClick={onClick}
         disabled={isPurchased || isLoading}
-        className="w-full p-3 rounded-2xl transition-all relative overflow-hidden flex items-center gap-3"
+        className={cn(
+          "w-full p-4 pr-5 rounded-2xl transition-all relative overflow-hidden flex items-center gap-4",
+          !isPurchased && canAfford && "liquid-glass"
+        )}
         style={{
           background: isPurchased
             ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
-            : canAfford
-            ? "linear-gradient(180deg, hsl(0 0% 100% / 0.95) 0%, hsl(0 0% 98% / 0.9) 100%)"
-            : "hsl(var(--muted))",
+            : !canAfford
+            ? "hsl(var(--muted))"
+            : undefined,
           boxShadow: isPurchased
             ? "0 4px 0 hsl(145 60% 70%)"
-            : canAfford
-            ? "0 4px 0 hsl(0 0% 85%), inset 0 1px 2px hsl(0 0% 100% / 0.5)"
-            : "0 3px 0 hsl(var(--border))",
-          border: isPurchased ? "2px solid hsl(145 70% 50%)" : "2px solid hsl(0 0% 90%)",
+            : !canAfford
+            ? "0 3px 0 hsl(var(--border))"
+            : undefined,
+          border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
