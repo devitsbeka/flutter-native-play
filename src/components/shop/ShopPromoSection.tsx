@@ -51,7 +51,7 @@ export function ShopPromoSection({
   return (
     <motion.section 
       ref={sectionRef}
-      className="mx-4 mb-4 rounded-3xl overflow-hidden relative"
+      className="mx-4 mb-4 rounded-3xl relative"
       style={{ 
         height: "52vh",
         minHeight: "380px",
@@ -69,7 +69,7 @@ export function ShopPromoSection({
       }}
     >
       {/* Video background - full section */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 rounded-3xl overflow-hidden">
         <PingPongVideo 
           src={videoSrc} 
           className="w-full h-full object-cover"
@@ -100,8 +100,8 @@ export function ShopPromoSection({
         
         {/* Products at bottom - horizontal carousel */}
         <motion.div 
-          className="mt-auto"
-          style={{ marginLeft: '-0.5rem', marginRight: '-0.5rem' }}
+          className="mt-auto overflow-visible"
+          style={{ marginLeft: '-1.25rem', marginRight: '-1.25rem', paddingTop: '1rem' }}
           animate={{ 
             opacity: isInView ? 1 : 0, 
             y: isInView ? 0 : 30 
@@ -115,7 +115,7 @@ export function ShopPromoSection({
             }}
             className="w-full overflow-visible"
           >
-            <CarouselContent className="-ml-2 pr-4">
+            <CarouselContent className="ml-3 overflow-visible">
               {items.map((item, index) => {
                 const canAfford = gems >= item.price;
                 const isPurchased = purchasedItems.has(item.id);
@@ -125,7 +125,7 @@ export function ShopPromoSection({
                 return (
                   <CarouselItem 
                     key={item.id} 
-                    className="pl-2 basis-[85%]"
+                    className="pl-2 pr-1 basis-[80%] overflow-visible"
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
