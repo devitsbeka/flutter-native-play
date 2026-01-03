@@ -52,7 +52,7 @@ export function UniversalBottomNav({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
+    <div className="fixed bottom-0 left-0 right-0 z-50 overflow-visible">
       {/* Wave divider at top */}
       <svg 
         className="absolute w-full" 
@@ -69,7 +69,7 @@ export function UniversalBottomNav({
       
       {/* Solid color container */}
       <div 
-        className="relative"
+        className="relative overflow-visible"
         style={{
           background: "#F8F9FA",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -77,7 +77,7 @@ export function UniversalBottomNav({
         }}
       >
         {/* Navigation items container */}
-        <div className="flex items-center py-4">
+        <div className="flex items-center py-4 overflow-visible">
           {/* Explore */}
           <div className="flex-1 flex justify-center">
             <NavButton
@@ -99,8 +99,8 @@ export function UniversalBottomNav({
           </div>
 
           {/* Center Play Button - floats above, overlapping nav bar */}
-          <div className="flex-1 flex justify-center">
-            <div className="relative" style={{ width: 72, height: 48 }}>
+          <div className="flex-1 flex justify-center overflow-visible">
+            <div className="relative overflow-visible" style={{ width: 72, height: 48 }}>
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -8 }}>
               <Hex3DPlayButton 
                   onClick={handleCenterClick}
