@@ -136,7 +136,7 @@ export default function Discover() {
         {/* Content above mask */}
         <div className="relative z-10">
           {/* Subtle whiter background for header section */}
-          <div className="bg-white/30 backdrop-blur-sm">
+          <div className="bg-white/50 backdrop-blur-sm">
             {/* Header with Page Title */}
             <PageHeader
               title="აღმოაჩინე"
@@ -158,10 +158,10 @@ export default function Discover() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden px-4 pt-2"
+                  className="overflow-hidden px-4 pt-2 pb-2"
                 >
                   <div
-                    className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm mb-2 ${
+                    className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
                       isSearchFocused ? "ring-2 ring-primary/30" : ""
                     }`}
                   >
@@ -186,17 +186,17 @@ export default function Discover() {
               )}
             </AnimatePresence>
 
-            {/* Separator line */}
-            <div className="mx-4 border-t border-slate-200/60" />
+            {/* Separator line at the bottom edge */}
+            <div className="border-b border-slate-200/60" />
+          </div>
 
-            {/* Tabs */}
-            <div className="px-4 py-4">
-              <IconTabBar
-                tabs={tabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
-            </div>
+          {/* Tabs - outside white container */}
+          <div className="px-4 py-4">
+            <IconTabBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
         </div>
 
