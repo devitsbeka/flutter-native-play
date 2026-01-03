@@ -34,6 +34,7 @@ interface AvatarModalProps {
 interface AvatarGeneration {
   id: string;
   avatar_url: string;
+  animated_avatar_url: string | null;
   is_current: boolean;
   created_at: string;
 }
@@ -282,16 +283,19 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     
     setIsLoading(true);
     try {
+      // Find the generation record to get its animated_avatar_url
+      const generation = generations.find(g => g.avatar_url === avatarUrl);
+      
       // Update all to not current
       await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
       
       // Set selected as current
       await supabase.from('avatar_generations').update({ is_current: true }).eq('avatar_url', avatarUrl);
       
-      // Update profile - clear animated_avatar_url since we're switching to a different avatar
+      // Update profile - restore the animated_avatar_url if this avatar has one
       const result = await updateProfile({ 
         avatar_url: avatarUrl,
-        animated_avatar_url: null 
+        animated_avatar_url: generation?.animated_avatar_url || null 
       });
       
       if (result?.error) {

@@ -128,6 +128,27 @@ async function checkAndUpload(
       throw new Error(`Profile update failed: ${updateError.message}`);
     }
 
+    // Also save the animated_avatar_url to the avatar_generations table
+    // so it persists when user switches avatars and comes back
+    const { data: currentAvatar } = await supabase
+      .from("avatar_generations")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("is_current", true)
+      .single();
+
+    if (currentAvatar?.id) {
+      const { error: generationError } = await supabase
+        .from("avatar_generations")
+        .update({ animated_avatar_url: publicVideoUrl })
+        .eq("id", currentAvatar.id);
+
+      if (generationError) {
+        console.error("Avatar generation update error:", generationError);
+        // Don't throw - profile is already updated, this is just for persistence
+      }
+    }
+
     return { success: true, videoUrl: publicVideoUrl };
   } else if (statusData.status === "FAILED") {
     throw new Error(`Video generation failed: ${statusData.error || "Unknown error"}`);
