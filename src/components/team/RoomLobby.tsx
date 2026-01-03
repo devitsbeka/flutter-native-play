@@ -227,14 +227,18 @@ export function RoomLobby() {
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <ChunkyButton
+          <motion.button
             onClick={handleLeave}
-            variant="secondary"
-            size="sm"
-            icon={<ArrowLeft className="w-4 h-4" />}
+            className="flex items-center justify-center w-10 h-10 rounded-xl"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            გასვლა
-          </ChunkyButton>
+            <LogOut className="w-4 h-4 text-gray-600" />
+          </motion.button>
 
           <div className="flex items-center gap-2">
             {/* Chat toggle */}
@@ -269,6 +273,23 @@ export function RoomLobby() {
             </div>
           </div>
         </div>
+
+        {/* Category */}
+        {room.category_name && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mx-auto px-4 py-2 rounded-full mb-4"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            <span className="text-sm text-gray-700">
+              კატეგორია: <strong className="text-purple-600">{room.category_name}</strong>
+            </span>
+          </motion.div>
+        )}
 
         {/* Room Name (editable by host) */}
         <motion.div
@@ -311,74 +332,40 @@ export function RoomLobby() {
           )}
         </motion.div>
 
-        {/* Room Code */}
+        {/* Copy/Share Link Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="flex items-center justify-center gap-3 mb-6"
         >
-          <p className="text-gray-600 text-sm mb-2 text-center font-medium">ოთახის კოდი</p>
-          <div className="flex items-center justify-center gap-2">
-            <motion.div
-              className="px-4 py-2 rounded-xl"
-              style={{
-                background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%)",
-                boxShadow: "0 4px 0 #7C3AED, 0 6px 16px rgba(139, 92, 246, 0.3)",
-              }}
-              animate={{ 
-                boxShadow: ["0 4px 0 #7C3AED, 0 6px 20px rgba(139, 92, 246, 0.3)", "0 4px 0 #7C3AED, 0 6px 30px rgba(139, 92, 246, 0.5)", "0 4px 0 #7C3AED, 0 6px 20px rgba(139, 92, 246, 0.3)"]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <span className="font-display text-2xl font-bold text-white tracking-[0.2em]">
-                {room.room_code}
-              </span>
-            </motion.div>
-            
-            <motion.button
-              onClick={handleCopyCode}
-              className="flex items-center justify-center w-10 h-10 rounded-xl"
-              style={{
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
-            </motion.button>
-            
-            <motion.button
-              onClick={handleShare}
-              className="flex items-center justify-center w-10 h-10 rounded-xl"
-              style={{
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Share2 className="w-4 h-4 text-gray-600" />
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Category */}
-        {room.category_name && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto px-4 py-2 rounded-full mb-6"
+          <motion.button
+            onClick={handleCopyCode}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl"
             style={{
               background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <span className="text-sm text-gray-700">
-              კატეგორია: <strong className="text-purple-600">{room.category_name}</strong>
-            </span>
-          </motion.div>
-        )}
+            {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
+            <span className="text-sm font-medium text-gray-700">ლინკის კოპირება</span>
+          </motion.button>
+          
+          <motion.button
+            onClick={handleShare}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl"
+            style={{
+              background: "rgba(255,255,255,0.95)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Share2 className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">გაზიარება</span>
+          </motion.button>
+        </motion.div>
 
         {/* Chat Panel (slide in) */}
         <AnimatePresence>
@@ -550,16 +537,6 @@ export function RoomLobby() {
             </>
           )}
 
-          {/* Leave button */}
-          <ChunkyButton
-            onClick={handleLeave}
-            variant="secondary"
-            size="sm"
-            className="w-full"
-            icon={<LogOut className="w-4 h-4" />}
-          >
-            ოთახიდან გასვლა
-          </ChunkyButton>
         </div>
       </div>
 
