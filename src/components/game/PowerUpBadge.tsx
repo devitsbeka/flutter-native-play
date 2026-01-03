@@ -2,11 +2,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Power-up assets
-import fiftyFiftyImg from "@/assets/powers/5050.png";
-import freezeImg from "@/assets/powers/freeze.png";
-import replaceImg from "@/assets/powers/replace.png";
-import timeDrainImg from "@/assets/powers/time-drain.png";
+// Power-up badge assets (new hexagonal style)
+import fiftyFiftyBadge from "@/assets/powers/5050-badge.png";
+import freezeBadge from "@/assets/powers/freeze-badge.png";
+import replaceBadge from "@/assets/powers/replace-badge.png";
+import timeDrainBadge from "@/assets/powers/time-drain-badge.png";
 import addPowerImg from "@/assets/powers/add-power.png";
 
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
@@ -23,28 +23,19 @@ interface PowerUpBadgeProps {
 }
 
 const powerUpAssets: Record<PowerUpType | "add-power", string> = {
-  "fifty-fifty": fiftyFiftyImg,
-  "freeze": freezeImg,
-  "replace": replaceImg,
-  "time-drain": timeDrainImg,
+  "fifty-fifty": fiftyFiftyBadge,
+  "freeze": freezeBadge,
+  "replace": replaceBadge,
+  "time-drain": timeDrainBadge,
   "add-power": addPowerImg,
 };
 
-// Solid background fills for each power-up type (clean style like XP bar)
-const fillColors: Record<PowerUpType | "add-power", string> = {
-  "fifty-fifty": "#FFD699", // Warm orange/gold
-  "freeze": "#B3E5FC",      // Light blue
-  "replace": "#C8E6C9",     // Light green
-  "time-drain": "#FFCDD2",  // Light pink/red
-  "add-power": "#D1C4E9",   // Light purple
-};
-
 const sizeConfig = {
-  xs: { outer: 32, inner: 20 },
-  sm: { outer: 58, inner: 36 },
-  md: { outer: 69, inner: 45 },
-  lg: { outer: 88, inner: 58 },
-  avatar: { outer: 56, inner: 36 },
+  xs: 32,
+  sm: 48,
+  md: 56,
+  lg: 72,
+  avatar: 48,
 };
 
 export function PowerUpBadge({
@@ -58,8 +49,7 @@ export function PowerUpBadge({
   className,
 }: PowerUpBadgeProps) {
   const imageSrc = powerUpAssets[type];
-  const fill = fillColors[type];
-  const { outer, inner } = sizeConfig[size];
+  const iconSize = sizeConfig[size];
 
   return (
     <motion.div
@@ -88,7 +78,7 @@ export function PowerUpBadge({
         whileHover={{ scale: 1.1, y: -3 }}
         onClick={onClick}
         disabled={disabled || used}
-        style={{ width: outer, height: outer }}
+        style={{ width: iconSize, height: iconSize }}
         className={cn(
           "relative flex items-center justify-center transition-all",
           disabled && "opacity-70 cursor-not-allowed",
@@ -96,33 +86,22 @@ export function PowerUpBadge({
           className
         )}
       >
-        {/* Solid filled background - clean style like XP bar */}
-        <div 
-          className="absolute inset-0 rounded-full"
+        {/* Just the badge icon - no container */}
+        <img
+          src={imageSrc}
+          alt={type}
+          className="w-full h-full object-contain"
           style={{
-            background: fill,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.6)",
+            filter: disabled || used ? "none" : "drop-shadow(0 4px 8px rgba(0,0,0,0.25))",
           }}
         />
-      
-        {/* Inner icon */}
-        <div 
-          className="relative flex items-center justify-center z-10"
-          style={{ width: inner, height: inner }}
-        >
-          <img
-            src={imageSrc}
-            alt={type}
-            className="w-full h-full object-contain drop-shadow-md"
-          />
-        </div>
         
         {/* Count badge */}
         {count !== undefined && count > 0 && !used && (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-0.5 -right-0.5 w-6 h-6 text-xs font-bold rounded-full flex items-center justify-center shadow-lg z-20"
+            className="absolute -top-1 -right-1 min-w-[22px] h-[22px] text-[10px] font-bold rounded-full flex items-center justify-center px-1 z-20"
             style={{
               background: "linear-gradient(180deg, #FFE4B5 0%, #FFD699 100%)",
               color: "#6B4226",

@@ -2,11 +2,11 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Power-up images
-import power5050 from "@/assets/powers/5050.png";
-import powerFreeze from "@/assets/powers/freeze.png";
-import powerReplace from "@/assets/powers/replace.png";
-import powerHint from "@/assets/powers/time-drain.png";
+// Power-up badge images (new hexagonal style)
+import power5050Badge from "@/assets/powers/5050-badge.png";
+import powerFreezeBadge from "@/assets/powers/freeze-badge.png";
+import powerReplaceBadge from "@/assets/powers/replace-badge.png";
+import powerTimeDrainBadge from "@/assets/powers/time-drain-badge.png";
 
 export type PowerUpType = "5050" | "freeze" | "replace" | "hint";
 export type QuizPowerUpButtonState = "default" | "active" | "disabled" | "loading";
@@ -23,10 +23,10 @@ const powerUpConfig: Record<PowerUpType, {
   image: string; 
   label: string;
 }> = {
-  "5050": { image: power5050, label: "50/50" },
-  freeze: { image: powerFreeze, label: "Freeze" },
-  replace: { image: powerReplace, label: "Replace" },
-  hint: { image: powerHint, label: "Hint" },
+  "5050": { image: power5050Badge, label: "50/50" },
+  freeze: { image: powerFreezeBadge, label: "Freeze" },
+  replace: { image: powerReplaceBadge, label: "Replace" },
+  hint: { image: powerTimeDrainBadge, label: "Time+" },
 };
 
 const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonProps>(
@@ -42,53 +42,46 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
           onClick={onClick}
           disabled={isDisabled || isLoading}
           className={cn(
-            "relative w-14 h-14 rounded-full p-1",
-            "border-2 border-white/70",
-            "transition-all duration-200",
+            "relative flex items-center justify-center",
             isDisabled ? "opacity-40 cursor-not-allowed grayscale" : "cursor-pointer",
-            isLoading ? "bg-gradient-to-b from-[#9E8CD9] to-[#7B6BB7]" : "bg-gradient-to-b from-[#A59ADB] to-[#8B7BC7]"
           )}
-          style={{
-            boxShadow: isDisabled 
-              ? "none" 
-              : "0 3px 6px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.3)",
-          }}
-          whileHover={!isDisabled && !isLoading ? { scale: 1.1, y: -2 } : {}}
-          whileTap={!isDisabled && !isLoading ? { scale: 0.95, y: 2 } : {}}
+          whileHover={!isDisabled && !isLoading ? { scale: 1.15, y: -3 } : {}}
+          whileTap={!isDisabled && !isLoading ? { scale: 0.9 } : {}}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
-          {/* Inner container with image */}
-          <div className="w-full h-full flex items-center justify-center rounded-full overflow-hidden">
-            {isLoading ? (
-              <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />
-            ) : (
-              <motion.img
-                src={config.image}
-                alt={config.label}
-                className="w-10 h-10 object-contain"
-                style={{
-                  filter: isDisabled ? "none" : "drop-shadow(0 2px 3px rgba(0,0,0,0.2))",
-                }}
-              />
-            )}
-          </div>
+          {/* Just the icon - no container */}
+          {isLoading ? (
+            <div className="w-12 h-12 rounded-full bg-white/20 animate-pulse" />
+          ) : (
+            <motion.img
+              src={config.image}
+              alt={config.label}
+              className="w-12 h-12 object-contain"
+              style={{
+                filter: isDisabled ? "none" : "drop-shadow(0 3px 6px rgba(0,0,0,0.3))",
+              }}
+            />
+          )}
         </motion.button>
 
-        {/* Count Badge */}
+        {/* Small count badge with × */}
         {!isLoading && (
           <motion.div
             className={cn(
-              "absolute -top-1 -right-1 w-6 h-6 rounded-full",
+              "absolute -bottom-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full",
               "flex items-center justify-center",
-              "bg-[#FFF8E7] text-[#7C6BBB]",
-              "text-sm font-bold",
-              "border-2 border-white/80"
+              "bg-black/70 text-white",
+              "text-[10px] font-bold",
+              "border border-white/30"
             )}
+            style={{
+              boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+            }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.1 }}
           >
-            {count}
+            ×{count}
           </motion.div>
         )}
       </motion.div>

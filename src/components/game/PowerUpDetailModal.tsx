@@ -2,11 +2,11 @@ import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { GameModal } from "@/components/ui/game-modal";
 
-// Power-up assets
-import fiftyFiftyImg from "@/assets/powers/5050.png";
-import freezeImg from "@/assets/powers/freeze.png";
-import replaceImg from "@/assets/powers/replace.png";
-import timeDrainImg from "@/assets/powers/time-drain.png";
+// Power-up badge assets (new hexagonal style)
+import fiftyFiftyBadge from "@/assets/powers/5050-badge.png";
+import freezeBadge from "@/assets/powers/freeze-badge.png";
+import replaceBadge from "@/assets/powers/replace-badge.png";
+import timeDrainBadge from "@/assets/powers/time-drain-badge.png";
 import addPowerImg from "@/assets/powers/add-power.png";
 
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain" | "add-power";
@@ -19,10 +19,10 @@ interface PowerUpDetailModalProps {
 }
 
 const powerUpAssets: Record<PowerUpType, string> = {
-  "fifty-fifty": fiftyFiftyImg,
-  "freeze": freezeImg,
-  "replace": replaceImg,
-  "time-drain": timeDrainImg,
+  "fifty-fifty": fiftyFiftyBadge,
+  "freeze": freezeBadge,
+  "replace": replaceBadge,
+  "time-drain": timeDrainBadge,
   "add-power": addPowerImg,
 };
 
@@ -49,7 +49,7 @@ export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerU
   const titleGradient = powerUpTitleGradients[type];
   const translationKey = powerUpTranslationKeys[type];
   
-  // Clean centered icon without colorful ring stroke
+  // Clean centered icon - just the badge
   const customIcon = (
     <motion.div
       className="relative flex items-center justify-center"
@@ -57,23 +57,18 @@ export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerU
       animate={{ scale: 1 }}
       transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
     >
-      {/* Simple clean container - no colored ring */}
-      <div 
-        className="w-24 h-24 rounded-full flex items-center justify-center bg-gradient-to-b from-white to-muted/30"
+      <motion.img
+        src={imageSrc}
+        alt={type}
+        className="w-24 h-24 object-contain"
         style={{
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1), inset 0 1px 2px rgba(255,255,255,0.8)",
+          filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))",
         }}
-      >
-        <motion.img
-          src={imageSrc}
-          alt={type}
-          className="w-16 h-16 object-contain"
-          animate={{
-            y: [0, -3, 0],
-          }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+        animate={{
+          y: [0, -5, 0],
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
     </motion.div>
   );
   
