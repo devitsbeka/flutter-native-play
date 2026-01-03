@@ -70,6 +70,21 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
       ) : (
         <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
           <div className="flex gap-3 pr-4">
+            {/* Create New Room Button - First Item */}
+            {onCreateRoom && (
+              <motion.button
+                onClick={onCreateRoom}
+                className="flex flex-col items-center gap-2 flex-shrink-0 pt-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-dashed border-purple-400 flex items-center justify-center shadow-sm">
+                  <Plus className="w-6 h-6 text-purple-600" />
+                </div>
+                <span className="text-xs font-medium text-slate-600">შექმნა</span>
+              </motion.button>
+            )}
+            
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}

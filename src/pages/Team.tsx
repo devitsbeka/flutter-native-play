@@ -188,7 +188,7 @@ function TeamContent() {
       {/* Header */}
       <PageHeader
         title="მეგობრები"
-        showBack={false}
+        showBack={true}
         rightElements={
           <button
             onClick={() => setShowHelpModal(true)}
