@@ -150,22 +150,22 @@ export function ShopItemCard({
               style={{
                 background:
                   currency === "gems"
-                    ? "linear-gradient(180deg, hsl(263 76% 92%) 0%, hsl(263 70% 85%) 100%)"
+                    ? "linear-gradient(180deg, #A76EE7 0%, #9359DD 100%)"
                     : "linear-gradient(180deg, hsl(45 90% 88%) 0%, hsl(40 85% 80%) 100%)",
                 boxShadow:
                   currency === "gems"
-                    ? "0 2px 0 hsl(263 60% 70%)"
+                    ? "0 2px 0 #7A3FC5"
                     : "0 2px 0 hsl(35 80% 60%)",
               }}
               whileHover={{ scale: 1.05 }}
             >
-              <span className={`font-semibold text-xs ${currency === "gems" ? "text-primary" : "text-amber-800"}`}>
+              <span className={`font-semibold text-xs ${currency === "gems" ? "text-white" : "text-amber-800"}`}>
                 ყიდვა
               </span>
               <img src={currencyIcon} alt="" className="w-3.5 h-3.5" />
               <span
                 className={`font-bold text-sm ${
-                  currency === "gems" ? "text-primary" : "text-amber-800"
+                  currency === "gems" ? "text-white" : "text-amber-800"
                 }`}
               >
                 {price.toLocaleString()}

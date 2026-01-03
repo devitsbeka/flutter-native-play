@@ -125,7 +125,7 @@ export function ShopPromoSection({
                 return (
                   <CarouselItem 
                     key={item.id} 
-                    className="pl-0 basis-[82%] pr-5 overflow-visible"
+                    className="pl-0 basis-[50%] pr-3 overflow-visible"
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
