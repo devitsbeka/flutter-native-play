@@ -146,7 +146,7 @@ export function CategoryLeaderboard({
       </div>
 
       {/* Leaderboard List */}
-      <div className="flex-1 overflow-y-auto space-y-2 pb-4">
+      <div className="flex-1 overflow-y-auto space-y-3 py-2 pb-4">
         {isLoading ? (
           Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-xl" />
