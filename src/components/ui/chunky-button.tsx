@@ -143,14 +143,16 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
             ? `
               inset 0 2px 4px 0 rgba(0,0,0,0.15),
               0 2px 0 0 ${styles.depth},
-              0 0 0 2px ${styles.outerStroke},
+              0 0 0 1.5px ${styles.outerStroke}40,
+              0 2px 0 1.5px ${styles.outerStroke},
               0 4px 8px -2px ${styles.glow}
             `
             : `
               inset 0 2px 0 0 ${styles.innerBorder},
               0 1px 0 0 ${styles.border},
               0 ${depth}px 0 0 ${styles.depth},
-              0 0 0 2px ${styles.outerStroke},
+              0 0 0 1.5px ${styles.outerStroke}40,
+              0 ${depth}px 0 1.5px ${styles.outerStroke},
               0 ${depth + 6}px 20px -4px ${styles.glow}
             `,
           touchAction: "manipulation",
