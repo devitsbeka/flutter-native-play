@@ -430,9 +430,15 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
   }, [currentRoom, setParticipantReady]);
 
   const startGame = useCallback(async () => {
-    if (!currentRoom || !isHost || !allReady) return;
+    if (!currentRoom || !isHost) return;
 
     setState(prev => ({ ...prev, phase: "countdown" }));
+    
+    // Auto-set all participants to ready when game starts
+    await supabase
+      .from("room_participants")
+      .update({ status: "ready" })
+      .eq("room_id", currentRoom.id);
 
     // Generate questions
     try {

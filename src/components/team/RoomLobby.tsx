@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Copy, Share2, Users, Play, LogOut, Check, Loader2, UserX, Edit2, Crown, MessageCircle, Send, X } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Users, Play, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2 } from "lucide-react";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
-import { ParticipantCard } from "./ParticipantCard";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomChat } from "@/hooks/useRoomChat";
+import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { Input } from "@/components/ui/input";
+import { RoomScoreboard } from "./RoomScoreboard";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 
 export function RoomLobby() {
   const navigate = useNavigate();
@@ -19,18 +21,14 @@ export function RoomLobby() {
   const { 
     room, 
     participants, 
-    allReady, 
     isHost, 
     leaveRoom, 
-    setReady, 
     startGame,
-    startGameSolo,
     loading,
     phase,
   } = useMultiplayer();
   
   const [copied, setCopied] = useState(false);
-  const [isReady, setIsReady] = useState(isHost);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [showChat, setShowChat] = useState(false);
@@ -39,10 +37,9 @@ export function RoomLobby() {
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(room?.id || null);
+  const { matches } = useRoomMatchHistory(room?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const currentParticipant = participants.find(p => p.user_id === user?.id);
-  const isCurrentUserReady = currentParticipant?.status === "ready";
   const otherParticipants = participants.filter(p => p.user_id !== user?.id);
 
   // Play sound when new participant joins
@@ -50,7 +47,6 @@ export function RoomLobby() {
     const currentIds = participants.map(p => p.user_id);
     const prevIds = prevParticipantsRef.current;
     
-    // Check for new participants (excluding first load)
     if (prevIds.length > 0) {
       const newParticipants = currentIds.filter(id => !prevIds.includes(id));
       if (newParticipants.length > 0 && newParticipants[0] !== user?.id) {
@@ -77,10 +73,6 @@ export function RoomLobby() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  useEffect(() => {
-    setIsReady(isCurrentUserReady);
-  }, [isCurrentUserReady]);
 
   useEffect(() => {
     if (room) {
@@ -125,15 +117,7 @@ export function RoomLobby() {
     }
   };
 
-  const handleToggleReady = async () => {
-    if (isHost) return;
-    const newReady = !isReady;
-    setIsReady(newReady);
-    await setReady(newReady);
-  };
-
   const handleLeave = async () => {
-    // If host and there are other participants, show transfer modal
     if (isHost && otherParticipants.length > 0) {
       setShowTransferModal(true);
       return;
@@ -146,7 +130,6 @@ export function RoomLobby() {
     if (!room) return;
     
     try {
-      // Transfer host in database
       await supabase
         .from("game_rooms")
         .update({ host_user_id: newHostId })
@@ -167,7 +150,6 @@ export function RoomLobby() {
       toast.success("ჰოსტი გადაეცა!");
       setShowTransferModal(false);
       
-      // Now leave
       await leaveRoom();
       navigate("/team");
     } catch (error) {
@@ -182,12 +164,8 @@ export function RoomLobby() {
     navigate("/team");
   };
 
-  const handleStart = async () => {
+  const handleStartGame = async () => {
     await startGame();
-  };
-
-  const handleStartSolo = async () => {
-    await startGameSolo();
   };
 
   const handleSaveRoomName = async () => {
@@ -224,53 +202,39 @@ export function RoomLobby() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <motion.button
             onClick={handleLeave}
-            className="flex items-center justify-center w-10 h-10 rounded-xl"
-            style={{
-              background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            }}
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-card border border-border"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <LogOut className="w-4 h-4 text-gray-600" />
+            <LogOut className="w-4 h-4 text-muted-foreground" />
           </motion.button>
 
           <div className="flex items-center gap-2">
             {/* Chat toggle */}
             <motion.button
               onClick={() => setShowChat(!showChat)}
-              className={`flex items-center justify-center w-10 h-10 rounded-xl relative ${
-                showChat ? "bg-purple-500 text-white" : "bg-white/95"
+              className={`flex items-center justify-center w-10 h-10 rounded-xl relative border ${
+                showChat ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"
               }`}
-              style={{
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <MessageCircle className={`w-4 h-4 ${showChat ? "text-white" : "text-gray-600"}`} />
+              <MessageCircle className={`w-4 h-4 ${showChat ? "text-primary-foreground" : "text-muted-foreground"}`} />
               {messages.length > 0 && !showChat && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                   {messages.length}
                 </span>
               )}
             </motion.button>
 
-            <div 
-              className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
-              }}
-            >
-              <Users className="w-4 h-4 text-gray-700" />
-              <span className="text-sm font-medium text-gray-700">{participants.length}/{room.max_players}</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{participants.length}/{room.max_players}</span>
             </div>
           </div>
         </div>
@@ -280,19 +244,15 @@ export function RoomLobby() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto px-4 py-2 rounded-full mb-4"
-            style={{
-              background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}
+            className="mx-auto px-4 py-2 rounded-full mb-3 bg-card border border-border"
           >
-            <span className="text-sm text-gray-700">
-              კატეგორია: <strong className="text-purple-600">{room.category_name}</strong>
+            <span className="text-sm text-muted-foreground">
+              კატეგორია: <strong className="text-primary">{room.category_name}</strong>
             </span>
           </motion.div>
         )}
 
-        {/* Room Name (editable by host) */}
+        {/* Room Name */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -316,75 +276,63 @@ export function RoomLobby() {
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold text-foreground">
                 {room.room_name || `ოთახი #${room.room_code.slice(-4)}`}
               </h2>
               {isHost && (
                 <motion.button
                   onClick={() => setIsEditingName(true)}
-                  className="p-1.5 rounded-lg bg-white/80 hover:bg-white"
+                  className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <Edit2 className="w-4 h-4 text-gray-500" />
+                  <Edit2 className="w-4 h-4 text-muted-foreground" />
                 </motion.button>
               )}
             </div>
           )}
         </motion.div>
 
-        {/* Copy/Share Link Buttons */}
+        {/* Copy/Share Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center gap-3 mb-6"
+          className="flex items-center justify-center gap-3 mb-4"
         >
           <motion.button
             onClick={handleCopyCode}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl"
-            style={{
-              background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-600" />}
-            <span className="text-sm font-medium text-gray-700">ლინკის კოპირება</span>
+            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+            <span className="text-sm font-medium text-foreground">ლინკი</span>
           </motion.button>
           
           <motion.button
             onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl"
-            style={{
-              background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Share2 className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">გაზიარება</span>
+            <Share2 className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">გაზიარება</span>
           </motion.button>
         </motion.div>
 
-        {/* Chat Panel (slide in) */}
+        {/* Chat Panel */}
         <AnimatePresence>
           {showChat && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 200 }}
+              animate={{ opacity: 1, height: 180 }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-4 rounded-2xl overflow-hidden"
-              style={{
-                background: "rgba(255,255,255,0.95)",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-              }}
+              className="mb-4 rounded-2xl overflow-hidden bg-card border border-border"
             >
               <div className="h-full flex flex-col">
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {messages.length === 0 ? (
-                    <p className="text-center text-gray-400 text-sm py-4">
+                    <p className="text-center text-muted-foreground text-sm py-4">
                       ჯერ შეტყობინება არ არის
                     </p>
                   ) : (
@@ -395,11 +343,11 @@ export function RoomLobby() {
                           msg.user_id === user?.id ? "flex-row-reverse" : ""
                         }`}
                       >
-                        <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
                           {msg.avatar_url ? (
                             <img src={msg.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                            <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                               {msg.nickname?.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -407,12 +355,12 @@ export function RoomLobby() {
                         <div
                           className={`max-w-[70%] px-3 py-1.5 rounded-2xl text-sm ${
                             msg.user_id === user?.id
-                              ? "bg-purple-500 text-white rounded-tr-sm"
-                              : "bg-gray-100 text-gray-800 rounded-tl-sm"
+                              ? "bg-primary text-primary-foreground rounded-tr-sm"
+                              : "bg-muted text-foreground rounded-tl-sm"
                           }`}
                         >
                           {msg.user_id !== user?.id && (
-                            <p className="text-[10px] font-medium text-purple-600 mb-0.5">{msg.nickname}</p>
+                            <p className="text-[10px] font-medium text-primary mb-0.5">{msg.nickname}</p>
                           )}
                           <p>{msg.message}</p>
                         </div>
@@ -421,7 +369,7 @@ export function RoomLobby() {
                   )}
                   <div ref={chatEndRef} />
                 </div>
-                <div className="p-2 border-t border-gray-100 flex gap-2">
+                <div className="p-2 border-t border-border flex gap-2">
                   <Input
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
@@ -438,106 +386,68 @@ export function RoomLobby() {
           )}
         </AnimatePresence>
 
-        {/* Participants */}
+        {/* BIG SCOREBOARD */}
         <div className="flex-1 max-w-md mx-auto w-full">
-          <h3 className="text-gray-700 font-medium text-center mb-4">
-            მოთამაშეები
-          </h3>
-          
-          <div className="space-y-3">
-            <AnimatePresence mode="popLayout">
-              {participants.map((participant) => (
-                <ParticipantCard
-                  key={participant.id}
-                  participant={participant}
-                  isCurrentUser={participant.user_id === user?.id}
-                />
-              ))}
-            </AnimatePresence>
+          <RoomScoreboard
+            participants={participants}
+            matches={matches}
+            currentUserId={user?.id}
+          />
 
-            {/* Empty slot */}
-            {participants.length < room.max_players && (
+          {/* Participants row */}
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {participants.map((p) => (
+              <motion.div
+                key={p.id}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="relative"
+              >
+                <SmartAvatar
+                  avatarUrl={p.avatar_url}
+                  fallback={p.nickname}
+                  size="lg"
+                  className={p.user_id === user?.id ? "ring-2 ring-primary" : ""}
+                />
+                {p.is_host && (
+                  <Crown className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 text-amber-500 fill-amber-400" />
+                )}
+              </motion.div>
+            ))}
+            
+            {/* Empty slots */}
+            {participants.length < (room.min_players || 2) && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="rounded-2xl border-2 border-dashed border-gray-300 p-4 flex items-center justify-center"
-                style={{
-                  background: "rgba(255,255,255,0.6)",
-                }}
+                className="w-12 h-12 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center"
               >
-                <div className="text-center">
-                  <Loader2 className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">ველოდებით მოთამაშეს...</p>
-                  {isHost && participants.length < 2 && (
-                    <p className="text-gray-400 text-xs mt-1">ან დაიწყე მარტო - მეგობარი მოგვიანებით ითამაშებს</p>
-                  )}
-                </div>
+                <span className="text-muted-foreground text-lg">?</span>
               </motion.div>
             )}
           </div>
         </div>
 
-        {/* Bottom Actions */}
+        {/* Bottom Actions - SINGLE PLAY BUTTON */}
         <div className="max-w-md mx-auto w-full mt-6 space-y-3">
-          {/* Ready button (for non-hosts) */}
-          {!isHost && (
+          {isHost ? (
             <ChunkyButton
-              variant={isReady ? "success" : "secondary"}
+              variant="primary"
               size="lg"
               className="w-full"
-              onClick={handleToggleReady}
-              icon={isReady ? <Check className="w-5 h-5" /> : undefined}
+              onClick={handleStartGame}
+              disabled={loading}
+              icon={<Gamepad2 className="w-5 h-5" />}
             >
-              {isReady ? "მზადაა" : "მზად ვარ"}
+              {loading ? "იწყება..." : "🎮 რაუნდის დაწყება"}
             </ChunkyButton>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground text-sm">
+                ველოდებით ჰოსტს...
+              </p>
+            </div>
           )}
-
-          {/* Start button (for host) */}
-          {isHost && (
-            <>
-              {/* Normal start when multiple players ready */}
-              {participants.length >= 2 && allReady && (
-                <ChunkyButton
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleStart}
-                  disabled={loading}
-                  icon={<Play className="w-5 h-5" />}
-                >
-                  {loading ? "იწყება..." : "დაწყება"}
-                </ChunkyButton>
-              )}
-              
-              {/* Start solo when alone - converts to async */}
-              {participants.length < 2 && (
-                <ChunkyButton
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleStartSolo}
-                  disabled={loading}
-                  icon={<UserX className="w-5 h-5" />}
-                >
-                  {loading ? "იწყება..." : "დაწყება მარტო"}
-                </ChunkyButton>
-              )}
-              
-              {/* Waiting state when multiple players but not all ready */}
-              {participants.length >= 2 && !allReady && (
-                <ChunkyButton
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  disabled
-                  icon={<Loader2 className="w-5 h-5 animate-spin" />}
-                >
-                  ველოდებით მოთამაშეებს...
-                </ChunkyButton>
-              )}
-            </>
-          )}
-
         </div>
       </div>
 
@@ -555,14 +465,14 @@ export function RoomLobby() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl"
+              className="bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl border border-border"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 mb-4">
                 <Crown className="w-6 h-6 text-amber-500" />
-                <h3 className="text-lg font-bold text-gray-800">ჰოსტის გადაცემა</h3>
+                <h3 className="text-lg font-bold text-foreground">ჰოსტის გადაცემა</h3>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-muted-foreground text-sm mb-4">
                 შენ ხარ ჰოსტი. გადაეცი ჰოსტის უფლება სხვა მოთამაშეს გასვლამდე:
               </p>
               <div className="space-y-2 mb-4">
@@ -570,20 +480,16 @@ export function RoomLobby() {
                   <motion.button
                     key={p.id}
                     onClick={() => handleTransferHost(p.user_id)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-purple-50 border border-gray-100 hover:border-purple-200 transition-colors"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-primary/10 border border-border hover:border-primary/30 transition-colors"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                      {p.avatar_url ? (
-                        <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-purple-500 flex items-center justify-center text-white font-bold">
-                          {p.nickname?.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <span className="font-medium text-gray-800">{p.nickname}</span>
+                    <SmartAvatar
+                      avatarUrl={p.avatar_url}
+                      fallback={p.nickname}
+                      size="sm"
+                    />
+                    <span className="font-medium text-foreground">{p.nickname}</span>
                     <Crown className="w-4 h-4 text-amber-500 ml-auto" />
                   </motion.button>
                 ))}
@@ -636,7 +542,6 @@ function CountdownOverlay() {
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="relative"
         >
-          {/* Glow ring */}
           <motion.div
             className="absolute inset-0 rounded-full"
             style={{
@@ -647,7 +552,6 @@ function CountdownOverlay() {
             transition={{ duration: 1, repeat: Infinity }}
           />
           
-          {/* Number */}
           <span 
             className="font-display text-[120px] font-bold text-white"
             style={{ textShadow: "0 0 60px rgba(168,85,247,0.8)" }}

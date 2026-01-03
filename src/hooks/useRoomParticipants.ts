@@ -30,6 +30,8 @@ export function useRoomParticipants(roomId: string | null) {
         score: p.score || 0,
         current_question: p.current_question || 0,
         is_host: p.is_host || false,
+        total_wins: (p as any).total_wins || 0,
+        total_rounds_played: (p as any).total_rounds_played || 0,
       }));
       setParticipants(typedParticipants);
     }
@@ -68,6 +70,8 @@ export function useRoomParticipants(roomId: string | null) {
               return [...prev, {
                 ...newParticipant,
                 status: newParticipant.status as ParticipantStatus,
+                total_wins: (newParticipant as any).total_wins || 0,
+                total_rounds_played: (newParticipant as any).total_rounds_played || 0,
               }];
             });
           } else if (payload.eventType === "UPDATE") {

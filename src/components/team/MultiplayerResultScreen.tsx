@@ -163,7 +163,39 @@ export function MultiplayerResultScreen() {
     }
 
     try {
-      // Reset room to waiting status for rematch
+      // Save match to history first
+      const playerScores = rankedParticipants.map(p => ({
+        user_id: p.user_id,
+        nickname: p.nickname,
+        score: p.score,
+      }));
+      
+      const winnerId = rankedParticipants[0]?.user_id || null;
+      
+      await supabase
+        .from("room_match_history")
+        .insert({
+          room_id: room.id,
+          winner_user_id: winnerId,
+          player_scores: playerScores,
+        });
+      
+      // Update winner's total_wins and everyone's total_rounds_played
+      for (const p of participants) {
+        const isWinner = p.user_id === winnerId;
+        await supabase
+          .from("room_participants")
+          .update({ 
+            total_wins: isWinner ? (p.total_wins || 0) + 1 : p.total_wins || 0,
+            total_rounds_played: (p.total_rounds_played || 0) + 1,
+            status: "joined",
+            score: 0,
+            current_question: 0,
+          })
+          .eq("id", p.id);
+      }
+      
+      // Reset room to waiting status
       await supabase
         .from("game_rooms")
         .update({ 
@@ -185,19 +217,9 @@ export function MultiplayerResultScreen() {
         .delete()
         .eq("room_id", room.id);
       
-      // Reset all participants to joined status with score 0
-      await supabase
-        .from("room_participants")
-        .update({ 
-          status: "joined",
-          score: 0,
-          current_question: 0
-        })
-        .eq("room_id", room.id);
+      toast.success("მზადაა შემდეგი რაუნდისთვის!");
       
-      toast.success("ოთახი მზადაა ხელახლა თამაშისთვის!");
-      
-      // Reset local state but stay in lobby
+      // Navigate back to lobby
       resetMultiplayer();
       navigate(`/team?join=${room.room_code}`);
     } catch (error) {
