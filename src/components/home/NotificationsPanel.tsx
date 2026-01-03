@@ -209,43 +209,49 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
               </div>
 
               {/* Filter tabs */}
-              <div className="flex gap-2 px-4 pb-3">
+              <div className="flex gap-2 px-4 pb-4 overflow-x-auto scrollbar-hide">
                 {filters.map((f) => (
-                  <button
+                  <motion.button
                     key={f.key}
                     onClick={() => setFilter(f.key)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-                      filter === f.key
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                    )}
+                    className="px-4 py-2.5 rounded-full text-sm font-semibold transition-all flex-shrink-0"
+                    style={{
+                      background: filter === f.key
+                        ? "linear-gradient(135deg, hsl(263 70% 55%) 0%, hsl(280 65% 50%) 100%)"
+                        : "hsl(var(--muted))",
+                      color: filter === f.key ? "white" : "hsl(var(--muted-foreground))",
+                      boxShadow: filter === f.key
+                        ? "0 4px 0 hsl(263 60% 40%), inset 0 1px 0 hsl(0 0% 100% / 0.2)"
+                        : "0 2px 0 hsl(var(--border))",
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     {f.label}
                     {f.key === 'unread' && unreadCount > 0 && (
-                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary-foreground/20 text-[10px]">
+                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
                         {unreadCount}
                       </span>
                     )}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto max-h-[60vh] p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 min-h-[40vh]">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="flex flex-col items-center justify-center h-full min-h-[30vh]">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
                 </div>
               ) : filteredNotifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-                    <BellOff className="w-8 h-8 text-muted-foreground" />
+                <div className="flex flex-col items-center justify-center h-full min-h-[30vh]">
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <BellOff className="w-10 h-10 text-muted-foreground" />
                   </div>
-                  <h3 className="font-medium text-foreground mb-1">No notifications</h3>
-                  <p className="text-sm text-muted-foreground text-center">
+                  <h3 className="font-bold text-lg text-foreground mb-2">No notifications</h3>
+                  <p className="text-sm text-muted-foreground text-center max-w-[250px]">
                     {filter === 'unread'
                       ? "You're all caught up!"
                       : filter === 'friends'
