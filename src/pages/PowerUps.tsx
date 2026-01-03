@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Zap, Sparkles, Check, Frame } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
@@ -296,7 +296,13 @@ export default function PowerUps() {
   const { unlockFrame, isFrameUnlocked } = useAvatarFrames();
   const { playSound } = useSound();
 
-  const [activeTab, setActiveTab] = useState<ShopTab>("hot");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<ShopTab>(() => {
+    const tabParam = searchParams.get("tab");
+    return (tabParam === "powers" || tabParam === "coins" || tabParam === "vip" || tabParam === "frames") 
+      ? tabParam 
+      : "hot";
+  });
   const [showTutorialModal, setShowTutorialModal] = useState(false);
   const [showPowerShopModal, setShowPowerShopModal] = useState(false);
   const [selectedPowerType, setSelectedPowerType] = useState<PowerUpType>("5050");
