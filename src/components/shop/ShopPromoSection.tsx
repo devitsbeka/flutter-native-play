@@ -56,9 +56,9 @@ export function ShopPromoSection({
       ref={sectionRef}
       className="mx-4 mb-4 rounded-3xl relative overflow-x-clip overflow-y-visible"
       style={{ 
-        height: "28vh",
-        minHeight: "180px",
-        maxHeight: "200px",
+        height: "40vh",
+        minHeight: "240px",
+        maxHeight: "320px",
         scrollSnapAlign: "center",
       }}
       initial={{ opacity: 0.6, scale: 0.92 }}
