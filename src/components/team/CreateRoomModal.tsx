@@ -124,7 +124,6 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
         <GameModalFooter
           primaryLabel={loading ? "იქმნება..." : "შექმნა"}
           onPrimary={selectedCategory ? handleCreate : undefined}
-          primaryIcon={<Gamepad2 className="w-5 h-5" />}
           isLoading={loading || !selectedCategory}
           secondaryLabel="გაუქმება"
           onSecondary={onClose}
