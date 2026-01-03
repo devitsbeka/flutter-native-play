@@ -24,11 +24,23 @@ Deno.serve(async (req) => {
 
     const difficulty = level <= 5 ? "მარტივი" : level <= 15 ? "საშუალო" : "რთული";
     const difficultyEn = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
+    
+    // Add randomization for variety
+    const randomSeed = Math.floor(Math.random() * 100000);
+    const focusAreas = [
+      'ისტორიული მოვლენები', 'ცნობილი პიროვნებები', 'კულტურა და ტრადიციები',
+      'გეოგრაფია და ბუნება', 'ხელოვნება', 'მეცნიერება და აღმოჩენები',
+      'სპორტი', 'არქიტექტურა', 'ლიტერატურა', 'მუსიკა', 'კინო და თეატრი',
+      'საინტერესო ფაქტები', 'თანამედროვე მოვლენები'
+    ];
+    const focusArea = focusAreas[Math.floor(Math.random() * focusAreas.length)];
 
-    const prompt = `შექმენი ${count} ტრივია კითხვა თემაზე: "${category}" ქართულ ენაზე.
+    const prompt = `შექმენი ${count} უნიკალური ტრივია კითხვა თემაზე: "${category}" ქართულ ენაზე.
 
 სირთულე: ${difficulty}
 დონე: ${level}
+Random Seed: ${randomSeed}
+ფოკუსირება: ${focusArea}
 
 მნიშვნელოვანი ინსტრუქციები:
 1. ყველა კითხვა და პასუხი უნდა იყოს ქართულ ენაზე
@@ -36,6 +48,10 @@ Deno.serve(async (req) => {
 3. კითხვები უნდა იყოს ფაქტობრივად ზუსტი და სანდო
 4. არასწორი პასუხები უნდა იყოს დამაჯერებელი, მაგრამ აშკარად არასწორი
 5. თავიდან აიცილე გაუგებარი ან ორაზროვანი კითხვები
+6. CRITICAL: გენერირე სრულიად განსხვავებული და ახალი კითხვები ყოველ ჯერზე
+7. არ გაიმეორო ტიპიური ან ხშირად გამოყენებული კითხვები
+8. ფოკუსირდი "${focusArea}" ასპექტებზე მრავალფეროვნებისთვის
+9. გამოიყენე შემთხვევითი seed: ${randomSeed} სხვადასხვა შედეგებისთვის
 
 დააბრუნე მხოლოდ JSON მასივი ზუსტად ამ სტრუქტურით, სხვა ტექსტი არ დაურთო:
 [
@@ -61,7 +77,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
+        temperature: 0.95,
       }),
     });
 

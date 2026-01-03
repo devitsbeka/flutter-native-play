@@ -51,12 +51,14 @@ export function useMyRooms() {
       const roomIds = participations.map((p) => p.room_id);
       const hostMap = new Map(participations.map((p) => [p.room_id, p.is_host || false]));
 
-      // Fetch room details for active rooms only
+      // Fetch room details - active rooms and recently completed (24h)
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      
       const { data: roomsData, error: roomsError } = await supabase
         .from("game_rooms")
         .select("*")
         .in("id", roomIds)
-        .in("status", ["waiting", "ready", "playing"])
+        .or(`status.in.(waiting,ready,playing),and(status.eq.completed,completed_at.gte.${twentyFourHoursAgo})`)
         .order("created_at", { ascending: false });
 
       if (roomsError) throw roomsError;

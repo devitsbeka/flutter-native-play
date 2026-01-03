@@ -13,6 +13,7 @@ import confetti from "canvas-confetti";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import { toast } from "sonner";
 
 interface RankedParticipant {
   user_id: string;
@@ -154,9 +155,57 @@ export function MultiplayerResultScreen() {
     navigate("/team");
   };
 
-  const handlePlayAgain = () => {
-    resetMultiplayer();
-    navigate("/team");
+  const handlePlayAgain = async () => {
+    if (!room) {
+      resetMultiplayer();
+      navigate("/team");
+      return;
+    }
+
+    try {
+      // Reset room to waiting status for rematch
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          status: "waiting",
+          started_at: null,
+          completed_at: null 
+        })
+        .eq("id", room.id);
+      
+      // Clear old room questions
+      await supabase
+        .from("room_questions")
+        .delete()
+        .eq("room_id", room.id);
+      
+      // Clear old player answers
+      await supabase
+        .from("player_answers")
+        .delete()
+        .eq("room_id", room.id);
+      
+      // Reset all participants to joined status with score 0
+      await supabase
+        .from("room_participants")
+        .update({ 
+          status: "joined",
+          score: 0,
+          current_question: 0
+        })
+        .eq("room_id", room.id);
+      
+      toast.success("ოთახი მზადაა ხელახლა თამაშისთვის!");
+      
+      // Reset local state but stay in lobby
+      resetMultiplayer();
+      navigate(`/team?join=${room.room_code}`);
+    } catch (error) {
+      console.error("Error resetting room for rematch:", error);
+      toast.error("ხელახლა თამაშის დაწყება ვერ მოხერხდა");
+      resetMultiplayer();
+      navigate("/team");
+    }
   };
 
   const getFlagEmoji = (countryCode: string | null) => {
