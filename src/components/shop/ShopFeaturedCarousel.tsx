@@ -52,7 +52,7 @@ const FEATURED_DEALS: FeaturedDeal[] = [
     originalPrice: 20,
     price: 15,
     icon: iconVipCrown,
-    videoSrc: "/videos/promo-starter-pack.mp4",
+    videoSrc: "/videos/promo-vip-week.mp4",
     targetTab: "vip",
   },
 ];
@@ -71,7 +71,7 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
     const timer = setInterval(() => {
       setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % FEATURED_DEALS.length);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
@@ -145,41 +145,30 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
               </motion.div>
 
               {/* Text content */}
-              <div className="flex items-center justify-between">
-                <div className="flex-1 pr-4">
-                  <h3 className="text-2xl font-display font-bold text-gray-900 mb-1">
-                    {deal.title}
-                  </h3>
-                  <p className="text-gray-700 text-sm mb-3">{deal.subtitle}</p>
+              <div className="flex-1">
+                <h3 className="text-2xl font-display font-bold text-gray-900 mb-1">
+                  {deal.title}
+                </h3>
+                <p className="text-gray-700 text-sm mb-3">{deal.subtitle}</p>
 
-                  {/* Price */}
-                  <div className="flex items-center gap-3">
-                    {deal.originalPrice && (
-                      <span className="text-gray-400 line-through text-lg">
-                        {deal.originalPrice}
-                      </span>
-                    )}
-                    <div
-                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
-                      style={{
-                        background: "hsl(0 0% 0% / 0.1)",
-                        boxShadow: "inset 0 1px 0 hsl(0 0% 100% / 0.3)",
-                      }}
-                    >
-                      <img src={gemIcon} alt="" className="w-5 h-5" />
-                      <span className="text-xl font-bold text-gray-900">{deal.price}</span>
-                    </div>
+                {/* Price */}
+                <div className="flex items-center gap-3">
+                  {deal.originalPrice && (
+                    <span className="text-gray-400 line-through text-lg">
+                      {deal.originalPrice}
+                    </span>
+                  )}
+                  <div
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
+                    style={{
+                      background: "hsl(0 0% 0% / 0.1)",
+                      boxShadow: "inset 0 1px 0 hsl(0 0% 100% / 0.3)",
+                    }}
+                  >
+                    <img src={gemIcon} alt="" className="w-5 h-5" />
+                    <span className="text-xl font-bold text-gray-900">{deal.price}</span>
                   </div>
                 </div>
-
-                {/* Icon */}
-                <motion.div
-                  className="w-16 h-16 flex items-center justify-center"
-                  animate={{ scale: [1, 1.05, 1], rotate: [0, 3, -3, 0] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                >
-                  <img src={deal.icon} alt="" className="w-[50px] h-[50px] object-contain drop-shadow-lg" />
-                </motion.div>
               </div>
             </div>
           </motion.div>
