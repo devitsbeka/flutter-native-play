@@ -1,6 +1,5 @@
-import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
@@ -14,12 +13,9 @@ import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
-import { ShopFeaturedCarousel } from "@/components/shop/ShopFeaturedCarousel";
-
-import { ShopTabBar, ShopTab } from "@/components/shop/ShopTabBar";
-import { ShopItemCard, ShopItemBadge } from "@/components/shop/ShopItemCard";
-import { ShopBundleCard } from "@/components/shop/ShopBundleCard";
+import { ShopPromoSection } from "@/components/shop/ShopPromoSection";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
+import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
@@ -27,13 +23,9 @@ import replaceIcon from "@/assets/powers/replace.png";
 import timeDrainIcon from "@/assets/powers/time-drain.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import powerBottleIcon from "@/assets/icons/icon-power-bottle.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
-import iconFireDeals from "@/assets/icons/icon-fire-deals.png";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
 import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
-import iconFramesLantern from "@/assets/icons/icon-frames-lantern.png";
-import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 interface ShopItem {
   id: string;
@@ -43,8 +35,7 @@ interface ShopItem {
   currency: "gems" | "coins";
   icon: React.ReactNode;
   gradient: string;
-  category: "hot" | "powers" | "coins" | "vip" | "frames";
-  badge?: ShopItemBadge;
+  badge?: "popular" | "best-value" | "limited" | "new" | null;
   savings?: number;
   vipDuration?: VipDuration;
   powerType?: PowerUpType;
@@ -52,214 +43,6 @@ interface ShopItem {
   value?: number;
   frameId?: string;
 }
-
-const SHOP_ITEMS: ShopItem[] = [
-  // Hot Deals
-  {
-    id: "starter_bundle",
-    name: "სტარტერ პაკეტი",
-    description: "2x ყველა ძალა + 200 მონეტა",
-    price: 8,
-    currency: "gems",
-    icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "hot",
-    badge: "new",
-  },
-  {
-    id: "mega_power_bundle",
-    name: "მეგა ძალების პაკეტი",
-    description: "5x ყველა ძალა",
-    price: 15,
-    currency: "gems",
-    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "hot",
-    badge: "popular",
-    savings: 25,
-  },
-  {
-    id: "vip_week_deal",
-    name: "VIP კვირა",
-    description: "2x XP • უსასრულო სპინი",
-    price: 15,
-    currency: "gems",
-    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "hot",
-    badge: "best-value",
-    savings: 30,
-    vipDuration: "week",
-  },
-  // Power-Ups
-  {
-    id: "power_5050_3",
-    name: "50/50 ×3",
-    description: "წაშლის 2 არასწორ პასუხს",
-    price: 8,
-    currency: "gems",
-    icon: <img src={fiftyFiftyIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
-    category: "powers",
-    powerType: "5050",
-    amount: 3,
-  },
-  {
-    id: "power_freeze_3",
-    name: "გაყინვა ×3",
-    description: "დრო გაიყინება 10 წამით",
-    price: 8,
-    currency: "gems",
-    icon: <img src={freezeIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
-    category: "powers",
-    powerType: "freeze",
-    amount: 3,
-  },
-  {
-    id: "power_replace_3",
-    name: "შეცვლა ×3",
-    description: "შეცვლის კითხვას ახლით",
-    price: 8,
-    currency: "gems",
-    icon: <img src={replaceIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
-    category: "powers",
-    powerType: "replace",
-    amount: 3,
-  },
-  {
-    id: "power_timedrain_3",
-    name: "დრო+ ×3",
-    description: "ამატებს 10 წამს",
-    price: 8,
-    currency: "gems",
-    icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
-    category: "powers",
-    powerType: "time-drain",
-    amount: 3,
-  },
-  {
-    id: "power_bundle_small",
-    name: "მცირე პაკეტი",
-    description: "2x ყველა ძალა",
-    price: 8,
-    currency: "gems",
-    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "powers",
-  },
-  {
-    id: "power_bundle_medium",
-    name: "საშუალო პაკეტი",
-    description: "5x ყველა ძალა",
-    price: 15,
-    currency: "gems",
-    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "powers",
-    badge: "popular",
-  },
-  {
-    id: "power_bundle_large",
-    name: "დიდი პაკეტი",
-    description: "10x ყველა ძალა",
-    price: 25,
-    currency: "gems",
-    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "powers",
-    badge: "best-value",
-    savings: 20,
-  },
-  // Coins
-  {
-    id: "coins_100",
-    name: "100 მონეტა",
-    description: "მცირე პაკეტი",
-    price: 2,
-    currency: "gems",
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
-    category: "coins",
-    value: 100,
-  },
-  {
-    id: "coins_500",
-    name: "500 მონეტა",
-    description: "საშუალო პაკეტი",
-    price: 5,
-    currency: "gems",
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
-    category: "coins",
-    value: 500,
-  },
-  {
-    id: "coins_1500",
-    name: "1500 მონეტა",
-    description: "დიდი პაკეტი +20% ბონუსი",
-    price: 12,
-    currency: "gems",
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
-    category: "coins",
-    value: 1500,
-    badge: "popular",
-    savings: 20,
-  },
-  {
-    id: "coins_5000",
-    name: "5000 მონეტა",
-    description: "მეგა პაკეტი +50% ბონუსი",
-    price: 35,
-    currency: "gems",
-    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-    gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
-    category: "coins",
-    value: 5000,
-    badge: "best-value",
-    savings: 50,
-  },
-  // VIP
-  {
-    id: "vip_day",
-    name: "VIP დღე",
-    description: "ყველა VIP ბენეფიტი 1 დღე",
-    price: 5,
-    currency: "gems",
-    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "vip",
-    vipDuration: "day",
-  },
-  {
-    id: "vip_week",
-    name: "VIP კვირა",
-    description: "2x XP, +3 სპინი, ექსკლუზიური აქსესუარები",
-    price: 15,
-    currency: "gems",
-    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "vip",
-    badge: "popular",
-    vipDuration: "week",
-  },
-  {
-    id: "vip_month",
-    name: "VIP თვე",
-    description: "ყველა VIP ბენეფიტი 30 დღე",
-    price: 40,
-    currency: "gems",
-    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
-    gradient: "transparent",
-    category: "vip",
-    badge: "best-value",
-    savings: 35,
-    vipDuration: "month",
-  },
-];
 
 // Helper function to get frame data by ID
 const getFrameById = (frameId: string) => AVATAR_FRAMES.find(f => f.id === frameId);
@@ -277,19 +60,249 @@ const FramePreviewIcon = ({ frameId }: { frameId: string }) => {
   );
 };
 
-// Frame shop items - generated from AVATAR_FRAMES
-const FRAME_SHOP_ITEMS: ShopItem[] = AVATAR_FRAMES.map((frame, index) => ({
+// === SECTION DATA ===
+
+// Hot Deals - Starter Pack Section
+const STARTER_PACK_ITEMS: ShopItem[] = [
+  {
+    id: "starter_bundle",
+    name: "სტარტერ პაკეტი",
+    description: "2x ყველა ძალა + 200 მონეტა",
+    price: 8,
+    currency: "gems",
+    icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "new",
+  },
+];
+
+// Hot Deals - Mega Powers Section
+const MEGA_POWERS_ITEMS: ShopItem[] = [
+  {
+    id: "power_bundle_small",
+    name: "მცირე პაკეტი",
+    description: "2x ყველა ძალა",
+    price: 8,
+    currency: "gems",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+  },
+  {
+    id: "mega_power_bundle",
+    name: "მეგა ძალების პაკეტი",
+    description: "5x ყველა ძალა",
+    price: 15,
+    currency: "gems",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "popular",
+    savings: 25,
+  },
+  {
+    id: "power_bundle_large",
+    name: "დიდი პაკეტი",
+    description: "10x ყველა ძალა",
+    price: 25,
+    currency: "gems",
+    icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "best-value",
+    savings: 20,
+  },
+];
+
+// Hot Deals - VIP Week Section
+const VIP_PROMO_ITEMS: ShopItem[] = [
+  {
+    id: "vip_day",
+    name: "VIP დღე",
+    description: "ყველა VIP ბენეფიტი 1 დღე",
+    price: 5,
+    currency: "gems",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    vipDuration: "day",
+  },
+  {
+    id: "vip_week_deal",
+    name: "VIP კვირა",
+    description: "2x XP • უსასრულო სპინი",
+    price: 15,
+    currency: "gems",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "popular",
+    savings: 30,
+    vipDuration: "week",
+  },
+  {
+    id: "vip_month",
+    name: "VIP თვე",
+    description: "ყველა VIP ბენეფიტი 30 დღე",
+    price: 40,
+    currency: "gems",
+    icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "best-value",
+    savings: 35,
+    vipDuration: "month",
+  },
+];
+
+// Powers Section
+const POWERS_ITEMS: ShopItem[] = [
+  {
+    id: "power_5050_3",
+    name: "50/50 ×3",
+    description: "წაშლის 2 არასწორ პასუხს",
+    price: 8,
+    currency: "gems",
+    icon: <img src={fiftyFiftyIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
+    powerType: "5050",
+    amount: 3,
+  },
+  {
+    id: "power_freeze_3",
+    name: "გაყინვა ×3",
+    description: "დრო გაიყინება 10 წამით",
+    price: 8,
+    currency: "gems",
+    icon: <img src={freezeIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
+    powerType: "freeze",
+    amount: 3,
+  },
+  {
+    id: "power_replace_3",
+    name: "შეცვლა ×3",
+    description: "შეცვლის კითხვას ახლით",
+    price: 8,
+    currency: "gems",
+    icon: <img src={replaceIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
+    powerType: "replace",
+    amount: 3,
+  },
+  {
+    id: "power_timedrain_3",
+    name: "დრო+ ×3",
+    description: "ამატებს 10 წამს",
+    price: 8,
+    currency: "gems",
+    icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
+    powerType: "time-drain",
+    amount: 3,
+  },
+];
+
+// Frames Section - generated from AVATAR_FRAMES
+const FRAMES_ITEMS: ShopItem[] = AVATAR_FRAMES.slice(0, 4).map((frame, index) => ({
   id: `frame_${frame.id}`,
   name: frame.name,
   description: frame.description,
   price: frame.price,
   currency: "gems" as const,
   icon: <FramePreviewIcon frameId={frame.id} />,
-  gradient: "transparent", // Frame preview shows the actual frame, no need for gradient
-  category: "frames" as const,
+  gradient: "transparent",
   frameId: frame.id,
   badge: index === 0 ? "new" as const : index === 1 ? "popular" as const : frame.rarity === "legendary" ? "best-value" as const : null,
 }));
+
+// Coins Section
+const COINS_ITEMS: ShopItem[] = [
+  {
+    id: "coins_100",
+    name: "100 მონეტა",
+    description: "მცირე პაკეტი",
+    price: 2,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
+    value: 100,
+  },
+  {
+    id: "coins_500",
+    name: "500 მონეტა",
+    description: "საშუალო პაკეტი",
+    price: 5,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
+    value: 500,
+  },
+  {
+    id: "coins_1500",
+    name: "1500 მონეტა",
+    description: "დიდი პაკეტი +20% ბონუსი",
+    price: 12,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
+    value: 1500,
+    badge: "popular",
+    savings: 20,
+  },
+  {
+    id: "coins_5000",
+    name: "5000 მონეტა",
+    description: "მეგა პაკეტი +50% ბონუსი",
+    price: 35,
+    currency: "gems",
+    icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+    gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
+    value: 5000,
+    badge: "best-value",
+    savings: 50,
+  },
+];
+
+// Section definitions
+const SHOP_SECTIONS = [
+  {
+    id: "starter",
+    title: "სტარტერ პაკეტი",
+    description: "იდეალური დამწყებთათვის - ყველაფერი რაც საჭიროა თამაშის დასაწყებად",
+    videoSrc: "/videos/promo-starter-pack.mp4",
+    items: STARTER_PACK_ITEMS,
+  },
+  {
+    id: "mega-powers",
+    title: "მეგა ძალები",
+    description: "გაძლიერე შენი შესაძლებლობები და მოიგე მეტი თამაში",
+    videoSrc: "/videos/promo-mega-powers.mp4",
+    items: MEGA_POWERS_ITEMS,
+  },
+  {
+    id: "vip",
+    title: "VIP სტატუსი",
+    description: "2x XP, ექსკლუზიური ჩარჩოები და უსასრულო სპინი",
+    videoSrc: "/videos/promo-vip-week.mp4",
+    items: VIP_PROMO_ITEMS,
+  },
+  {
+    id: "powers",
+    title: "ძალები",
+    description: "გამოიყენე თამაშში უპირატესობის მოსაპოვებლად",
+    videoSrc: "/videos/floating-blob.mp4",
+    items: POWERS_ITEMS,
+  },
+  {
+    id: "frames",
+    title: "ჩარჩოები",
+    description: "გამოარჩიე შენი პროფილი უნიკალური ჩარჩოებით",
+    videoSrc: "/videos/floating-blob.mp4",
+    items: FRAMES_ITEMS,
+  },
+  {
+    id: "coins",
+    title: "მონეტები",
+    description: "შეიძინე მეტი მონეტა ბონუსებით",
+    videoSrc: "/videos/floating-blob.mp4",
+    items: COINS_ITEMS,
+  },
+];
 
 export default function PowerUps() {
   const navigate = useNavigate();
@@ -300,14 +313,6 @@ export default function PowerUps() {
   const { unlockFrame, isFrameUnlocked } = useAvatarFrames();
   const { playSound } = useSound();
 
-  const [searchParams] = useSearchParams();
-  const tabSectionRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<ShopTab>(() => {
-    const tabParam = searchParams.get("tab");
-    return (tabParam === "powers" || tabParam === "coins" || tabParam === "vip" || tabParam === "frames") 
-      ? tabParam 
-      : "hot";
-  });
   const [showTutorialModal, setShowTutorialModal] = useState(false);
   const [showPowerShopModal, setShowPowerShopModal] = useState(false);
   const [selectedPowerType, setSelectedPowerType] = useState<PowerUpType>("5050");
@@ -315,27 +320,6 @@ export default function PowerUps() {
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [showSuccess, setShowSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
-
-  const handleScrollToTab = (tab: ShopTab) => {
-    setActiveTab(tab);
-    setTimeout(() => {
-      tabSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
-
-  // Combine shop items with frame items
-  const allItems = [...SHOP_ITEMS, ...FRAME_SHOP_ITEMS];
-  const filteredItems = allItems.filter((item) => item.category === activeTab);
-
-  const handlePowerClick = (type: PowerUpType) => {
-    setSelectedPowerType(type);
-    setShowPowerShopModal(true);
-  };
-
-  const handleDealClick = (dealId: string) => {
-    const item = allItems.find((i) => i.id === dealId);
-    if (item) handlePurchase(item);
-  };
 
   const handlePurchase = async (item: ShopItem) => {
     if (!user) {
@@ -395,62 +379,29 @@ export default function PowerUps() {
   return (
     <div className="min-h-screen flex flex-col pb-24">
       <GlobalSplineBackground />
+      
       {/* Sticky Header */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
         onBuyGemsClick={() => toast.info("ალმასების შეძენა მალე!")}
       />
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Featured Carousel */}
-        <ShopFeaturedCarousel onDealClick={handleDealClick} onScrollToTab={handleScrollToTab} />
-
-
-        {/* Tab Navigation */}
-        <div ref={tabSectionRef}>
-          <ShopTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
-
-        {/* Shop Grid */}
-        <div className="px-4 pb-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              {filteredItems.map((item, index) => {
-                const canAfford = gems >= item.price;
-                const isPurchased = purchasedItems.has(item.id);
-                const isFrameOwned = item.frameId ? isFrameUnlocked(item.frameId) : false;
-                const isOwned = isPurchased || isFrameOwned;
-
-                return (
-                  <ShopItemCard
-                    key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    description={item.description}
-                    price={item.price}
-                    currency={item.currency}
-                    icon={item.icon}
-                    gradient={item.gradient}
-                    badge={item.badge}
-                    savings={item.savings}
-                    isPurchased={isOwned}
-                    isLoading={isPurchasing === item.id}
-                    canAfford={canAfford}
-                    index={index}
-                    onClick={() => !isOwned && handlePurchase(item)}
-                  />
-                );
-              })}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+      {/* Scrollable Content - Section-based layout */}
+      <div className="flex-1 overflow-y-auto pt-4">
+        {SHOP_SECTIONS.map((section) => (
+          <ShopPromoSection
+            key={section.id}
+            title={section.title}
+            description={section.description}
+            videoSrc={section.videoSrc}
+            items={section.items}
+            gems={gems}
+            purchasedItems={purchasedItems}
+            isPurchasing={isPurchasing}
+            isFrameUnlocked={isFrameUnlocked}
+            onItemClick={handlePurchase}
+          />
+        ))}
       </div>
 
       {/* Modals */}
