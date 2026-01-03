@@ -245,7 +245,7 @@ export function RoomLobbyV2() {
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center gap-2 mb-4"
           >
-            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/30 bg-card">
+            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/30 bg-card relative">
               {categoryVideo ? (
                 <PingPongVideo 
                   src={categoryVideo} 
