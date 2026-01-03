@@ -239,14 +239,14 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 min-h-[40vh]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {loading ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[30vh]">
+                <div className="flex flex-col items-center pt-8">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
                 </div>
               ) : filteredNotifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[30vh]">
+                <div className="flex flex-col items-center pt-8">
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
                     <BellOff className="w-10 h-10 text-muted-foreground" />
                   </div>
