@@ -1144,6 +1144,54 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_leaderboard_snapshots: {
+        Row: {
+          avatar_url: string | null
+          country_code: string | null
+          created_at: string
+          games_played: number
+          games_won: number
+          id: string
+          nickname: string
+          rank: number
+          snapshot_date: string
+          total_points: number
+          user_id: string
+          week_number: number
+          year: number
+        }
+        Insert: {
+          avatar_url?: string | null
+          country_code?: string | null
+          created_at?: string
+          games_played?: number
+          games_won?: number
+          id?: string
+          nickname: string
+          rank: number
+          snapshot_date?: string
+          total_points?: number
+          user_id: string
+          week_number: number
+          year: number
+        }
+        Update: {
+          avatar_url?: string | null
+          country_code?: string | null
+          created_at?: string
+          games_played?: number
+          games_won?: number
+          id?: string
+          nickname?: string
+          rank?: number
+          snapshot_date?: string
+          total_points?: number
+          user_id?: string
+          week_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
