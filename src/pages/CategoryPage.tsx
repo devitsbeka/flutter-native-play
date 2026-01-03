@@ -161,8 +161,8 @@ export default function CategoryPage() {
 
 
       <div className="min-h-screen flex flex-col relative">
-        {/* Category Video Header Section - taller for more visual impact */}
-        <div className="absolute top-0 left-0 right-0 h-[55vh] min-h-[420px] overflow-hidden z-0">
+        {/* Category Video Header Section */}
+        <div className="absolute top-0 left-0 right-0 h-[52vh] min-h-[380px] overflow-hidden z-0">
           <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
@@ -177,8 +177,8 @@ export default function CategoryPage() {
           />
         </div>
 
-        {/* Header content area - taller to match new video height */}
-        <div className="relative z-10 h-[calc(55vh-80px)] min-h-[340px]">
+        {/* Header content area */}
+        <div className="relative z-10 h-[calc(52vh-28px)] min-h-[352px]">
           {/* Navigation buttons */}
           <div className="absolute top-12 left-5 right-5 flex items-center justify-between">
             <button
@@ -198,14 +198,14 @@ export default function CategoryPage() {
             )}
           </div>
 
-          {/* Title only - centered in the video area */}
-          <div className="absolute bottom-20 left-5 right-5">
+          {/* Title - positioned just above tabs */}
+          <div className="absolute bottom-8 left-5 right-5">
             <h1 className="text-3xl font-bold text-white drop-shadow-lg tracking-tight">{category.name}</h1>
           </div>
         </div>
 
-        {/* Floating Tabs - polished pill design */}
-        <div className="relative px-5 -mt-8 mb-5 z-20">
+        {/* Floating Tabs - half on video, half on content */}
+        <div className="relative px-5 -mt-7 mb-4 z-20">
           <div 
             className="flex gap-1 rounded-2xl p-1.5"
             style={{
