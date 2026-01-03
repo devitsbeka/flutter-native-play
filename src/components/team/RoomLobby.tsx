@@ -233,6 +233,15 @@ export function RoomLobby() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* White mask overlay for readability */}
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(to bottom, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.85) 100%)",
+          zIndex: 0,
+        }}
+      />
+      
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
