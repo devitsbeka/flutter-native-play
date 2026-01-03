@@ -1,26 +1,32 @@
+import * as React from "react";
 import { motion } from "framer-motion";
-import { Trophy, X, Clock, ChevronRight } from "lucide-react";
+import { Trophy, X, Clock } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { useMemo } from "react";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface GameHistoryTableProps {
   onViewAll?: () => void;
 }
 
-// Shimmer skeleton component
-function ShimmerSkeleton({ className }: { className?: string }) {
-  return (
-    <div 
-      className={`relative overflow-hidden ${className}`}
-      style={{ backgroundColor: '#ECCCF2' }}
-    >
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-    </div>
-  );
-}
+// Shimmer skeleton component - wrapped with forwardRef to fix console warning
+const ShimmerSkeleton = React.forwardRef<HTMLDivElement, { className?: string }>(
+  ({ className }, ref) => {
+    return (
+      <div 
+        ref={ref}
+        className={`relative overflow-hidden ${className}`}
+        style={{ backgroundColor: '#ECCCF2' }}
+      >
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+      </div>
+    );
+  }
+);
+ShimmerSkeleton.displayName = "ShimmerSkeleton";
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
@@ -49,15 +55,9 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
         {onViewAll && rooms.length > 0 && (
-          <motion.button
-            onClick={onViewAll}
-            className="text-sm font-semibold text-slate-500 px-3 py-1 rounded-full hover:bg-slate-100 transition-colors flex items-center gap-1"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <ChunkyButton onClick={onViewAll} variant="secondary" size="sm">
             ყველა
-            <ChevronRight className="w-4 h-4" />
-          </motion.button>
+          </ChunkyButton>
         )}
       </div>
 
@@ -163,7 +163,8 @@ interface GameHistoryRowProps {
   getIconBySlug: (slug: string) => string | null;
 }
 
-function GameHistoryRow({ room, index, getIconBySlug }: GameHistoryRowProps) {
+const GameHistoryRow = React.forwardRef<HTMLDivElement, GameHistoryRowProps>(
+  ({ room, index, getIconBySlug }, ref) => {
   const timeAgo = room.completed_at
     ? formatDistanceToNow(new Date(room.completed_at), { addSuffix: true, locale: ka })
     : "";
@@ -260,4 +261,6 @@ function GameHistoryRow({ room, index, getIconBySlug }: GameHistoryRowProps) {
       </div>
     </motion.div>
   );
-}
+  }
+);
+GameHistoryRow.displayName = "GameHistoryRow";
