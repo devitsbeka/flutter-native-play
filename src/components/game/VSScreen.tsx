@@ -181,13 +181,29 @@ export function VSScreen() {
 
       {/* Full-screen Diagonal VS Divider - at root level for full coverage */}
       {selectedCategoryName && (
-        <div 
+        <motion.div 
           className="absolute inset-0 overflow-hidden pointer-events-none"
           style={{ zIndex: 5 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
-          {/* Diagonal golden line from top-left to bottom-right */}
-          <div 
+          {/* Diagonal golden line with draw-in animation */}
+          <motion.div 
             className="absolute"
+            initial={{ 
+              clipPath: "polygon(0% 0%, 0% 0%, 0% 0%)",
+              opacity: 0 
+            }}
+            animate={{ 
+              clipPath: "polygon(0% 0%, 100% 100%, 100% 100%, 0% 100%, 0% 0%)",
+              opacity: 1 
+            }}
+            transition={{ 
+              duration: 0.8, 
+              ease: "easeOut",
+              delay: 0.1
+            }}
             style={{
               top: "-50%",
               left: "-50%",
@@ -198,8 +214,36 @@ export function VSScreen() {
             }}
           />
           
+          {/* Pulsing glow overlay on the line */}
+          <motion.div 
+            className="absolute"
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: [0.3, 0.7, 0.3],
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.9
+            }}
+            style={{
+              top: "-50%",
+              left: "-50%",
+              width: "200%",
+              height: "200%",
+              background: "linear-gradient(135deg, transparent 48%, rgba(255,215,0,0.4) 49.5%, rgba(255,215,0,0.5) 50%, rgba(255,215,0,0.4) 50.5%, transparent 52%)",
+              filter: "blur(8px)",
+            }}
+          />
+          
           {/* Large VS watermark behind content */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div 
+            className="absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             <span 
               className="text-[180px] font-black text-white/[0.06]"
               style={{ 
@@ -209,8 +253,8 @@ export function VSScreen() {
             >
               VS
             </span>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
       {/* Header */}
       <motion.div 
