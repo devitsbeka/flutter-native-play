@@ -1,9 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Medal, Play, Crown, User, Star, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
+import { Trophy, Play, User, Star, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { useCategoryLeaderboard } from "@/hooks/useCategoryLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import medalGold from "@/assets/icons/medal-gold.png";
+import medalSilver from "@/assets/icons/medal-silver.png";
+import medalBronze from "@/assets/icons/medal-bronze.png";
 
 interface CategoryLeaderboardProps {
   categoryId: string;
@@ -24,38 +27,40 @@ export function CategoryLeaderboard({
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Crown className="h-5 w-5 text-amber-400 fill-amber-400" />;
+        return <img src={medalGold} alt="1st" className="w-8 h-8 object-contain" />;
       case 2:
-        return <Medal className="h-5 w-5 text-slate-300" />;
+        return <img src={medalSilver} alt="2nd" className="w-8 h-8 object-contain" />;
       case 3:
-        return <Medal className="h-5 w-5 text-amber-600" />;
+        return <img src={medalBronze} alt="3rd" className="w-8 h-8 object-contain" />;
       default:
         return null;
     }
   };
 
-  const getRankBackground = (rank: number) => {
-    if (lightMode) {
-      switch (rank) {
-        case 1:
-          return "bg-gradient-to-r from-amber-500/20 to-amber-400/10 border-amber-400/40";
-        case 2:
-          return "bg-gradient-to-r from-slate-400/20 to-slate-300/10 border-slate-400/40";
-        case 3:
-          return "bg-gradient-to-r from-amber-700/20 to-amber-600/10 border-amber-600/40";
-        default:
-          return "bg-white/60 border-slate-200";
-      }
-    }
+  const getRankStyle = (rank: number) => {
     switch (rank) {
       case 1:
-        return "bg-gradient-to-r from-amber-500/20 to-amber-400/10 border-amber-400/30";
+        return {
+          background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
+          border: "2px solid #34D399",
+          boxShadow: "0 2px 8px rgba(52, 211, 153, 0.3)",
+        };
       case 2:
-        return "bg-gradient-to-r from-slate-400/20 to-slate-300/10 border-slate-300/30";
+        return {
+          background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+          border: "2px solid #A78BFA",
+          boxShadow: "0 2px 8px rgba(167, 139, 250, 0.3)",
+        };
       case 3:
-        return "bg-gradient-to-r from-amber-700/20 to-amber-600/10 border-amber-600/30";
+        return {
+          background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
+          border: "2px solid #FBBF24",
+          boxShadow: "0 2px 8px rgba(251, 191, 36, 0.3)",
+        };
       default:
-        return "bg-white/5 border-white/10";
+        return lightMode
+          ? { background: "rgba(255,255,255,0.6)", border: "1px solid #E2E8F0" }
+          : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" };
     }
   };
 
@@ -128,7 +133,6 @@ export function CategoryLeaderboard({
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="h-5 w-5 text-amber-400" />
         <h3 className={`text-lg font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>ლიდერბორდი</h3>
-        <span className={`text-sm ${lightMode ? "text-slate-500" : "text-white/50"}`}>• {categoryName}</span>
       </div>
 
       {/* Leaderboard List */}
@@ -166,15 +170,17 @@ export function CategoryLeaderboard({
                       layout: { type: "spring", stiffness: 300, damping: 30 },
                       scale: { duration: 0.3 }
                     }}
-                    className={`p-3 rounded-xl border flex items-center gap-3 relative overflow-hidden ${
-                      isCurrentUser
-                        ? "bg-primary/20 border-primary/40 ring-2 ring-primary/30"
-                        : getRankBackground(entry.rank)
-                    } ${hasRankChange ? "ring-2 ring-offset-1 ring-offset-transparent" : ""} ${
+                    className={`p-3 rounded-xl flex items-center gap-3 relative overflow-hidden ${
+                      hasRankChange ? "ring-2 ring-offset-1 ring-offset-transparent" : ""
+                    } ${
                       hasRankChange === "up" ? "ring-emerald-400/50" : 
                       hasRankChange === "down" ? "ring-rose-400/50" : 
                       hasRankChange === "new" ? "ring-amber-400/50" : ""
-                    }`}
+                    } ${isCurrentUser ? "ring-2 ring-primary/30" : ""}`}
+                    style={isCurrentUser 
+                      ? { background: "rgba(var(--primary-rgb), 0.2)", border: "2px solid rgba(var(--primary-rgb), 0.4)" }
+                      : getRankStyle(entry.rank)
+                    }
                   >
                     {/* Rank change indicator */}
                     {hasRankChange && (
