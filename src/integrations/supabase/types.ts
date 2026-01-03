@@ -61,6 +61,7 @@ export type Database = {
       }
       avatar_generations: {
         Row: {
+          animated_avatar_url: string | null
           avatar_url: string
           created_at: string
           id: string
@@ -69,6 +70,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          animated_avatar_url?: string | null
           avatar_url: string
           created_at?: string
           id?: string
@@ -77,6 +79,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          animated_avatar_url?: string | null
           avatar_url?: string
           created_at?: string
           id?: string
