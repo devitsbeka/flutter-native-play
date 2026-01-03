@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_generation_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          model: string | null
+          model_settings: Json | null
+          name: string
+          negative_prompt: string | null
+          prompt: string
+          setting_type: string
+          style_image_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          model?: string | null
+          model_settings?: Json | null
+          name: string
+          negative_prompt?: string | null
+          prompt: string
+          setting_type: string
+          style_image_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          model?: string | null
+          model_settings?: Json | null
+          name?: string
+          negative_prompt?: string | null
+          prompt?: string
+          setting_type?: string
+          style_image_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       avatar_generations: {
         Row: {
           avatar_url: string

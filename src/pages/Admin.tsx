@@ -11,7 +11,8 @@ import {
   Sparkles,
   Wrench,
   ImageIcon,
-  AlertTriangle
+  AlertTriangle,
+  Wand2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,11 @@ const navItems = [
     to: '/admin/import', 
     icon: Upload, 
     label: 'იმპორტი' 
+  },
+  { 
+    to: '/admin/ai-generations', 
+    icon: Wand2, 
+    label: 'AI გენერაცია' 
   },
   { 
     to: '/admin/tools', 
