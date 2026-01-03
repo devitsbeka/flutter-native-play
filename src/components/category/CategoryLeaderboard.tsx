@@ -41,7 +41,7 @@ export function CategoryLeaderboard({
     // Base styles for top 3
     const baseStyles = {
       1: {
-        background: "linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%)",
+        background: "linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%)",
         border: "3px solid #A855F7",
         boxShadow: "0 2px 8px rgba(168, 85, 247, 0.3)",
       },
@@ -146,7 +146,7 @@ export function CategoryLeaderboard({
       </div>
 
       {/* Leaderboard List */}
-      <div className="flex-1 overflow-y-auto space-y-3 p-3 pb-4 -mx-1">
+      <div className="flex-1 overflow-y-auto space-y-3 py-3 pb-4">
         {isLoading ? (
           Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-xl" />
