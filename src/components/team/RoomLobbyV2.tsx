@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play } from "lucide-react";
+import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -198,7 +198,7 @@ export function RoomLobbyV2() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <LogOut className="w-4 h-4 text-muted-foreground" />
+            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </motion.button>
 
           <div className="flex items-center gap-2">
