@@ -19,7 +19,8 @@ const variantStyles = {
   primary: {
     face: "bg-gradient-to-b from-primary via-primary to-primary/90",
     textColor: "text-primary-foreground",
-    depth: "hsl(var(--primary) / 0.6)",
+    depth: "hsl(270 50% 35%)", // Darker, more saturated for contrast
+    border: "hsl(270 50% 45%)", // Border between face and depth
     glow: "hsl(var(--primary) / 0.4)",
     shine: "from-white/30 via-white/10 to-transparent",
     particle: "bg-primary-foreground/60",
@@ -27,7 +28,8 @@ const variantStyles = {
   secondary: {
     face: "bg-gradient-to-b from-secondary via-secondary to-secondary/90",
     textColor: "text-secondary-foreground",
-    depth: "hsl(var(--secondary) / 0.7)",
+    depth: "hsl(220 10% 65%)", // Darker gray for depth
+    border: "hsl(220 10% 75%)", // Border between face and depth
     glow: "hsl(var(--secondary) / 0.3)",
     shine: "from-white/25 via-white/10 to-transparent",
     particle: "bg-secondary-foreground/60",
@@ -35,7 +37,8 @@ const variantStyles = {
   success: {
     face: "bg-gradient-to-b from-success via-success to-success/90",
     textColor: "text-success-foreground",
-    depth: "hsl(var(--success) / 0.6)",
+    depth: "hsl(145 50% 30%)", // Darker green for depth
+    border: "hsl(145 50% 40%)", // Border between face and depth
     glow: "hsl(var(--success) / 0.4)",
     shine: "from-white/30 via-white/10 to-transparent",
     particle: "bg-success-foreground/60",
@@ -43,15 +46,17 @@ const variantStyles = {
   danger: {
     face: "bg-gradient-to-b from-destructive via-destructive to-destructive/90",
     textColor: "text-destructive-foreground",
-    depth: "hsl(var(--destructive) / 0.6)",
+    depth: "hsl(0 60% 35%)", // Darker red for depth
+    border: "hsl(0 60% 45%)", // Border between face and depth
     glow: "hsl(var(--destructive) / 0.4)",
     shine: "from-white/30 via-white/10 to-transparent",
     particle: "bg-destructive-foreground/60",
   },
   ghost: {
-    face: "bg-gradient-to-b from-card via-card to-card/90 border-2 border-border",
+    face: "bg-gradient-to-b from-card via-card to-card/90",
     textColor: "text-foreground",
-    depth: "hsl(var(--border))",
+    depth: "hsl(220 10% 70%)", // Visible gray depth
+    border: "hsl(220 10% 80%)", // Border between face and depth
     glow: "hsl(var(--border) / 0.3)",
     shine: "from-white/20 via-white/5 to-transparent",
     particle: "bg-foreground/40",
@@ -59,7 +64,8 @@ const variantStyles = {
   purple: {
     face: "bg-gradient-to-b from-[#9B87F5] via-[#8B5CF6] to-[#7C3AED]",
     textColor: "text-white",
-    depth: "#5B21B6",
+    depth: "#4C1D95", // Darker purple depth
+    border: "#6D28D9", // Border between face and depth
     glow: "rgba(139, 92, 246, 0.5)",
     shine: "from-white/40 via-white/15 to-transparent",
     particle: "bg-white/70",
@@ -67,7 +73,8 @@ const variantStyles = {
   white: {
     face: "bg-gradient-to-b from-white via-gray-50 to-gray-100",
     textColor: "text-gray-900",
-    depth: "#9ca3af",
+    depth: "#6b7280", // Darker gray for visible depth
+    border: "#9ca3af", // Border between face and depth
     glow: "rgba(255, 255, 255, 0.5)",
     shine: "from-white/50 via-white/20 to-transparent",
     particle: "bg-gray-400",
@@ -75,7 +82,8 @@ const variantStyles = {
   mint: {
     face: "bg-gradient-to-b from-[#B8F0D8] via-[#A8E6CF] to-[#8DD8B9]",
     textColor: "text-[#2D5A4A]",
-    depth: "#5DAB94",
+    depth: "#3D7A64", // Darker mint depth
+    border: "#5DAB94", // Border between face and depth
     glow: "rgba(168, 230, 207, 0.5)",
     shine: "from-white/40 via-white/15 to-transparent",
     particle: "bg-[#2D5A4A]/50",
@@ -149,8 +157,17 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
         style={{
           transform: isPressed ? `translateY(${depth - 2}px)` : "translateY(0px)",
           boxShadow: isPressed 
-            ? `0 2px 0 0 ${styles.depth}, 0 4px 12px -2px ${styles.glow}`
-            : `0 ${depth}px 0 0 ${styles.depth}, 0 ${depth + 4}px 20px -4px ${styles.glow}, inset 0 -2px 4px rgba(0,0,0,0.1)`,
+            ? `
+              inset 0 -1px 0 0 ${styles.border},
+              0 2px 0 0 ${styles.depth},
+              0 4px 12px -2px ${styles.glow}
+            `
+            : `
+              inset 0 -2px 0 0 ${styles.border},
+              0 ${depth}px 0 0 ${styles.depth},
+              0 ${depth + 4}px 20px -4px ${styles.glow},
+              inset 0 1px 0 0 rgba(255,255,255,0.3)
+            `,
           touchAction: "manipulation",
           ...style,
         }}
