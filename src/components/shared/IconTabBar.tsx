@@ -26,9 +26,10 @@ interface IconTabBarProps {
   tabs: { id: string; label: string }[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  compact?: boolean;
 }
 
-export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
+export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: IconTabBarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const velocityRef = useRef(0);
   const lastTouchRef = useRef(0);
@@ -142,7 +143,9 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
     <div className="relative -mx-4">
       <div
         ref={containerRef}
-        className="relative flex items-center gap-4 py-3 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing select-none"
+        className={`relative flex items-center overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing select-none ${
+          compact ? 'gap-2 py-1' : 'gap-4 py-3'
+        }`}
         style={{
           paddingLeft: 16,
           paddingRight: 16,
@@ -159,6 +162,47 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
           const isActive = activeTab === tab.id;
           const iconSrc = iconMap[tab.id];
           
+          if (compact) {
+            // Compact mode: small icon left of label, horizontal layout
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={(e) => {
+                  if (isDraggingRef.current) {
+                    e.preventDefault();
+                    return;
+                  }
+                  onTabChange(tab.id);
+                }}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full flex-shrink-0 transition-all ${
+                  isActive 
+                    ? 'bg-purple-100/80' 
+                    : 'bg-white/60 hover:bg-white/80'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <img 
+                  src={iconSrc} 
+                  alt={tab.label}
+                  className="w-5 h-5 object-contain"
+                />
+                <span 
+                  className="font-semibold leading-tight whitespace-nowrap uppercase"
+                  style={{
+                    fontFamily: "'Google Sans', sans-serif",
+                    fontSize: '12px',
+                    letterSpacing: '0',
+                    color: isActive ? "#6D28D9" : "#64748b",
+                  }}
+                >
+                  {tab.label}
+                </span>
+              </motion.button>
+            );
+          }
+          
+          // Default mode: icon above label
           return (
             <motion.button
               key={tab.id}
@@ -204,8 +248,10 @@ export function IconTabBar({ tabs, activeTab, onTabChange }: IconTabBarProps) {
         })}
       </div>
       
-      {/* Separator line */}
-      <div className="mx-4 mt-2 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+      {/* Separator line - hide in compact mode */}
+      {!compact && (
+        <div className="mx-4 mt-3 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+      )}
     </div>
   );
 }
