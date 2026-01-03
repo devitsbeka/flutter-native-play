@@ -9,6 +9,7 @@ export type ParticipantStatus = "joined" | "ready" | "playing" | "finished" | "d
 export interface GameRoom {
   id: string;
   room_code: string;
+  room_name: string | null;
   host_user_id: string;
   status: RoomStatus;
   category_id: string | null;
@@ -125,6 +126,7 @@ export function useGameRoom() {
       const typedRoom: GameRoom = {
         id: room.id,
         room_code: room.room_code,
+        room_name: room.room_name,
         host_user_id: room.host_user_id,
         status: room.status as RoomStatus,
         category_id: room.category_id,
@@ -205,6 +207,7 @@ export function useGameRoom() {
         const typedRoom: GameRoom = {
           id: room.id,
           room_code: room.room_code,
+          room_name: room.room_name,
           host_user_id: room.host_user_id,
           status: room.status as RoomStatus,
           category_id: room.category_id,
@@ -247,6 +250,7 @@ export function useGameRoom() {
       const typedRoom: GameRoom = {
         id: room.id,
         room_code: room.room_code,
+        room_name: room.room_name,
         host_user_id: room.host_user_id,
         status: room.status as RoomStatus,
         category_id: room.category_id,
@@ -365,6 +369,7 @@ export function useGameRoom() {
     return {
       id: data.id,
       room_code: data.room_code,
+      room_name: data.room_name,
       host_user_id: data.host_user_id,
       status: data.status as RoomStatus,
       category_id: data.category_id,

@@ -18,7 +18,9 @@ export type SoundEffect =
   | "power-up-5050"
   | "power-up-freeze"
   | "power-up-replace"
-  | "power-up-time-drain";
+  | "power-up-time-drain"
+  | "room-join"
+  | "room-message";
 
 interface SoundContextType {
   musicEnabled: boolean;
@@ -282,6 +284,41 @@ function createSynthSound(
       drainGain.connect(audioContext.destination);
       drainOsc.start(now);
       drainOsc.stop(now + 0.5);
+      break;
+    }
+
+    case "room-join": {
+      // Player joined - friendly pop sound
+      gainNode.gain.value = volume * 0.25;
+      [440, 554.37, 659.25].forEach((freq, i) => {
+        const osc = audioContext.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        const localGain = audioContext.createGain();
+        localGain.gain.setValueAtTime(volume * 0.2, now + i * 0.05);
+        localGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.15);
+        osc.connect(localGain);
+        localGain.connect(audioContext.destination);
+        osc.start(now + i * 0.05);
+        osc.stop(now + i * 0.05 + 0.15);
+      });
+      break;
+    }
+
+    case "room-message": {
+      // Chat message - subtle bubble pop
+      gainNode.gain.value = volume * 0.15;
+      const msgOsc = audioContext.createOscillator();
+      msgOsc.type = "sine";
+      msgOsc.frequency.setValueAtTime(800, now);
+      msgOsc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+      const msgGain = audioContext.createGain();
+      msgGain.gain.setValueAtTime(volume * 0.12, now);
+      msgGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      msgOsc.connect(msgGain);
+      msgGain.connect(audioContext.destination);
+      msgOsc.start(now);
+      msgOsc.stop(now + 0.1);
       break;
     }
   }
