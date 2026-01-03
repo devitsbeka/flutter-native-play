@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Plus, Users, Gamepad2 } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
-import { useMultiplayer } from "@/contexts/MultiplayerContext";
+import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,7 +11,7 @@ interface MyRoomsSectionProps {
 
 export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
   const { rooms, loading } = useMyRooms();
-  const { joinRoom } = useMultiplayer();
+  const { enterRoom } = useMultiplayerV2();
 
   // Clear unread activity when joining a room
   const handleJoin = async (room: MyRoom) => {
@@ -57,7 +57,7 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
         .eq("room_id", room.id);
     }
     
-    joinRoom(room.room_code);
+    enterRoom(room.room_code);
   };
 
   if (loading) {
