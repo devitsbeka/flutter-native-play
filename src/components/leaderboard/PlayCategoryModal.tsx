@@ -205,13 +205,13 @@ export function PlayCategoryModal({
                   </span>
                 </motion.button>
 
-                {/* Category Options */}
+                {/* Category Options - use category_id (slug) for game filtering */}
                 {categories.map((category) => (
                   <CategoryOption
                     key={category.uuid}
                     category={category}
-                    isSelected={selectedCategoryId === category.uuid}
-                    onSelect={() => setSelectedCategoryId(category.uuid)}
+                    isSelected={selectedCategoryId === category.category_id}
+                    onSelect={() => setSelectedCategoryId(category.category_id)}
                   />
                 ))}
               </div>
