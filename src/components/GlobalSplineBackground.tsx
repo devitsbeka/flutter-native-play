@@ -96,15 +96,17 @@ export function GlobalSplineBackground() {
     })), []
   );
 
+  // Don't render anything if not on allowed pages
+  if (!shouldShow) {
+    return null;
+  }
+
   return (
     <>
       {/* Video background */}
       <div 
-        className="fixed inset-0 pointer-events-none transition-opacity duration-500"
-        style={{
-          opacity: shouldShow ? 1 : 0,
-          zIndex: -30,
-        }}
+        className="fixed inset-0 pointer-events-none"
+        style={{ zIndex: -30 }}
       >
         <video
           autoPlay
@@ -119,15 +121,13 @@ export function GlobalSplineBackground() {
       </div>
       
       {/* White radial mask - transparent center, white edges */}
-      {shouldShow && (
-        <div 
-          className="fixed inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.6) 80%, rgba(255,255,255,1) 100%)",
-            zIndex: -25,
-          }}
-        />
-      )}
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.6) 80%, rgba(255,255,255,1) 100%)",
+          zIndex: -25,
+        }}
+      />
       
       {/* Floating orb particles - ambient background movement */}
       {shouldShowParticles && (
