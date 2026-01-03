@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown } from "lucide-react";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
-import { useFriends, Friend } from "@/hooks/useFriends";
+import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
 
 interface Category {
   id: string;
@@ -32,7 +32,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const [isRandom, setIsRandom] = useState(false);
+  const [isRandom, setIsRandom] = useState(true); // Default to random
   const [isCreating, setIsCreating] = useState(false);
 
   // Only accepted friends
@@ -52,8 +52,10 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         console.error("Error fetching categories:", error);
       } else if (data) {
         setCategories(data);
+        // Select random category by default
         if (data.length > 0 && !selectedCategory) {
-          setSelectedCategory(data[0]);
+          const randomIndex = Math.floor(Math.random() * data.length);
+          setSelectedCategory(data[randomIndex]);
         }
       }
       setLoadingCategories(false);
@@ -188,48 +190,57 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                 </div>
               </motion.button>
 
-              {/* Category Grid */}
+              {/* Category Grid - 2x height with video background */}
               <div className="grid grid-cols-2 gap-2">
-                {displayedCategories.map((category) => (
-                  <motion.button
-                    key={category.id}
-                    onClick={() => handleCategorySelect(category)}
-                    className="relative p-3 rounded-xl text-left transition-all"
-                    style={{
-                      background: selectedCategory?.id === category.id && !isRandom
-                        ? "linear-gradient(180deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%)"
-                        : "hsl(var(--muted))",
-                      border: selectedCategory?.id === category.id && !isRandom
-                        ? "2px solid hsl(var(--primary))"
-                        : "2px solid hsl(var(--border))",
-                      boxShadow: selectedCategory?.id === category.id && !isRandom
-                        ? "0 3px 0 hsl(var(--primary) / 0.3)"
-                        : "0 2px 0 hsl(var(--border))",
-                    }}
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98, y: 1 }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <DynamicIcon 
-                        slug={category.icon_slug || undefined}
-                        categoryId={category.category_id} 
-                        size={24} 
-                      />
-                      <span className="text-sm font-medium text-foreground line-clamp-1">
-                        {category.name}
-                      </span>
-                    </div>
-                    
-                    {selectedCategory?.id === category.id && !isRandom && (
-                      <motion.div
-                        layoutId="category-selected-page"
-                        className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none"
-                        initial={false}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                      />
-                    )}
-                  </motion.button>
-                ))}
+                {displayedCategories.map((category) => {
+                  const videoUrl = CATEGORY_VIDEOS[category.category_id] || "/videos/floating-blob.mp4";
+                  const isSelected = selectedCategory?.id === category.id && !isRandom;
+                  
+                  return (
+                    <motion.button
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category)}
+                      className="relative h-28 rounded-xl overflow-hidden transition-all"
+                      style={{
+                        border: isSelected
+                          ? "3px solid hsl(var(--primary))"
+                          : "2px solid hsl(var(--border))",
+                        boxShadow: isSelected
+                          ? "0 4px 0 hsl(var(--primary) / 0.3)"
+                          : "0 2px 0 hsl(var(--border))",
+                      }}
+                      whileHover={{ scale: 1.02, y: -1 }}
+                      whileTap={{ scale: 0.98, y: 1 }}
+                    >
+                      {/* Video Background */}
+                      <div className="absolute inset-0">
+                        <PingPongVideo
+                          src={videoUrl}
+                          className="w-full h-full object-cover scale-125"
+                        />
+                      </div>
+                      
+                      {/* White mask overlay */}
+                      <div className="absolute inset-0 bg-white/70" />
+                      
+                      {/* Category Name - centered, two lines if needed */}
+                      <div className="absolute inset-0 flex items-center justify-center p-3">
+                        <span className="text-sm font-bold text-foreground text-center leading-tight line-clamp-2">
+                          {category.name}
+                        </span>
+                      </div>
+                      
+                      {isSelected && (
+                        <motion.div
+                          layoutId="category-selected-page"
+                          className="absolute inset-0 rounded-xl border-3 border-primary pointer-events-none"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
               </div>
 
               {/* Show More Button */}
@@ -323,27 +334,25 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-4 border-t border-border/30 bg-background">
-        <ChunkyButton
-          variant="primary"
-          size="lg"
-          className="w-full"
+      {/* Footer - Central 3D Purple Checkmark Button */}
+      <div className="px-4 py-6 flex justify-center">
+        <motion.button
           onClick={handleCreate}
           disabled={!selectedCategory || loading || isCreating}
+          className="relative w-20 h-20 rounded-full flex items-center justify-center disabled:opacity-50"
+          style={{
+            background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)",
+            boxShadow: "0 8px 0 hsl(var(--primary) / 0.4), 0 12px 20px hsl(var(--primary) / 0.3)",
+          }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95, y: 4, boxShadow: "0 2px 0 hsl(var(--primary) / 0.4)" }}
         >
           {loading || isCreating ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              იქმნება...
-            </span>
+            <Loader2 className="w-8 h-8 animate-spin text-primary-foreground" />
           ) : (
-            <>
-              შექმნა
-              {selectedFriends.size > 0 && ` და ${selectedFriends.size} მეგობრის მოწვევა`}
-            </>
+            <Check className="w-10 h-10 text-primary-foreground stroke-[3]" />
           )}
-        </ChunkyButton>
+        </motion.button>
       </div>
     </motion.div>
   );
