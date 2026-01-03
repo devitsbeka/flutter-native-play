@@ -92,9 +92,10 @@ export function RoomLobby() {
     if (!room) return;
     
     try {
-      await navigator.clipboard.writeText(room.room_code);
+      const fullLink = `${window.location.origin}/team?join=${room.room_code}`;
+      await navigator.clipboard.writeText(fullLink);
       setCopied(true);
-      toast.success("კოდი დაკოპირდა!");
+      toast.success("ლინკი დაკოპირდა!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("კოპირება ვერ მოხერხდა");
