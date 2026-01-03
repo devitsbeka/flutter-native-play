@@ -274,6 +274,22 @@ export default function CategoryPage() {
                     {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => {
                       const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
                       
+                      // Star-based gradients for completed levels
+                      const getCompletedGradient = (starCount: number) => {
+                        switch (starCount) {
+                          case 3: return "linear-gradient(135deg, #A855F7, #9333EA)"; // Purple
+                          case 2: return "linear-gradient(135deg, #60A5FA, #3B82F6)"; // Blue
+                          case 1: return "linear-gradient(135deg, #FCD34D, #F59E0B)"; // Yellow
+                          default: return "linear-gradient(135deg, #10B981, #059669)"; // Green fallback
+                        }
+                      };
+                      
+                      const getLevelBackground = () => {
+                        if (!isUnlocked) return undefined;
+                        if (isCompleted) return getCompletedGradient(stars);
+                        return `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})`;
+                      };
+                      
                       return (
                         <motion.button
                           key={level}
@@ -284,38 +300,36 @@ export default function CategoryPage() {
                           initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
                           animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
                           transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
-                          className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center shadow-md ${
+                          className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
                             isCurrent
-                              ? "ring-4 ring-primary ring-offset-2 ring-offset-white"
+                              ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
                               : ""
                           } ${
                             !isUnlocked
                               ? "bg-slate-200/80 opacity-60 cursor-not-allowed"
-                              : isCompleted
-                              ? "bg-emerald-500"
                               : ""
                           }`}
                           style={{
                             boxShadow: isUnlocked 
-                              ? "0 4px 0 0 hsl(0 0% 0% / 0.1)"
+                              ? "0 4px 0 0 hsl(0 0% 0% / 0.15), 0 6px 12px -4px hsl(0 0% 0% / 0.2)"
                               : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
-                            ...(!isUnlocked || isCompleted ? {} : { background: `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})` }),
+                            background: getLevelBackground(),
                           }}
                         >
                           {!isUnlocked ? (
                             <Lock className="h-5 w-5 text-slate-400" />
                           ) : (
                             <>
-                              <span className="font-bold text-white text-lg drop-shadow">{level}</span>
+                              <span className="font-bold text-white text-lg drop-shadow-md">{level}</span>
                               {isCompleted && (
                                 <div className="flex gap-0.5 mt-1">
                                   {[...Array(3)].map((_, i) => (
                                     <Star
                                       key={i}
-                                      className={`h-3 w-3 ${
+                                      className={`h-3 w-3 drop-shadow ${
                                         i < stars
-                                          ? "fill-amber-300 text-amber-300"
-                                          : "fill-white/40 text-white/40"
+                                          ? "fill-white text-white"
+                                          : "fill-white/30 text-white/30"
                                       }`}
                                     />
                                   ))}
