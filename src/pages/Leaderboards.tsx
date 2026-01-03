@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { TabBar } from "@/components/shared/TabBar";
+import { PlayCategoryModal } from "@/components/leaderboard/PlayCategoryModal";
 
 interface LeaderboardEntry {
   id: string;
@@ -121,8 +122,18 @@ export default function Leaderboards() {
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("weekly");
   const [userRank, setUserRank] = useState<number | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const handlePlayWithCategory = (categoryId: string | null) => {
+    // Navigate to game with optional category parameter
+    if (categoryId) {
+      navigate(`/game?category=${categoryId}`);
+    } else {
+      navigate("/game");
+    }
+  };
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -349,7 +360,7 @@ export default function Leaderboards() {
                   size="lg"
                   className="w-full"
                   icon={<Play className="w-5 h-5 fill-current" />}
-                  onClick={() => navigate("/game")}
+                  onClick={() => setShowCategoryModal(true)}
                 >
                   ითამაშე
                 </ChunkyButton>
@@ -387,6 +398,13 @@ export default function Leaderboards() {
 
       {/* Universal Bottom Navigation */}
       <UniversalBottomNav />
+
+      {/* Category Selection Modal */}
+      <PlayCategoryModal
+        open={showCategoryModal}
+        onOpenChange={setShowCategoryModal}
+        onSelectCategory={handlePlayWithCategory}
+      />
     </div>
   );
 }
