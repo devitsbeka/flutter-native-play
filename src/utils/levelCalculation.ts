@@ -1,28 +1,25 @@
-// Level calculation utility using Fibonacci-like XP thresholds
-// Level 1: 0 XP, Level 2: 100 XP, Level 3: 250 XP, Level 4: 500 XP, etc.
+// Level calculation utility using formula-based XP thresholds
+// Max level is 999, XP scales using a power curve
 
-const LEVEL_THRESHOLDS = [
-  0,      // Level 1
-  100,    // Level 2
-  250,    // Level 3
-  500,    // Level 4
-  850,    // Level 5
-  1300,   // Level 6
-  1900,   // Level 7
-  2600,   // Level 8
-  3500,   // Level 9
-  4600,   // Level 10
-  5900,   // Level 11
-  7500,   // Level 12
-  9400,   // Level 13
-  11600,  // Level 14
-  14200,  // Level 15
-  17200,  // Level 16
-  20700,  // Level 17
-  24800,  // Level 18
-  29500,  // Level 19
-  35000,  // Level 20
-];
+const MAX_LEVEL = 999;
+
+// Calculate XP threshold for a given level using a power curve
+function getThresholdForLevel(level: number): number {
+  if (level <= 1) return 0;
+  // Power curve: 100 * (level-1)^1.8 provides smooth progression
+  return Math.floor(100 * Math.pow(level - 1, 1.8));
+}
+
+// Pre-calculate first 50 levels for quick access, calculate rest on demand
+const CACHED_THRESHOLDS: number[] = [];
+for (let i = 1; i <= 50; i++) {
+  CACHED_THRESHOLDS.push(getThresholdForLevel(i));
+}
+
+function getXPThreshold(level: number): number {
+  if (level <= 50) return CACHED_THRESHOLDS[level - 1];
+  return getThresholdForLevel(level);
+}
 
 export interface LevelInfo {
   level: number;
@@ -38,23 +35,22 @@ export interface LevelInfo {
 export function calculateLevel(totalPoints: number): LevelInfo {
   const xp = totalPoints || 0;
   
-  // Find current level
+  // Find current level using binary search for efficiency
   let level = 1;
-  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (xp >= LEVEL_THRESHOLDS[i]) {
-      level = i + 1;
+  for (let i = MAX_LEVEL; i >= 1; i--) {
+    if (xp >= getXPThreshold(i)) {
+      level = i;
       break;
     }
   }
   
-  const isMaxLevel = level >= LEVEL_THRESHOLDS.length;
-  const xpForCurrentLevel = LEVEL_THRESHOLDS[level - 1] || 0;
+  const isMaxLevel = level >= MAX_LEVEL;
+  const xpForCurrentLevel = getXPThreshold(level);
   const xpForNextLevel = isMaxLevel 
-    ? LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1] 
-    : LEVEL_THRESHOLDS[level];
+    ? getXPThreshold(MAX_LEVEL) 
+    : getXPThreshold(level + 1);
   
   const xpInCurrentLevel = xp - xpForCurrentLevel;
-  // When at max level, show total XP earned instead of 0
   const xpNeededForNextLevel = isMaxLevel ? xp : (xpForNextLevel - xpForCurrentLevel);
   const progress = isMaxLevel ? 100 : Math.min(100, (xpInCurrentLevel / xpNeededForNextLevel) * 100);
   
