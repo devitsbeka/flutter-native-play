@@ -47,11 +47,9 @@ const BADGE_STYLES: Record<string, { text: string; bg: string; shadow: string }>
 
 export function ShopItemCard({
   name,
-  description,
   price,
   currency,
   icon,
-  gradient,
   badge,
   savings,
   isPurchased = false,
@@ -65,8 +63,8 @@ export function ShopItemCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
       className="relative"
     >
@@ -101,74 +99,50 @@ export function ShopItemCard({
       <motion.button
         onClick={onClick}
         disabled={isPurchased || isLoading}
-        className="w-full p-4 rounded-2xl text-left transition-all relative overflow-hidden"
+        className="w-full p-3 rounded-2xl transition-all relative overflow-hidden flex items-center gap-3"
         style={{
           background: isPurchased
             ? "linear-gradient(180deg, hsl(150 70% 92%) 0%, hsl(145 65% 85%) 100%)"
             : canAfford
-            ? "linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.3) 100%)"
+            ? "linear-gradient(180deg, hsl(0 0% 100% / 0.95) 0%, hsl(0 0% 98% / 0.9) 100%)"
             : "hsl(var(--muted))",
           boxShadow: isPurchased
             ? "0 4px 0 hsl(145 60% 70%)"
             : canAfford
-            ? "0 4px 0 hsl(var(--border)), inset 0 1px 2px hsl(0 0% 100% / 0.5)"
+            ? "0 4px 0 hsl(0 0% 85%), inset 0 1px 2px hsl(0 0% 100% / 0.5)"
             : "0 3px 0 hsl(var(--border))",
-          border: isPurchased ? "2px solid hsl(145 70% 50%)" : "2px solid hsl(var(--border))",
+          border: isPurchased ? "2px solid hsl(145 70% 50%)" : "2px solid hsl(0 0% 90%)",
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
         }}
-        whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -3 } : {}}
+        whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
       >
-        {/* Shine effect on hover */}
+        {/* Icon - Left side */}
         <motion.div
-          className="absolute inset-0 pointer-events-none"
-          initial={{ x: "-100%", opacity: 0 }}
-          whileHover={{ x: "100%", opacity: 0.2 }}
-          transition={{ duration: 0.6 }}
-          style={{
-            background: "linear-gradient(90deg, transparent, hsl(0 0% 100%), transparent)",
-          }}
-        />
-
-        {/* Icon - Direct display without container, 30% larger */}
-        <motion.div
-          className="flex items-center justify-center mx-auto mb-3 relative w-[65px] h-[65px]"
+          className="flex-shrink-0 w-12 h-12 flex items-center justify-center"
           whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.3 }}
         >
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
             {icon}
           </div>
-          {isPurchased && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-success flex items-center justify-center"
-              style={{ boxShadow: "0 2px 0 hsl(142 60% 30%)" }}
-            >
-              <Check className="w-4 h-4 text-success-foreground" />
-            </motion.div>
-          )}
         </motion.div>
 
-        {/* Name */}
-        <h3 className="text-foreground font-bold text-sm text-center mb-1">{name}</h3>
+        {/* Name - Center */}
+        <div className="flex-1 text-left">
+          <h3 className="text-gray-900 font-bold text-sm leading-tight">{name}</h3>
+        </div>
 
-        {/* Description */}
-        <p className="text-muted-foreground text-xs text-center mb-3 line-clamp-2">{description}</p>
-
-        {/* Price / Status */}
-        <div className="flex justify-center items-center h-10">
+        {/* Price / Status - Right side */}
+        <div className="flex-shrink-0">
           {isPurchased ? (
-            <div className="flex items-center gap-1 text-success font-bold text-sm px-3 py-1.5">
+            <div className="flex items-center gap-1 text-success font-bold text-xs px-2 py-1">
               <Check className="w-4 h-4" />
-              <span>შეძენილი</span>
             </div>
           ) : isLoading ? (
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
             <motion.div
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full"
               style={{
                 background:
                   currency === "gems"
@@ -181,7 +155,10 @@ export function ShopItemCard({
               }}
               whileHover={{ scale: 1.05 }}
             >
-              <img src={currencyIcon} alt="" className="w-4 h-4" />
+              <span className={`font-semibold text-xs ${currency === "gems" ? "text-primary" : "text-amber-800"}`}>
+                ყიდვა
+              </span>
+              <img src={currencyIcon} alt="" className="w-3.5 h-3.5" />
               <span
                 className={`font-bold text-sm ${
                   currency === "gems" ? "text-primary" : "text-amber-800"

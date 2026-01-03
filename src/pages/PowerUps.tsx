@@ -386,8 +386,14 @@ export default function PowerUps() {
         onBuyGemsClick={() => toast.info("ალმასების შეძენა მალე!")}
       />
 
-      {/* Scrollable Content - Section-based layout */}
-      <div className="flex-1 overflow-y-auto pt-4">
+      {/* Scrollable Content - Section-based layout with scroll snap */}
+      <div 
+        className="flex-1 overflow-y-auto pt-4 pb-4"
+        style={{
+          scrollSnapType: "y mandatory",
+          scrollBehavior: "smooth",
+        }}
+      >
         {SHOP_SECTIONS.map((section) => (
           <ShopPromoSection
             key={section.id}
