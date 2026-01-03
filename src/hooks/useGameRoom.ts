@@ -162,16 +162,16 @@ export function useGameRoom() {
 
     setLoading(true);
     try {
-      // Find the room - allow all active statuses for re-entry check
+      // Find the room - include completed rooms for rematch/re-entry
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
         .select("*")
         .eq("room_code", roomCode.toUpperCase())
-        .in("status", ["waiting", "ready", "playing"])
+        .in("status", ["waiting", "ready", "playing", "completed"])
         .maybeSingle();
 
       if (roomError || !room) {
-        toast.error("ოთახი ვერ მოიძებნა ან დასრულებულია");
+        toast.error("ოთახი ვერ მოიძებნა ან გაუქმებულია");
         return null;
       }
 

@@ -22,6 +22,41 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
         .update({ has_unread_activity: false })
         .eq("id", room.id);
     }
+    
+    // If room is completed, reset it to waiting for rematch
+    if (room.status === "completed") {
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          status: "waiting",
+          started_at: null,
+          completed_at: null 
+        })
+        .eq("id", room.id);
+      
+      // Clear room questions for new game
+      await supabase
+        .from("room_questions")
+        .delete()
+        .eq("room_id", room.id);
+      
+      // Clear player answers
+      await supabase
+        .from("player_answers")
+        .delete()
+        .eq("room_id", room.id);
+      
+      // Reset all participants to joined status
+      await supabase
+        .from("room_participants")
+        .update({ 
+          status: "joined",
+          score: 0,
+          current_question: 0
+        })
+        .eq("room_id", room.id);
+    }
+    
     joinRoom(room.room_code);
   };
 

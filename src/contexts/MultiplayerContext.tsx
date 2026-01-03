@@ -679,13 +679,19 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
       }
       
       // Check if all other players have also finished (realtime games)
-      const otherPlayers = participants.filter(p => p.user_id !== user?.id);
-      const allOthersFinished = otherPlayers.every(p => p.status === "finished");
+      // Refetch participants to get latest status
+      const { data: latestParticipants } = await supabase
+        .from("room_participants")
+        .select("*")
+        .eq("room_id", currentRoom?.id);
+      
+      const otherPlayers = (latestParticipants || []).filter(p => p.user_id !== user?.id);
+      const allOthersFinished = otherPlayers.length === 0 || otherPlayers.every(p => p.status === "finished");
       
       if (allOthersFinished) {
         // All finished - go to result
         if (currentRoom) {
-          updateRoomStatus(currentRoom.id, "completed");
+          await updateRoomStatus(currentRoom.id, "completed");
         }
         setState(prev => ({ ...prev, phase: "match-result" }));
       } else {
