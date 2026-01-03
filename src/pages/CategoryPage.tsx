@@ -340,7 +340,6 @@ export default function CategoryPage() {
                 )}
               </>
             )}
-          </div>
         </div>
       </div>
     </PageTransition>
