@@ -4,77 +4,100 @@ import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
 interface PingPongVideoProps {
   src: string;
   className?: string;
+  rootMargin?: string;
 }
 
 export function PingPongVideo({ 
   src, 
   className = "",
+  rootMargin = "200px",
 }: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   // Get preloaded blob URL if available
   const videoSrc = getVideoBlobUrl(src);
 
+  // Intersection Observer - detect when video enters viewport
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        rootMargin,
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  // Only load and play video when in view
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleCanPlay = () => {
-      setIsReady(true);
-      // Attempt autoplay
-      video.play().catch(() => {
-        // If autoplay blocked, will play on user interaction
-      });
-    };
+    if (isInView) {
+      // Video is in viewport - load and play
+      if (!video.src) {
+        video.src = videoSrc;
+      }
+      
+      const handleCanPlay = () => {
+        setIsReady(true);
+        video.play().catch(() => {});
+      };
 
-    const handleEnded = () => {
-      // Loop the video
-      video.currentTime = 0;
-      video.play().catch(() => {});
-    };
+      video.addEventListener("canplay", handleCanPlay);
+      
+      if (video.readyState >= 3) {
+        setIsReady(true);
+        video.play().catch(() => {});
+      }
 
-    video.addEventListener("canplay", handleCanPlay);
-    video.addEventListener("ended", handleEnded);
-
-    // If video is already ready (preloaded), play immediately
-    if (video.readyState >= 3) {
-      setIsReady(true);
-      video.play().catch(() => {});
+      return () => video.removeEventListener("canplay", handleCanPlay);
+    } else {
+      // Video left viewport - pause to save resources
+      video.pause();
     }
+  }, [isInView, videoSrc]);
 
-    return () => {
-      video.removeEventListener("canplay", handleCanPlay);
-      video.removeEventListener("ended", handleEnded);
-    };
-  }, [videoSrc]);
-
-  // Handle visibility changes - pause when hidden, play when visible
+  // Handle page visibility changes
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isReady) return;
+    if (!video || !isReady || !isInView) return;
 
     const handleVisibility = () => {
       if (document.hidden) {
         video.pause();
-      } else {
+      } else if (isInView) {
         video.play().catch(() => {});
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [isReady]);
+  }, [isReady, isInView]);
 
   return (
-    <video
-      ref={videoRef}
-      src={videoSrc}
-      muted
-      playsInline
-      loop
-      preload="auto"
-      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isReady ? 'opacity-100' : 'opacity-0'} ${className}`}
-    />
+    <div ref={containerRef} className="absolute inset-0">
+      <video
+        ref={videoRef}
+        muted
+        playsInline
+        loop
+        preload="none"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+          isReady && isInView ? 'opacity-100' : 'opacity-0'
+        } ${className}`}
+      />
+    </div>
   );
 }
