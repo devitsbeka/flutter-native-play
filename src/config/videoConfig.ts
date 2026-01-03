@@ -53,6 +53,18 @@ export const CATEGORY_VIDEOS: Record<string, string> = {
   nature: "/videos/nature.mp4",
   religion: "/videos/religion.mp4",
   religion_mythology: "/videos/religion.mp4",
+  philosophy: "/videos/philosophy.mp4",
+  physics: "/videos/physics.mp4",
+  politics: "/videos/politics.mp4",
+  pop_culture: "/videos/pop-culture.mp4",
+  pop_culture_trends: "/videos/pop-culture.mp4",
+  video_games: "/videos/video-games.mp4",
+  gaming: "/videos/video-games.mp4",
+  world_cuisine: "/videos/world-cuisine.mp4",
+  food: "/videos/world-cuisine.mp4",
+  georgian_cuisine: "/videos/georgian-cuisine.mp4",
+  georgian_culture: "/videos/georgian-culture.mp4",
+  geology: "/videos/geology.mp4",
 };
 
 // Get all video URLs for preloading
