@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useMultiplayer } from "@/contexts/MultiplayerContext";
+import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ interface CreateRoomPageProps {
 
 export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const { user } = useAuth();
-  const { createRoom, loading, room } = useMultiplayer();
+  const { createRoom, loading, currentRoom } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation } = useGameInvitations();
   
@@ -115,15 +115,15 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   // Send invitations once room is created
   useEffect(() => {
     const sendInvitations = async () => {
-      if (room && selectedFriends.size > 0 && isCreating === false) {
+      if (currentRoom && selectedFriends.size > 0 && isCreating === false) {
         for (const friendId of selectedFriends) {
-          await sendInvitation(friendId, room.id);
+          await sendInvitation(friendId, currentRoom.id);
         }
       }
     };
     
     sendInvitations();
-  }, [room?.id]);
+  }, [currentRoom?.id]);
 
   return (
     <motion.div
