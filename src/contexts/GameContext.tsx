@@ -52,7 +52,7 @@ interface GameState {
 }
 
 interface GameContextType extends GameState {
-  startMatchmaking: () => Promise<void>;
+  startMatchmaking: (categoryId?: string) => Promise<void>;
   startMatch: () => void;
   answerQuestion: (answer: string, timeRemaining: number) => void;
   nextQuestion: () => void;
@@ -60,6 +60,7 @@ interface GameContextType extends GameState {
   resetGame: () => void;
   usePowerUp: (type: PowerUpType) => void;
   loading: boolean;
+  selectedCategoryId: string | null;
 }
 
 const defaultPowerUps: PowerUpState[] = [
@@ -106,10 +107,12 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { fetchQuestions, loading, preparationProgress, resetAskedQuestions } = useTrivia();
 
-  const startMatchmaking = useCallback(async () => {
+  const startMatchmaking = useCallback(async (categoryId?: string) => {
     setState(prev => ({ ...prev, phase: "matchmaking" }));
+    setSelectedCategoryId(categoryId || null);
     
     // Reset mission tracker for new game session
     missionTracker.resetSession();
@@ -117,8 +120,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Generate opponent while starting to fetch questions
     const opponent = generateFakeOpponent();
     
-    // Start fetching 6 questions (one from each random category) for VS mode
-    const questionsPromise = fetchQuestions(6, undefined, 1, [], true);
+    // Start fetching questions - either from specific category or mixed
+    // If categoryId is provided, fetch all from that category
+    // Otherwise, fetch one from each random category (VS mode)
+    const questionsPromise = categoryId 
+      ? fetchQuestions(6, categoryId, 1, [], false) // Single category mode
+      : fetchQuestions(6, undefined, 1, [], true);  // Mixed categories mode
     
     // Matchmaking screen lasts ~2 seconds for the interactive experience
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -363,6 +370,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         resetGame,
         usePowerUp,
         loading,
+        selectedCategoryId,
       }}
     >
       {children}

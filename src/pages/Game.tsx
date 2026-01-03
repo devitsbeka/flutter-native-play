@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { GameProvider, useGame } from "@/contexts/GameContext";
 import { GameContainer } from "@/components/game/GameContainer";
 import { ArrowLeft } from "lucide-react";
@@ -7,13 +7,15 @@ import { ArrowLeft } from "lucide-react";
 function GameContent() {
   const { startMatchmaking, phase } = useGame();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const categoryId = searchParams.get("category");
 
   useEffect(() => {
     // Auto-start matchmaking when page loads
     if (phase === "home") {
-      startMatchmaking();
+      startMatchmaking(categoryId || undefined);
     }
-  }, [phase, startMatchmaking]);
+  }, [phase, startMatchmaking, categoryId]);
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
