@@ -160,9 +160,9 @@ export default function CategoryPage() {
       />
 
 
-      <div className="min-h-screen flex flex-col">
-        {/* Category Video Header Section (top 1/3) */}
-        <div className="relative h-[240px] overflow-hidden">
+      <div className="min-h-screen flex flex-col relative">
+        {/* Category Video Header Section - extends into tabs area */}
+        <div className="absolute top-0 left-0 right-0 h-[320px] overflow-hidden z-0">
           <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
@@ -172,12 +172,22 @@ export default function CategoryPage() {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.6) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.5) 100%)',
             }}
           />
+          {/* Beautiful curved transition at bottom */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-24"
+            style={{
+              background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,1) 100%)',
+            }}
+          />
+        </div>
 
+        {/* Header content area */}
+        <div className="relative z-10 h-[240px]">
           {/* Navigation buttons */}
-          <div className="absolute top-12 left-5 right-5 z-10 flex items-center justify-between">
+          <div className="absolute top-12 left-5 right-5 flex items-center justify-between">
             <button
               onClick={() => navigate("/discover")}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
@@ -196,7 +206,7 @@ export default function CategoryPage() {
           </div>
 
           {/* Title and description at bottom */}
-          <div className="absolute bottom-4 left-5 right-5 z-10">
+          <div className="absolute bottom-4 left-5 right-5">
             <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
             <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
           </div>
@@ -220,13 +230,13 @@ export default function CategoryPage() {
             <div 
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.75) 50%, rgba(255,255,255,0.85) 100%)',
+                background: 'rgba(255,255,255,0.85)',
               }}
             />
           </div>
 
-          {/* Tabs */}
-          <div className="relative px-5 pt-5 mb-4 z-10">
+          {/* Tabs - positioned to overlap video */}
+          <div className="relative px-5 -mt-10 mb-4 z-20">
             <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
               <button
                 onClick={() => setActiveTab("leaderboard")}
