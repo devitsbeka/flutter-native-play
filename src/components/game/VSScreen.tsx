@@ -300,15 +300,14 @@ export function VSScreen() {
             >
               <div className="flex items-center gap-3">
                 {/* Avatar with golden gradient stroke */}
-                <div className="relative">
-                  <div 
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
-                      padding: "4px",
-                    }}
-                  />
-                  <div className="relative w-20 h-20 rounded-full overflow-hidden m-1">
+                <div 
+                  className="p-1 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
+                    boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
+                  }}
+                >
+                  <div className="w-20 h-20 rounded-full overflow-hidden">
                     <img 
                       src={opponent?.avatarUrl || currentAvatar || slotAvatars[0]} 
                       alt="Opponent"
@@ -344,7 +343,7 @@ export function VSScreen() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
             >
-              {/* Video Bubble */}
+              {/* Video Container - Rectangular */}
               {selectedCategoryVideo && showCategoryBubble && (
                 <motion.div
                   initial={{ scale: 1.5, y: -50, opacity: 0 }}
@@ -354,7 +353,7 @@ export function VSScreen() {
                     ease: [0.34, 1.56, 0.64, 1],
                     delay: 0.3
                   }}
-                  className="w-28 h-28 rounded-full overflow-hidden"
+                  className="w-[304px] h-[179px] rounded-[18px] overflow-hidden"
                   style={{ 
                     border: "4px solid rgba(255,215,0,0.7)",
                     boxShadow: "0 0 25px rgba(255,215,0,0.4), 0 8px 32px rgba(0,0,0,0.3)"
@@ -410,15 +409,14 @@ export function VSScreen() {
                   </p>
                 </div>
                 {/* Avatar with golden gradient stroke */}
-                <div className="relative">
-                  <div 
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
-                      padding: "4px",
-                    }}
-                  />
-                  <div className="relative w-20 h-20 rounded-full overflow-hidden m-1">
+                <div 
+                  className="p-1 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
+                    boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
+                  }}
+                >
+                  <div className="w-20 h-20 rounded-full overflow-hidden">
                     <img 
                       src={profile?.animated_avatar_url || profile?.avatar_url || "/placeholder.svg"} 
                       alt="Player"
