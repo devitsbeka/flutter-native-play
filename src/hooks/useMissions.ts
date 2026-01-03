@@ -17,6 +17,7 @@ interface Mission {
   reward_gems: number;
   reward_power_up: string | null;
   reward_power_up_count: number;
+  mission_type: string;
 }
 
 interface MissionDefinition {
@@ -29,7 +30,8 @@ interface MissionDefinition {
   reward_gems: number;
   reward_power_up: string | null;
   reward_power_up_count: number;
-  color_theme: "purple" | "blue" | "orange" | "emerald" | "rose";
+  color_theme: "purple" | "blue" | "orange" | "emerald" | "rose" | "cyan" | "amber";
+  mission_type: "daily" | "weekly";
 }
 
 // Mission color themes for UI
@@ -74,6 +76,22 @@ export const MISSION_THEMES = {
     progress: "from-rose-500 to-pink-500",
     icon: "bg-rose-100 text-rose-600",
   },
+  cyan: {
+    gradient: "from-cyan-500 to-teal-500",
+    bg: "bg-cyan-50",
+    border: "border-cyan-200",
+    text: "text-cyan-700",
+    progress: "from-cyan-500 to-teal-500",
+    icon: "bg-cyan-100 text-cyan-600",
+  },
+  amber: {
+    gradient: "from-amber-500 to-yellow-500",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-700",
+    progress: "from-amber-500 to-yellow-500",
+    icon: "bg-amber-100 text-amber-600",
+  },
 };
 
 const DAILY_MISSIONS: MissionDefinition[] = [
@@ -88,6 +106,7 @@ const DAILY_MISSIONS: MissionDefinition[] = [
     reward_power_up: "5050",
     reward_power_up_count: 1,
     color_theme: "purple",
+    mission_type: "daily",
   },
   {
     mission_id: "answer_correct",
@@ -100,6 +119,7 @@ const DAILY_MISSIONS: MissionDefinition[] = [
     reward_power_up: null,
     reward_power_up_count: 0,
     color_theme: "blue",
+    mission_type: "daily",
   },
   {
     mission_id: "play_categories",
@@ -112,6 +132,7 @@ const DAILY_MISSIONS: MissionDefinition[] = [
     reward_power_up: "freeze",
     reward_power_up_count: 1,
     color_theme: "orange",
+    mission_type: "daily",
   },
   {
     mission_id: "play_games",
@@ -124,6 +145,7 @@ const DAILY_MISSIONS: MissionDefinition[] = [
     reward_power_up: null,
     reward_power_up_count: 0,
     color_theme: "emerald",
+    mission_type: "daily",
   },
   {
     mission_id: "perfect_round",
@@ -136,44 +158,127 @@ const DAILY_MISSIONS: MissionDefinition[] = [
     reward_power_up: "replace",
     reward_power_up_count: 1,
     color_theme: "rose",
+    mission_type: "daily",
   },
 ];
 
+const WEEKLY_MISSIONS: MissionDefinition[] = [
+  {
+    mission_id: "weekly_wins",
+    mission_title: "კვირის ჩემპიონი",
+    mission_description: "მოიგე 15 თამაში ამ კვირაში",
+    target_value: 15,
+    reward_xp: 200,
+    reward_coins: 500,
+    reward_gems: 10,
+    reward_power_up: "5050",
+    reward_power_up_count: 3,
+    color_theme: "purple",
+    mission_type: "weekly",
+  },
+  {
+    mission_id: "weekly_answers",
+    mission_title: "ცოდნის ექსპერტი",
+    mission_description: "გასცე 100 სწორი პასუხი",
+    target_value: 100,
+    reward_xp: 150,
+    reward_coins: 400,
+    reward_gems: 8,
+    reward_power_up: "freeze",
+    reward_power_up_count: 2,
+    color_theme: "cyan",
+    mission_type: "weekly",
+  },
+  {
+    mission_id: "weekly_categories",
+    mission_title: "მულტიკატეგორია",
+    mission_description: "ითამაშე 10 სხვადასხვა კატეგორიაში",
+    target_value: 10,
+    reward_xp: 180,
+    reward_coins: 350,
+    reward_gems: 6,
+    reward_power_up: "replace",
+    reward_power_up_count: 2,
+    color_theme: "amber",
+    mission_type: "weekly",
+  },
+  {
+    mission_id: "weekly_perfect",
+    mission_title: "პერფექციონისტი",
+    mission_description: "მოიგე 5 თამაში 100% სიზუსტით",
+    target_value: 5,
+    reward_xp: 250,
+    reward_coins: 600,
+    reward_gems: 15,
+    reward_power_up: "time-drain",
+    reward_power_up_count: 2,
+    color_theme: "rose",
+    mission_type: "weekly",
+  },
+];
+
+// Helper to get current week start (Monday)
+function getWeekStart(): string {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+  const monday = new Date(now.setDate(diff));
+  return monday.toISOString().split("T")[0];
+}
+
 // Export mission definitions for UI to access color themes
 export function getMissionTheme(missionId: string) {
-  const mission = DAILY_MISSIONS.find((m) => m.mission_id === missionId);
+  const allMissions = [...DAILY_MISSIONS, ...WEEKLY_MISSIONS];
+  const mission = allMissions.find((m) => m.mission_id === missionId);
   return mission ? MISSION_THEMES[mission.color_theme] : MISSION_THEMES.blue;
+}
+
+export function getMissionType(missionId: string): "daily" | "weekly" {
+  if (WEEKLY_MISSIONS.some((m) => m.mission_id === missionId)) return "weekly";
+  return "daily";
 }
 
 export function useMissions() {
   const { user, profile, updateProfile } = useAuth();
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const [dailyMissions, setDailyMissions] = useState<Mission[]>([]);
+  const [weeklyMissions, setWeeklyMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMissions = useCallback(async () => {
     if (!user) {
-      setMissions([]);
+      setDailyMissions([]);
+      setWeeklyMissions([]);
       setLoading(false);
       return;
     }
 
     try {
       const today = new Date().toISOString().split("T")[0];
+      const weekStart = getWeekStart();
 
-      // Get today's missions
-      const { data, error } = await supabase
+      // Fetch daily missions
+      const { data: dailyData, error: dailyError } = await supabase
         .from("user_missions")
         .select("*")
         .eq("user_id", user.id)
-        .eq("mission_date", today);
+        .eq("mission_date", today)
+        .eq("mission_type", "daily");
 
-      if (error) throw error;
+      if (dailyError) throw dailyError;
 
-      if (data && data.length > 0) {
-        setMissions(data);
-      } else {
-        // Create daily missions for today using upsert to avoid duplicates
-        const missionsToCreate = DAILY_MISSIONS.map((m) => ({
+      // Fetch weekly missions
+      const { data: weeklyData, error: weeklyError } = await supabase
+        .from("user_missions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("mission_date", weekStart)
+        .eq("mission_type", "weekly");
+
+      if (weeklyError) throw weeklyError;
+
+      // Create daily missions if needed
+      if (!dailyData || dailyData.length === 0) {
+        const dailyToCreate = DAILY_MISSIONS.map((m) => ({
           user_id: user.id,
           mission_id: m.mission_id,
           mission_title: m.mission_title,
@@ -185,26 +290,62 @@ export function useMissions() {
           reward_power_up: m.reward_power_up,
           reward_power_up_count: m.reward_power_up_count,
           mission_date: today,
+          mission_type: "daily",
         }));
 
-        const { data: newMissions, error: insertError } = await supabase
+        await supabase
           .from("user_missions")
-          .upsert(missionsToCreate, { 
+          .upsert(dailyToCreate, { 
             onConflict: "user_id,mission_id,mission_date",
             ignoreDuplicates: true 
-          })
-          .select();
+          });
 
-        if (insertError) throw insertError;
-        
-        // Refetch to get the actual data
-        const { data: refreshedData } = await supabase
+        const { data: refreshedDaily } = await supabase
           .from("user_missions")
           .select("*")
           .eq("user_id", user.id)
-          .eq("mission_date", today);
-          
-        setMissions(refreshedData || newMissions || []);
+          .eq("mission_date", today)
+          .eq("mission_type", "daily");
+
+        setDailyMissions(refreshedDaily || []);
+      } else {
+        setDailyMissions(dailyData);
+      }
+
+      // Create weekly missions if needed
+      if (!weeklyData || weeklyData.length === 0) {
+        const weeklyToCreate = WEEKLY_MISSIONS.map((m) => ({
+          user_id: user.id,
+          mission_id: m.mission_id,
+          mission_title: m.mission_title,
+          mission_description: m.mission_description,
+          target_value: m.target_value,
+          reward_xp: m.reward_xp,
+          reward_coins: m.reward_coins,
+          reward_gems: m.reward_gems,
+          reward_power_up: m.reward_power_up,
+          reward_power_up_count: m.reward_power_up_count,
+          mission_date: weekStart,
+          mission_type: "weekly",
+        }));
+
+        await supabase
+          .from("user_missions")
+          .upsert(weeklyToCreate, { 
+            onConflict: "user_id,mission_id,mission_date",
+            ignoreDuplicates: true 
+          });
+
+        const { data: refreshedWeekly } = await supabase
+          .from("user_missions")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("mission_date", weekStart)
+          .eq("mission_type", "weekly");
+
+        setWeeklyMissions(refreshedWeekly || []);
+      } else {
+        setWeeklyMissions(weeklyData);
       }
     } catch (error) {
       console.error("Error fetching missions:", error);
@@ -212,6 +353,10 @@ export function useMissions() {
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    fetchMissions();
+  }, [fetchMissions]);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -228,16 +373,17 @@ export function useMissions() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log("Mission update:", payload);
-          
           if (payload.eventType === "UPDATE") {
-            setMissions((prev) =>
-              prev.map((m) =>
-                m.id === (payload.new as Mission).id ? (payload.new as Mission) : m
-              )
-            );
-          } else if (payload.eventType === "INSERT") {
-            setMissions((prev) => [...prev, payload.new as Mission]);
+            const updated = payload.new as Mission;
+            if (updated.mission_type === "daily") {
+              setDailyMissions((prev) =>
+                prev.map((m) => (m.id === updated.id ? updated : m))
+              );
+            } else {
+              setWeeklyMissions((prev) =>
+                prev.map((m) => (m.id === updated.id ? updated : m))
+              );
+            }
           }
         }
       )
@@ -248,20 +394,17 @@ export function useMissions() {
     };
   }, [user]);
 
-  useEffect(() => {
-    fetchMissions();
-  }, [fetchMissions]);
-
   const updateMissionProgress = async (
     missionId: string,
     progressIncrement: number
   ): Promise<{ completed: boolean; xpEarned: number }> => {
     if (!user) return { completed: false, xpEarned: 0 };
 
-    try {
-      const mission = missions.find((m) => m.mission_id === missionId);
-      if (!mission || mission.completed) return { completed: false, xpEarned: 0 };
+    const allMissions = [...dailyMissions, ...weeklyMissions];
+    const mission = allMissions.find((m) => m.mission_id === missionId);
+    if (!mission || mission.completed) return { completed: false, xpEarned: 0 };
 
+    try {
       const newProgress = Math.min(
         mission.current_progress + progressIncrement,
         mission.target_value
@@ -282,7 +425,7 @@ export function useMissions() {
         .update(updates)
         .eq("id", mission.id);
 
-      return { completed: isCompleted, xpEarned: 0 }; // XP given on claim now
+      return { completed: isCompleted, xpEarned: 0 };
     } catch (error) {
       console.error("Error updating mission progress:", error);
       return { completed: false, xpEarned: 0 };
@@ -303,12 +446,13 @@ export function useMissions() {
       return { success: false, coins: 0, gems: 0, xp: 0, powerUp: null, powerUpCount: 0 };
     }
 
-    try {
-      const mission = missions.find((m) => m.mission_id === missionId);
-      if (!mission || !mission.completed || mission.reward_claimed) {
-        return { success: false, coins: 0, gems: 0, xp: 0, powerUp: null, powerUpCount: 0 };
-      }
+    const allMissions = [...dailyMissions, ...weeklyMissions];
+    const mission = allMissions.find((m) => m.mission_id === missionId);
+    if (!mission || !mission.completed || mission.reward_claimed) {
+      return { success: false, coins: 0, gems: 0, xp: 0, powerUp: null, powerUpCount: 0 };
+    }
 
+    try {
       // Mark as claimed
       await supabase
         .from("user_missions")
@@ -364,11 +508,15 @@ export function useMissions() {
       });
 
       // Update local state
-      setMissions((prev) =>
-        prev.map((m) =>
-          m.id === mission.id ? { ...m, reward_claimed: true } : m
-        )
-      );
+      if (mission.mission_type === "daily") {
+        setDailyMissions((prev) =>
+          prev.map((m) => (m.id === mission.id ? { ...m, reward_claimed: true } : m))
+        );
+      } else {
+        setWeeklyMissions((prev) =>
+          prev.map((m) => (m.id === mission.id ? { ...m, reward_claimed: true } : m))
+        );
+      }
 
       return { 
         success: true, 
@@ -384,22 +532,39 @@ export function useMissions() {
     }
   };
 
-  const completedCount = missions.filter((m) => m.completed).length;
-  const claimedCount = missions.filter((m) => m.reward_claimed).length;
-  const unclaimedCount = missions.filter((m) => m.completed && !m.reward_claimed).length;
-  const totalCount = missions.length;
-  const inProgressCount = missions.filter((m) => !m.completed && m.current_progress > 0).length;
+  // Computed values
+  const allMissions = [...dailyMissions, ...weeklyMissions];
+  const completedDaily = dailyMissions.filter((m) => m.completed).length;
+  const claimedDaily = dailyMissions.filter((m) => m.reward_claimed).length;
+  const unclaimedDaily = dailyMissions.filter((m) => m.completed && !m.reward_claimed).length;
+  const completedWeekly = weeklyMissions.filter((m) => m.completed).length;
+  const claimedWeekly = weeklyMissions.filter((m) => m.reward_claimed).length;
+  const unclaimedWeekly = weeklyMissions.filter((m) => m.completed && !m.reward_claimed).length;
+  const allDailyComplete = dailyMissions.length > 0 && completedDaily === dailyMissions.length;
+  const allDailyClaimed = dailyMissions.length > 0 && claimedDaily === dailyMissions.length;
 
   return {
-    missions,
+    dailyMissions,
+    weeklyMissions,
+    allMissions,
     loading,
     updateMissionProgress,
     claimMissionReward,
     refreshMissions: fetchMissions,
-    completedCount,
-    claimedCount,
-    unclaimedCount,
-    totalCount,
-    inProgressCount,
+    completedDaily,
+    claimedDaily,
+    unclaimedDaily,
+    totalDaily: dailyMissions.length,
+    completedWeekly,
+    claimedWeekly,
+    unclaimedWeekly,
+    totalWeekly: weeklyMissions.length,
+    allDailyComplete,
+    allDailyClaimed,
+    // Legacy exports for backward compatibility
+    missions: allMissions,
+    completedCount: completedDaily + completedWeekly,
+    totalCount: allMissions.length,
+    unclaimedCount: unclaimedDaily + unclaimedWeekly,
   };
 }
