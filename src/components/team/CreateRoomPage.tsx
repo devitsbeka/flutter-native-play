@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
-import { Gamepad2, Loader2, ArrowLeft, Check, Users } from "lucide-react";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -31,6 +31,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [isRandom, setIsRandom] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   // Only accepted friends
@@ -59,6 +61,23 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
 
     fetchCategories();
   }, []);
+
+  // Select random category
+  const selectRandomCategory = () => {
+    if (categories.length > 0) {
+      const randomIndex = Math.floor(Math.random() * categories.length);
+      setSelectedCategory(categories[randomIndex]);
+      setIsRandom(true);
+    }
+  };
+
+  const handleCategorySelect = (category: Category) => {
+    setSelectedCategory(category);
+    setIsRandom(false);
+  };
+
+  // Display categories - show first 4 or all
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 4);
 
   const toggleFriendSelection = (friendId: string) => {
     setSelectedFriends(prev => {
@@ -139,47 +158,94 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category)}
-                  className="relative p-3 rounded-xl text-left transition-all"
-                  style={{
-                    background: selectedCategory?.id === category.id
-                      ? "linear-gradient(180deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%)"
-                      : "hsl(var(--muted))",
-                    border: selectedCategory?.id === category.id
-                      ? "2px solid hsl(var(--primary))"
-                      : "2px solid hsl(var(--border))",
-                    boxShadow: selectedCategory?.id === category.id
-                      ? "0 3px 0 hsl(var(--primary) / 0.3)"
-                      : "0 2px 0 hsl(var(--border))",
-                  }}
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98, y: 1 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <DynamicIcon 
-                      slug={category.icon_slug || undefined}
-                      categoryId={category.category_id} 
-                      size={24} 
-                    />
-                    <span className="text-sm font-medium text-foreground line-clamp-1">
-                      {category.name}
-                    </span>
+            <div className="space-y-3">
+              {/* Random Button - 2x size */}
+              <motion.button
+                onClick={selectRandomCategory}
+                className="w-full p-4 rounded-xl text-left transition-all"
+                style={{
+                  background: isRandom
+                    ? "linear-gradient(180deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%)"
+                    : "linear-gradient(180deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%)",
+                  border: isRandom
+                    ? "2px solid hsl(var(--primary))"
+                    : "2px solid hsl(var(--border))",
+                  boxShadow: isRandom
+                    ? "0 4px 0 hsl(var(--primary) / 0.3)"
+                    : "0 3px 0 hsl(var(--border))",
+                }}
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98, y: 2 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Shuffle className="w-5 h-5 text-primary" />
                   </div>
-                  
-                  {selectedCategory?.id === category.id && (
-                    <motion.div
-                      layoutId="category-selected-page"
-                      className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
+                  <div>
+                    <span className="text-base font-semibold text-foreground">🎲 შემთხვევითი</span>
+                    <p className="text-xs text-muted-foreground">ნებისმიერი კატეგორია</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Category Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {displayedCategories.map((category) => (
+                  <motion.button
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category)}
+                    className="relative p-3 rounded-xl text-left transition-all"
+                    style={{
+                      background: selectedCategory?.id === category.id && !isRandom
+                        ? "linear-gradient(180deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%)"
+                        : "hsl(var(--muted))",
+                      border: selectedCategory?.id === category.id && !isRandom
+                        ? "2px solid hsl(var(--primary))"
+                        : "2px solid hsl(var(--border))",
+                      boxShadow: selectedCategory?.id === category.id && !isRandom
+                        ? "0 3px 0 hsl(var(--primary) / 0.3)"
+                        : "0 2px 0 hsl(var(--border))",
+                    }}
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98, y: 1 }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <DynamicIcon 
+                        slug={category.icon_slug || undefined}
+                        categoryId={category.category_id} 
+                        size={24} 
+                      />
+                      <span className="text-sm font-medium text-foreground line-clamp-1">
+                        {category.name}
+                      </span>
+                    </div>
+                    
+                    {selectedCategory?.id === category.id && !isRandom && (
+                      <motion.div
+                        layoutId="category-selected-page"
+                        className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Show More Button */}
+              {categories.length > 4 && (
+                <motion.button
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                  className="w-full p-3 rounded-xl bg-muted/50 border-2 border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <span className="text-sm font-medium">
+                    {showAllCategories ? "ნაკლების ჩვენება" : `მეტის ჩვენება (${categories.length - 4})`}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
                 </motion.button>
-              ))}
+              )}
             </div>
           )}
         </div>
