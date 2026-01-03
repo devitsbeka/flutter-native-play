@@ -135,8 +135,8 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* White container for header and tabs */}
-          <div className="bg-white/95 backdrop-blur-sm mx-4 mt-2 rounded-2xl shadow-sm">
+          {/* Subtle whiter background for header section */}
+          <div className="bg-white/30 backdrop-blur-sm">
             {/* Header with Page Title */}
             <PageHeader
               title="აღმოაჩინე"
@@ -144,7 +144,7 @@ export default function Discover() {
               rightElements={
                 <button
                   onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
                 >
                   {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
                 </button>
@@ -161,7 +161,7 @@ export default function Discover() {
                   className="overflow-hidden px-4 pt-2"
                 >
                   <div
-                    className={`flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-4 py-3 transition-all mb-2 ${
+                    className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm mb-2 ${
                       isSearchFocused ? "ring-2 ring-primary/30" : ""
                     }`}
                   >
@@ -187,7 +187,7 @@ export default function Discover() {
             </AnimatePresence>
 
             {/* Separator line */}
-            <div className="mx-4 border-t border-slate-200/80" />
+            <div className="mx-4 border-t border-slate-200/60" />
 
             {/* Tabs */}
             <div className="px-4 py-4">
