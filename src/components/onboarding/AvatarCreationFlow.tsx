@@ -437,7 +437,7 @@ export function AvatarCreationFlow() {
                       
                       <div className="flex gap-3">
                         <ChunkyButton
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={() => setUploadedImage(null)}
                           icon={<RefreshCw className="w-4 h-4" />}
@@ -563,7 +563,7 @@ export function AvatarCreationFlow() {
                   
                   <div className="flex gap-3">
                     <ChunkyButton
-                      variant="ghost"
+                      variant="secondary"
                       size="md"
                       onClick={() => {
                         stopCamera();
@@ -796,7 +796,7 @@ export function AvatarCreationFlow() {
                   
                   <div className="flex gap-3 w-full">
                     <ChunkyButton
-                      variant="ghost"
+                      variant="secondary"
                       size="md"
                       onClick={() => {
                         setGeneratedAvatar(null);

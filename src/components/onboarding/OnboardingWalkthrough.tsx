@@ -236,7 +236,7 @@ const WalkthroughTooltip = ({
         <div className="flex gap-2">
           {currentIndex > 0 && (
             <ChunkyButton
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={onPrev}
               icon={<ChevronLeft className="w-4 h-4" />}

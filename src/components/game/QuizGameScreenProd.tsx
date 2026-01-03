@@ -346,7 +346,7 @@ export function QuizGameScreenProd() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <ChunkyButton
-                  variant="white"
+                  variant="secondary"
                   size="xl"
                   onClick={handleNext}
                   className="w-full"

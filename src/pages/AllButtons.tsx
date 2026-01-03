@@ -15,11 +15,19 @@ const buttonCatalog = {
       { id: "chunky-primary-play", label: "ითამაშე", icon: <Play className="w-5 h-5 fill-current" />, usage: ["Leaderboards.tsx", "CategoryPage.tsx", "Index.tsx"], size: "lg" },
       { id: "chunky-primary-start", label: "დაწყება", icon: <Play className="w-5 h-5" />, usage: ["RoomLobby.tsx"], size: "lg" },
       { id: "chunky-primary-solo", label: "დაწყება მარტო", icon: <Users className="w-5 h-5" />, usage: ["RoomLobby.tsx"], size: "lg" },
+      { id: "chunky-primary-create-room", label: "ოთახის შექმნა", icon: <Plus className="w-5 h-5" />, usage: ["MyRoomsSection.tsx", "Team.tsx"], size: "md" },
+      { id: "chunky-primary-continue", label: "გაგრძელება", icon: <Play className="w-5 h-5" />, usage: ["MyRoomsSection.tsx"], size: "md" },
+      { id: "chunky-primary-replay", label: "ხელახლა თამაში", icon: <RotateCcw className="w-5 h-5" />, usage: ["MultiplayerResultScreen.tsx"], size: "lg" },
     ],
     secondary: [
       { id: "chunky-secondary-all", label: "ყველა", icon: null, usage: ["RecentPlayersList.tsx", "RecentRoomsSection.tsx", "GameHistoryTable.tsx"], size: "sm" },
       { id: "chunky-secondary-waiting", label: "ველოდებით მოთამაშეებს...", icon: null, usage: ["RoomLobby.tsx"], size: "lg", disabled: true },
       { id: "chunky-secondary-home", label: "მთავარ მენიუში", icon: <Home className="w-5 h-5" />, usage: ["MultiplayerResultScreen.tsx", "GameLoseModal.tsx"], size: "lg" },
+      { id: "chunky-secondary-back", label: "გასვლა", icon: <ArrowLeft className="w-4 h-4" />, usage: ["RoomLobby.tsx"], size: "sm" },
+      { id: "chunky-secondary-leave", label: "ოთახიდან გასვლა", icon: <LogOut className="w-4 h-4" />, usage: ["RoomLobby.tsx"], size: "sm" },
+      { id: "chunky-secondary-help", label: "დახმარება", icon: <HelpCircle className="w-4 h-4" />, usage: ["Various pages"], size: "sm" },
+      { id: "chunky-secondary-next", label: "შემდეგი კითხვა", icon: <ChevronRight className="w-5 h-5" />, usage: ["MultiplayerGameScreen.tsx", "QuizGameScreenProd.tsx"], size: "xl" },
+      { id: "chunky-secondary-results", label: "შედეგები", icon: <Trophy className="w-5 h-5" />, usage: ["MultiplayerGameScreen.tsx", "QuizGameScreenProd.tsx"], size: "xl" },
     ],
     success: [
       { id: "chunky-success-ready", label: "მზადაა", icon: <Check className="w-5 h-5" />, usage: ["RoomLobby.tsx"], size: "lg" },
@@ -30,21 +38,6 @@ const buttonCatalog = {
     danger: [
       { id: "chunky-danger-delete", label: "წაშლა", icon: <Trash className="w-5 h-5" />, usage: ["Admin panels"], size: "md" },
       { id: "chunky-danger-cancel", label: "გაუქმება", icon: <X className="w-5 h-5" />, usage: ["Various modals"], size: "md" },
-    ],
-    ghost: [
-      { id: "chunky-ghost-back", label: "გასვლა", icon: <ArrowLeft className="w-4 h-4" />, usage: ["RoomLobby.tsx"], size: "sm" },
-      { id: "chunky-ghost-leave", label: "ოთახიდან გასვლა", icon: <LogOut className="w-4 h-4" />, usage: ["RoomLobby.tsx"], size: "sm" },
-      { id: "chunky-ghost-help", label: "დახმარება", icon: <HelpCircle className="w-4 h-4" />, usage: ["Various pages"], size: "sm" },
-    ],
-    purple: [
-      { id: "chunky-purple-create-room", label: "ოთახის შექმნა", icon: <Plus className="w-5 h-5" />, usage: ["MyRoomsSection.tsx", "Team.tsx"], size: "md" },
-      { id: "chunky-purple-continue", label: "გაგრძელება", icon: <Play className="w-5 h-5" />, usage: ["MyRoomsSection.tsx"], size: "md" },
-      { id: "chunky-purple-start-solo", label: "დანწყება მარტო", icon: <Users className="w-5 h-5" />, usage: ["RoomLobby.tsx"], size: "lg" },
-      { id: "chunky-purple-replay", label: "ხელახლა თამაში", icon: <RotateCcw className="w-5 h-5" />, usage: ["MultiplayerResultScreen.tsx"], size: "lg" },
-    ],
-    white: [
-      { id: "chunky-white-next", label: "შემდეგი კითხვა", icon: <ChevronRight className="w-5 h-5" />, usage: ["MultiplayerGameScreen.tsx"], size: "xl" },
-      { id: "chunky-white-results", label: "შედეგები", icon: <Trophy className="w-5 h-5" />, usage: ["MultiplayerGameScreen.tsx"], size: "xl" },
     ],
     mint: [
       { id: "chunky-mint-play", label: "ითამაშე", icon: <Play className="w-5 h-5 fill-current" />, usage: ["Leaderboards.tsx", "CategoryPage.tsx"], size: "lg" },
@@ -123,7 +116,7 @@ export default function AllButtons() {
       <div className="sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="flex items-center justify-between px-4 py-4">
           <ChunkyButton
-            variant="ghost"
+            variant="secondary"
             size="sm"
             icon={<ArrowLeft className="w-4 h-4" />}
             onClick={() => navigate(-1)}
@@ -176,11 +169,8 @@ export default function AllButtons() {
                     style={{ 
                       background: variant === "primary" ? "hsl(var(--primary))"
                         : variant === "secondary" ? "hsl(var(--secondary))"
-                        : variant === "success" ? "hsl(var(--success))"
+                        : variant === "success" ? "#A8E6CF"
                         : variant === "danger" ? "hsl(var(--destructive))"
-                        : variant === "ghost" ? "hsl(var(--muted))"
-                        : variant === "purple" ? "#8B5CF6"
-                        : variant === "white" ? "#ffffff"
                         : "#A8E6CF"
                     }}
                   />

@@ -107,7 +107,7 @@ export function RoomLobby() {
         <div className="flex items-center justify-between mb-6">
           <ChunkyButton
             onClick={handleLeave}
-            variant="ghost"
+            variant="secondary"
             size="sm"
             icon={<ArrowLeft className="w-4 h-4" />}
           >
@@ -298,7 +298,7 @@ export function RoomLobby() {
           {/* Leave button */}
           <ChunkyButton
             onClick={handleLeave}
-            variant="ghost"
+            variant="secondary"
             size="sm"
             className="w-full"
             icon={<LogOut className="w-4 h-4" />}
