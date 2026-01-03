@@ -17,8 +17,9 @@ export function PingPongVideo({
   const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  // Get preloaded blob URL if available
-  const videoSrc = getVideoBlobUrl(src);
+  // Get preloaded blob URL if available, fallback to original src
+  const preloadedUrl = getVideoBlobUrl(src);
+  const videoSrc = preloadedUrl !== src ? preloadedUrl : src;
 
   // Intersection Observer - detect when video enters viewport
   useEffect(() => {
@@ -46,8 +47,10 @@ export function PingPongVideo({
 
     if (isInView) {
       // Video is in viewport - load and play
-      if (!video.src) {
+      // Always set src when in view to ensure video loads
+      if (video.src !== videoSrc) {
         video.src = videoSrc;
+        video.load();
       }
       
       const handleCanPlay = () => {
@@ -56,13 +59,17 @@ export function PingPongVideo({
       };
 
       video.addEventListener("canplay", handleCanPlay);
+      video.addEventListener("loadeddata", handleCanPlay);
       
       if (video.readyState >= 3) {
         setIsReady(true);
         video.play().catch(() => {});
       }
 
-      return () => video.removeEventListener("canplay", handleCanPlay);
+      return () => {
+        video.removeEventListener("canplay", handleCanPlay);
+        video.removeEventListener("loadeddata", handleCanPlay);
+      };
     } else {
       // Video left viewport - pause to save resources
       video.pause();
