@@ -115,7 +115,7 @@ export function ShopPromoSection({
             }}
             className="w-full overflow-visible"
           >
-            <CarouselContent className="ml-5 pr-5 overflow-visible" allowOverflow>
+            <CarouselContent className="ml-5 overflow-visible" allowOverflow>
               {items.map((item, index) => {
                 const canAfford = gems >= item.price;
                 const isPurchased = purchasedItems.has(item.id);
@@ -125,7 +125,7 @@ export function ShopPromoSection({
                 return (
                   <CarouselItem 
                     key={item.id} 
-                    className="pl-0 basis-[82%] overflow-visible"
+                    className="pl-0 basis-[82%] pr-5 overflow-visible"
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
