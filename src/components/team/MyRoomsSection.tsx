@@ -52,19 +52,28 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
+          className="flex flex-col items-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
         >
-          <Gamepad2 className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-500 text-sm mb-3">აქტიური ოთახი არ გაქვს</p>
+          <Gamepad2 className="w-12 h-12 text-slate-400 mb-3" />
+          <p className="text-slate-500 text-sm mb-4">აქტიური ოთახი არ გაქვს</p>
           {onCreateRoom && (
-            <ChunkyButton
-              variant="primary"
-              size="sm"
+            <motion.button
               onClick={onCreateRoom}
-              icon={<Plus className="w-4 h-4" />}
+              className="flex flex-col items-center gap-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              ოთახის შექმნა
-            </ChunkyButton>
+              <div 
+                className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+                style={{
+                  background: "linear-gradient(145deg, #6EE7B7 0%, #34D399 50%, #10B981 100%)",
+                  boxShadow: "0 4px 15px rgba(52, 211, 153, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
+                }}
+              >
+                <Home className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xs font-medium text-slate-600">ოთახის შექმნა</span>
+            </motion.button>
           )}
         </motion.div>
       ) : (
