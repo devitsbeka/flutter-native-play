@@ -160,59 +160,55 @@ export default function CategoryPage() {
       />
 
 
-      <div className="min-h-screen flex flex-col">
-        {/* Video Header */}
-        <div className="relative h-[280px] overflow-hidden">
-          {/* Video layer - no blur */}
-          <div className="absolute inset-0">
-            <PingPongVideo 
-              src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
-            />
-          </div>
-          
+      <div className="min-h-screen flex flex-col relative">
+        {/* Full-page Video Background */}
+        <div className="absolute inset-0 z-0">
+          <PingPongVideo 
+            src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
+          />
           {/* Dark gradient overlay for text readability */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.85) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.7) 100%)',
             }}
           />
-
-          {/* Navigation buttons */}
-          <div className="absolute top-12 left-5 right-5 z-10 flex items-center justify-between">
-            <button
-              onClick={() => navigate("/discover")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
-            >
-              <ArrowLeft className="h-5 w-5 text-white" />
-            </button>
-            {!user && (
-              <button
-                onClick={() => navigate("/auth")}
-                className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
-              >
-                <LogIn className="h-4 w-4" />
-                შესვლა
-              </button>
-            )}
-          </div>
-
-          {/* Left-aligned title and description at bottom of video */}
-          <div className="absolute bottom-4 left-5 right-5 z-10">
-            <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
-            <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
-          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="relative px-5 mb-4 z-10">
-          <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
+        {/* Navigation buttons */}
+        <div className="relative z-10 px-5 pt-12 flex items-center justify-between">
+          <button
+            onClick={() => navigate("/discover")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
+          >
+            <ArrowLeft className="h-5 w-5 text-white" />
+          </button>
+          {!user && (
+            <button
+              onClick={() => navigate("/auth")}
+              className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
+            >
+              <LogIn className="h-4 w-4" />
+              შესვლა
+            </button>
+          )}
+        </div>
+
+        {/* Title and description */}
+        <div className="relative z-10 px-5 pt-6 pb-8">
+          <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
+          <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
+        </div>
+
+        {/* Tabs - with more spacing from header */}
+        <div className="relative px-5 mb-4 mt-2 z-10">
+          <div className="flex gap-2 bg-black/30 backdrop-blur-sm rounded-full p-1">
             <button
               onClick={() => setActiveTab("leaderboard")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
                 activeTab === "leaderboard"
-                  ? "bg-white text-slate-800 shadow-md"
-                  : "text-slate-600 hover:text-slate-800"
+                  ? "bg-white/20 text-white"
+                  : "text-white/70 hover:text-white"
               }`}
             >
               <Trophy className="h-4 w-4" />
@@ -222,8 +218,8 @@ export default function CategoryPage() {
               onClick={() => setActiveTab("map")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
                 activeTab === "map"
-                  ? "bg-white text-slate-800 shadow-md"
-                  : "text-slate-600 hover:text-slate-800"
+                  ? "bg-white/20 text-white"
+                  : "text-white/70 hover:text-white"
               }`}
             >
               <Map className="h-4 w-4" />
@@ -233,7 +229,7 @@ export default function CategoryPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 relative rounded-t-3xl bg-[#1a1a2e] px-5 pt-6 pb-8 overflow-hidden">
+        <div className="flex-1 relative px-5 pt-4 pb-8 z-10 overflow-hidden">
           {activeTab === "leaderboard" ? (
             <CategoryLeaderboard
               categoryId={categoryId || ""}
