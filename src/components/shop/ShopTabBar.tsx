@@ -51,7 +51,7 @@ interface ShopTabBarProps {
 export function ShopTabBar({ activeTab, onTabChange }: ShopTabBarProps) {
   return (
     <div className="px-4 mb-4">
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
 
