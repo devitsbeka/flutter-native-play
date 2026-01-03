@@ -288,12 +288,17 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // Set selected as current
       await supabase.from('avatar_generations').update({ is_current: true }).eq('avatar_url', avatarUrl);
       
-      // Update profile
-      await updateProfile({ avatar_url: avatarUrl });
+      // Update profile - check for error!
+      const result = await updateProfile({ avatar_url: avatarUrl });
+      
+      if (result?.error) {
+        throw result.error;
+      }
       
       toast.success(t("avatar.avatarUpdated"));
       onClose();
     } catch (error) {
+      console.error("Error updating avatar:", error);
       toast.error(t("errors.generationFailed"));
     } finally {
       setIsLoading(false);
@@ -306,11 +311,16 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     setIsLoading(true);
     try {
       // Update profile directly with the default avatar path
-      await updateProfile({ avatar_url: avatarPath });
+      const result = await updateProfile({ avatar_url: avatarPath });
+      
+      if (result?.error) {
+        throw result.error;
+      }
       
       toast.success(t("avatar.avatarUpdated"));
       onClose();
     } catch (error) {
+      console.error("Error updating avatar:", error);
       toast.error(t("errors.generationFailed"));
     } finally {
       setIsLoading(false);
