@@ -424,93 +424,135 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!state.currentRoom || !isHost) return;
     
     const roomId = state.currentRoom.id;
+    const questionCount = state.currentRoom.total_questions || 5;
     
     try {
-      // Generate questions
-      const response = await supabase.functions.invoke("generate-category-trivia", {
-        body: {
-          category: state.currentRoom.category_name || "General Knowledge",
-          count: state.currentRoom.total_questions || 5,
-        },
-      });
+      // Fetch random questions from database based on category
+      let questionsQuery = supabase
+        .from("questions")
+        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+        .eq("is_active", true);
       
-      if (response.error) throw response.error;
+      // If category is specified, try to match by category_id or get mixed
+      if (state.currentRoom.category_id) {
+        // First try to get questions from the specific category
+        const { data: categoryQuestions, error: catError } = await supabase
+          .from("questions")
+          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("is_active", true)
+          .eq("category_id", state.currentRoom.category_id);
+        
+        if (!catError && categoryQuestions && categoryQuestions.length >= questionCount) {
+          // Shuffle and pick random questions from this category
+          const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
+          const selectedQuestions = shuffled.slice(0, questionCount);
+          
+          const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => ({
+            id: `${roomId}-${index}`,
+            question: q.question_text,
+            correctAnswer: q.correct_answer,
+            incorrectAnswers: q.incorrect_answers as string[],
+            allAnswers: [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5),
+            difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
+            category: state.currentRoom!.category_name || "General",
+          }));
+        }
+      }
       
-      const questions: TriviaQuestion[] = response.data.questions.map((q: any, index: number) => ({
+      // Fallback: get random questions from entire library
+      const { data: allQuestions, error: allError } = await supabase
+        .from("questions")
+        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+        .eq("is_active", true);
+      
+      if (allError || !allQuestions || allQuestions.length === 0) {
+        throw new Error("No questions available in database");
+      }
+      
+      // Shuffle and pick random questions
+      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+      const selectedQuestions = shuffled.slice(0, questionCount);
+      
+      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => ({
         id: `${roomId}-${index}`,
-        question: q.question,
+        question: q.question_text,
         correctAnswer: q.correct_answer,
-        incorrectAnswers: q.incorrect_answers,
-        allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
-        difficulty: q.difficulty || "medium",
+        incorrectAnswers: q.incorrect_answers as string[],
+        allAnswers: [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5),
+        difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
         category: state.currentRoom!.category_name || "General",
       }));
       
-      // Clear old questions/answers
-      await supabase.from("room_questions").delete().eq("room_id", roomId);
-      await supabase.from("player_answers").delete().eq("room_id", roomId);
-      
-      // Store questions
-      for (let i = 0; i < questions.length; i++) {
-        await supabase.from("room_questions").insert({
-          room_id: roomId,
-          question_index: i,
-          question_text: questions[i].question,
-          correct_answer: questions[i].correctAnswer,
-          incorrect_answers: questions[i].incorrectAnswers,
-          difficulty: questions[i].difficulty,
-        });
-      }
-      
-      // Reset all participants scores
-      await supabase
-        .from("room_participants")
-        .update({ score: 0, current_question: 0 })
-        .eq("room_id", roomId);
-      
-      // Create room_game record
-      const { data: game } = await supabase
-        .from("room_games")
-        .insert([{
-          room_id: roomId,
-          game_number: 1, // TODO: increment based on previous games
-          questions_data: JSON.parse(JSON.stringify(questions)),
-        }])
-        .select()
-        .single();
-      
-      // Update room status
-      await supabase
-        .from("game_rooms")
-        .update({
-          status: "playing",
-          started_at: new Date().toISOString(),
-          current_game_id: game?.id,
-        })
-        .eq("id", roomId);
-      
-      setState(prev => ({
-        ...prev,
-        questions,
-        currentQuestionIndex: 0,
-        myScore: 0,
-        currentGame: game ? {
-          id: game.id,
-          room_id: game.room_id,
-          game_number: game.game_number,
-          started_at: game.started_at,
-          completed_at: game.completed_at,
-          winner_user_id: game.winner_user_id,
-          player_scores: game.player_scores,
-        } : null,
-        phase: "playing",
-      }));
+      await saveQuestionsAndStartGame(roomId, questions);
       
     } catch (error) {
       console.error("Error starting game:", error);
       toast.error("Failed to start game");
     }
   }, [state.currentRoom, isHost]);
+
+  // Helper to save questions and update room status
+  const saveQuestionsAndStartGame = useCallback(async (roomId: string, questions: TriviaQuestion[]) => {
+    // Clear old questions/answers
+    await supabase.from("room_questions").delete().eq("room_id", roomId);
+    await supabase.from("player_answers").delete().eq("room_id", roomId);
+    
+    // Store questions in parallel
+    await Promise.all(questions.map((q, index) => 
+      supabase.from("room_questions").insert({
+        room_id: roomId,
+        question_index: index,
+        question_text: q.question,
+        correct_answer: q.correctAnswer,
+        incorrect_answers: q.incorrectAnswers,
+        difficulty: q.difficulty,
+      })
+    ));
+    
+    // Reset all participants scores
+    await supabase
+      .from("room_participants")
+      .update({ score: 0, current_question: 0 })
+      .eq("room_id", roomId);
+    
+    // Create room_game record
+    const { data: game } = await supabase
+      .from("room_games")
+      .insert([{
+        room_id: roomId,
+        game_number: 1,
+        questions_data: JSON.parse(JSON.stringify(questions)),
+      }])
+      .select()
+      .single();
+    
+    // Update room status
+    await supabase
+      .from("game_rooms")
+      .update({
+        status: "playing",
+        started_at: new Date().toISOString(),
+        current_game_id: game?.id,
+      })
+      .eq("id", roomId);
+    
+    setState(prev => ({
+      ...prev,
+      questions,
+      currentQuestionIndex: 0,
+      myScore: 0,
+      currentGame: game ? {
+        id: game.id,
+        room_id: game.room_id,
+        game_number: game.game_number,
+        started_at: game.started_at,
+        completed_at: game.completed_at,
+        winner_user_id: game.winner_user_id,
+        player_scores: game.player_scores,
+      } : null,
+      phase: "playing",
+    }));
+  }, []);
 
   // Submit answer
   const submitAnswer = useCallback(async (answer: string, timeRemaining: number) => {
