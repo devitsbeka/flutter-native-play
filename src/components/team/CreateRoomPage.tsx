@@ -132,7 +132,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
-      {/* Header */}
+      {/* Header - simplified */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-border/30">
         <button
           onClick={onClose}
@@ -140,13 +140,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <div className="flex-1">
-          <h1 className="text-xl font-display text-foreground">ახალი ოთახი</h1>
-          <p className="text-sm text-muted-foreground">აირჩიე კატეგორია და მოიწვიე მეგობრები</p>
-        </div>
-        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Gamepad2 className="w-6 h-6 text-primary" />
-        </div>
+        <h1 className="text-xl font-display text-foreground">ახალი ოთახი</h1>
       </div>
 
       {/* Content */}
@@ -161,32 +155,38 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Random Button - 2x size */}
+              {/* Random Button - distinct styling with purple gradient */}
               <motion.button
                 onClick={selectRandomCategory}
-                className="w-full p-4 rounded-xl text-left transition-all"
+                className="w-full p-4 rounded-2xl text-left transition-all overflow-hidden relative"
                 style={{
                   background: isRandom
-                    ? "linear-gradient(180deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%)"
-                    : "linear-gradient(180deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%)",
+                    ? "linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)"
+                    : "linear-gradient(180deg, #F3F4F6 0%, #E5E7EB 100%)",
                   border: isRandom
-                    ? "2px solid hsl(var(--primary))"
-                    : "2px solid hsl(var(--border))",
+                    ? "3px solid #7C3AED"
+                    : "2px solid #E5E7EB",
                   boxShadow: isRandom
-                    ? "0 4px 0 hsl(var(--primary) / 0.3)"
-                    : "0 3px 0 hsl(var(--border))",
+                    ? "0 6px 0 #6D28D9, 0 8px 20px rgba(139, 92, 246, 0.35)"
+                    : "0 3px 0 #D1D5DB",
                 }}
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.98, y: 2 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98, y: 4 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Shuffle className="w-5 h-5 text-primary" />
+                  <div 
+                    className="w-12 h-12 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: isRandom 
+                        ? "rgba(255,255,255,0.25)" 
+                        : "rgba(139, 92, 246, 0.1)",
+                    }}
+                  >
+                    <Shuffle className={`w-6 h-6 ${isRandom ? "text-white" : "text-primary"}`} />
                   </div>
-                  <div>
-                    <span className="text-base font-semibold text-foreground">🎲 შემთხვევითი</span>
-                    <p className="text-xs text-muted-foreground">ნებისმიერი კატეგორია</p>
-                  </div>
+                  <span className={`text-base font-bold ${isRandom ? "text-white" : "text-foreground"}`}>
+                    🎲 შემთხვევითი
+                  </span>
                 </div>
               </motion.button>
 
@@ -220,9 +220,9 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                         />
                       </div>
                       
-                      {/* Netflix-style gradient overlay - left to right fade */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/40 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent" />
+                      {/* Subtle Netflix-style gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/25 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-transparent to-transparent" />
                       
                       {/* Category Name - bottom left, Netflix style */}
                       <div className="absolute bottom-3 left-3 right-3">
