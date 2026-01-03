@@ -161,8 +161,8 @@ export default function CategoryPage() {
 
 
       <div className="min-h-screen flex flex-col relative">
-        {/* Category Video Header Section - extends into tabs area */}
-        <div className="absolute top-0 left-0 right-0 h-[320px] overflow-hidden z-0">
+        {/* Category Video Header Section - extends to include tabs overlap */}
+        <div className="absolute top-0 left-0 right-0 h-[380px] overflow-hidden z-0">
           <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
@@ -172,20 +172,13 @@ export default function CategoryPage() {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.5) 100%)',
-            }}
-          />
-          {/* Beautiful curved transition at bottom */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 h-24"
-            style={{
-              background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,1) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.4) 100%)',
             }}
           />
         </div>
 
         {/* Header content area */}
-        <div className="relative z-10 h-[200px]">
+        <div className="relative z-10 h-[260px]">
           {/* Navigation buttons */}
           <div className="absolute top-12 left-5 right-5 flex items-center justify-between">
             <button
@@ -205,22 +198,22 @@ export default function CategoryPage() {
             )}
           </div>
 
-          {/* Title and description at bottom */}
-          <div className="absolute bottom-4 left-5 right-5">
+          {/* Title and description */}
+          <div className="absolute bottom-16 left-5 right-5">
             <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
             <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
           </div>
         </div>
 
-        {/* Tabs - positioned to overlap video transition area */}
-        <div className="relative px-5 mb-4 z-20">
-          <div className="flex gap-2 bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-lg">
+        {/* Tabs - half on video, half on white background */}
+        <div className="relative px-5 -mt-6 mb-4 z-20">
+          <div className="flex gap-2 bg-white/95 backdrop-blur-md rounded-full p-1.5 shadow-xl border border-white/50">
             <button
               onClick={() => setActiveTab("leaderboard")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full font-semibold text-sm transition-all ${
                 activeTab === "leaderboard"
-                  ? "bg-white text-slate-800 shadow-md"
-                  : "text-slate-600 hover:text-slate-800"
+                  ? "bg-white text-slate-800 shadow-lg"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <Trophy className="h-4 w-4" />
@@ -228,10 +221,10 @@ export default function CategoryPage() {
             </button>
             <button
               onClick={() => setActiveTab("map")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full font-semibold text-sm transition-all ${
                 activeTab === "map"
-                  ? "bg-white text-slate-800 shadow-md"
-                  : "text-slate-600 hover:text-slate-800"
+                  ? "bg-white text-slate-800 shadow-lg"
+                  : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <Map className="h-4 w-4" />
