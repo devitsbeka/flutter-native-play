@@ -20,7 +20,8 @@ export type SoundEffect =
   | "power-up-replace"
   | "power-up-time-drain"
   | "room-join"
-  | "room-message";
+  | "room-message"
+  | "game-invitation";
 
 interface SoundContextType {
   musicEnabled: boolean;
@@ -319,6 +320,40 @@ function createSynthSound(
       msgGain.connect(audioContext.destination);
       msgOsc.start(now);
       msgOsc.stop(now + 0.1);
+      break;
+    }
+
+    case "game-invitation": {
+      // Distinct attention-grabbing invitation sound - ascending fanfare with urgency
+      gainNode.gain.value = volume * 0.3;
+      // Three-note attention chime
+      [587.33, 739.99, 880].forEach((freq, i) => {
+        const osc = audioContext.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        const localGain = audioContext.createGain();
+        localGain.gain.setValueAtTime(volume * 0.25, now + i * 0.1);
+        localGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.25);
+        osc.connect(localGain);
+        localGain.connect(audioContext.destination);
+        osc.start(now + i * 0.1);
+        osc.stop(now + i * 0.1 + 0.25);
+      });
+      // Add a subtle second layer for richness
+      setTimeout(() => {
+        [1174.66, 1479.98].forEach((freq, i) => {
+          const osc = audioContext.createOscillator();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          const localGain = audioContext.createGain();
+          localGain.gain.setValueAtTime(volume * 0.1, audioContext.currentTime + i * 0.08);
+          localGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.08 + 0.2);
+          osc.connect(localGain);
+          localGain.connect(audioContext.destination);
+          osc.start(audioContext.currentTime + i * 0.08);
+          osc.stop(audioContext.currentTime + i * 0.08 + 0.2);
+        });
+      }, 150);
       break;
     }
   }

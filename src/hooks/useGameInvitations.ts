@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { createNotification } from "@/hooks/useNotifications";
+import { useSound } from "@/contexts/SoundContext";
 
 export interface GameInvitation {
   id: string;
@@ -25,6 +26,7 @@ export interface GameInvitation {
 
 export function useGameInvitations() {
   const { user } = useAuth();
+  const { playSound } = useSound();
   const [pendingInvitations, setPendingInvitations] = useState<GameInvitation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -243,6 +245,9 @@ export function useGameInvitations() {
           };
 
           setPendingInvitations((prev) => [invitationWithData, ...prev]);
+          
+          // Play invitation sound
+          playSound("game-invitation");
           
           // Show toast notification
           toast.info(`${profile?.nickname || "მეგობარი"} გიწვევს თამაშში!`, {
