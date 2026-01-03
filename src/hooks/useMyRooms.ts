@@ -51,15 +51,14 @@ export function useMyRooms() {
       const roomIds = participations.map((p) => p.room_id);
       const hostMap = new Map(participations.map((p) => [p.room_id, p.is_host || false]));
 
-      // Fetch room details - active rooms and recently completed (24h)
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      
+      // Fetch ALL room details - show all rooms user is part of (permanent rooms)
+      // Only exclude cancelled rooms
       const { data: roomsData, error: roomsError } = await supabase
         .from("game_rooms")
         .select("*")
         .in("id", roomIds)
-        .or(`status.in.(waiting,ready,playing),and(status.eq.completed,completed_at.gte.${twentyFourHoursAgo})`)
-        .order("created_at", { ascending: false });
+        .neq("status", "cancelled")
+        .order("last_activity_at", { ascending: false, nullsFirst: false });
 
       if (roomsError) throw roomsError;
 

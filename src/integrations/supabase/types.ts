@@ -304,10 +304,12 @@ export type Database = {
           challenger_completed_at: string | null
           completed_at: string | null
           created_at: string | null
+          current_game_id: string | null
           game_type: Database["public"]["Enums"]["game_type"]
           has_unread_activity: boolean | null
           host_user_id: string
           id: string
+          is_permanent: boolean | null
           last_activity_at: string | null
           max_players: number | null
           min_players: number | null
@@ -325,10 +327,12 @@ export type Database = {
           challenger_completed_at?: string | null
           completed_at?: string | null
           created_at?: string | null
+          current_game_id?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           has_unread_activity?: boolean | null
           host_user_id: string
           id?: string
+          is_permanent?: boolean | null
           last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
@@ -346,10 +350,12 @@ export type Database = {
           challenger_completed_at?: string | null
           completed_at?: string | null
           created_at?: string | null
+          current_game_id?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           has_unread_activity?: boolean | null
           host_user_id?: string
           id?: string
+          is_permanent?: boolean | null
           last_activity_at?: string | null
           max_players?: number | null
           min_players?: number | null
@@ -359,7 +365,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "game_rooms_current_game_id_fkey"
+            columns: ["current_game_id"]
+            isOneToOne: false
+            referencedRelation: "room_games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       game_sessions: {
         Row: {
@@ -759,6 +773,50 @@ export type Database = {
           },
         ]
       }
+      room_games: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          game_number: number
+          id: string
+          player_scores: Json
+          questions_data: Json
+          room_id: string
+          started_at: string
+          winner_user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          game_number?: number
+          id?: string
+          player_scores?: Json
+          questions_data?: Json
+          room_id: string
+          started_at?: string
+          winner_user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          game_number?: number
+          id?: string
+          player_scores?: Json
+          questions_data?: Json
+          room_id?: string
+          started_at?: string
+          winner_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_games_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_match_history: {
         Row: {
           id: string
@@ -788,9 +846,11 @@ export type Database = {
           avatar_url: string | null
           country_code: string | null
           current_question: number | null
+          has_seen_results: boolean | null
           id: string
           is_host: boolean | null
           joined_at: string | null
+          last_played_at: string | null
           nickname: string
           room_id: string
           score: number | null
@@ -803,9 +863,11 @@ export type Database = {
           avatar_url?: string | null
           country_code?: string | null
           current_question?: number | null
+          has_seen_results?: boolean | null
           id?: string
           is_host?: boolean | null
           joined_at?: string | null
+          last_played_at?: string | null
           nickname: string
           room_id: string
           score?: number | null
@@ -818,9 +880,11 @@ export type Database = {
           avatar_url?: string | null
           country_code?: string | null
           current_question?: number | null
+          has_seen_results?: boolean | null
           id?: string
           is_host?: boolean | null
           joined_at?: string | null
+          last_played_at?: string | null
           nickname?: string
           room_id?: string
           score?: number | null

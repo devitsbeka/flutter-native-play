@@ -20,7 +20,8 @@ import Profile from "./pages/Profile";
 import WorldHome from "./pages/WorldHome";
 import NotFound from "./pages/NotFound";
 import Game from "./pages/Game";
-import Team from "./pages/Team";
+import TeamV2 from "./pages/TeamV2";
+import RoomRedirect from "./pages/RoomRedirect";
 
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
@@ -65,7 +66,8 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/world" element={<WorldHome />} />
               <Route path="/game" element={<Game />} />
-              <Route path="/team" element={<Team />} />
+              <Route path="/team" element={<TeamV2 />} />
+              <Route path="/room/:code" element={<RoomRedirect />} />
               <Route path="/vip" element={<VIP />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/notifications" element={<Notifications />} />
