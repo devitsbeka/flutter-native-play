@@ -147,7 +147,15 @@ export function MultiplayerGameScreenV2() {
     return oppAnswer.is_correct ? "correct" : "wrong";
   }, [answerRevealed, topOpponent, opponentAnswers]);
 
-  if (!currentQuestion) return null;
+  // Show loading while questions are being fetched
+  if (!currentQuestion) {
+    return (
+      <div className="w-full h-[100dvh] flex flex-col items-center justify-center bg-[#7E7BDC]">
+        <div className="animate-spin w-10 h-10 border-4 border-white border-t-transparent rounded-full mb-4" />
+        <p className="text-white/80 text-lg">Loading game...</p>
+      </div>
+    );
+  }
 
   const progressPercent = (timeRemaining / timePerQuestion) * 100;
 
