@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
@@ -301,6 +301,7 @@ export default function PowerUps() {
   const { playSound } = useSound();
 
   const [searchParams] = useSearchParams();
+  const tabSectionRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ShopTab>(() => {
     const tabParam = searchParams.get("tab");
     return (tabParam === "powers" || tabParam === "coins" || tabParam === "vip" || tabParam === "frames") 
@@ -314,6 +315,13 @@ export default function PowerUps() {
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [showSuccess, setShowSuccess] = useState(false);
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
+
+  const handleScrollToTab = (tab: ShopTab) => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      tabSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   // Combine shop items with frame items
   const allItems = [...SHOP_ITEMS, ...FRAME_SHOP_ITEMS];
@@ -396,13 +404,15 @@ export default function PowerUps() {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Featured Carousel */}
-        <ShopFeaturedCarousel onDealClick={handleDealClick} />
+        <ShopFeaturedCarousel onDealClick={handleDealClick} onScrollToTab={handleScrollToTab} />
 
         {/* My Powers Bar */}
         <MyPowersBar onPowerClick={handlePowerClick} />
 
         {/* Tab Navigation */}
-        <ShopTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        <div ref={tabSectionRef}>
+          <ShopTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
 
         {/* Shop Grid */}
         <div className="px-4 pb-8">
