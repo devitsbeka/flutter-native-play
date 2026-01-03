@@ -54,7 +54,8 @@ export function calculateLevel(totalPoints: number): LevelInfo {
     : LEVEL_THRESHOLDS[level];
   
   const xpInCurrentLevel = xp - xpForCurrentLevel;
-  const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel;
+  // When at max level, show total XP earned instead of 0
+  const xpNeededForNextLevel = isMaxLevel ? xp : (xpForNextLevel - xpForCurrentLevel);
   const progress = isMaxLevel ? 100 : Math.min(100, (xpInCurrentLevel / xpNeededForNextLevel) * 100);
   
   return {
