@@ -10,6 +10,7 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useMissions } from "@/hooks/useMissions";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
 import { useSessionQuestions } from "@/hooks/useSessionQuestions";
@@ -84,6 +85,9 @@ export default function CategoryQuizPage() {
   
   // Currency hook for level-up rewards
   const { addCurrency } = useCurrency();
+  
+  // Mission tracking
+  const { updateMissionProgress } = useMissions();
   
   // Power-up state
   const { powerUps, usePowerUp: consumePowerUp } = useUserPowerUps();
@@ -474,6 +478,22 @@ export default function CategoryQuizPage() {
             setTimeout(() => setShowRegisterPrompt(true), 1500);
             break;
           }
+        }
+      }
+      
+      // Update mission progress for correct answers and category played
+      if (user) {
+        // Update correct answers mission
+        if (score > 0) {
+          await updateMissionProgress("answer_correct", score);
+        }
+        
+        // Update categories played mission (1 category per quiz)
+        await updateMissionProgress("play_categories", 1);
+        
+        // Update win games mission if passed (at least 1 star)
+        if (result.stars >= 1) {
+          await updateMissionProgress("win_games", 1);
         }
       }
     } else if (user) {
