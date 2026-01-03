@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Crown, HelpCircle, Plus } from "lucide-react";
+import { HelpCircle, Plus } from "lucide-react";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useVipStatus } from "@/hooks/useVipStatus";
+import { formatCompactNumber } from "@/lib/utils";
 
 interface ShopHeaderProps {
   onHelpClick: () => void;
@@ -12,7 +12,6 @@ interface ShopHeaderProps {
 
 export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
   const { coins, gems } = useCurrency();
-  const { isVip, getDaysRemaining } = useVipStatus();
 
   return (
     <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md">
@@ -35,7 +34,7 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
         </div>
 
         {/* Currency Row */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2">
           {/* Coins Balance */}
           <motion.div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
@@ -48,7 +47,7 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
             whileTap={{ scale: 0.97 }}
           >
             <img src={coinIcon} alt="" className="w-5 h-5" />
-            <span className="font-bold text-emerald-800">{coins.toLocaleString()}</span>
+            <span className="font-bold text-emerald-800">{formatCompactNumber(coins)}</span>
           </motion.div>
 
           {/* Gems Balance with Add Button */}
@@ -64,7 +63,7 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
             whileTap={{ scale: 0.97 }}
           >
             <img src={gemIcon} alt="" className="w-5 h-5" />
-            <span className="font-bold text-primary">{gems.toLocaleString()}</span>
+            <span className="font-bold text-primary">{formatCompactNumber(gems)}</span>
             <motion.div
               className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center ml-0.5"
               whileHover={{ scale: 1.1 }}
@@ -73,33 +72,6 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick }: ShopHeaderProps) {
             </motion.div>
           </motion.button>
         </div>
-
-        {/* VIP Status Banner */}
-        {isVip && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="px-4 py-2.5 rounded-xl flex items-center justify-between"
-            style={{
-              background: "linear-gradient(135deg, hsl(45 90% 80%) 0%, hsl(35 90% 75%) 100%)",
-              boxShadow: "0 3px 0 hsl(30 70% 50%), inset 0 1px 2px hsl(0 0% 100% / 0.5)",
-              border: "2px solid hsl(40 80% 70%)",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <motion.div
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Crown className="w-5 h-5 text-amber-700" />
-              </motion.div>
-              <span className="text-amber-900 font-bold">VIP აქტიური</span>
-            </div>
-            <span className="text-amber-800 text-sm font-bold bg-amber-100/50 px-2 py-0.5 rounded-full">
-              {getDaysRemaining()} დღე
-            </span>
-          </motion.div>
-        )}
       </div>
     </div>
   );
