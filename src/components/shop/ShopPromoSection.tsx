@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { ShopItemCard, ShopItemBadge } from "./ShopItemCard";
+import { ShopItemDetailModal } from "./ShopItemDetailModal";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface ShopItemData {
@@ -44,6 +45,8 @@ export function ShopPromoSection({
     amount: 0.5,
     once: false 
   });
+  
+  const [selectedItem, setSelectedItem] = useState<ShopItemData | null>(null);
   
   // Truncate description to max 20 chars
   const shortDesc = description.length > 20 ? description.slice(0, 20) + "..." : description;
@@ -149,7 +152,7 @@ export function ShopPromoSection({
                         isLoading={isPurchasing === item.id}
                         canAfford={canAfford}
                         index={0}
-                        onClick={() => !isOwned && onItemClick(item)}
+                        onClick={() => !isOwned && setSelectedItem(item)}
                       />
                     </motion.div>
                   </CarouselItem>
@@ -159,6 +162,22 @@ export function ShopPromoSection({
           </Carousel>
         </motion.div>
       </div>
+      
+      {/* Detail Modal */}
+      <ShopItemDetailModal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        item={selectedItem}
+        canAfford={selectedItem ? gems >= selectedItem.price : false}
+        isPurchased={selectedItem ? purchasedItems.has(selectedItem.id) : false}
+        isLoading={selectedItem ? isPurchasing === selectedItem.id : false}
+        onBuy={() => {
+          if (selectedItem) {
+            onItemClick(selectedItem);
+            setSelectedItem(null);
+          }
+        }}
+      />
     </motion.section>
   );
 }

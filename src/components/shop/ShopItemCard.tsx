@@ -131,9 +131,9 @@ export function ShopItemCard({
           </div>
         </motion.div>
 
-        {/* Name + Description - Center, left-aligned */}
+        {/* Name - Center, left-aligned */}
         <div className="flex-1 text-left min-w-0">
-          <h3 className="text-gray-900 font-bold text-sm leading-tight truncate">{name}</h3>
+          <h3 className="text-gray-900 font-bold text-sm leading-tight">{name}</h3>
         </div>
 
         {/* Price / Status - Right side */}
@@ -146,30 +146,13 @@ export function ShopItemCard({
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
             <motion.div
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
               style={{
-                background:
-                  currency === "gems"
-                    ? "linear-gradient(180deg, #FFFFFF 0%, #F5F0FF 100%)"
-                    : "linear-gradient(180deg, hsl(45 90% 88%) 0%, hsl(40 85% 80%) 100%)",
-                boxShadow:
-                  currency === "gems"
-                    ? "0 2px 0 #E0D0F5"
-                    : "0 2px 0 hsl(35 80% 60%)",
+                background: "linear-gradient(135deg, rgba(147, 89, 221, 0.15), rgba(147, 89, 221, 0.08))",
               }}
-              whileHover={{ scale: 1.05 }}
             >
-              <span className={`font-semibold text-xs ${currency === "gems" ? "text-[#9359DD]" : "text-amber-800"}`}>
-                ყიდვა
-              </span>
-              <img src={currencyIcon} alt="" className="w-3.5 h-3.5" />
-              <span
-                className={`font-bold text-sm ${
-                  currency === "gems" ? "text-[#9359DD]" : "text-amber-800"
-                }`}
-              >
-                {price.toLocaleString()}
-              </span>
+              <img src={currencyIcon} alt="" className="w-4 h-4" />
+              <span className="font-bold text-sm text-[#9359DD]">{price}</span>
             </motion.div>
           )}
         </div>
