@@ -4,6 +4,7 @@ import { X, Upload, Camera, Sparkles, Check, RefreshCw, Loader2, FlipHorizontal 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { t } from "@/lib/i18n";
 
 interface AvatarGeneratorModalProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
       }
     } catch (error) {
       console.error("Camera error:", error);
-      toast.error("Could not access camera. Please check permissions.");
+      toast.error(t("errors.cameraPermission"));
       setStep("upload");
     }
   }, []);
@@ -104,13 +105,13 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error(t("errors.selectImageFile"));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+      toast.error(t("errors.imageTooLarge"));
       return;
     }
 
@@ -174,7 +175,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
 
       setGeneratedAvatar(data.avatarUrl);
       setStep("preview");
-      toast.success("Avatar generated!");
+      toast.success(t("avatar.avatarSaved"));
 
     } catch (error) {
       console.error("Error generating avatar:", error);
@@ -217,7 +218,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
       // Update profile with new avatar URL
       await updateProfile({ avatar_url: urlData.publicUrl });
 
-      toast.success("Avatar saved as profile picture!");
+      toast.success(t("avatar.avatarSaved"));
       onClose();
       resetState();
 
@@ -264,7 +265,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              <h2 className="font-display text-lg font-bold">AI Avatar</h2>
+              <h2 className="font-display text-lg font-bold">{t("avatar.aiTitle")}</h2>
             </div>
             <button
               onClick={handleClose}
@@ -279,7 +280,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
             {step === "upload" && (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground text-center">
-                  Take a selfie or upload a photo to generate your 3D avatar
+                  {t("avatar.description")}
                 </p>
 
                 {/* Preview uploaded image */}
@@ -298,7 +299,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                         className="px-4 py-2 rounded-full bg-muted text-sm font-medium flex items-center gap-2"
                       >
                         <RefreshCw className="w-4 h-4" />
-                        Change
+                        {t("avatar.change")}
                       </button>
                       <button
                         onClick={generateAvatar}
@@ -306,7 +307,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                         className="px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2"
                       >
                         <Sparkles className="w-4 h-4" />
-                        Generate
+                        {t("avatar.generate")}
                       </button>
                     </div>
                   </div>
@@ -321,7 +322,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                         <Camera className="w-6 h-6 text-primary" />
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        Take Selfie
+                        {t("avatar.takeSelfie")}
                       </span>
                     </button>
 
@@ -334,7 +335,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                         <Upload className="w-6 h-6 text-primary" />
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        Upload Photo
+                        {t("avatar.uploadPhoto")}
                       </span>
                     </button>
                   </div>
@@ -353,7 +354,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
             {step === "camera" && (
               <div className="flex flex-col items-center gap-4">
                 <p className="text-sm text-muted-foreground text-center">
-                  Position your face in the frame
+                  {t("avatar.positionFace")}
                 </p>
 
                 {/* Camera viewfinder */}
@@ -383,7 +384,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                     }}
                     className="px-4 py-2 rounded-full bg-muted text-sm font-medium"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                   <button
                     onClick={capturePhoto}
@@ -391,7 +392,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                     className="px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 disabled:opacity-50"
                   >
                     <Camera className="w-4 h-4" />
-                    Capture
+                    {t("avatar.capture")}
                   </button>
                 </div>
               </div>
@@ -414,8 +415,8 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                   />
                 </div>
                 <div className="text-center">
-                  <p className="font-semibold text-foreground">Creating your avatar...</p>
-                  <p className="text-sm text-muted-foreground">This may take 30-60 seconds</p>
+                  <p className="font-semibold text-foreground">{t("avatar.generating")}</p>
+                  <p className="text-sm text-muted-foreground">{t("avatar.generatingTime")}</p>
                 </div>
                 <motion.div
                   className="flex gap-1"
@@ -437,7 +438,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
             {step === "preview" && generatedAvatar && (
               <div className="flex flex-col items-center gap-4">
                 <p className="text-sm text-muted-foreground text-center">
-                  Your 3D avatar is ready!
+                  {t("avatar.avatarReady")}
                 </p>
 
                 <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary shadow-lg">
@@ -458,7 +459,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                     className="flex-1 py-3 rounded-full bg-muted text-sm font-medium flex items-center justify-center gap-2"
                   >
                     <RefreshCw className="w-4 h-4" />
-                    Regenerate
+                    {t("avatar.regenerate")}
                   </button>
                   <button
                     onClick={saveAvatar}
@@ -470,7 +471,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                     ) : (
                       <Check className="w-4 h-4" />
                     )}
-                    Use as PP
+                    {t("avatar.useAsProfile")}
                   </button>
                 </div>
               </div>

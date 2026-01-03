@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { t } from "@/lib/i18n";
 
 interface AvatarModalProps {
   isOpen: boolean;
@@ -86,7 +87,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       }
     } catch (error) {
       console.error("Camera error:", error);
-      toast.error("Could not access camera");
+      toast.error(t("errors.cameraPermission"));
       setStep("upload");
     }
   }, []);
@@ -128,12 +129,12 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error(t("errors.selectImageFile"));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+      toast.error(t("errors.imageTooLarge"));
       return;
     }
 
@@ -248,7 +249,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // Update profile
       await updateProfile({ avatar_url: finalUrl });
 
-      toast.success("Avatar saved! 🎉");
+      toast.success(t("avatar.avatarSaved"));
       onClose();
 
     } catch (error) {
@@ -273,10 +274,10 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // Update profile
       await updateProfile({ avatar_url: avatarUrl });
       
-      toast.success("Avatar updated!");
+      toast.success(t("avatar.avatarUpdated"));
       onClose();
     } catch (error) {
-      toast.error("Failed to update avatar");
+      toast.error(t("errors.generationFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -284,12 +285,12 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
   const animateAvatar = async () => {
     if (!profile?.avatar_url || !user) {
-      toast.error("No avatar to animate");
+      toast.error(t("errors.noAvatarToAnimate"));
       return;
     }
 
     setIsAnimating(true);
-    toast.info("Starting avatar animation... This takes 1-2 minutes!", { duration: 5000 });
+    toast.info(t("avatar.startingAnimation"), { duration: 5000 });
 
     try {
       // Start the animation
@@ -306,7 +307,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       // If completed immediately (unlikely)
       if (data.videoUrl) {
         await updateProfile({ animated_avatar_url: data.videoUrl });
-        toast.success("Avatar animated! 🎬", { duration: 5000 });
+        toast.success(t("avatar.avatarAnimated"), { duration: 5000 });
         confetti({
           particleCount: 100,
           spread: 70,
@@ -326,7 +327,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         throw new Error("No request ID or URLs received");
       }
 
-      toast.info("Animation started! Checking progress...", { duration: 3000 });
+      toast.info(t("avatar.animationStarted"), { duration: 3000 });
 
       // Poll every 5 seconds for up to 3 minutes (36 attempts)
       const maxAttempts = 36;
@@ -348,7 +349,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         }
 
         if (statusData?.success && statusData?.videoUrl) {
-          toast.success("Avatar animated! 🎬", { duration: 5000 });
+          toast.success(t("avatar.avatarAnimated"), { duration: 5000 });
           confetti({
             particleCount: 100,
             spread: 70,
@@ -362,11 +363,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
         // Show progress every 15 seconds (every 3rd attempt)
         if ((attempt + 1) % 3 === 0) {
-          toast.info(`Still processing... (${Math.round((attempt + 1) * 5 / 60)} min)`, { duration: 2000 });
+          toast.info(t("avatar.stillProcessing", { time: Math.round((attempt + 1) * 5 / 60) }), { duration: 2000 });
         }
       }
 
-      toast.error("Animation is taking longer than expected. Please try again later.");
+      toast.error(t("avatar.animationTakingLong"));
 
     } catch (error) {
       console.error("Error animating avatar:", error);
@@ -401,7 +402,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">Current Avatar</p>
+            <p className="text-sm text-muted-foreground">{t("avatar.currentAvatar")}</p>
             
             {/* Animate Avatar Button */}
             {profile?.avatar_url && (
@@ -415,12 +416,12 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 {isAnimating ? (
                   <>
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    <span>Animating...</span>
+                    <span>{t("avatar.animating")}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3 h-3" />
-                    <span>{profile?.animated_avatar_url ? "Re-animate" : "Animate Avatar"}</span>
+                    <span>{profile?.animated_avatar_url ? t("avatar.reAnimate") : t("avatar.animateAvatar")}</span>
                   </>
                 )}
               </motion.button>
@@ -430,7 +431,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           {/* Previous Generations */}
           {generations.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-foreground mb-2">Previous Avatars</p>
+              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.previousAvatars")}</p>
               <div className="grid grid-cols-4 gap-2">
                 {generations.slice(0, 8).map((gen) => (
                   <motion.button
@@ -460,7 +461,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
           {/* Generate New Section */}
           <div className="pt-2">
-            <p className="text-sm font-medium text-foreground mb-2">Create New Avatar</p>
+            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
             <div className="flex gap-3">
               <motion.button
                 onClick={startCamera}
@@ -471,7 +472,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Camera className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-xs text-muted-foreground">Selfie</span>
+                <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
               </motion.button>
 
               <motion.button
@@ -483,7 +484,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Upload className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-xs text-muted-foreground">Upload</span>
+                <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
               </motion.button>
             </div>
           </div>
@@ -507,7 +508,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           </div>
           
           <p className="text-sm text-muted-foreground text-center">
-            Your photo will be transformed into a premium 3D avatar
+            {t("avatar.description")}
           </p>
 
           <div className="flex gap-2 w-full">
@@ -521,7 +522,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               className="flex-1"
               icon={<RefreshCw className="w-4 h-4" />}
             >
-              Change
+              {t("avatar.change")}
             </ChunkyButton>
             <ChunkyButton
               variant="primary"
@@ -530,7 +531,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               className="flex-1"
               icon={<Wand2 className="w-4 h-4" />}
             >
-              Generate
+              {t("avatar.generate")}
             </ChunkyButton>
           </div>
         </div>
@@ -565,7 +566,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               }}
               className="flex-1"
             >
-              Cancel
+              {t("common.cancel")}
             </ChunkyButton>
             <ChunkyButton
               variant="primary"
@@ -575,7 +576,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               className="flex-1"
               icon={<Camera className="w-4 h-4" />}
             >
-              Capture
+              {t("avatar.capture")}
             </ChunkyButton>
           </div>
         </div>
@@ -596,8 +597,8 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-foreground">Creating your avatar...</p>
-            <p className="text-sm text-muted-foreground">This may take 30-60 seconds</p>
+            <p className="font-semibold text-foreground">{t("avatar.generating")}</p>
+            <p className="text-sm text-muted-foreground">{t("avatar.generatingTime")}</p>
           </div>
           <motion.div className="flex gap-1">
             {[0, 1, 2].map((i) => (
@@ -624,7 +625,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           >
             <img src={generatedAvatar} alt="Generated Avatar" className="w-full h-full object-cover" />
           </motion.div>
-          <p className="text-sm text-muted-foreground text-center">Your 3D avatar is ready!</p>
+          <p className="text-sm text-muted-foreground text-center">{t("avatar.avatarReady")}</p>
           <div className="flex gap-2 w-full">
             <ChunkyButton
               variant="ghost"
@@ -638,7 +639,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               className="flex-1"
               icon={<RefreshCw className="w-4 h-4" />}
             >
-              Redo
+              {t("avatar.regenerate")}
             </ChunkyButton>
             <ChunkyButton
               variant="success"
@@ -648,7 +649,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               className="flex-1"
               icon={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             >
-              Use
+              {t("avatar.useAsProfile")}
             </ChunkyButton>
           </div>
         </div>
@@ -664,8 +665,8 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       onClose={onClose}
       variant="primary"
       iconEmoji="🎨"
-      title="Your Avatar"
-      subtitle="Create or select your game avatar"
+      title={t("avatar.title")}
+      subtitle={t("avatar.subtitle")}
       showSparkles
     >
       {renderContent()}
