@@ -17,7 +17,6 @@ type SettingsView = "main" | "editName" | "changePassword" | "language";
 const languages = [
   { code: "ka", label: "ქართული", flag: "🇬🇪" },
   { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "ru", label: "Русский", flag: "🇷🇺" },
 ];
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
