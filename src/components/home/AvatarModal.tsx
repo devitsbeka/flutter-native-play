@@ -513,7 +513,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
           <div className="flex gap-2 w-full">
             <ChunkyButton
-              variant="ghost"
+              variant="secondary"
               size="md"
               onClick={() => {
                 setUploadedImage(null);
@@ -558,7 +558,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           <canvas ref={canvasRef} className="hidden" />
           <div className="flex gap-2 w-full">
             <ChunkyButton
-              variant="ghost"
+              variant="secondary"
               size="md"
               onClick={() => {
                 stopCamera();
@@ -628,7 +628,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           <p className="text-sm text-muted-foreground text-center">{t("avatar.avatarReady")}</p>
           <div className="flex gap-2 w-full">
             <ChunkyButton
-              variant="ghost"
+              variant="secondary"
               size="md"
               onClick={() => {
                 setStep("gallery");

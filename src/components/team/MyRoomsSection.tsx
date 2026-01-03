@@ -45,7 +45,7 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
           <p className="text-slate-500 text-sm mb-3">აქტიური ოთახი არ გაქვს</p>
           {onCreateRoom && (
             <ChunkyButton
-              variant="purple"
+              variant="primary"
               size="sm"
               onClick={onCreateRoom}
               icon={<Plus className="w-4 h-4" />}
@@ -164,7 +164,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         onClick={onJoin}
         className="w-full whitespace-nowrap"
         size="sm"
-        variant="purple"
+        variant="primary"
       >
         {room.status === "playing" ? "გაგრძელება" : "შეუერთდი"}
       </ChunkyButton>

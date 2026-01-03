@@ -354,7 +354,7 @@ export function GameModalFooter({
       {secondaryLabel && onSecondary && (
         <ChunkyButton
           onClick={onSecondary}
-          variant="ghost"
+          variant="secondary"
           size="md"
           className="w-full"
         >

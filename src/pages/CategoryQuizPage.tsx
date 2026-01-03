@@ -884,7 +884,7 @@ export default function CategoryQuizPage() {
               {/* Replay option when next level is available */}
               {passed && unlockedLevel && !isSaving && (
                 <ChunkyButton 
-                  variant="ghost" 
+                  variant="secondary" 
                   className="w-full"
                   onClick={() => {
                     hasFetched.current = false;
@@ -1024,7 +1024,7 @@ export default function CategoryQuizPage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <ChunkyButton
-                  variant="white"
+                  variant="secondary"
                   size="xl"
                   onClick={handleNextQuestion}
                   className="w-full"

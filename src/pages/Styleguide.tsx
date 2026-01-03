@@ -232,8 +232,7 @@ const Styleguide = () => {
                 <ChunkyButton variant="secondary">Secondary</ChunkyButton>
                 <ChunkyButton variant="success">Success</ChunkyButton>
                 <ChunkyButton variant="danger">Danger</ChunkyButton>
-                <ChunkyButton variant="ghost">Ghost</ChunkyButton>
-                <ChunkyButton variant="purple">Purple</ChunkyButton>
+                <ChunkyButton variant="mint">Mint</ChunkyButton>
               </div>
             </section>
 

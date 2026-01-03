@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "ghost" | "purple" | "white" | "mint";
+  variant?: "primary" | "secondary" | "success" | "danger" | "mint";
   size?: "sm" | "md" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -35,13 +35,13 @@ const variantStyles = {
     particle: "bg-secondary-foreground/60",
   },
   success: {
-    face: "bg-gradient-to-b from-success via-success to-success/90",
-    textColor: "text-success-foreground",
-    depth: "hsl(145 50% 30%)", // Darker green for depth
-    border: "hsl(145 50% 40%)", // Border between face and depth
-    glow: "hsl(var(--success) / 0.4)",
-    shine: "from-white/30 via-white/10 to-transparent",
-    particle: "bg-success-foreground/60",
+    face: "bg-gradient-to-b from-[#B8F0D8] via-[#A8E6CF] to-[#8DD8B9]",
+    textColor: "text-[#2D5A4A]",
+    depth: "#3D7A64", // Darker mint depth
+    border: "#5DAB94", // Border between face and depth
+    glow: "rgba(168, 230, 207, 0.5)",
+    shine: "from-white/40 via-white/15 to-transparent",
+    particle: "bg-[#2D5A4A]/50",
   },
   danger: {
     face: "bg-gradient-to-b from-destructive via-destructive to-destructive/90",
@@ -51,33 +51,6 @@ const variantStyles = {
     glow: "hsl(var(--destructive) / 0.4)",
     shine: "from-white/30 via-white/10 to-transparent",
     particle: "bg-destructive-foreground/60",
-  },
-  ghost: {
-    face: "bg-gradient-to-b from-card via-card to-card/90",
-    textColor: "text-foreground",
-    depth: "hsl(220 10% 70%)", // Visible gray depth
-    border: "hsl(220 10% 80%)", // Border between face and depth
-    glow: "hsl(var(--border) / 0.3)",
-    shine: "from-white/20 via-white/5 to-transparent",
-    particle: "bg-foreground/40",
-  },
-  purple: {
-    face: "bg-gradient-to-b from-[#9B87F5] via-[#8B5CF6] to-[#7C3AED]",
-    textColor: "text-white",
-    depth: "#4C1D95", // Darker purple depth
-    border: "#6D28D9", // Border between face and depth
-    glow: "rgba(139, 92, 246, 0.5)",
-    shine: "from-white/40 via-white/15 to-transparent",
-    particle: "bg-white/70",
-  },
-  white: {
-    face: "bg-gradient-to-b from-white via-gray-50 to-gray-100",
-    textColor: "text-gray-900",
-    depth: "#6b7280", // Darker gray for visible depth
-    border: "#9ca3af", // Border between face and depth
-    glow: "rgba(255, 255, 255, 0.5)",
-    shine: "from-white/50 via-white/20 to-transparent",
-    particle: "bg-gray-400",
   },
   mint: {
     face: "bg-gradient-to-b from-[#B8F0D8] via-[#A8E6CF] to-[#8DD8B9]",
