@@ -139,12 +139,14 @@ function MissionCarouselCard({
   mission, 
   onClaim, 
   isClaiming,
-  claimAnimation 
+  claimAnimation,
+  missionType
 }: { 
   mission: Mission; 
   onClaim: (id: string) => void; 
   isClaiming: boolean;
   claimAnimation: ClaimAnimationState | null;
+  missionType: "daily" | "weekly";
 }) {
   const theme = getMissionTheme(mission.mission_id);
   const progress = Math.min((mission.current_progress / mission.target_value) * 100, 100);
@@ -407,9 +409,15 @@ function MissionCarouselCard({
               </Button>
             </motion.div>
           ) : isClaimed ? (
-            <div className="flex items-center justify-center gap-2 text-emerald-600 bg-emerald-100 rounded-full px-8 py-3">
-              <Check className="w-5 h-5" />
-              <span className="font-bold text-lg">აღებულია</span>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center gap-1.5 text-emerald-600 bg-emerald-100 rounded-full px-4 py-1.5">
+                <Check className="w-4 h-4" />
+                <span className="font-medium text-sm">აღებულია</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <Clock className="w-3 h-3" />
+                <span>ახალი: {missionType === "daily" ? getTimeUntilMidnight() : getTimeUntilMonday()}</span>
+              </div>
             </div>
           ) : null}
         </div>
@@ -609,12 +617,12 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
     <div className="flex items-center justify-center gap-4 py-2">
       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <Clock className="w-4 h-4" />
-        <span>დღიური: <span className="font-mono font-bold">{getTimeUntilMidnight()}</span></span>
+        <span>დღის: <span className="font-mono font-bold">{getTimeUntilMidnight()}</span></span>
       </div>
       <div className="w-px h-4 bg-border" />
       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <Calendar className="w-4 h-4" />
-        <span>კვირული: <span className="font-mono font-bold">{getTimeUntilMonday()}</span></span>
+        <span>კვირის: <span className="font-mono font-bold">{getTimeUntilMonday()}</span></span>
       </div>
     </div>
   );
@@ -666,7 +674,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="daily" className="text-xs">
-              დღიური
+              დღის
               {dailyMissions.filter((m) => m.completed && !m.reward_claimed).length > 0 && (
                 <span className="ml-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center">
                   {dailyMissions.filter((m) => m.completed && !m.reward_claimed).length}
@@ -674,7 +682,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               )}
             </TabsTrigger>
             <TabsTrigger value="weekly" className="text-xs">
-              კვირული
+              კვირის
               {weeklyMissions.filter((m) => m.completed && !m.reward_claimed).length > 0 && (
                 <span className="ml-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center">
                   {weeklyMissions.filter((m) => m.completed && !m.reward_claimed).length}
@@ -711,6 +719,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                           onClaim={handleClaimMission}
                           isClaiming={claimingId === mission.mission_id}
                           claimAnimation={claimingId === mission.mission_id ? claimAnimation : null}
+                          missionType="daily"
                         />
                       </CarouselItem>
                     ))}
@@ -749,6 +758,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                           onClaim={handleClaimMission}
                           isClaiming={claimingId === mission.mission_id}
                           claimAnimation={claimingId === mission.mission_id ? claimAnimation : null}
+                          missionType="weekly"
                         />
                       </CarouselItem>
                     ))}
