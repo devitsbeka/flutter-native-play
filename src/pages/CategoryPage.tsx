@@ -161,36 +161,36 @@ export default function CategoryPage() {
 
 
       <div className="min-h-screen flex flex-col relative">
-        {/* Category Video Header Section - extends to include tabs overlap */}
-        <div className="absolute top-0 left-0 right-0 h-[380px] overflow-hidden z-0">
+        {/* Category Video Header Section - taller for more visual impact */}
+        <div className="absolute top-0 left-0 right-0 h-[55vh] min-h-[420px] overflow-hidden z-0">
           <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
             />
           </div>
-          {/* Dark gradient overlay for text readability */}
+          {/* Refined gradient overlay */}
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.4) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.5) 100%)',
             }}
           />
         </div>
 
-        {/* Header content area */}
-        <div className="relative z-10 h-[260px]">
+        {/* Header content area - taller to match new video height */}
+        <div className="relative z-10 h-[calc(55vh-80px)] min-h-[340px]">
           {/* Navigation buttons */}
           <div className="absolute top-12 left-5 right-5 flex items-center justify-between">
             <button
               onClick={() => navigate("/discover")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20"
             >
               <ArrowLeft className="h-5 w-5 text-white" />
             </button>
             {!user && (
               <button
                 onClick={() => navigate("/auth")}
-                className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
+                className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/25 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
               >
                 <LogIn className="h-4 w-4" />
                 შესვლა
@@ -198,34 +198,50 @@ export default function CategoryPage() {
             )}
           </div>
 
-          {/* Title and description */}
-          <div className="absolute bottom-16 left-5 right-5">
-            <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
-            <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
+          {/* Title only - centered in the video area */}
+          <div className="absolute bottom-20 left-5 right-5">
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg tracking-tight">{category.name}</h1>
           </div>
         </div>
 
-        {/* Tabs - half on video, half on white background */}
-        <div className="relative px-5 -mt-6 mb-4 z-20">
-          <div className="flex gap-2 bg-white/95 backdrop-blur-md rounded-full p-1.5 shadow-xl border border-white/50">
+        {/* Floating Tabs - polished pill design */}
+        <div className="relative px-5 -mt-8 mb-5 z-20">
+          <div 
+            className="flex gap-1 rounded-2xl p-1.5"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
+              boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8), inset 0 1px 0 0 rgba(255,255,255,1)',
+              border: '1px solid rgba(0,0,0,0.06)',
+            }}
+          >
             <button
               onClick={() => setActiveTab("leaderboard")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full font-semibold text-sm transition-all ${
-                activeTab === "leaderboard"
-                  ? "bg-white text-slate-800 shadow-lg"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
+              className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
+              style={{
+                background: activeTab === "leaderboard" 
+                  ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
+                  : 'transparent',
+                boxShadow: activeTab === "leaderboard"
+                  ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
+                  : 'none',
+                color: activeTab === "leaderboard" ? '#1E293B' : '#94A3B8',
+              }}
             >
               <Trophy className="h-4 w-4" />
               ლიდერბორდი
             </button>
             <button
               onClick={() => setActiveTab("map")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full font-semibold text-sm transition-all ${
-                activeTab === "map"
-                  ? "bg-white text-slate-800 shadow-lg"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
+              className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
+              style={{
+                background: activeTab === "map" 
+                  ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
+                  : 'transparent',
+                boxShadow: activeTab === "map"
+                  ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
+                  : 'none',
+                color: activeTab === "map" ? '#1E293B' : '#94A3B8',
+              }}
             >
               <Map className="h-4 w-4" />
               რუკა
