@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Crown, Zap, Sparkles } from "lucide-react";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import gemIcon from "@/assets/icons/icon-gem.png";
-import coinIcon from "@/assets/icons/icon-coin.png";
+import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
+import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
+import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
+import { ShopTab } from "./ShopTabBar";
 
 interface FeaturedDeal {
   id: string;
@@ -13,53 +14,55 @@ interface FeaturedDeal {
   badgeColor: string;
   originalPrice?: number;
   price: number;
-  icon: React.ReactNode;
-  gradient: string;
-  particles?: boolean;
+  icon: string;
+  videoSrc: string;
+  targetTab: ShopTab;
 }
 
 const FEATURED_DEALS: FeaturedDeal[] = [
   {
-    id: "mega_bundle",
-    title: "მეგა პაკეტი",
-    subtitle: "5x ყველა ძალა + 1000 მონეტა",
-    badge: "საუკეთესო ფასი",
-    badgeColor: "hsl(142 71% 45%)",
-    originalPrice: 35,
-    price: 25,
-    icon: <Zap className="w-12 h-12 text-yellow-300" />,
-    gradient: "linear-gradient(135deg, hsl(263 60% 55%) 0%, hsl(280 70% 45%) 100%)",
-    particles: true,
-  },
-  {
-    id: "vip_week",
-    title: "VIP კვირა",
-    subtitle: "2x XP • უსასრულო სპინი • ექსკლუზიური ჩარჩოები",
-    badge: "პოპულარული",
-    badgeColor: "hsl(340 80% 55%)",
-    originalPrice: 20,
-    price: 15,
-    icon: <Crown className="w-12 h-12 text-amber-300" />,
-    gradient: "linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(25 85% 50%) 100%)",
-    particles: true,
-  },
-  {
-    id: "starter_pack",
+    id: "starter_bundle",
     title: "სტარტერ პაკეტი",
-    subtitle: "2x ყველა ძალა • იდეალური დამწყებთათვის",
+    subtitle: "2x ყველა ძალა • 200 მონეტა • იდეალური დამწყებთათვის",
     badge: "ახალი",
     badgeColor: "hsl(200 80% 50%)",
     price: 8,
-    icon: <Sparkles className="w-12 h-12 text-sky-300" />,
-    gradient: "linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(180 70% 45%) 100%)",
+    icon: iconStarterPack,
+    videoSrc: "/videos/promo-starter-pack.mp4",
+    targetTab: "hot",
+  },
+  {
+    id: "mega_power_bundle",
+    title: "მეგა ძალები",
+    subtitle: "5x ყველა ძალა • საუკეთესო მოთამაშეებისთვის",
+    badge: "პოპულარული",
+    badgeColor: "hsl(340 80% 55%)",
+    originalPrice: 25,
+    price: 15,
+    icon: iconPowersBottle,
+    videoSrc: "/videos/promo-mega-powers.mp4",
+    targetTab: "powers",
+  },
+  {
+    id: "vip_week_deal",
+    title: "VIP კვირა",
+    subtitle: "2x XP • უსასრულო სპინი • ექსკლუზიური ჩარჩოები",
+    badge: "საუკეთესო ფასი",
+    badgeColor: "hsl(45 90% 50%)",
+    originalPrice: 20,
+    price: 15,
+    icon: iconVipCrown,
+    videoSrc: "/videos/promo-starter-pack.mp4",
+    targetTab: "vip",
   },
 ];
 
 interface ShopFeaturedCarouselProps {
   onDealClick: (dealId: string) => void;
+  onScrollToTab?: (tab: ShopTab) => void;
 }
 
-export function ShopFeaturedCarousel({ onDealClick }: ShopFeaturedCarouselProps) {
+export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeaturedCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
@@ -75,6 +78,10 @@ export function ShopFeaturedCarousel({ onDealClick }: ShopFeaturedCarouselProps)
   const goTo = (index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
+  };
+
+  const handleBannerClick = (deal: FeaturedDeal) => {
+    onScrollToTab?.(deal.targetTab);
   };
 
   const deal = FEATURED_DEALS[currentIndex];
@@ -106,93 +113,74 @@ export function ShopFeaturedCarousel({ onDealClick }: ShopFeaturedCarouselProps)
             animate="center"
             exit="exit"
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="absolute inset-0 p-5 flex flex-col justify-between"
-            style={{
-              background: deal.gradient,
-              boxShadow: "0 8px 0 hsl(0 0% 0% / 0.15), inset 0 2px 0 hsl(0 0% 100% / 0.2)",
-            }}
+            className="absolute inset-0 cursor-pointer"
+            onClick={() => handleBannerClick(deal)}
           >
-            {/* Animated particles */}
-            {deal.particles && (
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute text-2xl"
-                    style={{
-                      left: `${10 + i * 15}%`,
-                      top: `${20 + (i % 3) * 25}%`,
-                    }}
-                    animate={{
-                      y: [-10, 10, -10],
-                      opacity: [0.5, 1, 0.5],
-                      scale: [0.8, 1, 0.8],
-                    }}
-                    transition={{
-                      duration: 2 + i * 0.3,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  >
-                    ✨
-                  </motion.div>
-                ))}
-              </div>
-            )}
+            {/* Video Background */}
+            <video
+              src={deal.videoSrc}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
 
-            {/* Badge */}
-            <motion.div
-              className="self-start px-3 py-1 rounded-full text-xs font-bold text-white"
-              style={{
-                background: deal.badgeColor,
-                boxShadow: "0 2px 0 hsl(0 0% 0% / 0.2)",
-              }}
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              {deal.badge}
-            </motion.div>
+            {/* White gradient mask for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent" />
 
             {/* Content */}
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="text-2xl font-display font-bold text-white mb-1 drop-shadow-md">
-                  {deal.title}
-                </h3>
-                <p className="text-white/90 text-sm mb-3">{deal.subtitle}</p>
+            <div className="relative z-10 p-5 flex flex-col justify-between h-full">
+              {/* Badge */}
+              <motion.div
+                className="self-start px-3 py-1 rounded-full text-xs font-bold text-white"
+                style={{
+                  background: deal.badgeColor,
+                  boxShadow: "0 2px 0 hsl(0 0% 0% / 0.2)",
+                }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {deal.badge}
+              </motion.div>
 
-                {/* Price */}
-                <div className="flex items-center gap-3">
-                  {deal.originalPrice && (
-                    <span className="text-white/60 line-through text-lg">
-                      {deal.originalPrice}
-                    </span>
-                  )}
-                  <div
-                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
-                    style={{
-                      background: "hsl(0 0% 100% / 0.25)",
-                      boxShadow: "inset 0 1px 0 hsl(0 0% 100% / 0.3)",
-                    }}
-                  >
-                    <img src={gemIcon} alt="" className="w-5 h-5" />
-                    <span className="text-xl font-bold text-white">{deal.price}</span>
+              {/* Text content */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1 pr-4">
+                  <h3 className="text-2xl font-display font-bold text-gray-900 mb-1">
+                    {deal.title}
+                  </h3>
+                  <p className="text-gray-700 text-sm mb-3">{deal.subtitle}</p>
+
+                  {/* Price */}
+                  <div className="flex items-center gap-3">
+                    {deal.originalPrice && (
+                      <span className="text-gray-400 line-through text-lg">
+                        {deal.originalPrice}
+                      </span>
+                    )}
+                    <div
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
+                      style={{
+                        background: "hsl(0 0% 0% / 0.1)",
+                        boxShadow: "inset 0 1px 0 hsl(0 0% 100% / 0.3)",
+                      }}
+                    >
+                      <img src={gemIcon} alt="" className="w-5 h-5" />
+                      <span className="text-xl font-bold text-gray-900">{deal.price}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Icon */}
-              <motion.div
-                className="w-20 h-20 rounded-full flex items-center justify-center"
-                style={{
-                  background: "hsl(0 0% 100% / 0.15)",
-                  boxShadow: "0 4px 0 hsl(0 0% 0% / 0.1)",
-                }}
-                animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                {deal.icon}
-              </motion.div>
+                {/* Icon */}
+                <motion.div
+                  className="w-16 h-16 flex items-center justify-center"
+                  animate={{ scale: [1, 1.05, 1], rotate: [0, 3, -3, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <img src={deal.icon} alt="" className="w-[50px] h-[50px] object-contain drop-shadow-lg" />
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
