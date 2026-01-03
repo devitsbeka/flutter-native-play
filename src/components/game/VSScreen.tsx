@@ -69,6 +69,8 @@ export function VSScreen() {
   const [showWheel, setShowWheel] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
+  const [selectedCategoryVideo, setSelectedCategoryVideo] = useState<string | null>(null);
+  const [showCategoryBubble, setShowCategoryBubble] = useState(false);
   const [canStart, setCanStart] = useState(false);
 
   // Player data
@@ -150,11 +152,16 @@ export function VSScreen() {
   }, [slotPhase]);
 
   // Handle when category is selected by wheel
-  const handleCategorySelected = (categoryId: string, categoryName: string) => {
+  const handleCategorySelected = (categoryId: string, categoryName: string, videoUrl: string) => {
     setShowWheel(false);
     setSelectedCategoryId(categoryId);
     setSelectedCategoryName(categoryName);
-    setCanStart(true);
+    setSelectedCategoryVideo(videoUrl);
+    // Delay showing the bubble for smooth entrance
+    setTimeout(() => {
+      setShowCategoryBubble(true);
+      setCanStart(true);
+    }, 100);
   };
 
   // Start button now begins the game with the selected category
@@ -276,20 +283,53 @@ export function VSScreen() {
         </motion.div>
       </div>
 
-      {/* Selected Category Badge */}
+      {/* Selected Category Badge with Video Bubble */}
       {selectedCategoryName && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center pb-2"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="px-6 pb-2"
         >
-          <span className="text-white/60 text-sm">კატეგორია:</span>
-          <h3 
-            className="text-xl font-bold text-white"
-            style={{ fontFamily: "'TASolivare', sans-serif" }}
-          >
-            {selectedCategoryName}
-          </h3>
+          <div className="flex items-center gap-3">
+            {/* Animated Video Bubble */}
+            {selectedCategoryVideo && showCategoryBubble && (
+              <motion.div
+                initial={{ scale: 1.5, x: "50vw", y: -100, opacity: 0 }}
+                animate={{ scale: 1, x: 0, y: 0, opacity: 1 }}
+                transition={{ 
+                  duration: 0.6, 
+                  ease: [0.34, 1.56, 0.64, 1],
+                  delay: 0.1
+                }}
+                className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0"
+                style={{ 
+                  border: "3px solid rgba(255,215,0,0.7)",
+                  boxShadow: "0 0 15px rgba(255,215,0,0.3)"
+                }}
+              >
+                <video
+                  src={selectedCategoryVideo}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            )}
+            
+            {/* Category Text - Left aligned */}
+            <div className="flex flex-col">
+              <span className="text-white/60 text-sm">კატეგორია:</span>
+              <h3 
+                className="text-xl font-bold text-white"
+                style={{ fontFamily: "'TASolivare', sans-serif" }}
+              >
+                {selectedCategoryName}
+              </h3>
+            </div>
+          </div>
         </motion.div>
       )}
 
