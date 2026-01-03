@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { createNotification } from "@/hooks/useNotifications";
 
 export interface GameInvitation {
   id: string;
@@ -101,6 +102,35 @@ export function useGameInvitations() {
         });
 
         if (error) throw error;
+        
+        // Get sender's profile to include in notification
+        const { data: senderProfile } = await supabase
+          .from("profiles")
+          .select("nickname")
+          .eq("user_id", user.id)
+          .single();
+        
+        // Get room info for notification
+        const { data: roomInfo } = await supabase
+          .from("game_rooms")
+          .select("category_name")
+          .eq("id", roomId)
+          .single();
+        
+        // Create notification for receiver
+        await createNotification(
+          receiverId,
+          "challenge",
+          `${senderProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
+          roomInfo?.category_name ? `კატეგორია: ${roomInfo.category_name}` : "შემოგიერთდი თამაშს",
+          { 
+            invitation_id: roomId,
+            sender_id: user.id,
+            room_id: roomId,
+            category_name: roomInfo?.category_name,
+          }
+        );
+        
         toast.success("მოწვევა გაიგზავნა!");
         return true;
       } catch (error) {

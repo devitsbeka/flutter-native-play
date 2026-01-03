@@ -22,6 +22,7 @@ import { QuickPlayModal } from "@/components/team/QuickPlayModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
 import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
+import { GameInvitationsSection } from "@/components/team/GameInvitationsSection";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
@@ -226,6 +227,19 @@ function TeamContent() {
               playSound("button-click");
               setShowCreateModal(true);
             }}
+          />
+        </motion.div>
+
+        {/* Game Invitations Section - with green glow */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.11 }}
+          className="mb-6"
+        >
+          <GameInvitationsSection 
+            onAcceptInvitation={handleAcceptInvitation}
+            onJoinRoom={handleJoinFromInvitation}
           />
         </motion.div>
 
