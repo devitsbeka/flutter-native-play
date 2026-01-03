@@ -174,15 +174,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const beginPlaying = useCallback(async (categoryId: string) => {
     try {
-      // Fetch fresh questions for the selected category
-      const questions = await fetchQuestions(6, categoryId, 1, [], false);
+      // Try to fetch questions for the selected category
+      let questions = await fetchQuestions(6, categoryId, 1, [], false);
       
-      // If no questions, stay on vs-screen and don't proceed
+      // If no questions for this category, try fetching from all categories
       if (!questions || questions.length === 0) {
-        console.error("No questions available for category:", categoryId);
-        // Reset to home phase if no questions
-        setState(prev => ({ ...prev, phase: "home" }));
-        return;
+        console.warn("No questions for category, falling back to all categories:", categoryId);
+        questions = await fetchQuestions(6, undefined, 1, [], false);
+      }
+      
+      // If still no questions, show error but proceed to playing (empty state handled there)
+      if (!questions || questions.length === 0) {
+        console.error("No questions available at all");
       }
       
       // Preload icons for new questions
