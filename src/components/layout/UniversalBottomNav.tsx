@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
+import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
 
 interface UniversalBottomNavProps {
   onPlayClick?: () => void;
@@ -28,6 +29,7 @@ export function UniversalBottomNav({
   const navigate = useNavigate();
   const location = useLocation();
   const { pendingChallenges } = usePendingChallenges();
+  const { indicators } = useNewContentIndicators();
   
   const isHome = location.pathname === "/";
   const isTeam = location.pathname === "/team";
@@ -84,6 +86,7 @@ export function UniversalBottomNav({
               onClick={() => navigate("/discover")}
               isActive={isActive("/discover")}
               icon={Compass}
+              hasNewContent={indicators.explore}
             />
           </div>
 
@@ -93,6 +96,7 @@ export function UniversalBottomNav({
               onClick={() => navigate("/power-ups")}
               isActive={isActive("/power-ups")}
               icon={Store}
+              hasNewContent={indicators.shop}
             />
           </div>
 
@@ -120,6 +124,7 @@ export function UniversalBottomNav({
               onClick={() => navigate("/leaderboards")}
               isActive={isActive("/leaderboards")}
               icon={Trophy}
+              hasNewContent={indicators.rank}
             />
           </div>
 
@@ -130,6 +135,7 @@ export function UniversalBottomNav({
               isActive={isActive("/team")}
               icon={Headphones}
               badgeCount={pendingChallenges.length}
+              hasNewContent={indicators.team}
             />
           </div>
         </div>
@@ -143,12 +149,14 @@ function NavButton({
   isActive, 
   icon: Icon,
   badgeCount = 0,
+  hasNewContent = false,
 }: { 
   onClick: () => void;
   isActive: boolean;
   icon: React.ComponentType<{ className?: string }>;
   label?: string;
   badgeCount?: number;
+  hasNewContent?: boolean;
 }) {
   return (
     <motion.button
@@ -163,7 +171,7 @@ function NavButton({
           <Icon className="w-6 h-6 text-gray-800" />
         </div>
         
-        {/* Badge */}
+        {/* Badge count (for Team challenges) */}
         {badgeCount > 0 && (
           <motion.div
             initial={{ scale: 0 }}
@@ -178,6 +186,19 @@ function NavButton({
               {badgeCount > 9 ? "9+" : badgeCount}
             </span>
           </motion.div>
+        )}
+        
+        {/* Purple "new content" indicator dot */}
+        {hasNewContent && badgeCount === 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
+            style={{
+              background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+              boxShadow: "0 0 6px rgba(168, 85, 247, 0.6)",
+            }}
+          />
         )}
       </div>
       

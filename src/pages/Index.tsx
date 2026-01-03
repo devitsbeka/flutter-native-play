@@ -25,6 +25,7 @@ import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
+import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 
 import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
@@ -43,6 +44,7 @@ import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { useDailyPlays } from "@/hooks/useDailyPlays";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -119,6 +121,7 @@ export default function Index() {
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, recordPlay, watchAdForPlays } = useDailyPlays();
+  const { unreadCount } = useNotifications();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   
   // Calculate incomplete missions count
@@ -136,6 +139,7 @@ export default function Index() {
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
+  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -267,6 +271,10 @@ export default function Index() {
         onWatchAd={watchAdForPlays}
         playsRemaining={playsRemaining}
       />
+      <NotificationsPanel
+        isOpen={showNotificationsPanel}
+        onClose={() => setShowNotificationsPanel(false)}
+      />
       
       <div 
         ref={containerRef}
@@ -315,13 +323,29 @@ export default function Index() {
                 <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
               </motion.button>
               
-              {/* Bell icon */}
+              {/* Bell icon with unread badge */}
               <motion.button
                 className="relative p-1"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={() => setShowNotificationsPanel(true)}
               >
                 <Bell className="w-5 h-5 text-gray-600" />
+                {unreadCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                      boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  </motion.div>
+                )}
               </motion.button>
             </motion.div>
             
