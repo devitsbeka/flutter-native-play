@@ -160,9 +160,9 @@ export default function CategoryPage() {
       />
 
 
-      <div className="min-h-screen flex flex-col relative">
-        {/* Category Video Header Section */}
-        <div className="absolute top-0 left-0 right-0 h-[52vh] min-h-[380px] overflow-hidden z-0">
+      <div className="min-h-screen flex flex-col relative bg-background">
+        {/* Category Video Header Section - fixed height for clean tab positioning */}
+        <div className="relative h-[48vh] min-h-[340px] overflow-hidden">
           <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
@@ -172,15 +172,12 @@ export default function CategoryPage() {
           <div 
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.5) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.45) 100%)',
             }}
           />
-        </div>
-
-        {/* Header content area */}
-        <div className="relative z-10 h-[calc(52vh-28px)] min-h-[352px]">
+          
           {/* Navigation buttons */}
-          <div className="absolute top-12 left-5 right-5 flex items-center justify-between">
+          <div className="absolute top-12 left-5 right-5 flex items-center justify-between z-10">
             <button
               onClick={() => navigate("/discover")}
               className="flex h-11 w-11 items-center justify-center rounded-full bg-black/25 backdrop-blur-md border border-white/20"
@@ -198,14 +195,14 @@ export default function CategoryPage() {
             )}
           </div>
 
-          {/* Title - positioned just above tabs */}
-          <div className="absolute bottom-8 left-5 right-5">
+          {/* Title - positioned near bottom of video */}
+          <div className="absolute bottom-14 left-5 right-5 z-10">
             <h1 className="text-3xl font-bold text-white drop-shadow-lg tracking-tight">{category.name}</h1>
           </div>
         </div>
 
-        {/* Floating Tabs - half on video, half on content */}
-        <div className="relative px-5 -mt-7 mb-4 z-20">
+        {/* Floating Tabs - positioned to straddle video/content boundary */}
+        <div className="relative px-5 -mt-7 z-20">
           <div 
             className="flex gap-1 rounded-2xl p-1.5"
             style={{
@@ -249,31 +246,8 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        {/* Main Content Section with Homepage Video Background */}
-        <div className="flex-1 relative overflow-hidden">
-          {/* Homepage-style floating blob video background */}
-          <div className="absolute inset-0 z-0">
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover scale-125"
-              style={{ filter: "blur(8px)" }}
-            >
-              <source src={MAP_VIDEOS.default} type="video/mp4" />
-            </video>
-            {/* Light overlay for readability */}
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: 'rgba(255,255,255,0.85)',
-              }}
-            />
-          </div>
-
-          {/* Content */}
-          <div className="relative px-5 pt-4 pb-8 z-10 overflow-auto flex-1">
+        {/* Main Content Section - clean white background */}
+        <div className="flex-1 px-5 pt-5 pb-8 overflow-auto">
             {activeTab === "leaderboard" ? (
               <CategoryLeaderboard
                 categoryId={categoryId || ""}
