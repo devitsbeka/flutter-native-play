@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Check, Lock, Flame } from "lucide-react";
+import { Sparkles, Check, Lock, Flame, Clock } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
+import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import { GameModal } from "@/components/ui/game-modal";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -37,6 +38,20 @@ const celebrateClaim = () => {
   });
 };
 
+// Timer badge component
+const TimerBadge = ({ timeLeft }: { timeLeft: string }) => (
+  <div 
+    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+    style={{
+      background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
+      boxShadow: "0 2px 0 #FCD34D",
+    }}
+  >
+    <Clock className="w-4 h-4 text-amber-600" />
+    <span className="text-sm font-bold text-amber-700 font-mono">{timeLeft}</span>
+  </div>
+);
+
 // Streak badge component
 const StreakBadge = ({ streak }: { streak: number }) => (
   <div className="flex items-center justify-center gap-2 mb-4">
@@ -56,18 +71,20 @@ const DayRewardCard = ({
   index,
   currentDay,
   claimedToday,
+  canClaim,
   onClaim,
 }: {
   reward: (typeof dailyRewards)[0];
   index: number;
   currentDay: number;
   claimedToday: boolean;
+  canClaim: boolean;
   onClaim: () => void;
 }) => {
   const isToday = index === currentDay;
   const isClaimed = index < currentDay || (index === currentDay && claimedToday);
   const isLocked = index > currentDay;
-  const isAvailable = isToday && !claimedToday;
+  const isAvailable = isToday && canClaim && !claimedToday;
 
   return (
     <motion.div
@@ -166,12 +183,19 @@ const DayRewardCard = ({
 export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: DailyRewardsModalProps) {
   const { addCurrency } = useCurrency();
   const { playSound, vibrate } = useSound();
+  const { canClaimDaily, dailyTimeLeft, refreshTimers } = useRewardTimers();
+  const { claimDailyReward } = useDailyRewardsClaim();
   const [claimedToday, setClaimedToday] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const currentDay = Math.min(((currentStreak - 1) % 7), 6);
+
+  // Sync claimed state with timer hook
+  useEffect(() => {
+    setClaimedToday(!canClaimDaily);
+  }, [canClaimDaily]);
 
   // Scroll to center the current day when modal opens
   useEffect(() => {
@@ -186,12 +210,16 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   }, [isOpen, currentDay]);
 
   const handleClaim = async () => {
-    if (claimedToday) return;
+    if (claimedToday || !canClaimDaily) return;
 
     const reward = dailyRewards[currentDay];
     playSound("reward");
     vibrate([50, 30, 50]);
     celebrateClaim();
+
+    // Mark as claimed in database
+    const success = await claimDailyReward();
+    if (!success) return;
 
     await addCurrency(reward.coins, reward.gems || 0);
 
@@ -201,6 +229,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     }
 
     setClaimedToday(true);
+    refreshTimers();
 
     setTimeout(() => {
       setShowFlyingCoins(false);
@@ -226,8 +255,13 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
         showSparkles
         hideFooter
       >
-        {/* Streak Badge */}
-        <StreakBadge streak={currentStreak} />
+        {/* Timer or Streak Badge */}
+        <div className="flex flex-col items-center gap-2 mb-4">
+          <StreakBadge streak={currentStreak} />
+          {!canClaimDaily && (
+            <TimerBadge timeLeft={dailyTimeLeft} />
+          )}
+        </div>
 
         {/* Rewards - Horizontal scroll */}
         <div
@@ -242,6 +276,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
               index={index}
               currentDay={currentDay}
               claimedToday={claimedToday}
+              canClaim={canClaimDaily}
               onClaim={handleClaim}
             />
           ))}

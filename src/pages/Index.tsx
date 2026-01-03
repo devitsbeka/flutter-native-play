@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Menu, Check, Clock } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-tablet.png";
@@ -39,6 +39,8 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useTotalStars } from "@/hooks/useTotalStars";
 import { FlagIcon } from "@/components/shared/FlagIcon";
+import { useRewardTimers } from "@/hooks/useRewardTimers";
+import { useMissions } from "@/hooks/useMissions";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -112,7 +114,12 @@ export default function Index() {
   const { coins, gems } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
+  const { canClaimDaily, canClaimChest } = useRewardTimers();
+  const { missions, completedCount, totalCount } = useMissions();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
+  
+  // Calculate incomplete missions count
+  const incompleteMissions = totalCount - completedCount;
   
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
@@ -353,7 +360,15 @@ export default function Index() {
                     idleOffset={0}
                     size={62}
                     badge={
-                      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
+                      canClaimDaily ? (
+                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      ) : (
+                        <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
+                          <Clock className="w-2.5 h-2.5" />
+                        </span>
+                      )
                     }
                   />
                 </motion.div>
@@ -377,7 +392,15 @@ export default function Index() {
                     idleOffset={0.7}
                     size={62}
                     badge={
-                      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">2</span>
+                      incompleteMissions > 0 ? (
+                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                          {incompleteMissions}
+                        </span>
+                      ) : (
+                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      )
                     }
                   />
                 </motion.div>
@@ -401,7 +424,15 @@ export default function Index() {
                     idleOffset={1.4}
                     size={62}
                     badge={
-                      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">1</span>
+                      canClaimChest ? (
+                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                          <Check className="w-3.5 h-3.5" />
+                        </span>
+                      ) : (
+                        <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
+                          <Clock className="w-2.5 h-2.5" />
+                        </span>
+                      )
                     }
                   />
                 </motion.div>

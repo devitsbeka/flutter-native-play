@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Target, Trophy, Star, CheckCircle2, Gift } from "lucide-react";
+import { Target, Trophy, Star, CheckCircle2, Clock } from "lucide-react";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import { useMissions } from "@/hooks/useMissions";
 import { useSound } from "@/contexts/SoundContext";
@@ -21,6 +21,19 @@ const celebrateClaim = () => {
   });
 };
 
+// Calculate time until midnight for mission reset
+const getTimeUntilMidnight = (): string => {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const diff = midnight.getTime() - now.getTime();
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+};
+
 export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
   const { missions, loading } = useMissions();
   const { playSound } = useSound();
@@ -40,11 +53,14 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
     <img src={missionCrystalIcon} alt="" className="w-20 h-20 object-contain" />
   );
 
-  // Footer with reset info
+  // Footer with reset timer
   const footer = (
-    <p className="text-center text-muted-foreground text-xs py-2">
-      მისიები განახლდება ყოველ დღე 00:00-ზე
-    </p>
+    <div className="flex items-center justify-center gap-2 py-2">
+      <Clock className="w-4 h-4 text-muted-foreground" />
+      <p className="text-muted-foreground text-xs">
+        მისიები განახლდება: <span className="font-mono font-bold">{getTimeUntilMidnight()}</span>
+      </p>
+    </div>
   );
 
   return (
@@ -175,7 +191,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                           }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1 font-medium">
                         {mission.current_progress}/{mission.target_value}
                       </p>
                     </div>
@@ -189,8 +205,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ repeat: Infinity, duration: 1.5 }}
                       >
-                        <Gift className="w-4 h-4" />
-                        <span className="text-xs font-bold">აიღე!</span>
+                        <CheckCircle2 className="w-5 h-5" />
                       </motion.div>
                     ) : (
                       <div 

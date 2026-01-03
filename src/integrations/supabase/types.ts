@@ -827,6 +827,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_rewards: {
+        Row: {
+          chest_claimed: boolean | null
+          chest_claimed_at: string | null
+          created_at: string | null
+          daily_claimed: boolean | null
+          daily_claimed_at: string | null
+          id: string
+          reward_date: string
+          streak_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          chest_claimed?: boolean | null
+          chest_claimed_at?: string | null
+          created_at?: string | null
+          daily_claimed?: boolean | null
+          daily_claimed_at?: string | null
+          id?: string
+          reward_date?: string
+          streak_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          chest_claimed?: boolean | null
+          chest_claimed_at?: string | null
+          created_at?: string | null
+          daily_claimed?: boolean | null
+          daily_claimed_at?: string | null
+          id?: string
+          reward_date?: string
+          streak_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_daily_spins: {
         Row: {
           created_at: string
