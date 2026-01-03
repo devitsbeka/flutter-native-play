@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Clock } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
-import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
+import chestTabletIcon from "@/assets/icons/icon-chest-tablet.png";
 import confetti from "canvas-confetti";
 import { useRewards } from "@/hooks/useRewards";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
@@ -38,7 +38,7 @@ const ChestTimer = ({ timeLeft }: { timeLeft: string }) => (
       <Clock className="w-12 h-12 text-amber-600" />
     </div>
     <div className="text-center">
-      <p className="text-sm text-muted-foreground mb-2">მომდევნო სკივრი</p>
+      <p className="text-sm text-muted-foreground mb-2">მომდევნო განძი</p>
       <div 
         className="px-6 py-3 rounded-2xl"
         style={{
@@ -120,7 +120,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
 
   // Custom header icon for chest
   const chestIcon = (
-    <img src={chestBoxIcon} alt="" className="w-20 h-20 object-contain" />
+    <img src={chestTabletIcon} alt="" className="w-20 h-20 object-contain" />
   );
 
   return (
@@ -129,7 +129,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
       onClose={onClose}
       variant="gold"
       icon={chestIcon}
-      title={canClaimChest ? "სკივრი გახსნილია!" : "სკივრი"}
+      title={canClaimChest ? "განძი გახსნილია!" : "განძი"}
       subtitle={canClaimChest ? "გილოცავ! მიიღე შენი ჯილდოები" : "მალე მზად იქნება!"}
       showSparkles={canClaimChest}
       showStars={canClaimChest}

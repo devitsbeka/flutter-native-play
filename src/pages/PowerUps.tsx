@@ -29,6 +29,7 @@ import replaceIcon from "@/assets/powers/replace.png";
 import timeDrainIcon from "@/assets/powers/time-drain.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import powerBottleIcon from "@/assets/icons/icon-power-bottle.png";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 interface ShopItem {
@@ -142,7 +143,7 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "2x ყველა ძალა",
     price: 8,
     currency: "gems",
-    icon: <Zap className="w-8 h-8 text-blue-200" />,
+    icon: <img src={powerBottleIcon} alt="" className="w-8 h-8" />,
     gradient: "linear-gradient(135deg, hsl(200 80% 55%) 0%, hsl(220 70% 50%) 100%)",
     category: "powers",
   },
@@ -152,7 +153,7 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "5x ყველა ძალა",
     price: 15,
     currency: "gems",
-    icon: <Zap className="w-8 h-8 text-indigo-200" />,
+    icon: <img src={powerBottleIcon} alt="" className="w-8 h-8" />,
     gradient: "linear-gradient(135deg, hsl(240 70% 55%) 0%, hsl(260 65% 50%) 100%)",
     category: "powers",
     badge: "popular",
@@ -163,7 +164,7 @@ const SHOP_ITEMS: ShopItem[] = [
     description: "10x ყველა ძალა",
     price: 25,
     currency: "gems",
-    icon: <Zap className="w-8 h-8 text-purple-200" />,
+    icon: <img src={powerBottleIcon} alt="" className="w-8 h-8" />,
     gradient: "linear-gradient(135deg, hsl(270 70% 55%) 0%, hsl(290 65% 50%) 100%)",
     category: "powers",
     badge: "best-value",
