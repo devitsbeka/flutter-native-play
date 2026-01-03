@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, Diamond, Loader2, Play } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -169,31 +169,67 @@ export default function Leaderboards() {
     setWeekOffset(prev => prev + 1);
   };
 
+  // Swipe gesture handling
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = 50;
+    if (info.offset.x > threshold && weekInfo.weekNumber > 1) {
+      goToPreviousWeek();
+    } else if (info.offset.x < -threshold) {
+      goToNextWeek();
+    }
+  };
+
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      // Only fetch for current week
-      if (weekOffset !== 0) {
-        setLoading(false);
-        return;
-      }
-      
       setLoading(true);
       
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, user_id, nickname, country_code, total_points, games_won, games_played, avatar_url")
-        .order("total_points", { ascending: false })
-        .limit(100);
+      // For current week, fetch from profiles
+      if (weekOffset === 0) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, user_id, nickname, country_code, total_points, games_won, games_played, avatar_url")
+          .order("total_points", { ascending: false })
+          .limit(100);
 
-      if (!error && data) {
-        setEntries(data);
+        if (!error && data) {
+          setEntries(data);
+        }
+      } else if (weekOffset < 0) {
+        // For past weeks, fetch from weekly_leaderboard_snapshots
+        const { data, error } = await supabase
+          .from("weekly_leaderboard_snapshots")
+          .select("*")
+          .eq("week_number", weekInfo.weekNumber)
+          .eq("year", weekInfo.year)
+          .order("rank", { ascending: true })
+          .limit(100);
+
+        if (!error && data && data.length > 0) {
+          // Map snapshot data to LeaderboardEntry format
+          setEntries(data.map(snapshot => ({
+            id: snapshot.id,
+            user_id: snapshot.user_id,
+            nickname: snapshot.nickname,
+            country_code: snapshot.country_code || "",
+            total_points: snapshot.total_points,
+            games_won: snapshot.games_won,
+            games_played: snapshot.games_played,
+            avatar_url: snapshot.avatar_url
+          })));
+        } else {
+          // No historical data for this week
+          setEntries([]);
+        }
+      } else {
+        // Future weeks - no data
+        setEntries([]);
       }
       
       setLoading(false);
     };
 
     fetchLeaderboard();
-  }, [weekOffset, user]);
+  }, [weekOffset, weekInfo.weekNumber, weekInfo.year]);
 
   const topThree = entries.slice(0, 3);
 
@@ -249,10 +285,14 @@ export default function Leaderboards() {
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div 
-          className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-32 scroll-smooth"
+        {/* Scrollable Content with Swipe Support */}
+        <motion.div 
+          className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-32 scroll-smooth touch-pan-y"
           style={{ scrollBehavior: "smooth" }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={handleDragEnd}
         >
           <AnimatePresence mode="wait">
             {/* Future Week - Skeleton State */}
@@ -506,7 +546,7 @@ export default function Leaderboards() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
       </div>
 
       {/* Universal Bottom Navigation */}
