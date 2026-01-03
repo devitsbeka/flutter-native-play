@@ -1,16 +1,18 @@
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
-import fiftyFiftyIcon from "@/assets/powers/5050.png";
-import freezeIcon from "@/assets/powers/freeze.png";
-import replaceIcon from "@/assets/powers/replace.png";
-import timeDrainIcon from "@/assets/powers/time-drain.png";
+
+// New hexagonal badge icons
+import fiftyFiftyBadge from "@/assets/powers/5050-badge.png";
+import freezeBadge from "@/assets/powers/freeze-badge.png";
+import replaceBadge from "@/assets/powers/replace-badge.png";
+import timeDrainBadge from "@/assets/powers/time-drain-badge.png";
 
 const POWER_UP_ICONS: Record<PowerUpType, string> = {
-  "5050": fiftyFiftyIcon,
-  freeze: freezeIcon,
-  replace: replaceIcon,
-  "time-drain": timeDrainIcon,
+  "5050": fiftyFiftyBadge,
+  freeze: freezeBadge,
+  replace: replaceBadge,
+  "time-drain": timeDrainBadge,
 };
 
 const POWER_UP_NAMES: Record<PowerUpType, string> = {
@@ -86,13 +88,15 @@ export function MyPowersBar({ onPowerClick }: MyPowersBarProps) {
                 )}
               </motion.div>
 
-              {/* Icon */}
+              {/* Icon - just the badge, no container */}
               <div className="flex justify-center mb-2">
                 <img
                   src={POWER_UP_ICONS[type]}
                   alt={POWER_UP_NAMES[type]}
-                  className="w-10 h-10 object-contain"
-                  style={{ filter: isEmpty ? "grayscale(1)" : "none" }}
+                  className="w-11 h-11 object-contain"
+                  style={{ 
+                    filter: isEmpty ? "grayscale(1)" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" 
+                  }}
                 />
               </div>
 

@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import power5050 from "@/assets/powers/5050.png";
-import powerFreeze from "@/assets/powers/freeze.png";
-import powerReplace from "@/assets/powers/replace.png";
-import powerTimeDrain from "@/assets/powers/time-drain.png";
+
+// New hexagonal badge icons
+import power5050Badge from "@/assets/powers/5050-badge.png";
+import powerFreezeBadge from "@/assets/powers/freeze-badge.png";
+import powerReplaceBadge from "@/assets/powers/replace-badge.png";
+import powerTimeDrainBadge from "@/assets/powers/time-drain-badge.png";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 interface PowerUpEffectOverlayProps {
@@ -12,10 +14,10 @@ interface PowerUpEffectOverlayProps {
 }
 
 const POWER_UP_IMAGES: Record<PowerUpType, string> = {
-  "5050": power5050,
-  "freeze": powerFreeze,
-  "replace": powerReplace,
-  "time-drain": powerTimeDrain,
+  "5050": power5050Badge,
+  "freeze": powerFreezeBadge,
+  "replace": powerReplaceBadge,
+  "time-drain": powerTimeDrainBadge,
 };
 
 const POWER_UP_NAMES: Record<PowerUpType, string> = {
@@ -79,7 +81,7 @@ export function PowerUpEffectOverlay({ activeEffect, onComplete }: PowerUpEffect
             />
           ))}
 
-          {/* Power-up icon with bounce */}
+          {/* Power-up icon with bounce - just the badge */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -105,22 +107,17 @@ export function PowerUpEffectOverlay({ activeEffect, onComplete }: PowerUpEffect
               }}
             />
             
-            {/* Icon container */}
-            <motion.div
+            {/* Icon - just the badge, no container */}
+            <motion.img
+              src={POWER_UP_IMAGES[activeEffect]}
+              alt={activeEffect}
+              className="relative w-28 h-28 object-contain"
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 0.5, repeat: 2 }}
-              className="relative w-24 h-24 rounded-full flex items-center justify-center"
               style={{
-                background: `linear-gradient(135deg, ${POWER_UP_COLORS[activeEffect].from} 0%, ${POWER_UP_COLORS[activeEffect].to} 100%)`,
-                boxShadow: `0 8px 32px ${POWER_UP_COLORS[activeEffect].from}80`,
+                filter: `drop-shadow(0 8px 24px ${POWER_UP_COLORS[activeEffect].from}80)`,
               }}
-            >
-              <img
-                src={POWER_UP_IMAGES[activeEffect]}
-                alt={activeEffect}
-                className="w-16 h-16 object-contain drop-shadow-lg"
-              />
-            </motion.div>
+            />
 
             {/* Name label */}
             <motion.div
