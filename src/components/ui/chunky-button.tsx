@@ -19,9 +19,10 @@ const variantStyles = {
   primary: {
     face: "bg-gradient-to-b from-primary via-primary to-primary/90",
     textColor: "text-primary-foreground",
-    depth: "hsl(270 50% 35%)", // Darker, more saturated for contrast
-    border: "hsl(270 50% 45%)", // Border between face and depth
+    depth: "hsl(270 50% 35%)",
+    border: "hsl(270 50% 45%)",
     innerBorder: "rgba(255,255,255,0.25)",
+    outerStroke: "hsl(270 50% 28%)",
     glow: "hsl(var(--primary) / 0.4)",
     shine: "from-white/30 via-white/10 to-transparent",
     particle: "bg-primary-foreground/60",
@@ -29,42 +30,46 @@ const variantStyles = {
   secondary: {
     face: "bg-gradient-to-b from-secondary via-secondary to-secondary/90",
     textColor: "text-secondary-foreground",
-    depth: "hsl(220 10% 65%)", // Darker gray for depth
-    border: "hsl(220 10% 75%)", // Border between face and depth
+    depth: "hsl(220 10% 65%)",
+    border: "hsl(220 10% 75%)",
     innerBorder: "rgba(255,255,255,0.3)",
+    outerStroke: "hsl(220 10% 55%)",
     glow: "hsl(var(--secondary) / 0.3)",
     shine: "from-white/25 via-white/10 to-transparent",
     particle: "bg-secondary-foreground/60",
   },
   success: {
-    face: "bg-gradient-to-b from-[#C5F5E3] via-[#A8E6CF] to-[#7DD4AA]",
-    textColor: "text-[#1A4A3A]",
-    depth: "#6BC4A0", // Lighter, polished mint depth
-    border: "#8BD8B8", // Soft gradient border
-    innerBorder: "#E5FBF2", // Light inner stroke
-    glow: "rgba(168, 230, 207, 0.6)",
-    shine: "from-white/50 via-white/20 to-transparent",
-    particle: "bg-[#2D5A4A]/50",
+    face: "bg-gradient-to-b from-[#7DD8BC] via-[#6BCFB0] to-[#5CC5A5]",
+    textColor: "text-white",
+    depth: "#4BA78A",
+    border: "#5BB99D",
+    innerBorder: "rgba(255,255,255,0.4)",
+    outerStroke: "#3D8A70",
+    glow: "rgba(107, 207, 176, 0.5)",
+    shine: "from-white/40 via-white/15 to-transparent",
+    particle: "bg-white/50",
   },
   danger: {
     face: "bg-gradient-to-b from-destructive via-destructive to-destructive/90",
     textColor: "text-destructive-foreground",
-    depth: "hsl(0 60% 35%)", // Darker red for depth
-    border: "hsl(0 60% 45%)", // Border between face and depth
+    depth: "hsl(0 60% 35%)",
+    border: "hsl(0 60% 45%)",
     innerBorder: "rgba(255,255,255,0.2)",
+    outerStroke: "hsl(0 60% 28%)",
     glow: "hsl(var(--destructive) / 0.4)",
     shine: "from-white/30 via-white/10 to-transparent",
     particle: "bg-destructive-foreground/60",
   },
   mint: {
-    face: "bg-gradient-to-b from-[#C5F5E3] via-[#A8E6CF] to-[#7DD4AA]",
-    textColor: "text-[#1A4A3A]",
-    depth: "#6BC4A0", // Lighter, polished mint depth
-    border: "#8BD8B8", // Soft gradient border
-    innerBorder: "#E5FBF2", // Light inner stroke
-    glow: "rgba(168, 230, 207, 0.6)",
-    shine: "from-white/50 via-white/20 to-transparent",
-    particle: "bg-[#2D5A4A]/50",
+    face: "bg-gradient-to-b from-[#7DD8BC] via-[#6BCFB0] to-[#5CC5A5]",
+    textColor: "text-white",
+    depth: "#4BA78A",
+    border: "#5BB99D",
+    innerBorder: "rgba(255,255,255,0.4)",
+    outerStroke: "#3D8A70",
+    glow: "rgba(107, 207, 176, 0.5)",
+    shine: "from-white/40 via-white/15 to-transparent",
+    particle: "bg-white/50",
   },
 };
 
@@ -136,17 +141,17 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
           transform: isPressed ? `translateY(${depth - 2}px)` : "translateY(0px)",
           boxShadow: isPressed 
             ? `
-              inset 0 1px 2px 0 rgba(0,0,0,0.1),
-              inset 0 -1px 0 0 ${styles.border},
+              inset 0 2px 4px 0 rgba(0,0,0,0.15),
               0 2px 0 0 ${styles.depth},
-              0 4px 12px -2px ${styles.glow}
+              0 2px 0 1px ${styles.outerStroke},
+              0 4px 8px -2px ${styles.glow}
             `
             : `
               inset 0 2px 0 0 ${styles.innerBorder},
-              inset 0 -2px 0 0 ${styles.border},
+              0 1px 0 0 ${styles.border},
               0 ${depth}px 0 0 ${styles.depth},
-              0 ${depth + 2}px 0 0 ${styles.border},
-              0 ${depth + 6}px 24px -4px ${styles.glow}
+              0 ${depth}px 0 2px ${styles.outerStroke},
+              0 ${depth + 6}px 20px -4px ${styles.glow}
             `,
           touchAction: "manipulation",
           ...style,
