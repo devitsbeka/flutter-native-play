@@ -26,7 +26,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("ka");
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return localStorage.getItem("app_language") || "ka";
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleBack = () => {
