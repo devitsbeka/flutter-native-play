@@ -62,19 +62,28 @@ function TeamContentV2() {
     enterRoom(roomCode);
   };
 
-  // Show game screen if playing
-  if (phase === "playing") {
+  // Show game screen if playing (with guard for currentRoom)
+  if (phase === "playing" && currentRoom) {
     return <MultiplayerGameScreenV2 />;
   }
 
-  // Show result screen
-  if (phase === "results") {
+  // Show result screen (with guard for currentRoom)
+  if (phase === "results" && currentRoom) {
     return <GameResultsScreenV2 />;
   }
 
-  // Show lobby if in room
-  if (phase === "lobby") {
+  // Show lobby if in room (with guard for currentRoom)
+  if (phase === "lobby" && currentRoom) {
     return <RoomLobbyV2 />;
+  }
+
+  // Show loading when phase is set but room isn't ready yet
+  if (phase !== "idle" && !currentRoom) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   // Show login prompt if not authenticated
