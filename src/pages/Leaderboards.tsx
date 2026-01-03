@@ -349,7 +349,7 @@ export default function Leaderboards() {
                   size="lg"
                   className="w-full"
                   icon={<Play className="w-5 h-5 fill-current" />}
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/game")}
                 >
                   ითამაშე
                 </ChunkyButton>
