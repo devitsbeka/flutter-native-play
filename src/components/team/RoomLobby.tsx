@@ -232,7 +232,7 @@ export function RoomLobby() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background/80 backdrop-blur-sm">
+    <div className="min-h-screen relative overflow-hidden bg-background">
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
