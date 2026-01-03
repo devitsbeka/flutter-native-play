@@ -153,8 +153,7 @@ export function VSScreen() {
     setShowWheel(false);
     setSelectedCategoryName(categoryName);
     setCanStart(true);
-    // Set up the match with the selected category
-    startMatch();
+    // Don't call startMatch here - just show the Start button
   };
 
   // Start button now just begins the game (category already selected)
