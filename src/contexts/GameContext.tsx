@@ -173,20 +173,29 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const beginPlaying = useCallback(async (categoryId: string) => {
-    // Fetch fresh questions for the selected category
-    const questions = await fetchQuestions(6, categoryId, 1, [], false);
-    
-    // Preload icons for new questions
-    preloadQuestionIcons(
-      questions.map(q => ({ question: q.question, category: q.categoryId || q.category }))
-    );
-    
-    setSelectedCategoryId(categoryId);
-    
-    setState(prev => ({
-      ...prev,
-      phase: "playing",
-      questions,
+    try {
+      // Fetch fresh questions for the selected category
+      const questions = await fetchQuestions(6, categoryId, 1, [], false);
+      
+      // If no questions, stay on vs-screen and don't proceed
+      if (!questions || questions.length === 0) {
+        console.error("No questions available for category:", categoryId);
+        // Reset to home phase if no questions
+        setState(prev => ({ ...prev, phase: "home" }));
+        return;
+      }
+      
+      // Preload icons for new questions
+      preloadQuestionIcons(
+        questions.map(q => ({ question: q.question, category: q.categoryId || q.category }))
+      );
+      
+      setSelectedCategoryId(categoryId);
+      
+      setState(prev => ({
+        ...prev,
+        phase: "playing",
+        questions,
       currentQuestionIndex: 0,
       userScore: 0,
       opponentScore: 0,
@@ -205,8 +214,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       playerFreezeEndTime: null,
       playerTimerBonus: 0,
       hiddenAnswers: [],
-      replacedAnswer: null,
-    }));
+        replacedAnswer: null,
+      }));
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      setState(prev => ({ ...prev, phase: "home" }));
+    }
   }, [fetchQuestions]);
 
   const usePowerUp = useCallback((type: PowerUpType) => {
