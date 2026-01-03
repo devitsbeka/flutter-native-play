@@ -41,7 +41,7 @@ export function CategoryLeaderboard({
     // Base styles for top 3
     const baseStyles = {
       1: {
-        background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
+        background: "transparent",
         border: "2px solid #34D399",
         boxShadow: "0 2px 8px rgba(52, 211, 153, 0.3)",
       },
