@@ -867,19 +867,9 @@ export default function CategoryQuizPage() {
                     setLevelUpRewardsCredited(false);
                   }}
                 >
-                  თავიდან თამაში
-                </ChunkyButton>
-              )}
-              
-              {/* Secondary action: Go to category map */}
-              <ChunkyButton 
-                variant="secondary"
-                onClick={() => navigate(`/category/${categoryId}`)}
-                disabled={isSaving}
-                className="w-full"
-              >
-                რუკაზე დაბრუნება
+              სცადე თავიდან
               </ChunkyButton>
+            )}
               
               {/* Replay option when next level is available */}
               {passed && unlockedLevel && !isSaving && (
