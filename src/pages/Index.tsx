@@ -25,7 +25,7 @@ import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
-import { NotificationsPanel } from "@/components/home/NotificationsPanel";
+
 
 import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
@@ -139,7 +139,6 @@ export default function Index() {
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
-  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -271,11 +270,6 @@ export default function Index() {
         onWatchAd={watchAdForPlays}
         playsRemaining={playsRemaining}
       />
-      <NotificationsPanel
-        isOpen={showNotificationsPanel}
-        onClose={() => setShowNotificationsPanel(false)}
-      />
-      
       <div 
         ref={containerRef}
         className="relative h-screen w-full overflow-hidden"
@@ -328,7 +322,7 @@ export default function Index() {
                 className="relative p-1"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setShowNotificationsPanel(true)}
+                onClick={() => navigate('/notifications')}
               >
                 <Bell className="w-5 h-5 text-gray-600" />
                 {unreadCount > 0 && (
