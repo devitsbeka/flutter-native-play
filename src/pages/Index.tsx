@@ -41,6 +41,8 @@ import { useTotalStars } from "@/hooks/useTotalStars";
 import { FlagIcon } from "@/components/shared/FlagIcon";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
+import { useDailyPlays } from "@/hooks/useDailyPlays";
+import { WatchAdModal } from "@/components/home/WatchAdModal";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -116,6 +118,7 @@ export default function Index() {
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
+  const { playsRemaining, maxPlays, canPlay, isVip, recordPlay, watchAdForPlays } = useDailyPlays();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   
   // Calculate incomplete missions count
@@ -132,7 +135,7 @@ export default function Index() {
   const [showMissionsModal, setShowMissionsModal] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
-  
+  const [showWatchAdModal, setShowWatchAdModal] = useState(false);
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -182,8 +185,8 @@ export default function Index() {
     setPullDistance(0);
   }, [pullDistance, user, fetchProfile]);
 
-  // Handle play button click - check auth status
-  const handlePlayClick = useCallback(() => {
+  // Handle play button click - check auth status and plays remaining
+  const handlePlayClick = useCallback(async () => {
     if (!user) {
       // Not logged in - start signup onboarding
       startOnboarding();
@@ -194,10 +197,13 @@ export default function Index() {
       // First time with avatar - show walkthrough
       setStep("walkthrough");
     } else {
-      // All good - navigate to game
-      navigate("/game");
+      // Check if user can play
+      const canPlayGame = await recordPlay();
+      if (canPlayGame) {
+        navigate("/game");
+      }
     }
-  }, [user, profile, navigate, startOnboarding, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep]);
+  }, [user, profile, navigate, startOnboarding, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay]);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
@@ -255,7 +261,12 @@ export default function Index() {
         isOpen={showMyPowersModal}
         onClose={() => setShowMyPowersModal(false)}
       />
-      
+      <WatchAdModal
+        isOpen={showWatchAdModal}
+        onClose={() => setShowWatchAdModal(false)}
+        onWatchAd={watchAdForPlays}
+        playsRemaining={playsRemaining}
+      />
       
       <div 
         ref={containerRef}
@@ -568,7 +579,12 @@ export default function Index() {
 
         {/* Universal Bottom Navigation */}
         <UniversalBottomNav 
-          onPlayClick={handlePlayClick} 
+          onPlayClick={handlePlayClick}
+          playsRemaining={playsRemaining}
+          maxPlays={maxPlays}
+          canPlay={canPlay}
+          isVip={isVip}
+          onWatchAdClick={() => setShowWatchAdModal(true)}
         />
       </div>
     </>

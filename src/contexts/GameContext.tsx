@@ -4,7 +4,7 @@ import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { missionTracker } from "@/services/missionTracker";
 
-export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
+export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "category-wheel" | "playing" | "question-result" | "match-result";
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
 
 export interface AnswerHistory {
@@ -54,6 +54,7 @@ interface GameState {
 interface GameContextType extends GameState {
   startMatchmaking: (categoryId?: string) => Promise<void>;
   startMatch: () => void;
+  beginPlaying: () => void;
   answerQuestion: (answer: string, timeRemaining: number) => void;
   nextQuestion: () => void;
   finishMatch: () => void;
@@ -164,6 +165,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [preparationProgress, state.phase]);
 
   const startMatch = useCallback(() => {
+    // First show the category wheel
+    setState(prev => ({
+      ...prev,
+      phase: "category-wheel",
+    }));
+  }, []);
+
+  const beginPlaying = useCallback(() => {
     setState(prev => ({
       ...prev,
       phase: "playing",
@@ -364,6 +373,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         ...state,
         startMatchmaking,
         startMatch,
+        beginPlaying,
         answerQuestion,
         nextQuestion,
         finishMatch,
