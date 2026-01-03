@@ -37,6 +37,7 @@ import IconAssignment from "./pages/admin/IconAssignment";
 import MissingIcons from "./pages/admin/MissingIcons";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
+import AllButtons from "./pages/AllButtons";
 
 const App = () => (
   <AuthProvider>
@@ -77,6 +78,7 @@ const App = () => (
                 <Route path="missing-icons" element={<MissingIcons />} />
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
+              <Route path="/all-buttons" element={<AllButtons />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
