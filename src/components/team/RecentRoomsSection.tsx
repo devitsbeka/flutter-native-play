@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { MoreVertical, MessageCircle } from "lucide-react";
+import { MoreVertical, MessageCircle, Plus } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface RecentRoomsSectionProps {
   onViewAll?: () => void;
@@ -36,7 +37,9 @@ export function RecentRoomsSection({ onViewAll }: RecentRoomsSectionProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
-        <button onClick={onViewAll} className="text-sm font-semibold text-orange-600 px-3 py-1 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors">ყველა</button>
+        <ChunkyButton onClick={onViewAll} variant="secondary" size="sm">
+          ყველა
+        </ChunkyButton>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
@@ -105,22 +108,23 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 relative z-10">
-        <motion.button
-          className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/40"
-          whileHover={{ scale: 1.02, boxShadow: "0 10px 20px -5px rgba(249, 115, 22, 0.5)" }}
-          whileTap={{ scale: 0.98 }}
+        <ChunkyButton
+          variant="primary"
+          size="sm"
+          className="flex-1"
+          icon={<Plus className="w-4 h-4" />}
         >
-          + თამაში
-        </motion.button>
+          თამაში
+        </ChunkyButton>
 
-        <motion.button
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 text-sm font-semibold border-2 border-gray-200 shadow-sm"
-          whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
-          whileTap={{ scale: 0.98 }}
+        <ChunkyButton
+          variant="secondary"
+          size="sm"
+          className="flex-1"
+          icon={<MessageCircle className="w-4 h-4" />}
         >
-          <MessageCircle className="w-4 h-4" />
           ჩატი
-        </motion.button>
+        </ChunkyButton>
       </div>
     </motion.div>
   );

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useRecentPlayers } from "@/hooks/useRecentPlayers";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface RecentPlayersListProps {
   onViewAll?: () => void;
@@ -32,7 +33,9 @@ export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო მოთამაშეები</span>
-        <button onClick={onViewAll} className="text-sm font-semibold text-orange-600 px-3 py-1 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors">ყველა</button>
+        <ChunkyButton onClick={onViewAll} variant="secondary" size="sm">
+          ყველა
+        </ChunkyButton>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
