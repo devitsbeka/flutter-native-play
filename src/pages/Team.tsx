@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Users } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
-import { CreateRoomModal } from "@/components/team/CreateRoomModal";
+import { CreateRoomPage } from "@/components/team/CreateRoomPage";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobby } from "@/components/team/RoomLobby";
 import { MultiplayerGameScreen } from "@/components/team/MultiplayerGameScreen";
@@ -250,11 +250,13 @@ function TeamContent() {
         </motion.div>
       </div>
 
-      {/* Modals */}
-      <CreateRoomModal 
-        isOpen={showCreateModal} 
-        onClose={() => setShowCreateModal(false)} 
-      />
+      {/* Create Room Page (full screen) */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateRoomPage onClose={() => setShowCreateModal(false)} />
+        )}
+      </AnimatePresence>
+      
       <JoinRoomModal 
         isOpen={showJoinModal} 
         onClose={() => setShowJoinModal(false)} 
