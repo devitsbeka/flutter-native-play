@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { Search, ChevronLeft, ChevronRight, ExternalLink, Image, Film } from 'lucide-react';
@@ -77,7 +78,7 @@ export const GenerationHistoryTable = () => {
         </Badge>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <ScrollArea className="h-[500px] border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
@@ -169,7 +170,7 @@ export const GenerationHistoryTable = () => {
             )}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
