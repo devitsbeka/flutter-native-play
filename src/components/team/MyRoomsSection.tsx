@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Plus, Users, Gamepad2 } from "lucide-react";
+import { Plus, Users, Gamepad2 } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -66,11 +66,11 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
               <div 
                 className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
                 style={{
-                  background: "linear-gradient(145deg, #6EE7B7 0%, #34D399 50%, #10B981 100%)",
-                  boxShadow: "0 4px 15px rgba(52, 211, 153, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
+                  background: "linear-gradient(145deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
+                  boxShadow: "0 4px 15px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
                 }}
               >
-                <Home className="w-6 h-6 text-white" />
+                <Plus className="w-6 h-6 text-white" />
               </div>
               <span className="text-xs font-medium text-slate-600">ოთახის შექმნა</span>
             </motion.button>
@@ -90,11 +90,11 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
                 <div 
                   className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
                   style={{
-                    background: "linear-gradient(145deg, #6EE7B7 0%, #34D399 50%, #10B981 100%)",
-                    boxShadow: "0 4px 15px rgba(52, 211, 153, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
+                    background: "linear-gradient(145deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
+                    boxShadow: "0 4px 15px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
                   }}
                 >
-                  <Home className="w-6 h-6 text-white" />
+                  <Plus className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-xs font-medium text-slate-600">შექმნა</span>
               </motion.button>

@@ -36,8 +36,8 @@ export function UniversalBottomNav({
   const isActive = (path: string) => location.pathname === path;
 
   // Determine center button behavior
-  const showPlayButton = isHome || isTeam;
-  const isPurpleVariant = isTeam;
+  const showPlayButton = isHome;
+  const isPurpleVariant = false;
 
   const handleCenterClick = () => {
     if (isHome) {
@@ -46,8 +46,6 @@ export function UniversalBottomNav({
       } else {
         onWatchAdClick?.();
       }
-    } else if (isTeam) {
-      onTeamPlayClick?.();
     } else {
       navigate("/");
     }
@@ -104,11 +102,11 @@ export function UniversalBottomNav({
           <div className="flex-1 flex justify-center">
             <div className="relative" style={{ width: 72, height: 48 }}>
               <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -8 }}>
-                <Hex3DPlayButton 
+              <Hex3DPlayButton 
                   onClick={handleCenterClick}
-                  isPlayButton={showPlayButton && !isTeam}
-                  isPlusIcon={isTeam}
-                  variant={isPurpleVariant ? "purple" : isVip ? "gold" : canPlay ? "mint" : "exhausted"}
+                  isPlayButton={showPlayButton}
+                  isPlusIcon={false}
+                  variant={isVip ? "gold" : canPlay ? "mint" : "exhausted"}
                   playsRemaining={playsRemaining}
                   maxPlays={maxPlays}
                   isVip={isVip}
