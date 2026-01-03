@@ -331,12 +331,59 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .single();
       
       if (existing) {
-        // Re-entering - just update state
-        setState(prev => ({
-          ...prev,
-          phase: room.status === "playing" ? "playing" : room.status === "completed" ? "results" : "lobby",
-          currentRoom: room as GameRoom,
-        }));
+        // Re-entering - determine phase based on room status
+        let newPhase: GamePhase = "lobby";
+        if (room.status === "playing") {
+          newPhase = "playing";
+        } else if (room.status === "completed") {
+          newPhase = "results";
+        }
+        
+        // If game is playing, load the questions
+        if (newPhase === "playing") {
+          const { data: roomQuestions } = await supabase
+            .from("room_questions")
+            .select("*")
+            .eq("room_id", room.id)
+            .order("question_index", { ascending: true });
+          
+          if (roomQuestions && roomQuestions.length > 0) {
+            const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
+              id: `${room.id}-${q.question_index}`,
+              question: q.question_text,
+              correctAnswer: q.correct_answer,
+              incorrectAnswers: q.incorrect_answers,
+              allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
+              difficulty: q.difficulty || "medium",
+              category: room.category_name || "General",
+            }));
+            
+            // Get current progress from participant
+            const currentQuestion = existing.current_question || 0;
+            
+            setState(prev => ({
+              ...prev,
+              phase: "playing",
+              currentRoom: room as GameRoom,
+              questions,
+              currentQuestionIndex: currentQuestion,
+              myScore: existing.score || 0,
+            }));
+          } else {
+            // No questions yet, go to lobby
+            setState(prev => ({
+              ...prev,
+              phase: "lobby",
+              currentRoom: room as GameRoom,
+            }));
+          }
+        } else {
+          setState(prev => ({
+            ...prev,
+            phase: newPhase,
+            currentRoom: room as GameRoom,
+          }));
+        }
       } else {
         // New participant
         const { data: participantCount } = await supabase
