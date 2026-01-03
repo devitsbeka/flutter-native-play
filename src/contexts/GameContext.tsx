@@ -54,7 +54,7 @@ interface GameState {
 interface GameContextType extends GameState {
   startMatchmaking: (categoryId?: string) => Promise<void>;
   startMatch: () => void;
-  beginPlaying: () => void;
+  beginPlaying: (categoryId: string) => Promise<void>;
   answerQuestion: (answer: string, timeRemaining: number) => void;
   nextQuestion: () => void;
   finishMatch: () => void;
@@ -172,10 +172,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const beginPlaying = useCallback(() => {
+  const beginPlaying = useCallback(async (categoryId: string) => {
+    // Fetch fresh questions for the selected category
+    const questions = await fetchQuestions(6, categoryId, 1, [], false);
+    
+    // Preload icons for new questions
+    preloadQuestionIcons(
+      questions.map(q => ({ question: q.question, category: q.categoryId || q.category }))
+    );
+    
+    setSelectedCategoryId(categoryId);
+    
     setState(prev => ({
       ...prev,
       phase: "playing",
+      questions,
       currentQuestionIndex: 0,
       userScore: 0,
       opponentScore: 0,
@@ -196,7 +207,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       hiddenAnswers: [],
       replacedAnswer: null,
     }));
-  }, []);
+  }, [fetchQuestions]);
 
   const usePowerUp = useCallback((type: PowerUpType) => {
     setState(prev => {

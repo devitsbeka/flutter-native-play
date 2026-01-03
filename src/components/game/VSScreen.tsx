@@ -67,6 +67,7 @@ export function VSScreen() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showWheel, setShowWheel] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [canStart, setCanStart] = useState(false);
 
@@ -151,14 +152,16 @@ export function VSScreen() {
   // Handle when category is selected by wheel
   const handleCategorySelected = (categoryId: string, categoryName: string) => {
     setShowWheel(false);
+    setSelectedCategoryId(categoryId);
     setSelectedCategoryName(categoryName);
     setCanStart(true);
-    // Don't call startMatch here - just show the Start button
   };
 
-  // Start button now just begins the game (category already selected)
+  // Start button now begins the game with the selected category
   const handleStart = () => {
-    beginPlaying();
+    if (selectedCategoryId) {
+      beginPlaying(selectedCategoryId);
+    }
   };
 
   return (
