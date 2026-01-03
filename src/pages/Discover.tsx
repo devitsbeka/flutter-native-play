@@ -135,62 +135,68 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* Header with Page Title */}
-          <PageHeader
-            title="აღმოაჩინე"
-            showBack={false}
-            rightElements={
-              <button
-                onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
-              >
-                {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-              </button>
-            }
-          />
-
-          {/* Expandable Search Bar */}
-          <AnimatePresence>
-            {isSearchExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden px-4 pt-2"
-              >
-                <div
-                  className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm mb-2 ${
-                    isSearchFocused ? "ring-2 ring-primary/30" : ""
-                  }`}
+          {/* White container for header and tabs */}
+          <div className="bg-white/95 backdrop-blur-sm mx-4 mt-2 rounded-2xl shadow-sm">
+            {/* Header with Page Title */}
+            <PageHeader
+              title="აღმოაჩინე"
+              showBack={false}
+              rightElements={
+                <button
+                  onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
                 >
-                  <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
-                    placeholder="მოძებნე კატეგორია..."
-                    className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
-                    autoFocus
-                  />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Tabs */}
-          <div className="px-4 pb-4">
-            <IconTabBar
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
+                  {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+                </button>
+              }
             />
+
+            {/* Expandable Search Bar */}
+            <AnimatePresence>
+              {isSearchExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden px-4 pt-2"
+                >
+                  <div
+                    className={`flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-4 py-3 transition-all mb-2 ${
+                      isSearchFocused ? "ring-2 ring-primary/30" : ""
+                    }`}
+                  >
+                    <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      onBlur={() => setIsSearchFocused(false)}
+                      placeholder="მოძებნე კატეგორია..."
+                      className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
+                      autoFocus
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Separator line */}
+            <div className="mx-4 border-t border-slate-200/80" />
+
+            {/* Tabs */}
+            <div className="px-4 py-4">
+              <IconTabBar
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
+            </div>
           </div>
         </div>
 
