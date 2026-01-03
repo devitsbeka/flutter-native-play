@@ -287,7 +287,8 @@ export default function CategoryPage() {
                       const getLevelBackground = () => {
                         if (!isUnlocked) return undefined;
                         if (isCompleted && stars > 0) return getCompletedGradient(stars);
-                        return `linear-gradient(135deg, ${pastelColors.accent}, ${pastelColors.highlight})`;
+                        // Neutral white/gray for unlocked levels without stars (current level)
+                        return "linear-gradient(135deg, #FFFFFF, #F1F5F9)";
                       };
                       
                       return (
