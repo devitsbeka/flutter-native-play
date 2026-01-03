@@ -321,7 +321,11 @@ export default function CategoryPage() {
                             <Lock className="h-5 w-5 text-slate-400" />
                           ) : (
                             <>
-                              <span className="font-bold text-white text-lg drop-shadow-md">{level}</span>
+                              <span className={`font-bold text-lg ${
+                                isCompleted && stars > 0
+                                  ? "text-white drop-shadow-md"
+                                  : "text-slate-700"
+                              }`}>{level}</span>
                               {isCompleted && stars > 0 && (
                                 <div className="flex gap-0.5 mt-1">
                                   {[...Array(3)].map((_, i) => (
