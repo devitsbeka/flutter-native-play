@@ -331,12 +331,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .single();
       
       if (existing) {
-        // Re-entering - determine phase based on room status
+        // Check if user has already finished their questions in this round
+        const userFinished = (existing.current_question || 0) >= (room.total_questions || 5);
+        
+        // Determine correct phase based on room status and user completion
         let newPhase: GamePhase = "lobby";
-        if (room.status === "playing") {
-          newPhase = "playing";
-        } else if (room.status === "completed") {
+        if (room.status === "completed") {
           newPhase = "results";
+        } else if (room.status === "playing" && !userFinished) {
+          newPhase = "playing";
         }
         
         // If game is playing, load the questions
