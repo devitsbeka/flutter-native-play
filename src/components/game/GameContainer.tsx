@@ -10,7 +10,8 @@ export function GameContainer() {
   // Use stable key for question-related phases to prevent unmount/remount
   const getStableKey = () => {
     if (phase === "playing" || phase === "question-result") return "question-flow";
-    if (phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") return "vs-flow";
+    // Keep VS screen mounted during category-wheel phase (wheel is an overlay on VS screen)
+    if (phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "category-wheel") return "vs-flow";
     return phase;
   };
 
@@ -25,8 +26,8 @@ export function GameContainer() {
           transition={{ duration: 0.1 }}
           className="w-full h-full"
         >
-          {/* Combined VS Screen handles matchmaking + vs-screen phases */}
-          {(phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen") && <VSScreen />}
+          {/* Combined VS Screen handles matchmaking + vs-screen + category-wheel phases */}
+          {(phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "category-wheel") && <VSScreen />}
           {(phase === "playing" || phase === "question-result") && <QuizGameScreenProd />}
           {phase === "match-result" && <MatchResultScreen />}
         </motion.div>
