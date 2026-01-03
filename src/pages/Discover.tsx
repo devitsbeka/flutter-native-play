@@ -135,7 +135,7 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* Subtle whiter background for header section */}
+          {/* Subtle whiter background for header and tabs section */}
           <div className="bg-white/50 backdrop-blur-sm">
             {/* Header with Page Title */}
             <PageHeader
@@ -186,17 +186,17 @@ export default function Discover() {
               )}
             </AnimatePresence>
 
-            {/* Separator line at the bottom edge */}
+            {/* Separator line between header and tabs */}
             <div className="border-b border-slate-200/60" />
-          </div>
 
-          {/* Tabs - outside white container */}
-          <div className="px-4 py-4">
-            <IconTabBar
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            {/* Tabs */}
+            <div className="px-4 py-4">
+              <IconTabBar
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
+            </div>
           </div>
         </div>
 
