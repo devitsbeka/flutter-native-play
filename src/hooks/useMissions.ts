@@ -65,7 +65,7 @@ export function useMissions() {
       if (data && data.length > 0) {
         setMissions(data);
       } else {
-        // Create daily missions for today
+        // Create daily missions for today using upsert to avoid duplicates
         const missionsToCreate = DAILY_MISSIONS.map((m) => ({
           user_id: user.id,
           ...m,
@@ -74,17 +74,63 @@ export function useMissions() {
 
         const { data: newMissions, error: insertError } = await supabase
           .from("user_missions")
-          .insert(missionsToCreate)
+          .upsert(missionsToCreate, { 
+            onConflict: "user_id,mission_id,mission_date",
+            ignoreDuplicates: true 
+          })
           .select();
 
         if (insertError) throw insertError;
-        setMissions(newMissions || []);
+        
+        // Refetch to get the actual data
+        const { data: refreshedData } = await supabase
+          .from("user_missions")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("mission_date", today);
+          
+        setMissions(refreshedData || newMissions || []);
       }
     } catch (error) {
       console.error("Error fetching missions:", error);
     } finally {
       setLoading(false);
     }
+  }, [user]);
+
+  // Set up realtime subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("user-missions-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_missions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log("Mission update:", payload);
+          
+          if (payload.eventType === "UPDATE") {
+            setMissions((prev) =>
+              prev.map((m) =>
+                m.id === (payload.new as Mission).id ? (payload.new as Mission) : m
+              )
+            );
+          } else if (payload.eventType === "INSERT") {
+            setMissions((prev) => [...prev, payload.new as Mission]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
@@ -94,12 +140,12 @@ export function useMissions() {
   const updateMissionProgress = async (
     missionId: string,
     progressIncrement: number
-  ): Promise<boolean> => {
-    if (!user) return false;
+  ): Promise<{ completed: boolean; xpEarned: number }> => {
+    if (!user) return { completed: false, xpEarned: 0 };
 
     try {
       const mission = missions.find((m) => m.mission_id === missionId);
-      if (!mission || mission.completed) return false;
+      if (!mission || mission.completed) return { completed: false, xpEarned: 0 };
 
       const newProgress = Math.min(
         mission.current_progress + progressIncrement,
@@ -136,18 +182,20 @@ export function useMissions() {
             xp_earned: mission.reward_xp,
           },
         });
+
+        return { completed: true, xpEarned: mission.reward_xp };
       }
 
-      await fetchMissions();
-      return true;
+      return { completed: false, xpEarned: 0 };
     } catch (error) {
       console.error("Error updating mission progress:", error);
-      return false;
+      return { completed: false, xpEarned: 0 };
     }
   };
 
   const completedCount = missions.filter((m) => m.completed).length;
   const totalCount = missions.length;
+  const inProgressCount = missions.filter((m) => !m.completed && m.current_progress > 0).length;
 
   return {
     missions,
@@ -156,5 +204,6 @@ export function useMissions() {
     refreshMissions: fetchMissions,
     completedCount,
     totalCount,
+    inProgressCount,
   };
 }

@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ShoppingBag } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { PowerUpBadge, PowerUpType as BadgePowerUpType } from "@/components/game/PowerUpBadge";
 import { useUserPowerUps, PowerUpType as HookPowerUpType } from "@/hooks/useUserPowerUps";
-import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
-import { GemShopModal } from "@/components/home/GemShopModal";
-import coinIcon from "@/assets/icons/icon-coin.png";
-import gemIcon from "@/assets/icons/icon-gem.png";
 import powerBottleIcon from "@/assets/icons/icon-power-bottle.png";
 
 interface MyPowersModalProps {
@@ -23,115 +20,76 @@ const POWER_UP_ORDER: { hookType: HookPowerUpType; badgeType: BadgePowerUpType; 
 ];
 
 export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
+  const navigate = useNavigate();
   const { powerUps, isLoading } = useUserPowerUps();
-  const [showCoinShop, setShowCoinShop] = useState(false);
-  const [showGemShop, setShowGemShop] = useState(false);
 
-  const handleBuyWithCoins = () => {
+  const handleGoToShop = () => {
     onClose();
-    setTimeout(() => setShowCoinShop(true), 100);
-  };
-
-  const handleBuyWithGems = () => {
-    onClose();
-    setTimeout(() => setShowGemShop(true), 100);
+    setTimeout(() => navigate("/power-ups"), 100);
   };
 
   return (
-    <>
-      <GameModal
-        isOpen={isOpen}
-        onClose={onClose}
-        title="ჩემი ძალები"
-        icon={<img src={powerBottleIcon} alt="" className="w-20 h-20 object-contain" />}
-        variant="info"
-      >
-        <div className="space-y-6">
-          {/* Power-ups grid */}
-          <div className="grid grid-cols-4 gap-3 p-2 overflow-visible">
-            {isLoading ? (
-              // Loading skeletons
-              [1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex flex-col items-center gap-2">
-                  <div className="w-[69px] h-[69px] rounded-full bg-muted animate-pulse" />
-                  <div className="w-12 h-3 rounded bg-muted animate-pulse" />
-                </div>
-              ))
-            ) : (
-              POWER_UP_ORDER.map((powerUp) => (
-                <motion.div
-                  key={powerUp.hookType}
-                  className="flex flex-col items-center gap-2"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <PowerUpBadge
-                    type={powerUp.badgeType}
-                    size="md"
-                    count={powerUps[powerUp.hookType] || 0}
-                    disabled={false}
-                  />
-                  <span className="text-xs font-medium text-muted-foreground text-center">
-                    {powerUp.name}
-                  </span>
-                </motion.div>
-              ))
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-gray-200" />
-
-          {/* Buy buttons */}
-          <div className="space-y-3">
-            <motion.button
-              onClick={handleBuyWithCoins}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl"
-              style={{
-                background: "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
-                boxShadow: "0 4px 0 #CA8A04, 0 6px 12px rgba(234,179,8,0.25)",
-              }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98, y: 0 }}
-            >
-              <img src={coinIcon} alt="" className="w-6 h-6" />
-              <span className="font-bold text-amber-900">
-                ყიდვა მონეტებით
-              </span>
-            </motion.button>
-
-            <motion.button
-              onClick={handleBuyWithGems}
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl"
-              style={{
-                background: "linear-gradient(180deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)",
-                boxShadow: "0 4px 0 #6D28D9, 0 6px 12px rgba(139,92,246,0.25)",
-              }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98, y: 0 }}
-            >
-              <img src={gemIcon} alt="" className="w-6 h-6" />
-              <span className="font-bold text-white drop-shadow-sm">
-                ყიდვა ალმასებით
-              </span>
-            </motion.button>
-          </div>
+    <GameModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="ჩემი ძალები"
+      icon={<img src={powerBottleIcon} alt="" className="w-20 h-20 object-contain" />}
+      variant="info"
+    >
+      <div className="space-y-6">
+        {/* Power-ups grid */}
+        <div className="grid grid-cols-4 gap-3 p-2 overflow-visible">
+          {isLoading ? (
+            // Loading skeletons
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-2">
+                <div className="w-[69px] h-[69px] rounded-full bg-muted animate-pulse" />
+                <div className="w-12 h-3 rounded bg-muted animate-pulse" />
+              </div>
+            ))
+          ) : (
+            POWER_UP_ORDER.map((powerUp) => (
+              <motion.div
+                key={powerUp.hookType}
+                className="flex flex-col items-center gap-2"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <PowerUpBadge
+                  type={powerUp.badgeType}
+                  size="md"
+                  count={powerUps[powerUp.hookType] || 0}
+                  disabled={false}
+                />
+                <span className="text-xs font-medium text-muted-foreground text-center">
+                  {powerUp.name}
+                </span>
+              </motion.div>
+            ))
+          )}
         </div>
-      </GameModal>
 
-      {/* Coin Shop Modal */}
-      <PowerUpShopModal
-        isOpen={showCoinShop}
-        onClose={() => setShowCoinShop(false)}
-      />
+        {/* Divider */}
+        <div className="h-px bg-gray-200" />
 
-      {/* Gem Shop Modal */}
-      <GemShopModal
-        isOpen={showGemShop}
-        onClose={() => setShowGemShop(false)}
-        defaultCategory="powerup"
-      />
-    </>
+        {/* Single shop button */}
+        <motion.button
+          onClick={handleGoToShop}
+          className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl"
+          style={{
+            background: "linear-gradient(180deg, #10B981 0%, #059669 100%)",
+            boxShadow: "0 4px 0 #047857, 0 6px 12px rgba(16, 185, 129, 0.25)",
+          }}
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98, y: 0 }}
+        >
+          <ShoppingBag className="w-5 h-5 text-white" />
+          <span className="font-bold text-white">
+            მაღაზიაში გადასვლა
+          </span>
+        </motion.button>
+      </div>
+    </GameModal>
   );
 }
