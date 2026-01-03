@@ -101,7 +101,7 @@ export function ShopItemCard({
         onClick={onClick}
         disabled={isPurchased || isLoading}
         className={cn(
-          "w-full p-4 pr-5 rounded-2xl transition-all relative overflow-hidden flex items-center gap-4",
+          "w-full p-4 rounded-2xl transition-all relative overflow-hidden flex flex-col items-center gap-3",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -121,9 +121,9 @@ export function ShopItemCard({
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
       >
-        {/* Icon - Left side */}
+        {/* Icon - Top */}
         <motion.div
-          className="flex-shrink-0 w-12 h-12 flex items-center justify-center"
+          className="w-10 h-10 flex items-center justify-center"
           whileHover={{ scale: 1.05 }}
         >
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
@@ -132,12 +132,12 @@ export function ShopItemCard({
         </motion.div>
 
         {/* Name - Center */}
-        <div className="flex-1 text-left">
+        <div className="text-center">
           <h3 className="text-gray-900 font-bold text-sm leading-tight">{name}</h3>
         </div>
 
-        {/* Price / Status - Right side */}
-        <div className="flex-shrink-0">
+        {/* Price / Status - Bottom */}
+        <div className="w-full flex justify-center">
           {isPurchased ? (
             <div className="flex items-center gap-1 text-success font-bold text-xs px-2 py-1">
               <Check className="w-4 h-4" />
