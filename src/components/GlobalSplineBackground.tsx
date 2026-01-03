@@ -64,8 +64,11 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
 export function GlobalSplineBackground() {
   const location = useLocation();
   
-  // Check if current page should show background
-  const shouldShow = BACKGROUND_PAGES.some(page => location.pathname.startsWith(page) || location.pathname === page);
+  // Check if current page should show background - use exact match for "/" and startsWith for others
+  const shouldShow = BACKGROUND_PAGES.some(page => {
+    if (page === "/") return location.pathname === "/";
+    return location.pathname.startsWith(page);
+  });
   
   // Check if particles should be disabled for performance
   const shouldShowParticles = shouldShow && !NO_PARTICLES_PAGES.includes(location.pathname);
