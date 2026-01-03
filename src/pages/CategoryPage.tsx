@@ -185,7 +185,7 @@ export default function CategoryPage() {
         </div>
 
         {/* Header content area */}
-        <div className="relative z-10 h-[240px]">
+        <div className="relative z-10 h-[200px]">
           {/* Navigation buttons */}
           <div className="absolute top-12 left-5 right-5 flex items-center justify-between">
             <button
@@ -212,6 +212,34 @@ export default function CategoryPage() {
           </div>
         </div>
 
+        {/* Tabs - positioned to overlap video transition area */}
+        <div className="relative px-5 mb-4 z-20">
+          <div className="flex gap-2 bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-lg">
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+                activeTab === "leaderboard"
+                  ? "bg-white text-slate-800 shadow-md"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}
+            >
+              <Trophy className="h-4 w-4" />
+              ლიდერბორდი
+            </button>
+            <button
+              onClick={() => setActiveTab("map")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
+                activeTab === "map"
+                  ? "bg-white text-slate-800 shadow-md"
+                  : "text-slate-600 hover:text-slate-800"
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              რუკა
+            </button>
+          </div>
+        </div>
+
         {/* Main Content Section with Homepage Video Background */}
         <div className="flex-1 relative overflow-hidden">
           {/* Homepage-style floating blob video background */}
@@ -235,36 +263,8 @@ export default function CategoryPage() {
             />
           </div>
 
-          {/* Tabs - positioned to overlap video */}
-          <div className="relative px-5 -mt-10 mb-4 z-20">
-            <div className="flex gap-2 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
-              <button
-                onClick={() => setActiveTab("leaderboard")}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
-                  activeTab === "leaderboard"
-                    ? "bg-white text-slate-800 shadow-md"
-                    : "text-slate-600 hover:text-slate-800"
-                }`}
-              >
-                <Trophy className="h-4 w-4" />
-                ლიდერბორდი
-              </button>
-              <button
-                onClick={() => setActiveTab("map")}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full font-semibold text-sm transition-all ${
-                  activeTab === "map"
-                    ? "bg-white text-slate-800 shadow-md"
-                    : "text-slate-600 hover:text-slate-800"
-                }`}
-              >
-                <Map className="h-4 w-4" />
-                რუკა
-              </button>
-            </div>
-          </div>
-
           {/* Content */}
-          <div className="relative px-5 pt-2 pb-8 z-10 overflow-auto">
+          <div className="relative px-5 pt-4 pb-8 z-10 overflow-auto flex-1">
             {activeTab === "leaderboard" ? (
               <CategoryLeaderboard
                 categoryId={categoryId || ""}
