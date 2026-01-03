@@ -99,10 +99,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
 
   const handleLanguageChange = (code: string) => {
+    console.log("Language change clicked:", code);
+    console.log("Current selectedLanguage:", selectedLanguage);
     setSelectedLanguage(code);
     localStorage.setItem("app_language", code);
+    console.log("Saved to localStorage:", localStorage.getItem("app_language"));
     toast.success("ენა წარმატებით შეიცვალა!");
-    // In a real app, this would trigger i18n change
   };
 
   const settingsItems = [
