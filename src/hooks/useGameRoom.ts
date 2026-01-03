@@ -39,6 +39,8 @@ export interface RoomParticipant {
   score: number;
   current_question: number;
   is_host: boolean;
+  total_wins?: number;
+  total_rounds_played?: number;
 }
 
 // Generate a unique 6-character room code

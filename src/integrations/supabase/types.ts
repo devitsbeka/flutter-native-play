@@ -759,6 +759,30 @@ export type Database = {
           },
         ]
       }
+      room_match_history: {
+        Row: {
+          id: string
+          played_at: string | null
+          player_scores: Json
+          room_id: string
+          winner_user_id: string | null
+        }
+        Insert: {
+          id?: string
+          played_at?: string | null
+          player_scores?: Json
+          room_id: string
+          winner_user_id?: string | null
+        }
+        Update: {
+          id?: string
+          played_at?: string | null
+          player_scores?: Json
+          room_id?: string
+          winner_user_id?: string | null
+        }
+        Relationships: []
+      }
       room_participants: {
         Row: {
           avatar_url: string | null
@@ -771,6 +795,8 @@ export type Database = {
           room_id: string
           score: number | null
           status: Database["public"]["Enums"]["participant_status"] | null
+          total_rounds_played: number | null
+          total_wins: number | null
           user_id: string
         }
         Insert: {
@@ -784,6 +810,8 @@ export type Database = {
           room_id: string
           score?: number | null
           status?: Database["public"]["Enums"]["participant_status"] | null
+          total_rounds_played?: number | null
+          total_wins?: number | null
           user_id: string
         }
         Update: {
@@ -797,6 +825,8 @@ export type Database = {
           room_id?: string
           score?: number | null
           status?: Database["public"]["Enums"]["participant_status"] | null
+          total_rounds_played?: number | null
+          total_wins?: number | null
           user_id?: string
         }
         Relationships: [
