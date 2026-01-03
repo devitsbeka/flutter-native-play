@@ -51,7 +51,7 @@ export function ShopPromoSection({
   return (
     <motion.section 
       ref={sectionRef}
-      className="mx-4 mb-4 rounded-3xl relative"
+      className="mx-4 mb-4 rounded-3xl relative overflow-x-clip overflow-y-visible"
       style={{ 
         height: "52vh",
         minHeight: "380px",
