@@ -146,7 +146,7 @@ export function CategoryLeaderboard({
       </div>
 
       {/* Leaderboard List */}
-      <div className="flex-1 overflow-y-auto space-y-3 py-2 pb-4">
+      <div className="flex-1 overflow-y-auto space-y-3 p-3 pb-4 -mx-1">
         {isLoading ? (
           Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-xl" />
@@ -220,7 +220,7 @@ export function CategoryLeaderboard({
                     {/* Rank */}
                     <motion.div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        lightMode ? "bg-slate-200/80" : "bg-white/10"
+                        entry.rank <= 3 ? "" : (lightMode ? "bg-slate-200/80" : "bg-white/10")
                       }`}
                       animate={hasRankChange ? { scale: [1, 1.2, 1] } : {}}
                       transition={{ duration: 0.3 }}
