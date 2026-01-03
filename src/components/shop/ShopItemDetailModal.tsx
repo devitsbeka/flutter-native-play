@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { GameModal } from "@/components/ui/game-modal";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import iconGem from "@/assets/icons/icon-gem.png";
 import iconCoin from "@/assets/icons/icon-coin.png";
 
@@ -66,7 +65,7 @@ export function ShopItemDetailModal({
 
         {/* Buy Button */}
         <motion.div
-          className="w-full mt-2"
+          className="w-full mt-2 flex justify-center"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -77,15 +76,18 @@ export function ShopItemDetailModal({
               <span>შეძენილია</span>
             </div>
           ) : (
-            <ChunkyButton
-              variant="primary"
-              size="lg"
+            <button
               onClick={onBuy}
               disabled={!canAfford || isLoading}
-              icon={<img src={currencyIcon} alt="" className="w-5 h-5" />}
+              className="flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-amber-900 disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
+              style={{
+                background: "linear-gradient(180deg, hsl(45 95% 60%) 0%, hsl(40 90% 50%) 100%)",
+                boxShadow: "0 4px 0 hsl(35 85% 40%), 0 6px 12px rgba(0,0,0,0.15)",
+              }}
             >
-              {isLoading ? "..." : `ყიდვა ${item.price}`}
-            </ChunkyButton>
+              <img src={currencyIcon} alt="" className="w-5 h-5" />
+              <span>{isLoading ? "..." : `ყიდვა ${item.price}`}</span>
+            </button>
           )}
         </motion.div>
       </div>
