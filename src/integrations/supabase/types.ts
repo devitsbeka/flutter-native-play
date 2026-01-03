@@ -721,6 +721,44 @@ export type Database = {
           },
         ]
       }
+      room_chat_messages: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          message: string
+          nickname: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          nickname: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          nickname?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_participants: {
         Row: {
           avatar_url: string | null
