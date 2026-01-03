@@ -220,8 +220,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                         />
                       </div>
                       
-                      {/* White mask overlay */}
-                      <div className="absolute inset-0 bg-white/70" />
+                      {/* Subtle gradient mask overlay - less opacity */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-white/20 to-transparent" />
                       
                       {/* Category Name - centered, two lines if needed */}
                       <div className="absolute inset-0 flex items-center justify-center p-3">
