@@ -65,17 +65,19 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
       subtitle="აირჩიე კატეგორია და მოიწვიე მეგობარი"
       showSparkles
     >
-      <div className="space-y-3 mt-2">
-        <p className="text-sm text-muted-foreground text-center mb-4">
+      <div className="flex flex-col h-full">
+        {/* Sticky header */}
+        <p className="text-sm text-muted-foreground text-center py-2 sticky top-0 bg-background z-10">
           კატეგორია
         </p>
         
+        {/* Scrollable categories section */}
         {loadingCategories ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-2 overflow-y-auto flex-1 pr-1 pb-4" style={{ maxHeight: "calc(60vh - 200px)" }}>
             {categories.map((category) => (
               <motion.button
                 key={category.id}
@@ -118,16 +120,15 @@ export function CreateRoomModal({ isOpen, onClose }: CreateRoomModalProps) {
             ))}
           </div>
         )}
-      </div>
-      
-      <div className="mt-4">
-        <GameModalFooter
-          primaryLabel={loading ? "იქმნება..." : "შექმნა"}
-          onPrimary={selectedCategory ? handleCreate : undefined}
-          isLoading={loading || !selectedCategory}
-          secondaryLabel="გაუქმება"
-          onSecondary={onClose}
-        />
+        
+        {/* Sticky footer button */}
+        <div className="sticky bottom-0 bg-background pt-4">
+          <GameModalFooter
+            primaryLabel={loading ? "იქმნება..." : "შექმნა"}
+            onPrimary={selectedCategory ? handleCreate : undefined}
+            isLoading={loading || !selectedCategory}
+          />
+        </div>
       </div>
     </GameModal>
   );
