@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { ShopItemCard, ShopItemBadge } from "./ShopItemCard";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface ShopItemData {
   id: string;
@@ -52,9 +53,9 @@ export function ShopPromoSection({
       ref={sectionRef}
       className="mx-4 mb-4 rounded-3xl overflow-hidden relative"
       style={{ 
-        height: "70vh",
-        minHeight: "450px",
-        maxHeight: "600px",
+        height: "52vh",
+        minHeight: "380px",
+        maxHeight: "480px",
         scrollSnapAlign: "center",
       }}
       initial={{ opacity: 0.6, scale: 0.92 }}
@@ -97,9 +98,9 @@ export function ShopPromoSection({
           </p>
         </motion.div>
         
-        {/* Products at bottom */}
+        {/* Products at bottom - horizontal carousel */}
         <motion.div 
-          className="mt-auto space-y-2"
+          className="mt-auto -mx-2"
           initial={{ opacity: 0, y: 30 }}
           animate={{ 
             opacity: isInView ? 1 : 0, 
@@ -107,41 +108,55 @@ export function ShopPromoSection({
           }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          {items.map((item, index) => {
-            const canAfford = gems >= item.price;
-            const isPurchased = purchasedItems.has(item.id);
-            const isFrameOwned = (item as any).frameId ? isFrameUnlocked((item as any).frameId) : false;
-            const isOwned = isPurchased || isFrameOwned;
+          <Carousel
+            opts={{
+              align: "start",
+              loop: false,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
+              {items.map((item, index) => {
+                const canAfford = gems >= item.price;
+                const isPurchased = purchasedItems.has(item.id);
+                const isFrameOwned = (item as any).frameId ? isFrameUnlocked((item as any).frameId) : false;
+                const isOwned = isPurchased || isFrameOwned;
 
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ 
-                  opacity: isInView ? 1 : 0, 
-                  x: isInView ? 0 : -20 
-                }}
-                transition={{ duration: 0.4, delay: 0.3 + index * 0.08 }}
-              >
-                <ShopItemCard
-                  id={item.id}
-                  name={item.name}
-                  description={item.description}
-                  price={item.price}
-                  currency={item.currency}
-                  icon={item.icon}
-                  gradient={item.gradient}
-                  badge={item.badge ?? undefined}
-                  savings={item.savings}
-                  isPurchased={isOwned}
-                  isLoading={isPurchasing === item.id}
-                  canAfford={canAfford}
-                  index={0}
-                  onClick={() => !isOwned && onItemClick(item)}
-                />
-              </motion.div>
-            );
-          })}
+                return (
+                  <CarouselItem 
+                    key={item.id} 
+                    className="pl-2 basis-[85%]"
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ 
+                        opacity: isInView ? 1 : 0, 
+                        x: isInView ? 0 : -20 
+                      }}
+                      transition={{ duration: 0.4, delay: 0.3 + index * 0.08 }}
+                    >
+                      <ShopItemCard
+                        id={item.id}
+                        name={item.name}
+                        description={item.description}
+                        price={item.price}
+                        currency={item.currency}
+                        icon={item.icon}
+                        gradient={item.gradient}
+                        badge={item.badge ?? undefined}
+                        savings={item.savings}
+                        isPurchased={isOwned}
+                        isLoading={isPurchasing === item.id}
+                        canAfford={canAfford}
+                        index={0}
+                        onClick={() => !isOwned && onItemClick(item)}
+                      />
+                    </motion.div>
+                  </CarouselItem>
+                );
+              })}
+            </CarouselContent>
+          </Carousel>
         </motion.div>
       </div>
     </motion.section>
