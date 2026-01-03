@@ -394,7 +394,7 @@ export default function PowerUps() {
           scrollBehavior: "smooth",
         }}
       >
-        {SHOP_SECTIONS.map((section) => (
+        {SHOP_SECTIONS.filter(section => section.id !== "frames").map((section) => (
           <ShopPromoSection
             key={section.id}
             title={section.title}
