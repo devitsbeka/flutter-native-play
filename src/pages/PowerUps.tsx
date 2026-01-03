@@ -15,7 +15,7 @@ import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopFeaturedCarousel } from "@/components/shop/ShopFeaturedCarousel";
-import { MyPowersBar } from "@/components/shop/MyPowersBar";
+
 import { ShopTabBar, ShopTab } from "@/components/shop/ShopTabBar";
 import { ShopItemCard, ShopItemBadge } from "@/components/shop/ShopItemCard";
 import { ShopBundleCard } from "@/components/shop/ShopBundleCard";
@@ -406,8 +406,6 @@ export default function PowerUps() {
         {/* Featured Carousel */}
         <ShopFeaturedCarousel onDealClick={handleDealClick} onScrollToTab={handleScrollToTab} />
 
-        {/* My Powers Bar */}
-        <MyPowersBar onPowerClick={handlePowerClick} />
 
         {/* Tab Navigation */}
         <div ref={tabSectionRef}>

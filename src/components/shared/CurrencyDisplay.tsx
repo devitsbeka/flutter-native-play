@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useCurrency } from "@/hooks/useCurrency";
+import { formatCompactNumber } from "@/lib/utils";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 
@@ -45,7 +46,7 @@ export function CurrencyDisplay({
             animate={{ scale: 1 }}
             className={`font-bold text-gray-900 ${config.text}`}
           >
-            {coins.toLocaleString()}
+            {formatCompactNumber(coins)}
           </motion.span>
         </motion.div>
       )}
@@ -64,7 +65,7 @@ export function CurrencyDisplay({
             animate={{ scale: 1 }}
             className={`font-bold text-gray-900 ${config.text}`}
           >
-            {gems.toLocaleString()}
+            {formatCompactNumber(gems)}
           </motion.span>
         </motion.div>
       )}
