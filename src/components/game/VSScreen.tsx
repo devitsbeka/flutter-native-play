@@ -9,7 +9,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { CloudCategoryFlight } from "./CloudCategoryFlight";
-
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
 import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
@@ -179,6 +179,39 @@ export function VSScreen() {
       {/* Wave Pattern Background */}
       <WavePattern />
 
+      {/* Full-screen Diagonal VS Divider - at root level for full coverage */}
+      {selectedCategoryName && (
+        <div 
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          style={{ zIndex: 5 }}
+        >
+          {/* Diagonal golden line from top-left to bottom-right */}
+          <div 
+            className="absolute"
+            style={{
+              top: "-50%",
+              left: "-50%",
+              width: "200%",
+              height: "200%",
+              background: "linear-gradient(135deg, transparent 47%, rgba(255,215,0,0.5) 49%, rgba(255,215,0,0.6) 50%, rgba(255,215,0,0.5) 51%, transparent 53%)",
+              filter: "blur(2px)",
+            }}
+          />
+          
+          {/* Large VS watermark behind content */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span 
+              className="text-[180px] font-black text-white/[0.06]"
+              style={{ 
+                fontFamily: "'TASolivare', sans-serif",
+                letterSpacing: "-0.05em"
+              }}
+            >
+              VS
+            </span>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <motion.div 
         className="flex items-center justify-between px-4 pt-4 pb-2 relative z-30 shrink-0"
@@ -291,37 +324,6 @@ export function VSScreen() {
         {selectedCategoryName && (
           <div className="flex-1 flex flex-col justify-between py-4 relative">
             
-            {/* Diagonal VS Divider Background */}
-            <div 
-              className="absolute inset-0 overflow-hidden pointer-events-none"
-              style={{ zIndex: 0 }}
-            >
-              {/* Diagonal line from top-left to bottom-right */}
-              <div 
-                className="absolute"
-                style={{
-                  top: "-10%",
-                  left: "-10%",
-                  width: "120%",
-                  height: "120%",
-                  background: "linear-gradient(135deg, rgba(255,255,255,0.03) 49%, rgba(255,215,0,0.25) 49.5%, rgba(255,215,0,0.25) 50.5%, rgba(255,255,255,0.03) 51%)",
-                }}
-              />
-              
-              {/* Large VS watermark behind content */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span 
-                  className="text-[140px] font-black text-white/[0.04]"
-                  style={{ 
-                    fontFamily: "'TASolivare', sans-serif",
-                    letterSpacing: "-0.05em"
-                  }}
-                >
-                  VS
-                </span>
-              </div>
-            </div>
-            
             {/* Opponent - Top Left */}
             <motion.div 
               className="flex justify-start relative z-10"
@@ -338,14 +340,13 @@ export function VSScreen() {
                     boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
                   }}
                 >
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-800">
-                    <img 
-                      src={opponent?.avatarUrl || currentAvatar || slotAvatars[0]} 
-                      alt="Opponent"
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
-                    />
-                  </div>
+                  <SmartAvatar
+                    avatarUrl={opponent?.avatarUrl || currentAvatar || slotAvatars[0]}
+                    fallback={opponent?.name || "O"}
+                    size="2xl"
+                    autoPlay={false}
+                    showSparkle={false}
+                  />
                 </div>
                 {/* Text Info - Right of avatar */}
                 <div className="flex flex-col">
@@ -448,14 +449,14 @@ export function VSScreen() {
                     boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
                   }}
                 >
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-800">
-                    <img 
-                      src={profile?.animated_avatar_url || profile?.avatar_url || "/placeholder.svg"} 
-                      alt="Player"
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
-                    />
-                  </div>
+                  <SmartAvatar
+                    avatarUrl={profile?.avatar_url}
+                    animatedAvatarUrl={profile?.animated_avatar_url}
+                    fallback={profile?.nickname || "P"}
+                    size="2xl"
+                    autoPlay={true}
+                    showSparkle={false}
+                  />
                 </div>
               </div>
             </motion.div>
