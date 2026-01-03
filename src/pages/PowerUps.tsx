@@ -258,48 +258,48 @@ const COINS_ITEMS: ShopItem[] = [
   },
 ];
 
-// Section definitions
+// Section definitions with appropriate video backgrounds
 const SHOP_SECTIONS = [
   {
     id: "starter",
     title: "სტარტერ პაკეტი",
-    description: "იდეალური დამწყებთათვის - ყველაფერი რაც საჭიროა თამაშის დასაწყებად",
-    videoSrc: "/videos/promo-starter-pack.mp4",
+    description: "დამწყებთათვის",
+    videoSrc: "/videos/galaxy.mp4",
     items: STARTER_PACK_ITEMS,
   },
   {
     id: "mega-powers",
     title: "მეგა ძალები",
-    description: "გაძლიერე შენი შესაძლებლობები და მოიგე მეტი თამაში",
+    description: "მოიგე მეტი თამაში",
     videoSrc: "/videos/promo-mega-powers.mp4",
     items: MEGA_POWERS_ITEMS,
   },
   {
     id: "vip",
     title: "VIP სტატუსი",
-    description: "2x XP, ექსკლუზიური ჩარჩოები და უსასრულო სპინი",
+    description: "2x XP + ბონუსები",
     videoSrc: "/videos/promo-vip-week.mp4",
     items: VIP_PROMO_ITEMS,
   },
   {
     id: "powers",
     title: "ძალები",
-    description: "გამოიყენე თამაშში უპირატესობის მოსაპოვებლად",
-    videoSrc: "/videos/floating-blob.mp4",
+    description: "უპირატესობა თამაშში",
+    videoSrc: "/videos/science.mp4",
     items: POWERS_ITEMS,
   },
   {
     id: "frames",
     title: "ჩარჩოები",
-    description: "გამოარჩიე შენი პროფილი უნიკალური ჩარჩოებით",
-    videoSrc: "/videos/floating-blob.mp4",
+    description: "უნიკალური პროფილი",
+    videoSrc: "/videos/art.mp4",
     items: FRAMES_ITEMS,
   },
   {
     id: "coins",
     title: "მონეტები",
-    description: "შეიძინე მეტი მონეტა ბონუსებით",
-    videoSrc: "/videos/floating-blob.mp4",
+    description: "ბონუსებით",
+    videoSrc: "/videos/economics.mp4",
     items: COINS_ITEMS,
   },
 ];
