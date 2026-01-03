@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { ShopItemCard, ShopItemBadge } from "./ShopItemCard";
 
@@ -38,18 +38,34 @@ export function ShopPromoSection({
   isFrameUnlocked,
   onItemClick,
 }: ShopPromoSectionProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(sectionRef, { 
+    amount: 0.5,
+    once: false 
+  });
   
   // Truncate description to max 20 chars
   const shortDesc = description.length > 20 ? description.slice(0, 20) + "..." : description;
 
   return (
     <motion.section 
-      className="mx-4 mb-6 rounded-3xl overflow-hidden relative"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4 }}
+      ref={sectionRef}
+      className="mx-4 mb-4 rounded-3xl overflow-hidden relative"
+      style={{ 
+        height: "70vh",
+        minHeight: "450px",
+        maxHeight: "600px",
+        scrollSnapAlign: "center",
+      }}
+      initial={{ opacity: 0.6, scale: 0.92 }}
+      animate={{ 
+        opacity: isInView ? 1 : 0.6, 
+        scale: isInView ? 1 : 0.92,
+      }}
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.25, 0.46, 0.45, 0.94] 
+      }}
     >
       {/* Video background - full section */}
       <div className="absolute inset-0">
@@ -57,71 +73,76 @@ export function ShopPromoSection({
           src={videoSrc} 
           className="w-full h-full object-cover"
         />
-        {/* Subtle overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/20" />
+        {/* Gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
       </div>
       
       {/* Content on top of video */}
-      <div className="relative z-10 p-5 pt-6">
-        {/* Title and short description - left aligned */}
-        <div className="text-left mb-4">
-          <h2 className="text-2xl font-display font-bold text-white drop-shadow-lg mb-1">
+      <div className="relative z-10 h-full flex flex-col p-5 pt-8">
+        {/* Title and short description - left aligned, top */}
+        <motion.div 
+          className="text-left mb-auto"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ 
+            opacity: isInView ? 1 : 0, 
+            y: isInView ? 0 : -20 
+          }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <h2 className="text-3xl font-display font-bold text-white drop-shadow-lg mb-2">
             {title}
           </h2>
-          <p className="text-white/80 text-sm drop-shadow">
+          <p className="text-white/80 text-base drop-shadow">
             {shortDesc}
           </p>
-        </div>
+        </motion.div>
         
-        {/* Horizontally scrollable products */}
-        <div 
-          ref={scrollRef}
-          className="overflow-x-auto scrollbar-hide -mx-5 px-5 pb-2"
-          style={{ 
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch"
+        {/* Products at bottom */}
+        <motion.div 
+          className="mt-auto space-y-2"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ 
+            opacity: isInView ? 1 : 0, 
+            y: isInView ? 0 : 30 
           }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <motion.div 
-            className="flex gap-3"
-            drag="x"
-            dragConstraints={scrollRef}
-            dragElastic={0.1}
-            dragMomentum={true}
-          >
-            {items.map((item, index) => {
-              const canAfford = gems >= item.price;
-              const isPurchased = purchasedItems.has(item.id);
-              const isFrameOwned = (item as any).frameId ? isFrameUnlocked((item as any).frameId) : false;
-              const isOwned = isPurchased || isFrameOwned;
+          {items.map((item, index) => {
+            const canAfford = gems >= item.price;
+            const isPurchased = purchasedItems.has(item.id);
+            const isFrameOwned = (item as any).frameId ? isFrameUnlocked((item as any).frameId) : false;
+            const isOwned = isPurchased || isFrameOwned;
 
-              return (
-                <div 
-                  key={item.id} 
-                  className="flex-shrink-0 w-[160px]"
-                  style={{ scrollSnapAlign: "start" }}
-                >
-                  <ShopItemCard
-                    id={item.id}
-                    name={item.name}
-                    description={item.description}
-                    price={item.price}
-                    currency={item.currency}
-                    icon={item.icon}
-                    gradient={item.gradient}
-                    badge={item.badge ?? undefined}
-                    savings={item.savings}
-                    isPurchased={isOwned}
-                    isLoading={isPurchasing === item.id}
-                    canAfford={canAfford}
-                    index={index}
-                    onClick={() => !isOwned && onItemClick(item)}
-                  />
-                </div>
-              );
-            })}
-          </motion.div>
-        </div>
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ 
+                  opacity: isInView ? 1 : 0, 
+                  x: isInView ? 0 : -20 
+                }}
+                transition={{ duration: 0.4, delay: 0.3 + index * 0.08 }}
+              >
+                <ShopItemCard
+                  id={item.id}
+                  name={item.name}
+                  description={item.description}
+                  price={item.price}
+                  currency={item.currency}
+                  icon={item.icon}
+                  gradient={item.gradient}
+                  badge={item.badge ?? undefined}
+                  savings={item.savings}
+                  isPurchased={isOwned}
+                  isLoading={isPurchasing === item.id}
+                  canAfford={canAfford}
+                  index={0}
+                  onClick={() => !isOwned && onItemClick(item)}
+                />
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
     </motion.section>
   );
