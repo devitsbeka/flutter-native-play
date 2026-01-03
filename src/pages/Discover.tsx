@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,16 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Track scroll position for compact header
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 60);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
@@ -135,63 +145,75 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* Subtle whiter background for header and tabs section */}
-          <div className="bg-white/50 backdrop-blur-sm">
-            {/* Header with Page Title */}
-            <PageHeader
-              title="აღმოაჩინე"
-              showBack={false}
-              rightElements={
-                <button
-                  onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
-                >
-                  {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-                </button>
-              }
-            />
-
-            {/* Expandable Search Bar */}
+          {/* Sticky header section */}
+          <div className={`sticky top-0 z-20 bg-white/50 backdrop-blur-sm transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''}`}>
+            {/* Header with Page Title - hide when scrolled */}
             <AnimatePresence>
-              {isSearchExpanded && (
+              {!isScrolled && (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
+                  initial={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden px-4 pt-2 pb-2"
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
                 >
-                  <div
-                    className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
-                      isSearchFocused ? "ring-2 ring-primary/30" : ""
-                    }`}
-                  >
-                    <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onFocus={() => setIsSearchFocused(true)}
-                      onBlur={() => setIsSearchFocused(false)}
-                      placeholder="მოძებნე კატეგორია..."
-                      className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
-                      autoFocus
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
-                        <X className="w-4 h-4" />
+                  <PageHeader
+                    title="აღმოაჩინე"
+                    showBack={false}
+                    rightElements={
+                      <button
+                        onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                        className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+                      >
+                        {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
                       </button>
+                    }
+                  />
+
+                  {/* Expandable Search Bar */}
+                  <AnimatePresence>
+                    {isSearchExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden px-4 pt-2 pb-2"
+                      >
+                        <div
+                          className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
+                            isSearchFocused ? "ring-2 ring-primary/30" : ""
+                          }`}
+                        >
+                          <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onBlur={() => setIsSearchFocused(false)}
+                            placeholder="მოძებნე კატეგორია..."
+                            className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
+                            autoFocus
+                          />
+                          {searchQuery && (
+                            <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Tabs */}
-            <div className="px-4 pt-2 pb-1">
+            <div className={`px-4 ${isScrolled ? 'py-2' : 'pt-2 pb-1'}`}>
               <IconTabBar
                 tabs={tabs}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
+                compact={isScrolled}
               />
             </div>
           </div>
