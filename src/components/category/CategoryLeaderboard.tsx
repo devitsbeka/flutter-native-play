@@ -207,6 +207,21 @@ export function CategoryLeaderboard({
                       </motion.div>
                     )}
 
+                    {/* Shine animation for 1st place */}
+                    {entry.rank === 1 && (
+                      <motion.div
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "200%" }}
+                        transition={{ 
+                          duration: 2,
+                          ease: "easeInOut",
+                          repeat: Infinity,
+                          repeatDelay: 3
+                        }}
+                        className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none"
+                      />
+                    )}
+
                     {/* Shine animation for rank changes */}
                     {hasRankChange === "up" && (
                       <motion.div
