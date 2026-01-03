@@ -352,12 +352,14 @@ export function GameModalFooter({
       </ChunkyButton>
       
       {secondaryLabel && onSecondary && (
-        <button
+        <ChunkyButton
           onClick={onSecondary}
-          className="w-full text-center text-sm text-gray-500 py-2 hover:text-gray-700 transition-colors font-medium"
+          variant="ghost"
+          size="md"
+          className="w-full"
         >
           {secondaryLabel}
-        </button>
+        </ChunkyButton>
       )}
     </div>
   );

@@ -105,19 +105,14 @@ export function RoomLobby() {
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <motion.button
+          <ChunkyButton
             onClick={handleLeave}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{
-              background: "rgba(255,255,255,0.95)",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
-            }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            variant="ghost"
+            size="sm"
+            icon={<ArrowLeft className="w-4 h-4" />}
           >
-            <ArrowLeft className="w-4 h-4 text-gray-700" />
-            <span className="text-sm font-medium text-gray-700">გასვლა</span>
-          </motion.button>
+            გასვლა
+          </ChunkyButton>
 
           <div 
             className="flex items-center gap-2 px-3 py-2 rounded-xl"
@@ -301,13 +296,15 @@ export function RoomLobby() {
           )}
 
           {/* Leave button */}
-          <button
+          <ChunkyButton
             onClick={handleLeave}
-            className="w-full text-center text-gray-500 hover:text-gray-700 py-2 text-sm transition-colors flex items-center justify-center gap-2"
+            variant="ghost"
+            size="sm"
+            className="w-full"
+            icon={<LogOut className="w-4 h-4" />}
           >
-            <LogOut className="w-4 h-4" />
             ოთახიდან გასვლა
-          </button>
+          </ChunkyButton>
         </div>
       </div>
     </div>
