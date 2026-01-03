@@ -100,8 +100,8 @@ export function ShopPromoSection({
         
         {/* Products at bottom - horizontal carousel */}
         <motion.div 
-          className="mt-auto -mx-2"
-          initial={{ opacity: 0, y: 30 }}
+          className="mt-auto"
+          style={{ marginLeft: '-0.5rem', marginRight: '-0.5rem' }}
           animate={{ 
             opacity: isInView ? 1 : 0, 
             y: isInView ? 0 : 30 
@@ -113,9 +113,9 @@ export function ShopPromoSection({
               align: "start",
               loop: false,
             }}
-            className="w-full"
+            className="w-full overflow-visible"
           >
-            <CarouselContent className="-ml-2">
+            <CarouselContent className="-ml-2 pr-4">
               {items.map((item, index) => {
                 const canAfford = gems >= item.price;
                 const isPurchased = purchasedItems.has(item.id);
