@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
-import { useMultiplayer } from "@/contexts/MultiplayerContext";
+import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { KeyRound, Delete } from "lucide-react";
 
 interface JoinRoomModalProps {
@@ -10,7 +10,7 @@ interface JoinRoomModalProps {
 }
 
 export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
-  const { joinRoom, loading } = useMultiplayer();
+  const { enterRoom, loading } = useMultiplayerV2();
   const [code, setCode] = useState("");
 
   const handleKeyPress = (key: string) => {
@@ -25,7 +25,7 @@ export function JoinRoomModal({ isOpen, onClose }: JoinRoomModalProps) {
 
   const handleJoin = async () => {
     if (code.length === 6) {
-      await joinRoom(code);
+      await enterRoom(code);
     }
   };
 
