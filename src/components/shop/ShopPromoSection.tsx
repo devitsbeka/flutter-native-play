@@ -115,7 +115,7 @@ export function ShopPromoSection({
             }}
             className="w-full overflow-visible"
           >
-            <CarouselContent className="ml-3 overflow-visible">
+            <CarouselContent className="ml-3 overflow-visible" allowOverflow>
               {items.map((item, index) => {
                 const canAfford = gems >= item.price;
                 const isPurchased = purchasedItems.has(item.id);
