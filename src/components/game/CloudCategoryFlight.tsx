@@ -66,7 +66,8 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
     const completeTimer = setTimeout(() => {
       const winner = displayCategories[winnerIndex];
       const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.mp4";
-      onCategorySelected(winner.uuid, winner.name, videoUrl);
+      // Pass category_id (e.g., "coding") not uuid for question fetching
+      onCategorySelected(winner.id, winner.name, videoUrl);
     }, 4600);
 
     return () => {
