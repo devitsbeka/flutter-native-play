@@ -266,6 +266,8 @@ export const ka = {
     aiTitle: "AI ავატარი",
     currentAvatar: "მიმდინარე ავატარი",
     previousAvatars: "წინა ავატარები",
+    myAvatars: "ჩემი ავატარები",
+    defaultAvatars: "ნაგულისხმევი ავატარები",
     createNew: "ახალი ავატარის შექმნა",
     takeSelfie: "სელფი",
     uploadPhoto: "ატვირთვა",

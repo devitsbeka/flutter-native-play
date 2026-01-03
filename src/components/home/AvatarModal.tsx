@@ -9,6 +9,23 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { t } from "@/lib/i18n";
 
+// Import default bot avatars
+import botAvatar1 from '@/assets/avatars/bot-avatar-1.png';
+import botAvatar2 from '@/assets/avatars/bot-avatar-2.png';
+import botAvatar3 from '@/assets/avatars/bot-avatar-3.png';
+import botAvatar4 from '@/assets/avatars/bot-avatar-4.png';
+import botAvatar5 from '@/assets/avatars/bot-avatar-5.png';
+import botAvatar6 from '@/assets/avatars/bot-avatar-6.png';
+import botAvatar7 from '@/assets/avatars/bot-avatar-7.png';
+import botAvatar8 from '@/assets/avatars/bot-avatar-8.png';
+import botAvatar9 from '@/assets/avatars/bot-avatar-9.png';
+import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
+
+const DEFAULT_AVATARS = [
+  botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
+  botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10,
+];
+
 interface AvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -283,6 +300,23 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
   };
 
+  const selectDefaultAvatar = async (avatarPath: string) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Update profile directly with the default avatar path
+      await updateProfile({ avatar_url: avatarPath });
+      
+      toast.success(t("avatar.avatarUpdated"));
+      onClose();
+    } catch (error) {
+      toast.error(t("errors.generationFailed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const animateAvatar = async () => {
     if (!profile?.avatar_url || !user) {
       toast.error(t("errors.noAvatarToAnimate"));
@@ -428,18 +462,19 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             )}
           </div>
 
-          {/* Previous Generations */}
+          {/* My Generated Avatars */}
           {generations.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.previousAvatars")}</p>
-              <div className="grid grid-cols-4 gap-2">
-                {generations.slice(0, 8).map((gen) => (
+              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
+              <div className="grid grid-cols-5 gap-2">
+                {generations.slice(0, 10).map((gen) => (
                   <motion.button
                     key={gen.id}
                     onClick={() => selectPreviousAvatar(gen.avatar_url)}
+                    disabled={isLoading}
                     className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
                       gen.is_current ? "border-primary" : "border-border hover:border-primary/50"
-                    }`}
+                    } disabled:opacity-50`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -458,6 +493,39 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               </div>
             </div>
           )}
+
+          {/* Default Avatars */}
+          <div>
+            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.defaultAvatars")}</p>
+            <div className="grid grid-cols-5 gap-2">
+              {DEFAULT_AVATARS.map((avatar, index) => {
+                const isSelected = profile?.avatar_url === avatar;
+                return (
+                  <motion.button
+                    key={index}
+                    onClick={() => selectDefaultAvatar(avatar)}
+                    disabled={isLoading}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      isSelected ? "border-amber-500" : "border-border hover:border-amber-400/50"
+                    } disabled:opacity-50`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img 
+                      src={avatar} 
+                      alt={`Default avatar ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-amber-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-amber-500" />
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Generate New Section */}
           <div className="pt-2">
