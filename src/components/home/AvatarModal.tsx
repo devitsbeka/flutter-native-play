@@ -296,6 +296,10 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       }
       
       toast.success(t("avatar.avatarUpdated"));
+      
+      // Small delay to ensure state propagates before modal closes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       onClose();
     } catch (error) {
       console.error("Error updating avatar:", error);
@@ -318,6 +322,10 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       }
       
       toast.success(t("avatar.avatarUpdated"));
+      
+      // Small delay to ensure state propagates before modal closes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       onClose();
     } catch (error) {
       console.error("Error updating avatar:", error);
