@@ -67,6 +67,8 @@ export function VSScreen() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showWheel, setShowWheel] = useState(false);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
+  const [canStart, setCanStart] = useState(false);
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -134,25 +136,29 @@ export function VSScreen() {
     }
   }, [slotPhase, opponent]);
 
-  // Transition to ready state after found
+  // Transition to ready state after found - then show wheel
   useEffect(() => {
     if (slotPhase === "found") {
       const timer = setTimeout(() => {
         setSlotPhase("ready");
+        // Automatically show wheel when match is ready
+        setShowWheel(true);
       }, 600);
       return () => clearTimeout(timer);
     }
   }, [slotPhase]);
 
-  const handleStart = () => {
-    // Show wheel first, then startMatch will transition to category-wheel phase
-    startMatch();
-    setShowWheel(true);
-  };
-
+  // Handle when category is selected by wheel
   const handleCategorySelected = (categoryId: string, categoryName: string) => {
     setShowWheel(false);
-    // Start playing after category is selected
+    setSelectedCategoryName(categoryName);
+    setCanStart(true);
+    // Set up the match with the selected category
+    startMatch();
+  };
+
+  // Start button now just begins the game (category already selected)
+  const handleStart = () => {
     beginPlaying();
   };
 
@@ -268,14 +274,31 @@ export function VSScreen() {
         </motion.div>
       </div>
 
+      {/* Selected Category Badge */}
+      {selectedCategoryName && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center pb-2"
+        >
+          <span className="text-white/60 text-sm">კატეგორია:</span>
+          <h3 
+            className="text-xl font-bold text-white"
+            style={{ fontFamily: "'TASolivare', sans-serif" }}
+          >
+            {selectedCategoryName}
+          </h3>
+        </motion.div>
+      )}
+
       {/* Button Section - Fixed at bottom */}
       <div className="w-full max-w-sm mx-auto pb-4 sm:pb-8 pt-4 px-6 relative z-10">
         <motion.div
           className="w-full"
           initial={{ opacity: 0, y: 20 }}
           animate={{ 
-            opacity: isMatchFound ? 1 : 0,
-            y: isMatchFound ? 0 : 20,
+            opacity: canStart ? 1 : 0,
+            y: canStart ? 0 : 20,
           }}
           transition={{ duration: 0.3 }}
         >
@@ -283,7 +306,7 @@ export function VSScreen() {
             variant="mint"
             size="xl"
             onClick={handleStart}
-            disabled={!isMatchFound}
+            disabled={!canStart}
             className="w-full"
           >
             დაწყება
