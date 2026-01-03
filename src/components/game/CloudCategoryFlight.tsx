@@ -9,16 +9,16 @@ interface CloudCategoryFlightProps {
   onCategorySelected: (categoryId: string, categoryName: string) => void;
 }
 
-type Phase = "floating" | "focusing" | "revealed";
+type Phase = "floating" | "focusing" | "revealed" | "transitioning";
 
 // Bubble positions - scattered nicely across screen
 const BUBBLE_POSITIONS = [
-  { x: -100, y: -120 },
-  { x: 100, y: -80 },
-  { x: -80, y: 40 },
-  { x: 120, y: 60 },
-  { x: -40, y: 140 },
-  { x: 60, y: -160 },
+  { x: -90, y: -130 },
+  { x: 90, y: -100 },
+  { x: -110, y: 20 },
+  { x: 100, y: 50 },
+  { x: -50, y: 130 },
+  { x: 70, y: -170 },
 ];
 
 export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategoryFlightProps) {
@@ -41,10 +41,10 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
   useEffect(() => {
     if (!isOpen || displayCategories.length === 0) return;
 
-    // Phase 1: Float for 2 seconds
-    const focusTimer = setTimeout(() => setPhase("focusing"), 2000);
+    // Phase 1: Float for 1.8 seconds
+    const focusTimer = setTimeout(() => setPhase("focusing"), 1800);
     
-    // Phase 2: Reveal after 1 more second
+    // Phase 2: Reveal after focusing
     const revealTimer = setTimeout(() => {
       setPhase("revealed");
       
@@ -55,17 +55,24 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
         origin: { y: 0.5 },
         colors: ["#FFD700", "#FFA500", "#FFFFFF"],
       });
+    }, 2600);
 
-      // Callback after short delay
+    // Phase 3: Start transition out
+    const transitionTimer = setTimeout(() => {
+      setPhase("transitioning");
+    }, 4000);
+
+    // Phase 4: Complete and callback
+    const completeTimer = setTimeout(() => {
       const winner = displayCategories[winnerIndex];
-      setTimeout(() => {
-        onCategorySelected(winner.uuid, winner.name);
-      }, 1200);
-    }, 3000);
+      onCategorySelected(winner.uuid, winner.name);
+    }, 4600);
 
     return () => {
       clearTimeout(focusTimer);
       clearTimeout(revealTimer);
+      clearTimeout(transitionTimer);
+      clearTimeout(completeTimer);
     };
   }, [isOpen, displayCategories, winnerIndex, onCategorySelected]);
 
@@ -75,32 +82,34 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
 
   if (!isOpen) return null;
 
+  const winner = displayCategories[winnerIndex];
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center"
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      animate={{ opacity: phase === "transitioning" ? 0 : 1 }}
+      transition={{ duration: phase === "transitioning" ? 0.6 : 0.3 }}
+      style={{ background: "#7E7ADB" }}
     >
-      {/* Sky gradient */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(180deg, #1e3a5f 0%, #3b6ea5 50%, #7ec8e3 100%)"
-        }}
-      />
-
       {/* Title */}
       <motion.h1
-        className="absolute top-20 left-0 right-0 text-center text-xl font-bold text-white/90"
-        style={{ textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
-        animate={{ opacity: phase === "revealed" ? 0 : 1 }}
+        className="absolute top-20 left-0 right-0 text-center text-xl font-bold text-white/90 z-10"
+        style={{ 
+          textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+          fontFamily: "'TASolivare', sans-serif"
+        }}
+        animate={{ 
+          opacity: phase === "revealed" || phase === "transitioning" ? 0 : 1,
+          y: phase === "revealed" || phase === "transitioning" ? -20 : 0
+        }}
+        transition={{ duration: 0.4 }}
       >
         კატეგორიის არჩევა...
       </motion.h1>
 
-      {/* Bubbles container */}
-      <div className="relative">
+      {/* Bubbles container - centered */}
+      <div className="relative flex items-center justify-center">
         {displayCategories.map((category, index) => {
           const isWinner = index === winnerIndex;
           const pos = BUBBLE_POSITIONS[index];
@@ -109,7 +118,6 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
             <motion.div
               key={category.uuid}
               className="absolute"
-              style={{ left: "50%", top: "50%", marginLeft: -40, marginTop: -40 }}
               initial={{ 
                 x: pos.x, 
                 y: pos.y, 
@@ -117,44 +125,47 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
                 opacity: 0 
               }}
               animate={{
-                x: phase === "focusing" || phase === "revealed" 
-                  ? (isWinner ? 0 : pos.x * 1.5) 
+                x: phase === "focusing" || phase === "revealed" || phase === "transitioning"
+                  ? (isWinner ? 0 : pos.x * 2) 
                   : pos.x,
-                y: phase === "focusing" || phase === "revealed"
-                  ? (isWinner ? 0 : pos.y * 1.5)
+                y: phase === "focusing" || phase === "revealed" || phase === "transitioning"
+                  ? (isWinner ? 0 : pos.y * 2)
                   : pos.y,
-                scale: phase === "revealed" && isWinner ? 1.6 : 1,
-                opacity: phase === "focusing" || phase === "revealed"
+                scale: phase === "transitioning" && isWinner 
+                  ? 0.8 
+                  : (phase === "revealed" && isWinner ? 1.5 : 1),
+                opacity: phase === "focusing" || phase === "revealed" || phase === "transitioning"
                   ? (isWinner ? 1 : 0)
                   : 1,
               }}
               transition={{
-                duration: phase === "floating" ? 0.6 : 0.8,
-                delay: phase === "floating" ? index * 0.1 : 0,
+                duration: phase === "floating" ? 0.5 : 0.7,
+                delay: phase === "floating" ? index * 0.08 : 0,
                 ease: "easeOut",
               }}
             >
               {/* Gentle floating animation */}
               <motion.div
                 animate={phase === "floating" ? {
-                  y: [0, -8, 0],
+                  y: [0, -6, 0],
                 } : {}}
                 transition={{
-                  duration: 2,
+                  duration: 2.5,
                   repeat: Infinity,
-                  delay: index * 0.2,
+                  delay: index * 0.15,
                 }}
+                className="flex flex-col items-center"
               >
                 {/* Bubble */}
                 <div 
                   className="w-20 h-20 rounded-full overflow-hidden"
                   style={{ 
-                    border: phase === "revealed" && isWinner 
+                    border: (phase === "revealed" || phase === "transitioning") && isWinner 
                       ? "4px solid rgba(255,215,0,0.9)" 
-                      : "3px solid rgba(255,255,255,0.6)",
-                    boxShadow: phase === "revealed" && isWinner
+                      : "3px solid rgba(255,255,255,0.5)",
+                    boxShadow: (phase === "revealed" || phase === "transitioning") && isWinner
                       ? "0 0 30px rgba(255,215,0,0.5), 0 0 60px rgba(255,215,0,0.3)"
-                      : "0 0 20px rgba(255,255,255,0.3)",
+                      : "0 0 15px rgba(255,255,255,0.25)",
                   }}
                 >
                   <video
@@ -167,21 +178,29 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
                   />
                 </div>
 
-                {/* Category name - only for winner when revealed */}
+                {/* Category name - centered below bubble for winner */}
                 <AnimatePresence>
-                  {phase === "revealed" && isWinner && (
-                    <motion.p
+                  {(phase === "revealed" || phase === "transitioning") && isWinner && (
+                    <motion.div
                       initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap text-lg font-bold text-white"
-                      style={{ 
-                        fontFamily: "'TASolivare', sans-serif",
-                        textShadow: "0 2px 10px rgba(0,0,0,0.4)"
+                      animate={{ 
+                        opacity: phase === "transitioning" ? 0 : 1, 
+                        y: 0 
                       }}
+                      exit={{ opacity: 0 }}
+                      transition={{ delay: phase === "revealed" ? 0.3 : 0, duration: 0.4 }}
+                      className="mt-4 text-center"
                     >
-                      {category.name}
-                    </motion.p>
+                      <p 
+                        className="text-xl font-bold text-white whitespace-nowrap"
+                        style={{ 
+                          fontFamily: "'TASolivare', sans-serif",
+                          textShadow: "0 2px 10px rgba(0,0,0,0.4)"
+                        }}
+                      >
+                        {category.name}
+                      </p>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </motion.div>
