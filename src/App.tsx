@@ -39,6 +39,7 @@ import AIGenerations from "./pages/admin/AIGenerations";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
+import Notifications from "./pages/Notifications";
 
 const App = () => (
   <AuthProvider>
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/team" element={<Team />} />
               <Route path="/vip" element={<VIP />} />
               <Route path="/discover" element={<Discover />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="content" element={<ContentManager />} />

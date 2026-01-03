@@ -1,0 +1,275 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Bell, BellOff, CheckCheck, Check, Trash2 } from 'lucide-react';
+import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { ka } from 'date-fns/locale';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
+
+type FilterType = 'all' | 'unread' | 'friends' | 'games';
+
+// Map notification types to icon slugs from our library
+const NOTIFICATION_ICON_SLUGS: Record<string, string> = {
+  friend_request: 'user-plus-02',
+  friend_accepted: 'users-check',
+  challenge: 'swords-02',
+  game_result: 'trophy-02',
+  reward: 'gift-02',
+  achievement: 'award-03',
+  system: 'announcement-01',
+  welcome: 'party-popper',
+};
+
+function NotificationCard({
+  notification,
+  onMarkRead,
+  onDelete,
+  onNavigate,
+}: {
+  notification: Notification;
+  onMarkRead: (id: string) => void;
+  onDelete: (id: string) => void;
+  onNavigate: (notification: Notification) => void;
+}) {
+  const isUnread = !notification.read_at;
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { 
+    addSuffix: true,
+    locale: ka 
+  });
+
+  // Get icon slug based on notification type or from data
+  const iconSlug = (notification.data?.icon_slug as string) || NOTIFICATION_ICON_SLUGS[notification.type] || 'bell-01';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className={cn(
+        "relative p-4 rounded-2xl border transition-all",
+        isUnread
+          ? "bg-primary/5 border-primary/20"
+          : "bg-card/50 border-border/50"
+      )}
+    >
+      {/* Unread indicator dot */}
+      {isUnread && (
+        <div className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+      )}
+
+      <div className="flex items-start gap-3">
+        {/* Icon from library */}
+        <div className={cn(
+          "flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
+          isUnread ? "bg-primary/10" : "bg-muted"
+        )}>
+          <DynamicIcon slug={iconSlug} size={28} />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 pr-8">
+          <p className={cn(
+            "font-bold text-sm line-clamp-1",
+            isUnread ? "text-foreground" : "text-muted-foreground"
+          )}>
+            {notification.title}
+          </p>
+          {notification.message && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+              {notification.message}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground/60 mt-2">
+            {timeAgo}
+          </p>
+        </div>
+      </div>
+
+      {/* Actions row */}
+      <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-border/30">
+        {isUnread && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMarkRead(notification.id);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+          >
+            <Check className="w-3.5 h-3.5" />
+            წაკითხულად მონიშვნა
+          </motion.button>
+        )}
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(notification.id);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          წაშლა
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function Notifications() {
+  const navigate = useNavigate();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const [filter, setFilter] = useState<FilterType>('all');
+
+  const filteredNotifications = notifications.filter((n) => {
+    switch (filter) {
+      case 'unread':
+        return !n.read_at;
+      case 'friends':
+        return n.type === 'friend_request' || n.type === 'friend_accepted';
+      case 'games':
+        return n.type === 'challenge' || n.type === 'game_result';
+      default:
+        return true;
+    }
+  });
+
+  const handleNavigate = (notification: Notification) => {
+    // Navigate based on notification type
+    switch (notification.type) {
+      case 'friend_request':
+      case 'friend_accepted':
+        navigate('/team');
+        break;
+      case 'challenge':
+      case 'game_result':
+        navigate('/team');
+        break;
+      case 'reward':
+        navigate('/');
+        break;
+      case 'achievement':
+        navigate('/profile');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const filters: { key: FilterType; label: string }[] = [
+    { key: 'all', label: 'ყველა' },
+    { key: 'unread', label: 'წაუკითხავი' },
+    { key: 'friends', label: 'მეგობრები' },
+    { key: 'games', label: 'თამაშები' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/50">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </motion.button>
+            <div>
+              <h1 className="font-bold text-xl">შეტყობინებები</h1>
+              {unreadCount > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {unreadCount} წაუკითხავი
+                </p>
+              )}
+            </div>
+          </div>
+
+          {unreadCount > 0 && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={markAllAsRead}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            >
+              <CheckCheck className="w-5 h-5" />
+              <span className="text-sm font-medium">ყველას წაკითხვა</span>
+            </motion.button>
+          )}
+        </div>
+
+        {/* Filter tabs */}
+        <div className="flex gap-2 px-4 pb-4 overflow-x-auto scrollbar-hide">
+          {filters.map((f) => (
+            <motion.button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className="px-4 py-2.5 rounded-full text-sm font-semibold transition-all flex-shrink-0"
+              style={{
+                background: filter === f.key
+                  ? "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(280 65% 50%) 100%)"
+                  : "hsl(var(--muted))",
+                color: filter === f.key ? "white" : "hsl(var(--muted-foreground))",
+                boxShadow: filter === f.key
+                  ? "0 4px 0 hsl(var(--primary) / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.2)"
+                  : "0 2px 0 hsl(var(--border))",
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {f.label}
+              {f.key === 'unread' && unreadCount > 0 && (
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
+                  {unreadCount}
+                </span>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        {loading ? (
+          <div className="flex flex-col items-center py-12">
+            <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground mt-4">იტვირთება...</p>
+          </div>
+        ) : filteredNotifications.length === 0 ? (
+          <div className="flex flex-col items-center py-12">
+            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
+              <BellOff className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <h3 className="font-bold text-lg text-foreground mb-2">შეტყობინებები არ არის</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-[280px]">
+              {filter === 'unread'
+                ? "ყველაფერი წაკითხული გაქვს!"
+                : filter === 'friends'
+                ? "მეგობრების აქტივობა ჯერ არ არის"
+                : filter === 'games'
+                ? "თამაშის შეტყობინებები არ არის"
+                : "როცა რამე მოხდება, აქ ნახავ"}
+            </p>
+          </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {filteredNotifications.map((notification) => (
+              <NotificationCard
+                key={notification.id}
+                notification={notification}
+                onMarkRead={markAsRead}
+                onDelete={deleteNotification}
+                onNavigate={handleNavigate}
+              />
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
+
+      <UniversalBottomNav />
+    </div>
+  );
+}
