@@ -289,11 +289,42 @@ export function VSScreen() {
 
         {/* After Category Selected: Diagonal Layout */}
         {selectedCategoryName && (
-          <div className="flex-1 flex flex-col justify-between py-4">
+          <div className="flex-1 flex flex-col justify-between py-4 relative">
+            
+            {/* Diagonal VS Divider Background */}
+            <div 
+              className="absolute inset-0 overflow-hidden pointer-events-none"
+              style={{ zIndex: 0 }}
+            >
+              {/* Diagonal line from top-left to bottom-right */}
+              <div 
+                className="absolute"
+                style={{
+                  top: "-10%",
+                  left: "-10%",
+                  width: "120%",
+                  height: "120%",
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.03) 49%, rgba(255,215,0,0.25) 49.5%, rgba(255,215,0,0.25) 50.5%, rgba(255,255,255,0.03) 51%)",
+                }}
+              />
+              
+              {/* Large VS watermark behind content */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span 
+                  className="text-[140px] font-black text-white/[0.04]"
+                  style={{ 
+                    fontFamily: "'TASolivare', sans-serif",
+                    letterSpacing: "-0.05em"
+                  }}
+                >
+                  VS
+                </span>
+              </div>
+            </div>
             
             {/* Opponent - Top Left */}
             <motion.div 
-              className="flex justify-start"
+              className="flex justify-start relative z-10"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
@@ -307,11 +338,12 @@ export function VSScreen() {
                     boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
                   }}
                 >
-                  <div className="w-20 h-20 rounded-full overflow-hidden">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-800">
                     <img 
                       src={opponent?.avatarUrl || currentAvatar || slotAvatars[0]} 
                       alt="Opponent"
                       className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
                     />
                   </div>
                 </div>
@@ -338,7 +370,7 @@ export function VSScreen() {
 
             {/* Category - Center */}
             <motion.div 
-              className="flex flex-col items-center justify-center gap-3"
+              className="flex flex-col items-center justify-center gap-3 relative z-10"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
@@ -384,7 +416,7 @@ export function VSScreen() {
 
             {/* Player - Bottom Right */}
             <motion.div 
-              className="flex justify-end"
+              className="flex justify-end relative z-10"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
@@ -416,11 +448,12 @@ export function VSScreen() {
                     boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
                   }}
                 >
-                  <div className="w-20 h-20 rounded-full overflow-hidden">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-800">
                     <img 
                       src={profile?.animated_avatar_url || profile?.avatar_url || "/placeholder.svg"} 
                       alt="Player"
                       className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
                     />
                   </div>
                 </div>
