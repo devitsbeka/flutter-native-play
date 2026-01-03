@@ -155,19 +155,17 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Random Button - distinct styling with purple gradient */}
+              {/* Random Button - grey styling matching reference with purple outline when selected */}
               <motion.button
                 onClick={selectRandomCategory}
                 className="w-full p-4 rounded-2xl text-left transition-all overflow-hidden relative"
                 style={{
-                  background: isRandom
-                    ? "linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)"
-                    : "linear-gradient(180deg, #F3F4F6 0%, #E5E7EB 100%)",
+                  background: "linear-gradient(180deg, #F3F4F6 0%, #E5E7EB 100%)",
                   border: isRandom
-                    ? "3px solid #7C3AED"
+                    ? "3px solid hsl(var(--primary))"
                     : "2px solid #E5E7EB",
                   boxShadow: isRandom
-                    ? "0 6px 0 #6D28D9, 0 8px 20px rgba(139, 92, 246, 0.35)"
+                    ? "0 4px 0 hsl(var(--primary) / 0.3)"
                     : "0 3px 0 #D1D5DB",
                 }}
                 whileHover={{ scale: 1.02, y: -2 }}
@@ -177,14 +175,12 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   <div 
                     className="w-12 h-12 rounded-xl flex items-center justify-center"
                     style={{
-                      background: isRandom 
-                        ? "rgba(255,255,255,0.25)" 
-                        : "rgba(139, 92, 246, 0.1)",
+                      background: "rgba(139, 92, 246, 0.1)",
                     }}
                   >
-                    <Shuffle className={`w-6 h-6 ${isRandom ? "text-white" : "text-primary"}`} />
+                    <Shuffle className="w-6 h-6 text-primary" />
                   </div>
-                  <span className={`text-base font-bold ${isRandom ? "text-white" : "text-foreground"}`}>
+                  <span className="text-base font-bold text-foreground">
                     🎲 შემთხვევითი
                   </span>
                 </div>
