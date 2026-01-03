@@ -161,54 +161,35 @@ export default function CategoryPage() {
 
 
       <div className="min-h-screen flex flex-col">
-        {/* Blurred Video Background for Header */}
-        <div className="absolute inset-x-0 top-0 h-[45vh] overflow-hidden">
-          {/* Video layer */}
-          <div className="absolute inset-0 scale-125">
+        {/* Video Header */}
+        <div className="relative h-[280px] overflow-hidden">
+          {/* Video layer - no blur */}
+          <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
             />
           </div>
           
-          {/* Heavy blur overlay */}
+          {/* Dark gradient overlay for text readability */}
           <div 
             className="absolute inset-0"
             style={{
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.85) 100%)',
             }}
           />
-          
-          {/* White fade masks for barely visible effect */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.6) 40%, rgba(255,255,255,0.5) 70%, rgba(255,255,255,0.85) 100%)',
-            }}
-          />
-          
-          {/* Extra top white fade */}
-          <div 
-            className="absolute inset-x-0 top-0 h-24"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, transparent 100%)',
-            }}
-          />
-        </div>
 
-        {/* Header */}
-        <div className="relative px-5 pb-6 pt-12 z-10">
-          <div className="flex items-center justify-between mb-6">
+          {/* Navigation buttons */}
+          <div className="absolute top-12 left-5 right-5 z-10 flex items-center justify-between">
             <button
               onClick={() => navigate("/discover")}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
             >
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
+              <ArrowLeft className="h-5 w-5 text-white" />
             </button>
             {!user && (
               <button
                 onClick={() => navigate("/auth")}
-                className="flex items-center gap-1.5 text-sm text-slate-700 font-medium bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm"
+                className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
               >
                 <LogIn className="h-4 w-4" />
                 შესვლა
@@ -216,19 +197,10 @@ export default function CategoryPage() {
             )}
           </div>
 
-          <div className="text-center">
-            <div 
-              className="mx-auto mb-4 flex h-32 w-32 items-center justify-center rounded-3xl bg-white shadow-lg"
-            >
-              <DynamicIcon
-                slug={(category as any).icon_slug || undefined}
-                categoryId={category.id}
-                size={128}
-                className="drop-shadow-lg"
-              />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-800">{category.name}</h1>
-            <p className="text-slate-600">{category.description}</p>
+          {/* Left-aligned title and description at bottom of video */}
+          <div className="absolute bottom-4 left-5 right-5 z-10">
+            <h1 className="text-2xl font-bold text-white drop-shadow-lg">{category.name}</h1>
+            <p className="text-white/80 text-sm mt-1 drop-shadow-md">{category.description}</p>
           </div>
         </div>
 
