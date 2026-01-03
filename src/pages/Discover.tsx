@@ -186,11 +186,8 @@ export default function Discover() {
               )}
             </AnimatePresence>
 
-            {/* Separator line between header and tabs */}
-            <div className="border-b border-slate-200/60" />
-
             {/* Tabs */}
-            <div className="px-4 py-4">
+            <div className="px-4 pt-2 pb-1">
               <IconTabBar
                 tabs={tabs}
                 activeTab={activeTab}
