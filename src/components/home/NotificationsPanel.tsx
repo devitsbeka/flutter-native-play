@@ -170,7 +170,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-3xl bg-card border-t border-border shadow-2xl overflow-hidden flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-3xl bg-card border-t border-border shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/50">
@@ -239,14 +239,14 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="overflow-y-auto p-4 pb-8">
               {loading ? (
-                <div className="flex flex-col items-center pt-8">
+                <div className="flex flex-col items-center py-8">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
                 </div>
               ) : filteredNotifications.length === 0 ? (
-                <div className="flex flex-col items-center pt-8">
+                <div className="flex flex-col items-center py-8">
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
                     <BellOff className="w-10 h-10 text-muted-foreground" />
                   </div>
@@ -262,22 +262,21 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                   </p>
                 </div>
               ) : (
-                <AnimatePresence mode="popLayout">
-                  {filteredNotifications.map((notification) => (
-                    <NotificationCard
-                      key={notification.id}
-                      notification={notification}
-                      onMarkRead={markAsRead}
-                      onDelete={deleteNotification}
-                      onNavigate={handleNavigate}
-                    />
-                  ))}
-                </AnimatePresence>
+                <div className="space-y-2">
+                  <AnimatePresence mode="popLayout">
+                    {filteredNotifications.map((notification) => (
+                      <NotificationCard
+                        key={notification.id}
+                        notification={notification}
+                        onMarkRead={markAsRead}
+                        onDelete={deleteNotification}
+                        onNavigate={handleNavigate}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
               )}
             </div>
-
-            {/* Bottom safe area */}
-            <div className="h-6 bg-card" />
           </motion.div>
         </>
       )}
