@@ -1,0 +1,284 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMultiplayer } from "@/contexts/MultiplayerContext";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { supabase } from "@/integrations/supabase/client";
+import { useFriends, Friend } from "@/hooks/useFriends";
+import { useGameInvitations } from "@/hooks/useGameInvitations";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface Category {
+  id: string;
+  category_id: string;
+  name: string;
+  icon_slug: string | null;
+}
+
+interface CreateRoomPageProps {
+  onClose: () => void;
+}
+
+export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
+  const { user } = useAuth();
+  const { createRoom, loading, room } = useMultiplayer();
+  const { friends } = useFriends();
+  const { sendInvitation } = useGameInvitations();
+  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Only accepted friends
+  const acceptedFriends = friends.filter(f => f.status === "accepted");
+
+  // Fetch categories from database
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, category_id, name, icon_slug")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching categories:", error);
+      } else if (data) {
+        setCategories(data);
+        if (data.length > 0 && !selectedCategory) {
+          setSelectedCategory(data[0]);
+        }
+      }
+      setLoadingCategories(false);
+    };
+
+    fetchCategories();
+  }, []);
+
+  const toggleFriendSelection = (friendId: string) => {
+    setSelectedFriends(prev => {
+      const next = new Set(prev);
+      if (next.has(friendId)) {
+        next.delete(friendId);
+      } else {
+        next.add(friendId);
+      }
+      return next;
+    });
+  };
+
+  const handleCreate = async () => {
+    if (!selectedCategory || !user) return;
+    
+    setIsCreating(true);
+    
+    try {
+      // Create the room
+      await createRoom(selectedCategory.category_id, selectedCategory.name);
+      
+      // Note: We need to wait for room to be created before sending invitations
+      // The room will be available after createRoom completes
+      // Invitations will be sent after redirect to lobby
+    } catch (error) {
+      console.error("Error creating room:", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Send invitations once room is created
+  useEffect(() => {
+    const sendInvitations = async () => {
+      if (room && selectedFriends.size > 0 && isCreating === false) {
+        for (const friendId of selectedFriends) {
+          await sendInvitation(friendId, room.id);
+        }
+      }
+    };
+    
+    sendInvitations();
+  }, [room?.id]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-background flex flex-col"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-border/30">
+        <button
+          onClick={onClose}
+          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+        >
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-xl font-display text-foreground">ახალი ოთახი</h1>
+          <p className="text-sm text-muted-foreground">აირჩიე კატეგორია და მოიწვიე მეგობრები</p>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <Gamepad2 className="w-6 h-6 text-primary" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+        {/* Category Selection */}
+        <div>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">კატეგორია</h2>
+          
+          {loadingCategories ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map((category) => (
+                <motion.button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category)}
+                  className="relative p-3 rounded-xl text-left transition-all"
+                  style={{
+                    background: selectedCategory?.id === category.id
+                      ? "linear-gradient(180deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%)"
+                      : "hsl(var(--muted))",
+                    border: selectedCategory?.id === category.id
+                      ? "2px solid hsl(var(--primary))"
+                      : "2px solid hsl(var(--border))",
+                    boxShadow: selectedCategory?.id === category.id
+                      ? "0 3px 0 hsl(var(--primary) / 0.3)"
+                      : "0 2px 0 hsl(var(--border))",
+                  }}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98, y: 1 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <DynamicIcon 
+                      slug={category.icon_slug || undefined}
+                      categoryId={category.category_id} 
+                      size={24} 
+                    />
+                    <span className="text-sm font-medium text-foreground line-clamp-1">
+                      {category.name}
+                    </span>
+                  </div>
+                  
+                  {selectedCategory?.id === category.id && (
+                    <motion.div
+                      layoutId="category-selected-page"
+                      className="absolute inset-0 rounded-xl border-2 border-primary pointer-events-none"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Friend Invitation Section */}
+        {acceptedFriends.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-medium text-muted-foreground">
+                მოიწვიე მეგობრები ({selectedFriends.size} არჩეული)
+              </h2>
+            </div>
+            
+            <div className="space-y-2">
+              {acceptedFriends.map((friend) => (
+                <motion.button
+                  key={friend.id}
+                  onClick={() => toggleFriendSelection(friend.friendId)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl transition-all"
+                  style={{
+                    background: selectedFriends.has(friend.friendId)
+                      ? "linear-gradient(180deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.15) 100%)"
+                      : "hsl(var(--muted))",
+                    border: selectedFriends.has(friend.friendId)
+                      ? "2px solid hsl(var(--primary))"
+                      : "2px solid transparent",
+                  }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <div className="relative">
+                    <SmartAvatar
+                      avatarUrl={friend.avatarUrl}
+                      animatedAvatarUrl={friend.animatedAvatarUrl}
+                      fallback={friend.nickname?.slice(0, 2)}
+                      size="md"
+                    />
+                    {friend.isOnline && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-foreground">{friend.nickname}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {friend.isOnline ? "ონლაინ" : "ოფლაინ"}
+                    </p>
+                  </div>
+                  
+                  <div 
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                      selectedFriends.has(friend.friendId)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted-foreground/20"
+                    }`}
+                  >
+                    {selectedFriends.has(friend.friendId) && (
+                      <Check className="w-4 h-4" />
+                    )}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty friends state */}
+        {acceptedFriends.length === 0 && (
+          <div className="text-center py-6 text-muted-foreground">
+            <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">მეგობრები ჯერ არ გყავს</p>
+            <p className="text-xs">დაამატე მეგობრები თამაშის შემდეგ მოსაწვევად</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 py-4 border-t border-border/30 bg-background">
+        <ChunkyButton
+          variant="primary"
+          size="lg"
+          className="w-full"
+          onClick={handleCreate}
+          disabled={!selectedCategory || loading || isCreating}
+        >
+          {loading || isCreating ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              იქმნება...
+            </span>
+          ) : (
+            <>
+              შექმნა
+              {selectedFriends.size > 0 && ` და ${selectedFriends.size} მეგობრის მოწვევა`}
+            </>
+          )}
+        </ChunkyButton>
+      </div>
+    </motion.div>
+  );
+}
