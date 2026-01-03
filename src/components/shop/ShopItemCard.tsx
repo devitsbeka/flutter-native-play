@@ -69,7 +69,7 @@ export function ShopItemCard({
       transition={{ delay: index * 0.05 }}
       className="relative"
     >
-      {/* Badge */}
+      {/* Badge - positioned on right */}
       {badgeStyle && !isPurchased && (
         <motion.div
           className="absolute -top-2 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
@@ -84,7 +84,7 @@ export function ShopItemCard({
         </motion.div>
       )}
 
-      {/* Savings Badge */}
+      {/* Savings Badge - positioned on left */}
       {savings && !isPurchased && (
         <motion.div
           className="absolute -top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-900 z-10"
@@ -101,7 +101,7 @@ export function ShopItemCard({
         onClick={onClick}
         disabled={isPurchased || isLoading}
         className={cn(
-          "w-full p-4 rounded-2xl transition-all relative overflow-hidden flex flex-col items-center gap-3",
+          "w-full px-4 py-3 rounded-2xl transition-all relative overflow-hidden flex items-center gap-4",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -121,9 +121,9 @@ export function ShopItemCard({
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
       >
-        {/* Icon - Top */}
+        {/* Icon - Left side */}
         <motion.div
-          className="w-10 h-10 flex items-center justify-center"
+          className="flex-shrink-0 w-12 h-12 flex items-center justify-center"
           whileHover={{ scale: 1.05 }}
         >
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
@@ -131,13 +131,13 @@ export function ShopItemCard({
           </div>
         </motion.div>
 
-        {/* Name - Center */}
-        <div className="text-center">
-          <h3 className="text-gray-900 font-bold text-sm leading-tight">{name}</h3>
+        {/* Name + Description - Center, left-aligned */}
+        <div className="flex-1 text-left min-w-0">
+          <h3 className="text-gray-900 font-bold text-sm leading-tight truncate">{name}</h3>
         </div>
 
-        {/* Price / Status - Bottom */}
-        <div className="w-full flex justify-center">
+        {/* Price / Status - Right side */}
+        <div className="flex-shrink-0">
           {isPurchased ? (
             <div className="flex items-center gap-1 text-success font-bold text-xs px-2 py-1">
               <Check className="w-4 h-4" />
