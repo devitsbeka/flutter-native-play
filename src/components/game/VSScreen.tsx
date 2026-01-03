@@ -203,135 +203,216 @@ export function VSScreen() {
         </motion.button>
       </motion.div>
 
-      {/* Main Content - Vertical VS Layout */}
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-center pt-2 sm:pt-6 relative z-10 px-6 gap-1 sm:gap-2">
+      {/* Main Content Area */}
+      <div className="flex-1 min-h-0 flex flex-col relative z-10 px-5">
         
-        {/* Player Section - Top */}
-        <motion.div 
-          className="flex flex-col items-center gap-2"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <QuizPlayerAvatar
-            avatarUrl={profile?.avatar_url}
-            animatedAvatarUrl={profile?.animated_avatar_url}
-            score={playerPoints}
-            position="left"
-            state="active"
-            size="xlarge"
-          />
-          <h2
-            className="text-2xl font-black tracking-wide"
-            style={{
-              fontFamily: "'TASolivare', sans-serif",
-              color: "#FFFFFF",
-              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            }}
-          >
-            {profile?.nickname || "შენ"}
-          </h2>
-          <p className="text-white/70 text-sm">
-            დონე {playerLevelInfo.level}
-          </p>
-        </motion.div>
-
-        {/* VS Badge - Center */}
-        <motion.div 
-          className="py-2 sm:py-4"
-          animate={!isMatchFound ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-          transition={{ duration: 1.2, repeat: !isMatchFound ? Infinity : 0, ease: "easeInOut" }}
-        >
-          <span 
-            className="text-4xl sm:text-6xl font-black text-white"
-            style={{ 
-              textShadow: "0 6px 30px rgba(0,0,0,0.4)",
-              fontFamily: "'TASolivare', sans-serif",
-            }}
-          >
-            VS
-          </span>
-        </motion.div>
-
-        {/* Opponent Section - Bottom */}
-        <motion.div 
-          className="flex flex-col items-center gap-2"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <QuizPlayerAvatar
-            avatarUrl={currentAvatar || slotAvatars[0]}
-            score={opponentPointsDisplay}
-            position="right"
-            state="default"
-            size="xlarge"
-          />
-          <h2
-            className="text-2xl font-black tracking-wide"
-            style={{
-              fontFamily: "'TASolivare', sans-serif",
-              color: "#FFFFFF",
-              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            }}
-          >
-            {opponentName}
-          </h2>
-          <p className="text-white/70 text-sm">
-            {isMatchFound ? `დონე ${opponentLevelInfo.level}` : "დონე ?"}
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Selected Category Badge with Video Bubble */}
-      {selectedCategoryName && (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="px-6 pb-2"
-        >
-          <div className="flex items-center gap-3">
-            {/* Animated Video Bubble */}
-            {selectedCategoryVideo && showCategoryBubble && (
-              <motion.div
-                initial={{ scale: 1.5, x: "50vw", y: -100, opacity: 0 }}
-                animate={{ scale: 1, x: 0, y: 0, opacity: 1 }}
-                transition={{ 
-                  duration: 0.6, 
-                  ease: [0.34, 1.56, 0.64, 1],
-                  delay: 0.1
-                }}
-                className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0"
-                style={{ 
-                  border: "3px solid rgba(255,215,0,0.7)",
-                  boxShadow: "0 0 15px rgba(255,215,0,0.3)"
+        {/* Before Category Selected: Vertical VS Layout */}
+        {!selectedCategoryName && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-1 sm:gap-2">
+            {/* Player Section - Top */}
+            <motion.div 
+              className="flex flex-col items-center gap-2"
+              initial={{ opacity: 0, y: -30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <QuizPlayerAvatar
+                avatarUrl={profile?.avatar_url}
+                animatedAvatarUrl={profile?.animated_avatar_url}
+                score={playerPoints}
+                position="left"
+                state="active"
+                size="xlarge"
+              />
+              <h2
+                className="text-2xl font-black tracking-wide"
+                style={{
+                  fontFamily: "'TASolivare', sans-serif",
+                  color: "#FFFFFF",
+                  textShadow: "0 2px 10px rgba(0,0,0,0.3)",
                 }}
               >
-                <video
-                  src={selectedCategoryVideo}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-            )}
+                {profile?.nickname || "შენ"}
+              </h2>
+              <p className="text-white/70 text-sm">
+                დონე {playerLevelInfo.level}
+              </p>
+            </motion.div>
+
+            {/* VS Badge - Center */}
+            <motion.div 
+              className="py-2 sm:py-4"
+              animate={!isMatchFound ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+              transition={{ duration: 1.2, repeat: !isMatchFound ? Infinity : 0, ease: "easeInOut" }}
+            >
+              <span 
+                className="text-4xl sm:text-6xl font-black text-white"
+                style={{ 
+                  textShadow: "0 6px 30px rgba(0,0,0,0.4)",
+                  fontFamily: "'TASolivare', sans-serif",
+                }}
+              >
+                VS
+              </span>
+            </motion.div>
+
+            {/* Opponent Section - Bottom */}
+            <motion.div 
+              className="flex flex-col items-center gap-2"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <QuizPlayerAvatar
+                avatarUrl={currentAvatar || slotAvatars[0]}
+                score={opponentPointsDisplay}
+                position="right"
+                state="default"
+                size="xlarge"
+              />
+              <h2
+                className="text-2xl font-black tracking-wide"
+                style={{
+                  fontFamily: "'TASolivare', sans-serif",
+                  color: "#FFFFFF",
+                  textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                }}
+              >
+                {opponentName}
+              </h2>
+              <p className="text-white/70 text-sm">
+                {isMatchFound ? `დონე ${opponentLevelInfo.level}` : "დონე ?"}
+              </p>
+            </motion.div>
+          </div>
+        )}
+
+        {/* After Category Selected: Diagonal Layout */}
+        {selectedCategoryName && (
+          <div className="flex-1 flex flex-col justify-between py-4">
             
-            {/* Category Text - Left aligned */}
-            <div className="flex flex-col">
-              <span className="text-white/60 text-sm">კატეგორია:</span>
-              <h3 
-                className="text-xl font-bold text-white"
-                style={{ fontFamily: "'TASolivare', sans-serif" }}
+            {/* Opponent - Top Right */}
+            <motion.div 
+              className="flex justify-end"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <div className="flex items-center gap-3">
+                {/* Text Info - Left of avatar */}
+                <div className="flex flex-col items-end">
+                  <h3
+                    className="text-lg font-bold text-white"
+                    style={{
+                      fontFamily: "'TASolivare', sans-serif",
+                      textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    {opponent?.name || "მოწინააღმდეგე"}
+                  </h3>
+                  <p className="text-white/70 text-sm">
+                    დონე {opponentLevelInfo.level}
+                  </p>
+                  <p className="text-amber-300 text-sm font-medium">
+                    {opponentPoints.toLocaleString()}
+                  </p>
+                </div>
+                {/* Avatar */}
+                <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-white/30 shadow-lg">
+                  <img 
+                    src={opponent?.avatarUrl || currentAvatar || slotAvatars[0]} 
+                    alt="Opponent"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Category - Center */}
+            <motion.div 
+              className="flex flex-col items-center justify-center gap-3"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            >
+              {/* Video Bubble */}
+              {selectedCategoryVideo && showCategoryBubble && (
+                <motion.div
+                  initial={{ scale: 1.5, y: -50, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    ease: [0.34, 1.56, 0.64, 1],
+                    delay: 0.3
+                  }}
+                  className="w-28 h-28 rounded-full overflow-hidden"
+                  style={{ 
+                    border: "4px solid rgba(255,215,0,0.7)",
+                    boxShadow: "0 0 25px rgba(255,215,0,0.4), 0 8px 32px rgba(0,0,0,0.3)"
+                  }}
+                >
+                  <video
+                    src={selectedCategoryVideo}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              )}
+              
+              {/* Category Name */}
+              <h2 
+                className="text-2xl font-black text-white text-center"
+                style={{ 
+                  fontFamily: "'TASolivare', sans-serif",
+                  textShadow: "0 4px 20px rgba(0,0,0,0.4)"
+                }}
               >
                 {selectedCategoryName}
-              </h3>
-            </div>
+              </h2>
+            </motion.div>
+
+            {/* Player - Bottom Left */}
+            <motion.div 
+              className="flex justify-start"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-white/30 shadow-lg">
+                  <img 
+                    src={profile?.animated_avatar_url || profile?.avatar_url || "/placeholder.svg"} 
+                    alt="Player"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Text Info - Right of avatar */}
+                <div className="flex flex-col">
+                  <h3
+                    className="text-lg font-bold text-white"
+                    style={{
+                      fontFamily: "'TASolivare', sans-serif",
+                      textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    {profile?.nickname || "შენ"}
+                  </h3>
+                  <p className="text-white/70 text-sm">
+                    დონე {playerLevelInfo.level}
+                  </p>
+                  <p className="text-amber-300 text-sm font-medium">
+                    {playerPoints.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
-      )}
+        )}
+      </div>
 
       {/* Button Section - Fixed at bottom */}
       <div className="w-full max-w-sm mx-auto pb-4 sm:pb-8 pt-4 px-6 relative z-10">
