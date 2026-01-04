@@ -113,7 +113,7 @@ function TeamContentV2() {
       {/* Header */}
       <PageHeader
         title="ონლაინ თამაში"
-        showBack={true}
+        showBack={false}
         rightElements={
           <button
             onClick={() => setShowHelpModal(true)}
