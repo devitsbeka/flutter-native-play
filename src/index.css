@@ -257,16 +257,16 @@
   .liquid-glass {
     background: linear-gradient(
       135deg,
-      hsl(0 0% 100% / 0.75) 0%,
-      hsl(0 0% 100% / 0.65) 50%,
-      hsl(0 0% 100% / 0.7) 100%
+      hsl(0 0% 100% / 0.65) 0%,
+      hsl(0 0% 100% / 0.55) 50%,
+      hsl(0 0% 100% / 0.6) 100%
     );
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid hsl(0 0% 100% / 0.6);
+    border: 1px solid hsl(0 0% 100% / 0.5);
     box-shadow: 
       0 8px 32px hsl(0 0% 0% / 0.1),
-      inset 0 1px 0 hsl(0 0% 100% / 0.6),
+      inset 0 1px 0 hsl(0 0% 100% / 0.5),
       inset 0 -1px 0 hsl(0 0% 0% / 0.05);
   }
 
