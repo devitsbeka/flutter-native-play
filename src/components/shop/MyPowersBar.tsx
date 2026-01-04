@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Clock } from "lucide-react";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 
 // 3D cube-style power-up icons
@@ -90,14 +90,28 @@ export function MyPowersBar({ onPowerClick }: MyPowersBarProps) {
 
               {/* Icon - just the badge, no container */}
               <div className="flex justify-center mb-2">
-                <img
-                  src={POWER_UP_ICONS[type]}
-                  alt={POWER_UP_NAMES[type]}
-                  className="w-11 h-11 object-contain"
-                  style={{ 
-                    filter: isEmpty ? "grayscale(1)" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" 
-                  }}
-                />
+                {type === "time-drain" ? (
+                  <div 
+                    className="w-11 h-11 rounded-full flex items-center justify-center"
+                    style={{
+                      background: isEmpty 
+                        ? "hsl(var(--muted-foreground))" 
+                        : "linear-gradient(180deg, #E8B4F8 0%, #C084FC 100%)",
+                      boxShadow: isEmpty ? "none" : "0 4px 12px rgba(192, 132, 252, 0.4)"
+                    }}
+                  >
+                    <Clock className="w-6 h-6 text-white" strokeWidth={2.5} />
+                  </div>
+                ) : (
+                  <img
+                    src={POWER_UP_ICONS[type]}
+                    alt={POWER_UP_NAMES[type]}
+                    className="w-11 h-11 object-contain"
+                    style={{ 
+                      filter: isEmpty ? "grayscale(1)" : "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" 
+                    }}
+                  />
+                )}
               </div>
 
               {/* Name */}
