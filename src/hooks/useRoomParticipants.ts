@@ -61,8 +61,8 @@ export function useRoomParticipants(roomId: string | null) {
     // Initial fetch
     fetchParticipants();
 
-    // Subscribe to changes
-    const channel = supabase
+    // Subscribe to room_participants changes
+    const participantsChannel = supabase
       .channel(`room-participants-${roomId}`)
       .on(
         "postgres_changes",
@@ -103,8 +103,34 @@ export function useRoomParticipants(roomId: string | null) {
       )
       .subscribe();
 
+    // Subscribe to profiles changes to update avatars in real-time
+    const profilesChannel = supabase
+      .channel(`profiles-avatars-${roomId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+        },
+        (payload) => {
+          const updatedProfile = payload.new as { user_id: string; avatar_url: string | null };
+          console.log("Profile avatar change:", updatedProfile);
+          
+          // Update avatar for matching participant
+          setParticipants(prev =>
+            prev.map(p => p.user_id === updatedProfile.user_id 
+              ? { ...p, avatar_url: updatedProfile.avatar_url }
+              : p
+            )
+          );
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(participantsChannel);
+      supabase.removeChannel(profilesChannel);
     };
   }, [roomId, fetchParticipants]);
 
