@@ -64,7 +64,7 @@ export function GameResultsScreenV2() {
 
   const isWin = myRank === 1;
   const isPodium = myRank <= 3;
-  const result = isWin ? "Victory!" : isPodium ? `${myRank}${myRank === 2 ? "nd" : "rd"} Place!` : `${myRank}th Place`;
+  const result = isWin ? "გამარჯვება!" : isPodium ? `მე-${myRank} ადგილი!` : `მე-${myRank} ადგილი`;
 
   const hasUpdatedStats = useRef(false);
 
@@ -195,7 +195,7 @@ export function GameResultsScreenV2() {
 
   const handlePlayAgain = async () => {
     if (!isHost) {
-      toast.info("Waiting for host to start next round...");
+      toast.info("ველოდებით ჰოსტს შემდეგი რაუნდის დასაწყებად...");
       return;
     }
     
@@ -216,7 +216,7 @@ export function GameResultsScreenV2() {
       await startGame();
     } catch (error) {
       console.error("Error starting rematch:", error);
-      toast.error("Failed to start rematch");
+      toast.error("რემატჩის დაწყება ვერ მოხერხდა");
     } finally {
       setIsStartingRematch(false);
     }
@@ -329,7 +329,7 @@ export function GameResultsScreenV2() {
                 
                 {/* Name */}
                 <span className="flex-1 text-white font-display text-lg truncate">
-                  {p.isMe ? "You" : p.nickname}
+                  {p.isMe ? "შენ" : p.nickname}
                 </span>
                 
                 {/* Score */}
@@ -383,7 +383,7 @@ export function GameResultsScreenV2() {
             disabled={isStartingRematch}
             icon={<RotateCcw className="w-5 h-5" />}
           >
-            {isStartingRematch ? "Starting..." : "Play Again"}
+            {isStartingRematch ? "იწყება..." : "თავიდან თამაში"}
           </ChunkyButton>
         ) : (
           <div className="text-center py-3">
@@ -392,7 +392,7 @@ export function GameResultsScreenV2() {
               transition={{ duration: 2, repeat: Infinity }}
               className="text-white/80"
             >
-              Waiting for host to start next round...
+              ველოდებით ჰოსტს შემდეგი რაუნდის დასაწყებად...
             </motion.p>
           </div>
         )}
@@ -404,7 +404,7 @@ export function GameResultsScreenV2() {
           onClick={handleBackToRoom}
           icon={<ArrowLeft className="w-5 h-5" />}
         >
-          Back to Room
+          ოთახში დაბრუნება
         </ChunkyButton>
       </motion.div>
     </div>
