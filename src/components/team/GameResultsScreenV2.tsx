@@ -7,13 +7,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, ArrowLeft, RotateCcw, Star } from "lucide-react";
+import { Trophy, ArrowLeft, RotateCcw, Star, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface RankedParticipant {
   user_id: string;
@@ -291,16 +292,34 @@ export function GameResultsScreenV2() {
               <div
                 key={p.user_id}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl",
+                  "flex items-center gap-3 px-3 py-2 rounded-xl",
                   p.isMe ? "bg-white/20" : ""
                 )}
               >
-                <span className="w-5 text-center text-white/70 font-bold text-sm">
+                {/* Avatar with crown for winner */}
+                <div className="relative">
+                  <Avatar className="w-8 h-8 border-2 border-white/30">
+                    <AvatarImage src={p.avatar_url || undefined} />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-xs font-bold">
+                      {p.nickname?.charAt(0)?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  {idx === 0 && (
+                    <Crown className="absolute -top-2 -right-1 w-4 h-4 text-amber-400 fill-amber-400 drop-shadow-md" />
+                  )}
+                </div>
+                
+                {/* Medal */}
+                <span className="text-sm">
                   {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
                 </span>
+                
+                {/* Name */}
                 <span className="flex-1 text-white font-medium text-sm truncate">
                   {p.isMe ? "You" : p.nickname}
                 </span>
+                
+                {/* Score */}
                 <span className="text-white font-bold text-sm">{p.score}</span>
               </div>
             ))}
