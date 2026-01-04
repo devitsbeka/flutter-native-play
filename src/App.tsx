@@ -5,6 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SoundProvider } from "@/contexts/SoundContext";
+import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
 import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
 import "@/components/game/VideoPreloader";
@@ -49,8 +50,9 @@ const App = () => (
   <AuthProvider>
     <OnboardingProvider>
       <SoundProvider>
-        <SplashScreen>
-          <TooltipProvider>
+        <NotificationModalProvider>
+          <SplashScreen>
+            <TooltipProvider>
             {/* Global persistent background with particles */}
             <GlobalSplineBackground />
             
@@ -93,8 +95,9 @@ const App = () => (
               <Route path="/all-buttons" element={<AllButtons />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </TooltipProvider>
-        </SplashScreen>
+            </TooltipProvider>
+          </SplashScreen>
+        </NotificationModalProvider>
       </SoundProvider>
     </OnboardingProvider>
   </AuthProvider>
