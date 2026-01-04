@@ -252,14 +252,14 @@ export function GameResultsScreenV2() {
         </motion.div>
 
         {/* Result Text */}
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-3xl font-display font-bold text-white mb-1 text-center"
-        >
-          {result}
-        </motion.h1>
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="text-3xl font-display font-bold text-white mb-6 text-center"
+      >
+        {result}
+      </motion.h1>
 
         {/* Stars for win */}
         {isWin && (
@@ -283,12 +283,12 @@ export function GameResultsScreenV2() {
         )}
 
         {/* Podium */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="w-full mb-4"
-        >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="w-full mb-4 mt-4"
+      >
           <div className="flex items-end justify-center gap-2 h-48">
             {/* 2nd Place */}
             {podiumParticipants[1] && (
