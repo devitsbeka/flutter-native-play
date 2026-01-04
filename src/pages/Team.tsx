@@ -222,12 +222,7 @@ function TeamContent() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <MyRoomsSection
-            onCreateRoom={() => {
-              playSound("button-click");
-              setShowCreateModal(true);
-            }}
-          />
+          <MyRoomsSection />
         </motion.div>
 
         {/* Game Invitations Section - with green glow */}
