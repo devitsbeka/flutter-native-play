@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
-import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play } from "lucide-react";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
@@ -9,6 +9,8 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { generateRoomName } from "@/utils/roomNameGenerator";
+import { Input } from "@/components/ui/input";
 
 interface Category {
   id: string;
@@ -34,6 +36,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isRandom, setIsRandom] = useState(true); // Default to random
   const [isCreating, setIsCreating] = useState(false);
+  const [roomName, setRoomName] = useState(() => generateRoomName());
 
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
@@ -145,6 +148,27 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+        {/* Room Name Input */}
+        <div>
+          <h2 className="text-sm font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
+          <div className="relative">
+            <Input
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+              placeholder="შეიყვანეთ ოთახის სახელი"
+              className="pr-10 bg-muted/50 border-border/50 text-foreground"
+              maxLength={30}
+            />
+            <button
+              onClick={() => setRoomName(generateRoomName())}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-muted transition-colors"
+              title="შემთხვევითი სახელი"
+            >
+              <Shuffle className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+
         {/* Category Selection */}
         <div>
           <h2 className="text-sm font-medium text-muted-foreground mb-3">კატეგორია</h2>
