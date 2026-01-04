@@ -990,37 +990,43 @@ export type Database = {
           created_at: string | null
           current_question_index: number | null
           expires_at: string | null
-          host_user_id: string
+          host_user_id: string | null
           id: string
-          pairing_code: string
+          is_paired: boolean | null
+          pairing_code: string | null
           question_start_time: string | null
           questions: Json | null
           room_id: string | null
           status: string | null
+          tv_pairing_code: string | null
         }
         Insert: {
           created_at?: string | null
           current_question_index?: number | null
           expires_at?: string | null
-          host_user_id: string
+          host_user_id?: string | null
           id?: string
-          pairing_code: string
+          is_paired?: boolean | null
+          pairing_code?: string | null
           question_start_time?: string | null
           questions?: Json | null
           room_id?: string | null
           status?: string | null
+          tv_pairing_code?: string | null
         }
         Update: {
           created_at?: string | null
           current_question_index?: number | null
           expires_at?: string | null
-          host_user_id?: string
+          host_user_id?: string | null
           id?: string
-          pairing_code?: string
+          is_paired?: boolean | null
+          pairing_code?: string | null
           question_start_time?: string | null
           questions?: Json | null
           room_id?: string | null
           status?: string | null
+          tv_pairing_code?: string | null
         }
         Relationships: [
           {
