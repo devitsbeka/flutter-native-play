@@ -157,7 +157,7 @@ function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index:
           <p className="text-gray-800 font-bold text-sm">{room.my_score} ქულა</p>
           <div className="flex items-center gap-1 text-gray-400 text-xs">
             <Clock className="w-3 h-3" />
-            <span>{formatTimeAgo(room.completed_at)}</span>
+            <span>{formatTimeAgo(room.played_at)}</span>
           </div>
         </div>
       </div>

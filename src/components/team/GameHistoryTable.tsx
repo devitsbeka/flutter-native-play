@@ -165,8 +165,8 @@ interface GameHistoryRowProps {
 
 const GameHistoryRow = React.forwardRef<HTMLDivElement, GameHistoryRowProps>(
   ({ room, index, getIconBySlug }, ref) => {
-  const timeAgo = room.completed_at
-    ? formatDistanceToNow(new Date(room.completed_at), { addSuffix: true, locale: ka })
+  const timeAgo = room.played_at
+    ? formatDistanceToNow(new Date(room.played_at), { addSuffix: true, locale: ka })
     : "";
 
   // Get first opponent (the main person you played against)
