@@ -68,19 +68,16 @@ const ChestButtonBadge = ({ canClaimChest }: { canClaimChest: boolean }) => {
   
   return (
     <motion.div
-      className="absolute -top-2 -right-2 px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg z-20"
+      className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20"
       style={{
         background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
         boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
         border: "2px solid white",
       }}
-      animate={{ scale: [1, 1.05, 1] }}
+      animate={{ scale: [1, 1.1, 1] }}
       transition={{ duration: 2, repeat: Infinity }}
     >
-      <Clock className="w-3 h-3 text-amber-700" />
-      <span className="text-[10px] font-bold text-amber-800 font-mono">
-        {chestTimeLeft}
-      </span>
+      <Clock className="w-3.5 h-3.5 text-amber-700" />
     </motion.div>
   );
 };
