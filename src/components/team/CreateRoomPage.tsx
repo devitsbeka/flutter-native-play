@@ -78,8 +78,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     setIsRandom(false);
   };
 
-  // Display categories - show first 4 or all
-  const displayedCategories = showAllCategories ? categories : categories.slice(0, 4);
+  // Display categories - show first 6 or all
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 6);
 
   const toggleFriendSelection = (friendId: string) => {
     setSelectedFriends(prev => {
@@ -241,7 +241,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
               </div>
 
               {/* Show More Button */}
-              {categories.length > 4 && (
+              {categories.length > 6 && (
                 <motion.button
                   onClick={() => setShowAllCategories(!showAllCategories)}
                   className="w-full p-3 rounded-xl bg-muted/50 border-2 border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -249,7 +249,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   whileTap={{ scale: 0.99 }}
                 >
                   <span className="text-sm font-medium">
-                    {showAllCategories ? "ნაკლების ჩვენება" : `მეტის ჩვენება (${categories.length - 4})`}
+                    {showAllCategories ? "ნაკლების ჩვენება" : "მეტის ჩვენება"}
                   </span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
                 </motion.button>
