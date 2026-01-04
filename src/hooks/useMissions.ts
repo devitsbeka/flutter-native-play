@@ -111,7 +111,7 @@ const DAILY_MISSIONS: MissionDefinition[] = [
   {
     mission_id: "answer_correct",
     mission_title: "სწორი პასუხები",
-    mission_description: "გასცე 10 სწორი პასუხი",
+    mission_description: "გაეცი 10 სწორი პასუხი",
     target_value: 10,
     reward_xp: 30,
     reward_coins: 50,
@@ -179,7 +179,7 @@ const WEEKLY_MISSIONS: MissionDefinition[] = [
   {
     mission_id: "weekly_answers",
     mission_title: "ცოდნის ექსპერტი",
-    mission_description: "გასცე 100 სწორი პასუხი",
+    mission_description: "გაეცი 100 სწორი პასუხი",
     target_value: 100,
     reward_xp: 150,
     reward_coins: 400,
