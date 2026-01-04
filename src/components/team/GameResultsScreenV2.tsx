@@ -7,7 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, ArrowLeft, RotateCcw, Star, Crown } from "lucide-react";
+import { ArrowLeft, RotateCcw, Star, Crown } from "lucide-react";
+import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 import { REWARDS } from "@/config/rewardConfig";
@@ -216,8 +217,11 @@ export function GameResultsScreenV2() {
       {/* Top Section: Icon + Result */}
       <div className="pt-8 text-center">
         <motion.div
-          initial={{ scale: 0, y: -20 }}
-          animate={{ scale: 1, y: 0 }}
+          initial={{ scale: 0.5, y: -20 }}
+          animate={{ 
+            scale: 1, 
+            y: 0,
+          }}
           transition={{ type: "spring", stiffness: 200 }}
           className={cn(
             "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4",
@@ -229,10 +233,18 @@ export function GameResultsScreenV2() {
               : "0 8px 20px rgba(0,0,0,0.2)"
           }}
         >
-          <Trophy className={cn(
-            "w-10 h-10",
-            isWin ? "text-amber-800" : "text-white"
-          )} />
+          <motion.img 
+            src={trophyWinIcon} 
+            alt="Trophy" 
+            className="w-12 h-12 object-contain"
+            animate={{ rotate: [0, -8, 8, -8, 0] }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              repeatDelay: 1,
+              ease: "easeInOut"
+            }}
+          />
         </motion.div>
 
         <motion.h1
