@@ -173,15 +173,15 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98, y: 1 }}
                 >
-                  {/* Dice icon centered */}
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  {/* Dice icon centered - positioned higher */}
+                  <div className="absolute inset-0 flex items-center justify-center pb-5">
                     <span className="text-4xl">🎲</span>
                   </div>
                   
-                  {/* Category Name - bottom left */}
+                  {/* Category Name - bottom left, no emoji */}
                   <div className="absolute bottom-3 left-3 right-3">
                     <span className="text-sm font-bold text-foreground leading-tight drop-shadow-sm">
-                      🎲 შემთხვევითი
+                      შემთხვევითი
                     </span>
                   </div>
                   
