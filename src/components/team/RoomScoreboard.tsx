@@ -190,7 +190,9 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     <span className="text-muted-foreground">#{matches.length - index}</span>
                     <span className="text-base">{isMyWin ? "🏆" : index === 0 ? "🥈" : "🎮"}</span>
                     <span className="flex-1 font-medium truncate">
-                      {winner?.user_id === currentUserId ? "შენ" : winner?.nickname || "?"} მოიგო
+                      {winner?.user_id === currentUserId 
+                        ? "შენ მოიგე" 
+                        : `${winner?.nickname || "?"}-მ მოიგო`}
                     </span>
                     <span className="text-muted-foreground">{winner?.score || 0}pts</span>
                   </div>
