@@ -1,20 +1,25 @@
 import { motion } from "framer-motion";
-import { Trophy, Crown, Swords } from "lucide-react";
+import { Trophy, Crown, Swords, Target } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 
 interface RoomScoreboardProps {
-  participants: RoomParticipant[];
+  participants: (RoomParticipant & { total_score?: number })[];
   matches: MatchHistoryEntry[];
   currentUserId?: string;
   showHostCrown?: boolean;
 }
 
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true }: RoomScoreboardProps) {
-  // Sort by total wins
+  // Sort by total cumulative score (primary), then by total wins (secondary)
   const sortedParticipants = [...participants].sort(
-    (a, b) => (b.total_wins || 0) - (a.total_wins || 0)
+    (a, b) => {
+      const scoreA = (a as any).total_score || 0;
+      const scoreB = (b as any).total_score || 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return (b.total_wins || 0) - (a.total_wins || 0);
+    }
   );
 
   const getFlagEmoji = (countryCode: string) => {
@@ -65,13 +70,18 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
               <p className="font-medium text-foreground text-sm truncate max-w-[100px] mx-auto">
                 {sortedParticipants[0].user_id === currentUserId ? "შენ" : sortedParticipants[0].nickname}
               </p>
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <Crown className="w-5 h-5 text-primary fill-primary/50" />
-                <span className="text-3xl font-display font-bold text-foreground">
-                  {sortedParticipants[0].total_wins || 0}
-                </span>
+              {/* Total Score with Rounds */}
+              <div className="flex flex-col items-center mt-2">
+                <div className="flex items-center gap-1">
+                  <Target className="w-4 h-4 text-primary" />
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {(sortedParticipants[0] as any).total_score || 0}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {sortedParticipants[0].total_rounds_played || 0} რაუნდი • {sortedParticipants[0].total_wins || 0} მოგ.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">მოგება</p>
             </div>
 
             {/* VS */}
@@ -107,13 +117,18 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
               <p className="font-medium text-foreground text-sm truncate max-w-[100px] mx-auto">
                 {sortedParticipants[1].user_id === currentUserId ? "შენ" : sortedParticipants[1].nickname}
               </p>
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <Crown className="w-5 h-5 text-primary fill-primary/50" />
-                <span className="text-3xl font-display font-bold text-foreground">
-                  {sortedParticipants[1].total_wins || 0}
-                </span>
+              {/* Total Score with Rounds */}
+              <div className="flex flex-col items-center mt-2">
+                <div className="flex items-center gap-1">
+                  <Target className="w-4 h-4 text-primary" />
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {(sortedParticipants[1] as any).total_score || 0}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {sortedParticipants[1].total_rounds_played || 0} რაუნდი • {sortedParticipants[1].total_wins || 0} მოგ.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">მოგება</p>
             </div>
           </div>
         ) : (
@@ -142,9 +157,14 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     <Crown className="w-4 h-4 text-amber-500 fill-amber-400 flex-shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-1">
-                  <Trophy className="w-4 h-4 text-primary fill-primary/50" />
-                  <span className="font-bold text-foreground">{p.total_wins || 0}</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Target className="w-3.5 h-3.5 text-primary" />
+                    <span className="font-bold text-foreground text-sm">{(p as any).total_score || 0}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    ({p.total_rounds_played || 0}რ)
+                  </span>
                 </div>
               </div>
             ))}

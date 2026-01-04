@@ -856,6 +856,7 @@ export type Database = {
           score: number | null
           status: Database["public"]["Enums"]["participant_status"] | null
           total_rounds_played: number | null
+          total_score: number | null
           total_wins: number | null
           user_id: string
         }
@@ -873,6 +874,7 @@ export type Database = {
           score?: number | null
           status?: Database["public"]["Enums"]["participant_status"] | null
           total_rounds_played?: number | null
+          total_score?: number | null
           total_wins?: number | null
           user_id: string
         }
@@ -890,6 +892,7 @@ export type Database = {
           score?: number | null
           status?: Database["public"]["Enums"]["participant_status"] | null
           total_rounds_played?: number | null
+          total_score?: number | null
           total_wins?: number | null
           user_id?: string
         }
