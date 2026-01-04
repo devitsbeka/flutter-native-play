@@ -323,7 +323,7 @@ export function GameResultsScreenV2() {
                 </div>
                 
                 {/* Medal */}
-                <span className="text-lg">
+                <span className="text-2xl">
                   {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
                 </span>
                 
