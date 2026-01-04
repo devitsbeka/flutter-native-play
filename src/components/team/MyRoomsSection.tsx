@@ -129,7 +129,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className={`flex-shrink-0 w-64 p-5 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 ${
+      className={`flex-shrink-0 w-64 p-5 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 flex flex-col ${
         room.has_unread_activity 
           ? "border-2 border-emerald-400" 
           : "border border-white/50"
@@ -146,12 +146,14 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-gradient-to-br from-blue-200/40 to-purple-200/40 rounded-full blur-xl" />
       
       {/* Subtle status indicator */}
-      {room.status === "playing" && (
-        <div className="flex items-center gap-1.5 mb-2 text-slate-500 text-xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-          მიმდინარე
-        </div>
-      )}
+      <div className="h-5 mb-2">
+        {room.status === "playing" && (
+          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
+            მიმდინარე
+          </div>
+        )}
+      </div>
 
       {/* Room name as main headline */}
       <div className="mb-4 relative z-10">
@@ -165,8 +167,8 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         )}
       </div>
 
-      {/* Participants */}
-      <div className="flex items-center gap-2 mb-4 relative z-10">
+      {/* Participants - flex-grow to push button down */}
+      <div className="flex items-center gap-2 mb-4 relative z-10 flex-grow">
         <div className="flex -space-x-2.5">
           {room.participants.slice(0, 4).map((p) => (
             <div 
@@ -198,7 +200,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         </div>
       </div>
 
-      {/* Join button */}
+      {/* Join button - always at bottom */}
       <ChunkyButton
         onClick={onJoin}
         className="w-full whitespace-nowrap relative z-10"
