@@ -62,13 +62,13 @@ const FramePreviewIcon = ({ frameId }: { frameId: string }) => {
 
 // === SECTION DATA ===
 
-// Hot Deals - Starter Pack Section
+// Hot Deals - Starter Pack Section (rebalanced prices)
 const STARTER_PACK_ITEMS: ShopItem[] = [
   {
     id: "starter_bundle",
     name: "სტარტერ პაკეტი",
     description: "2x ყველა ძალა + 200 მონეტა",
-    price: 8,
+    price: 6,
     currency: "gems",
     icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
@@ -78,7 +78,7 @@ const STARTER_PACK_ITEMS: ShopItem[] = [
     id: "starter_bundle_medium",
     name: "საშუალო პაკეტი",
     description: "5x ყველა ძალა + 500 მონეტა",
-    price: 18,
+    price: 12,
     currency: "gems",
     icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
@@ -89,22 +89,22 @@ const STARTER_PACK_ITEMS: ShopItem[] = [
     id: "starter_bundle_large",
     name: "დიდი პაკეტი",
     description: "10x ყველა ძალა + 1000 მონეტა",
-    price: 30,
+    price: 22,
     currency: "gems",
     icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
     badge: "best-value",
-    savings: 35,
+    savings: 30,
   },
 ];
 
-// Hot Deals - Mega Powers Section
+// Hot Deals - Mega Powers Section (rebalanced prices)
 const MEGA_POWERS_ITEMS: ShopItem[] = [
   {
     id: "power_bundle_small",
     name: "მცირე პაკეტი",
     description: "2x ყველა ძალა",
-    price: 8,
+    price: 5,
     currency: "gems",
     icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
@@ -113,33 +113,33 @@ const MEGA_POWERS_ITEMS: ShopItem[] = [
     id: "mega_power_bundle",
     name: "მეგა ძალების პაკეტი",
     description: "5x ყველა ძალა",
-    price: 15,
+    price: 10,
     currency: "gems",
     icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
     badge: "popular",
-    savings: 25,
+    savings: 20,
   },
   {
     id: "power_bundle_large",
     name: "დიდი პაკეტი",
     description: "10x ყველა ძალა",
-    price: 25,
+    price: 18,
     currency: "gems",
     icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
     badge: "best-value",
-    savings: 20,
+    savings: 30,
   },
 ];
 
-// Hot Deals - VIP Week Section
+// Hot Deals - VIP Week Section (rebalanced prices)
 const VIP_PROMO_ITEMS: ShopItem[] = [
   {
     id: "vip_day",
     name: "VIP დღე",
     description: "ყველა VIP ბენეფიტი 1 დღე",
-    price: 5,
+    price: 3,
     currency: "gems",
     icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
@@ -149,24 +149,24 @@ const VIP_PROMO_ITEMS: ShopItem[] = [
     id: "vip_week_deal",
     name: "VIP კვირა",
     description: "2x XP • უსასრულო სპინი",
-    price: 15,
+    price: 12,
     currency: "gems",
     icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
     badge: "popular",
-    savings: 30,
+    savings: 25,
     vipDuration: "week",
   },
   {
     id: "vip_month",
     name: "VIP თვე",
     description: "ყველა VIP ბენეფიტი 30 დღე",
-    price: 40,
+    price: 35,
     currency: "gems",
     icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
     gradient: "transparent",
     badge: "best-value",
-    savings: 35,
+    savings: 30,
     vipDuration: "month",
   },
 ];
@@ -232,7 +232,7 @@ const FRAMES_ITEMS: ShopItem[] = AVATAR_FRAMES.slice(0, 4).map((frame, index) =>
   badge: index === 0 ? "new" as const : index === 1 ? "popular" as const : frame.rarity === "legendary" ? "best-value" as const : null,
 }));
 
-// Coins Section
+// Coins Section (rebalanced: 1 gem ≈ 50 coins)
 const COINS_ITEMS: ShopItem[] = [
   {
     id: "coins_100",
@@ -248,7 +248,7 @@ const COINS_ITEMS: ShopItem[] = [
     id: "coins_500",
     name: "500 მონეტა",
     description: "საშუალო პაკეტი",
-    price: 5,
+    price: 8,
     currency: "gems",
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
@@ -258,7 +258,7 @@ const COINS_ITEMS: ShopItem[] = [
     id: "coins_1500",
     name: "1500 მონეტა",
     description: "დიდი პაკეტი +20% ბონუსი",
-    price: 12,
+    price: 20,
     currency: "gems",
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
@@ -269,14 +269,14 @@ const COINS_ITEMS: ShopItem[] = [
   {
     id: "coins_5000",
     name: "5000 მონეტა",
-    description: "მეგა პაკეტი +50% ბონუსი",
-    price: 35,
+    description: "მეგა პაკეტი +40% ბონუსი",
+    price: 60,
     currency: "gems",
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
     value: 5000,
     badge: "best-value",
-    savings: 50,
+    savings: 40,
   },
 ];
 

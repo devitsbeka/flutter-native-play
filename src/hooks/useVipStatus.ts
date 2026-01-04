@@ -16,9 +16,9 @@ export interface VipSubscription {
 export type VipDuration = "day" | "week" | "month";
 
 export const VIP_PRICES: Record<VipDuration, number> = {
-  day: 5,
-  week: 15,
-  month: 40,
+  day: 3,
+  week: 12,
+  month: 35,
 };
 
 export const VIP_BENEFITS = [
