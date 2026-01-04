@@ -19,9 +19,11 @@ export interface RoomParticipant {
   current_question: number;
   total_rounds_played: number;
   total_wins: number;
+  total_score: number; // Cumulative score across all rounds
   joined_at: string;
   last_played_at: string | null;
   has_seen_results: boolean;
+  status?: "joined" | "ready" | "playing" | "finished" | "disconnected";
 }
 
 export interface GameRoom {
@@ -83,9 +85,11 @@ interface MultiplayerContextType extends MultiplayerState {
   createRoom: (categoryId?: string, categoryName?: string) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: () => Promise<void>;
+  startNewRound: () => Promise<void>; // Any player can start a new round
   submitAnswer: (answer: string, timeRemaining: number) => Promise<void>;
   nextQuestion: () => void;
   exitRoom: () => void;
+  continueInRoom: () => void; // Return to lobby after results
   leaveRoomPermanently: () => Promise<void>;
   deleteRoom: () => Promise<void>;
   resetMultiplayer: () => void;
@@ -657,6 +661,144 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     setState(initialState);
   }, [cleanupChannels]);
 
+  // Continue in room after results (go back to lobby)
+  const continueInRoom = useCallback(async () => {
+    if (!state.currentRoom) return;
+    
+    // Reset room status to waiting if all players finished
+    await supabase
+      .from("game_rooms")
+      .update({ status: "waiting" })
+      .eq("id", state.currentRoom.id);
+    
+    setState(prev => ({
+      ...prev,
+      phase: "lobby",
+      questions: [],
+      currentQuestionIndex: 0,
+      myScore: 0,
+      lastQuestionResult: null,
+      opponentAnswers: {},
+    }));
+  }, [state.currentRoom]);
+
+  // Start new round (any player can call this)
+  const startNewRound = useCallback(async () => {
+    if (!state.currentRoom || !user) return;
+    
+    const roomId = state.currentRoom.id;
+    const questionCount = state.currentRoom.total_questions || 5;
+    
+    try {
+      // Fetch random questions from database
+      let selectedQuestions: any[] = [];
+      
+      if (state.currentRoom.category_id) {
+        const { data: categoryQuestions } = await supabase
+          .from("questions")
+          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("is_active", true)
+          .eq("category_id", state.currentRoom.category_id);
+        
+        if (categoryQuestions && categoryQuestions.length >= questionCount) {
+          const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
+          selectedQuestions = shuffled.slice(0, questionCount);
+        }
+      }
+      
+      // Fallback to all questions if not enough category-specific ones
+      if (selectedQuestions.length < questionCount) {
+        const { data: allQuestions } = await supabase
+          .from("questions")
+          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("is_active", true);
+        
+        if (allQuestions && allQuestions.length > 0) {
+          const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+          selectedQuestions = shuffled.slice(0, questionCount);
+        }
+      }
+      
+      if (selectedQuestions.length === 0) {
+        throw new Error("No questions available");
+      }
+      
+      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => ({
+        id: `${roomId}-${Date.now()}-${index}`,
+        question: q.question_text,
+        correctAnswer: q.correct_answer,
+        incorrectAnswers: q.incorrect_answers as string[],
+        allAnswers: [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5),
+        difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
+        category: state.currentRoom!.category_name || "General",
+      }));
+      
+      // Clear old questions/answers for this room
+      await supabase.from("room_questions").delete().eq("room_id", roomId);
+      await supabase.from("player_answers").delete().eq("room_id", roomId);
+      
+      // Store questions
+      await Promise.all(questions.map((q, index) => 
+        supabase.from("room_questions").insert({
+          room_id: roomId,
+          question_index: index,
+          question_text: q.question,
+          correct_answer: q.correctAnswer,
+          incorrect_answers: q.incorrectAnswers,
+          difficulty: q.difficulty,
+        })
+      ));
+      
+      // Reset only my score and current_question
+      await supabase
+        .from("room_participants")
+        .update({ score: 0, current_question: 0, status: "playing" })
+        .eq("room_id", roomId)
+        .eq("user_id", user.id);
+      
+      // Create room_game record
+      const { data: game } = await supabase
+        .from("room_games")
+        .insert([{
+          room_id: roomId,
+          game_number: 1,
+          questions_data: JSON.parse(JSON.stringify(questions)),
+        }])
+        .select()
+        .single();
+      
+      // Update room status
+      await supabase
+        .from("game_rooms")
+        .update({
+          status: "playing",
+          started_at: new Date().toISOString(),
+          current_game_id: game?.id,
+        })
+        .eq("id", roomId);
+      
+      setState(prev => ({
+        ...prev,
+        questions,
+        currentQuestionIndex: 0,
+        myScore: 0,
+        currentGame: game ? {
+          id: game.id,
+          room_id: game.room_id,
+          game_number: game.game_number,
+          started_at: game.started_at,
+          completed_at: game.completed_at,
+          winner_user_id: game.winner_user_id,
+          player_scores: game.player_scores,
+        } : null,
+        phase: "playing",
+      }));
+    } catch (error) {
+      console.error("Error starting new round:", error);
+      toast.error("ახალი რაუნდის დაწყება ვერ მოხერხდა");
+    }
+  }, [state.currentRoom, user]);
+
   // Leave room permanently
   const leaveRoomPermanently = useCallback(async () => {
     if (!state.currentRoom || !user) return;
@@ -741,9 +883,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     createRoom,
     enterRoom,
     startGame,
+    startNewRound,
     submitAnswer,
     nextQuestion,
     exitRoom,
+    continueInRoom,
     leaveRoomPermanently,
     deleteRoom,
     resetMultiplayer,

@@ -39,7 +39,8 @@ export function GameResultsScreenV2() {
     resetMultiplayer,
     currentRoom,
     exitRoom,
-    startGame,
+    continueInRoom,
+    startNewRound,
     isHost,
   } = useMultiplayerV2();
 
@@ -168,15 +169,17 @@ export function GameResultsScreenV2() {
             player_scores: playerScores,
           });
 
-        // Update participant stats
+        // Update participant stats including cumulative total_score
         const winnerId = rankedParticipants[0]?.user_id;
         for (const p of participants) {
           const isWinner = p.user_id === winnerId;
+          const participantScore = rankedParticipants.find(rp => rp.user_id === p.user_id)?.score || 0;
           await supabase
             .from("room_participants")
             .update({
               total_wins: isWinner ? (p.total_wins || 0) + 1 : p.total_wins || 0,
               total_rounds_played: (p.total_rounds_played || 0) + 1,
+              total_score: (p.total_score || 0) + participantScore, // Add to cumulative score
               last_played_at: new Date().toISOString(),
               has_seen_results: p.user_id === user.id,
             })
@@ -189,34 +192,17 @@ export function GameResultsScreenV2() {
   }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants]);
 
   const handleBackToRoom = () => {
-    exitRoom();
-    navigate("/team");
+    continueInRoom();
   };
 
   const handlePlayAgain = async () => {
-    if (!isHost) {
-      toast.info("ველოდებით ჰოსტს შემდეგი რაუნდის დასაწყებად...");
-      return;
-    }
-    
     setIsStartingRematch(true);
     try {
-      // Reset room to waiting
-      await supabase
-        .from("game_rooms")
-        .update({
-          status: "waiting",
-          started_at: null,
-          completed_at: null,
-          current_game_id: null,
-        })
-        .eq("id", currentRoom!.id);
-      
-      // Start new game
-      await startGame();
+      // Any player can start a new round
+      await startNewRound();
     } catch (error) {
-      console.error("Error starting rematch:", error);
-      toast.error("რემატჩის დაწყება ვერ მოხერხდა");
+      console.error("Error starting new round:", error);
+      toast.error("ახალი რაუნდის დაწყება ვერ მოხერხდა");
     } finally {
       setIsStartingRematch(false);
     }
@@ -374,28 +360,16 @@ export function GameResultsScreenV2() {
         transition={{ delay: 0.4 }}
         className="p-4 pb-8 space-y-3"
       >
-        {isHost ? (
-          <ChunkyButton
-            variant="mint"
-            size="lg"
-            className="w-full"
-            onClick={handlePlayAgain}
-            disabled={isStartingRematch}
-            icon={<RotateCcw className="w-5 h-5" />}
-          >
-            {isStartingRematch ? "იწყება..." : "თავიდან თამაში"}
-          </ChunkyButton>
-        ) : (
-          <div className="text-center py-3">
-            <motion.p
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-white/80"
-            >
-              ველოდებით ჰოსტს შემდეგი რაუნდის დასაწყებად...
-            </motion.p>
-          </div>
-        )}
+        <ChunkyButton
+          variant="mint"
+          size="lg"
+          className="w-full"
+          onClick={handlePlayAgain}
+          disabled={isStartingRematch}
+          icon={<RotateCcw className="w-5 h-5" />}
+        >
+          {isStartingRematch ? "იწყება..." : "ახალი რაუნდი"}
+        </ChunkyButton>
 
         <ChunkyButton
           variant="secondary"
