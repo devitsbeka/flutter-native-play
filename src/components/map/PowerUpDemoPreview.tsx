@@ -3,18 +3,17 @@ import { PowerUpType } from "@/hooks/useUserPowerUps";
 import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
-import powerTimeDrain from "@/assets/powers/time-drain.png";
+import { TimeIcon } from "@/components/shared/TimeIcon";
 
 interface PowerUpDemoPreviewProps {
   type: PowerUpType;
   animationKey: number;
 }
 
-const POWER_UP_IMAGES: Record<PowerUpType, string> = {
+const POWER_UP_IMAGES: Record<Exclude<PowerUpType, "time-drain">, string> = {
   "5050": power5050,
   "freeze": powerFreeze,
   "replace": powerReplace,
-  "time-drain": powerTimeDrain,
 };
 
 const POWER_UP_DESCRIPTIONS: Record<PowerUpType, string> = {
@@ -33,13 +32,22 @@ export function PowerUpDemoPreview({ type, animationKey }: PowerUpDemoPreviewPro
       transition={{ duration: 0.3 }}
       className="flex flex-col items-center justify-center py-2 gap-2"
     >
-      <motion.img 
-        src={POWER_UP_IMAGES[type]} 
-        alt={type}
-        className="w-16 h-16 object-contain drop-shadow-lg"
-        animate={{ y: [0, -4, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {type === "time-drain" ? (
+        <motion.div
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <TimeIcon size={64} />
+        </motion.div>
+      ) : (
+        <motion.img 
+          src={POWER_UP_IMAGES[type]} 
+          alt={type}
+          className="w-16 h-16 object-contain drop-shadow-lg"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
       <p className="text-sm text-muted-foreground text-center font-medium">
         {POWER_UP_DESCRIPTIONS[type]}
       </p>

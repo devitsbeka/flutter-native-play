@@ -21,18 +21,18 @@ import { toast } from "@/hooks/use-toast";
 import power5050 from "@/assets/powers/5050.png";
 import powerFreeze from "@/assets/powers/freeze.png";
 import powerReplace from "@/assets/powers/replace.png";
-import powerTimeDrain from "@/assets/powers/time-drain.png";
+import { TimeIcon } from "@/components/shared/TimeIcon";
 
 interface MissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const POWER_UP_ICONS: Record<string, string> = {
+const POWER_UP_ICONS: Record<string, string | null> = {
   "5050": power5050,
   "freeze": powerFreeze,
   "replace": powerReplace,
-  "time-drain": powerTimeDrain,
+  "time-drain": null, // Use TimeIcon component instead
 };
 
 const POWER_UP_NAMES: Record<string, string> = {
@@ -268,13 +268,22 @@ function MissionCarouselCard({
                     transition={{ delay: 0.6, type: "spring" }}
                     className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2"
                   >
-                    <motion.img 
-                      src={POWER_UP_ICONS[claimAnimation.powerUp] || power5050} 
-                      alt="" 
-                      className="w-8 h-8"
-                      animate={{ y: [0, -10, 0] }}
-                      transition={{ duration: 0.4, delay: 0.6 }}
-                    />
+                    {claimAnimation.powerUp === "time-drain" ? (
+                      <motion.div
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 0.4, delay: 0.6 }}
+                      >
+                        <TimeIcon size={32} />
+                      </motion.div>
+                    ) : (
+                      <motion.img 
+                        src={POWER_UP_ICONS[claimAnimation.powerUp] || power5050} 
+                        alt="" 
+                        className="w-8 h-8"
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 0.4, delay: 0.6 }}
+                      />
+                    )}
                     <span className="text-xl font-black text-white">+{claimAnimation.powerUpCount}</span>
                   </motion.div>
                 )}
@@ -345,7 +354,11 @@ function MissionCarouselCard({
               )}
               {mission.reward_power_up && mission.reward_power_up_count > 0 && (
                 <div className="flex items-center gap-1.5 bg-rose-100 rounded-full px-3 py-1.5">
-                  <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-5 h-5" />
+                  {mission.reward_power_up === "time-drain" ? (
+                    <TimeIcon size={20} />
+                  ) : (
+                    <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-5 h-5" />
+                  )}
                   <span className="text-sm font-bold text-rose-700">{mission.reward_power_up_count}x</span>
                 </div>
               )}
@@ -375,7 +388,11 @@ function MissionCarouselCard({
               )}
               {mission.reward_power_up && mission.reward_power_up_count > 0 && (
                 <div className="flex items-center gap-1">
-                  <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-4 h-4" />
+                  {mission.reward_power_up === "time-drain" ? (
+                    <TimeIcon size={16} />
+                  ) : (
+                    <img src={POWER_UP_ICONS[mission.reward_power_up] || power5050} alt="" className="w-4 h-4" />
+                  )}
                   <span className="text-xs font-bold text-rose-600">{mission.reward_power_up_count}x</span>
                 </div>
               )}

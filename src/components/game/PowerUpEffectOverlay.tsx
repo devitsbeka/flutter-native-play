@@ -5,19 +5,18 @@ import { useEffect, useState } from "react";
 import power5050Badge from "@/assets/powers/5050-badge.png";
 import powerFreezeBadge from "@/assets/powers/freeze-badge.png";
 import powerReplaceBadge from "@/assets/powers/replace-badge.png";
-import powerTimeDrainBadge from "@/assets/powers/time-drain-badge.png";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
+import { TimeIcon } from "@/components/shared/TimeIcon";
 
 interface PowerUpEffectOverlayProps {
   activeEffect: PowerUpType | null;
   onComplete: () => void;
 }
 
-const POWER_UP_IMAGES: Record<PowerUpType, string> = {
+const POWER_UP_IMAGES: Record<Exclude<PowerUpType, "time-drain">, string> = {
   "5050": power5050Badge,
   "freeze": powerFreezeBadge,
   "replace": powerReplaceBadge,
-  "time-drain": powerTimeDrainBadge,
 };
 
 const POWER_UP_NAMES: Record<PowerUpType, string> = {
@@ -108,16 +107,26 @@ export function PowerUpEffectOverlay({ activeEffect, onComplete }: PowerUpEffect
             />
             
             {/* Icon - just the badge, no container */}
-            <motion.img
-              src={POWER_UP_IMAGES[activeEffect]}
-              alt={activeEffect}
-              className="relative w-28 h-28 object-contain"
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 0.5, repeat: 2 }}
-              style={{
-                filter: `drop-shadow(0 8px 24px ${POWER_UP_COLORS[activeEffect].from}80)`,
-              }}
-            />
+            {activeEffect === "time-drain" ? (
+              <motion.div
+                className="relative"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+              >
+                <TimeIcon size={112} />
+              </motion.div>
+            ) : (
+              <motion.img
+                src={POWER_UP_IMAGES[activeEffect]}
+                alt={activeEffect}
+                className="relative w-28 h-28 object-contain"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+                style={{
+                  filter: `drop-shadow(0 8px 24px ${POWER_UP_COLORS[activeEffect].from}80)`,
+                }}
+              />
+            )}
 
             {/* Name label */}
             <motion.div

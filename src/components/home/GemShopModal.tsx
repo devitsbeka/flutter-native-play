@@ -20,8 +20,8 @@ interface GemShopModalProps {
 import powerIcon5050 from "@/assets/powers/5050.png";
 import powerIconFreeze from "@/assets/powers/freeze.png";
 import powerIconReplace from "@/assets/powers/replace.png";
-import powerIconTimeDrain from "@/assets/powers/time-drain.png";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
+import { TimeIcon } from "@/components/shared/TimeIcon";
 
 interface ShopItem {
   id: string;
@@ -130,7 +130,7 @@ const SHOP_ITEMS: ShopItem[] = [
     name: "დრო+ ×3",
     description: "დაამატე 10 წამი დროს",
     price: 8,
-    icon: <img src={powerIconTimeDrain} alt="" className="w-8 h-8" />,
+    icon: <TimeIcon size={32} />,
     category: "powerup",
     gradient: "from-violet-400 to-purple-500",
     powerType: "time-drain",

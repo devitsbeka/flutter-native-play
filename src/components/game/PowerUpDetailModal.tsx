@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
 import { GameModal } from "@/components/ui/game-modal";
+import { TimeIcon } from "@/components/shared/TimeIcon";
 
 // Power-up badge assets (new hexagonal style)
 import fiftyFiftyBadge from "@/assets/powers/5050-badge.png";
 import freezeBadge from "@/assets/powers/freeze-badge.png";
 import replaceBadge from "@/assets/powers/replace-badge.png";
-import timeDrainBadge from "@/assets/powers/time-drain-badge.png";
 import addPowerImg from "@/assets/powers/add-power.png";
 
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain" | "add-power";
@@ -18,11 +18,10 @@ interface PowerUpDetailModalProps {
   onAddClick?: () => void;
 }
 
-const powerUpAssets: Record<PowerUpType, string> = {
+const powerUpAssets: Record<Exclude<PowerUpType, "time-drain">, string> = {
   "fifty-fifty": fiftyFiftyBadge,
   "freeze": freezeBadge,
   "replace": replaceBadge,
-  "time-drain": timeDrainBadge,
   "add-power": addPowerImg,
 };
 
@@ -45,7 +44,8 @@ const powerUpTranslationKeys: Record<PowerUpType, string> = {
 
 
 export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerUpDetailModalProps) {
-  const imageSrc = powerUpAssets[type];
+  const isTimeDrain = type === "time-drain";
+  const imageSrc = isTimeDrain ? undefined : powerUpAssets[type as Exclude<PowerUpType, "time-drain">];
   const titleGradient = powerUpTitleGradients[type];
   const translationKey = powerUpTranslationKeys[type];
   
@@ -57,18 +57,27 @@ export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerU
       animate={{ scale: 1 }}
       transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
     >
-      <motion.img
-        src={imageSrc}
-        alt={type}
-        className="w-24 h-24 object-contain"
-        style={{
-          filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))",
-        }}
-        animate={{
-          y: [0, -5, 0],
-        }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {isTimeDrain ? (
+        <motion.div
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <TimeIcon size={96} />
+        </motion.div>
+      ) : (
+        <motion.img
+          src={imageSrc}
+          alt={type}
+          className="w-24 h-24 object-contain"
+          style={{
+            filter: "drop-shadow(0 6px 12px rgba(0,0,0,0.25))",
+          }}
+          animate={{
+            y: [0, -5, 0],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
     </motion.div>
   );
   

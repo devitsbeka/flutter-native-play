@@ -20,8 +20,8 @@ import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
 import replaceIcon from "@/assets/powers/replace.png";
-import timeDrainIcon from "@/assets/powers/time-drain.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import { TimeIcon } from "@/components/shared/TimeIcon";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
@@ -212,7 +212,7 @@ const POWERS_ITEMS: ShopItem[] = [
     description: "ამატებს 10 წამს",
     price: 8,
     currency: "gems",
-    icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
+    icon: <TimeIcon size={32} />,
     gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
     powerType: "time-drain",
     amount: 3,
