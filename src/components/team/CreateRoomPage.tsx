@@ -78,8 +78,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     setIsRandom(false);
   };
 
-  // Display categories - show first 6 or all
-  const displayedCategories = showAllCategories ? categories : categories.slice(0, 6);
+  // Display categories - show first 5 or all (5 because Random takes 1 slot)
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 5);
 
   const toggleFriendSelection = (friendId: string) => {
     setSelectedFriends(prev => {
@@ -155,39 +155,54 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Random Button - grey styling matching reference with purple outline when selected */}
-              <motion.button
-                onClick={selectRandomCategory}
-                className="w-full p-4 rounded-2xl text-left transition-all overflow-hidden relative"
-                style={{
-                  background: "linear-gradient(180deg, #F3F4F6 0%, #E5E7EB 100%)",
-                  border: isRandom
-                    ? "3px solid hsl(var(--primary))"
-                    : "2px solid #E5E7EB",
-                  boxShadow: isRandom
-                    ? "0 4px 0 hsl(var(--primary) / 0.3)"
-                    : "0 3px 0 #D1D5DB",
-                }}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98, y: 4 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: "rgba(139, 92, 246, 0.1)",
-                    }}
-                  >
-                    <Shuffle className="w-6 h-6 text-primary" />
-                  </div>
-                  <span className="text-base font-bold text-foreground">
-                    🎲 შემთხვევითი
-                  </span>
-                </div>
-              </motion.button>
-
-              {/* Category Grid - 2x height with video background */}
+              {/* Category Grid - including Random as first option */}
               <div className="grid grid-cols-2 gap-2">
+                {/* Random Category Card - always first */}
+                <motion.button
+                  onClick={selectRandomCategory}
+                  className="relative h-28 rounded-xl overflow-hidden transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
+                    border: isRandom
+                      ? "3px solid hsl(var(--primary))"
+                      : "2px solid hsl(var(--border))",
+                    boxShadow: isRandom
+                      ? "0 4px 0 hsl(var(--primary) / 0.3)"
+                      : "0 2px 0 hsl(var(--border))",
+                  }}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98, y: 1 }}
+                >
+                  {/* Icon centered */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div 
+                      className="w-14 h-14 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "rgba(255, 255, 255, 0.4)",
+                      }}
+                    >
+                      <Shuffle className="w-7 h-7 text-primary" />
+                    </div>
+                  </div>
+                  
+                  {/* Category Name - bottom left */}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <span className="text-sm font-bold text-foreground leading-tight drop-shadow-sm">
+                      🎲 შემთხვევითი
+                    </span>
+                  </div>
+                  
+                  {isRandom && (
+                    <motion.div
+                      layoutId="category-selected-page"
+                      className="absolute inset-0 rounded-xl border-3 border-primary pointer-events-none"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+
+                {/* Regular Categories */}
                 {displayedCategories.map((category) => {
                   const videoUrl = CATEGORY_VIDEOS[category.category_id] || "/videos/floating-blob.mp4";
                   const isSelected = selectedCategory?.id === category.id && !isRandom;
@@ -241,7 +256,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
               </div>
 
               {/* Show More Button */}
-              {categories.length > 6 && (
+              {categories.length > 5 && (
                 <motion.button
                   onClick={() => setShowAllCategories(!showAllCategories)}
                   className="w-full p-3 rounded-xl bg-muted/50 border-2 border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
