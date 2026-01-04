@@ -145,6 +145,7 @@ export function GameResultsScreenV2() {
           user_id: p.user_id,
           nickname: p.nickname,
           score: p.score,
+          avatar_url: p.avatar_url,
         }));
         
         if (currentRoom.current_game_id) {

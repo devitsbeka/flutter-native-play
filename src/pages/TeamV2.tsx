@@ -112,7 +112,7 @@ function TeamContentV2() {
     <div className="min-h-screen relative overflow-hidden pb-24">
       {/* Header */}
       <PageHeader
-        title="Friends"
+        title="ონლაინ თამაში"
         showBack={true}
         rightElements={
           <button
