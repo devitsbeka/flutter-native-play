@@ -141,13 +141,13 @@ export function GameResultsScreenV2() {
         });
 
         // Save to room_games
+        const playerScores = rankedParticipants.map(p => ({
+          user_id: p.user_id,
+          nickname: p.nickname,
+          score: p.score,
+        }));
+        
         if (currentRoom.current_game_id) {
-          const playerScores = rankedParticipants.map(p => ({
-            user_id: p.user_id,
-            nickname: p.nickname,
-            score: p.score,
-          }));
-          
           await supabase
             .from("room_games")
             .update({
@@ -157,6 +157,15 @@ export function GameResultsScreenV2() {
             })
             .eq("id", currentRoom.current_game_id);
         }
+
+        // Save to room_match_history for recent games display
+        await supabase
+          .from("room_match_history")
+          .insert({
+            room_id: currentRoom.id,
+            winner_user_id: rankedParticipants[0]?.user_id || null,
+            player_scores: playerScores,
+          });
 
         // Update participant stats
         const winnerId = rankedParticipants[0]?.user_id;
