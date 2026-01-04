@@ -288,39 +288,39 @@ export function GameResultsScreenV2() {
           className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3"
         >
           <div className="space-y-2">
-            {rankedParticipants.slice(0, 4).map((p, idx) => (
+          {rankedParticipants.slice(0, 4).map((p, idx) => (
               <div
                 key={p.user_id}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-xl",
+                  "flex items-center gap-4 px-4 py-3 rounded-xl",
                   p.isMe ? "bg-white/20" : ""
                 )}
               >
                 {/* Avatar with crown for winner */}
                 <div className="relative">
-                  <Avatar className="w-8 h-8 border-2 border-white/30">
+                  <Avatar className="w-12 h-12 border-2 border-white/30">
                     <AvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-xs font-bold">
+                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold">
                       {p.nickname?.charAt(0)?.toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                   {idx === 0 && (
-                    <Crown className="absolute -top-2 -right-1 w-4 h-4 text-amber-400 fill-amber-400 drop-shadow-md" />
+                    <Crown className="absolute -top-3 -right-1 w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
                   )}
                 </div>
                 
                 {/* Medal */}
-                <span className="text-sm">
+                <span className="text-lg">
                   {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
                 </span>
                 
                 {/* Name */}
-                <span className="flex-1 text-white font-medium text-sm truncate">
+                <span className="flex-1 text-white font-display text-lg truncate">
                   {p.isMe ? "You" : p.nickname}
                 </span>
                 
                 {/* Score */}
-                <span className="text-white font-bold text-sm">{p.score}</span>
+                <span className="text-white font-display text-lg">{p.score}</span>
               </div>
             ))}
           </div>
