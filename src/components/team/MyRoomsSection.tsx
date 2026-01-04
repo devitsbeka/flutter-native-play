@@ -203,7 +203,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         onClick={onJoin}
         className="w-full whitespace-nowrap relative z-10"
         size="sm"
-        variant="secondary"
+        variant="outline"
       >
         {room.status === "playing" ? "გაგრძელება" : "შეუერთდი"}
       </ChunkyButton>

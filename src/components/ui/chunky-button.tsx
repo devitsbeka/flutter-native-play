@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "mint";
+  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline";
   size?: "sm" | "md" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -70,6 +70,17 @@ const variantStyles = {
     glow: "rgba(107, 207, 176, 0.5)",
     shine: "from-white/40 via-white/15 to-transparent",
     particle: "bg-white/50",
+  },
+  outline: {
+    face: "bg-transparent border-2 border-primary",
+    textColor: "text-primary",
+    depth: "hsl(270 50% 85%)",
+    border: "hsl(270 50% 70%)",
+    innerBorder: "transparent",
+    outerStroke: "hsl(270 50% 60%)",
+    glow: "hsl(var(--primary) / 0.15)",
+    shine: "from-primary/10 via-transparent to-transparent",
+    particle: "bg-primary/60",
   },
 };
 
