@@ -6,7 +6,7 @@ import { useVipStatus, VipDuration } from "@/hooks/useVipStatus";
 import { useAvatarFrames, AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
@@ -334,6 +334,7 @@ export default function PowerUps() {
   const { activateVip } = useVipStatus();
   const { unlockFrame, isFrameUnlocked } = useAvatarFrames();
   const { playSound } = useSound();
+  const { notify } = useNotificationModal();
 
   const [showTutorialModal, setShowTutorialModal] = useState(false);
   const [showPowerShopModal, setShowPowerShopModal] = useState(false);
@@ -345,13 +346,13 @@ export default function PowerUps() {
 
   const handlePurchase = async (item: ShopItem) => {
     if (!user) {
-      toast.error("შესვლა საჭიროა შეძენისთვის!");
+      notify.error("შესვლა საჭიროა შეძენისთვის!");
       navigate("/auth");
       return;
     }
 
     if (gems < item.price) {
-      toast.error("არ გაქვს საკმარისი ალმასი!");
+      notify.error("არ გაქვს საკმარისი ალმასი!", { icon: "💎" });
       playSound("wrong-answer");
       return;
     }
@@ -411,7 +412,7 @@ export default function PowerUps() {
       setShowSuccess(true);
     } catch (error) {
       console.error("Purchase failed:", error);
-      toast.error("შეძენა ვერ მოხერხდა");
+      notify.error("შეძენა ვერ მოხერხდა");
     } finally {
       setIsPurchasing(null);
     }
@@ -424,7 +425,7 @@ export default function PowerUps() {
       {/* Sticky Header */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
-        onBuyGemsClick={() => toast.info("ალმასების შეძენა მალე!")}
+        onBuyGemsClick={() => notify.info("ალმასების შეძენა მალე!", { icon: "🏗️" })}
       />
 
       {/* Scrollable Content - Section-based layout with scroll snap */}
