@@ -57,3 +57,6 @@ verify_jwt = false
 
 [functions.smart-assign-icons]
 verify_jwt = false
+
+[functions.shorten-questions]
+verify_jwt = false

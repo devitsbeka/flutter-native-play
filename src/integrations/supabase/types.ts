@@ -700,7 +700,9 @@ export type Database = {
           incorrect_answers: Json
           is_active: boolean | null
           level_number: number | null
+          original_question_text: string | null
           question_text: string
+          shorten_status: string | null
           updated_at: string | null
         }
         Insert: {
@@ -714,7 +716,9 @@ export type Database = {
           incorrect_answers?: Json
           is_active?: boolean | null
           level_number?: number | null
+          original_question_text?: string | null
           question_text: string
+          shorten_status?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -728,7 +732,9 @@ export type Database = {
           incorrect_answers?: Json
           is_active?: boolean | null
           level_number?: number | null
+          original_question_text?: string | null
           question_text?: string
+          shorten_status?: string | null
           updated_at?: string | null
         }
         Relationships: [
