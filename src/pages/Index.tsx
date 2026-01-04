@@ -46,11 +46,43 @@ import { useMissions } from "@/hooks/useMissions";
 import { useDailyPlays } from "@/hooks/useDailyPlays";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useRewardTimers as useRewardTimersWithTime } from "@/hooks/useRewardTimers";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
   accent: "#9C6ADE",
   accentDark: "#7B4BBF",
+};
+
+// Chest button countdown badge component
+const ChestButtonBadge = ({ canClaimChest }: { canClaimChest: boolean }) => {
+  const { chestTimeLeft } = useRewardTimersWithTime();
+  
+  if (canClaimChest) {
+    return (
+      <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+        <Check className="w-3.5 h-3.5" />
+      </span>
+    );
+  }
+  
+  return (
+    <motion.div
+      className="absolute -top-2 -right-2 px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg z-20"
+      style={{
+        background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
+        boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
+        border: "2px solid white",
+      }}
+      animate={{ scale: [1, 1.05, 1] }}
+      transition={{ duration: 2, repeat: Infinity }}
+    >
+      <Clock className="w-3 h-3 text-amber-700" />
+      <span className="text-[10px] font-bold text-amber-800 font-mono">
+        {chestTimeLeft}
+      </span>
+    </motion.div>
+  );
 };
 
 // Convert country code to flag emoji
@@ -454,17 +486,7 @@ export default function Index() {
                       glowColor="rgba(252, 211, 77, 0.5)"
                       idleOffset={1.4}
                       size={62}
-                      badge={
-                        canClaimChest ? (
-                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                            <Check className="w-3.5 h-3.5" />
-                          </span>
-                        ) : (
-                          <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
-                            <Clock className="w-2.5 h-2.5" />
-                          </span>
-                        )
-                      }
+                      badge={<ChestButtonBadge canClaimChest={canClaimChest} />}
                     />
                   </motion.div>
 
