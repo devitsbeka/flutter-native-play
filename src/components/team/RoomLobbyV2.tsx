@@ -16,6 +16,7 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { TVSessionProvider, useTVSession } from "@/contexts/TVSessionContext";
+import { TVEnterCodeModal } from "./TVEnterCodeModal";
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ export function RoomLobbyV2() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isStartingTV, setIsStartingTV] = useState(false);
+  const [showTVModal, setShowTVModal] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
@@ -152,98 +154,10 @@ export function RoomLobbyV2() {
     setIsStarting(false);
   };
 
-  const handleStartTVMode = async () => {
+  const handleStartTVMode = () => {
     if (!currentRoom) return;
-    setIsStartingTV(true);
     playSound("button-click");
-    
-    try {
-      // Generate a random 6-digit code
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let code = '';
-      for (let i = 0; i < 6; i++) {
-        code += chars[Math.floor(Math.random() * chars.length)];
-      }
-
-      // First get the category UUID from the slug
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('category_id', currentRoom.category_id)
-        .single();
-
-      if (categoryError || !categoryData) {
-        console.error('Category not found:', currentRoom.category_id);
-        toast.error("კატეგორია ვერ მოიძებნა");
-        setIsStartingTV(false);
-        return;
-      }
-
-      // Fetch questions for this category
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-        .eq('category_id', categoryData.id)
-        .eq('is_active', true)
-        .eq('in_production', true)
-        .limit(10);
-
-      if (questionsError) throw questionsError;
-
-      const formattedQuestions = (questionsData || []).map(q => {
-        const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-          ? q.incorrect_answers as string[] 
-          : [];
-        const allOptions = [q.correct_answer, ...incorrectAnswers].filter(Boolean);
-        const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
-        
-        return {
-          id: q.id,
-          question_text: q.question_text,
-          options: shuffledOptions,
-          correct_answer: q.correct_answer,
-          difficulty: q.difficulty || undefined,
-        };
-      });
-
-      if (formattedQuestions.length === 0) {
-        toast.error("ამ კატეგორიაში კითხვები ვერ მოიძებნა");
-        setIsStartingTV(false);
-        return;
-      }
-
-      // Create TV session
-      const { data: tvSession, error: tvError } = await supabase
-        .from('tv_sessions')
-        .insert([{
-          room_id: currentRoom.id,
-          pairing_code: code,
-          host_user_id: user!.id,
-          status: 'waiting',
-          questions: formattedQuestions as unknown as any,
-        }])
-        .select()
-        .single();
-
-      if (tvError) throw tvError;
-
-      // Update game room
-      await supabase
-        .from('game_rooms')
-        .update({ 
-          game_mode: 'tv_show',
-          tv_session_id: tvSession.id 
-        })
-        .eq('id', currentRoom.id);
-
-      // Navigate to TV display
-      navigate(`/tv/${code}`);
-    } catch (error) {
-      console.error('Error starting TV mode:', error);
-      toast.error("TV რეჟიმის გაშვება ვერ მოხერხდა");
-    } finally {
-      setIsStartingTV(false);
-    }
+    setShowTVModal(true);
   };
 
   const getCategoryVideo = () => {
@@ -520,10 +434,10 @@ export function RoomLobbyV2() {
                 size="lg"
                 className="w-full"
                 onClick={handleStartTVMode}
-                disabled={isStartingTV || loading}
+                disabled={loading}
                 icon={<Tv className="w-5 h-5" />}
               >
-                {isStartingTV ? "იწყება..." : "TV-ზე თამაში"}
+                TV-სთან დაკავშირება
               </ChunkyButton>
             </div>
           )}
@@ -600,6 +514,16 @@ export function RoomLobbyV2() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* TV Enter Code Modal */}
+      {currentRoom && (
+        <TVEnterCodeModal
+          open={showTVModal}
+          onOpenChange={setShowTVModal}
+          roomId={currentRoom.id}
+          categoryId={currentRoom.category_id || ''}
+        />
+      )}
     </div>
   );
 }
