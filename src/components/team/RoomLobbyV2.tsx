@@ -314,7 +314,7 @@ export function RoomLobbyV2() {
             onClick={handleCopyLink}
             icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
           >
-            Copy Link
+            ლინკის კოპირება
           </ChunkyButton>
           
           <ChunkyButton
@@ -323,7 +323,7 @@ export function RoomLobbyV2() {
             onClick={handleShare}
             icon={<Share2 className="w-4 h-4" />}
           >
-            Share
+            გაზიარება
           </ChunkyButton>
         </motion.div>
 
@@ -340,7 +340,7 @@ export function RoomLobbyV2() {
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {messages.length === 0 ? (
                     <p className="text-center text-muted-foreground text-sm py-4">
-                      No messages yet
+                      ჯერ შეტყობინებები არ არის
                     </p>
                   ) : (
                     messages.map((msg) => (
@@ -380,7 +380,7 @@ export function RoomLobbyV2() {
                   <Input
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder="Type a message..."
+                    placeholder="დაწერე შეტყობინება..."
                     className="flex-1 text-sm"
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   />
@@ -415,7 +415,7 @@ export function RoomLobbyV2() {
               disabled={!canStartGame || isStarting || loading}
               icon={<Play className="w-5 h-5" />}
             >
-              {isStarting ? "Starting..." : canStartGame ? "Start Game" : `Waiting for ${(currentRoom.min_players || 2) - participants.length} more`}
+              {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
             </ChunkyButton>
           )}
           
@@ -427,7 +427,7 @@ export function RoomLobbyV2() {
                 transition={{ duration: 2, repeat: Infinity }}
                 className="text-muted-foreground"
               >
-                Waiting for host to start the game...
+                ველოდებით ჰოსტს თამაშის დასაწყებად...
               </motion.div>
             </div>
           )}
@@ -439,7 +439,7 @@ export function RoomLobbyV2() {
             className="w-full"
             onClick={handleLeaveConfirm}
           >
-            Leave Room
+            ოთახის დატოვება
           </ChunkyButton>
         </div>
       </div>
@@ -459,9 +459,9 @@ export function RoomLobbyV2() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl"
             >
-              <h3 className="text-lg font-bold text-foreground mb-2">Leave Room?</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">დატოვება?</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                You can exit now and come back later, or leave permanently.
+                შეგიძლია გახვიდე და მოგვიანებით დაბრუნდე, ან სამუდამოდ დატოვო ოთახი.
               </p>
               <div className="space-y-2">
                 <ChunkyButton
@@ -470,7 +470,7 @@ export function RoomLobbyV2() {
                   className="w-full"
                   onClick={handleExitRoom}
                 >
-                  Exit (Stay in room)
+                  გასვლა (დარჩენა ოთახში)
                 </ChunkyButton>
                 <ChunkyButton
                   variant="danger"
@@ -478,13 +478,13 @@ export function RoomLobbyV2() {
                   className="w-full"
                   onClick={handleLeavePermanently}
                 >
-                  Leave Permanently
+                  სამუდამოდ დატოვება
                 </ChunkyButton>
                 <button
                   onClick={() => setShowLeaveConfirm(false)}
                   className="w-full py-2 text-muted-foreground text-sm hover:text-foreground"
                 >
-                  Cancel
+                  გაუქმება
                 </button>
               </div>
             </motion.div>
