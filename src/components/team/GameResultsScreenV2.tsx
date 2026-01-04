@@ -7,12 +7,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Home, RotateCcw, Star, Crown } from "lucide-react";
+import { Trophy, ArrowLeft, RotateCcw, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import xpIcon from "@/assets/icons/icon-xp.png";
 import { toast } from "sonner";
 
 interface RankedParticipant {
@@ -176,7 +176,7 @@ export function GameResultsScreenV2() {
     }
   }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants]);
 
-  const handleBackToTeam = () => {
+  const handleBackToRoom = () => {
     exitRoom();
     navigate("/team");
   };
@@ -210,33 +210,16 @@ export function GameResultsScreenV2() {
     }
   };
 
-  const getFlagEmoji = (countryCode: string | null) => {
-    if (!countryCode) return "🏳️";
-    try {
-      const codePoints = countryCode
-        .toUpperCase()
-        .split("")
-        .map(char => 127397 + char.charCodeAt(0));
-      return String.fromCodePoint(...codePoints);
-    } catch {
-      return "🏳️";
-    }
-  };
-
-  // Get podium participants (top 3)
-  const podiumParticipants = rankedParticipants.slice(0, 3);
-  const restParticipants = rankedParticipants.slice(3);
-
   return (
-    <div className="h-[100dvh] flex flex-col bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5] overflow-auto">
-      <div className="flex-1 flex flex-col items-center p-4 max-w-md mx-auto w-full">
-        {/* Result Header */}
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
+      {/* Top Section: Icon + Result */}
+      <div className="pt-8 text-center">
         <motion.div
           initial={{ scale: 0, y: -20 }}
           animate={{ scale: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 200 }}
           className={cn(
-            "w-20 h-20 rounded-full flex items-center justify-center mb-3",
+            "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4",
             isWin ? "bg-amber-400" : isPodium ? "bg-blue-400" : "bg-slate-400"
           )}
           style={{
@@ -251,15 +234,14 @@ export function GameResultsScreenV2() {
           )} />
         </motion.div>
 
-        {/* Result Text */}
-      <motion.h1
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="text-3xl font-display font-bold text-white mb-6 text-center"
-      >
-        {result}
-      </motion.h1>
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-3xl font-display font-bold text-white"
+        >
+          {result}
+        </motion.h1>
 
         {/* Stars for win */}
         {isWin && (
@@ -267,7 +249,7 @@ export function GameResultsScreenV2() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex justify-center gap-1 mb-4"
+            className="flex justify-center gap-1 mt-2"
           >
             {[1, 2, 3].map((star) => (
               <motion.div
@@ -281,219 +263,90 @@ export function GameResultsScreenV2() {
             ))}
           </motion.div>
         )}
+      </div>
 
-        {/* Podium */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="w-full mb-4 mt-4"
-      >
-          <div className="flex items-end justify-center gap-2 h-48">
-            {/* 2nd Place */}
-            {podiumParticipants[1] && (
-              <PodiumSpot participant={podiumParticipants[1]} place={2} getFlagEmoji={getFlagEmoji} />
-            )}
-            
-            {/* 1st Place */}
-            {podiumParticipants[0] && (
-              <PodiumSpot participant={podiumParticipants[0]} place={1} getFlagEmoji={getFlagEmoji} />
-            )}
-            
-            {/* 3rd Place */}
-            {podiumParticipants[2] && (
-              <PodiumSpot participant={podiumParticipants[2]} place={3} getFlagEmoji={getFlagEmoji} />
-            )}
-          </div>
-        </motion.div>
-
-        {/* Full Rankings */}
-        {restParticipants.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="w-full bg-white/95 backdrop-blur-lg rounded-2xl p-3 mb-4 shadow-xl"
-          >
-            <p className="text-slate-500 text-xs font-medium mb-2 text-center">Full Rankings</p>
-            <div className="space-y-2">
-              {restParticipants.map((p) => (
-                <div
-                  key={p.user_id}
-                  className={cn(
-                    "flex items-center gap-3 p-2 rounded-xl",
-                    p.isMe ? "bg-purple-100" : ""
-                  )}
-                >
-                  <span className="w-6 text-center text-slate-500 font-bold text-sm">
-                    #{p.rank}
-                  </span>
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm">
-                      {p.nickname?.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium text-slate-800 text-sm truncate">
-                        {p.isMe ? "You" : p.nickname}
-                      </span>
-                      <span className="text-sm">{getFlagEmoji(p.country_code)}</span>
-                    </div>
-                  </div>
-                  <span className="font-bold text-purple-600 text-sm">{p.score}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Coins Earned */}
-        {coinsEarned > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, type: "spring" }}
-            className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-amber-500/90"
-            style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
-          >
-            <img src={coinIcon} alt="" className="w-6 h-6" />
-            <span className="text-white font-bold text-lg">+{coinsEarned}</span>
-          </motion.div>
-        )}
-
-        {/* Points Earned */}
-        {myScore > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-white/20"
-          >
-            <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold">+{myScore} points</span>
-          </motion.div>
-        )}
-
-        {/* Category badge */}
+      {/* Middle Section: Category + Rewards (with 60px top spacing) */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4" style={{ paddingTop: '60px' }}>
+        {/* Category */}
         {currentRoom?.category_name && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mb-4 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="px-6 py-3 rounded-full bg-white/15 backdrop-blur-sm"
           >
-            <span className="text-white/90 text-sm">
-              Category: <strong>{currentRoom.category_name}</strong>
-            </span>
+            <span className="text-white font-medium">{currentRoom.category_name}</span>
           </motion.div>
         )}
 
-        {/* Buttons */}
+        {/* Points + Coins Row */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="w-full flex flex-col gap-3 pb-4"
+          transition={{ delay: 0.3 }}
+          className="flex items-center justify-center gap-4"
         >
-          {isHost ? (
-            <ChunkyButton
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={handlePlayAgain}
-              disabled={isStartingRematch}
-              icon={<RotateCcw className="w-5 h-5" />}
+          {/* Coins Badge */}
+          {coinsEarned > 0 && (
+            <div 
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/90"
+              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
             >
-              {isStartingRematch ? "Starting..." : "Play Again"}
-            </ChunkyButton>
-          ) : (
-            <div className="text-center py-3">
-              <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-white/80"
-              >
-                Waiting for host to start next round...
-              </motion.p>
+              <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+              <span className="text-white font-bold text-lg">+{coinsEarned}</span>
             </div>
           )}
 
-          <ChunkyButton
-            variant="secondary"
-            size="lg"
-            className="w-full"
-            onClick={handleBackToTeam}
-            icon={<Home className="w-5 h-5" />}
-          >
-            Back to Team
-          </ChunkyButton>
+          {/* XP Badge */}
+          {myScore > 0 && (
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-sm">
+              <img src={xpIcon} alt="XP" className="w-5 h-5" />
+              <span className="text-white font-bold text-lg">+{myScore} XP</span>
+            </div>
+          )}
         </motion.div>
       </div>
+
+      {/* Bottom Section: Buttons */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="p-4 pb-8 space-y-3"
+      >
+        {isHost ? (
+          <ChunkyButton
+            variant="mint"
+            size="lg"
+            className="w-full"
+            onClick={handlePlayAgain}
+            disabled={isStartingRematch}
+            icon={<RotateCcw className="w-5 h-5" />}
+          >
+            {isStartingRematch ? "Starting..." : "Play Again"}
+          </ChunkyButton>
+        ) : (
+          <div className="text-center py-3">
+            <motion.p
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-white/80"
+            >
+              Waiting for host to start next round...
+            </motion.p>
+          </div>
+        )}
+
+        <ChunkyButton
+          variant="secondary"
+          size="lg"
+          className="w-full"
+          onClick={handleBackToRoom}
+          icon={<ArrowLeft className="w-5 h-5" />}
+        >
+          Back to Room
+        </ChunkyButton>
+      </motion.div>
     </div>
-  );
-}
-
-// Podium spot component
-function PodiumSpot({ 
-  participant, 
-  place, 
-  getFlagEmoji 
-}: { 
-  participant: RankedParticipant; 
-  place: 1 | 2 | 3;
-  getFlagEmoji: (code: string | null) => string;
-}) {
-  const heights = { 1: "h-28", 2: "h-20", 3: "h-16" };
-  const colors = { 
-    1: "from-amber-400 to-amber-500 border-amber-300", 
-    2: "from-slate-300 to-slate-400 border-slate-200", 
-    3: "from-amber-600 to-amber-700 border-amber-500" 
-  };
-  const avatarSizes = { 1: "w-16 h-16", 2: "w-12 h-12", 3: "w-12 h-12" };
-  const medals = { 1: "🥇", 2: "🥈", 3: "🥉" };
-
-  return (
-    <motion.div
-      initial={{ y: 50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: place === 1 ? 0.3 : place === 2 ? 0.4 : 0.5 }}
-      className="flex flex-col items-center"
-    >
-      {/* Avatar */}
-      <div className="relative mb-2">
-        <Avatar className={cn(
-          avatarSizes[place],
-          "border-3",
-          participant.isMe ? "border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]" : "border-white/50"
-        )}>
-          <AvatarImage src={participant.avatar_url || undefined} />
-          <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold">
-            {participant.nickname?.charAt(0) || "?"}
-          </AvatarFallback>
-        </Avatar>
-        <div className="absolute -bottom-1 right-1/2 translate-x-1/2 text-sm">
-          {getFlagEmoji(participant.country_code)}
-        </div>
-      </div>
-
-      {/* Name */}
-      <p className="text-white text-xs font-medium truncate max-w-[80px] text-center mb-1">
-        {participant.isMe ? "You" : participant.nickname}
-      </p>
-
-      {/* Score */}
-      <p className="text-white/80 text-xs font-bold mb-2">{participant.score}</p>
-
-      {/* Podium block */}
-      <div className={cn(
-        "w-20 rounded-t-xl bg-gradient-to-b border-t-2 flex items-start justify-center pt-2",
-        heights[place],
-        colors[place]
-      )}>
-        <span className="text-2xl">{medals[place]}</span>
-      </div>
-    </motion.div>
   );
 }
