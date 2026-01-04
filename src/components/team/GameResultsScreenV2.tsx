@@ -216,36 +216,27 @@ export function GameResultsScreenV2() {
     <div className="h-[100dvh] flex flex-col overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       {/* Top Section: Icon + Result */}
       <div className="pt-8 text-center">
-        <motion.div
+        <motion.img 
+          src={trophyWinIcon} 
+          alt="Trophy" 
+          className="w-20 h-20 object-contain mx-auto mb-4"
           initial={{ scale: 0.5, y: -20 }}
           animate={{ 
             scale: 1, 
             y: 0,
+            rotate: [0, -8, 8, -8, 0] 
           }}
-          transition={{ type: "spring", stiffness: 200 }}
-          className={cn(
-            "mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4",
-            isWin ? "bg-amber-400" : isPodium ? "bg-blue-400" : "bg-slate-400"
-          )}
-          style={{
-            boxShadow: isWin 
-              ? "0 8px 30px rgba(251, 191, 36, 0.5)" 
-              : "0 8px 20px rgba(0,0,0,0.2)"
-          }}
-        >
-          <motion.img 
-            src={trophyWinIcon} 
-            alt="Trophy" 
-            className="w-12 h-12 object-contain"
-            animate={{ rotate: [0, -8, 8, -8, 0] }}
-            transition={{ 
+          transition={{ 
+            scale: { type: "spring", stiffness: 200 },
+            y: { type: "spring", stiffness: 200 },
+            rotate: { 
               duration: 2,
               repeat: Infinity,
               repeatDelay: 1,
               ease: "easeInOut"
-            }}
-          />
-        </motion.div>
+            }
+          }}
+        />
 
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
