@@ -236,11 +236,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles" },
         (payload) => {
-          const updatedProfile = payload.new as { user_id: string; avatar_url: string | null };
-          // Update avatar for matching participant
+          const updatedProfile = payload.new as { user_id: string; avatar_url: string | null; animated_avatar_url: string | null };
+          // Update both avatar_url and animated_avatar_url for matching participant
           setParticipants(prev =>
             prev.map(p => p.user_id === updatedProfile.user_id 
-              ? { ...p, avatar_url: updatedProfile.avatar_url }
+              ? { ...p, avatar_url: updatedProfile.avatar_url, animated_avatar_url: updatedProfile.animated_avatar_url }
               : p
             )
           );
