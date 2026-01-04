@@ -134,7 +134,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     channelsRef.current = [];
   }, []);
 
-  // Fetch participants for current room
+  // Fetch participants for current room with fresh profile data
   const fetchParticipants = useCallback(async (roomId: string) => {
     const { data, error } = await supabase
       .from("room_participants")
@@ -143,7 +143,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .order("joined_at", { ascending: true });
     
     if (!error && data) {
-      setParticipants(data as RoomParticipant[]);
+      // Fetch fresh profile data for all participants
+      const userIds = data.map(p => p.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, avatar_url")
+        .in("user_id", userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.avatar_url]) || []);
+
+      // Merge fresh avatar_url from profiles
+      const participantsWithFreshAvatars = data.map(p => ({
+        ...p,
+        avatar_url: profileMap.get(p.user_id) || p.avatar_url,
+      }));
+
+      setParticipants(participantsWithFreshAvatars as RoomParticipant[]);
     }
   }, []);
 
