@@ -265,19 +265,47 @@ export function GameResultsScreenV2() {
         )}
       </div>
 
-      {/* Middle Section: Category + Rewards (with 60px top spacing) */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4" style={{ paddingTop: '60px' }}>
+      {/* Middle Section: Category + Scorecard + Rewards (with 60px top spacing) */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-4" style={{ paddingTop: '60px' }}>
         {/* Category */}
         {currentRoom?.category_name && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="px-6 py-3 rounded-full bg-white/15 backdrop-blur-sm"
+            className="px-6 py-2.5 rounded-full bg-white/15 backdrop-blur-sm"
           >
             <span className="text-white font-medium">{currentRoom.category_name}</span>
           </motion.div>
         )}
+
+        {/* Compact Scorecard */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3"
+        >
+          <div className="space-y-2">
+            {rankedParticipants.slice(0, 4).map((p, idx) => (
+              <div
+                key={p.user_id}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl",
+                  p.isMe ? "bg-white/20" : ""
+                )}
+              >
+                <span className="w-5 text-center text-white/70 font-bold text-sm">
+                  {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${p.rank}`}
+                </span>
+                <span className="flex-1 text-white font-medium text-sm truncate">
+                  {p.isMe ? "You" : p.nickname}
+                </span>
+                <span className="text-white font-bold text-sm">{p.score}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
 
         {/* Points + Coins Row */}
         <motion.div
