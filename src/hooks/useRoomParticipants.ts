@@ -6,7 +6,7 @@ export function useRoomParticipants(roomId: string | null) {
   const [participants, setParticipants] = useState<RoomParticipant[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch participants
+  // Fetch participants with fresh profile data
   const fetchParticipants = useCallback(async () => {
     if (!roomId) return;
 
@@ -18,21 +18,34 @@ export function useRoomParticipants(roomId: string | null) {
       .order("joined_at", { ascending: true });
 
     if (!error && data) {
-      const typedParticipants: RoomParticipant[] = data.map(p => ({
-        id: p.id,
-        room_id: p.room_id,
-        user_id: p.user_id,
-        nickname: p.nickname,
-        avatar_url: p.avatar_url,
-        country_code: p.country_code || "GE",
-        joined_at: p.joined_at,
-        status: p.status as ParticipantStatus,
-        score: p.score || 0,
-        current_question: p.current_question || 0,
-        is_host: p.is_host || false,
-        total_wins: (p as any).total_wins || 0,
-        total_rounds_played: (p as any).total_rounds_played || 0,
-      }));
+      // Fetch fresh profile data for all participants
+      const userIds = data.map(p => p.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, avatar_url, nickname")
+        .in("user_id", userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      const typedParticipants: RoomParticipant[] = data.map(p => {
+        const profile = profileMap.get(p.user_id);
+        return {
+          id: p.id,
+          room_id: p.room_id,
+          user_id: p.user_id,
+          nickname: p.nickname,
+          // Use fresh avatar_url from profiles, fallback to stored one
+          avatar_url: profile?.avatar_url || p.avatar_url,
+          country_code: p.country_code || "GE",
+          joined_at: p.joined_at,
+          status: p.status as ParticipantStatus,
+          score: p.score || 0,
+          current_question: p.current_question || 0,
+          is_host: p.is_host || false,
+          total_wins: (p as any).total_wins || 0,
+          total_rounds_played: (p as any).total_rounds_played || 0,
+        };
+      });
       setParticipants(typedParticipants);
     }
     setLoading(false);
