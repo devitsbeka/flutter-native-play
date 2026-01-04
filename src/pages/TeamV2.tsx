@@ -162,11 +162,13 @@ function TeamContentV2() {
               playSound("button-click");
               setShowCreateModal(true);
             }}
-            className="w-full"
+            className="w-full flex items-center justify-center"
             variant="primary"
           >
-            <Plus className="w-5 h-5 mr-2" />
-            ახალი ოთახის შექმნა
+            <span className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              ახალი ოთახის შექმნა
+            </span>
           </ChunkyButton>
         </motion.div>
 
