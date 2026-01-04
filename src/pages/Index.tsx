@@ -25,6 +25,7 @@ import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
+import { GuestActivationFlow } from "@/components/home/GuestActivationFlow";
 
 
 import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
@@ -359,141 +360,153 @@ export default function Index() {
               transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
             }}
           >
-            {/* Avatar section with curved action buttons above */}
+            {/* Avatar section with curved action buttons above (only for logged-in users) */}
             <div className="relative">
-              {/* Curved action buttons above avatar */}
-              <div 
-                className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
-                style={{ 
-                  top: -75,
-                  width: 340,
-                }}
-                data-walkthrough="powerups"
-              >
-                {/* Gift Button - leftmost, lower */}
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3, type: "spring" }}
-                  style={{ marginBottom: 0 }}
+              {/* Curved action buttons above avatar - ONLY show for logged-in users */}
+              {user && (
+                <div 
+                  className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
+                  style={{ 
+                    top: -75,
+                    width: 340,
+                  }}
+                  data-walkthrough="powerups"
                 >
-                  <ActionButtonWithParticles
-                    iconSrc={giftBottleIcon}
-                    alt="Gift"
-                    onClick={() => setIsDailyRewardsOpen(true)}
-                    background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
-                    shadowColor="#FDBA74"
-                    delay={0.4}
-                    particleColor="rgba(253, 186, 116, 0.9)"
-                    glowColor="rgba(253, 186, 116, 0.5)"
-                    idleOffset={0}
-                    size={62}
-                    badge={
-                      canClaimDaily ? (
-                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                          <Check className="w-3.5 h-3.5" />
-                        </span>
-                      ) : (
-                        <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
-                          <Clock className="w-2.5 h-2.5" />
-                        </span>
-                      )
-                    }
-                  />
-                </motion.div>
+                  {/* Gift Button - leftmost, lower */}
+                  <motion.div 
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <ActionButtonWithParticles
+                      iconSrc={giftBottleIcon}
+                      alt="Gift"
+                      onClick={() => setIsDailyRewardsOpen(true)}
+                      background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
+                      shadowColor="#FDBA74"
+                      delay={0.4}
+                      particleColor="rgba(253, 186, 116, 0.9)"
+                      glowColor="rgba(253, 186, 116, 0.5)"
+                      idleOffset={0}
+                      size={62}
+                      badge={
+                        canClaimDaily ? (
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                            <Check className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
+                            <Clock className="w-2.5 h-2.5" />
+                          </span>
+                        )
+                      }
+                    />
+                  </motion.div>
 
-                {/* Mission Button - left-center, much higher for curve */}
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.35, type: "spring" }}
-                  style={{ marginBottom: 32 }}
-                >
-                  <ActionButtonWithParticles
-                    iconSrc={missionCrystalIcon}
-                    alt="Mission"
-                    onClick={() => setShowMissionsModal(true)}
-                    background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
-                    shadowColor="#7DD3FC"
-                    delay={0.48}
-                    particleColor="rgba(125, 211, 252, 0.9)"
-                    glowColor="rgba(125, 211, 252, 0.5)"
-                    idleOffset={0.7}
-                    size={62}
-                    badge={
-                      incompleteMissions > 0 ? (
-                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
-                          {incompleteMissions}
-                        </span>
-                      ) : (
-                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                          <Check className="w-3.5 h-3.5" />
-                        </span>
-                      )
-                    }
-                  />
-                </motion.div>
+                  {/* Mission Button - left-center, much higher for curve */}
+                  <motion.div 
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.35, type: "spring" }}
+                    style={{ marginBottom: 32 }}
+                  >
+                    <ActionButtonWithParticles
+                      iconSrc={missionCrystalIcon}
+                      alt="Mission"
+                      onClick={() => setShowMissionsModal(true)}
+                      background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
+                      shadowColor="#7DD3FC"
+                      delay={0.48}
+                      particleColor="rgba(125, 211, 252, 0.9)"
+                      glowColor="rgba(125, 211, 252, 0.5)"
+                      idleOffset={0.7}
+                      size={62}
+                      badge={
+                        incompleteMissions > 0 ? (
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                            {incompleteMissions}
+                          </span>
+                        ) : (
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                            <Check className="w-3.5 h-3.5" />
+                          </span>
+                        )
+                      }
+                    />
+                  </motion.div>
 
-                {/* Chest Button - right-center, much higher for curve */}
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.4, type: "spring" }}
-                  style={{ marginBottom: 32 }}
-                >
-                  <ActionButtonWithParticles
-                    iconSrc={chestBoxIcon}
-                    alt="Chest"
-                    onClick={() => setIsChestModalOpen(true)}
-                    background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
-                    shadowColor="#FCD34D"
-                    delay={0.56}
-                    particleColor="rgba(252, 211, 77, 0.9)"
-                    glowColor="rgba(252, 211, 77, 0.5)"
-                    idleOffset={1.4}
-                    size={62}
-                    badge={
-                      canClaimChest ? (
-                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                          <Check className="w-3.5 h-3.5" />
-                        </span>
-                      ) : (
-                        <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
-                          <Clock className="w-2.5 h-2.5" />
-                        </span>
-                      )
-                    }
-                  />
-                </motion.div>
+                  {/* Chest Button - right-center, much higher for curve */}
+                  <motion.div 
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                    style={{ marginBottom: 32 }}
+                  >
+                    <ActionButtonWithParticles
+                      iconSrc={chestBoxIcon}
+                      alt="Chest"
+                      onClick={() => setIsChestModalOpen(true)}
+                      background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
+                      shadowColor="#FCD34D"
+                      delay={0.56}
+                      particleColor="rgba(252, 211, 77, 0.9)"
+                      glowColor="rgba(252, 211, 77, 0.5)"
+                      idleOffset={1.4}
+                      size={62}
+                      badge={
+                        canClaimChest ? (
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                            <Check className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
+                            <Clock className="w-2.5 h-2.5" />
+                          </span>
+                        )
+                      }
+                    />
+                  </motion.div>
 
-                {/* Powers Button - rightmost, lower */}
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.45, type: "spring" }}
-                  style={{ marginBottom: 0 }}
+                  {/* Powers Button - rightmost, lower */}
+                  <motion.div 
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.45, type: "spring" }}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <ActionButtonWithParticles
+                      iconSrc={powersIcon}
+                      alt="Powers"
+                      onClick={() => setShowMyPowersModal(true)}
+                      background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                      shadowColor="#C4B5FD"
+                      delay={0.64}
+                      particleColor="rgba(196, 181, 253, 0.9)"
+                      glowColor="rgba(196, 181, 253, 0.5)"
+                      idleOffset={2.1}
+                      size={62}
+                      badge={
+                        totalPowerUps > 0 ? (
+                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                            {totalPowerUps}
+                          </span>
+                        ) : undefined
+                      }
+                    />
+                  </motion.div>
+                </div>
+              )}
+              
+              {/* Guest activation flow - show ABOVE avatar for logged-out users */}
+              {!user && (
+                <div 
+                  className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-20"
+                  style={{ top: -100, width: 340 }}
                 >
-                  <ActionButtonWithParticles
-                    iconSrc={powersIcon}
-                    alt="Powers"
-                    onClick={() => setShowMyPowersModal(true)}
-                    background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                    shadowColor="#C4B5FD"
-                    delay={0.64}
-                    particleColor="rgba(196, 181, 253, 0.9)"
-                    glowColor="rgba(196, 181, 253, 0.5)"
-                    idleOffset={2.1}
-                    size={62}
-                    badge={
-                      totalPowerUps > 0 ? (
-                        <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
-                          {totalPowerUps}
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                </motion.div>
-              </div>
+                  <GuestActivationFlow />
+                </div>
+              )}
 
               <motion.div 
                 animate={isRefreshing ? {
