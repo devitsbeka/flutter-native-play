@@ -75,7 +75,7 @@ export function useTrivia() {
           const result = await supabase
             .from('questions')
             .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
-            .eq('is_active', true)
+            .eq('in_production', true)
             .eq('category_id', categoryData.id)
             .gte('level_number', level)
             .lte('level_number', level + 2)
@@ -109,7 +109,7 @@ export function useTrivia() {
             const { data } = await supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
-              .eq('is_active', true)
+              .eq('in_production', true)
               .eq('category_id', cat.id)
               .limit(50); // Increased from 10 to ensure we have enough after filtering
             
@@ -156,7 +156,7 @@ export function useTrivia() {
             level_number,
             categories!inner(name, icon)
           `)
-          .eq('is_active', true)
+          .eq('in_production', true)
           .limit(50);
         
         if (result.data) {

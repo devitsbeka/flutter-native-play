@@ -11,6 +11,7 @@ export interface AdminQuestion {
   difficulty: 'easy' | 'medium' | 'hard';
   level_number: number;
   is_active: boolean;
+  in_production?: boolean;
   icon_slug?: string;
   created_at: string;
   updated_at: string;
@@ -79,6 +80,7 @@ export const useAdminQuestions = (categoryId?: string | null) => {
         difficulty: q.difficulty as 'easy' | 'medium' | 'hard',
         level_number: q.level_number || 1,
         is_active: q.is_active ?? true,
+        in_production: q.in_production ?? false,
         icon_slug: q.icon_slug || undefined,
         created_at: q.created_at || '',
         updated_at: q.updated_at || '',
@@ -129,6 +131,7 @@ export const useAdminQuestions = (categoryId?: string | null) => {
                 difficulty: newQ.difficulty,
                 level_number: newQ.level_number || 1,
                 is_active: newQ.is_active ?? true,
+                in_production: newQ.in_production ?? false,
                 icon_slug: newQ.icon_slug || undefined,
                 created_at: newQ.created_at || '',
                 updated_at: newQ.updated_at || '',
@@ -149,6 +152,7 @@ export const useAdminQuestions = (categoryId?: string | null) => {
                 difficulty: updated.difficulty,
                 level_number: updated.level_number || 1,
                 is_active: updated.is_active ?? true,
+                in_production: updated.in_production ?? false,
                 icon_slug: updated.icon_slug || undefined,
                 updated_at: updated.updated_at || '',
               } : q

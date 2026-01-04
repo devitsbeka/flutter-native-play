@@ -9,7 +9,9 @@ import {
   ToggleRight,
   Loader2,
   Filter,
-  ImageOff
+  ImageOff,
+  Rocket,
+  Archive
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +49,7 @@ import { useAdminQuestions, AdminQuestion } from '@/hooks/useAdminQuestions';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { cn } from '@/lib/utils';
+import { QUESTION_MAX_LENGTH } from '@/utils/questionValidation';
 
 const DIFFICULTIES = [
   { value: 'easy', label: 'ადვილი', color: 'bg-emerald-500' },
@@ -60,6 +63,7 @@ export default function AdminQuestions() {
   const [search, setSearch] = useState('');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [filterMissingIcons, setFilterMissingIcons] = useState(false);
+  const [filterProductionStatus, setFilterProductionStatus] = useState<string>('all');
   const [editingQuestion, setEditingQuestion] = useState<AdminQuestion | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminQuestion | null>(null);
@@ -149,10 +153,25 @@ export default function AdminQuestions() {
       q.correct_answer.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = filterCategoryId === 'all' || q.category_id === filterCategoryId;
     const matchesMissingIcon = !filterMissingIcons || !q.icon_slug || q.icon_slug.trim() === '';
-    return matchesSearch && matchesCategory && matchesMissingIcon;
+    const matchesProductionStatus = filterProductionStatus === 'all' || 
+      (filterProductionStatus === 'prod' && q.in_production) ||
+      (filterProductionStatus === 'lib' && !q.in_production) ||
+      (filterProductionStatus === 'toolong' && q.question_text.length > QUESTION_MAX_LENGTH);
+    return matchesSearch && matchesCategory && matchesMissingIcon && matchesProductionStatus;
   });
 
   const missingIconsCount = questions.filter(q => !q.icon_slug || q.icon_slug.trim() === '').length;
+  const inProdCount = questions.filter(q => q.in_production).length;
+  const inLibCount = questions.filter(q => !q.in_production).length;
+  const tooLongCount = questions.filter(q => q.question_text.length > QUESTION_MAX_LENGTH).length;
+
+  const handleToggleProduction = async (question: AdminQuestion) => {
+    // Don't allow pushing to prod if question is too long
+    if (!question.in_production && question.question_text.length > QUESTION_MAX_LENGTH) {
+      return;
+    }
+    await updateQuestion(question.id, { in_production: !question.in_production });
+  };
 
   const getCategoryName = (categoryId: string) => {
     const cat = categories.find(c => c.id === categoryId);
@@ -212,6 +231,32 @@ export default function AdminQuestions() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={filterProductionStatus} onValueChange={setFilterProductionStatus}>
+            <SelectTrigger className="w-40 h-9">
+              <SelectValue placeholder="სტატუსი" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ყველა</SelectItem>
+              <SelectItem value="prod">
+                <span className="flex items-center gap-1.5">
+                  <Rocket className="h-3.5 w-3.5 text-emerald-500" />
+                  In Prod ({inProdCount})
+                </span>
+              </SelectItem>
+              <SelectItem value="lib">
+                <span className="flex items-center gap-1.5">
+                  <Archive className="h-3.5 w-3.5 text-amber-500" />
+                  In Lib ({inLibCount})
+                </span>
+              </SelectItem>
+              <SelectItem value="toolong">
+                <span className="flex items-center gap-1.5">
+                  <span className="text-rose-500">⚠️</span>
+                  Too Long ({tooLongCount})
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant={filterMissingIcons ? "default" : "outline"}
             size="sm"
@@ -219,7 +264,6 @@ export default function AdminQuestions() {
             onClick={() => setFilterMissingIcons(!filterMissingIcons)}
           >
             <ImageOff className="h-3.5 w-3.5" />
-            აიკონის გარეშე
             <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
               {missingIconsCount}
             </Badge>
@@ -259,6 +303,24 @@ export default function AdminQuestions() {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1.5">
+                      {/* Production Status Badge */}
+                      <Badge 
+                        className={cn(
+                          "text-[10px] px-1.5 py-0 cursor-pointer transition-colors",
+                          question.in_production 
+                            ? "bg-emerald-500 hover:bg-emerald-600 text-white" 
+                            : "bg-amber-500 hover:bg-amber-600 text-white",
+                          question.question_text.length > QUESTION_MAX_LENGTH && !question.in_production && "opacity-50 cursor-not-allowed"
+                        )}
+                        onClick={() => handleToggleProduction(question)}
+                        title={question.question_text.length > QUESTION_MAX_LENGTH ? `კითხვა ზედმეტად გრძელია (${question.question_text.length}/${QUESTION_MAX_LENGTH})` : undefined}
+                      >
+                        {question.in_production ? (
+                          <><Rocket className="h-2.5 w-2.5 mr-0.5" /> In Prod</>
+                        ) : (
+                          <><Archive className="h-2.5 w-2.5 mr-0.5" /> In Lib</>
+                        )}
+                      </Badge>
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                         {getCategoryName(question.category_id)}
                       </Badge>
@@ -272,6 +334,13 @@ export default function AdminQuestions() {
                       </Badge>
                       <span className="text-[10px] text-muted-foreground">
                         L{question.level_number}
+                      </span>
+                      {/* Character count warning */}
+                      <span className={cn(
+                        "text-[10px]",
+                        question.question_text.length > QUESTION_MAX_LENGTH ? "text-rose-500 font-medium" : "text-muted-foreground"
+                      )}>
+                        {question.question_text.length}/{QUESTION_MAX_LENGTH}
                       </span>
                     </div>
                     <p className="text-sm font-medium leading-snug line-clamp-2">
