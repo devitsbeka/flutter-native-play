@@ -211,7 +211,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           } else if (updated.status === "completed") {
             setState(prev => ({ ...prev, phase: "results" }));
           } else if (updated.status === "cancelled") {
-            toast.info("Room was closed");
+            toast.info("ოთახი დაიხურა");
             setState(initialState);
             cleanupChannels();
           }
@@ -283,7 +283,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // Create room
   const createRoom = useCallback(async (categoryId?: string, categoryName?: string): Promise<GameRoom | null> => {
     if (!user || !profile) {
-      toast.error("Please login first");
+      toast.error("ჯერ გაიარე ავტორიზაცია");
       return null;
     }
     
@@ -318,12 +318,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       setShowCreateModal(false);
-      toast.success("Room created!");
+      toast.success("ოთახი შეიქმნა!");
       
       return room as GameRoom;
     } catch (error) {
       console.error("Error creating room:", error);
-      toast.error("Failed to create room");
+      toast.error("ოთახის შექმნა ვერ მოხერხდა");
       return null;
     } finally {
       setLoading(false);
@@ -333,7 +333,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   // Enter room (join or re-enter)
   const enterRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     if (!user || !profile) {
-      toast.error("Please login first");
+      toast.error("ჯერ გაიარე ავტორიზაცია");
       return false;
     }
     
@@ -347,12 +347,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .single();
       
       if (roomError || !room) {
-        toast.error("Room not found");
+        toast.error("ოთახი ვერ მოიძებნა");
         return false;
       }
       
       if (room.status === "cancelled") {
-        toast.error("This room was closed");
+        toast.error("ეს ოთახი დაიხურა");
         return false;
       }
       
@@ -429,7 +429,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("room_id", room.id);
         
         if ((participantCount?.length || 0) >= room.max_players) {
-          toast.error("Room is full");
+          toast.error("ოთახი სავსეა");
           return false;
         }
         
@@ -449,7 +449,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       return true;
     } catch (error) {
       console.error("Error entering room:", error);
-      toast.error("Failed to join room");
+      toast.error("ოთახში შესვლა ვერ მოხერხდა");
       return false;
     } finally {
       setLoading(false);
@@ -524,7 +524,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
     } catch (error) {
       console.error("Error starting game:", error);
-      toast.error("Failed to start game");
+      toast.error("თამაშის დაწყება ვერ მოხერხდა");
     }
   }, [state.currentRoom, isHost]);
 
@@ -691,10 +691,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       cleanupChannels();
       setState(initialState);
-      toast.success("Left room");
+      toast.success("ოთახი დატოვე");
     } catch (error) {
       console.error("Error leaving room:", error);
-      toast.error("Failed to leave room");
+      toast.error("ოთახის დატოვება ვერ მოხერხდა");
     }
   }, [state.currentRoom, user, isHost, participants, cleanupChannels]);
 
@@ -710,10 +710,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       cleanupChannels();
       setState(initialState);
-      toast.success("Room deleted");
+      toast.success("ოთახი წაიშალა");
     } catch (error) {
       console.error("Error deleting room:", error);
-      toast.error("Failed to delete room");
+      toast.error("ოთახის წაშლა ვერ მოხერხდა");
     }
   }, [state.currentRoom, isHost, cleanupChannels]);
 

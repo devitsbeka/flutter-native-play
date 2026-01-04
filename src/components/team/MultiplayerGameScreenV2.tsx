@@ -152,7 +152,7 @@ export function MultiplayerGameScreenV2() {
     return (
       <div className="w-full h-[100dvh] flex flex-col items-center justify-center bg-[#7E7BDC]">
         <div className="animate-spin w-10 h-10 border-4 border-white border-t-transparent rounded-full mb-4" />
-        <p className="text-white/80 text-lg">Loading game...</p>
+        <p className="text-white/80 text-lg">თამაში იტვირთება...</p>
       </div>
     );
   }
@@ -240,7 +240,7 @@ export function MultiplayerGameScreenV2() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="flex-1 text-white text-sm truncate">
-                    {p.user_id === user?.id ? "You" : p.nickname}
+                    {p.user_id === user?.id ? "შენ" : p.nickname}
                   </span>
                   <span className="text-white font-bold text-sm">{p.score || 0}</span>
                 </div>
@@ -259,7 +259,7 @@ export function MultiplayerGameScreenV2() {
         >
           <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-full bg-white/10 mx-auto w-fit">
             <span className="text-white/80 text-xs">
-              {answeredCount}/{opponents.length} answered
+              {answeredCount}/{opponents.length} უპასუხა
             </span>
           </div>
         </motion.div>
@@ -386,7 +386,7 @@ export function MultiplayerGameScreenV2() {
                   onClick={handleNext}
                   className="w-full"
                 >
-                  {isLastQuestion ? "View Results" : "Next Question"}
+                  {isLastQuestion ? "შედეგების ნახვა" : "შემდეგი კითხვა"}
                 </ChunkyButton>
               </motion.div>
             )}

@@ -98,10 +98,10 @@ function TeamContentV2() {
           >
             <Users className="w-12 h-12 text-slate-700" />
           </motion.div>
-          <h1 className="font-display text-2xl text-slate-800 mb-3">Multiplayer</h1>
-          <p className="text-slate-600 text-center mb-6">Sign in to play with friends</p>
+          <h1 className="font-display text-2xl text-slate-800 mb-3">მულტიპლეიერი</h1>
+          <p className="text-slate-600 text-center mb-6">მეგობრებთან სათამაშოდ გაიარე ავტორიზაცია</p>
           <ChunkyButton variant="secondary" onClick={() => navigate("/auth")}>
-            Sign In
+            შესვლა
           </ChunkyButton>
         </div>
       </div>

@@ -53,7 +53,7 @@ export function RoomLobbyV2() {
       const newParticipants = currentIds.filter(id => !prevIds.includes(id));
       if (newParticipants.length > 0 && newParticipants[0] !== user?.id) {
         playSound("room-join");
-        toast.success("New player joined!");
+        toast.success("ახალი მოთამაშე შემოუერთდა!");
       }
     }
     
@@ -90,10 +90,10 @@ export function RoomLobbyV2() {
       const link = getShareLink(currentRoom.room_code);
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast.success("Link copied!");
+      toast.success("ლინკი დაკოპირდა!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy");
+      toast.error("კოპირება ვერ მოხერხდა");
     }
   };
 
@@ -112,11 +112,11 @@ export function RoomLobbyV2() {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(link);
-        toast.success("Link copied!");
+        toast.success("ლინკი დაკოპირდა!");
       }
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
-        toast.error("Failed to share");
+        toast.error("გაზიარება ვერ მოხერხდა");
       }
     }
   };
@@ -136,7 +136,7 @@ export function RoomLobbyV2() {
   };
 
   const handleDeleteRoom = async () => {
-    const confirmed = window.confirm("Are you sure you want to delete this room?");
+    const confirmed = window.confirm("დარწმუნებული ხარ, რომ გინდა ამ ოთახის წაშლა?");
     if (confirmed) {
       await deleteRoom();
       navigate("/team");
@@ -167,11 +167,11 @@ export function RoomLobbyV2() {
         .update({ room_name: editedName.trim() })
         .eq("id", currentRoom.id);
       
-      toast.success("Name updated!");
+      toast.success("სახელი განახლდა!");
       setIsEditingName(false);
     } catch (error) {
       console.error("Error updating room name:", error);
-      toast.error("Failed to update name");
+      toast.error("სახელის განახლება ვერ მოხერხდა");
     }
   };
 
