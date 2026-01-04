@@ -6,7 +6,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
-import { toast } from "sonner";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 import confetti from "canvas-confetti";
 import gemIcon from "@/assets/icons/icon-gem.png";
 
@@ -40,6 +40,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
   const { unlockFrame, equipFrame, isFrameUnlocked, equippedFrame } = useAvatarFrames();
   const { gems, spendGems, canAffordGems } = useCurrency();
   const { playSound } = useSound();
+  const { notify } = useNotificationModal();
   const [selectedFrame, setSelectedFrame] = useState<AvatarFrame | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -53,7 +54,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     }
 
     if (!canAffordGems(frame.price)) {
-      toast.error("არ გაქვს საკმარისი ალმასი!");
+      notify.error("არ გაქვს საკმარისი ალმასი!", { icon: "💎" });
       playSound("wrong-answer");
       return;
     }
@@ -85,10 +86,10 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
         zIndex: 9999,
       });
 
-      toast.success(`${frame.name} ჩარჩო გახსნილია! 🎉`);
+      notify.success(`${frame.name} ჩარჩო გახსნილია!`, { icon: "🎉" });
     } catch (error) {
       console.error("Purchase failed:", error);
-      toast.error("შეძენა ვერ მოხერხდა");
+      notify.error("შეძენა ვერ მოხერხდა");
     } finally {
       setIsPurchasing(false);
     }

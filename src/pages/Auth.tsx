@@ -5,7 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { z } from "zod";
 
@@ -29,7 +29,7 @@ export default function Auth() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { signIn, signUp, user } = useAuth();
-  const { toast } = useToast();
+  const { notify } = useNotificationModal();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,23 +61,12 @@ export default function Auth() {
         const { error } = await signUp(email, password, nickname);
         if (error) {
           if (error.message.includes("already registered")) {
-            toast({
-              title: "Account exists",
-              description: "This email is already registered. Please sign in instead.",
-              variant: "destructive",
-            });
+            notify.error("Account exists", { description: "This email is already registered. Please sign in instead." });
           } else {
-            toast({
-              title: "Sign up failed",
-              description: error.message,
-              variant: "destructive",
-            });
+            notify.error("Sign up failed", { description: error.message });
           }
         } else {
-          toast({
-            title: "Welcome to Quiz Battle!",
-            description: "Your account has been created.",
-          });
+          notify.success("Welcome to Quiz Battle!", { description: "Your account has been created.", icon: "🎉" });
           navigate("/");
         }
       } else {
@@ -96,25 +85,14 @@ export default function Auth() {
 
         const { error } = await signIn(email, password);
         if (error) {
-          toast({
-            title: "Sign in failed",
-            description: "Invalid email or password. Please try again.",
-            variant: "destructive",
-          });
+          notify.error("Sign in failed", { description: "Invalid email or password. Please try again." });
         } else {
-          toast({
-            title: "Welcome back!",
-            description: "You've successfully signed in.",
-          });
+          notify.success("Welcome back!", { description: "You've successfully signed in.", icon: "👋" });
           navigate("/");
         }
       }
     } catch (err) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      notify.error("Error", { description: "Something went wrong. Please try again." });
     } finally {
       setLoading(false);
     }

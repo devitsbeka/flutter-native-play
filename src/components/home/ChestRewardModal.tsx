@@ -7,7 +7,7 @@ import confetti from "canvas-confetti";
 import { useRewards } from "@/hooks/useRewards";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import { useSound } from "@/contexts/SoundContext";
-import { toast } from "sonner";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -57,6 +57,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
   const { canClaimChest, chestTimeLeft, refreshTimers } = useRewardTimers();
   const { claimChestReward } = useDailyRewardsClaim();
   const { playSound, vibrate } = useSound();
+  const { notify } = useNotificationModal();
   const [isClaiming, setIsClaiming] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
@@ -102,7 +103,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     );
 
     if (result.success) {
-      toast.success("ჯილდოები მიღებულია! 🎉");
+      notify.success("ჯილდოები მიღებულია!", { icon: "🎉" });
     }
 
     // Refresh timers

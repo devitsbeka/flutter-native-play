@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Lock, Globe, ChevronRight, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
@@ -21,6 +21,7 @@ const languages = [
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { user, profile, fetchProfile } = useAuth();
+  const { notify } = useNotificationModal();
   const [view, setView] = useState<SettingsView>("main");
   const [nickname, setNickname] = useState(profile?.nickname || "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -56,10 +57,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (error) throw error;
       
       if (user) await fetchProfile(user.id);
-      toast.success("სახელი წარმატებით შეიცვალა!");
+      notify.success("სახელი წარმატებით შეიცვალა!", { icon: "✅" });
       handleBack();
     } catch (error: any) {
-      toast.error("შეცდომა: " + error.message);
+      notify.error("შეცდომა", { description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -67,17 +68,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
-      toast.error("გთხოვთ შეავსოთ ყველა ველი");
+      notify.error("გთხოვთ შეავსოთ ყველა ველი");
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      toast.error("პაროლები არ ემთხვევა");
+      notify.error("პაროლები არ ემთხვევა");
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error("პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო");
+      notify.error("პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო");
       return;
     }
     
@@ -89,22 +90,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
       if (error) throw error;
       
-      toast.success("პაროლი წარმატებით შეიცვალა!");
+      notify.success("პაროლი წარმატებით შეიცვალა!", { icon: "🔐" });
       handleBack();
     } catch (error: any) {
-      toast.error("შეცდომა: " + error.message);
+      notify.error("შეცდომა", { description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLanguageChange = (code: string) => {
-    console.log("Language change clicked:", code);
-    console.log("Current selectedLanguage:", selectedLanguage);
     setSelectedLanguage(code);
     localStorage.setItem("app_language", code);
-    console.log("Saved to localStorage:", localStorage.getItem("app_language"));
-    toast.success("ენა წარმატებით შეიცვალა!");
+    notify.success("ენა წარმატებით შეიცვალა!", { icon: "🌍" });
   };
 
   const settingsItems = [

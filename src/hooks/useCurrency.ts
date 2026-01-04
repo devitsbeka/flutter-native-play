@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export function useCurrency() {
   const { user, profile, updateProfile } = useAuth();
@@ -28,7 +27,7 @@ export function useCurrency() {
     if (!user || amount <= 0) return false;
 
     if (coins < amount) {
-      toast.error("არ გაქვს საკმარისი მონეტა!");
+      // Return false - let the calling component handle the notification
       return false;
     }
 
@@ -61,7 +60,7 @@ export function useCurrency() {
     if (!user || amount <= 0) return false;
 
     if (gems < amount) {
-      toast.error("არ გაქვს საკმარისი ალმასი!");
+      // Return false - let the calling component handle the notification
       return false;
     }
 

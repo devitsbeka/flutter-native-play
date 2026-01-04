@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
 import { createNotification } from "@/hooks/useNotifications";
 import { useSound } from "@/contexts/SoundContext";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 
 export interface GameInvitation {
   id: string;
@@ -27,6 +27,7 @@ export interface GameInvitation {
 export function useGameInvitations() {
   const { user } = useAuth();
   const { playSound } = useSound();
+  const { notify } = useNotificationModal();
   const [pendingInvitations, setPendingInvitations] = useState<GameInvitation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,7 +94,7 @@ export function useGameInvitations() {
           .single();
 
         if (existing) {
-          toast.info("მოწვევა უკვე გაგზავნილია");
+          notify.info("მოწვევა უკვე გაგზავნილია", { icon: "📧" });
           return false;
         }
 
@@ -133,15 +134,15 @@ export function useGameInvitations() {
           }
         );
         
-        toast.success("მოწვევა გაიგზავნა!");
+        notify.success("მოწვევა გაიგზავნა!", { icon: "✉️" });
         return true;
       } catch (error) {
         console.error("Error sending invitation:", error);
-        toast.error("მოწვევა ვერ გაიგზავნა");
+        notify.error("მოწვევა ვერ გაიგზავნა");
         return false;
       }
     },
-    [user]
+    [user, notify]
   );
 
   // Accept an invitation
@@ -174,11 +175,11 @@ export function useGameInvitations() {
         return (invitation.room as any)?.room_code || null;
       } catch (error) {
         console.error("Error accepting invitation:", error);
-        toast.error("მოწვევის მიღება ვერ მოხერხდა");
+        notify.error("მოწვევის მიღება ვერ მოხერხდა");
         return null;
       }
     },
-    [user]
+    [user, notify]
   );
 
   // Decline an invitation
@@ -249,10 +250,8 @@ export function useGameInvitations() {
           // Play invitation sound
           playSound("game-invitation");
           
-          // Show toast notification
-          toast.info(`${profile?.nickname || "მეგობარი"} გიწვევს თამაშში!`, {
-            duration: 10000,
-          });
+          // Show notification modal
+          notify.info(`${profile?.nickname || "მეგობარი"} გიწვევს თამაშში!`, { icon: "🎮" });
         }
       )
       .on(
@@ -277,7 +276,7 @@ export function useGameInvitations() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchInvitations]);
+  }, [user, fetchInvitations, notify, playSound]);
 
   return {
     pendingInvitations,

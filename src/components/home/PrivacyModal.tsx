@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Shield, FileText, Trash2, Download, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ interface PrivacyModalProps {
 
 export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
   const { user, signOut } = useAuth();
+  const { notify } = useNotificationModal();
   const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -25,11 +26,11 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       // Note: Full account deletion requires admin privileges
       // This just signs out and shows a message
       await signOut();
-      toast.success("თქვენი მოთხოვნა მიღებულია. ანგარიში წაიშლება 30 დღეში.");
+      notify.success("თქვენი მოთხოვნა მიღებულია", { description: "ანგარიში წაიშლება 30 დღეში." });
       onClose();
       navigate("/");
     } catch (error: any) {
-      toast.error("შეცდომა: " + error.message);
+      notify.error("შეცდომა", { description: error.message });
     } finally {
       setIsDeleting(false);
     }
@@ -52,7 +53,7 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       icon: Download,
       label: "მონაცემების ჩამოტვირთვა",
       sublabel: "გადმოწერეთ თქვენი ინფორმაცია",
-      action: () => toast.info("მონაცემები მალე გამოიგზავნება თქვენს ელფოსტაზე"),
+      action: () => notify.info("მონაცემები მალე გამოიგზავნება", { description: "თქვენს ელფოსტაზე", icon: "📧" }),
     },
   ];
 
