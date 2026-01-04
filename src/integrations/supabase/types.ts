@@ -318,6 +318,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["room_status"] | null
           total_questions: number | null
+          used_question_ids: string[] | null
         }
         Insert: {
           category_id?: string | null
@@ -341,6 +342,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
+          used_question_ids?: string[] | null
         }
         Update: {
           category_id?: string | null
@@ -364,6 +366,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
+          used_question_ids?: string[] | null
         }
         Relationships: [
           {
@@ -919,6 +922,7 @@ export type Database = {
           question_index: number
           question_text: string
           room_id: string
+          shuffled_answers: string[] | null
         }
         Insert: {
           correct_answer: string
@@ -929,6 +933,7 @@ export type Database = {
           question_index: number
           question_text: string
           room_id: string
+          shuffled_answers?: string[] | null
         }
         Update: {
           correct_answer?: string
@@ -939,6 +944,7 @@ export type Database = {
           question_index?: number
           question_text?: string
           room_id?: string
+          shuffled_answers?: string[] | null
         }
         Relationships: [
           {
