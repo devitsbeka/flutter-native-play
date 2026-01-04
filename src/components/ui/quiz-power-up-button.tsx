@@ -2,11 +2,11 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Power-up badge images (new hexagonal style)
-import power5050Badge from "@/assets/powers/5050-badge.png";
-import powerFreezeBadge from "@/assets/powers/freeze-badge.png";
-import powerReplaceBadge from "@/assets/powers/replace-badge.png";
-import powerTimeDrainBadge from "@/assets/powers/time-drain-badge.png";
+// 3D cube-style power-up icons
+import power5050 from "@/assets/powers/5050.png";
+import powerFreeze from "@/assets/powers/freeze.png";
+import powerReplace from "@/assets/powers/replace.png";
+import powerTimeDrain from "@/assets/powers/time-drain.png";
 
 export type PowerUpType = "5050" | "freeze" | "replace" | "hint";
 export type QuizPowerUpButtonState = "default" | "active" | "disabled" | "loading";
@@ -23,10 +23,10 @@ const powerUpConfig: Record<PowerUpType, {
   image: string; 
   label: string;
 }> = {
-  "5050": { image: power5050Badge, label: "50/50" },
-  freeze: { image: powerFreezeBadge, label: "Freeze" },
-  replace: { image: powerReplaceBadge, label: "Replace" },
-  hint: { image: powerTimeDrainBadge, label: "Time+" },
+  "5050": { image: power5050, label: "50/50" },
+  freeze: { image: powerFreeze, label: "Freeze" },
+  replace: { image: powerReplace, label: "Replace" },
+  hint: { image: powerTimeDrain, label: "Time+" },
 };
 
 const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonProps>(

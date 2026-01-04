@@ -2,17 +2,17 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 
-// New hexagonal badge icons
-import fiftyFiftyBadge from "@/assets/powers/5050-badge.png";
-import freezeBadge from "@/assets/powers/freeze-badge.png";
-import replaceBadge from "@/assets/powers/replace-badge.png";
-import timeDrainBadge from "@/assets/powers/time-drain-badge.png";
+// 3D cube-style power-up icons
+import fiftyFiftyIcon from "@/assets/powers/5050.png";
+import freezeIcon from "@/assets/powers/freeze.png";
+import replaceIcon from "@/assets/powers/replace.png";
+import timeDrainIcon from "@/assets/powers/time-drain.png";
 
 const POWER_UP_ICONS: Record<PowerUpType, string> = {
-  "5050": fiftyFiftyBadge,
-  freeze: freezeBadge,
-  replace: replaceBadge,
-  "time-drain": timeDrainBadge,
+  "5050": fiftyFiftyIcon,
+  freeze: freezeIcon,
+  replace: replaceIcon,
+  "time-drain": timeDrainIcon,
 };
 
 const POWER_UP_NAMES: Record<PowerUpType, string> = {
