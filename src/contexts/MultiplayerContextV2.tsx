@@ -40,6 +40,7 @@ export interface GameRoom {
   is_permanent: boolean;
   current_game_id: string | null;
   created_at: string;
+  used_question_ids?: string[];
 }
 
 export interface RoomGame {
@@ -184,7 +185,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           
           // Handle status changes
           if (updated.status === "playing" && state.phase === "lobby") {
-            // Non-host: fetch questions when game starts
+            // Non-host: fetch questions when game starts - USE shuffled_answers from DB
             if (!isHost) {
               const { data: roomQuestions } = await supabase
                 .from("room_questions")
@@ -198,7 +199,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   question: q.question_text,
                   correctAnswer: q.correct_answer,
                   incorrectAnswers: q.incorrect_answers,
-                  allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
+                  // Use stored shuffled_answers so all players see same order
+                  allAnswers: q.shuffled_answers && q.shuffled_answers.length > 0 
+                    ? q.shuffled_answers 
+                    : [...q.incorrect_answers, q.correct_answer],
                   difficulty: q.difficulty || "medium",
                   category: updated.category_name || "General",
                 }));
@@ -394,7 +398,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               question: q.question_text,
               correctAnswer: q.correct_answer,
               incorrectAnswers: q.incorrect_answers,
-              allAnswers: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
+              // Use stored shuffled_answers so all players see same order
+              allAnswers: q.shuffled_answers && q.shuffled_answers.length > 0 
+                ? q.shuffled_answers 
+                : [...q.incorrect_answers, q.correct_answer],
               difficulty: q.difficulty || "medium",
               category: room.category_name || "General",
             }));
@@ -466,63 +473,87 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
+    const usedIds = state.currentRoom.used_question_ids || [];
     
     try {
-      // Fetch random questions from database based on category
-      let questionsQuery = supabase
-        .from("questions")
-        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-        .eq("is_active", true);
+      let selectedQuestions: any[] = [];
+      let categoryUUID: string | null = null;
       
-      // If category is specified, try to match by category_id or get mixed
+      // Phase 1: Fix category lookup - convert slug to UUID
       if (state.currentRoom.category_id) {
-        // First try to get questions from the specific category
-        const { data: categoryQuestions, error: catError } = await supabase
+        const { data: category } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("category_id", state.currentRoom.category_id)
+          .single();
+        
+        if (category) {
+          categoryUUID = category.id;
+        }
+      }
+      
+      // Fetch questions with proper category UUID and exclude used questions
+      if (categoryUUID) {
+        let query = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("is_active", true)
-          .eq("category_id", state.currentRoom.category_id);
+          .eq("in_production", true)
+          .eq("category_id", categoryUUID);
         
-        if (!catError && categoryQuestions && categoryQuestions.length >= questionCount) {
-          // Shuffle and pick random questions from this category
+        // Exclude already used questions
+        if (usedIds.length > 0) {
+          query = query.not("id", "in", `(${usedIds.join(",")})`);
+        }
+        
+        const { data: categoryQuestions } = await query;
+        
+        if (categoryQuestions && categoryQuestions.length >= questionCount) {
           const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
-          const selectedQuestions = shuffled.slice(0, questionCount);
-          
-          const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => ({
-            id: `${roomId}-${index}`,
-            question: q.question_text,
-            correctAnswer: q.correct_answer,
-            incorrectAnswers: q.incorrect_answers as string[],
-            allAnswers: [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5),
-            difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
-            category: state.currentRoom!.category_name || "General",
-          }));
+          selectedQuestions = shuffled.slice(0, questionCount);
         }
       }
       
       // Fallback: get random questions from entire library
-      const { data: allQuestions, error: allError } = await supabase
-        .from("questions")
-        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-        .eq("is_active", true);
-      
-      if (allError || !allQuestions || allQuestions.length === 0) {
-        throw new Error("No questions available in database");
+      if (selectedQuestions.length < questionCount) {
+        let fallbackQuery = supabase
+          .from("questions")
+          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("in_production", true);
+        
+        if (usedIds.length > 0) {
+          fallbackQuery = fallbackQuery.not("id", "in", `(${usedIds.join(",")})`);
+        }
+        
+        const { data: allQuestions, error: allError } = await fallbackQuery;
+        
+        if (allError || !allQuestions || allQuestions.length === 0) {
+          throw new Error("No questions available in database");
+        }
+        
+        const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+        selectedQuestions = shuffled.slice(0, questionCount);
       }
       
-      // Shuffle and pick random questions
-      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-      const selectedQuestions = shuffled.slice(0, questionCount);
+      // Create TriviaQuestion objects with pre-shuffled answers
+      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => {
+        const shuffledAnswers = [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5);
+        return {
+          id: q.id, // Use actual question UUID for tracking
+          question: q.question_text,
+          correctAnswer: q.correct_answer,
+          incorrectAnswers: q.incorrect_answers as string[],
+          allAnswers: shuffledAnswers,
+          difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
+          category: state.currentRoom!.category_name || "General",
+        };
+      });
       
-      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => ({
-        id: `${roomId}-${index}`,
-        question: q.question_text,
-        correctAnswer: q.correct_answer,
-        incorrectAnswers: q.incorrect_answers as string[],
-        allAnswers: [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5),
-        difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
-        category: state.currentRoom!.category_name || "General",
-      }));
+      // Update used_question_ids on game_rooms
+      const newUsedIds = [...usedIds, ...selectedQuestions.map(q => q.id)];
+      await supabase
+        .from("game_rooms")
+        .update({ used_question_ids: newUsedIds })
+        .eq("id", roomId);
       
       await saveQuestionsAndStartGame(roomId, questions);
       
@@ -538,7 +569,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     await supabase.from("room_questions").delete().eq("room_id", roomId);
     await supabase.from("player_answers").delete().eq("room_id", roomId);
     
-    // Store questions in parallel
+    // Store questions in parallel WITH shuffled_answers for sync
     await Promise.all(questions.map((q, index) => 
       supabase.from("room_questions").insert({
         room_id: roomId,
@@ -546,6 +577,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         question_text: q.question,
         correct_answer: q.correctAnswer,
         incorrect_answers: q.incorrectAnswers,
+        shuffled_answers: q.allAnswers, // Store pre-shuffled order for all players
         difficulty: q.difficulty,
       })
     ));
@@ -689,16 +721,45 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     
+    // Get fresh room data to have latest used_question_ids
+    const { data: freshRoom } = await supabase
+      .from("game_rooms")
+      .select("used_question_ids")
+      .eq("id", roomId)
+      .single();
+    
+    const usedIds = (freshRoom?.used_question_ids as string[]) || [];
+    
     try {
-      // Fetch random questions from database
       let selectedQuestions: any[] = [];
+      let categoryUUID: string | null = null;
       
+      // Phase 1: Fix category lookup - convert slug to UUID
       if (state.currentRoom.category_id) {
-        const { data: categoryQuestions } = await supabase
+        const { data: category } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("category_id", state.currentRoom.category_id)
+          .single();
+        
+        if (category) {
+          categoryUUID = category.id;
+        }
+      }
+      
+      // Fetch questions with proper category UUID and exclude used questions
+      if (categoryUUID) {
+        let query = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("is_active", true)
-          .eq("category_id", state.currentRoom.category_id);
+          .eq("in_production", true)
+          .eq("category_id", categoryUUID);
+        
+        if (usedIds.length > 0) {
+          query = query.not("id", "in", `(${usedIds.join(",")})`);
+        }
+        
+        const { data: categoryQuestions } = await query;
         
         if (categoryQuestions && categoryQuestions.length >= questionCount) {
           const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
@@ -708,10 +769,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       // Fallback to all questions if not enough category-specific ones
       if (selectedQuestions.length < questionCount) {
-        const { data: allQuestions } = await supabase
+        let fallbackQuery = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("is_active", true);
+          .eq("in_production", true);
+        
+        if (usedIds.length > 0) {
+          fallbackQuery = fallbackQuery.not("id", "in", `(${usedIds.join(",")})`);
+        }
+        
+        const { data: allQuestions } = await fallbackQuery;
         
         if (allQuestions && allQuestions.length > 0) {
           const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
@@ -723,21 +790,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         throw new Error("No questions available");
       }
       
-      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => ({
-        id: `${roomId}-${Date.now()}-${index}`,
-        question: q.question_text,
-        correctAnswer: q.correct_answer,
-        incorrectAnswers: q.incorrect_answers as string[],
-        allAnswers: [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5),
-        difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
-        category: state.currentRoom!.category_name || "General",
-      }));
+      // Create TriviaQuestion objects with pre-shuffled answers
+      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => {
+        const shuffledAnswers = [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5);
+        return {
+          id: q.id, // Use actual question UUID for tracking
+          question: q.question_text,
+          correctAnswer: q.correct_answer,
+          incorrectAnswers: q.incorrect_answers as string[],
+          allAnswers: shuffledAnswers,
+          difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
+          category: state.currentRoom!.category_name || "General",
+        };
+      });
       
       // Clear old questions/answers for this room
       await supabase.from("room_questions").delete().eq("room_id", roomId);
       await supabase.from("player_answers").delete().eq("room_id", roomId);
       
-      // Store questions
+      // Store questions WITH shuffled_answers
       await Promise.all(questions.map((q, index) => 
         supabase.from("room_questions").insert({
           room_id: roomId,
@@ -745,9 +816,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           question_text: q.question,
           correct_answer: q.correctAnswer,
           incorrect_answers: q.incorrectAnswers,
+          shuffled_answers: q.allAnswers, // Store pre-shuffled order
           difficulty: q.difficulty,
         })
       ));
+      
+      // Update used_question_ids on game_rooms
+      const newUsedIds = [...usedIds, ...selectedQuestions.map(q => q.id)];
+      await supabase
+        .from("game_rooms")
+        .update({ used_question_ids: newUsedIds })
+        .eq("id", roomId);
       
       // Reset only my score and current_question
       await supabase
