@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Tv } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -17,6 +17,7 @@ import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
 import { GameInvitationsSection } from "@/components/team/GameInvitationsSection";
+import { TVJoinModal } from "@/components/team/TVJoinModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
@@ -43,6 +44,7 @@ function TeamContentV2() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
+  const [showTVJoinModal, setShowTVJoinModal] = useState(false);
 
   // Handle join code from URL
   useEffect(() => {
@@ -157,19 +159,35 @@ function TeamContentV2() {
           transition={{ delay: 0.12 }}
           className="mb-6"
         >
-          <ChunkyButton
-            onClick={() => {
-              playSound("button-click");
-              setShowCreateModal(true);
-            }}
-            className="w-full flex items-center justify-center"
-            variant="primary"
-          >
-            <span className="flex items-center gap-2">
-              <Plus className="w-5 h-5" />
-              ახალი ოთახის შექმნა
-            </span>
-          </ChunkyButton>
+          <div className="flex gap-2">
+            <ChunkyButton
+              onClick={() => {
+                playSound("button-click");
+                setShowCreateModal(true);
+              }}
+              className="flex-1 flex items-center justify-center"
+              variant="primary"
+            >
+              <span className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                ახალი ოთახი
+              </span>
+            </ChunkyButton>
+            
+            <ChunkyButton
+              onClick={() => {
+                playSound("button-click");
+                setShowTVJoinModal(true);
+              }}
+              className="flex items-center justify-center"
+              variant="secondary"
+            >
+              <span className="flex items-center gap-2">
+                <Tv className="w-5 h-5" />
+                TV
+              </span>
+            </ChunkyButton>
+          </div>
         </motion.div>
 
         {/* Game Invitations Section */}
@@ -218,6 +236,10 @@ function TeamContentV2() {
       <AllRecentRoomsModal
         isOpen={showAllGamesModal}
         onClose={() => setShowAllGamesModal(false)}
+      />
+      <TVJoinModal
+        open={showTVJoinModal}
+        onOpenChange={setShowTVJoinModal}
       />
 
       {/* Bottom Navigation - hide when CreateRoomPage is open */}
