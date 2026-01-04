@@ -476,11 +476,11 @@ export default function Index() {
                       iconSrc={chestBoxIcon}
                       alt="Chest"
                       onClick={() => setIsChestModalOpen(true)}
-                      background="linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
-                      shadowColor="#FCD34D"
+                      background="linear-gradient(180deg, #E8FFE6 0%, #D9FFD7 100%)"
+                      shadowColor="#A7D9A5"
                       delay={0.56}
-                      particleColor="rgba(252, 211, 77, 0.9)"
-                      glowColor="rgba(252, 211, 77, 0.5)"
+                      particleColor="rgba(169, 217, 167, 0.9)"
+                      glowColor="rgba(169, 217, 167, 0.5)"
                       idleOffset={1.4}
                       size={62}
                       badge={<ChestButtonBadge canClaimChest={canClaimChest} />}
