@@ -5,11 +5,7 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
 
-interface MyRoomsSectionProps {
-  onCreateRoom?: () => void;
-}
-
-export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
+export function MyRoomsSection() {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
 
@@ -90,51 +86,11 @@ export function MyRoomsSection({ onCreateRoom }: MyRoomsSectionProps) {
           className="flex flex-col items-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
         >
           <Gamepad2 className="w-12 h-12 text-slate-400 mb-3" />
-          <p className="text-slate-500 text-sm mb-4">აქტიური ოთახი არ გაქვს</p>
-          {onCreateRoom && (
-            <motion.button
-              onClick={onCreateRoom}
-              className="flex flex-col items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
-                style={{
-                  background: "linear-gradient(145deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
-                  boxShadow: "0 4px 15px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
-                }}
-              >
-                <Plus className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xs font-medium text-slate-600">ოთახის შექმნა</span>
-            </motion.button>
-          )}
+          <p className="text-slate-500 text-sm">აქტიური ოთახი არ გაქვს</p>
         </motion.div>
       ) : (
         <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
           <div className="flex gap-3 pr-4">
-            {/* Create New Room Button - First Item */}
-            {onCreateRoom && (
-              <motion.button
-                onClick={onCreateRoom}
-                className="flex flex-col items-center gap-2 flex-shrink-0 pt-2"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
-                  style={{
-                    background: "linear-gradient(145deg, #C084FC 0%, #A855F7 50%, #9333EA 100%)",
-                    boxShadow: "0 4px 15px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)"
-                  }}
-                >
-                  <Plus className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xs font-medium text-slate-600">შექმნა</span>
-              </motion.button>
-            )}
-            
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}

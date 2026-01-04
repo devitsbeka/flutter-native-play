@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users } from "lucide-react";
+import { Users, Plus } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -127,12 +127,13 @@ function TeamContentV2() {
       {/* Content */}
       <div className="relative z-10 flex flex-col px-4 pb-6">
 
-        {/* Friends Stories Bar */}
+        {/* Friends Section Header + Stories Bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
+          <span className="text-sm font-bold text-slate-800 tracking-wide mb-3 block">მეგობრები</span>
           <FriendsStoriesBar
             onAddFriendClick={() => setShowAddFriendModal(true)}
             onFriendClick={() => {}}
@@ -144,14 +145,29 @@ function TeamContentV2() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="mb-3"
+        >
+          <MyRoomsSection />
+        </motion.div>
+
+        {/* Create Room CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
           className="mb-6"
         >
-          <MyRoomsSection
-            onCreateRoom={() => {
+          <ChunkyButton
+            onClick={() => {
               playSound("button-click");
               setShowCreateModal(true);
             }}
-          />
+            className="w-full"
+            variant="primary"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            ახალი ოთახის შექმნა
+          </ChunkyButton>
         </motion.div>
 
         {/* Game Invitations Section */}
