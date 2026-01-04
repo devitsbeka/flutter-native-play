@@ -173,16 +173,9 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98, y: 1 }}
                 >
-                  {/* Icon centered */}
+                  {/* Dice icon centered */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div 
-                      className="w-14 h-14 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.4)",
-                      }}
-                    >
-                      <Shuffle className="w-7 h-7 text-primary" />
-                    </div>
+                    <span className="text-4xl">🎲</span>
                   </div>
                   
                   {/* Category Name - bottom left */}
