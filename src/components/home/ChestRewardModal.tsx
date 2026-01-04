@@ -25,22 +25,13 @@ const rewards = [
   { icon: "⭐", isImage: false, label: `${REWARDS.CHEST_XP} XP`, type: "xp", value: REWARDS.CHEST_XP, gradient: "from-blue-400 to-cyan-500" },
 ];
 
-// Timer display component
+// Timer display component - clean countdown only
 const ChestTimer = ({ timeLeft }: { timeLeft: string }) => (
-  <div className="flex flex-col items-center gap-3 py-6">
-    <div 
-      className="w-24 h-24 rounded-full flex items-center justify-center"
-      style={{
-        background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-        boxShadow: "0 4px 0 #FCD34D, 0 8px 24px rgba(252, 211, 77, 0.3)",
-      }}
-    >
-      <Clock className="w-12 h-12 text-amber-600" />
-    </div>
+  <div className="flex flex-col items-center gap-4 py-6">
     <div className="text-center">
-      <p className="text-sm text-muted-foreground mb-2">მომდევნო განძი</p>
+      <p className="text-sm text-muted-foreground mb-3">მომდევნო განძი</p>
       <div 
-        className="px-6 py-3 rounded-2xl"
+        className="px-8 py-4 rounded-2xl inline-flex items-center gap-2"
         style={{
           background: "linear-gradient(180deg, #1F2937 0%, #111827 100%)",
           boxShadow: "0 4px 0 #000, inset 0 1px 0 rgba(255,255,255,0.1)",
