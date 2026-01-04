@@ -305,6 +305,7 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           current_game_id: string | null
+          game_mode: string | null
           game_type: Database["public"]["Enums"]["game_type"]
           has_unread_activity: boolean | null
           host_user_id: string
@@ -318,6 +319,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["room_status"] | null
           total_questions: number | null
+          tv_session_id: string | null
           used_question_ids: string[] | null
         }
         Insert: {
@@ -329,6 +331,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           current_game_id?: string | null
+          game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           has_unread_activity?: boolean | null
           host_user_id: string
@@ -342,6 +345,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
+          tv_session_id?: string | null
           used_question_ids?: string[] | null
         }
         Update: {
@@ -353,6 +357,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           current_game_id?: string | null
+          game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           has_unread_activity?: boolean | null
           host_user_id?: string
@@ -366,6 +371,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["room_status"] | null
           total_questions?: number | null
+          tv_session_id?: string | null
           used_question_ids?: string[] | null
         }
         Relationships: [
@@ -374,6 +380,13 @@ export type Database = {
             columns: ["current_game_id"]
             isOneToOne: false
             referencedRelation: "room_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_tv_session_id_fkey"
+            columns: ["tv_session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -600,6 +613,7 @@ export type Database = {
           question_index: number
           room_id: string
           time_remaining: number
+          tv_session_id: string | null
           user_id: string
         }
         Insert: {
@@ -611,6 +625,7 @@ export type Database = {
           question_index: number
           room_id: string
           time_remaining: number
+          tv_session_id?: string | null
           user_id: string
         }
         Update: {
@@ -622,6 +637,7 @@ export type Database = {
           question_index?: number
           room_id?: string
           time_remaining?: number
+          tv_session_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -630,6 +646,13 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_answers_tv_session_id_fkey"
+            columns: ["tv_session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -955,6 +978,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "room_questions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_sessions: {
+        Row: {
+          created_at: string | null
+          current_question_index: number | null
+          expires_at: string | null
+          host_user_id: string
+          id: string
+          pairing_code: string
+          question_start_time: string | null
+          questions: Json | null
+          room_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_question_index?: number | null
+          expires_at?: string | null
+          host_user_id: string
+          id?: string
+          pairing_code: string
+          question_start_time?: string | null
+          questions?: Json | null
+          room_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_question_index?: number | null
+          expires_at?: string | null
+          host_user_id?: string
+          id?: string
+          pairing_code?: string
+          question_start_time?: string | null
+          questions?: Json | null
+          room_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_sessions_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "game_rooms"

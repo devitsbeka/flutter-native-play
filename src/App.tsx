@@ -22,6 +22,8 @@ import NotFound from "./pages/NotFound";
 import Game from "./pages/Game";
 import TeamV2 from "./pages/TeamV2";
 import RoomRedirect from "./pages/RoomRedirect";
+import TVDisplay from "./pages/TVDisplay";
+import TVController from "./pages/TVController";
 
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
@@ -68,6 +70,8 @@ const App = () => (
               <Route path="/game" element={<Game />} />
               <Route path="/team" element={<TeamV2 />} />
               <Route path="/room/:code" element={<RoomRedirect />} />
+              <Route path="/tv/:code" element={<TVDisplay />} />
+              <Route path="/controller/:code" element={<TVController />} />
               <Route path="/vip" element={<VIP />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/notifications" element={<Notifications />} />

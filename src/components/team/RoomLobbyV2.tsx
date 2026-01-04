@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play } from "lucide-react";
+import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play, Tv } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -15,6 +15,7 @@ import { RoomScoreboard } from "./RoomScoreboard";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { TVSessionProvider, useTVSession } from "@/contexts/TVSessionContext";
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export function RoomLobbyV2() {
   const [chatMessage, setChatMessage] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [isStartingTV, setIsStartingTV] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
@@ -148,6 +150,86 @@ export function RoomLobbyV2() {
     playSound("button-click");
     await startGame();
     setIsStarting(false);
+  };
+
+  const handleStartTVMode = async () => {
+    if (!currentRoom) return;
+    setIsStartingTV(true);
+    playSound("button-click");
+    
+    try {
+      // Generate a random 6-digit code
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      // Fetch questions for this category
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('questions')
+        .select('id, question_text, correct_answer, incorrect_answers, difficulty')
+        .eq('category_id', currentRoom.category_id)
+        .eq('is_active', true)
+        .eq('in_production', true)
+        .limit(10);
+
+      if (questionsError) throw questionsError;
+
+      const formattedQuestions = (questionsData || []).map(q => {
+        const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+          ? q.incorrect_answers as string[] 
+          : [];
+        const allOptions = [q.correct_answer, ...incorrectAnswers].filter(Boolean);
+        const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
+        
+        return {
+          id: q.id,
+          question_text: q.question_text,
+          options: shuffledOptions,
+          correct_answer: q.correct_answer,
+          difficulty: q.difficulty || undefined,
+        };
+      });
+
+      if (formattedQuestions.length === 0) {
+        toast.error("ამ კატეგორიაში კითხვები ვერ მოიძებნა");
+        setIsStartingTV(false);
+        return;
+      }
+
+      // Create TV session
+      const { data: tvSession, error: tvError } = await supabase
+        .from('tv_sessions')
+        .insert([{
+          room_id: currentRoom.id,
+          pairing_code: code,
+          host_user_id: user!.id,
+          status: 'waiting',
+          questions: formattedQuestions as unknown as any,
+        }])
+        .select()
+        .single();
+
+      if (tvError) throw tvError;
+
+      // Update game room
+      await supabase
+        .from('game_rooms')
+        .update({ 
+          game_mode: 'tv_show',
+          tv_session_id: tvSession.id 
+        })
+        .eq('id', currentRoom.id);
+
+      // Navigate to TV display
+      navigate(`/tv/${code}`);
+    } catch (error) {
+      console.error('Error starting TV mode:', error);
+      toast.error("TV რეჟიმის გაშვება ვერ მოხერხდა");
+    } finally {
+      setIsStartingTV(false);
+    }
   };
 
   const getCategoryVideo = () => {
@@ -405,18 +487,31 @@ export function RoomLobbyV2() {
 
         {/* Bottom Action Area */}
         <div className="mt-auto pt-4 pb-6 space-y-3">
-          {/* Start Game Button (Host only) */}
+          {/* Start Game Buttons (Host only) */}
           {isHost && (
-            <ChunkyButton
-              variant="primary"
-              size="xl"
-              className="w-full"
-              onClick={handleStartGame}
-              disabled={!canStartGame || isStarting || loading}
-              icon={<Play className="w-5 h-5" />}
-            >
-              {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
-            </ChunkyButton>
+            <div className="space-y-2">
+              <ChunkyButton
+                variant="primary"
+                size="xl"
+                className="w-full"
+                onClick={handleStartGame}
+                disabled={!canStartGame || isStarting || loading}
+                icon={<Play className="w-5 h-5" />}
+              >
+                {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
+              </ChunkyButton>
+              
+              <ChunkyButton
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                onClick={handleStartTVMode}
+                disabled={isStartingTV || loading}
+                icon={<Tv className="w-5 h-5" />}
+              >
+                {isStartingTV ? "იწყება..." : "TV-ზე თამაში"}
+              </ChunkyButton>
+            </div>
           )}
           
           {/* Waiting message for non-host */}
