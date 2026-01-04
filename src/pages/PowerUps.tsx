@@ -74,6 +74,28 @@ const STARTER_PACK_ITEMS: ShopItem[] = [
     gradient: "transparent",
     badge: "new",
   },
+  {
+    id: "starter_bundle_medium",
+    name: "საშუალო პაკეტი",
+    description: "5x ყველა ძალა + 500 მონეტა",
+    price: 18,
+    currency: "gems",
+    icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "popular",
+    savings: 20,
+  },
+  {
+    id: "starter_bundle_large",
+    name: "დიდი პაკეტი",
+    description: "10x ყველა ძალა + 1000 მონეტა",
+    price: 30,
+    currency: "gems",
+    icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "best-value",
+    savings: 35,
+  },
 ];
 
 // Hot Deals - Mega Powers Section
@@ -353,13 +375,32 @@ export default function PowerUps() {
         await addPowerUp(item.powerType, item.amount);
         await refetch();
       } else if (item.id.includes("bundle")) {
-        const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
+        let bundleAmount = 2;
+        let coinAmount = 0;
+        
+        if (item.id === "starter_bundle") {
+          bundleAmount = 2;
+          coinAmount = 200;
+        } else if (item.id === "starter_bundle_medium") {
+          bundleAmount = 5;
+          coinAmount = 500;
+        } else if (item.id === "starter_bundle_large") {
+          bundleAmount = 10;
+          coinAmount = 1000;
+        } else if (item.id.includes("small")) {
+          bundleAmount = 2;
+        } else if (item.id.includes("large")) {
+          bundleAmount = 10;
+        } else {
+          bundleAmount = 5;
+        }
+        
         await addPowerUp("5050", bundleAmount);
         await addPowerUp("freeze", bundleAmount);
         await addPowerUp("replace", bundleAmount);
         await addPowerUp("time-drain", bundleAmount);
-        if (item.id === "starter_bundle") {
-          await addCoins(200);
+        if (coinAmount > 0) {
+          await addCoins(coinAmount);
         }
         await refetch();
       }
