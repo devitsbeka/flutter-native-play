@@ -228,6 +228,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         () => fetchParticipants(roomId)
       )
       .subscribe();
+
+    // Subscribe to profiles changes to update avatars in real-time
+    const profilesChannel = supabase
+      .channel(`profiles-lobby-${roomId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updatedProfile = payload.new as { user_id: string; avatar_url: string | null };
+          // Update avatar for matching participant
+          setParticipants(prev =>
+            prev.map(p => p.user_id === updatedProfile.user_id 
+              ? { ...p, avatar_url: updatedProfile.avatar_url }
+              : p
+            )
+          );
+        }
+      )
+      .subscribe();
     
     // Subscribe to player answers during game
     const answersChannel = supabase
@@ -247,7 +266,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       )
       .subscribe();
     
-    channelsRef.current = [roomChannel, participantsChannel, answersChannel];
+    channelsRef.current = [roomChannel, participantsChannel, profilesChannel, answersChannel];
     
     // Initial fetch
     fetchParticipants(roomId);
