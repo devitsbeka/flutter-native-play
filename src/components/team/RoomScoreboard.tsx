@@ -8,9 +8,10 @@ interface RoomScoreboardProps {
   participants: RoomParticipant[];
   matches: MatchHistoryEntry[];
   currentUserId?: string;
+  showHostCrown?: boolean;
 }
 
-export function RoomScoreboard({ participants, matches, currentUserId }: RoomScoreboardProps) {
+export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true }: RoomScoreboardProps) {
   // Sort by total wins
   const sortedParticipants = [...participants].sort(
     (a, b) => (b.total_wins || 0) - (a.total_wins || 0)
@@ -49,6 +50,9 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
             {/* Player 1 */}
             <div className="flex-1 text-center">
               <div className="relative inline-block mb-2">
+                {showHostCrown && sortedParticipants[0].is_host && (
+                  <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
+                )}
                 <SmartAvatar
                   avatarUrl={sortedParticipants[0].avatar_url}
                   fallback={sortedParticipants[0].nickname}
@@ -88,6 +92,9 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
             {/* Player 2 */}
             <div className="flex-1 text-center">
               <div className="relative inline-block mb-2">
+                {showHostCrown && sortedParticipants[1].is_host && (
+                  <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
+                )}
                 <SmartAvatar
                   avatarUrl={sortedParticipants[1].avatar_url}
                   fallback={sortedParticipants[1].nickname}
@@ -127,13 +134,16 @@ export function RoomScoreboard({ participants, matches, currentUserId }: RoomSco
                   fallback={p.nickname}
                   size="sm"
                 />
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex items-center gap-1.5">
                   <p className="font-medium text-foreground text-sm truncate">
                     {p.user_id === currentUserId ? "შენ" : p.nickname}
                   </p>
+                  {showHostCrown && p.is_host && (
+                    <Crown className="w-4 h-4 text-amber-500 fill-amber-400 flex-shrink-0" />
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Crown className="w-4 h-4 text-primary fill-primary/50" />
+                  <Trophy className="w-4 h-4 text-primary fill-primary/50" />
                   <span className="font-bold text-foreground">{p.total_wins || 0}</span>
                 </div>
               </div>

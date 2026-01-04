@@ -399,39 +399,8 @@ export function RoomLobbyV2() {
             participants={participants as any}
             matches={matches}
             currentUserId={user?.id}
+            showHostCrown={true}
           />
-
-          {/* Participants row */}
-          <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
-            {participants.map((p) => (
-              <motion.div
-                key={p.id}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="relative"
-              >
-                <SmartAvatar
-                  avatarUrl={p.avatar_url}
-                  fallback={p.nickname}
-                  size="lg"
-                />
-                {p.is_host && (
-                  <Crown className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 text-amber-500 fill-amber-400" />
-                )}
-              </motion.div>
-            ))}
-            
-            {/* Empty slots */}
-            {participants.length < (currentRoom.min_players || 2) && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-12 h-12 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center"
-              >
-                <span className="text-xs text-muted-foreground">+?</span>
-              </motion.div>
-            )}
-          </div>
         </div>
 
         {/* Bottom Action Area */}
