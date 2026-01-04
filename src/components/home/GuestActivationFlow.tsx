@@ -1,169 +1,122 @@
 import { motion } from "framer-motion";
-import { Check, User, Camera, Sparkles, Wand2 } from "lucide-react";
+import { User, Camera, Sparkles, Wand2, Play } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 
-interface ActivationStep {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  completed: boolean;
-  active: boolean;
-}
+const steps = [
+  { id: "signup", title: "რეგისტრაცია", icon: User },
+  { id: "photo", title: "ფოტო", icon: Camera },
+  { id: "avatar", title: "ავატარი", icon: Sparkles },
+  { id: "animate", title: "ანიმაცია", icon: Wand2 },
+];
 
 export function GuestActivationFlow() {
   const { startOnboarding } = useOnboarding();
 
-  // For logged-out users, all steps are incomplete
-  const steps: ActivationStep[] = [
-    {
-      id: "signup",
-      title: "რეგისტრაცია",
-      subtitle: "შექმენი ანგარიში",
-      icon: <User className="w-5 h-5" />,
-      completed: false,
-      active: true,
-    },
-    {
-      id: "photo",
-      title: "ფოტო",
-      subtitle: "ატვირთე სელფი",
-      icon: <Camera className="w-5 h-5" />,
-      completed: false,
-      active: false,
-    },
-    {
-      id: "avatar",
-      title: "ავატარი",
-      subtitle: "AI გენერაცია",
-      icon: <Sparkles className="w-5 h-5" />,
-      completed: false,
-      active: false,
-    },
-    {
-      id: "animate",
-      title: "ანიმაცია",
-      subtitle: "გააცოცხლე",
-      icon: <Wand2 className="w-5 h-5" />,
-      completed: false,
-      active: false,
-    },
-  ];
-
   return (
-    <div className="flex flex-col items-center w-full">
-      {/* Steps row */}
-      <div className="flex items-center justify-center gap-1 mb-6">
-        {steps.map((step, index) => (
-          <div key={step.id} className="flex items-center">
-            {/* Step circle */}
-            <motion.button
-              onClick={() => step.active && startOnboarding()}
-              disabled={!step.active}
-              className={`
-                relative flex flex-col items-center
-                ${step.active ? "cursor-pointer" : "cursor-default"}
-              `}
-              whileHover={step.active ? { scale: 1.05 } : {}}
-              whileTap={step.active ? { scale: 0.95 } : {}}
-            >
-              {/* Circle */}
-              <motion.div
-                className={`
-                  w-14 h-14 rounded-full flex items-center justify-center relative
-                  ${step.completed 
-                    ? "bg-emerald-500 text-white" 
-                    : step.active 
-                      ? "bg-white text-purple-600 shadow-lg ring-2 ring-purple-400/50" 
-                      : "bg-white/60 text-gray-400"
-                  }
-                `}
-                style={{
-                  boxShadow: step.active 
-                    ? "0 4px 0 #C084FC, 0 8px 20px rgba(168, 85, 247, 0.25)" 
-                    : step.completed
-                      ? "0 4px 0 #059669, 0 8px 20px rgba(16, 185, 129, 0.25)"
-                      : "0 2px 8px rgba(0,0,0,0.08)",
-                }}
-                animate={step.active ? {
-                  scale: [1, 1.05, 1],
-                } : {}}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                {step.completed ? (
-                  <Check className="w-6 h-6" />
-                ) : (
-                  step.icon
-                )}
-                
-                {/* Step number badge */}
-                <div 
-                  className={`
-                    absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold
-                    flex items-center justify-center
-                    ${step.completed 
-                      ? "bg-emerald-600 text-white" 
-                      : step.active 
-                        ? "bg-purple-600 text-white" 
-                        : "bg-gray-300 text-gray-500"
-                    }
-                  `}
-                >
-                  {index + 1}
-                </div>
-              </motion.div>
-              
-              {/* Label */}
-              <span 
-                className={`
-                  text-[11px] font-semibold mt-2 leading-tight text-center
-                  ${step.completed 
-                    ? "text-emerald-600" 
-                    : step.active 
-                      ? "text-purple-600" 
-                      : "text-gray-400"
-                  }
-                `}
-              >
-                {step.title}
-              </span>
-            </motion.button>
-            
-            {/* Connector line */}
-            {index < steps.length - 1 && (
-              <div 
-                className={`
-                  w-4 h-0.5 mx-0.5 mt-[-18px]
-                  ${step.completed ? "bg-emerald-400" : "bg-gray-200"}
-                `}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-      
-      {/* Call to action */}
+    <motion.div 
+      className="flex flex-col items-center w-full px-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Main CTA Card */}
       <motion.button
         onClick={startOnboarding}
-        className="px-8 py-3 rounded-full font-bold text-white text-base"
+        className="relative w-full max-w-xs rounded-3xl p-6 mb-6 overflow-hidden"
         style={{
-          background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-          boxShadow: "0 4px 0 #7C3AED, 0 8px 24px rgba(168, 85, 247, 0.35)",
+          background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(280 70% 50%) 100%)",
+          boxShadow: "0 8px 32px hsl(var(--primary) / 0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
         }}
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95, y: 2 }}
+        whileHover={{ scale: 1.02, y: -2 }}
+        whileTap={{ scale: 0.98 }}
       >
-        🚀 დაიწყე თამაში
+        {/* Decorative circles */}
+        <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-white/10" />
+        <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+        
+        {/* Play icon */}
+        <motion.div 
+          className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <Play className="w-8 h-8 text-white fill-white" />
+        </motion.div>
+        
+        <h2 className="text-white text-xl font-bold mb-1">დაიწყე თამაში</h2>
+        <p className="text-white/80 text-sm">შექმენი ანგარიში და ითამაშე</p>
       </motion.button>
+
+      {/* Steps Progress */}
+      <div className="flex items-center justify-center gap-3 w-full max-w-xs">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const isFirst = index === 0;
+          
+          return (
+            <div key={step.id} className="flex items-center">
+              <motion.div
+                className="flex flex-col items-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                {/* Circle */}
+                <div 
+                  className={`
+                    w-11 h-11 rounded-full flex items-center justify-center relative
+                    ${isFirst 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted text-muted-foreground"
+                    }
+                  `}
+                  style={{
+                    boxShadow: isFirst 
+                      ? "0 4px 12px hsl(var(--primary) / 0.3)" 
+                      : "none",
+                  }}
+                >
+                  <Icon className="w-5 h-5" />
+                  
+                  {/* Number badge */}
+                  <span 
+                    className={`
+                      absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold
+                      flex items-center justify-center
+                      ${isFirst 
+                        ? "bg-primary-foreground text-primary" 
+                        : "bg-border text-muted-foreground"
+                      }
+                    `}
+                  >
+                    {index + 1}
+                  </span>
+                </div>
+                
+                {/* Label */}
+                <span 
+                  className={`
+                    text-[10px] font-medium mt-1.5
+                    ${isFirst ? "text-primary" : "text-muted-foreground"}
+                  `}
+                >
+                  {step.title}
+                </span>
+              </motion.div>
+              
+              {/* Connector */}
+              {index < steps.length - 1 && (
+                <div className="w-2 h-px bg-border mx-1 mt-[-14px]" />
+              )}
+            </div>
+          );
+        })}
+      </div>
       
       {/* Subtitle */}
-      <p className="text-gray-500 text-sm mt-3 text-center">
-        4 ნაბიჯი სრულ აქტივაციამდე
+      <p className="text-muted-foreground text-xs mt-4">
+        4 მარტივი ნაბიჯი 🎮
       </p>
-    </div>
+    </motion.div>
   );
 }
