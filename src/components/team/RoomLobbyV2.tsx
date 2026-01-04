@@ -165,11 +165,25 @@ export function RoomLobbyV2() {
         code += chars[Math.floor(Math.random() * chars.length)];
       }
 
+      // First get the category UUID from the slug
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('category_id', currentRoom.category_id)
+        .single();
+
+      if (categoryError || !categoryData) {
+        console.error('Category not found:', currentRoom.category_id);
+        toast.error("კატეგორია ვერ მოიძებნა");
+        setIsStartingTV(false);
+        return;
+      }
+
       // Fetch questions for this category
       const { data: questionsData, error: questionsError } = await supabase
         .from('questions')
         .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-        .eq('category_id', currentRoom.category_id)
+        .eq('category_id', categoryData.id)
         .eq('is_active', true)
         .eq('in_production', true)
         .limit(10);
