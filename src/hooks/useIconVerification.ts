@@ -20,40 +20,54 @@ export function useIconVerification() {
   const [verifyProgress, setVerifyProgress] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch verification stats from database
+  // Fetch verification stats from database using COUNT queries to avoid row limits
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['icon-verification-stats'],
     queryFn: async (): Promise<VerificationStats> => {
-      const { data, error } = await supabase
-        .from('icon_verification_results')
-        .select('is_valid, last_checked_at');
+      // Use COUNT queries to get accurate totals (bypasses 1000 row limit)
+      const [totalResult, validResult, brokenResult, lastCheckedResult] = await Promise.all([
+        supabase.from('icon_verification_results').select('*', { count: 'exact', head: true }),
+        supabase.from('icon_verification_results').select('*', { count: 'exact', head: true }).eq('is_valid', true),
+        supabase.from('icon_verification_results').select('*', { count: 'exact', head: true }).eq('is_valid', false),
+        supabase.from('icon_verification_results').select('last_checked_at').order('last_checked_at', { ascending: false }).limit(1),
+      ]);
 
-      if (error) throw error;
+      if (totalResult.error) throw totalResult.error;
 
-      if (!data || data.length === 0) {
-        return { total: 0, valid: 0, broken: 0, lastChecked: null };
-      }
-
-      const valid = data.filter(r => r.is_valid).length;
-      const broken = data.filter(r => !r.is_valid).length;
-      const lastChecked = data[0]?.last_checked_at || null;
-
-      return { total: data.length, valid, broken, lastChecked };
+      return {
+        total: totalResult.count || 0,
+        valid: validResult.count || 0,
+        broken: brokenResult.count || 0,
+        lastChecked: lastCheckedResult.data?.[0]?.last_checked_at || null,
+      };
     },
   });
 
-  // Fetch broken icons list
+  // Fetch broken icons list with pagination to get all results
   const { data: brokenIcons, isLoading: brokenLoading, refetch: refetchBroken } = useQuery({
     queryKey: ['broken-icons-list'],
     queryFn: async (): Promise<BrokenIcon[]> => {
-      const { data, error } = await supabase
-        .from('icon_verification_results')
-        .select('slug, icon_url, error_message')
-        .eq('is_valid', false)
-        .order('slug');
+      const allBroken: BrokenIcon[] = [];
+      const pageSize = 1000;
+      let page = 0;
 
-      if (error) throw error;
-      return data || [];
+      while (true) {
+        const { data, error } = await supabase
+          .from('icon_verification_results')
+          .select('slug, icon_url, error_message')
+          .eq('is_valid', false)
+          .order('slug')
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) throw error;
+        if (!data?.length) break;
+        
+        allBroken.push(...data);
+        if (data.length < pageSize) break;
+        page++;
+      }
+
+      return allBroken;
     },
   });
 
