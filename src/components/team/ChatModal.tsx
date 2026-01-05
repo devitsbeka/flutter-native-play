@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, ArrowLeft } from "lucide-react";
+import { X, Send, ArrowLeft, MoreVertical } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserModeration } from "@/hooks/useUserModeration";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { Friend } from "@/hooks/useFriends";
 
 interface ChatModalProps {
@@ -15,9 +17,14 @@ interface ChatModalProps {
 export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
   const { user } = useAuth();
   const { messages, loading, sending, sendMessage } = useChat(friend?.friendId || null);
+  const { filterBlockedUsers, isUserBlocked } = useUserModeration();
   const [inputValue, setInputValue] = useState("");
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter out messages from blocked users
+  const filteredMessages = filterBlockedUsers(messages);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -67,15 +74,15 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
     }
   };
 
-  // Group messages by date
-  const groupedMessages = messages.reduce((groups, message) => {
+  // Group messages by date (using filtered messages)
+  const groupedMessages = filteredMessages.reduce((groups, message) => {
     const date = new Date(message.created_at).toDateString();
     if (!groups[date]) {
       groups[date] = [];
     }
     groups[date].push(message);
     return groups;
-  }, {} as Record<string, typeof messages>);
+  }, {} as Record<string, typeof filteredMessages>);
 
   if (!friend) return null;
 
@@ -146,6 +153,19 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                   {friend.isOnline ? "ონლაინ" : "ოფლაინ"}
                 </p>
               </div>
+
+              {/* More Options Button */}
+              <motion.button
+                onClick={() => setShowUserMenu(true)}
+                className="p-2 rounded-xl transition-colors"
+                style={{
+                  background: "#F3F4F6",
+                  boxShadow: "0 2px 0 #D1D5DB",
+                }}
+                whileTap={{ scale: 0.95, y: 2 }}
+              >
+                <MoreVertical className="w-5 h-5 text-gray-600" />
+              </motion.button>
 
               <motion.button
                 onClick={onClose}
@@ -303,6 +323,14 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
               </div>
             </motion.div>
           </div>
+
+          {/* User Action Menu for Report/Block */}
+          <UserActionMenu
+            isOpen={showUserMenu}
+            onClose={() => setShowUserMenu(false)}
+            targetUserId={friend.friendId}
+            targetUserName={friend.nickname}
+          />
         </motion.div>
       )}
     </AnimatePresence>
