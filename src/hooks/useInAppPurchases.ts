@@ -67,9 +67,13 @@ export function useInAppPurchases() {
           return;
         }
 
-        // Initialize with API key (configure in App Store Connect)
+        // Initialize with API key
+        // Note: For RevenueCat, the public API key is safe to include in client code
+        // as it only allows read access to products. Replace with your key from RevenueCat dashboard.
+        const apiKey = import.meta.env.VITE_REVENUECAT_API_KEY || "appl_CONFIGURE_IN_ENV";
+        
         await plugin.configure({
-          apiKey: "appl_YOUR_REVENUECAT_API_KEY", // Replace with your RevenueCat API key or use StoreKit directly
+          apiKey,
         });
 
         // Fetch available products
