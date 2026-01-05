@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface QuizCardProps {
   icon?: string;
@@ -23,6 +24,8 @@ export function QuizCard({
   progress,
   className,
 }: QuizCardProps) {
+  const { t } = useLanguage();
+  
   return (
     <motion.button
       whileHover={{ scale: 1.01 }}
@@ -79,7 +82,7 @@ export function QuizCard({
                 : "text-muted-foreground"
             )}
           >
-            {questionsCount} Quizzes
+            {t("game.quizzes", { count: questionsCount })}
           </p>
         )}
       </div>

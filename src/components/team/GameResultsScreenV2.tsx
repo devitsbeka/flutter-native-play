@@ -5,6 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, RotateCcw, Star, Crown } from "lucide-react";
@@ -31,6 +32,7 @@ export function GameResultsScreenV2() {
   const navigate = useNavigate();
   const { user, profile, updateProfile } = useAuth();
   const { playSound, vibrate } = useSound();
+  const { t } = useLanguage();
   const { addCoins } = useCurrency();
   const [coinsEarned, setCoinsEarned] = useState(0);
   const { 
@@ -65,7 +67,11 @@ export function GameResultsScreenV2() {
 
   const isWin = myRank === 1;
   const isPodium = myRank <= 3;
-  const result = isWin ? "გამარჯვება!" : isPodium ? `მე-${myRank} ადგილი!` : `მე-${myRank} ადგილი`;
+  const result = isWin 
+    ? t("game.victory") 
+    : isPodium 
+      ? t("game.placeFirst", { rank: myRank }) 
+      : t("game.place", { rank: myRank });
 
   const hasUpdatedStats = useRef(false);
 
@@ -202,7 +208,7 @@ export function GameResultsScreenV2() {
       await startNewRound();
     } catch (error) {
       console.error("Error starting new round:", error);
-      toast.error("ახალი რაუნდის დაწყება ვერ მოხერხდა");
+      toast.error(t("game.couldNotStartRound"));
     } finally {
       setIsStartingRematch(false);
     }
@@ -315,7 +321,7 @@ export function GameResultsScreenV2() {
                 
                 {/* Name */}
                 <span className="flex-1 text-white font-display text-lg truncate">
-                  {p.isMe ? "შენ" : p.nickname}
+                  {p.isMe ? t("game.you") : p.nickname}
                 </span>
                 
                 {/* Score */}
@@ -368,7 +374,7 @@ export function GameResultsScreenV2() {
           disabled={isStartingRematch}
           icon={<RotateCcw className="w-5 h-5" />}
         >
-          {isStartingRematch ? "იწყება..." : "ახალი რაუნდი"}
+          {isStartingRematch ? t("game.starting") : t("game.newRound")}
         </ChunkyButton>
 
         <ChunkyButton
@@ -378,7 +384,7 @@ export function GameResultsScreenV2() {
           onClick={handleBackToRoom}
           icon={<ArrowLeft className="w-5 h-5" />}
         >
-          ოთახში დაბრუნება
+          {t("game.backToRoom")}
         </ChunkyButton>
       </motion.div>
     </div>

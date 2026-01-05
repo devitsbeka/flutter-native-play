@@ -215,6 +215,22 @@ export const en: KaTranslations = {
     pointsEarned: "+{points} points",
     streakBonus: "Streak Bonus!",
     perfectRound: "Perfect Round!",
+    newRound: "New Round",
+    starting: "Starting...",
+    backToRoom: "Back to Room",
+    place: "{rank}th Place",
+    placeFirst: "{rank}st Place!",
+    couldNotStartRound: "Could not start new round",
+    quizzes: "{count} Quizzes",
+    difficulty: {
+      easy: "Easy",
+      medium: "Medium",
+      hard: "Hard",
+    },
+    labelA: "A",
+    labelB: "B",
+    labelC: "C",
+    labelD: "D",
   },
 
   // ==========================================
