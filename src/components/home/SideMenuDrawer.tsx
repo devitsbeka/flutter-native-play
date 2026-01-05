@@ -13,15 +13,12 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Icon imports for menu items
-import iconMissions from "@/assets/icons/icon-compass.png";
-import iconAvatar from "@/assets/icons/icon-profile.png";
-import iconEvents from "@/assets/icons/icon-gem.png";
-import iconPass from "@/assets/icons/icon-trophy-3d.png";
-import iconNotifications from "@/assets/icons/icon-shop-3d.png";
-import iconSettings from "@/assets/icons/icon-powers-3d.png";
-import iconHelp from "@/assets/icons/icon-map-3d.png";
-import iconPrivacy from "@/assets/icons/icon-coin.png";
-import iconLogout from "@/assets/icons/icon-ad-free.png";
+import iconRewards from "@/assets/icons/icon-gift-bottle.png";
+import iconMissions from "@/assets/icons/icon-mission-crystal.png";
+import iconTreasure from "@/assets/icons/icon-chest-tablet.png";
+import iconShop from "@/assets/icons/icon-magical-shop.png";
+import iconParty from "@/assets/icons/icon-party.png";
+import iconOtherGames from "@/assets/icons/icon-other-games.png";
 
 interface SideMenuDrawerProps {
   isOpen: boolean;
@@ -29,7 +26,12 @@ interface SideMenuDrawerProps {
 }
 
 const menuItems = [
-  { icon: iconAvatar, label: "AI Avatar", onClick: "avatar", badge: "ახალი" },
+  { icon: iconRewards, label: "ჯილდოები", onClick: "rewards" },
+  { icon: iconMissions, label: "მისიები", onClick: "missions" },
+  { icon: iconTreasure, label: "განძის ყუთი", onClick: "treasure" },
+  { icon: iconShop, label: "მაღაზია", onClick: "shop" },
+  { icon: iconParty, label: "Party", onClick: "party" },
+  { icon: iconOtherGames, label: "სხვა თამაშები", onClick: "other-games" },
 ];
 
 const bottomLinks = [
@@ -164,7 +166,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
 
               {/* Grid Menu */}
               <div className="p-4 pb-2">
-                <div className="flex justify-center">
+                <div className="grid grid-cols-3 gap-2">
                   {visibleGridItems.map((item, index) => (
                     <motion.button
                       key={item.label}
@@ -172,26 +174,19 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => handleItemClick(item.onClick)}
-                      className="relative flex flex-col items-center gap-2 p-4 rounded-2xl transition-all hover:scale-105 active:scale-95 bg-muted/50 hover:bg-muted"
+                      className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all hover:scale-105 active:scale-95 bg-muted/50 hover:bg-muted"
                     >
-                      {/* Badge */}
-                      {item.badge && (
-                        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold min-w-[18px] text-center">
-                          {item.badge}
-                        </span>
-                      )}
-                      
                       {/* Icon */}
-                      <div className="h-16 w-16 flex items-center justify-center">
+                      <div className="h-12 w-12 flex items-center justify-center">
                         <img 
                           src={item.icon} 
                           alt={item.label}
-                          className="h-14 w-14 object-contain"
+                          className="h-11 w-11 object-contain"
                         />
                       </div>
                       
                       {/* Label */}
-                      <span className="text-xs font-medium text-center leading-tight text-foreground">
+                      <span className="text-[11px] font-medium text-center leading-tight text-foreground">
                         {item.label}
                       </span>
                     </motion.button>
