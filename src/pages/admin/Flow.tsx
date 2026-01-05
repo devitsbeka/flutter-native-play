@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
@@ -59,12 +59,100 @@ export default function Flow() {
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [stats, setStats] = useState({ inLib: 0, inProd: 0 });
+  const [focusedQuestionId, setFocusedQuestionId] = useState<string | null>(null);
+  const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchCategories();
     fetchStats();
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const pendingQuestions = generatedQuestions.filter(q => q.status === 'pending');
+      const focusedQuestion = pendingQuestions.find(q => q.id === focusedQuestionId);
+      const currentIndex = pendingQuestions.findIndex(q => q.id === focusedQuestionId);
+
+      switch (e.key) {
+        case 'Enter':
+          if (focusedQuestion) {
+            e.preventDefault();
+            handleApprove(focusedQuestion.id);
+            // Move focus to next
+            if (currentIndex < pendingQuestions.length - 1) {
+              setFocusedQuestionId(pendingQuestions[currentIndex + 1].id);
+            }
+          }
+          break;
+        case 'Backspace':
+        case 'Delete':
+          if (focusedQuestion) {
+            e.preventDefault();
+            handleReject(focusedQuestion.id);
+            // Move focus to next
+            if (currentIndex < pendingQuestions.length - 1) {
+              setFocusedQuestionId(pendingQuestions[currentIndex + 1].id);
+            } else if (currentIndex > 0) {
+              setFocusedQuestionId(pendingQuestions[currentIndex - 1].id);
+            }
+          }
+          break;
+        case 'Tab':
+          e.preventDefault();
+          if (pendingQuestions.length === 0) return;
+          
+          if (e.shiftKey) {
+            // Previous question
+            if (currentIndex > 0) {
+              setFocusedQuestionId(pendingQuestions[currentIndex - 1].id);
+            } else {
+              setFocusedQuestionId(pendingQuestions[pendingQuestions.length - 1].id);
+            }
+          } else {
+            // Next question
+            if (currentIndex < pendingQuestions.length - 1) {
+              setFocusedQuestionId(pendingQuestions[currentIndex + 1].id);
+            } else {
+              setFocusedQuestionId(pendingQuestions[0].id);
+            }
+          }
+          break;
+        case 'Escape':
+          setFocusedQuestionId(null);
+          setSelectedPreviewId(null);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [generatedQuestions, focusedQuestionId]);
+
+  // Set first pending question as focused when questions are generated
+  useEffect(() => {
+    if (!focusedQuestionId) {
+      const firstPending = generatedQuestions.find(q => q.status === 'pending');
+      if (firstPending) {
+        setFocusedQuestionId(firstPending.id);
+      }
+    }
+  }, [generatedQuestions.length]);
+
+  // Update selected preview when focus changes
+  useEffect(() => {
+    if (focusedQuestionId) {
+      setSelectedPreviewId(focusedQuestionId);
+    }
+  }, [focusedQuestionId]);
 
   const fetchCategories = async () => {
     const { data, error } = await supabase
@@ -136,19 +224,24 @@ export default function Flow() {
     if (duplicateCount > 0) {
       toast.info(`${duplicateCount} duplicate question(s) found`);
     }
+    
+    // Focus first new question
+    if (checkedQuestions.length > 0) {
+      setFocusedQuestionId(checkedQuestions[0].id);
+    }
   }, [checkDuplicates]);
 
-  const handleApprove = (id: string) => {
+  const handleApprove = useCallback((id: string) => {
     setGeneratedQuestions(prev =>
       prev.map(q => q.id === id ? { ...q, status: 'approved' as const } : q)
     );
-  };
+  }, []);
 
-  const handleReject = (id: string) => {
+  const handleReject = useCallback((id: string) => {
     setGeneratedQuestions(prev =>
       prev.map(q => q.id === id ? { ...q, status: 'rejected' as const } : q)
     );
-  };
+  }, []);
 
   const handleBulkApprove = (ids: string[]) => {
     setGeneratedQuestions(prev =>
@@ -167,6 +260,57 @@ export default function Flow() {
       q.id === id ? { ...q, ...updates } : q
     ));
   }, []);
+
+  const handleTranslateAll = async () => {
+    const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid && !q.isDuplicate);
+    if (approved.length === 0) {
+      toast.error('No approved questions to translate');
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const sourceLanguage = approved[0].language;
+      
+      const { data, error } = await supabase.functions.invoke('translate-questions', {
+        body: {
+          questions: approved.map(q => ({
+            questionText: q.questionText,
+            correctAnswer: q.correctAnswer,
+            incorrectAnswers: q.incorrectAnswers,
+            difficulty: q.difficulty,
+            categoryId: q.categoryId,
+            categoryName: q.categoryName,
+            iconSlug: q.iconSlug,
+          })),
+          sourceLanguage,
+          targetLanguages: LANGUAGES.map(l => l.code),
+        },
+      });
+
+      if (error) throw error;
+
+      const translations = data.translations || [];
+      const newQuestions: GeneratedQuestion[] = translations.map((t: any, i: number) => ({
+        id: `trans-${Date.now()}-${i}`,
+        ...t,
+        status: 'pending' as const,
+        isValid: true,
+        warnings: [],
+      }));
+
+      // Check duplicates for translations
+      const checkedTranslations = await checkDuplicates(newQuestions);
+      setGeneratedQuestions(prev => [...checkedTranslations, ...prev]);
+      
+      toast.success(`Created ${checkedTranslations.length} translations in ${data.languages} languages`);
+    } catch (err) {
+      console.error('Translation error:', err);
+      toast.error('Failed to translate questions');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const handlePublishToLib = async () => {
     const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid && !q.isDuplicate);
@@ -238,8 +382,10 @@ export default function Flow() {
   const approvedCount = generatedQuestions.filter(q => q.status === 'approved').length;
   const rejectedCount = generatedQuestions.filter(q => q.status === 'rejected').length;
 
+  const selectedQuestion = generatedQuestions.find(q => q.id === selectedPreviewId);
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" ref={containerRef}>
       {/* Header */}
       <div className="p-4 border-b border-border/50 bg-card/30">
         <div className="flex items-center gap-3">
@@ -247,16 +393,21 @@ export default function Flow() {
             <span className="text-2xl">⚡</span>
             Flow - Question Factory
           </h1>
-          {isCheckingDuplicates && (
+          {(isCheckingDuplicates || isTranslating) && (
             <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
               <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              Checking duplicates...
+              {isTranslating ? 'Translating...' : 'Checking duplicates...'}
             </div>
           )}
         </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          Generate, review, and publish questions in 20 languages
-        </p>
+        <div className="flex items-center gap-4 mt-1">
+          <p className="text-sm text-muted-foreground">
+            Generate, review, and publish questions in 20 languages
+          </p>
+          <div className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
+            <kbd className="font-mono">Enter</kbd> Approve • <kbd className="font-mono">⌫</kbd> Reject • <kbd className="font-mono">Tab</kbd> Navigate
+          </div>
+        </div>
       </div>
 
       {/* Three Column Layout */}
@@ -278,17 +429,20 @@ export default function Flow() {
         <div className="flex-1 flex flex-col bg-background/50">
           <QuestionPreviewList
             questions={generatedQuestions}
+            categories={categories}
             onApprove={handleApprove}
             onReject={handleReject}
             onBulkApprove={handleBulkApprove}
             onBulkReject={handleBulkReject}
             onUpdateQuestion={handleUpdateQuestion}
             languages={LANGUAGES}
+            focusedQuestionId={focusedQuestionId}
+            onFocusChange={setFocusedQuestionId}
           />
         </div>
 
         {/* Right: Queue */}
-        <div className="w-72 border-l border-border/50 bg-card/20">
+        <div className="w-80 border-l border-border/50 bg-card/20 flex flex-col">
           <QuestionQueue
             pendingCount={pendingCount}
             approvedCount={approvedCount}
@@ -298,6 +452,10 @@ export default function Flow() {
             onPublishToLib={handlePublishToLib}
             onPublishToProd={handlePublishToProd}
             onClearRejected={handleClearRejected}
+            onTranslateAll={handleTranslateAll}
+            isTranslating={isTranslating}
+            selectedQuestion={selectedQuestion}
+            onUpdateQuestion={handleUpdateQuestion}
           />
         </div>
       </div>

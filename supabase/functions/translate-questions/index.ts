@@ -1,0 +1,185 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  'ka': 'Georgian (ქართული)',
+  'en': 'English',
+  'ru': 'Russian (Русский)',
+  'es': 'Spanish (Español)',
+  'fr': 'French (Français)',
+  'pt-br': 'Portuguese (Português)',
+  'it': 'Italian (Italiano)',
+  'de': 'German (Deutsch)',
+  'nl': 'Dutch (Nederlands)',
+  'sv': 'Swedish (Svenska)',
+  'nb': 'Norwegian (Norsk)',
+  'da': 'Danish (Dansk)',
+  'fi': 'Finnish (Suomi)',
+  'pl': 'Polish (Polski)',
+  'cs': 'Czech (Čeština)',
+  'sk': 'Slovak (Slovenčina)',
+  'hu': 'Hungarian (Magyar)',
+  'ro': 'Romanian (Română)',
+  'hr': 'Croatian (Hrvatski)',
+  'sr-latn': 'Serbian Latin (Srpski)',
+};
+
+const QUESTION_MAX_LENGTH = 65;
+const ANSWER_MAX_LENGTH = 16;
+
+interface Question {
+  questionText: string;
+  correctAnswer: string;
+  incorrectAnswers: string[];
+  difficulty: string;
+  categoryId: string;
+  categoryName: string;
+  iconSlug?: string;
+}
+
+async function translateBatch(
+  questions: Question[],
+  targetLanguage: string,
+  apiKey: string
+): Promise<Question[]> {
+  const languageName = LANGUAGE_NAMES[targetLanguage] || targetLanguage;
+  
+  const systemPrompt = `You are a professional translator. Translate trivia questions accurately while maintaining their meaning.
+
+CRITICAL CHARACTER LIMITS:
+- Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters
+- Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters
+
+If translation exceeds limits, shorten while preserving meaning. Use abbreviations if needed.
+
+Return JSON with "translations" array matching input order.`;
+
+  const userPrompt = `Translate these trivia questions to ${languageName}:
+
+${JSON.stringify(questions.map(q => ({
+  question: q.questionText,
+  correct: q.correctAnswer,
+  incorrect: q.incorrectAnswers
+})), null, 2)}
+
+Return ONLY valid JSON:
+{
+  "translations": [
+    {
+      "questionText": "translated question (max ${QUESTION_MAX_LENGTH} chars)",
+      "correctAnswer": "translated (max ${ANSWER_MAX_LENGTH} chars)",
+      "incorrectAnswers": ["...", "...", "..."]
+    }
+  ]
+}`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Translation API error for ${targetLanguage}:`, response.status, errorText);
+    throw new Error(`Translation failed for ${targetLanguage}`);
+  }
+
+  const aiData = await response.json();
+  const content = aiData.choices?.[0]?.message?.content;
+  
+  if (!content) {
+    throw new Error('No content in translation response');
+  }
+
+  const parsed = JSON.parse(content);
+  const translations = parsed.translations || [];
+
+  // Merge translations with original metadata
+  return questions.map((original, idx) => ({
+    ...original,
+    questionText: translations[idx]?.questionText || original.questionText,
+    correctAnswer: translations[idx]?.correctAnswer || original.correctAnswer,
+    incorrectAnswers: translations[idx]?.incorrectAnswers || original.incorrectAnswers,
+    language: targetLanguage,
+  }));
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { questions, targetLanguages, sourceLanguage } = await req.json();
+    
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      throw new Error('No questions provided');
+    }
+
+    // Filter out source language from targets
+    const languagesToTranslate = (targetLanguages || Object.keys(LANGUAGE_NAMES))
+      .filter((lang: string) => lang !== sourceLanguage);
+
+    console.log(`Translating ${questions.length} questions to ${languagesToTranslate.length} languages`);
+
+    const allTranslations: Question[] = [];
+    const batchSize = 10; // Process 10 questions per translation batch to stay within limits
+    
+    // Process languages sequentially but questions in batches
+    for (const targetLang of languagesToTranslate) {
+      console.log(`Translating to ${targetLang}...`);
+      
+      const chunks: Question[][] = [];
+      for (let i = 0; i < questions.length; i += batchSize) {
+        chunks.push(questions.slice(i, i + batchSize));
+      }
+
+      for (const chunk of chunks) {
+        try {
+          const translated = await translateBatch(chunk, targetLang, LOVABLE_API_KEY);
+          allTranslations.push(...translated);
+        } catch (error) {
+          console.error(`Error translating chunk to ${targetLang}:`, error);
+          // Continue with other chunks/languages
+        }
+      }
+    }
+
+    console.log(`Completed: ${allTranslations.length} total translations`);
+
+    return new Response(JSON.stringify({ 
+      translations: allTranslations,
+      count: allTranslations.length,
+      languages: languagesToTranslate.length
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error in translate-questions:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

@@ -20,10 +20,11 @@ interface FlowIconPickerProps {
   currentIconSlug?: string;
   onSelect: (slug: string) => void;
   suggestedSlugs?: string[];
+  isExpanded?: boolean;
 }
 
-export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [] }: FlowIconPickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [], isExpanded = false }: FlowIconPickerProps) {
+  const [isOpen, setIsOpen] = useState(isExpanded);
   const [searchQuery, setSearchQuery] = useState('');
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);

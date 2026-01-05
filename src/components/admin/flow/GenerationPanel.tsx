@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from '@/utils/questionValidation';
+import { cn } from '@/lib/utils';
 
 interface Props {
   categories: Category[];
@@ -19,12 +20,19 @@ interface Props {
   setIsGenerating: (v: boolean) => void;
 }
 
+const DIFFICULTIES = [
+  { id: 'mixed', label: '🎲 Mixed' },
+  { id: 'easy', label: 'Easy' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'hard', label: 'Hard' },
+];
+
 export function GenerationPanel({ categories, languages, onQuestionsGenerated, isGenerating, setIsGenerating }: Props) {
   const [mode, setMode] = useState<'ai' | 'url'>('ai');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('ka');
   const [difficulty, setDifficulty] = useState<string>('mixed');
-  const [count, setCount] = useState(10);
+  const [count, setCount] = useState(50);
   const [topic, setTopic] = useState('');
   const [url, setUrl] = useState('');
 
@@ -138,8 +146,6 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
     }
   };
 
-  const selectedLang = languages.find(l => l.code === selectedLanguage);
-
   return (
     <div className="p-4 space-y-4">
       <Tabs value={mode} onValueChange={(v) => setMode(v as 'ai' | 'url')}>
@@ -155,31 +161,26 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
         </TabsList>
 
         <TabsContent value="ai" className="space-y-4 mt-4">
-          {/* Language */}
+          {/* Language - Inline Circles */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Language</Label>
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-              <SelectTrigger className="h-9">
-                <SelectValue>
-                  {selectedLang && (
-                    <span className="flex items-center gap-2">
-                      <span className="text-lg">{selectedLang.flag}</span>
-                      <span>{selectedLang.name}</span>
-                    </span>
+            <div className="flex flex-wrap gap-1.5">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => setSelectedLanguage(lang.code)}
+                  className={cn(
+                    "w-9 h-9 rounded-full flex items-center justify-center text-lg border-2 transition-all hover:scale-105",
+                    selectedLanguage === lang.code
+                      ? "border-primary ring-2 ring-primary/30 scale-110"
+                      : "border-transparent hover:border-muted-foreground/30"
                   )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {languages.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    <span className="flex items-center gap-2">
-                      <span className="text-lg">{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  title={lang.name}
+                >
+                  {lang.flag}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Category */}
@@ -199,20 +200,25 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
             </Select>
           </div>
 
-          {/* Difficulty */}
+          {/* Difficulty - Inline Buttons */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Difficulty</Label>
-            <Select value={difficulty} onValueChange={setDifficulty}>
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mixed">Mixed</SelectItem>
-                <SelectItem value="easy">Easy</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="hard">Hard</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              {DIFFICULTIES.map((diff) => (
+                <button
+                  key={diff.id}
+                  onClick={() => setDifficulty(diff.id)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                    difficulty === diff.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted hover:bg-muted/80"
+                  )}
+                >
+                  {diff.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Topic */}
@@ -234,11 +240,14 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
             <Slider
               value={[count]}
               onValueChange={([v]) => setCount(v)}
-              min={5}
-              max={50}
-              step={5}
+              min={10}
+              max={200}
+              step={10}
               className="py-2"
             />
+            <p className="text-xs text-muted-foreground">
+              Recommended: 50-100 for best quality. Max 200.
+            </p>
           </div>
 
           {/* Generate Button */}

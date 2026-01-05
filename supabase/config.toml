@@ -75,3 +75,6 @@ verify_jwt = true
 
 [functions.generate-multilang-trivia]
 verify_jwt = false
+
+[functions.translate-questions]
+verify_jwt = false
