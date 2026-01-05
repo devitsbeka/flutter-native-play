@@ -302,7 +302,7 @@ async function loadDbIcons(): Promise<Record<string, string>> {
       .from('icon_library')
       .select('slug, icon_url')
       .order('created_at', { ascending: false })
-      .limit(200);
+      .limit(1000);
     
     if (error) {
       console.error('[IconLibrary] DB fetch error:', error);
@@ -436,6 +436,24 @@ export function useIconLibrary() {
     return icon ? getIconUrl(icon.file_name) : null;
   }, [iconIndex, dbIcons]);
 
+  // Direct database lookup for icons not in cache (async)
+  const fetchIconBySlug = useCallback(async (slug: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('icon_library')
+        .select('icon_url, file_name')
+        .eq('slug', slug)
+        .single();
+      
+      if (error || !data) return null;
+      
+      // Return icon_url if available, otherwise construct from file_name
+      return data.icon_url || getIconUrl(data.file_name);
+    } catch {
+      return null;
+    }
+  }, []);
+
   const getIconForCategory = useCallback((categoryIdOrName: string): string | null => {
     // First check if it's a Georgian category name and convert to English slug
     let categoryKey = categoryIdOrName.toLowerCase();
@@ -501,7 +519,8 @@ export function useIconLibrary() {
   return { 
     findIcon, 
     findIconForQuestion,
-    getIconBySlug, 
+    getIconBySlug,
+    fetchIconBySlug,
     getIconForCategory,
     getRandomIconForCategory,
     isLoaded: !isLoading && iconIndex.length > 0,
