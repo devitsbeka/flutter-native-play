@@ -133,7 +133,7 @@ export default function CategoryQuizPage() {
   }, [levelId]);
 
   // Store database category with icon_slug
-  const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null } | null>(null);
+  const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null; total_levels: number } | null>(null);
   const category = getCategoryById(categoryId || "");
   
   // Session question tracking to prevent repetition
@@ -192,7 +192,7 @@ export default function CategoryQuizPage() {
         // First, get the category UUID and icon_slug from the category_id string
         const { data: categoryData, error: categoryError } = await supabase
           .from('categories')
-          .select('id, name, icon_slug')
+          .select('id, name, icon_slug, total_levels')
           .eq('category_id', categoryId)
           .maybeSingle();
 
@@ -254,28 +254,41 @@ export default function CategoryQuizPage() {
           return;
         }
 
-        // If no new questions available, reset and try again
+        // If no new questions available, try fallback strategies
         if (!dbQuestions || dbQuestions.length === 0) {
+          // First, try clearing asked questions and retry same range
           if (askedIds.length > 0) {
             clearAskedQuestions();
-            // Retry without exclusions
             const { data: retryQuestions } = await supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
               .eq('is_active', true)
               .eq('category_id', categoryData.id)
-              .gte('level_number', levelNumber)
-              .lte('level_number', levelNumber + 2)
+              .gte('level_number', minLevel)
+              .lte('level_number', maxLevel)
               .limit(15);
             
-            if (!retryQuestions || retryQuestions.length === 0) {
-              setError("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
+            if (retryQuestions && retryQuestions.length > 0) {
+              processAndSetQuestions(retryQuestions, categoryData);
               return;
             }
-            // Use retry questions
-            processAndSetQuestions(retryQuestions, categoryData);
+          }
+          
+          // Fallback: If level > 20 or no questions in range, query from level 1-20
+          const { data: fallbackQuestions } = await supabase
+            .from('questions')
+            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
+            .eq('is_active', true)
+            .eq('category_id', categoryData.id)
+            .gte('level_number', 1)
+            .lte('level_number', 20)
+            .limit(30);
+          
+          if (fallbackQuestions && fallbackQuestions.length > 0) {
+            processAndSetQuestions(fallbackQuestions, categoryData);
             return;
           }
+          
           setError("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
           return;
         }
@@ -378,7 +391,7 @@ export default function CategoryQuizPage() {
     const previousLevel = profile?.total_points ? calculateLevel(profile.total_points).level : 1;
     setPreviousProfileLevel(previousLevel);
     
-    const result = await updateLevelProgress(categoryId, levelNumber, score, questions.length);
+    const result = await updateLevelProgress(categoryId, levelNumber, score, questions.length, dbCategory?.total_levels || 20);
     
     if (result.success) {
       setSavedStars(result.stars);
