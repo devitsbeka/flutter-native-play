@@ -148,7 +148,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
               >
                 <motion.img
                   src={logoImage}
-                  alt="World Quizzes"
+                  alt="MyTrivia"
                   className="w-64 md:w-80 h-auto drop-shadow-2xl"
                   animate={{ 
                     y: [0, -8, 0],
