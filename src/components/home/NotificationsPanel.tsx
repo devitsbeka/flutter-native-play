@@ -288,11 +288,11 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
 
           {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
+            exit={{ opacity: 0, y: -50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] rounded-t-3xl bg-card border-t border-border shadow-2xl overflow-hidden"
+            className="fixed inset-0 z-50 bg-card flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/50">
@@ -361,7 +361,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto p-4 pb-8">
+            <div className="flex-1 overflow-y-auto p-4 pb-8">
               {loading ? (
                 <div className="flex flex-col items-center py-8">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
