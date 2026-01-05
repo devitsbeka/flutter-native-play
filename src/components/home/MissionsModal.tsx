@@ -159,7 +159,7 @@ function MissionCarouselCard({
     <div className="px-2">
       <motion.div
         layout
-        className={`relative rounded-3xl p-6 transition-all overflow-hidden ${
+        className={`relative rounded-2xl p-4 transition-all overflow-hidden ${
           isClaimed 
             ? "bg-muted/30 border border-border" 
             : canClaim 
@@ -170,9 +170,8 @@ function MissionCarouselCard({
           boxShadow: isClaimed 
             ? "none" 
             : canClaim 
-              ? "0 8px 0 rgba(0,0,0,0.1), inset 0 2px 4px rgba(255, 255, 255, 0.8)"
-              : "0 6px 0 rgba(0,0,0,0.05), inset 0 2px 4px rgba(255, 255, 255, 0.8)",
-          minHeight: "280px",
+              ? "0 6px 0 rgba(0,0,0,0.1), inset 0 2px 4px rgba(255, 255, 255, 0.8)"
+              : "0 4px 0 rgba(0,0,0,0.05), inset 0 2px 4px rgba(255, 255, 255, 0.8)",
         }}
       >
         {canClaim && !isThisAnimating && (
@@ -295,29 +294,29 @@ function MissionCarouselCard({
         <div className="relative flex flex-col items-center text-center">
           {/* Large Icon */}
           <div
-            className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-4 ${
+            className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl mb-3 ${
               isClaimed ? "bg-muted text-muted-foreground" : `bg-gradient-to-br ${theme.gradient}`
             }`}
-            style={{ boxShadow: isClaimed ? "none" : "0 4px 0 rgba(0,0,0,0.2)" }}
+            style={{ boxShadow: isClaimed ? "none" : "0 3px 0 rgba(0,0,0,0.2)" }}
           >
-            {isClaimed ? <Check className="w-10 h-10" /> : getMissionIcon(mission.mission_id)}
+            {isClaimed ? <Check className="w-7 h-7" /> : getMissionIcon(mission.mission_id)}
           </div>
 
           {/* Title */}
-          <h3 className={`font-black text-lg mb-1 ${isClaimed ? "text-muted-foreground" : theme.text}`}>
+          <h3 className={`font-black text-base mb-1 ${isClaimed ? "text-muted-foreground" : theme.text}`}>
             {mission.mission_title}
           </h3>
           
           {mission.mission_description && (
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-xs text-muted-foreground mb-3">
               {mission.mission_description}
             </p>
           )}
 
           {/* Progress Bar - only show if not claimed */}
           {!isClaimed && (
-            <div className="w-full mb-4">
-              <div className="h-3 rounded-full overflow-hidden bg-black/10">
+            <div className="w-full mb-3">
+              <div className="h-2.5 rounded-full overflow-hidden bg-black/10">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -325,7 +324,7 @@ function MissionCarouselCard({
                   className={`h-full rounded-full bg-gradient-to-r ${theme.progress}`}
                 />
               </div>
-              <p className={`text-sm mt-2 font-bold ${theme.text}`}>
+              <p className={`text-xs mt-1.5 font-bold ${theme.text}`}>
                 {mission.current_progress} / {mission.target_value}
               </p>
             </div>
@@ -333,7 +332,7 @@ function MissionCarouselCard({
 
           {/* Rewards Preview - show inline for claimed */}
           {!isClaimed && (
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div className="flex flex-wrap gap-1.5 justify-center mb-3">
               {mission.reward_coins > 0 && (
                 <div className="flex items-center gap-1.5 bg-amber-100 rounded-full px-3 py-1.5">
                   <img src={coinIcon} alt="" className="w-5 h-5" />
@@ -367,7 +366,7 @@ function MissionCarouselCard({
 
           {/* Claimed rewards on single line */}
           {isClaimed && (
-            <div className="flex items-center gap-2 justify-center mb-4 flex-wrap">
+            <div className="flex items-center gap-2 justify-center mb-3 flex-wrap">
               {mission.reward_coins > 0 && (
                 <div className="flex items-center gap-1">
                   <img src={coinIcon} alt="" className="w-4 h-4" />
@@ -407,11 +406,11 @@ function MissionCarouselCard({
               className="w-full"
             >
               <Button
-                size="lg"
+                size="default"
                 onClick={() => onClaim(mission.mission_id)}
                 disabled={isClaiming}
-                className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-900 font-black text-lg shadow-lg border-none h-14"
-                style={{ boxShadow: "0 4px 0 #B45309" }}
+                className="w-full bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-900 font-black text-base shadow-lg border-none h-11"
+                style={{ boxShadow: "0 3px 0 #B45309" }}
               >
                 {isClaiming ? (
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
@@ -445,7 +444,7 @@ function MissionCarouselCard({
 
 function CarouselDots({ count, current, onSelect }: { count: number; current: number; onSelect: (index: number) => void }) {
   return (
-    <div className="flex items-center justify-center gap-2 mt-4">
+    <div className="flex items-center justify-center gap-2 mt-2">
       {Array.from({ length: count }).map((_, index) => (
         <button
           key={index}
@@ -473,7 +472,7 @@ function RewardPreview({ missions }: { missions: Mission[] }) {
   if (unclaimedMissions.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl p-3 mb-4 border border-violet-200">
+    <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-2 mb-2 border border-violet-200">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-violet-600 font-medium">შესაძლო ჯილდოები</p>
@@ -658,26 +657,20 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
         className="max-h-[90vh]"
       >
         {/* Streak Banner */}
-        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 mb-4 border border-orange-200">
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-2.5 mb-2 border border-orange-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                <Flame className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                <Flame className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-xs text-orange-600 font-medium">სტრიქი</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-orange-700">{currentStreak}</span>
-                  <span className="text-xs text-orange-500">დღე</span>
-                </div>
-              </div>
+              <span className="text-sm font-bold text-orange-700">სტრიქი: {currentStreak} დღე</span>
             </div>
             {canClaimStreakBonus && (
               <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
                 <Button
                   size="sm"
                   onClick={handleClaimStreakBonus}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs"
+                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs h-7 px-2"
                 >
                   <Gift className="w-3 h-3 mr-1" />
                   +{streakBonus.coins} • +{streakBonus.gems} 💎
@@ -689,7 +682,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-3 mb-2">
             <TabsTrigger value="daily" className="text-xs">
               დღის
               {dailyMissions.filter((m) => m.completed && !m.reward_claimed).length > 0 && (
