@@ -16,9 +16,29 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('Starting icon verification...');
+    // Parse request body for options
+    let resetAll = false;
+    try {
+      const body = await req.json();
+      resetAll = body?.reset === true;
+    } catch { /* no body or invalid json */ }
 
-    // Fetch ALL icons using pagination (Supabase has 1000 row default limit)
+    console.log(`Starting icon verification... (reset: ${resetAll})`);
+
+    // If reset, clear all verification results
+    if (resetAll) {
+      await supabase.from('icon_verification_results').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      console.log('Cleared all verification results');
+    }
+
+    // Get already verified slugs
+    const { data: verified } = await supabase
+      .from('icon_verification_results')
+      .select('slug');
+    const verifiedSlugs = new Set((verified || []).map(v => v.slug));
+    console.log(`Already verified: ${verifiedSlugs.size} icons`);
+
+    // Fetch icons that haven't been verified yet
     const allIcons: Array<{ slug: string; icon_url: string }> = [];
     const pageSize = 1000;
     let offset = 0;
@@ -36,35 +56,41 @@ serve(async (req) => {
       }
 
       if (batch && batch.length > 0) {
-        allIcons.push(...batch);
+        // Only add icons not already verified
+        const unverified = batch.filter(icon => !verifiedSlugs.has(icon.slug));
+        allIcons.push(...unverified);
         offset += batch.length;
         hasMore = batch.length === pageSize;
-        console.log(`Fetched ${allIcons.length} icons so far...`);
       } else {
         hasMore = false;
       }
     }
 
-    console.log(`Found ${allIcons.length} total icons to verify`);
+    console.log(`Found ${allIcons.length} unverified icons to check`);
 
     if (allIcons.length === 0) {
+      // Get current totals
+      const { data: stats } = await supabase
+        .from('icon_verification_results')
+        .select('is_valid');
+      const valid = stats?.filter(s => s.is_valid).length || 0;
+      const broken = stats?.filter(s => !s.is_valid).length || 0;
+      
       return new Response(JSON.stringify({ 
         success: true, 
-        total: 0, 
-        valid: 0, 
-        broken: 0,
-        message: 'No icons to verify'
+        total: valid + broken,
+        valid,
+        broken,
+        done: true,
+        message: 'All icons already verified'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Clear old verification results
-    await supabase.from('icon_verification_results').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
     let validCount = 0;
     let brokenCount = 0;
-    const verifyBatchSize = 50;
+    const verifyBatchSize = 100; // Larger batches for speed
     const results: Array<{
       slug: string;
       icon_url: string;
@@ -72,10 +98,13 @@ serve(async (req) => {
       error_message: string | null;
     }> = [];
 
-    // Process icons in batches
-    for (let i = 0; i < allIcons.length; i += verifyBatchSize) {
-      const batch = allIcons.slice(i, i + verifyBatchSize);
-      console.log(`Verifying batch ${Math.floor(i / verifyBatchSize) + 1}/${Math.ceil(allIcons.length / verifyBatchSize)} (${i + batch.length}/${allIcons.length})`);
+    // Process up to 3000 icons per invocation to avoid timeout
+    const maxPerRun = 3000;
+    const iconsToProcess = allIcons.slice(0, maxPerRun);
+
+    for (let i = 0; i < iconsToProcess.length; i += verifyBatchSize) {
+      const batch = iconsToProcess.slice(i, i + verifyBatchSize);
+      console.log(`Verifying batch ${Math.floor(i / verifyBatchSize) + 1}/${Math.ceil(iconsToProcess.length / verifyBatchSize)} (${i + batch.length}/${iconsToProcess.length})`);
 
       const batchResults = await Promise.all(
         batch.map(async (icon) => {
@@ -109,8 +138,8 @@ serve(async (req) => {
 
       results.push(...batchResults);
 
-      // Insert results in chunks to avoid payload limits
-      if (results.length >= 500 || i + verifyBatchSize >= allIcons.length) {
+      // Insert in chunks
+      if (results.length >= 500 || i + verifyBatchSize >= iconsToProcess.length) {
         const { error: insertError } = await supabase
           .from('icon_verification_results')
           .upsert(results, { onConflict: 'slug' });
@@ -118,18 +147,25 @@ serve(async (req) => {
         if (insertError) {
           console.error('Insert error:', insertError);
         }
-        results.length = 0; // Clear results array
+        results.length = 0;
       }
     }
 
-    console.log(`Verification complete: ${validCount} valid, ${brokenCount} broken out of ${allIcons.length}`);
+    const remaining = allIcons.length - iconsToProcess.length;
+    const done = remaining === 0;
+
+    console.log(`Batch complete: ${validCount} valid, ${brokenCount} broken. Remaining: ${remaining}`);
 
     return new Response(JSON.stringify({
       success: true,
-      total: allIcons.length,
+      processed: iconsToProcess.length,
       valid: validCount,
       broken: brokenCount,
-      message: `Verified ${allIcons.length} icons: ${validCount} valid, ${brokenCount} broken`
+      remaining,
+      done,
+      message: done 
+        ? `Verification complete: ${validCount} valid, ${brokenCount} broken`
+        : `Verified ${iconsToProcess.length} icons. ${remaining} remaining - call again to continue.`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
