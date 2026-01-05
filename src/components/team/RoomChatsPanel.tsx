@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle, Users } from "lucide-react";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { useRoomChat } from "@/hooks/useRoomChat";
+import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
 
 interface RoomChatsPanelProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const { rooms, loading: roomsLoading } = useMyRooms();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const { messages, loading: messagesLoading, sendMessage } = useRoomChat(selectedRoomId);
+  const { unreadCounts, markRoomAsRead } = useUnreadRoomMessages();
+  const { typingUsers, setIsTyping } = useTypingIndicator(selectedRoomId);
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -29,6 +32,13 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
       setSelectedRoomId(rooms[0].id);
     }
   }, [rooms, selectedRoomId]);
+
+  // Mark room as read when selected
+  useEffect(() => {
+    if (selectedRoomId && isOpen) {
+      markRoomAsRead(selectedRoomId);
+    }
+  }, [selectedRoomId, isOpen, markRoomAsRead]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -46,11 +56,19 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
     if (!inputValue.trim() || sending) return;
     
     setSending(true);
+    setIsTyping(false);
     const success = await sendMessage(inputValue);
     if (success) {
       setInputValue("");
     }
     setSending(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (e.target.value.trim()) {
+      setIsTyping(true);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -119,28 +137,36 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
               ) : rooms.length === 0 ? (
                 <p className="text-sm text-muted-foreground px-2">ოთახები არ არის</p>
               ) : (
-                rooms.map((room) => (
-                  <motion.button
-                    key={room.id}
-                    onClick={() => setSelectedRoomId(room.id)}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all flex-shrink-0",
-                      selectedRoomId === room.id
-                        ? "bg-primary text-primary-foreground shadow-md"
-                        : "bg-secondary/80 text-muted-foreground hover:bg-secondary"
-                    )}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span className="max-w-[100px] truncate">
-                      {room.room_name || room.category_name || room.room_code}
-                    </span>
-                    <span className="text-xs opacity-60">
-                      ({room.participants.length})
-                    </span>
-                  </motion.button>
-                ))
+                rooms.map((room) => {
+                  const unreadCount = unreadCounts[room.id] || 0;
+                  return (
+                    <motion.button
+                      key={room.id}
+                      onClick={() => setSelectedRoomId(room.id)}
+                      className={cn(
+                        "relative flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all flex-shrink-0",
+                        selectedRoomId === room.id
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "bg-secondary/80 text-muted-foreground hover:bg-secondary"
+                      )}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Users className="w-4 h-4" />
+                      <span className="max-w-[100px] truncate">
+                        {room.room_name || room.category_name || room.room_code}
+                      </span>
+                      <span className="text-xs opacity-60">
+                        ({room.participants.length})
+                      </span>
+                      {unreadCount > 0 && selectedRoomId !== room.id && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </motion.button>
+                  );
+                })
               )}
             </div>
 
@@ -218,12 +244,27 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             {/* Input area */}
             {selectedRoomId && (
               <div className="p-3 border-t border-border/50">
+                {/* Typing indicator */}
+                {typingUsers.length > 0 && (
+                  <div className="flex items-center gap-2 px-2 pb-2 text-xs text-muted-foreground">
+                    <div className="flex gap-0.5">
+                      <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                    <span>
+                      {typingUsers.length === 1
+                        ? `${typingUsers[0].nickname} წერს...`
+                        : `${typingUsers.length} მომხმარებელი წერს...`}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <input
                     ref={inputRef}
                     type="text"
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     placeholder="შეტყობინება..."
                     className="flex-1 px-4 py-3 rounded-xl bg-secondary text-foreground placeholder-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
