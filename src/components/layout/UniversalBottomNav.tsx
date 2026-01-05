@@ -119,19 +119,17 @@ export function UniversalBottomNav({
 
           {/* Center Play Button - floats above, overlapping nav bar */}
           <div className="flex-1 flex justify-center overflow-visible">
-            <div className="relative overflow-visible" style={{ width: 72, height: 48 }}>
-              <div className="absolute left-1/2 -translate-x-1/2" style={{ bottom: -8 }}>
+            <div className="relative overflow-visible" style={{ width: 90, height: 90, marginTop: -42 }}>
               <Hex3DPlayButton 
-                  onClick={handleCenterClick}
-                  isPlayButton={showPlayButton}
-                  isPlusIcon={false}
-                  variant={isVip ? "gold" : canPlay ? "mint" : "exhausted"}
-                  playsRemaining={playsRemaining}
-                  maxPlays={maxPlays}
-                  isVip={isVip}
-                  canPlay={canPlay}
-                />
-              </div>
+                onClick={handleCenterClick}
+                isPlayButton={showPlayButton}
+                isPlusIcon={false}
+                variant={isVip ? "gold" : canPlay ? "mint" : "exhausted"}
+                playsRemaining={playsRemaining}
+                maxPlays={maxPlays}
+                isVip={isVip}
+                canPlay={canPlay}
+              />
             </div>
           </div>
 
