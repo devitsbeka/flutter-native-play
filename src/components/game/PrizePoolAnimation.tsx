@@ -105,7 +105,7 @@ export function PrizePoolAnimation({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="absolute -top-[50px] left-0 right-0 z-20 flex justify-center px-4"
+          className="absolute top-0 left-0 right-0 z-20 flex justify-center px-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
