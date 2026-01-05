@@ -4,6 +4,7 @@ import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -24,16 +25,6 @@ import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
 
 const botAvatars = [botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5];
 
-// Georgian answer labels
-const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
-
-// Difficulty labels and colors
-const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: "მარტივი",
-  medium: "საშუალო",
-  hard: "რთული",
-};
-
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "bg-success",
   medium: "bg-warning",
@@ -45,6 +36,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 export function QuizGameScreenProd() {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const {
     phase,
     questions,
@@ -75,6 +67,18 @@ export function QuizGameScreenProd() {
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+  // Translated labels
+  const ANSWER_LABELS = useMemo(() => [
+    t("game.labelA"),
+    t("game.labelB"), 
+    t("game.labelC"),
+    t("game.labelD")
+  ], [t]);
+  
+  const getDifficultyLabel = useCallback((difficulty: string) => {
+    return t(`game.difficulty.${difficulty}`) || difficulty;
+  }, [t]);
 
   // Get AI-suggested icon for current question
   const { aiData } = useAIIcon({
@@ -287,7 +291,7 @@ export function QuizGameScreenProd() {
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
           state={playerTimerFrozen ? "frozen" : "default"}
-          difficultyLabel={DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium}
+          difficultyLabel={getDifficultyLabel(currentQuestion.difficulty)}
           difficultyColor={DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}
           timerSeconds={timeRemaining}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}

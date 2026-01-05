@@ -213,6 +213,22 @@ export const ka = {
     pointsEarned: "+{points} ქულა",
     streakBonus: "სტრიკ ბონუსი!",
     perfectRound: "იდეალური რაუნდი!",
+    newRound: "ახალი რაუნდი",
+    starting: "იწყება...",
+    backToRoom: "ოთახში დაბრუნება",
+    place: "მე-{rank} ადგილი",
+    placeFirst: "მე-{rank} ადგილი!",
+    couldNotStartRound: "ახალი რაუნდის დაწყება ვერ მოხერხდა",
+    quizzes: "{count} ვიქტორინა",
+    difficulty: {
+      easy: "მარტივი",
+      medium: "საშუალო",
+      hard: "რთული",
+    },
+    labelA: "ა",
+    labelB: "ბ",
+    labelC: "გ",
+    labelD: "დ",
   },
 
   // ==========================================
