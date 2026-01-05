@@ -7,6 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
 import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
@@ -14,22 +15,23 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 
-const tabs = [
-  { id: "all", label: "ყველა" },
-  { id: "favorites", label: "ფავორიტები" },
-  { id: "classic", label: "კლასიკური" },
-  { id: "fun", label: "გართობა" },
-  { id: "educational", label: "სასწავლო" },
-];
-
 export default function Discover() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const tabs = useMemo(() => [
+    { id: "all", label: t("discover.all") },
+    { id: "favorites", label: t("discover.favorites") },
+    { id: "classic", label: t("discover.classic") },
+    { id: "fun", label: t("discover.fun") },
+    { id: "educational", label: t("discover.educational") },
+  ], [t]);
 
   // Track scroll position for compact header
   useEffect(() => {
@@ -131,7 +133,7 @@ export default function Discover() {
   };
 
   const getBadge = (_category: any, index: number) => {
-    if (index < 2) return "ტრენდული";
+    if (index < 2) return t("discover.trending");
     return undefined;
   };
 
@@ -157,7 +159,7 @@ export default function Discover() {
                   className="overflow-hidden"
                 >
                   <PageHeader
-                    title="აღმოაჩინე"
+                    title={t("discover.title")}
                     showBack={false}
                     rightElements={
                       <button
@@ -190,7 +192,7 @@ export default function Discover() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onFocus={() => setIsSearchFocused(true)}
                             onBlur={() => setIsSearchFocused(false)}
-                            placeholder="მოძებნე კატეგორია..."
+                            placeholder={t("discover.searchPlaceholder")}
                             className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
                             autoFocus
                           />
@@ -235,7 +237,7 @@ export default function Discover() {
                 exit={{ opacity: 0 }}
               >
                 <SectionHeader
-                  title={`ძებნის შედეგები (${filteredCategories.length})`}
+                  title={t("discover.searchResults").replace("{count}", String(filteredCategories.length))}
                 />
                 <CategoryCarousel
                   categories={filteredCategories}
@@ -248,7 +250,7 @@ export default function Discover() {
                 {filteredCategories.length === 0 && (
                   <div className="text-center py-12 px-4">
                     <p className="text-slate-500">
-                      არაფერი მოიძებნა "{searchQuery}"
+                      {t("discover.nothingFound").replace("{query}", searchQuery)}
                     </p>
                   </div>
                 )}
@@ -261,8 +263,8 @@ export default function Discover() {
               {favoriteCategories.length > 0 && (
                 <section>
                   <SectionHeader
-                    title="ჩემი ფავორიტები"
-                    subtitle="შენს მიერ არჩეული"
+                    title={t("discover.myFavorites")}
+                    subtitle={t("discover.chosenByYou")}
                   />
                   <CategoryCarousel
                     categories={favoriteCategories}
@@ -279,7 +281,7 @@ export default function Discover() {
               {recentlyViewed.length > 0 && (
                 <section>
                   <SectionHeader
-                    title="ბოლოს ნანახი"
+                    title={t("discover.recentlyViewed")}
                   />
                   <CategoryCarousel
                     categories={recentlyViewed as any[]}
@@ -295,8 +297,8 @@ export default function Discover() {
               {/* Popular */}
               <section>
                 <SectionHeader
-                  title="პოპულარული"
-                  subtitle="ყველაზე ხშირად თამაშობენ"
+                  title={t("discover.popular")}
+                  subtitle={t("discover.mostPlayed")}
                 />
                 <CategoryCarousel
                   categories={popularCategories}
@@ -313,8 +315,8 @@ export default function Discover() {
               {classicCategories.length > 0 && (
                 <section>
                   <SectionHeader
-                    title="კლასიკური ტრივია"
-                    subtitle="ისტორია, გეოგრაფია, მეცნიერება"
+                    title={t("discover.classicTrivia")}
+                    subtitle={t("discover.classicSubtitle")}
                     onSeeAll={() => setActiveTab("classic")}
                   />
                   <CategoryCarousel
@@ -332,8 +334,8 @@ export default function Discover() {
               {funCategories.length > 0 && (
                 <section>
                   <SectionHeader
-                    title="გართობა"
-                    subtitle="ფილმები, მუსიკა, სპორტი"
+                    title={t("discover.fun")}
+                    subtitle={t("discover.funSubtitle")}
                     onSeeAll={() => setActiveTab("fun")}
                   />
                   <CategoryCarousel
@@ -351,8 +353,8 @@ export default function Discover() {
               {educationalCategories.length > 0 && (
                 <section>
                   <SectionHeader
-                    title="სასწავლო"
-                    subtitle="ენები, ლიტერატურა, ხელოვნება"
+                    title={t("discover.educational")}
+                    subtitle={t("discover.educationalSubtitle")}
                     onSeeAll={() => setActiveTab("educational")}
                   />
                   <CategoryCarousel
@@ -369,7 +371,7 @@ export default function Discover() {
           ) : activeTab === "favorites" ? (
             /* Favorites Tab - Grid Layout */
             <section>
-              <SectionHeader title="ფავორიტები" />
+              <SectionHeader title={t("discover.favorites")} />
               <CategoryGrid
                 categories={favoriteCategories}
                 progress={progressMap}
@@ -381,7 +383,7 @@ export default function Discover() {
               {favoriteCategories.length === 0 && (
                 <div className="text-center py-12 px-4">
                   <p className="text-slate-500">
-                    ჯერ არაფერი დაგიმატებია ფავორიტებში
+                    {t("discover.noFavoritesYet")}
                   </p>
                 </div>
               )}
@@ -403,7 +405,7 @@ export default function Discover() {
               {filteredCategories.length === 0 && (
                 <div className="text-center py-12 px-4">
                   <p className="text-slate-500">
-                    ამ კატეგორიაში ჯერ არაფერია
+                    {t("discover.nothingInCategory")}
                   </p>
                 </div>
               )}

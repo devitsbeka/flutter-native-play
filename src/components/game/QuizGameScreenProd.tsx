@@ -355,7 +355,7 @@ export function QuizGameScreenProd() {
                   onClick={handleNext}
                   className="w-full"
                 >
-                  {isLastQuestion ? "შედეგები" : "შემდეგი კითხვა"}
+                  {isLastQuestion ? t("game.results") : t("game.nextQuestion")}
                 </ChunkyButton>
               </motion.div>
             ) : (
