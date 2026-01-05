@@ -72,3 +72,6 @@ verify_jwt = false
 
 [functions.verify-receipt]
 verify_jwt = true
+
+[functions.generate-multilang-trivia]
+verify_jwt = false

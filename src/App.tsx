@@ -41,6 +41,7 @@ import MissingIcons from "./pages/admin/MissingIcons";
 import AIGenerations from "./pages/admin/AIGenerations";
 import PushNotifications from "./pages/admin/PushNotifications";
 import AdminReports from "./pages/admin/Reports";
+import AdminFlow from "./pages/admin/Flow";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="/support" element={<Support />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="flow" element={<AdminFlow />} />
                 <Route path="content" element={<ContentManager />} />
                 <Route path="import" element={<AdminImport />} />
                 <Route path="users" element={<AdminOnlineUsers />} />
