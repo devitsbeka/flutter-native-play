@@ -1,6 +1,11 @@
 import { motion } from "framer-motion";
-import { Users, Gamepad2, Share2, Trophy } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
+
+// 3D icons
+import iconParty from "@/assets/icons/icon-party.png";
+import iconCompass from "@/assets/icons/icon-compass.png";
+import iconOtherGames from "@/assets/icons/icon-other-games.png";
+import iconTrophy from "@/assets/icons/icon-trophy-3d.png";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -13,7 +18,7 @@ function HelpItem({
   description,
   index 
 }: { 
-  icon: React.ReactNode; 
+  icon: string; 
   title: string; 
   description: string;
   index: number;
@@ -36,7 +41,7 @@ function HelpItem({
           boxShadow: "0 2px 0 #C4B5FD",
         }}
       >
-        <div className="text-purple-600">{icon}</div>
+        <img src={icon} alt={title} className="w-6 h-6 object-contain" />
       </div>
       <div>
         <h3 className="font-semibold text-gray-800 mb-0.5">{title}</h3>
@@ -58,28 +63,28 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       {/* Content */}
       <div className="space-y-3 mb-4">
         <HelpItem
-          icon={<Gamepad2 className="w-5 h-5" />}
+          icon={iconOtherGames}
           title="თამაშის შექმნა"
           description="დააჭირე '+ თამაშის შექმნა' ღილაკს და აირჩიე კატეგორია. მიიღებ უნიკალურ კოდს."
           index={0}
         />
         
         <HelpItem
-          icon={<Share2 className="w-5 h-5" />}
+          icon={iconCompass}
           title="კოდის გაზიარება"
           description="გაუზიარე კოდი მეგობარს და დაელოდე სანამ შემოვა ოთახში."
           index={1}
         />
         
         <HelpItem
-          icon={<Users className="w-5 h-5" />}
+          icon={iconParty}
           title="მეგობრებთან თამაში"
           description="დაამატე მეგობრები და დაიწყე თამაში პირდაპირ მათ ბარათზე დაჭერით."
           index={2}
         />
         
         <HelpItem
-          icon={<Trophy className="w-5 h-5" />}
+          icon={iconTrophy}
           title="გამარჯვება"
           description="უპასუხე კითხვებს სწრაფად და სწორად. ყველაზე მეტი ქულის მქონე იმარჯვებს!"
           index={3}
