@@ -1,46 +1,70 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check, X, CheckCheck, XCircle, AlertTriangle, Search, Edit2 } from 'lucide-react';
-import { GeneratedQuestion } from '@/pages/admin/Flow';
+import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from '@/utils/questionValidation';
 import { cn } from '@/lib/utils';
 import { FlowIconPicker } from './FlowIconPicker';
 
 interface Props {
   questions: GeneratedQuestion[];
+  categories: Category[];
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onBulkApprove: (ids: string[]) => void;
   onBulkReject: (ids: string[]) => void;
   onUpdateQuestion: (id: string, updates: Partial<GeneratedQuestion>) => void;
   languages: { code: string; name: string; flag: string }[];
+  focusedQuestionId: string | null;
+  onFocusChange: (id: string | null) => void;
 }
+
+type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
 
 export function QuestionPreviewList({
   questions,
+  categories,
   onApprove,
   onReject,
   onBulkApprove,
   onBulkReject,
   onUpdateQuestion,
   languages,
+  focusedQuestionId,
+  onFocusChange,
 }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
+  const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Get unique categories from questions
+  const uniqueCategories = useMemo(() => {
+    const catMap = new Map<string, { id: string; name: string }>();
+    questions.forEach(q => {
+      if (!catMap.has(q.categoryId)) {
+        catMap.set(q.categoryId, { id: q.categoryId, name: q.categoryName });
+      }
+    });
+    return Array.from(catMap.values());
+  }, [questions]);
 
   const filteredQuestions = useMemo(() => {
     let result = questions;
     
     // Filter by status
-    if (filter !== 'all') {
-      result = result.filter(q => q.status === filter);
+    if (statusFilter !== 'all') {
+      result = result.filter(q => q.status === statusFilter);
+    }
+
+    // Filter by category
+    if (categoryFilter.size > 0) {
+      result = result.filter(q => categoryFilter.has(q.categoryId));
     }
 
     // Filter by search
@@ -55,7 +79,7 @@ export function QuestionPreviewList({
     }
 
     return result;
-  }, [questions, filter, searchQuery]);
+  }, [questions, statusFilter, categoryFilter, searchQuery]);
 
   const pendingQuestions = filteredQuestions.filter(q => q.status === 'pending');
 
@@ -86,9 +110,25 @@ export function QuestionPreviewList({
     setSelectedIds(new Set());
   };
 
+  const toggleCategoryFilter = (catId: string) => {
+    setCategoryFilter(prev => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
+      return next;
+    });
+  };
+
   const getFlag = (langCode: string) => {
     return languages.find(l => l.code === langCode)?.flag || '🌐';
   };
+
+  const statusFilters: { value: FilterStatus; label: string; count: number }[] = [
+    { value: 'all', label: 'All', count: questions.length },
+    { value: 'pending', label: 'Pending', count: questions.filter(q => q.status === 'pending').length },
+    { value: 'approved', label: 'Approved', count: questions.filter(q => q.status === 'approved').length },
+    { value: 'rejected', label: 'Rejected', count: questions.filter(q => q.status === 'rejected').length },
+  ];
 
   if (questions.length === 0) {
     return (
@@ -119,21 +159,60 @@ export function QuestionPreviewList({
           />
         </div>
 
-        {/* Filters & Selection */}
+        {/* Status Filter - Inline Circles */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">Status:</span>
+          {statusFilters.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setStatusFilter(f.value)}
+              className={cn(
+                "px-2.5 py-1 rounded-full text-xs transition-all",
+                statusFilter === f.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+            >
+              {f.label} ({f.count})
+            </button>
+          ))}
+        </div>
+
+        {/* Category Filter - Inline Circles */}
+        {uniqueCategories.length > 1 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">Category:</span>
+            <button
+              onClick={() => setCategoryFilter(new Set())}
+              className={cn(
+                "px-2.5 py-1 rounded-full text-xs transition-all",
+                categoryFilter.size === 0
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+            >
+              All
+            </button>
+            {uniqueCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => toggleCategoryFilter(cat.id)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs transition-all truncate max-w-32",
+                  categoryFilter.has(cat.id)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/50 hover:bg-muted"
+                )}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Selection Actions */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
-              <SelectTrigger className="w-32 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All ({questions.length})</SelectItem>
-                <SelectItem value="pending">Pending ({questions.filter(q => q.status === 'pending').length})</SelectItem>
-                <SelectItem value="approved">Approved ({questions.filter(q => q.status === 'approved').length})</SelectItem>
-                <SelectItem value="rejected">Rejected ({questions.filter(q => q.status === 'rejected').length})</SelectItem>
-              </SelectContent>
-            </Select>
-
             {pendingQuestions.length > 0 && (
               <Button
                 variant="ghost"
@@ -141,7 +220,7 @@ export function QuestionPreviewList({
                 onClick={selectedIds.size === pendingQuestions.length ? deselectAll : selectAll}
                 className="text-xs h-8"
               >
-                {selectedIds.size === pendingQuestions.length ? 'Deselect All' : 'Select All'}
+                {selectedIds.size === pendingQuestions.length ? 'Deselect All' : `Select All (${pendingQuestions.length})`}
               </Button>
             )}
           </div>
@@ -181,12 +260,14 @@ export function QuestionPreviewList({
               question={q}
               isSelected={selectedIds.has(q.id)}
               isEditing={editingId === q.id}
+              isFocused={focusedQuestionId === q.id}
               onToggleSelect={() => toggleSelect(q.id)}
               onApprove={() => onApprove(q.id)}
               onReject={() => onReject(q.id)}
               onStartEdit={() => setEditingId(q.id)}
               onEndEdit={() => setEditingId(null)}
               onUpdate={(updates) => onUpdateQuestion(q.id, updates)}
+              onFocus={() => onFocusChange(q.id)}
               flag={getFlag(q.language)}
             />
           ))}
@@ -200,31 +281,43 @@ function QuestionCard({
   question,
   isSelected,
   isEditing,
+  isFocused,
   onToggleSelect,
   onApprove,
   onReject,
   onStartEdit,
   onEndEdit,
   onUpdate,
+  onFocus,
   flag,
 }: {
   question: GeneratedQuestion;
   isSelected: boolean;
   isEditing: boolean;
+  isFocused: boolean;
   onToggleSelect: () => void;
   onApprove: () => void;
   onReject: () => void;
   onStartEdit: () => void;
   onEndEdit: () => void;
   onUpdate: (updates: Partial<GeneratedQuestion>) => void;
+  onFocus: () => void;
   flag: string;
 }) {
   const [editedQuestion, setEditedQuestion] = useState(question.questionText);
   const [editedCorrect, setEditedCorrect] = useState(question.correctAnswer);
   const [editedIncorrect, setEditedIncorrect] = useState([...question.incorrectAnswers]);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const questionLength = (isEditing ? editedQuestion : question.questionText)?.length || 0;
   const isQuestionOverLimit = questionLength > QUESTION_MAX_LENGTH;
+
+  // Scroll into view when focused
+  useEffect(() => {
+    if (isFocused && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isFocused]);
 
   const handleSave = useCallback(() => {
     const newWarnings: string[] = [];
@@ -260,13 +353,16 @@ function QuestionCard({
 
   return (
     <div
+      ref={cardRef}
+      onClick={onFocus}
       className={cn(
-        "p-3 rounded-lg border transition-all",
+        "p-3 rounded-lg border transition-all cursor-pointer",
         question.status === 'approved' && "border-green-500/50 bg-green-500/5",
         question.status === 'rejected' && "border-destructive/50 bg-destructive/5 opacity-60",
         question.status === 'pending' && "border-border bg-card/50",
         question.isDuplicate && "border-orange-500/50 bg-orange-500/5",
-        isSelected && question.status === 'pending' && "ring-2 ring-primary"
+        isSelected && question.status === 'pending' && "ring-2 ring-primary",
+        isFocused && question.status === 'pending' && "ring-2 ring-blue-500 shadow-lg"
       )}
     >
       <div className="flex items-start gap-3">
@@ -274,6 +370,7 @@ function QuestionCard({
           <Checkbox
             checked={isSelected}
             onCheckedChange={onToggleSelect}
+            onClick={(e) => e.stopPropagation()}
             className="mt-1"
           />
         )}
@@ -311,6 +408,7 @@ function QuestionCard({
               <Input
                 value={editedQuestion}
                 onChange={(e) => setEditedQuestion(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
                 className={cn(
                   "font-medium",
                   editedQuestion.length > QUESTION_MAX_LENGTH && "border-destructive focus-visible:ring-destructive"
@@ -327,7 +425,7 @@ function QuestionCard({
           ) : (
             <div 
               className="group cursor-pointer mb-2"
-              onClick={onStartEdit}
+              onClick={(e) => { e.stopPropagation(); onStartEdit(); }}
             >
               <p className="font-medium text-sm group-hover:text-primary transition-colors">
                 {question.questionText}
@@ -385,10 +483,10 @@ function QuestionCard({
           {/* Edit Actions */}
           {isEditing && (
             <div className="flex justify-end gap-2 mt-3">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
+              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleCancel(); }}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={(e) => { e.stopPropagation(); handleSave(); }}>
                 Save
               </Button>
             </div>
@@ -401,7 +499,7 @@ function QuestionCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onApprove}
+              onClick={(e) => { e.stopPropagation(); onApprove(); }}
               className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
             >
               <Check className="h-4 w-4" />
@@ -409,7 +507,7 @@ function QuestionCard({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onReject}
+              onClick={(e) => { e.stopPropagation(); onReject(); }}
               className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <X className="h-4 w-4" />
@@ -465,6 +563,7 @@ function AnswerInput({ value, onChange, isCorrect = false }: { value: string; on
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
         className={cn(
           "pr-10 text-xs h-8",
           isCorrect && "border-green-500/50 focus-visible:ring-green-500",
