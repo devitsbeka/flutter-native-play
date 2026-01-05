@@ -442,12 +442,6 @@ function Hex3DPlayButton({
                   strokeWidth={2.5}
                 />
               </motion.div>
-            ) : isVip ? (
-              <Crown 
-                className="w-7 h-7" 
-                color="#ffffff"
-                strokeWidth={2.5}
-              />
             ) : isPlayButton ? (
               <Play 
                 className="w-8 h-8 ml-1" 
