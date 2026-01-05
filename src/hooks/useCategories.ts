@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { preloadIcons } from '@/hooks/useIconLibrary';
+
+const STORAGE_KEY = 'app-language';
+const DEFAULT_LANGUAGE = 'ka';
 
 export interface DatabaseCategory {
   id: string; // UUID
@@ -49,6 +52,42 @@ export const useCategories = () => {
   const [categories, setCategories] = useState<TransformedCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [translations, setTranslations] = useState<Record<string, { name: string; description?: string }>>({});
+
+  // Get current language from localStorage
+  const getCurrentLanguage = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
+    }
+    return DEFAULT_LANGUAGE;
+  }, []);
+
+  const language = useMemo(() => getCurrentLanguage(), [getCurrentLanguage]);
+
+  const fetchTranslations = useCallback(async (lang: string) => {
+    if (lang === 'ka') {
+      // Georgian is the default, no translations needed
+      setTranslations({});
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('category_translations')
+        .select('category_id, name, description')
+        .eq('language', lang);
+
+      if (error) throw error;
+
+      const transMap: Record<string, { name: string; description?: string }> = {};
+      (data || []).forEach(t => {
+        transMap[t.category_id] = { name: t.name, description: t.description || undefined };
+      });
+      setTranslations(transMap);
+    } catch (err) {
+      console.error('Error fetching category translations:', err);
+    }
+  }, []);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -120,5 +159,35 @@ export const useCategories = () => {
     };
   }, [fetchCategories]);
 
-  return { categories, loading, error, refetch: fetchCategories };
+  // Fetch translations when language changes
+  useEffect(() => {
+    fetchTranslations(language);
+  }, [language, fetchTranslations]);
+
+  // Apply translations to categories
+  const translatedCategories = useMemo(() => {
+    if (Object.keys(translations).length === 0) {
+      return categories;
+    }
+
+    return categories.map(cat => {
+      const trans = translations[cat.uuid];
+      if (trans) {
+        return {
+          ...cat,
+          name: trans.name,
+          description: trans.description || cat.description,
+        };
+      }
+      return cat;
+    });
+  }, [categories, translations]);
+
+  return { 
+    categories: translatedCategories, 
+    loading, 
+    error, 
+    refetch: fetchCategories,
+    language,
+  };
 };

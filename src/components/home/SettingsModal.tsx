@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Lock, Globe, ChevronRight, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
@@ -14,23 +15,23 @@ interface SettingsModalProps {
 
 type SettingsView = "main" | "editName" | "changePassword" | "language";
 
-const languages = [
-  { code: "ka", label: "ქართული", flag: "🇬🇪" },
-  { code: "en", label: "English", flag: "🇺🇸" },
-];
-
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { user, profile, fetchProfile } = useAuth();
   const { notify } = useNotificationModal();
+  const { language, setLanguage, t, languages } = useLanguage();
   const [view, setView] = useState<SettingsView>("main");
   const [nickname, setNickname] = useState(profile?.nickname || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState(() => {
-    return localStorage.getItem("app_language") || "ka";
-  });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update nickname when profile changes
+  useEffect(() => {
+    if (profile?.nickname) {
+      setNickname(profile.nickname);
+    }
+  }, [profile?.nickname]);
 
   const handleBack = () => {
     setView("main");
@@ -57,10 +58,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       if (error) throw error;
       
       if (user) await fetchProfile(user.id);
-      notify.success("სახელი წარმატებით შეიცვალა!", { icon: "✅" });
+      notify.success(t("settings.nameChanged"), { icon: "✅" });
       handleBack();
     } catch (error: any) {
-      notify.error("შეცდომა", { description: error.message });
+      notify.error(t("errors.generic"), { description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -68,17 +69,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
-      notify.error("გთხოვთ შეავსოთ ყველა ველი");
+      notify.error(t("settings.passwordMismatch"));
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      notify.error("პაროლები არ ემთხვევა");
+      notify.error(t("settings.passwordMismatch"));
       return;
     }
 
     if (newPassword.length < 6) {
-      notify.error("პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო");
+      notify.error(t("auth.passwordTooShort"));
       return;
     }
     
@@ -90,26 +91,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
       if (error) throw error;
       
-      notify.success("პაროლი წარმატებით შეიცვალა!", { icon: "🔐" });
+      notify.success(t("settings.passwordChanged"), { icon: "🔐" });
       handleBack();
     } catch (error: any) {
-      notify.error("შეცდომა", { description: error.message });
+      notify.error(t("errors.generic"), { description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLanguageChange = (code: string) => {
-    setSelectedLanguage(code);
-    localStorage.setItem("app_language", code);
-    notify.success("ენა წარმატებით შეიცვალა!", { icon: "🌍" });
+    setLanguage(code);
+    // Force a page reload to apply all translations
+    window.location.reload();
   };
+
+  const currentLang = languages.find(l => l.code === language);
 
   const settingsItems = [
     {
       icon: User,
-      label: "სახელის შეცვლა",
-      sublabel: profile?.nickname || "მოთამაშე",
+      label: t("settings.editName"),
+      sublabel: profile?.nickname || t("game.you"),
       action: () => {
         setNickname(profile?.nickname || "");
         setView("editName");
@@ -117,14 +120,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     },
     {
       icon: Lock,
-      label: "პაროლის შეცვლა",
-      sublabel: "უსაფრთხოება",
+      label: t("settings.changePassword"),
+      sublabel: t("auth.password"),
       action: () => setView("changePassword"),
     },
     {
       icon: Globe,
-      label: "ენა",
-      sublabel: languages.find(l => l.code === selectedLanguage)?.label || "ქართული",
+      label: t("settings.language"),
+      sublabel: currentLang?.nativeName || "ქართული",
       action: () => setView("language"),
     },
   ];
@@ -164,10 +167,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </button>
 
               <h2 className="text-center font-display text-lg font-bold text-foreground">
-                {view === "main" && "პარამეტრები"}
-                {view === "editName" && "სახელის შეცვლა"}
-                {view === "changePassword" && "პაროლის შეცვლა"}
-                {view === "language" && "ენის არჩევა"}
+                {view === "main" && t("settings.title")}
+                {view === "editName" && t("settings.editName")}
+                {view === "changePassword" && t("settings.changePassword")}
+                {view === "language" && t("settings.language")}
               </h2>
             </div>
 
@@ -182,7 +185,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     exit={{ opacity: 0, x: 20 }}
                     className="space-y-2"
                   >
-                    {settingsItems.map((item, index) => (
+                    {settingsItems.map((item) => (
                       <button
                         key={item.label}
                         onClick={item.action}
@@ -211,12 +214,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   >
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        ახალი სახელი
+                        {t("settings.editName")}
                       </label>
                       <Input
                         value={nickname}
                         onChange={(e) => setNickname(e.target.value)}
-                        placeholder="შეიყვანეთ სახელი"
+                        placeholder={t("auth.usernamePlaceholder")}
                         className="h-12 rounded-xl"
                         maxLength={20}
                       />
@@ -231,7 +234,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        "შენახვა"
+                        t("common.save")
                       )}
                     </ChunkyButton>
                   </motion.div>
@@ -247,25 +250,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   >
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        ახალი პაროლი
+                        {t("settings.newPassword")}
                       </label>
                       <Input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="შეიყვანეთ ახალი პაროლი"
+                        placeholder={t("auth.passwordPlaceholder")}
                         className="h-12 rounded-xl"
                       />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        გაიმეორეთ პაროლი
+                        {t("settings.confirmPassword")}
                       </label>
                       <Input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="გაიმეორეთ ახალი პაროლი"
+                        placeholder={t("auth.passwordPlaceholder")}
                         className="h-12 rounded-xl"
                       />
                     </div>
@@ -279,7 +282,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       {isLoading ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        "პაროლის შეცვლა"
+                        t("settings.changePassword")
                       )}
                     </ChunkyButton>
                   </motion.div>
@@ -298,16 +301,21 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang.code)}
                         className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors ${
-                          selectedLanguage === lang.code
+                          language === lang.code
                             ? "bg-primary/10 ring-2 ring-primary"
                             : "bg-muted/50 hover:bg-muted"
                         }`}
                       >
                         <span className="text-2xl">{lang.flag}</span>
-                        <span className="flex-1 text-left font-medium text-foreground">
-                          {lang.label}
-                        </span>
-                        {selectedLanguage === lang.code && (
+                        <div className="flex-1 text-left">
+                          <span className="font-medium text-foreground block">
+                            {lang.nativeName}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {lang.name}
+                          </span>
+                        </div>
+                        {language === lang.code && (
                           <Check className="h-5 w-5 text-primary" />
                         )}
                       </button>
