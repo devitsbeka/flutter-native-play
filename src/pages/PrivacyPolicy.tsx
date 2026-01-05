@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
               <h2 className="text-lg font-semibold mb-2">შესავალი</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 ჩვენ ვიცავთ თქვენს კონფიდენციალურობას. ეს პოლიტიკა აღწერს, როგორ ვაგროვებთ, 
-                ვიყენებთ და ვიცავთ თქვენს პერსონალურ მონაცემებს QuizApp-ის გამოყენებისას.
+                ვიყენებთ და ვიცავთ თქვენს პერსონალურ მონაცემებს World Quizzes-ის გამოყენებისას.
               </p>
             </section>
 

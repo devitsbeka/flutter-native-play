@@ -68,7 +68,7 @@ export default function Auth() {
             notify.error("Sign up failed", { description: error.message });
           }
         } else {
-          notify.success("Welcome to Quiz Battle!", { description: "Your account has been created.", icon: "🎉" });
+          notify.success("კეთილი იყოს შენი მობრძანება!", { description: "ანგარიში შეიქმნა.", icon: "🎉" });
           navigate("/");
         }
       } else {

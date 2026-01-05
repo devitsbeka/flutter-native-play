@@ -1119,6 +1119,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       user_category_progress: {
         Row: {
           category_id: string
@@ -1562,6 +1583,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_reports: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          message_id: string | null
+          report_type: string
+          reported_user_id: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          room_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          message_id?: string | null
+          report_type: string
+          reported_user_id: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          message_id?: string | null
+          report_type?: string
+          reported_user_id?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       user_rewards: {
         Row: {
           claimed_at: string
@@ -1612,30 +1675,39 @@ export type Database = {
       }
       vip_subscriptions: {
         Row: {
+          apple_original_transaction_id: string | null
+          apple_product_id: string | null
           auto_renew: boolean | null
           created_at: string
           expires_at: string
           id: string
+          purchase_platform: string | null
           started_at: string
           updated_at: string
           user_id: string
           vip_tier: string
         }
         Insert: {
+          apple_original_transaction_id?: string | null
+          apple_product_id?: string | null
           auto_renew?: boolean | null
           created_at?: string
           expires_at: string
           id?: string
+          purchase_platform?: string | null
           started_at?: string
           updated_at?: string
           user_id: string
           vip_tier?: string
         }
         Update: {
+          apple_original_transaction_id?: string | null
+          apple_product_id?: string | null
           auto_renew?: boolean | null
           created_at?: string
           expires_at?: string
           id?: string
+          purchase_platform?: string | null
           started_at?: string
           updated_at?: string
           user_id?: string

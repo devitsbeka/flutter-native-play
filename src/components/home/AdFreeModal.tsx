@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, RotateCcw } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
+import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface AdFreeModalProps {
   isOpen: boolean;
@@ -16,6 +20,32 @@ const benefits = [
 ];
 
 export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { purchase, restorePurchases, purchasing } = useInAppPurchases();
+  const [restoring, setRestoring] = useState(false);
+
+  const handlePurchase = async () => {
+    if (!user) {
+      onClose();
+      navigate("/auth");
+      return;
+    }
+    const result = await purchase(IAP_PRODUCTS.AD_FREE);
+    if (result.success) {
+      onClose();
+    }
+  };
+
+  const handleRestore = async () => {
+    setRestoring(true);
+    const success = await restorePurchases();
+    setRestoring(false);
+    if (success) {
+      onClose();
+    }
+  };
+
   // Custom icon with the ad-free image
   const customIcon = (
     <div className="relative">
@@ -81,10 +111,10 @@ export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
       </div>
 
       <GameModalFooter
-        primaryLabel="Unlock for $4.99"
-        onPrimary={() => {}}
-        secondaryLabel="Restore Purchase"
-        onSecondary={() => {}}
+        primaryLabel={purchasing ? "მიმდინარეობს..." : "Unlock for $4.99"}
+        onPrimary={handlePurchase}
+        secondaryLabel={restoring ? "მიმდინარეობს..." : "Restore Purchase"}
+        onSecondary={handleRestore}
         primaryVariant="primary"
       />
     </GameModal>

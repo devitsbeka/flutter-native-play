@@ -45,7 +45,10 @@ import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
 import Notifications from "./pages/Notifications";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import PrivacyPolicyEN from "./pages/PrivacyPolicyEN";
 import TermsOfService from "./pages/TermsOfService";
+import Support from "./pages/Support";
+import { OfflineBanner } from "./components/shared/OfflineBanner";
 
 const App = () => (
   <AuthProvider>
@@ -54,6 +57,9 @@ const App = () => (
         <NotificationModalProvider>
           <SplashScreen>
             <TooltipProvider>
+            {/* Offline detection banner */}
+            <OfflineBanner />
+            
             {/* Global persistent background with particles */}
             <GlobalSplineBackground />
             
@@ -79,7 +85,9 @@ const App = () => (
               <Route path="/discover" element={<Discover />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
               <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="content" element={<ContentManager />} />

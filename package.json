@@ -19,6 +19,7 @@
     "@capacitor/core": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
+    "@capgo/capacitor-purchases": "^5.0.8",
     "@fontsource/google-sans-flex": "^5.2.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",

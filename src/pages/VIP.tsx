@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Star, Crown, Zap, Palette, Gift, Shield, Sparkles } from "lucide-react";
+import { Star, Crown, Zap, Palette, Gift, Shield, Sparkles, RotateCcw } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { useVipStatus } from "@/hooks/useVipStatus";
 
 const vipBenefits = [
   {
@@ -44,9 +47,41 @@ const vipBenefits = [
   },
 ];
 
+// Pricing constants
+const MONTHLY_PRICE = 9.99;
+const ANNUAL_PRICE = 79.99;
+const MONTHLY_TOTAL = MONTHLY_PRICE * 12;
+const SAVINGS = MONTHLY_TOTAL - ANNUAL_PRICE;
+const SAVINGS_PERCENT = Math.round((SAVINGS / MONTHLY_TOTAL) * 100);
+
 export default function VIP() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { purchase, restorePurchases, purchasing } = useInAppPurchases();
+  const { isVip, getDaysRemaining } = useVipStatus();
+  const [restoring, setRestoring] = useState(false);
+
+  const handlePurchaseMonthly = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    await purchase(IAP_PRODUCTS.VIP_MONTHLY);
+  };
+
+  const handlePurchaseAnnual = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    await purchase(IAP_PRODUCTS.VIP_ANNUAL);
+  };
+
+  const handleRestore = async () => {
+    setRestoring(true);
+    await restorePurchases();
+    setRestoring(false);
+  };
 
   return (
     <div className="min-h-screen">
@@ -119,9 +154,26 @@ export default function VIP() {
           ))}
         </div>
 
+        {/* VIP Status Banner (if already VIP) */}
+        {isVip && (
+          <motion.div
+            className="bg-gradient-to-r from-amber-400 to-orange-400 rounded-2xl p-4 mb-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="flex items-center gap-3">
+              <Crown className="w-8 h-8 text-white" />
+              <div>
+                <p className="font-bold text-white">VIP აქტიურია!</p>
+                <p className="text-white/80 text-sm">{getDaysRemaining()} დღე დარჩენილია</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Pricing */}
         <motion.div
-          className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 mb-6 border border-slate-200"
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-slate-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -130,32 +182,23 @@ export default function VIP() {
             <div>
               <p className="text-sm text-slate-600">თვიური გამოწერა</p>
               <p className="text-2xl font-display font-bold text-slate-800">
-                ₾9.99<span className="text-sm text-slate-600 font-normal">/თვე</span>
+                ₾{MONTHLY_PRICE}<span className="text-sm text-slate-600 font-normal">/თვე</span>
               </p>
-            </div>
-            <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-              -40% დაზოგვა
             </div>
           </div>
           <ChunkyButton 
             className="w-full"
-            onClick={() => {
-              if (!user) {
-                navigate("/auth");
-              } else {
-                // TODO: Implement payment
-                console.log("Subscribe to VIP");
-              }
-            }}
+            onClick={handlePurchaseMonthly}
+            disabled={purchasing}
           >
             <Crown className="w-5 h-5 mr-2" />
-            გააქტიურე VIP
+            {purchasing ? "მიმდინარეობს..." : "გააქტიურე VIP"}
           </ChunkyButton>
         </motion.div>
 
         {/* Annual option */}
         <motion.div
-          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 border border-amber-200"
+          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 mb-4 border border-amber-200"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -167,13 +210,42 @@ export default function VIP() {
               საუკეთესო ფასი
             </span>
           </div>
-          <p className="text-2xl font-display font-bold text-slate-800 mb-1">
-            ₾79.99<span className="text-sm text-slate-600 font-normal">/წელი</span>
-          </p>
-          <p className="text-sm text-slate-600">
-            ₾6.67/თვე • დაზოგე ₾40
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-2xl font-display font-bold text-slate-800">
+                ₾{ANNUAL_PRICE}<span className="text-sm text-slate-600 font-normal">/წელი</span>
+              </p>
+              <p className="text-sm text-slate-600">
+                ₾{(ANNUAL_PRICE / 12).toFixed(2)}/თვე • დაზოგე ₾{SAVINGS.toFixed(0)}
+              </p>
+            </div>
+            <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+              -{SAVINGS_PERCENT}% დაზოგვა
+            </div>
+          </div>
+          <ChunkyButton 
+            className="w-full"
+            variant="primary"
+            onClick={handlePurchaseAnnual}
+            disabled={purchasing}
+          >
+            <Crown className="w-5 h-5 mr-2" />
+            {purchasing ? "მიმდინარეობს..." : "წლიური გამოწერა"}
+          </ChunkyButton>
         </motion.div>
+
+        {/* Restore Purchases */}
+        <motion.button
+          className="w-full flex items-center justify-center gap-2 py-3 text-primary text-sm font-medium"
+          onClick={handleRestore}
+          disabled={restoring}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <RotateCcw className={`w-4 h-4 ${restoring ? "animate-spin" : ""}`} />
+          {restoring ? "მიმდინარეობს..." : "შესყიდვების აღდგენა"}
+        </motion.button>
 
         {/* Apple Required Subscription Terms */}
         <div className="mt-6 space-y-3 px-2">

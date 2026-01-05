@@ -29,7 +29,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-lg font-semibold mb-2">1. პირობების მიღება</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                QuizApp-ის გამოყენებით თქვენ ეთანხმებით ამ მომსახურების პირობებს. 
+                World Quizzes-ის გამოყენებით თქვენ ეთანხმებით ამ მომსახურების პირობებს.
                 თუ არ ეთანხმებით რომელიმე პირობას, გთხოვთ, არ გამოიყენოთ აპლიკაცია.
               </p>
             </section>
@@ -122,7 +122,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-lg font-semibold mb-2">6. ინტელექტუალური საკუთრება</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                QuizApp-ის კონტენტი, დიზაინი, ლოგო და სასაქონლო ნიშნები არის ჩვენი საკუთრება. 
+                World Quizzes-ის კონტენტი, დიზაინი, ლოგო და სასაქონლო ნიშნები არის ჩვენი საკუთრება.
                 თქვენ მიიღებთ შეზღუდულ ლიცენზიას აპლიკაციის პირადი მოხმარებისთვის.
               </p>
             </section>
