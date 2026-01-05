@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { FileText, Mail } from "lucide-react";
+import { FileText, Mail, Globe } from "lucide-react";
 
 export default function TermsOfService() {
   return (
@@ -161,6 +162,20 @@ export default function TermsOfService() {
                 ეს პირობები რეგულირდება საქართველოს კანონმდებლობით. დავები განიხილება 
                 საქართველოს სასამართლოებში.
               </p>
+            </section>
+
+            {/* Language Toggle */}
+            <section className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+              <Link 
+                to="/terms-en"
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-foreground">English Version</span>
+                </div>
+                <span className="text-xs text-muted-foreground">View in English →</span>
+              </Link>
             </section>
 
             {/* Contact */}

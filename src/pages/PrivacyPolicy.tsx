@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Shield, Mail } from "lucide-react";
+import { Shield, Mail, Globe } from "lucide-react";
 
 export default function PrivacyPolicy() {
   return (
@@ -142,6 +143,20 @@ export default function PrivacyPolicy() {
                 ჩვენი სერვისი განკუთვნილია 13 წელზე უფროსი ასაკის მომხმარებლებისთვის. 
                 ჩვენ შეგნებულად არ ვაგროვებთ 13 წლამდე ბავშვების მონაცემებს.
               </p>
+            </section>
+
+            {/* Language Toggle */}
+            <section className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+              <Link 
+                to="/privacy-policy-en"
+                className="flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-foreground">English Version</span>
+                </div>
+                <span className="text-xs text-muted-foreground">View in English →</span>
+              </Link>
             </section>
 
             {/* Contact */}
