@@ -312,7 +312,7 @@ function Hex3DPlayButton({
   const showExhausted = variant === "exhausted" && isPlayButton;
 
   return (
-    <div className="relative">
+    <div className="relative pointer-events-auto">
       {/* Badge above button */}
       {isPlayButton && !isPlusIcon && (
         <motion.div
