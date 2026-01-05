@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Check, Lock, Flame, Clock } from "lucide-react";
-import giftBottleIcon from "@/assets/icons/icon-gem.png";
+import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
