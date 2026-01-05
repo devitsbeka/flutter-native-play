@@ -30,11 +30,22 @@ export const VIP_BENEFITS = [
   { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
 ];
 
+// Cache key for localStorage
+const VIP_CACHE_KEY = "cached_vip_status";
+
 export function useVipStatus() {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<VipSubscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isVip, setIsVip] = useState(true); // Optimistically assume VIP, verify after
+  // Optimistically use cached value, fallback to false for new users
+  const [isVip, setIsVip] = useState(() => {
+    try {
+      const cached = localStorage.getItem(VIP_CACHE_KEY);
+      return cached === "true";
+    } catch {
+      return false;
+    }
+  });
 
   // Fetch VIP status
   useEffect(() => {
@@ -59,14 +70,18 @@ export function useVipStatus() {
           setSubscription(data as VipSubscription);
           const isActive = isAfter(new Date(data.expires_at), new Date());
           setIsVip(isActive);
+          // Cache the VIP status
+          try { localStorage.setItem(VIP_CACHE_KEY, String(isActive)); } catch {}
         } else {
           setSubscription(null);
           setIsVip(false);
+          try { localStorage.setItem(VIP_CACHE_KEY, "false"); } catch {}
         }
       } catch (error) {
         // Silently handle - user just doesn't have VIP
         setSubscription(null);
         setIsVip(false);
+        try { localStorage.setItem(VIP_CACHE_KEY, "false"); } catch {}
       } finally {
         setLoading(false);
       }
