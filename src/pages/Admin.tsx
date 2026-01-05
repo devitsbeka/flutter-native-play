@@ -13,7 +13,8 @@ import {
   ImageIcon,
   AlertTriangle,
   Wand2,
-  Bell
+  Bell,
+  Workflow
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,11 @@ const navItems = [
     icon: LayoutDashboard, 
     label: 'დეშბორდი',
     end: true 
+  },
+  { 
+    to: '/admin/flow', 
+    icon: Workflow, 
+    label: 'Flow' 
   },
   { 
     to: '/admin/content', 

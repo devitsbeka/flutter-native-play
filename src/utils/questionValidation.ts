@@ -1,8 +1,8 @@
 // Content length validation for quiz questions and answers
 // These limits ensure questions fit within a single viewport on mobile devices
 
-export const QUESTION_MAX_LENGTH = 67; // Max length to ensure questions fit in UI without cropping
-export const ANSWER_MAX_LENGTH = 60;   // Increased from 45 to accommodate more answers
+export const QUESTION_MAX_LENGTH = 65; // Max length to ensure questions fit in UI without cropping
+export const ANSWER_MAX_LENGTH = 16;   // Strict limit for answer options
 
 export function isQuestionValid(question: string): boolean {
   return question.length <= QUESTION_MAX_LENGTH;
