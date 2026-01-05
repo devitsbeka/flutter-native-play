@@ -15,12 +15,14 @@ export interface DatabaseCategory {
   type: string;
   is_active: boolean | null;
   sort_order: number | null;
+  image_url: string | null;
 }
 
 export interface TransformedCategory extends Category {
   uuid: string; // The actual UUID from database
   category_id: string; // String slug like "movies"  
   icon_slug?: string | null;
+  image_url?: string | null;
 }
 
 // Build icon URL from slug
@@ -40,6 +42,7 @@ const transformCategory = (dbCat: DatabaseCategory): TransformedCategory => ({
   description: dbCat.description || '',
   totalLevels: dbCat.total_levels,
   type: dbCat.type as 'classic' | 'fun' | 'educational',
+  image_url: dbCat.image_url,
 });
 
 export const useCategories = () => {

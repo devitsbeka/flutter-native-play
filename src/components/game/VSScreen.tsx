@@ -10,7 +10,7 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
-import { CATEGORY_IMAGES } from "@/config/videoConfig";
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -85,9 +85,9 @@ export function VSScreen() {
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
-  // Current category for display during slot
+  // Current category for display during slot - use image_url from database
   const currentCategory = categoryPool[currentCategoryIndex];
-  const currentImageUrl = currentCategory ? (CATEGORY_IMAGES[currentCategory.id] || "/images/categories/galaxy.jpg") : "/images/categories/galaxy.jpg";
+  const currentImageUrl = currentCategory?.image_url || "/placeholder.svg";
 
   // Initialize category pool when categories load
   useEffect(() => {
@@ -170,7 +170,7 @@ export function VSScreen() {
         const winnerIndex = Math.floor(Math.random() * categoryPool.length);
         setCurrentCategoryIndex(winnerIndex);
         const winner = categoryPool[winnerIndex];
-        const imageUrl = CATEGORY_IMAGES[winner.id] || "/images/categories/galaxy.jpg";
+        const imageUrl = winner.image_url || "/placeholder.svg";
         setSelectedCategory({ id: winner.id, name: winner.name, imageUrl });
         setStage("category-found");
       }
@@ -372,7 +372,7 @@ export function VSScreen() {
           >
             {/* Interactive Multi-Blob Video Container */}
             <InteractiveBlobVideo
-              imageSrc={showCategorySlot ? (selectedCategory?.imageUrl || currentImageUrl) : "/images/galaxy-frame.jpg"}
+              imageSrc={showCategorySlot ? (selectedCategory?.imageUrl || currentImageUrl) : "/placeholder.svg"}
               isLocked={isCategoryLocked}
               showCategorySlot={showCategorySlot}
             />
