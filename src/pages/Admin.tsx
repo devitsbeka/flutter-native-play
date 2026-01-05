@@ -12,7 +12,8 @@ import {
   Wrench,
   ImageIcon,
   AlertTriangle,
-  Wand2
+  Wand2,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,11 @@ const navItems = [
     to: '/admin/users', 
     icon: Users, 
     label: 'მომხმარებლები' 
+  },
+  { 
+    to: '/admin/push', 
+    icon: Bell, 
+    label: 'Push შეტყობინებები' 
   },
 ];
 
