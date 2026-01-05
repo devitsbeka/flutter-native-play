@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2 } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -53,6 +54,8 @@ export default function IconAssignment() {
   const { getIconBySlug } = useIconLibrary();
 
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionForAssignment | null>(null);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
+  const [bulkAssigning, setBulkAssigning] = useState(false);
   const [iconSearchTerm, setIconSearchTerm] = useState('');
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [iconsLoading, setIconsLoading] = useState(true);
@@ -174,8 +177,88 @@ export default function IconAssignment() {
     setRecentlyFixedSlugs(prev => new Set([slug, ...prev]));
   };
 
-  // Handle icon assignment (manual)
+  // Toggle question selection for multi-select
+  const toggleQuestionSelection = useCallback((questionId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedQuestionIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId);
+      } else {
+        newSet.add(questionId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Select all currently visible/filtered questions
+  const selectAllQuestions = useCallback(() => {
+    setSelectedQuestionIds(new Set(questions.map(q => q.id)));
+  }, [questions]);
+
+  // Deselect all
+  const deselectAllQuestions = useCallback(() => {
+    setSelectedQuestionIds(new Set());
+  }, []);
+
+  // Handle bulk icon assignment
+  const handleBulkAssignIcon = async (iconSlug: string) => {
+    if (selectedQuestionIds.size === 0) {
+      toast.error('აირჩიეთ კითხვები');
+      return;
+    }
+
+    setBulkAssigning(true);
+    const questionIds = Array.from(selectedQuestionIds);
+    const selectedQuestions = questions.filter(q => selectedQuestionIds.has(q.id));
+    let successCount = 0;
+
+    try {
+      // Batch update all questions
+      const { error } = await supabase
+        .from('questions')
+        .update({ icon_slug: iconSlug })
+        .in('id', questionIds);
+
+      if (error) throw error;
+
+      // Log to history
+      const historyEntries = selectedQuestions.map(q => ({
+        question_id: q.id,
+        question_text: q.question_text.substring(0, 200),
+        old_icon_slug: q.icon_slug,
+        new_icon_slug: iconSlug,
+        assignment_method: 'bulk-manual',
+        category_id: q.category_id,
+        category_name: q.category_name,
+        assigned_by: null
+      }));
+
+      await supabase.from('icon_assignment_history').insert(historyEntries);
+
+      successCount = questionIds.length;
+      toast.success(`${successCount} კითხვას მინიჭდა აიკონი: ${iconSlug}`);
+      
+      // Clear selection and refresh
+      setSelectedQuestionIds(new Set());
+      setSelectedQuestion(null);
+      refetch();
+    } catch (error) {
+      console.error('Bulk assign error:', error);
+      toast.error('შეცდომა ბულკ მინიჭებისას');
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
+
+  // Handle icon assignment (manual - single)
   const handleAssignIcon = async (iconSlug: string) => {
+    // If multiple questions selected, do bulk assignment
+    if (selectedQuestionIds.size > 0) {
+      await handleBulkAssignIcon(iconSlug);
+      return;
+    }
+
     if (!selectedQuestion) {
       toast.error('აირჩიეთ კითხვა');
       return;
@@ -656,63 +739,118 @@ export default function IconAssignment() {
                 <Label htmlFor="only-without" className="text-xs whitespace-nowrap">უიკონო</Label>
               </div>
             </div>
+
+            {/* Bulk Selection Controls */}
+            <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/50 p-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllQuestions}
+                  disabled={questions.length === 0}
+                  className="h-7 text-xs gap-1.5"
+                >
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  ყველა ({questions.length})
+                </Button>
+                {selectedQuestionIds.size > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={deselectAllQuestions}
+                    className="h-7 text-xs gap-1.5 text-muted-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    გასუფთავება
+                  </Button>
+                )}
+              </div>
+              {selectedQuestionIds.size > 0 && (
+                <Badge variant="secondary" className="bg-primary/20 text-primary">
+                  {selectedQuestionIds.size} არჩეული
+                </Badge>
+              )}
+            </div>
           </div>
 
           {/* Question List */}
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-1">
-              {questions.map((question) => (
-                <button
-                  key={question.id}
-                  onClick={() => setSelectedQuestion(question)}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg border transition-all",
-                    selectedQuestion?.id === question.id
-                      ? "border-primary bg-primary/10"
-                      : question.icon_slug 
-                        ? "border-l-4 border-l-green-500 border-y-transparent border-r-transparent bg-green-500/5 hover:bg-green-500/10"
-                        : "border-transparent hover:bg-accent/50 opacity-70"
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Icon Preview */}
-                    <div className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg relative",
-                      question.icon_slug ? "bg-background shadow-sm" : "bg-muted border-2 border-dashed border-muted-foreground/30"
-                    )}>
-                      {question.icon_slug ? (
-                        <>
-                          <img 
-                            src={getIconUrl(question.icon_slug) || ''} 
-                            alt="" 
-                            className="h-8 w-8 object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                          <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
-                            <Check className="h-2.5 w-2.5 text-white" />
+              {questions.map((question) => {
+                const isChecked = selectedQuestionIds.has(question.id);
+                return (
+                  <div
+                    key={question.id}
+                    className={cn(
+                      "w-full text-left p-3 rounded-lg border transition-all flex items-start gap-3",
+                      selectedQuestion?.id === question.id
+                        ? "border-primary bg-primary/10"
+                        : isChecked
+                          ? "border-primary/50 bg-primary/5"
+                          : question.icon_slug 
+                            ? "border-l-4 border-l-green-500 border-y-transparent border-r-transparent bg-green-500/5 hover:bg-green-500/10"
+                            : "border-transparent hover:bg-accent/50 opacity-70"
+                    )}
+                  >
+                    {/* Checkbox for multi-select */}
+                    <div 
+                      className="shrink-0 pt-0.5" 
+                      onClick={(e) => toggleQuestionSelection(question.id, e)}
+                    >
+                      <Checkbox 
+                        checked={isChecked}
+                        className="h-4 w-4"
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedQuestion(question);
+                        setSelectedQuestionIds(new Set()); // Clear bulk selection when clicking individual
+                      }}
+                      className="flex-1 text-left"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Icon Preview */}
+                        <div className={cn(
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg relative",
+                          question.icon_slug ? "bg-background shadow-sm" : "bg-muted border-2 border-dashed border-muted-foreground/30"
+                        )}>
+                          {question.icon_slug ? (
+                            <>
+                              <img 
+                                src={getIconUrl(question.icon_slug) || ''} 
+                                alt="" 
+                                className="h-8 w-8 object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                              <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-green-500 flex items-center justify-center">
+                                <Check className="h-2.5 w-2.5 text-white" />
+                              </div>
+                            </>
+                          ) : (
+                            <Image className="h-4 w-4 text-muted-foreground/50" />
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm line-clamp-2">{question.question_text}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                              {question.category_name}
+                            </Badge>
+                            {question.icon_slug && (
+                              <span className="text-[10px] text-green-600 font-medium">{question.icon_slug}</span>
+                            )}
                           </div>
-                        </>
-                      ) : (
-                        <Image className="h-4 w-4 text-muted-foreground/50" />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm line-clamp-2">{question.question_text}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                          {question.category_name}
-                        </Badge>
-                        {question.icon_slug && (
-                          <span className="text-[10px] text-green-600 font-medium">{question.icon_slug}</span>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   </div>
-                </button>
-              ))}
+                );
+              })}
               
               {loading && (
                 <div className="flex items-center justify-center py-8">
@@ -741,8 +879,37 @@ export default function IconAssignment() {
 
         {/* Right Panel - Icon Picker */}
         <div className="flex min-h-0 flex-col bg-muted/20">
-          {/* Selected Question Preview */}
-          {selectedQuestion && (
+          {/* Bulk Selection Preview */}
+          {selectedQuestionIds.size > 0 && (
+            <div className="border-b border-border/30 p-4 bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/20">
+                  <CheckCheck className="h-8 w-8 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">ბულკ მინიჭება</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedQuestionIds.size} კითხვა არჩეულია. აირჩიეთ აიკონი ყველასთვის მინიჭებისთვის.
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={deselectAllQuestions}
+                    className="h-6 px-2 text-xs mt-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    არჩევის გაუქმება
+                  </Button>
+                </div>
+                {bulkAssigning && (
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Selected Question Preview - only show when no bulk selection */}
+          {selectedQuestion && selectedQuestionIds.size === 0 && (
             <div className="border-b border-border/30 p-4 bg-card/50">
               <div className="flex items-start gap-3">
                 <div className={cn(
@@ -844,42 +1011,45 @@ export default function IconAssignment() {
               </div>
             ) : (
               <div className="grid grid-cols-5 gap-2 p-3">
-                {filteredIcons.map((icon) => (
-                  <button
-                    key={icon.slug}
-                    onClick={() => handleAssignIcon(icon.slug)}
-                    disabled={!selectedQuestion}
-                    className={cn(
-                      "group relative flex flex-col items-center gap-1 rounded-lg p-2 transition-all",
-                      "hover:bg-accent/80 hover:shadow-sm",
-                      !selectedQuestion && "opacity-50 cursor-not-allowed",
-                      selectedQuestion?.icon_slug === icon.slug && "ring-2 ring-primary bg-primary/10"
-                    )}
-                  >
-                    <div className="relative h-12 w-12">
-                      <img 
-                        src={icon.url} 
-                        alt={icon.title}
-                        className="h-full w-full object-contain"
-                        loading="lazy"
-                        onError={() => handleIconError(icon.slug)}
-                      />
-                      {recentlyFixedSlugs.has(icon.slug) && (
-                        <div className="absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-                          <Check className="h-3 w-3 text-white" />
-                        </div>
+                {filteredIcons.map((icon) => {
+                  const hasSelection = selectedQuestion || selectedQuestionIds.size > 0;
+                  return (
+                    <button
+                      key={icon.slug}
+                      onClick={() => handleAssignIcon(icon.slug)}
+                      disabled={!hasSelection || bulkAssigning}
+                      className={cn(
+                        "group relative flex flex-col items-center gap-1 rounded-lg p-2 transition-all",
+                        "hover:bg-accent/80 hover:shadow-sm",
+                        (!hasSelection || bulkAssigning) && "opacity-50 cursor-not-allowed",
+                        selectedQuestion?.icon_slug === icon.slug && selectedQuestionIds.size === 0 && "ring-2 ring-primary bg-primary/10"
                       )}
-                      {selectedQuestion?.icon_slug === icon.slug && (
-                        <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
-                          <Check className="h-3 w-3 text-primary-foreground" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground truncate max-w-full">
-                      {icon.slug}
-                    </span>
-                  </button>
-                ))}
+                    >
+                      <div className="relative h-12 w-12">
+                        <img 
+                          src={icon.url} 
+                          alt={icon.title}
+                          className="h-full w-full object-contain"
+                          loading="lazy"
+                          onError={() => handleIconError(icon.slug)}
+                        />
+                        {recentlyFixedSlugs.has(icon.slug) && (
+                          <div className="absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                            <Check className="h-3 w-3 text-white" />
+                          </div>
+                        )}
+                        {selectedQuestion?.icon_slug === icon.slug && selectedQuestionIds.size === 0 && (
+                          <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-full">
+                        {icon.slug}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
             
