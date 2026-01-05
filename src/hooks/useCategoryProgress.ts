@@ -235,7 +235,8 @@ export function useCategoryProgress() {
     categoryId: string,
     levelNumber: number,
     score: number,
-    totalQuestions: number
+    totalQuestions: number,
+    categoryTotalLevels: number = 20 // Default cap at 20 levels
   ): Promise<{ success: boolean; stars: number; unlockedLevel?: number }> => {
     // Calculate stars based on score percentage
     const percentage = (score / totalQuestions) * 100;
@@ -247,8 +248,10 @@ export function useCategoryProgress() {
     else if (percentage >= 20) stars = 1; // At least 1 star for trying (1/5 correct)
 
     // For unlocking: level is unlocked if stars >= 1 AND this is the current level or beyond
+    // Cap at categoryTotalLevels to prevent progressing beyond available content
     const currentMax = progress[categoryId]?.currentLevel || 1;
-    const unlockedLevel = stars >= 1 && levelNumber >= currentMax ? levelNumber + 1 : undefined;
+    const canUnlockNext = stars >= 1 && levelNumber >= currentMax && levelNumber < categoryTotalLevels;
+    const unlockedLevel = canUnlockNext ? levelNumber + 1 : undefined;
 
     if (!user) {
       // Save to localStorage for guests - always save even with 0 stars to track attempts
