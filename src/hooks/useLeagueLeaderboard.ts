@@ -164,10 +164,10 @@ export function useLeagueLeaderboard(viewingTier?: number) {
       const userIds = leagueUsers?.map(u => u.user_id) || [];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, nickname, avatar_url")
-        .in("id", userIds);
+        .select("user_id, nickname, avatar_url")
+        .in("user_id", userIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
       // Map real users
       const realEntries: LeagueEntry[] = (leagueUsers || []).map((u) => {
