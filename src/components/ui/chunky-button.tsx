@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
   variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline";
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "compact" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
   className?: string;
@@ -87,6 +87,7 @@ const variantStyles = {
 const sizeStyles = {
   sm: "px-5 py-2.5 text-sm rounded-xl",
   md: "px-6 py-3 text-base rounded-xl",
+  compact: "px-5 py-2 text-base rounded-xl",
   lg: "px-8 py-4 text-lg rounded-2xl",
   xl: "px-10 py-5 text-lg font-bold rounded-2xl",
 };
@@ -94,6 +95,7 @@ const sizeStyles = {
 const depthSizes = {
   sm: 4,
   md: 5,
+  compact: 4,
   lg: 6,
   xl: 7,
 };
