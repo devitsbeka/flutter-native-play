@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // 3D cube-style power-up icons
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
 import freezeIcon from "@/assets/powers/freeze.png";
 import replaceIcon from "@/assets/powers/replace.png";
+import timeDrainIcon from "@/assets/powers/time-drain.png";
 import addPowerImg from "@/assets/powers/add-power.png";
 
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
@@ -22,10 +22,11 @@ interface PowerUpBadgeProps {
   className?: string;
 }
 
-const powerUpAssets: Record<Exclude<PowerUpType, "time-drain"> | "add-power", string> = {
+const powerUpAssets: Record<PowerUpType | "add-power", string> = {
   "fifty-fifty": fiftyFiftyIcon,
   "freeze": freezeIcon,
   "replace": replaceIcon,
+  "time-drain": timeDrainIcon,
   "add-power": addPowerImg,
 };
 
@@ -47,8 +48,7 @@ export function PowerUpBadge({
   onClick,
   className,
 }: PowerUpBadgeProps) {
-  const isTimeDrain = type === "time-drain";
-  const imageSrc = isTimeDrain ? undefined : powerUpAssets[type as Exclude<PowerUpType, "time-drain"> | "add-power"];
+  const imageSrc = powerUpAssets[type];
   const iconSize = sizeConfig[size];
 
   return (
@@ -86,33 +86,15 @@ export function PowerUpBadge({
           className
         )}
       >
-        {/* Just the badge icon - no container */}
-        {isTimeDrain ? (
-          <div 
-            className="w-full h-full rounded-full flex items-center justify-center"
-            style={{
-              background: disabled || used 
-                ? "hsl(var(--muted-foreground))" 
-                : "linear-gradient(180deg, #E8B4F8 0%, #C084FC 100%)",
-              boxShadow: disabled || used ? "none" : "0 4px 12px rgba(192, 132, 252, 0.4)"
-            }}
-          >
-            <Clock 
-              className="text-white" 
-              style={{ width: iconSize * 0.5, height: iconSize * 0.5 }}
-              strokeWidth={2.5} 
-            />
-          </div>
-        ) : (
-          <img
-            src={imageSrc}
-            alt={type}
-            className="w-full h-full object-contain"
-            style={{
-              filter: disabled || used ? "none" : "drop-shadow(0 4px 8px rgba(0,0,0,0.25))",
-            }}
-          />
-        )}
+        {/* Just the badge icon */}
+        <img
+          src={imageSrc}
+          alt={type}
+          className="w-full h-full object-contain"
+          style={{
+            filter: disabled || used ? "none" : "drop-shadow(0 4px 8px rgba(0,0,0,0.25))",
+          }}
+        />
         
         {/* Count badge */}
         {count !== undefined && count > 0 && !used && (
