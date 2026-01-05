@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeagueLeaderboard, LEAGUES } from "@/hooks/useLeagueLeaderboard";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { LeagueBadgeRow } from "@/components/leaderboard/LeagueBadgeRow";
 import { LeagueInfoCard } from "@/components/leaderboard/LeagueInfoCard";
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
@@ -13,6 +14,7 @@ import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 export default function Leaderboards() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, region, currentLanguage } = useLanguage();
   const [viewingTier, setViewingTier] = useState<number | undefined>(undefined);
   
   const {
@@ -25,7 +27,7 @@ export default function Leaderboards() {
     rankChange,
     daysLeft,
     isLeagueLocked,
-  } = useLeagueLeaderboard(viewingTier);
+  } = useLeagueLeaderboard(viewingTier, region);
 
   const [showFixedBar, setShowFixedBar] = useState(true);
   const userRowRef = useRef<HTMLDivElement>(null);
@@ -36,13 +38,11 @@ export default function Leaderboards() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Hide fixed bar when the actual row is visible (or has been scrolled past)
-        // rootMargin accounts for bottom nav + fixed bar area
         setShowFixedBar(!entry.isIntersecting);
       },
       {
-        root: null, // viewport
-        rootMargin: "0px 0px -200px 0px", // 200px from bottom to account for nav
+        root: null,
+        rootMargin: "0px 0px -200px 0px",
         threshold: 0,
       }
     );
@@ -63,6 +63,11 @@ export default function Leaderboards() {
     setViewingTier(tier);
   };
 
+  // Get region display name
+  const regionName = region === 'global' 
+    ? t('leaderboard.globalLeaderboard')
+    : t('leaderboard.regionLeaderboard', { region: t(`countries.${region}`) || region.toUpperCase() });
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
       {/* Header */}
@@ -78,7 +83,12 @@ export default function Leaderboards() {
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-semibold text-foreground">ლიდერბორდი</h1>
+          <div className="text-center">
+            <h1 className="text-lg font-semibold text-foreground">{t('leaderboard.title')}</h1>
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              {currentLanguage.flag} {regionName}
+            </p>
+          </div>
           <div className="w-10" />
         </div>
       </motion.header>
@@ -161,7 +171,7 @@ export default function Leaderboards() {
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <p className="text-muted-foreground">
-                      ჯერ არავინ არ არის ამ ლიგაში
+                      {t('leaderboard.noPlayersYet')}
                     </p>
                   </motion.div>
                 )}

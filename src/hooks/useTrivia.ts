@@ -2,6 +2,9 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
 
+const STORAGE_KEY = 'app-language';
+const DEFAULT_LANGUAGE = 'ka';
+
 export interface TriviaQuestion {
   id: string;
   category: string;      // Display name (Georgian)
@@ -44,18 +47,30 @@ export function useTrivia() {
   const [preparationProgress, setPreparationProgress] = useState(0);
   const [imagesReady, setImagesReady] = useState(false);
   const [askedQuestionHashes, setAskedQuestionHashes] = useState<Set<string>>(new Set());
+  const [noQuestionsInLanguage, setNoQuestionsInLanguage] = useState(false);
+
+  // Get current language from localStorage
+  const getCurrentLanguage = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
+    }
+    return DEFAULT_LANGUAGE;
+  }, []);
 
   const fetchQuestions = useCallback(async (
     amount: number = 6,
     category?: string,
     level: number = 1,
     excludeHashes: string[] = [],
-    mixFromCategories: boolean = true // New param: pick one from each random category
+    mixFromCategories: boolean = true
   ) => {
+    const language = getCurrentLanguage();
+    
     setLoading(true);
     setError(null);
     setPreparationProgress(0);
     setImagesReady(false);
+    setNoQuestionsInLanguage(false);
 
     try {
       setPreparationProgress(10);
@@ -74,9 +89,10 @@ export function useTrivia() {
         if (categoryData) {
           const result = await supabase
             .from('questions')
-            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
+            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
             .eq('in_production', true)
             .eq('category_id', categoryData.id)
+            .eq('language', language)
             .gte('level_number', level)
             .lte('level_number', level + 2)
             .limit(amount + 5);
@@ -108,10 +124,11 @@ export function useTrivia() {
           const questionPromises = randomCategories.map(async (cat) => {
             const { data } = await supabase
               .from('questions')
-              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug')
+              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
               .eq('in_production', true)
               .eq('category_id', cat.id)
-              .limit(50); // Increased from 10 to ensure we have enough after filtering
+              .eq('language', language)
+              .limit(50);
             
             if (data && data.length > 0) {
               // Filter by length first, then pick random
@@ -154,9 +171,11 @@ export function useTrivia() {
             incorrect_answers, 
             difficulty, 
             level_number,
+            language,
             categories!inner(name, icon)
           `)
           .eq('in_production', true)
+          .eq('language', language)
           .limit(50);
         
         if (result.data) {
@@ -214,10 +233,12 @@ export function useTrivia() {
       }
 
       if (formattedQuestions.length < amount) {
-        console.warn(`Not enough questions (${formattedQuestions.length}/${amount})`);
+        console.warn(`Not enough questions (${formattedQuestions.length}/${amount}) in language: ${language}`);
         
         if (formattedQuestions.length === 0) {
-          throw new Error("კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
+          setNoQuestionsInLanguage(true);
+          // Don't throw error, just return empty - UI will show friendly message
+          return [];
         }
       }
 
@@ -238,7 +259,7 @@ export function useTrivia() {
     } finally {
       setLoading(false);
     }
-  }, [askedQuestionHashes]);
+  }, [askedQuestionHashes, getCurrentLanguage]);
 
   const resetAskedQuestions = useCallback(() => {
     setAskedQuestionHashes(new Set());
@@ -252,6 +273,7 @@ export function useTrivia() {
     preparationProgress,
     imagesReady,
     resetAskedQuestions,
+    noQuestionsInLanguage,
   };
 }
 

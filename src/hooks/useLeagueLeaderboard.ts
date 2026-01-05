@@ -63,7 +63,7 @@ function generateFakeUsers(tier: number, count: number = 15, existingCoinsRange?
   }));
 }
 
-export function useLeagueLeaderboard(viewingTier?: number) {
+export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [previousRank, setPreviousRank] = useState<number | null>(null);
@@ -149,9 +149,9 @@ export function useLeagueLeaderboard(viewingTier?: number) {
   const userTier = userLeagueData?.league_tier || 1;
   const activeTier = viewingTier ?? userTier;
 
-  // Fetch leaderboard for the viewing tier
+  // Fetch leaderboard for the viewing tier (optionally filtered by region)
   const { data: leaderboard, isLoading } = useQuery({
-    queryKey: ["leagueLeaderboard", activeTier],
+    queryKey: ["leagueLeaderboard", activeTier, region],
     queryFn: async () => {
       // For user's own tier, get league data; for other tiers, get all profiles
       let realEntries: LeagueEntry[] = [];
@@ -173,12 +173,19 @@ export function useLeagueLeaderboard(viewingTier?: number) {
 
         if (error) throw error;
 
-        // Get profile info for real users
+        // Get profile info for real users (optionally filtered by region)
         const userIds = leagueUsers?.map(u => u.user_id) || [];
-        const { data: profiles } = await supabase
+        let profileQuery = supabase
           .from("profiles")
-          .select("user_id, nickname, avatar_url, coins")
+          .select("user_id, nickname, avatar_url, coins, region")
           .in("user_id", userIds);
+        
+        // Filter by region if not global
+        if (region && region !== 'global') {
+          profileQuery = profileQuery.eq("region", region);
+        }
+        
+        const { data: profiles } = await profileQuery;
 
         const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 

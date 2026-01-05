@@ -203,6 +203,44 @@ export type Database = {
         }
         Relationships: []
       }
+      category_translations: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          language: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          language: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          language?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_translations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -701,6 +739,8 @@ export type Database = {
           gems: number
           id: string
           nickname: string
+          preferred_language: string
+          region: string | null
           total_points: number | null
           updated_at: string
           user_id: string
@@ -718,6 +758,8 @@ export type Database = {
           gems?: number
           id?: string
           nickname: string
+          preferred_language?: string
+          region?: string | null
           total_points?: number | null
           updated_at?: string
           user_id: string
@@ -735,6 +777,8 @@ export type Database = {
           gems?: number
           id?: string
           nickname?: string
+          preferred_language?: string
+          region?: string | null
           total_points?: number | null
           updated_at?: string
           user_id?: string
@@ -779,6 +823,7 @@ export type Database = {
           in_production: boolean | null
           incorrect_answers: Json
           is_active: boolean | null
+          language: string
           level_number: number | null
           original_question_text: string | null
           question_text: string
@@ -795,6 +840,7 @@ export type Database = {
           in_production?: boolean | null
           incorrect_answers?: Json
           is_active?: boolean | null
+          language?: string
           level_number?: number | null
           original_question_text?: string | null
           question_text: string
@@ -811,6 +857,7 @@ export type Database = {
           in_production?: boolean | null
           incorrect_answers?: Json
           is_active?: boolean | null
+          language?: string
           level_number?: number | null
           original_question_text?: string | null
           question_text?: string
