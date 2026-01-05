@@ -21,6 +21,8 @@ const NOTIFICATION_ICONS: Record<string, React.ReactNode> = {
   friend_accepted: <Users className="w-5 h-5 text-green-400" />,
   challenge: <Gamepad2 className="w-5 h-5 text-orange-400" />,
   game_invite: <Swords className="w-5 h-5 text-purple-400" />,
+  game_started: <Swords className="w-5 h-5 text-green-400" />,
+  room_invite: <Gamepad2 className="w-5 h-5 text-purple-400" />,
   game_result: <Trophy className="w-5 h-5 text-yellow-400" />,
   reward: <Gift className="w-5 h-5 text-pink-400" />,
   achievement: <Trophy className="w-5 h-5 text-purple-400" />,
@@ -189,7 +191,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
       case 'friends':
         return n.type === 'friend_request' || n.type === 'friend_accepted';
       case 'games':
-        return n.type === 'challenge' || n.type === 'game_result';
+        return ['challenge', 'game_result', 'game_started', 'room_invite'].includes(n.type);
       default:
         return true;
     }
@@ -251,26 +253,60 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   };
 
   const handleNavigate = (notification: Notification) => {
-    // Navigate based on notification type
+    const data = notification.data as Record<string, unknown>;
+    
+    // Mark as read before navigating
+    if (!notification.read_at) {
+      markAsRead(notification.id);
+    }
+    
+    // Navigate based on notification type using data fields
     switch (notification.type) {
+      case 'game_started':
+      case 'room_invite':
+        if (data?.room_code) {
+          onClose();
+          navigate(`/team?join=${data.room_code}`);
+        } else {
+          onClose();
+          navigate('/team');
+        }
+        break;
       case 'friend_request':
       case 'friend_accepted':
+        onClose();
         navigate('/team');
         break;
       case 'challenge':
+        if (data?.room_code) {
+          onClose();
+          navigate(`/team?join=${data.room_code}`);
+        } else {
+          onClose();
+          navigate('/team');
+        }
+        break;
       case 'game_result':
-        navigate('/team');
+        if (data?.room_code) {
+          onClose();
+          navigate(`/team?join=${data.room_code}`);
+        } else {
+          onClose();
+          navigate('/profile');
+        }
         break;
       case 'reward':
-        // Stay on home, maybe open rewards modal
+        onClose();
+        navigate('/');
         break;
       case 'achievement':
+        onClose();
         navigate('/profile');
         break;
       default:
+        onClose();
         break;
     }
-    onClose();
   };
 
   const filters: { key: FilterType; label: string }[] = [

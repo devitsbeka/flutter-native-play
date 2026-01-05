@@ -17,6 +17,8 @@ const NOTIFICATION_ICON_SLUGS: Record<string, string> = {
   friend_request: 'user-plus-02',
   friend_accepted: 'users-check',
   challenge: 'swords-02',
+  game_started: 'play-circle',
+  room_invite: 'users-plus',
   game_result: 'trophy-02',
   reward: 'gift-02',
   achievement: 'award-03',
@@ -50,11 +52,17 @@ function NotificationCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
       className={cn(
-        "relative p-4 rounded-2xl border transition-all",
+        "relative p-4 rounded-2xl border transition-all cursor-pointer",
         isUnread
-          ? "bg-primary/5 border-primary/20"
-          : "bg-card/50 border-border/50"
+          ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
+          : "bg-card/50 border-border/50 hover:bg-card/80"
       )}
+      onClick={() => {
+        if (isUnread) {
+          onMarkRead(notification.id);
+        }
+        onNavigate(notification);
+      }}
     >
       {/* Unread indicator dot */}
       {isUnread && (
@@ -134,21 +142,41 @@ export default function Notifications() {
       case 'friends':
         return n.type === 'friend_request' || n.type === 'friend_accepted';
       case 'games':
-        return n.type === 'challenge' || n.type === 'game_result';
+        return ['challenge', 'game_result', 'game_started', 'room_invite'].includes(n.type);
       default:
         return true;
     }
   });
 
   const handleNavigate = (notification: Notification) => {
+    const data = notification.data as Record<string, unknown>;
+    
     switch (notification.type) {
+      case 'game_started':
+      case 'room_invite':
+        if (data?.room_code) {
+          navigate(`/team?join=${data.room_code}`);
+        } else {
+          navigate('/team');
+        }
+        break;
       case 'friend_request':
       case 'friend_accepted':
         navigate('/team');
         break;
       case 'challenge':
+        if (data?.room_code) {
+          navigate(`/team?join=${data.room_code}`);
+        } else {
+          navigate('/team');
+        }
+        break;
       case 'game_result':
-        navigate('/team');
+        if (data?.room_code) {
+          navigate(`/team?join=${data.room_code}`);
+        } else {
+          navigate('/profile');
+        }
         break;
       case 'reward':
         navigate('/');
