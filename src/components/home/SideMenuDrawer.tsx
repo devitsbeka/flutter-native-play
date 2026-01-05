@@ -13,8 +13,8 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Icon imports for menu items
-import iconRewards from "@/assets/icons/icon-gem.png";
-import iconMissions from "@/assets/icons/icon-compass.png";
+import iconRewards from "@/assets/icons/icon-coin-purse.png";
+import iconMissions from "@/assets/icons/icon-mission-crystal.png";
 import iconTreasure from "@/assets/icons/icon-chest-box.png";
 import iconShop from "@/assets/icons/icon-magical-shop.png";
 import iconParty from "@/assets/icons/icon-party.png";
