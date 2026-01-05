@@ -7,11 +7,10 @@ import { formatCompactNumber } from "@/lib/utils";
 
 interface ShopHeaderProps {
   onHelpClick: () => void;
-  onBuyGemsClick: () => void;
-  onBuyCoinsClick?: () => void;
+  onCurrencyPlusClick: (currencyType: "coins" | "gems") => void;
 }
 
-export function ShopHeader({ onHelpClick, onBuyGemsClick, onBuyCoinsClick }: ShopHeaderProps) {
+export function ShopHeader({ onHelpClick, onCurrencyPlusClick }: ShopHeaderProps) {
   const { coins, gems } = useCurrency();
 
   return (
@@ -38,7 +37,7 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick, onBuyCoinsClick }: Sho
         <div className="flex items-center gap-4">
           {/* Coins Balance with Add Button */}
           <motion.button
-            onClick={onBuyCoinsClick}
+            onClick={() => onCurrencyPlusClick("coins")}
             className="flex items-center gap-2 group"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -57,7 +56,7 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick, onBuyCoinsClick }: Sho
 
           {/* Gems Balance with Add Button */}
           <motion.button
-            onClick={onBuyGemsClick}
+            onClick={() => onCurrencyPlusClick("gems")}
             className="flex items-center gap-2 group"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
