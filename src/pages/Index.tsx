@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Menu, Check, Clock } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-gem.png";
-import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
+import missionCrystalIcon from "@/assets/icons/icon-compass.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import powersIcon from "@/assets/icons/icon-powers.png";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
