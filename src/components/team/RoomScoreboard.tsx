@@ -200,7 +200,9 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
               {matches.slice(0, 5).map((match, index) => {
                 const winner = match.player_scores?.find(p => p.user_id === match.winner_user_id);
                 const isMyWin = match.winner_user_id === currentUserId;
-                const roundNumber = matches.length - index;
+                // Sequential numbering from most recent displayed matches
+                const displayedCount = Math.min(matches.length, 5);
+                const roundNumber = displayedCount - index;
                 
                 return (
                   <div
@@ -218,7 +220,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       />
                     </div>
                     <span className="flex-1 font-medium truncate">
-                      {winner?.user_id === currentUserId 
+                      {isMyWin 
                         ? "შენ მოიგე" 
                         : `${winner?.nickname || "?"}-მ მოიგო`}
                     </span>
