@@ -100,11 +100,11 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
           {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
+            exit={{ opacity: 0, y: -50 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 h-[85vh] rounded-t-3xl bg-card border-t border-border shadow-2xl overflow-hidden flex flex-col"
+            className="fixed inset-0 z-50 bg-card flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50">
