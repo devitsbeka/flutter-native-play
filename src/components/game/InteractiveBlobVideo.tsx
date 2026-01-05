@@ -6,12 +6,12 @@ const roundedRectPath = "M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 C0.94,0.82 0.82
 const borderRectPath = "M0.5,0.04 C0.84,0.04 0.96,0.16 0.96,0.5 C0.96,0.84 0.84,0.96 0.5,0.96 C0.16,0.96 0.04,0.84 0.04,0.5 C0.04,0.16 0.16,0.04 0.5,0.04";
 
 interface InteractiveBlobVideoProps {
-  videoSrc: string;
+  imageSrc: string;
   isLocked: boolean;
   showCategorySlot: boolean;
 }
 
-export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: InteractiveBlobVideoProps) {
+export function InteractiveBlobVideo({ imageSrc, isLocked, showCategorySlot }: InteractiveBlobVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPoking, setIsPoking] = useState(false);
   const [flipKey, setFlipKey] = useState(0);
@@ -77,7 +77,7 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${videoSrc}-${flipKey}`}
+              key={`${imageSrc}-${flipKey}`}
               className="w-full h-full"
               initial={{ rotateY: 90, opacity: 0 }}
               animate={{ rotateY: 0, opacity: 1 }}
@@ -88,12 +88,9 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
               }}
               style={{ transformStyle: "preserve-3d" }}
             >
-              <video
-                src={videoSrc}
-                autoPlay
-                muted
-                loop
-                playsInline
+              <img
+                src={imageSrc}
+                alt="Category"
                 className="w-full h-full object-cover"
                 style={{ transform: "scale(1.3)" }}
               />
