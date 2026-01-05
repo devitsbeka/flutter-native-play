@@ -425,7 +425,8 @@ export default function PowerUps() {
       {/* Sticky Header */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
-        onBuyGemsClick={() => notify.info("ალმასების შეძენა მალე!", { icon: "🏗️" })}
+        onBuyGemsClick={() => notify.info("ალმასების შეძენა მალე!", { icon: "💎" })}
+        onBuyCoinsClick={() => notify.info("მონეტების შეძენა მალე!", { icon: "🪙" })}
       />
 
       {/* Scrollable Content - Section-based layout with scroll snap */}
