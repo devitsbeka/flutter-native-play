@@ -20,7 +20,7 @@ import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetail
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
 import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
-import { OnboardingWalkthrough } from "@/components/onboarding/OnboardingWalkthrough";
+
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
@@ -151,7 +151,7 @@ const SideIconButton = ({
 export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile } = useAuth();
-  const { step, startOnboarding, skipToAvatarCreation, needsWalkthrough, setStep, hasCompletedOnboarding } = useOnboarding();
+  const { step, startOnboarding, skipToAvatarCreation, setStep, hasCompletedOnboarding } = useOnboarding();
   const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
@@ -251,9 +251,6 @@ export default function Index() {
     } else if (!profile?.avatar_url) {
       // Logged in but no avatar - go to avatar creation
       skipToAvatarCreation();
-    } else if (needsWalkthrough && !hasCompletedOnboarding) {
-      // First time with avatar - show walkthrough
-      setStep("walkthrough");
     } else {
       // Check if user has enough coins for stake
       if (!hasEnoughCoins) {
@@ -267,7 +264,7 @@ export default function Index() {
         navigate("/game");
       }
     }
-  }, [user, profile, navigate, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay, hasEnoughCoins]);
+  }, [user, profile, navigate, skipToAvatarCreation, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay, hasEnoughCoins]);
 
   // Handle exchange gems for coins
   const handleExchangeGems = useCallback(async () => {

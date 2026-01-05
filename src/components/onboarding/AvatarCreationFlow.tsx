@@ -368,7 +368,7 @@ export function AvatarCreationFlow() {
       celebrateAvatarConfetti();
       
       toast.success(t("success.avatarSaved"));
-      setStep("walkthrough");
+      setStep("complete");
       
     } catch (error: any) {
       console.error("Save avatar error:", error);
