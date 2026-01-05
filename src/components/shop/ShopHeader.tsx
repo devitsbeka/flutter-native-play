@@ -4,6 +4,7 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatCompactNumber } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ShopHeaderProps {
   onHelpClick: () => void;
@@ -12,6 +13,7 @@ interface ShopHeaderProps {
 
 export function ShopHeader({ onHelpClick, onCurrencyPlusClick }: ShopHeaderProps) {
   const { coins, gems } = useCurrency();
+  const { t } = useLanguage();
 
   return (
     <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md">
@@ -19,7 +21,7 @@ export function ShopHeader({ onHelpClick, onCurrencyPlusClick }: ShopHeaderProps
         {/* Top Row: Title + Help */}
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-            მაღაზია
+            {t("shop.title")}
           </h1>
 
           <motion.button

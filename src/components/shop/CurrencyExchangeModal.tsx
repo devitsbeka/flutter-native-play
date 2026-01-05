@@ -5,6 +5,7 @@ import { GameModal } from "@/components/ui/game-modal";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { formatCompactNumber } from "@/lib/utils";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -29,6 +30,7 @@ type ExchangeDirection = "coins-to-gems" | "gems-to-coins";
 export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModalProps) {
   const { coins, gems, spendCoins, addGems, spendGems, addCoins } = useCurrency();
   const { playSound } = useSound();
+  const { t } = useLanguage();
   
   const [direction, setDirection] = useState<ExchangeDirection>("coins-to-gems");
   const [amount, setAmount] = useState(100);
@@ -107,15 +109,15 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
 
         toast.success(
           isCoinsToGems 
-            ? `გადაცვალე ${formatCompactNumber(amount)} მონეტა → ${exchangeResult} 💎`
-            : `გადაცვალე ${amount} ალმასი → ${formatCompactNumber(exchangeResult)} 🪙`
+            ? t("shop.exchangedCoins").replace("{coins}", formatCompactNumber(amount)).replace("{gems}", String(exchangeResult))
+            : t("shop.exchangedGems").replace("{gems}", String(amount)).replace("{coins}", formatCompactNumber(exchangeResult))
         );
         
         onClose();
       }
     } catch (error) {
       console.error("Exchange failed:", error);
-      toast.error("გაცვლა ვერ მოხერხდა");
+      toast.error(t("shop.exchangeFailed"));
     } finally {
       setIsExchanging(false);
     }
@@ -134,8 +136,8 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
       isOpen={isOpen}
       onClose={onClose}
       icon={headerIcon}
-      title="ვალუტის გაცვლა"
-      subtitle="გადაცვალე მონეტები და ალმასები"
+      title={t("shop.currencyExchange")}
+      subtitle={t("shop.exchangeDescription")}
     >
       <div className="space-y-3">
         {/* Exchange Direction - Icons only */}
@@ -249,20 +251,20 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
             </motion.span>
           </AnimatePresence>
           <span className="text-base font-bold text-muted-foreground">
-            {isCoinsToGems ? "ალმასი" : "მონეტა"}
+            {isCoinsToGems ? t("shop.diamond") : t("shop.coin")}
           </span>
         </div>
 
         {/* Error Message */}
         {!canAfford && (
           <p className="text-center text-xs text-destructive">
-            არ გაქვს საკმარისი {isCoinsToGems ? "მონეტა" : "ალმასი"}
+            {isCoinsToGems ? t("shop.notEnoughCoins") : t("shop.notEnoughGems")}
           </p>
         )}
         
         {!hasValidResult && canAfford && (
           <p className="text-center text-xs text-muted-foreground">
-            მინიმუმ {COINS_PER_GEM} მონეტა საჭიროა
+            {t("shop.minimumRequired").replace("{amount}", String(COINS_PER_GEM))}
           </p>
         )}
 
@@ -294,7 +296,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
             ) : (
               <>
                 <ArrowLeftRight className="w-6 h-6 mr-2" />
-                გადაცვლა
+                {t("shop.exchangeButton")}
               </>
             )}
           </Button>

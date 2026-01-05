@@ -1,0 +1,328 @@
+import { useMemo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
+import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+import { VipDuration } from "@/hooks/useVipStatus";
+import { PowerUpType } from "@/hooks/useUserPowerUps";
+
+import fiftyFiftyIcon from "@/assets/powers/5050.png";
+import freezeIcon from "@/assets/powers/freeze.png";
+import replaceIcon from "@/assets/powers/replace.png";
+import timeDrainIcon from "@/assets/powers/time-drain.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
+import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
+import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: "gems" | "coins";
+  icon: React.ReactNode;
+  gradient: string;
+  badge?: "popular" | "best-value" | "limited" | "new" | null;
+  savings?: number;
+  vipDuration?: VipDuration;
+  powerType?: PowerUpType;
+  amount?: number;
+  value?: number;
+  frameId?: string;
+}
+
+export interface ShopSection {
+  id: string;
+  title: string;
+  description: string;
+  videoSrc: string;
+  items: ShopItem[];
+}
+
+// Helper function to get frame data by ID
+const getFrameById = (frameId: string) => AVATAR_FRAMES.find(f => f.id === frameId);
+
+// Frame Preview Component for shop
+const FramePreviewIcon = ({ frameId }: { frameId: string }) => {
+  const frame = getFrameById(frameId);
+  return (
+    <AvatarWithFrame
+      emoji="👤"
+      size="sm"
+      showVipBadge={false}
+      frameOverride={frame}
+    />
+  );
+};
+
+export function useShopData() {
+  const { t } = useLanguage();
+
+  return useMemo(() => {
+    // Hot Deals - Starter Pack Section
+    const STARTER_PACK_ITEMS: ShopItem[] = [
+      {
+        id: "starter_bundle",
+        name: t("shop.starterPack"),
+        description: `2x ${t("shop.allPowers")} + 200 ${t("shop.coin")}`,
+        price: 6,
+        currency: "gems",
+        icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "new",
+      },
+      {
+        id: "starter_bundle_medium",
+        name: t("shop.mediumPackage"),
+        description: `5x ${t("shop.allPowers")} + 500 ${t("shop.coin")}`,
+        price: 12,
+        currency: "gems",
+        icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "popular",
+        savings: 20,
+      },
+      {
+        id: "starter_bundle_large",
+        name: t("shop.largePackage"),
+        description: `10x ${t("shop.allPowers")} + 1000 ${t("shop.coin")}`,
+        price: 22,
+        currency: "gems",
+        icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "best-value",
+        savings: 30,
+      },
+    ];
+
+    // Hot Deals - Mega Powers Section
+    const MEGA_POWERS_ITEMS: ShopItem[] = [
+      {
+        id: "power_bundle_small",
+        name: t("shop.smallPackage"),
+        description: `2x ${t("shop.allPowers")}`,
+        price: 5,
+        currency: "gems",
+        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+      },
+      {
+        id: "mega_power_bundle",
+        name: t("shop.megaPowers"),
+        description: `5x ${t("shop.allPowers")}`,
+        price: 10,
+        currency: "gems",
+        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "popular",
+        savings: 20,
+      },
+      {
+        id: "power_bundle_large",
+        name: t("shop.largePackage"),
+        description: `10x ${t("shop.allPowers")}`,
+        price: 18,
+        currency: "gems",
+        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "best-value",
+        savings: 30,
+      },
+    ];
+
+    // VIP Section
+    const VIP_PROMO_ITEMS: ShopItem[] = [
+      {
+        id: "vip_day",
+        name: t("shop.vipDay"),
+        description: t("shop.vipBenefitsDay"),
+        price: 3,
+        currency: "gems",
+        icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        vipDuration: "day",
+      },
+      {
+        id: "vip_week_deal",
+        name: t("shop.vipWeek"),
+        description: t("shop.vipBenefitsWeek"),
+        price: 12,
+        currency: "gems",
+        icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "popular",
+        savings: 25,
+        vipDuration: "week",
+      },
+      {
+        id: "vip_month",
+        name: t("shop.vipMonth"),
+        description: t("shop.vipBenefitsMonth"),
+        price: 35,
+        currency: "gems",
+        icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "transparent",
+        badge: "best-value",
+        savings: 30,
+        vipDuration: "month",
+      },
+    ];
+
+    // Powers Section
+    const POWERS_ITEMS: ShopItem[] = [
+      {
+        id: "power_5050_3",
+        name: `${t("powerups.fiftyFifty.name")} ×3`,
+        description: t("shop.deletesWrongAnswers"),
+        price: 8,
+        currency: "gems",
+        icon: <img src={fiftyFiftyIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
+        powerType: "5050",
+        amount: 3,
+      },
+      {
+        id: "power_freeze_3",
+        name: `${t("powerups.freeze.name")} ×3`,
+        description: t("shop.freezesTime"),
+        price: 8,
+        currency: "gems",
+        icon: <img src={freezeIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
+        powerType: "freeze",
+        amount: 3,
+      },
+      {
+        id: "power_replace_3",
+        name: `${t("powerups.replace.name")} ×3`,
+        description: t("shop.replacesQuestion"),
+        price: 8,
+        currency: "gems",
+        icon: <img src={replaceIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
+        powerType: "replace",
+        amount: 3,
+      },
+      {
+        id: "power_timedrain_3",
+        name: `${t("powerups.timeDrain.name")} ×3`,
+        description: t("shop.addsTime"),
+        price: 8,
+        currency: "gems",
+        icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
+        powerType: "time-drain",
+        amount: 3,
+      },
+    ];
+
+    // Frames Section - generated from AVATAR_FRAMES
+    const FRAMES_ITEMS: ShopItem[] = AVATAR_FRAMES.slice(0, 4).map((frame, index) => ({
+      id: `frame_${frame.id}`,
+      name: frame.name,
+      description: frame.description,
+      price: frame.price,
+      currency: "gems" as const,
+      icon: <FramePreviewIcon frameId={frame.id} />,
+      gradient: "transparent",
+      frameId: frame.id,
+      badge: index === 0 ? "new" as const : index === 1 ? "popular" as const : frame.rarity === "legendary" ? "best-value" as const : null,
+    }));
+
+    // Coins Section
+    const COINS_ITEMS: ShopItem[] = [
+      {
+        id: "coins_100",
+        name: `100 ${t("shop.coin")}`,
+        description: t("shop.smallPackage"),
+        price: 2,
+        currency: "gems",
+        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
+        value: 100,
+      },
+      {
+        id: "coins_500",
+        name: `500 ${t("shop.coin")}`,
+        description: t("shop.mediumPackage"),
+        price: 8,
+        currency: "gems",
+        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
+        value: 500,
+      },
+      {
+        id: "coins_1500",
+        name: `1500 ${t("shop.coin")}`,
+        description: `${t("shop.largePackage")} +20%`,
+        price: 20,
+        currency: "gems",
+        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
+        value: 1500,
+        badge: "popular",
+        savings: 20,
+      },
+      {
+        id: "coins_5000",
+        name: `5000 ${t("shop.coin")}`,
+        description: `${t("shop.megaPackage")} +40%`,
+        price: 60,
+        currency: "gems",
+        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
+        value: 5000,
+        badge: "best-value",
+        savings: 40,
+      },
+    ];
+
+    // Section definitions
+    const SHOP_SECTIONS: ShopSection[] = [
+      {
+        id: "starter",
+        title: t("shop.starterPack"),
+        description: t("shop.forBeginners"),
+        videoSrc: "/videos/starter.mp4",
+        items: STARTER_PACK_ITEMS,
+      },
+      {
+        id: "mega-powers",
+        title: t("shop.megaPowers"),
+        description: t("shop.winMoreGames"),
+        videoSrc: "/videos/mega-powers-2.mp4",
+        items: MEGA_POWERS_ITEMS,
+      },
+      {
+        id: "vip",
+        title: t("shop.vipStatus"),
+        description: t("shop.vipBenefits"),
+        videoSrc: "/videos/vip.mp4",
+        items: VIP_PROMO_ITEMS,
+      },
+      {
+        id: "powers",
+        title: t("shop.powers"),
+        description: t("shop.advantage"),
+        videoSrc: "/videos/powers.mp4",
+        items: POWERS_ITEMS,
+      },
+      {
+        id: "frames",
+        title: t("shop.frames"),
+        description: t("shop.uniqueProfile"),
+        videoSrc: "/videos/art.mp4",
+        items: FRAMES_ITEMS,
+      },
+      {
+        id: "coins",
+        title: t("shop.coins"),
+        description: t("shop.withBonuses"),
+        videoSrc: "/videos/coins.mp4",
+        items: COINS_ITEMS,
+      },
+    ];
+
+    return { SHOP_SECTIONS };
+  }, [t]);
+}
