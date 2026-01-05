@@ -55,8 +55,8 @@ import Support from "./pages/Support";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 
 const App = () => (
-  <AuthProvider>
-    <LanguageProvider>
+  <LanguageProvider>
+    <AuthProvider>
       <OnboardingProvider>
         <SoundProvider>
           <NotificationModalProvider>
@@ -118,8 +118,8 @@ const App = () => (
           </NotificationModalProvider>
         </SoundProvider>
       </OnboardingProvider>
-    </LanguageProvider>
-  </AuthProvider>
+    </AuthProvider>
+  </LanguageProvider>
 );
 
 export default App;
