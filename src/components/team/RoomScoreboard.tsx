@@ -3,6 +3,9 @@ import { Trophy, Crown, Swords, Target } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import medalGold from "@/assets/icons/medal-gold.png";
+import medalSilver from "@/assets/icons/medal-silver.png";
+import medalBronze from "@/assets/icons/medal-bronze.png";
 
 interface RoomScoreboardProps {
   participants: (RoomParticipant & { total_score?: number })[];
@@ -10,6 +13,19 @@ interface RoomScoreboardProps {
   currentUserId?: string;
   showHostCrown?: boolean;
 }
+
+const getRankIcon = (rank: number) => {
+  switch (rank) {
+    case 1:
+      return <img src={medalGold} alt="1st" className="w-6 h-6 object-contain" />;
+    case 2:
+      return <img src={medalSilver} alt="2nd" className="w-6 h-6 object-contain" />;
+    case 3:
+      return <img src={medalBronze} alt="3rd" className="w-6 h-6 object-contain" />;
+    default:
+      return <span className="text-sm font-bold text-muted-foreground">#{rank}</span>;
+  }
+};
 
 export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true }: RoomScoreboardProps) {
   // Sort by total cumulative score (primary), then by total wins (secondary)
@@ -137,18 +153,23 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
             {sortedParticipants.map((p, index) => (
               <div
                 key={p.id}
-                className={`flex items-center gap-3 p-2 rounded-xl ${
+                className={`flex items-center gap-3 p-3 rounded-xl ${
                   p.user_id === currentUserId ? "bg-primary/10" : "bg-muted/30"
                 }`}
               >
-                <span className="w-6 text-center font-bold text-muted-foreground">
-                  #{index + 1}
-                </span>
+                {/* Rank - fixed width */}
+                <div className="w-8 flex items-center justify-center flex-shrink-0">
+                  {getRankIcon(index + 1)}
+                </div>
+                
+                {/* Avatar */}
                 <SmartAvatar
                   avatarUrl={p.avatar_url}
                   fallback={p.nickname}
-                  size="sm"
+                  size="md"
                 />
+                
+                {/* Name + Crown - flex grow */}
                 <div className="flex-1 min-w-0 flex items-center gap-1.5">
                   <p className="font-medium text-foreground text-sm truncate">
                     {p.user_id === currentUserId ? "შენ" : p.nickname}
@@ -157,11 +178,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                     <Crown className="w-4 h-4 text-amber-500 fill-amber-400 flex-shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Target className="w-3.5 h-3.5 text-primary" />
-                    <span className="font-bold text-foreground text-sm">{(p as any).total_score || 0}</span>
-                  </div>
+                
+                {/* Score + Rounds - fixed width, right aligned */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Target className="w-4 h-4 text-primary" />
+                  <span className="font-bold text-foreground">{(p as any).total_score || 0}</span>
                   <span className="text-xs text-muted-foreground">
                     ({p.total_rounds_played || 0}რ)
                   </span>
@@ -179,6 +200,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
               {matches.slice(0, 5).map((match, index) => {
                 const winner = match.player_scores?.find(p => p.user_id === match.winner_user_id);
                 const isMyWin = match.winner_user_id === currentUserId;
+                const roundNumber = matches.length - index;
                 
                 return (
                   <div
@@ -187,8 +209,14 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       isMyWin ? "bg-green-500/10" : "bg-muted/30"
                     }`}
                   >
-                    <span className="text-muted-foreground">#{matches.length - index}</span>
-                    <span className="text-base">{isMyWin ? "🏆" : index === 0 ? "🥈" : "🎮"}</span>
+                    <span className="text-muted-foreground w-6 text-center">#{roundNumber}</span>
+                    <div className="w-5 flex items-center justify-center flex-shrink-0">
+                      <img 
+                        src={isMyWin ? medalGold : medalSilver} 
+                        alt={isMyWin ? "Win" : "Loss"} 
+                        className="w-5 h-5 object-contain" 
+                      />
+                    </div>
                     <span className="flex-1 font-medium truncate">
                       {winner?.user_id === currentUserId 
                         ? "შენ მოიგე" 
