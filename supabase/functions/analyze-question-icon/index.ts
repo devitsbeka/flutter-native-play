@@ -110,6 +110,10 @@ Rules:
 
     const data = await response.json();
     
+    // Check for malformed function call or other issues
+    const finishReason = data.choices?.[0]?.finish_reason;
+    const nativeFinishReason = data.choices?.[0]?.native_finish_reason;
+    
     // Try tool call response first
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
@@ -132,11 +136,32 @@ Rules:
 
     // Fallback to content parsing
     const content = data.choices?.[0]?.message?.content;
-    if (!content) {
-      console.error('No content in AI response:', JSON.stringify(data));
+    
+    // If no content and malformed function call, return generic fallback based on category
+    if (!content || nativeFinishReason === 'MALFORMED_FUNCTION_CALL') {
+      console.log('AI returned no content or malformed call, using category fallback for:', question.substring(0, 50));
+      
+      // Extract simple keywords from question text itself
+      const questionLower = question.toLowerCase();
+      const fallbackSlugs: string[] = [];
+      
+      // Simple keyword detection
+      if (category) fallbackSlugs.push(category.toLowerCase());
+      if (questionLower.includes('ვინ') || questionLower.includes('who')) fallbackSlugs.push('person');
+      if (questionLower.includes('სად') || questionLower.includes('where')) fallbackSlugs.push('geography');
+      if (questionLower.includes('როდის') || questionLower.includes('when')) fallbackSlugs.push('history');
+      
+      // Ensure at least one slug
+      if (fallbackSlugs.length === 0) fallbackSlugs.push('general');
+      
       return new Response(
-        JSON.stringify({ error: 'No AI response', fallback: true }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          slugs: fallbackSlugs.slice(0, 5), 
+          keywords: fallbackSlugs, 
+          mainConcept: category || 'general',
+          fallback: true 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
