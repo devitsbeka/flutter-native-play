@@ -298,7 +298,7 @@ export default function Index() {
       {/* Onboarding modals */}
       <SignupOnboardingModal />
       <AvatarCreationFlow />
-      <OnboardingWalkthrough />
+      
       
       {/* Other modals */}
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
