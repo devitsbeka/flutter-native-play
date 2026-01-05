@@ -52,7 +52,7 @@ export default function Leaderboards() {
       </motion.header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pb-24 relative">
+      <div className="flex-1 overflow-auto pb-40 relative">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -135,6 +135,30 @@ export default function Leaderboards() {
           </motion.div>
         )}
       </div>
+
+      {/* Fixed User Position Bar */}
+      {userEntry && !isLeagueLocked && (
+        <motion.div
+          className="fixed bottom-20 left-0 right-0 z-40 px-4 pb-2"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50">
+            <LeaguePlayerRow
+              entry={userEntry}
+              isCurrentUser={true}
+              index={0}
+              previousRank={previousRank}
+              shouldAnimate={false}
+              totalPlayers={leaderboard.length}
+              isPromotionZone={(viewingTier ?? userTier) < 5 && userEntry.rank <= 10}
+              isDemotionZone={(viewingTier ?? userTier) > 1 && userEntry.rank > leaderboard.length - 10}
+              isFixed={true}
+            />
+          </div>
+        </motion.div>
+      )}
 
       {/* Bottom Navigation */}
       <UniversalBottomNav />

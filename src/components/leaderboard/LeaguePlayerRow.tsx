@@ -11,6 +11,7 @@ interface LeaguePlayerRowProps {
   totalPlayers: number;
   isPromotionZone?: boolean;
   isDemotionZone?: boolean;
+  isFixed?: boolean;
 }
 
 // Rank badge colors matching Duolingo
@@ -42,9 +43,9 @@ export function LeaguePlayerRow({
   index,
   previousRank,
   shouldAnimate,
-  totalPlayers,
   isPromotionZone,
   isDemotionZone,
+  isFixed,
 }: LeaguePlayerRowProps) {
   const rankStyle = RANK_COLORS[entry.rank];
   const isTopThree = entry.rank <= 3;
@@ -57,24 +58,31 @@ export function LeaguePlayerRow({
   // Determine background styling based on zone
   const getRowBackground = () => {
     if (isCurrentUser) {
-      return "bg-emerald-500/10 border-2 border-emerald-500/30";
+      return "bg-primary/10";
     }
     if (isPromotionZone) {
-      return "bg-emerald-500/5 border-l-4 border-l-emerald-500";
+      return "bg-emerald-500/5";
     }
     if (isDemotionZone) {
-      return "bg-red-500/5 border-l-4 border-l-red-500";
+      return "bg-red-500/5";
     }
     return "hover:bg-muted/30";
   };
 
+  // Get zone indicator color for the rank badge ring
+  const getZoneRingColor = () => {
+    if (isPromotionZone && !isTopThree) return "ring-2 ring-emerald-500";
+    if (isDemotionZone) return "ring-2 ring-red-500";
+    return "";
+  };
+
   return (
     <motion.div
-      className={`flex items-center gap-4 py-3 px-2 rounded-2xl transition-colors ${getRowBackground()}`}
+      className={`flex items-center gap-3 py-3 px-3 rounded-2xl transition-colors ${getRowBackground()} ${isFixed ? "shadow-lg border border-border/50" : ""}`}
       initial={
         shouldAnimate && rankDiff !== 0 
           ? { y: initialOffset, opacity: 0.8, scale: 0.98 } 
-          : { opacity: 0, x: -20 }
+          : isFixed ? {} : { opacity: 0, x: -20 }
       }
       animate={{ y: 0, opacity: 1, x: 0, scale: 1 }}
       transition={
@@ -86,46 +94,38 @@ export function LeaguePlayerRow({
               delay: 0.8,
             }
           : {
-              delay: index * 0.03,
+              delay: isFixed ? 0 : index * 0.03,
               duration: 0.3,
             }
       }
-      layout
+      layout={!isFixed}
     >
-      {/* Rank Badge */}
-      <div className="w-10 flex justify-center shrink-0">
-        {isTopThree && rankStyle ? (
-          <motion.div
-            className={`w-8 h-8 rounded-full ${rankStyle.bg} flex items-center justify-center font-bold text-sm shadow-md ${rankStyle.text}`}
-            animate={
-              isCurrentUser && shouldAnimate
-                ? { scale: [1, 1.2, 1] }
-                : {}
-            }
-            transition={{ delay: 1.5, duration: 0.3 }}
-          >
-            {entry.rank}
-          </motion.div>
-        ) : (
-          <span className="text-muted-foreground font-bold text-lg">{entry.rank}</span>
-        )}
-      </div>
-
-      {/* Avatar */}
+      {/* Avatar with Rank Badge overlay */}
       <div className="relative shrink-0">
-        <Avatar className={`h-12 w-12 border-2 ${isCurrentUser ? "border-emerald-500" : "border-border"}`}>
+        <Avatar className={`h-12 w-12 ${isCurrentUser ? "ring-2 ring-primary" : ""}`}>
           <AvatarImage src={entry.avatar_url || undefined} alt={entry.nickname} />
           <AvatarFallback className={`${getAvatarColor(entry.nickname)} text-white font-bold text-lg`}>
             {entry.nickname?.charAt(0)?.toUpperCase() || "?"}
           </AvatarFallback>
         </Avatar>
+        
+        {/* Rank badge positioned at bottom-right of avatar */}
+        <div 
+          className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
+            isTopThree && rankStyle 
+              ? `${rankStyle.bg} ${rankStyle.text}` 
+              : `bg-muted text-muted-foreground ${getZoneRingColor()}`
+          }`}
+        >
+          {entry.rank}
+        </div>
       </div>
 
       {/* Name */}
       <div className="flex-1 min-w-0">
         <p
           className={`font-semibold text-base truncate ${
-            isCurrentUser ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+            isCurrentUser ? "text-primary" : "text-foreground"
           }`}
         >
           {entry.nickname}
@@ -142,7 +142,7 @@ export function LeaguePlayerRow({
         }
         transition={{ delay: 1.6, duration: 0.3 }}
       >
-        <span className={`font-bold text-base ${isCurrentUser ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"}`}>
+        <span className={`font-bold text-base ${isCurrentUser ? "text-primary" : "text-foreground"}`}>
           {entry.weekly_xp.toLocaleString()}
         </span>
         <span className="text-muted-foreground text-sm ml-1">XP</span>
