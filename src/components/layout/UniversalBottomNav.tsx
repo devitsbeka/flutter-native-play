@@ -118,8 +118,11 @@ export function UniversalBottomNav({
           </div>
 
           {/* Center Play Button - floats above, overlapping nav bar */}
-          <div className="flex-1 flex justify-center overflow-visible">
-            <div className="relative overflow-visible" style={{ width: 90, height: 90, marginTop: -42 }}>
+          <div className="flex-1 flex justify-center overflow-visible pointer-events-auto" style={{ zIndex: 60 }}>
+            <div 
+              className="relative overflow-visible pointer-events-auto" 
+              style={{ width: 90, height: 90, marginTop: -42, zIndex: 60 }}
+            >
               <Hex3DPlayButton 
                 onClick={handleCenterClick}
                 isPlayButton={showPlayButton}
@@ -362,12 +365,16 @@ function Hex3DPlayButton({
       )}
 
       <motion.button
-        onClick={onClick}
-        className="relative"
+        onClick={(e) => {
+          e.stopPropagation();
+          console.log("[Hex3DPlayButton] Button clicked!");
+          onClick();
+        }}
+        className="relative z-[60]"
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.92, y: 4 }}
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        style={{ width: 90, height: 90 }}
+        style={{ width: 90, height: 90, cursor: 'pointer' }}
       >
         {/* Bottom 3D depth layer */}
         <div
