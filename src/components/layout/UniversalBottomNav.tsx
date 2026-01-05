@@ -43,16 +43,21 @@ export function UniversalBottomNav({
   const isPurpleVariant = false;
 
   const handleCenterClick = () => {
+    console.log("[handleCenterClick] Called", { isHome, isVip, canPlay, isGuest, hasOnPlayClick: !!onPlayClick });
     if (isHome) {
       if (isVip || canPlay) {
         // VIP users can always play, or if user has plays remaining
+        console.log("[handleCenterClick] Calling onPlayClick");
         onPlayClick?.();
       } else if (!isGuest) {
+        console.log("[handleCenterClick] Calling onWatchAdClick");
         onWatchAdClick?.();
       } else {
+        console.log("[handleCenterClick] Guest - calling onPlayClick for modal");
         onPlayClick?.(); // For guests, this will trigger the max plays modal
       }
     } else {
+      console.log("[handleCenterClick] Navigating to home");
       navigate("/");
     }
   };
