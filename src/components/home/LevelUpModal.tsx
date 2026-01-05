@@ -5,6 +5,7 @@ import { getLevelRewards } from "@/utils/levelCalculation";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface LevelUpModalProps {
 
 // PURELY PRESENTATIONAL - rewards are credited in MatchResultScreen
 export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: LevelUpModalProps) {
+  const { t } = useLanguage();
   const rewards = getLevelRewards(newLevel);
 
   // Calculate level-up coins and gems for DISPLAY ONLY
@@ -27,7 +29,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="დონე აიწია! 🎉"
+      title={t("modals.levelUp")}
       showSparkles
       showStars
       hideCloseButton
@@ -67,7 +69,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
           >
             {newLevel}
           </motion.span>
-          <span className="text-sm font-bold text-amber-700">დონე</span>
+          <span className="text-sm font-bold text-amber-700">{t("modals.levelLabel")}</span>
         </div>
 
         {/* Stars around badge */}
@@ -96,7 +98,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
         transition={{ delay: 0.7 }}
         className="text-center text-gray-600 text-base font-medium mb-4"
       >
-        დონე {previousLevel} → დონე {newLevel}
+        {t("modals.levelLabel")} {previousLevel} → {t("modals.levelLabel")} {newLevel}
       </motion.p>
 
       {/* Rewards section - 3D chunky card */}
@@ -113,38 +115,38 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       >
         <div className="flex items-center justify-center gap-2 mb-3">
           <Gift className="w-5 h-5 text-amber-700" />
-          <span className="font-bold text-lg text-amber-800">ჯილდოები</span>
+          <span className="font-bold text-lg text-amber-800">{t("modals.rewards")}</span>
         </div>
         <div className="flex justify-center gap-4 flex-wrap">
           <div className="text-center">
             <img src={coinIcon} alt="" className="w-8 h-8 mx-auto" />
             <p className="font-bold text-lg text-amber-800">+{levelUpCoins}</p>
-            <p className="text-sm font-medium text-amber-700">მონეტა</p>
+            <p className="text-sm font-medium text-amber-700">{t("modals.coin")}</p>
           </div>
           {levelUpGems > 0 && (
             <div className="text-center">
               <img src={gemIcon} alt="" className="w-8 h-8 mx-auto" />
               <p className="font-bold text-lg text-amber-800">+{levelUpGems}</p>
-              <p className="text-sm font-medium text-amber-700">ალმასი</p>
+              <p className="text-sm font-medium text-amber-700">{t("modals.gem")}</p>
             </div>
           )}
           <div className="text-center">
             <span className="text-2xl">👑</span>
             <p className="font-bold text-lg text-amber-800">+{rewards.xpBonus}</p>
-            <p className="text-sm font-medium text-amber-700">XP ბონუსი</p>
+            <p className="text-sm font-medium text-amber-700">{t("modals.xpBonus")}</p>
           </div>
           {rewards.powerUps > 0 && (
             <div className="text-center">
               <span className="text-2xl">⚡</span>
               <p className="font-bold text-lg text-amber-800">+{rewards.powerUps}</p>
-              <p className="text-sm font-medium text-amber-700">ძალები</p>
+              <p className="text-sm font-medium text-amber-700">{t("modals.powers")}</p>
             </div>
           )}
         </div>
       </motion.div>
 
       <GameModalFooter
-        primaryLabel="გაგრძელება"
+        primaryLabel={t("common.continue")}
         onPrimary={onClose}
         primaryVariant="success"
       />

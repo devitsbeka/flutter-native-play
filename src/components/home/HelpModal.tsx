@@ -1,39 +1,42 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, HelpCircle, Mail, MessageCircle, FileText, ExternalLink } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const helpItems = [
-  {
-    icon: HelpCircle,
-    label: "ხშირად დასმული კითხვები",
-    sublabel: "პასუხები პოპულარულ კითხვებზე",
-    action: () => window.open("#faq", "_blank"),
-  },
-  {
-    icon: MessageCircle,
-    label: "მხარდაჭერის ჩატი",
-    sublabel: "დაგვიკავშირდით პირდაპირ",
-    action: () => window.open("#support", "_blank"),
-  },
-  {
-    icon: Mail,
-    label: "ელფოსტა",
-    sublabel: "support@worldquizzes.com",
-    action: () => window.open("mailto:support@mytrivia.io", "_blank"),
-  },
-  {
-    icon: FileText,
-    label: "გზამკვლევი",
-    sublabel: "როგორ ვითამაშოთ",
-    action: () => window.open("#guide", "_blank"),
-  },
-];
-
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
+  const { t } = useLanguage();
+
+  const helpItems = [
+    {
+      icon: HelpCircle,
+      label: t("help.faq"),
+      sublabel: t("help.faqSubtitle"),
+      action: () => window.open("#faq", "_blank"),
+    },
+    {
+      icon: MessageCircle,
+      label: t("help.supportChat"),
+      sublabel: t("help.supportSubtitle"),
+      action: () => window.open("#support", "_blank"),
+    },
+    {
+      icon: Mail,
+      label: t("help.email"),
+      sublabel: "support@worldquizzes.com",
+      action: () => window.open("mailto:support@mytrivia.io", "_blank"),
+    },
+    {
+      icon: FileText,
+      label: t("help.guide"),
+      sublabel: t("help.guideSubtitle"),
+      action: () => window.open("#guide", "_blank"),
+    },
+  ];
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -65,7 +68,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               </button>
 
               <h2 className="text-center font-display text-lg font-bold text-foreground">
-                დახმარება
+                {t("help.title")}
               </h2>
             </div>
 

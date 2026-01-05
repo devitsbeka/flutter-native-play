@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Star, Trophy, Sparkles, Lock } from "lucide-react";
 import { GameModal, GameModalFooter, GameModalStat } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GuestMaxPlaysModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface GuestMaxPlaysModalProps {
 
 export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlaysModalProps>(
   function GuestMaxPlaysModal({ isOpen, onClose, onRegister }, ref) {
+    const { t } = useLanguage();
     const guestProgress = getGuestProgress();
     
     // Calculate stats
@@ -30,8 +32,8 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           onClose={onClose}
           variant="primary"
           iconEmoji="🎮"
-          title="მოგეწონა? 🎉"
-          subtitle="შექმენი ანგარიში და გააგრძელე თამაში!"
+          title={t("modals.likedIt")}
+          subtitle={t("modals.createAccountToContinue")}
           showSparkles
           showStars
         >
@@ -41,12 +43,12 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               <GameModalStat
                 icon={<Trophy className="h-6 w-6 text-primary" />}
                 value={totalLevels}
-                label="გავლილი დონე"
+                label={t("modals.levelCompleted")}
               />
               <GameModalStat
                 icon={<Star className="h-6 w-6 text-amber-500 fill-amber-500" />}
                 value={totalStars}
-                label="მოგროვილი ვარსკვლავი"
+                label={t("modals.starsCollected")}
                 highlight
               />
             </div>
@@ -66,7 +68,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               transition={{ delay: 0.1 }}
             >
               <Sparkles className="h-5 w-5 text-primary shrink-0" />
-              <p className="text-sm font-medium text-gray-800">შექმენი უნიკალური ავატარი</p>
+              <p className="text-sm font-medium text-gray-800">{t("modals.createUniqueAvatar")}</p>
             </motion.div>
             
             <motion.div 
@@ -81,7 +83,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               transition={{ delay: 0.15 }}
             >
               <Trophy className="h-5 w-5 text-green-600 shrink-0" />
-              <p className="text-sm font-medium text-gray-800">შეინახე პროგრესი სამუდამოდ</p>
+              <p className="text-sm font-medium text-gray-800">{t("modals.saveProgressForever")}</p>
             </motion.div>
 
             <motion.div 
@@ -96,12 +98,12 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               transition={{ delay: 0.2 }}
             >
               <Lock className="h-5 w-5 text-blue-600 shrink-0" />
-              <p className="text-sm font-medium text-gray-800">გახსენი ყველა ფუნქცია</p>
+              <p className="text-sm font-medium text-gray-800">{t("modals.unlockAllFeatures")}</p>
             </motion.div>
           </div>
 
           <GameModalFooter
-            primaryLabel="დავიწყოთ!"
+            primaryLabel={t("common.letsGo")}
             onPrimary={onRegister}
             primaryIcon={<Sparkles className="w-5 h-5" />}
           />

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, Tv, Gift, AlertCircle } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { adService } from "@/services/adService";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WatchAdModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface WatchAdModalProps {
 }
 
 export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: WatchAdModalProps) {
+  const { t } = useLanguage();
   const [isWatching, setIsWatching] = useState(false);
   const [watchProgress, setWatchProgress] = useState(0);
   const [adError, setAdError] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
         },
         onAdFailedToShow: (error) => {
           console.error('Ad failed to show:', error);
-          setAdError('რეკლამის ჩვენება ვერ მოხერხდა');
+          setAdError(t("modals.adFailed"));
         },
       });
 
@@ -88,14 +90,14 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
         setIsWatching(false);
         setWatchProgress(0);
         if (!adError) {
-          setAdError('რეკლამის ყურება ვერ მოხერხდა');
+          setAdError(t("modals.watchFailed"));
         }
       }
     } catch (error) {
       clearInterval(progressInterval);
       setIsWatching(false);
       setWatchProgress(0);
-      setAdError('დაფიქსირდა შეცდომა');
+      setAdError(t("modals.errorOccurred"));
       console.error('Error watching ad:', error);
     }
   };
@@ -151,12 +153,12 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
               className="text-2xl font-black text-white mb-2"
               style={{ fontFamily: "'TASolivare', sans-serif" }}
             >
-              თამაშების ლიმიტი
+              {t("modals.playsLimit")}
             </h2>
 
             {/* Current status */}
             <p className="text-white/60 mb-4">
-              დარჩენილია: <span className="text-white font-bold">{playsRemaining}/5</span> თამაში
+              {t("modals.playsRemaining", { current: playsRemaining, max: 5 })}
             </p>
 
             {/* Reward preview */}
@@ -165,8 +167,8 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
               style={{ background: "rgba(255,255,255,0.05)" }}
             >
               <Gift className="w-5 h-5 text-amber-400" />
-              <span className="text-white">უყურე რეკლამას და მიიღე</span>
-              <span className="text-amber-400 font-bold">+2 თამაში</span>
+              <span className="text-white">{t("modals.watchAdGetPlays")}</span>
+              <span className="text-amber-400 font-bold">{t("modals.extraPlays", { count: 2 })}</span>
             </div>
 
             {/* Error message */}
@@ -195,7 +197,7 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
                     transition={{ duration: 0.1 }}
                   />
                 </div>
-                <p className="text-white/40 text-xs mt-2">რეკლამის ყურება...</p>
+                <p className="text-white/40 text-xs mt-2">{t("modals.watchingAd")}</p>
               </div>
             )}
 
@@ -215,19 +217,19 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
                   >
                     <Tv className="w-5 h-5" />
                   </motion.div>
-                  უყურებ...
+                  {t("modals.watching")}
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <Play className="w-5 h-5" fill="currentColor" />
-                  უყურე რეკლამას
+                  {t("modals.watchAd")}
                 </span>
               )}
             </ChunkyButton>
 
             {/* Alternative - VIP */}
             <p className="text-white/40 text-xs mt-4">
-              ან გახდი <span className="text-amber-400">VIP</span> უსაზღვრო თამაშებისთვის
+              {t("modals.orBecomeVip")}
             </p>
           </div>
         </motion.div>

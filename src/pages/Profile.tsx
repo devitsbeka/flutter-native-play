@@ -8,6 +8,8 @@ import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const badges = [
   { icon: "🏆", color: "yellow" as const, locked: false },
   { icon: "⚡", color: "purple" as const, locked: false },
@@ -19,15 +21,20 @@ const badges = [
   { icon: "🚀", color: "purple" as const, locked: true },
 ];
 
-const tabs = ["Badge", "Stats", "Details"];
-
 export default function Profile() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("Badge");
   const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const tabs = [
+    { key: "Badge", label: t("profile.badge") },
+    { key: "Stats", label: t("profile.stats") },
+    { key: "Details", label: t("profile.details") },
+  ];
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
@@ -36,12 +43,12 @@ export default function Profile() {
       <AppLayout showNav>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <p className="text-muted-foreground mb-4">Sign in to view your profile</p>
+            <p className="text-muted-foreground mb-4">{t("profile.signInToView")}</p>
             <button
               onClick={() => navigate("/auth")}
               className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-semibold"
             >
-              Sign In
+              {t("profile.signIn")}
             </button>
           </div>
         </div>
@@ -52,7 +59,7 @@ export default function Profile() {
   const headerContent = (
     <div className="pt-12 pb-20 px-6">
       <div className="flex justify-between items-start mb-8">
-        <h1 className="text-2xl font-bold text-primary-foreground">Profile</h1>
+        <h1 className="text-2xl font-bold text-primary-foreground">{t("profile.title")}</h1>
         <button
           onClick={() => signOut()}
           className="p-2 rounded-full bg-primary-foreground/10"
@@ -134,7 +141,7 @@ export default function Profile() {
               {profile.nickname}
             </h2>
             <p className={cn("text-sm font-medium", rank?.color || "text-muted-foreground")}>
-              {rank?.name || "Beginner"}
+              {rank?.name || t("profile.beginner")}
             </p>
           </div>
 
@@ -144,19 +151,19 @@ export default function Profile() {
               <p className="text-2xl font-bold text-foreground">
                 {profile.total_points.toLocaleString()}
               </p>
-              <p className="text-xs text-muted-foreground uppercase">Points</p>
+              <p className="text-xs text-muted-foreground uppercase">{t("profile.points")}</p>
             </div>
             <div className="text-center border-x border-border">
               <p className="text-2xl font-bold text-foreground">
                 #{Math.floor(Math.random() * 100) + 1}
               </p>
-              <p className="text-xs text-muted-foreground uppercase">World Rank</p>
+              <p className="text-xs text-muted-foreground uppercase">{t("profile.worldRank")}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-foreground">
                 #{Math.floor(Math.random() * 20) + 1}
               </p>
-              <p className="text-xs text-muted-foreground uppercase">Local Rank</p>
+              <p className="text-xs text-muted-foreground uppercase">{t("profile.localRank")}</p>
             </div>
           </div>
         </motion.div>
@@ -165,16 +172,16 @@ export default function Profile() {
         <div className="flex gap-2 mb-6">
           {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               className={cn(
                 "flex-1 py-3 rounded-full font-semibold text-sm transition-colors",
-                activeTab === tab
+                activeTab === tab.key
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground"
               )}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -211,15 +218,15 @@ export default function Profile() {
             className="space-y-4"
           >
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Games Played</span>
+              <span className="text-foreground">{t("profile.gamesPlayed")}</span>
               <span className="font-bold text-foreground">{profile.games_played}</span>
             </div>
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Games Won</span>
+              <span className="text-foreground">{t("profile.gamesWon")}</span>
               <span className="font-bold text-foreground">{profile.games_won}</span>
             </div>
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Win Rate</span>
+              <span className="text-foreground">{t("profile.winRate")}</span>
               <span className="font-bold text-foreground">
                 {profile.games_played > 0
                   ? Math.round((profile.games_won / profile.games_played) * 100)
@@ -227,7 +234,7 @@ export default function Profile() {
               </span>
             </div>
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Best Streak</span>
+              <span className="text-foreground">{t("profile.bestStreak")}</span>
               <span className="font-bold text-foreground">{profile.best_streak}</span>
             </div>
           </motion.div>
@@ -240,20 +247,20 @@ export default function Profile() {
             className="space-y-4"
           >
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Email</span>
+              <span className="text-foreground">{t("profile.email")}</span>
               <span className="text-muted-foreground truncate max-w-[180px]">
                 {user.email}
               </span>
             </div>
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Country</span>
+              <span className="text-foreground">{t("profile.country")}</span>
               <span className="text-foreground">
-                {profile.country_code || "Not set"}
+                {profile.country_code || t("profile.notSet")}
               </span>
             </div>
             <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
-              <span className="text-foreground">Member Since</span>
-              <span className="text-muted-foreground">Recently</span>
+              <span className="text-foreground">{t("profile.memberSince")}</span>
+              <span className="text-muted-foreground">{t("profile.recently")}</span>
             </div>
           </motion.div>
         )}

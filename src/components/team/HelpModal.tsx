@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // 3D icons
 import iconParty from "@/assets/icons/icon-party.png";
@@ -52,47 +53,54 @@ function HelpItem({
 }
 
 export function HelpModal({ isOpen, onClose }: HelpModalProps) {
+  const { t } = useLanguage();
+
+  const helpItems = [
+    {
+      icon: iconOtherGames,
+      title: t("help.createGame"),
+      description: t("help.createGameDesc"),
+    },
+    {
+      icon: iconCompass,
+      title: t("help.shareCode"),
+      description: t("help.shareCodeDesc"),
+    },
+    {
+      icon: iconParty,
+      title: t("help.playWithFriends"),
+      description: t("help.playWithFriendsDesc"),
+    },
+    {
+      icon: iconTrophy,
+      title: t("help.winning"),
+      description: t("help.winningDesc"),
+    },
+  ];
+
   return (
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="როგორ მუშაობს?"
+      title={t("help.howItWorks")}
       iconEmoji="❓"
       showSparkles={false}
     >
       {/* Content */}
       <div className="space-y-3 mb-4">
-        <HelpItem
-          icon={iconOtherGames}
-          title="თამაშის შექმნა"
-          description="დააჭირე '+ თამაშის შექმნა' ღილაკს და აირჩიე კატეგორია. მიიღებ უნიკალურ კოდს."
-          index={0}
-        />
-        
-        <HelpItem
-          icon={iconCompass}
-          title="კოდის გაზიარება"
-          description="გაუზიარე კოდი მეგობარს და დაელოდე სანამ შემოვა ოთახში."
-          index={1}
-        />
-        
-        <HelpItem
-          icon={iconParty}
-          title="მეგობრებთან თამაში"
-          description="დაამატე მეგობრები და დაიწყე თამაში პირდაპირ მათ ბარათზე დაჭერით."
-          index={2}
-        />
-        
-        <HelpItem
-          icon={iconTrophy}
-          title="გამარჯვება"
-          description="უპასუხე კითხვებს სწრაფად და სწორად. ყველაზე მეტი ქულის მქონე იმარჯვებს!"
-          index={3}
-        />
+        {helpItems.map((item, index) => (
+          <HelpItem
+            key={item.title}
+            icon={item.icon}
+            title={item.title}
+            description={item.description}
+            index={index}
+          />
+        ))}
       </div>
 
       <GameModalFooter
-        primaryLabel="გასაგებია"
+        primaryLabel={t("common.gotIt")}
         onPrimary={onClose}
         primaryVariant="success"
       />

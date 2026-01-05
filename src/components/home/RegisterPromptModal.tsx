@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Trophy, Star, Shield, Sparkles } from "lucide-react";
 import { GameModal, GameModalFooter, GameModalStat } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RegisterPromptModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface RegisterPromptModalProps {
 
 export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterPromptModalProps>(
   function RegisterPromptModal({ isOpen, onClose, onRegister }, ref) {
+    const { t } = useLanguage();
     const guestProgress = getGuestProgress();
     
     // Calculate stats
@@ -30,8 +32,8 @@ export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterProm
           onClose={onClose}
           variant="gold"
           iconEmoji="✨"
-          title="შესანიშნავი პროგრესი! 🎉"
-          subtitle="არ დაკარგო შენი მიღწევები - დარეგისტრირდი უფასოდ!"
+          title={t("modals.excellentProgress")}
+          subtitle={t("modals.dontLoseAchievements")}
           showSparkles
           showStars
         >
@@ -40,12 +42,12 @@ export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterProm
             <GameModalStat
               icon={<Trophy className="h-6 w-6 text-primary" />}
               value={totalLevels}
-              label="გავლილი დონე"
+              label={t("modals.levelCompleted")}
             />
             <GameModalStat
               icon={<Star className="h-6 w-6 text-amber-500 fill-amber-500" />}
               value={totalStars}
-              label="მოგროვილი ვარსკვლავი"
+              label={t("modals.starsCollected")}
               highlight
             />
           </div>
@@ -64,7 +66,7 @@ export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterProm
               transition={{ delay: 0.1 }}
             >
               <Shield className="h-5 w-5 text-green-600 shrink-0" />
-              <p className="text-sm font-medium text-gray-800">პროგრესი შენახული იქნება სამუდამოდ</p>
+              <p className="text-sm font-medium text-gray-800">{t("modals.progressSavedForever")}</p>
             </motion.div>
             <motion.div 
               className="flex items-center gap-3 rounded-xl p-3"
@@ -78,14 +80,14 @@ export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterProm
               transition={{ delay: 0.15 }}
             >
               <Trophy className="h-5 w-5 text-primary shrink-0" />
-              <p className="text-sm font-medium text-gray-800">მონაწილეობა ლიდერბორდში</p>
+              <p className="text-sm font-medium text-gray-800">{t("modals.leaderboardParticipation")}</p>
             </motion.div>
           </div>
 
           <GameModalFooter
-            primaryLabel="დარეგისტრირდი უფასოდ"
+            primaryLabel={t("modals.registerFree")}
             onPrimary={onRegister}
-            secondaryLabel="მოგვიანებით"
+            secondaryLabel={t("modals.later")}
             onSecondary={onClose}
             primaryIcon={<Sparkles className="w-5 h-5" />}
           />

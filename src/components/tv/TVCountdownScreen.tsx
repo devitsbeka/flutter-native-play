@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const TVCountdownScreen: React.FC = () => {
+  const { t } = useLanguage();
   const [count, setCount] = useState(3);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export const TVCountdownScreen: React.FC = () => {
             transition={{ duration: 0.3, type: 'spring' }}
             className="text-8xl font-bold text-green-500"
           >
-            დაწყება! 🚀
+            {t("tv.start")}
           </motion.div>
         )}
       </AnimatePresence>
