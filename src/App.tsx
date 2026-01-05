@@ -43,6 +43,7 @@ import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
 import Notifications from "./pages/Notifications";
+import Checklist from "./pages/Checklist";
 
 const App = () => (
   <AuthProvider>
@@ -89,6 +90,7 @@ const App = () => (
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="/all-buttons" element={<AllButtons />} />
+              <Route path="/checklist" element={<Checklist />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TooltipProvider>
