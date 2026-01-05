@@ -337,19 +337,44 @@ export function RoomLobbyV2() {
           </ChunkyButton>
         </motion.div>
 
-        {/* Chat Panel */}
+        {/* Full-Screen Chat Modal */}
         <AnimatePresence>
           {showChat && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 180 }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4 rounded-2xl overflow-hidden bg-card border border-border"
-            >
-              <div className="h-full flex flex-col">
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60]"
+                onClick={() => setShowChat(false)}
+              />
+
+              {/* Chat Modal */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="fixed inset-0 z-[60] bg-card flex flex-col"
+              >
+                {/* Header with title and close button */}
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                  <h2 className="text-xl font-bold text-foreground">ჩატი</h2>
+                  <motion.button
+                    onClick={() => setShowChat(false)}
+                    className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 border border-border"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <X className="w-5 h-5 text-foreground" />
+                  </motion.button>
+                </div>
+
+                {/* Messages area - scrollable */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.length === 0 ? (
-                    <p className="text-center text-muted-foreground text-sm py-4">
+                    <p className="text-center text-muted-foreground py-8">
                       ჯერ შეტყობინებები არ არის
                     </p>
                   ) : (
@@ -360,46 +385,48 @@ export function RoomLobbyV2() {
                           msg.user_id === user?.id ? "flex-row-reverse" : ""
                         }`}
                       >
-                        <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
                           {msg.avatar_url ? (
                             <img src={msg.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                            <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                               {msg.nickname?.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
                         <div
-                          className={`max-w-[70%] px-3 py-1.5 rounded-2xl text-sm ${
+                          className={`max-w-[75%] px-4 py-2 rounded-2xl ${
                             msg.user_id === user?.id
                               ? "bg-primary text-primary-foreground rounded-tr-sm"
                               : "bg-muted text-foreground rounded-tl-sm"
                           }`}
                         >
                           {msg.user_id !== user?.id && (
-                            <p className="text-[10px] font-medium text-primary mb-0.5">{msg.nickname}</p>
+                            <p className="text-xs font-medium text-primary mb-1">{msg.nickname}</p>
                           )}
-                          <p>{msg.message}</p>
+                          <p className="text-sm">{msg.message}</p>
                         </div>
                       </div>
                     ))
                   )}
                   <div ref={chatEndRef} />
                 </div>
-                <div className="p-2 border-t border-border flex gap-2">
+
+                {/* Input area at bottom */}
+                <div className="p-4 border-t border-border flex gap-2">
                   <Input
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
                     placeholder="დაწერე შეტყობინება..."
-                    className="flex-1 text-sm"
+                    className="flex-1"
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   />
                   <ChunkyButton size="sm" variant="primary" onClick={handleSendMessage}>
-                    <Send className="w-4 h-4" />
+                    <Send className="w-5 h-5" />
                   </ChunkyButton>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 
