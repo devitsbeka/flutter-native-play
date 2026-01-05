@@ -399,6 +399,7 @@ export function VSScreen() {
             {/* Interactive Multi-Blob Video Container */}
             <InteractiveBlobVideo
               imageSrc={showCategorySlot ? (selectedCategory?.imageUrl || currentImageUrl) : "/placeholder.svg"}
+              videoSrc={isCategoryLocked && selectedCategory ? CATEGORY_VIDEOS[selectedCategory.id] : undefined}
               isLocked={isCategoryLocked}
               showCategorySlot={showCategorySlot}
             />
