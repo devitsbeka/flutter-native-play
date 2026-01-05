@@ -36,11 +36,22 @@ export function RoomLobby() {
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(room?.id || null);
   const { matches } = useRoomMatchHistory(room?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate unread count
+  const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
+  
+  // Mark messages as read when chat is opened
+  useEffect(() => {
+    if (showChat) {
+      setLastSeenMessageCount(messages.length);
+    }
+  }, [showChat, messages.length]);
 
   const otherParticipants = participants.filter(p => p.user_id !== user?.id);
 
@@ -256,9 +267,9 @@ export function RoomLobby() {
               whileTap={{ scale: 0.95 }}
             >
               <MessageCircle className={`w-4 h-4 ${showChat ? "text-primary-foreground" : "text-muted-foreground"}`} />
-              {messages.length > 0 && !showChat && (
+              {unreadMessageCount > 0 && !showChat && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {messages.length}
+                  {unreadMessageCount}
                 </span>
               )}
             </motion.button>
