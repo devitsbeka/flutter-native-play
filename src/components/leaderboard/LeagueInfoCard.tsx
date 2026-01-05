@@ -11,7 +11,10 @@ interface LeagueInfoCardProps {
 }
 
 export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: LeagueInfoCardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  
+  // Use language-aware league name
+  const leagueName = language === 'ka' ? league.nameKa : league.name;
   
   const getRankChangeDisplay = () => {
     if (rankChange === 0) {
@@ -46,7 +49,7 @@ export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: Leagu
     >
       {/* League Name */}
       <h1 className="text-2xl font-bold text-center text-foreground">
-        {league.nameKa}
+        {leagueName}
       </h1>
 
       {/* Stats Row */}

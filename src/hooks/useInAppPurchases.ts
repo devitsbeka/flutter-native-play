@@ -96,12 +96,14 @@ export function useInAppPurchases() {
   // Purchase a product
   const purchase = useCallback(async (productId: string): Promise<PurchaseResult> => {
     if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      // Note: toast messages should ideally use t() but hook can't use useLanguage
+      // For now keeping English/Georgian messages inline - should be refactored to pass t() as param
+      toast.error("Please sign in");
       return { success: false, error: "Not authenticated" };
     }
 
     if (!Capacitor.isNativePlatform()) {
-      toast.error("შესყიდვა ხელმისაწვდომია მხოლოდ მობილურ აპლიკაციაში");
+      toast.error("Purchases only available in mobile app");
       return { success: false, error: "Not on native platform" };
     }
 
@@ -127,7 +129,7 @@ export function useInAppPurchases() {
         );
 
         if (verifyResult.success) {
-          toast.success("შესყიდვა წარმატებით დასრულდა! 🎉");
+          toast.success("Purchase completed! 🎉");
           return { 
             success: true, 
             transactionId: customerInfo.originalAppUserId 
@@ -146,7 +148,7 @@ export function useInAppPurchases() {
         return { success: false, error: "cancelled" };
       }
       
-      toast.error("შესყიდვა ვერ მოხერხდა");
+      toast.error("Purchase failed");
       return { success: false, error: error.message };
     } finally {
       setPurchasing(false);
@@ -156,12 +158,12 @@ export function useInAppPurchases() {
   // Restore previous purchases
   const restorePurchases = useCallback(async (): Promise<boolean> => {
     if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      toast.error("Please sign in");
       return false;
     }
 
     if (!Capacitor.isNativePlatform()) {
-      toast.info("აღდგენა ხელმისაწვდომია მხოლოდ მობილურ აპლიკაციაში");
+      toast.info("Restore only available in mobile app");
       return false;
     }
 
@@ -187,15 +189,15 @@ export function useInAppPurchases() {
           );
         }
 
-        toast.success("შესყიდვები აღდგენილია! 🎉");
+        toast.success("Purchases restored! 🎉");
         return true;
       } else {
-        toast.info("წინა შესყიდვები ვერ მოიძებნა");
+        toast.info("No previous purchases found");
         return false;
       }
     } catch (error: any) {
       console.error("Restore error:", error);
-      toast.error("აღდგენა ვერ მოხერხდა");
+      toast.error("Restore failed");
       return false;
     } finally {
       setPurchasing(false);

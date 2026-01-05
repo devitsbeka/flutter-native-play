@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { REWARDS } from "@/config/rewardConfig";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PrizePoolAnimationProps {
   isVisible: boolean;
@@ -54,6 +55,7 @@ export function PrizePoolAnimation({
   playerCoins, 
   opponentCoins 
 }: PrizePoolAnimationProps) {
+  const { t } = useLanguage();
   const [poolAmount, setPoolAmount] = useState(0);
   const [flyingCoins, setFlyingCoins] = useState<Array<{ id: number; side: "left" | "right" }>>([]);
   const [coinIdCounter, setCoinIdCounter] = useState(0);
@@ -178,7 +180,7 @@ export function PrizePoolAnimation({
               {/* Prize Pool Text */}
               <div className="flex flex-col items-start">
                 <span className="text-white/60 text-xs font-medium uppercase tracking-wide">
-                  პრიზი
+                  {t('gameExtra.prize')}
                 </span>
                 <motion.div 
                   className="flex items-center gap-1"

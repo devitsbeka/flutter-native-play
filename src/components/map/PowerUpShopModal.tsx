@@ -6,6 +6,7 @@ import { PowerUpDemoPreview } from "./PowerUpDemoPreview";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameModal } from "@/components/ui/game-modal";
 import { toast } from "sonner";
@@ -57,11 +58,24 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
   const { powerUps, isLoading, addPowerUp } = useUserPowerUps();
   const { coins, spendCoins, canAffordCoins } = useCurrency();
   const { playSound, vibrate } = useSound();
+  const { t } = useLanguage();
   const [selectedType, setSelectedType] = useState<PowerUpType>(initialSelectedType || "5050");
   const [animationKey, setAnimationKey] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Get translated power-up info
+  const getPowerUpInfo = (type: PowerUpType) => {
+    const info = POWER_UP_INFO.find(p => p.type === type)!;
+    const names: Record<PowerUpType, string> = {
+      "5050": "50/50",
+      "freeze": t('shop.freeze'),
+      "replace": t('shop.replace'),
+      "time-drain": t('shop.timePlus'),
+    };
+    return { ...info, displayName: names[type] };
+  };
 
   // Restart animation when switching power-ups
   const handleSelectPowerUp = (type: PowerUpType) => {
@@ -90,7 +104,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
     }
   }, [isOpen, initialSelectedType]);
 
-  const selectedInfo = POWER_UP_INFO.find((p) => p.type === selectedType)!;
+  const selectedInfo = getPowerUpInfo(selectedType);
   const unitPrice = POWER_UP_PRICES[selectedType] || 100;
   const totalPrice = unitPrice * quantity;
   const canAfford = canAffordCoins(totalPrice);
@@ -101,7 +115,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
 
   const handlePurchase = async () => {
     if (!canAfford) {
-      toast.error("არ გაქვს საკმარისი მონეტა!");
+      toast.error(t('shop.notEnoughCoins'));
       playSound("wrong-answer");
       return;
     }
@@ -128,7 +142,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
         zIndex: 9999,
       });
       
-      toast.success(`შეძენილია ${quantity}x ${selectedInfo.name}! ⚡`);
+      toast.success(t('shop.purchasedPower').replace('{count}', String(quantity)).replace('{name}', selectedInfo.displayName));
       
       setTimeout(() => {
         onClose();
@@ -136,7 +150,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       }, 1500);
     } catch (error) {
       console.error("Purchase failed:", error);
-      toast.error("შეძენა ვერ მოხერხდა");
+      toast.error(t('shop.purchaseFailed'));
       playSound("wrong-answer");
     } finally {
       setIsPurchasing(false);
@@ -175,8 +189,8 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       isOpen={isOpen}
       onClose={onClose}
       icon={headerIcon}
-      title="ძალები"
-      subtitle="შეიძინე სუპერ ძალები"
+      title={t('shop.powerShop')}
+      subtitle={t('shop.buyPowers')}
       showSparkles
       footer={
         <ChunkyButton
@@ -186,13 +200,13 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
           className="w-full"
         >
           {isPurchasing ? (
-            "იძენება..."
+            t('shop.purchasing')
           ) : !canAfford ? (
-            "არ გაქვს საკმარისი მონეტები"
+            t('shop.notEnoughCoinsLong')
           ) : (
             <>
               <img src={coinIcon} alt="" className="w-5 h-5 mr-2" />
-              შეიძინე
+              {t('shop.buy')}
             </>
           )}
         </ChunkyButton>
@@ -333,7 +347,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
                   transition={{ delay: 0.3 }}
                   className="text-xl font-bold text-foreground"
                 >
-                  წარმატებით შეიძინე!
+                  {t('shop.purchasedSuccess')}
                 </motion.p>
                 
                 {/* Quantity badge */}
@@ -344,7 +358,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
                   className="mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10"
                 >
                   <span className="text-lg font-bold text-primary">
-                    +{quantity}x {selectedInfo.name}
+                    +{quantity}x {selectedInfo.displayName}
                   </span>
                 </motion.div>
 

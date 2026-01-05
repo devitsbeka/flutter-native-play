@@ -10,8 +10,14 @@ interface LeagueLockedOverlayProps {
 }
 
 export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const previousLeague = LEAGUES.find(l => l.tier === league.tier - 1);
+  
+  // Use language-aware league names
+  const leagueName = language === 'ka' ? league.nameKa : league.name;
+  const previousLeagueName = previousLeague ? (language === 'ka' ? previousLeague.nameKa : previousLeague.name) : "";
+  const currentLeagueName = LEAGUES.find(l => l.tier === userTier);
+  const currentLeagueDisplayName = currentLeagueName ? (language === 'ka' ? currentLeagueName.nameKa : currentLeagueName.name) : "";
   
   return (
     <motion.div
@@ -30,7 +36,7 @@ export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayPro
         <div className="relative mb-6">
           <img
             src={leagueTrophy}
-            alt={league.name}
+            alt={leagueName}
             className="w-24 h-28 object-contain opacity-50"
             style={{ filter: "grayscale(1) brightness(0.8)" }}
           />
@@ -43,12 +49,12 @@ export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayPro
 
         {/* Title */}
         <h2 className="text-xl font-bold text-foreground mb-2">
-          {league.nameKa}
+          {leagueName}
         </h2>
 
         {/* Description */}
         <p className="text-muted-foreground text-sm mb-6">
-          {t('leaderboard.leagueLockedMessage').replace('{previousLeague}', previousLeague?.nameKa || "")}
+          {t('leaderboard.leagueLockedMessage').replace('{previousLeague}', previousLeagueName)}
         </p>
 
         {/* Unlock requirement */}
@@ -61,14 +67,14 @@ export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayPro
               {t('leaderboard.requiredToUnlock')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {t('leaderboard.topPlace').replace('{league}', previousLeague?.nameKa || "")}
+              {t('leaderboard.topPlace').replace('{league}', previousLeagueName)}
             </p>
           </div>
         </div>
 
         {/* Current tier info */}
         <p className="mt-6 text-xs text-muted-foreground">
-          {t('leaderboard.youAreCurrentlyIn')} {LEAGUES.find(l => l.tier === userTier)?.nameKa}
+          {t('leaderboard.youAreCurrentlyIn')} {currentLeagueDisplayName}
         </p>
       </motion.div>
     </motion.div>
