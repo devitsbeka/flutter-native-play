@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
@@ -16,9 +16,11 @@ export interface GeneratedQuestion {
   difficulty: string;
   language: string;
   iconSlug?: string;
+  suggestedIconSlugs?: string[];
   status: 'pending' | 'approved' | 'rejected';
   isValid: boolean;
   warnings: string[];
+  isDuplicate?: boolean;
 }
 
 export interface Category {
@@ -56,6 +58,7 @@ export default function Flow() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
   const [stats, setStats] = useState({ inLib: 0, inProd: 0 });
 
   useEffect(() => {
@@ -91,9 +94,49 @@ export default function Flow() {
     setStats({ inLib: libCount || 0, inProd: prodCount || 0 });
   };
 
-  const handleQuestionsGenerated = (questions: GeneratedQuestion[]) => {
-    setGeneratedQuestions(prev => [...questions, ...prev]);
-  };
+  // Check for duplicate questions in the database
+  const checkDuplicates = useCallback(async (questions: GeneratedQuestion[]): Promise<GeneratedQuestion[]> => {
+    if (questions.length === 0) return questions;
+    
+    setIsCheckingDuplicates(true);
+    try {
+      const questionTexts = questions.map(q => q.questionText);
+      
+      const { data: existing, error } = await supabase
+        .from('questions')
+        .select('question_text')
+        .in('question_text', questionTexts);
+      
+      if (error) {
+        console.error('Error checking duplicates:', error);
+        return questions;
+      }
+
+      const duplicateTexts = new Set(existing?.map(e => e.question_text) || []);
+      
+      return questions.map(q => ({
+        ...q,
+        isDuplicate: duplicateTexts.has(q.questionText),
+        warnings: duplicateTexts.has(q.questionText) 
+          ? [...q.warnings, 'Already exists in database']
+          : q.warnings,
+        isValid: !duplicateTexts.has(q.questionText) && q.isValid,
+      }));
+    } finally {
+      setIsCheckingDuplicates(false);
+    }
+  }, []);
+
+  const handleQuestionsGenerated = useCallback(async (questions: GeneratedQuestion[]) => {
+    // Check for duplicates before adding to the list
+    const checkedQuestions = await checkDuplicates(questions);
+    setGeneratedQuestions(prev => [...checkedQuestions, ...prev]);
+    
+    const duplicateCount = checkedQuestions.filter(q => q.isDuplicate).length;
+    if (duplicateCount > 0) {
+      toast.info(`${duplicateCount} duplicate question(s) found`);
+    }
+  }, [checkDuplicates]);
 
   const handleApprove = (id: string) => {
     setGeneratedQuestions(prev =>
@@ -119,8 +162,14 @@ export default function Flow() {
     );
   };
 
+  const handleUpdateQuestion = useCallback((id: string, updates: Partial<GeneratedQuestion>) => {
+    setGeneratedQuestions(prev => prev.map(q => 
+      q.id === id ? { ...q, ...updates } : q
+    ));
+  }, []);
+
   const handlePublishToLib = async () => {
-    const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid);
+    const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid && !q.isDuplicate);
     if (approved.length === 0) {
       toast.error('No approved questions to publish');
       return;
@@ -151,7 +200,7 @@ export default function Flow() {
   };
 
   const handlePublishToProd = async () => {
-    const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid);
+    const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid && !q.isDuplicate);
     if (approved.length === 0) {
       toast.error('No approved questions to publish');
       return;
@@ -193,10 +242,18 @@ export default function Flow() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-border/50 bg-card/30">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <span className="text-2xl">⚡</span>
-          Flow - Question Factory
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <span className="text-2xl">⚡</span>
+            Flow - Question Factory
+          </h1>
+          {isCheckingDuplicates && (
+            <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              Checking duplicates...
+            </div>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mt-1">
           Generate, review, and publish questions in 20 languages
         </p>
@@ -225,6 +282,7 @@ export default function Flow() {
             onReject={handleReject}
             onBulkApprove={handleBulkApprove}
             onBulkReject={handleBulkReject}
+            onUpdateQuestion={handleUpdateQuestion}
             languages={LANGUAGES}
           />
         </div>
