@@ -14,6 +14,7 @@ import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
+import { PrizePoolAnimation } from "./PrizePoolAnimation";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -399,6 +400,13 @@ export function VSScreen() {
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
+            {/* Prize Pool Animation - Positioned above category blob */}
+            <PrizePoolAnimation
+              isVisible={isOpponentLocked}
+              playerCoins={profile?.coins || 0}
+              opponentCoins={500}
+            />
+
             {/* Interactive Blob - Icons during spin, Video on reveal */}
             <InteractiveBlobVideo
               iconUrl={currentCategory?.image_url || undefined}
