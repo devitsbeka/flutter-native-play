@@ -1,10 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useCategories } from "@/hooks/useCategories";
 
 // Soft rounded rectangle path
 const roundedRectPath = "M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 C0.94,0.82 0.82,0.94 0.5,0.94 C0.18,0.94 0.06,0.82 0.06,0.5 C0.06,0.18 0.18,0.06 0.5,0.06";
 const borderRectPath = "M0.5,0.04 C0.84,0.04 0.96,0.16 0.96,0.5 C0.96,0.84 0.84,0.96 0.5,0.96 C0.16,0.96 0.04,0.84 0.04,0.5 C0.04,0.16 0.16,0.04 0.5,0.04";
+
+// Build icon URL from slug
+function getIconUrl(slug: string): string {
+  return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${slug}.png`;
+}
 
 interface InteractiveBlobVideoProps {
   iconUrl?: string;
@@ -17,10 +22,13 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: Interactiv
   const [slotIconUrl, setSlotIconUrl] = useState<string>("");
   const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Get all category icons for slot animation
-  const categoryIcons = categories
-    .map(c => c.image_url)
-    .filter((url): url is string => !!url);
+  // Get all category icons for slot animation - build URLs from icon_slug
+  const categoryIcons = useMemo(() => 
+    categories
+      .filter(c => c.icon_slug)
+      .map(c => getIconUrl(c.icon_slug!)),
+    [categories]
+  );
 
   // Slot machine animation - runs until locked
   useEffect(() => {
@@ -46,7 +54,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: Interactiv
         clearInterval(slotIntervalRef.current);
       }
     };
-  }, [isLocked, categoryIcons.length]);
+  }, [isLocked, categoryIcons]);
 
   // Determine which icon to show
   const displayIcon = isLocked ? iconUrl : slotIconUrl;
