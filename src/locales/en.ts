@@ -157,6 +157,26 @@ export const en: KaTranslations = {
   },
 
   // ==========================================
+  // Menu
+  // ==========================================
+  menu: {
+    rewards: "Rewards",
+    missions: "Missions",
+    treasure: "Treasure Chest",
+    shop: "Shop",
+    party: "Party",
+    otherGames: "Other Games",
+    settings: "Settings",
+    help: "Help",
+    privacy: "Privacy",
+    signOut: "Sign Out",
+    signIn: "Sign In",
+    comingSoon: "Coming soon!",
+    player: "Player",
+    points: "points",
+  },
+
+  // ==========================================
   // Sound Settings
   // ==========================================
   sound: {

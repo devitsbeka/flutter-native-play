@@ -2,59 +2,21 @@ import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-
-export const LANGUAGES = [
-  { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪' },
-  { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
-  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-  { code: 'pt-br', name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷' },
-  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
-  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱' },
-  { code: 'sv', name: 'Swedish', nativeName: 'Svenska', flag: '🇸🇪' },
-  { code: 'nb', name: 'Norwegian', nativeName: 'Norsk', flag: '🇳🇴' },
-  { code: 'da', name: 'Danish', nativeName: 'Dansk', flag: '🇩🇰' },
-  { code: 'fi', name: 'Finnish', nativeName: 'Suomi', flag: '🇫🇮' },
-  { code: 'pl', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱' },
-  { code: 'cs', name: 'Czech', nativeName: 'Čeština', flag: '🇨🇿' },
-  { code: 'sk', name: 'Slovak', nativeName: 'Slovenčina', flag: '🇸🇰' },
-  { code: 'hu', name: 'Hungarian', nativeName: 'Magyar', flag: '🇭🇺' },
-  { code: 'ro', name: 'Romanian', nativeName: 'Română', flag: '🇷🇴' },
-  { code: 'hr', name: 'Croatian', nativeName: 'Hrvatski', flag: '🇭🇷' },
-  { code: 'sr-latn', name: 'Serbian', nativeName: 'Srpski', flag: '🇷🇸' },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LanguageSwitcherProps {
-  currentLanguage?: string;
-  onChange?: (language: string) => void;
   compact?: boolean;
 }
 
-export function LanguageSwitcher({ 
-  currentLanguage: controlledLanguage, 
-  onChange,
-  compact = false 
-}: LanguageSwitcherProps) {
+export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
+  const { language, setLanguage, languages, currentLanguage } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [internalLanguage, setInternalLanguage] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('app-language') || 'ka';
-    }
-    return 'ka';
-  });
-
-  const currentLanguage = controlledLanguage ?? internalLanguage;
-  const currentLang = LANGUAGES.find(l => l.code === currentLanguage) || LANGUAGES[0];
 
   const handleSelect = (code: string) => {
-    if (!controlledLanguage) {
-      setInternalLanguage(code);
-      localStorage.setItem('app-language', code);
-    }
-    onChange?.(code);
+    setLanguage(code);
     setIsExpanded(false);
+    // Force a page reload to apply all translations
+    window.location.reload();
   };
 
   // Close on outside click
@@ -83,10 +45,10 @@ export function LanguageSwitcher({
             : "px-3 py-2 bg-card/50 hover:bg-card border border-border/50"
         )}
       >
-        <span className="text-xl">{currentLang.flag}</span>
+        <span className="text-xl">{currentLanguage.flag}</span>
         {!compact && (
           <>
-            <span className="text-sm font-medium">{currentLang.nativeName}</span>
+            <span className="text-sm font-medium">{currentLanguage.nativeName}</span>
             <ChevronDown className={cn(
               "w-4 h-4 text-muted-foreground transition-transform",
               isExpanded && "rotate-180"
@@ -105,13 +67,13 @@ export function LanguageSwitcher({
             className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-xl p-3 shadow-xl min-w-[280px]"
           >
             <div className="grid grid-cols-4 gap-2">
-              {LANGUAGES.map(lang => (
+              {languages.map(lang => (
                 <button
                   key={lang.code}
                   onClick={() => handleSelect(lang.code)}
                   className={cn(
                     "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors hover:bg-accent/50",
-                    currentLanguage === lang.code && "bg-primary/10 ring-1 ring-primary/50"
+                    language === lang.code && "bg-primary/10 ring-1 ring-primary/50"
                   )}
                   title={lang.name}
                 >
