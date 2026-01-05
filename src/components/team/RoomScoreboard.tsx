@@ -60,7 +60,6 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
       <div className="flex items-center justify-center gap-2 py-3 bg-primary/10 border-b border-border">
         <Trophy className="w-5 h-5 text-primary" />
         <span className="font-display font-bold text-foreground">ქულების ცხრილი</span>
-        <Trophy className="w-5 h-5 text-primary" />
       </div>
 
       {/* Scoreboard Content */}
@@ -211,20 +210,20 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       isMyWin ? "bg-green-500/10" : "bg-muted/30"
                     }`}
                   >
-                    <span className="text-muted-foreground w-6 text-center">#{roundNumber}</span>
-                    <div className="w-5 flex items-center justify-center flex-shrink-0">
+                    <span className="text-muted-foreground w-8 text-center text-sm">#{roundNumber}</span>
+                    <div className="w-7 flex items-center justify-center flex-shrink-0">
                       <img 
                         src={isMyWin ? medalGold : medalSilver} 
                         alt={isMyWin ? "Win" : "Loss"} 
-                        className="w-5 h-5 object-contain" 
+                        className="w-7 h-7 object-contain" 
                       />
                     </div>
-                    <span className="flex-1 font-medium truncate">
+                    <span className="flex-1 font-medium truncate text-sm">
                       {isMyWin 
                         ? "შენ მოიგე" 
                         : `${winner?.nickname || "?"}-მ მოიგო`}
                     </span>
-                    <span className="text-muted-foreground">{winner?.score || 0}pts</span>
+                    <span className="text-muted-foreground text-sm">{winner?.score || 0}pts</span>
                   </div>
                 );
               })}
