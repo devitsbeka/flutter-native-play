@@ -131,33 +131,14 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
           rotate: wobbleRotate,
         }}
       >
-        {/* Gradient border blob - animated iridescent effect */}
+        {/* Gradient border blob - yellowish frame */}
         <motion.div
           className="absolute inset-0"
           style={{
             clipPath: "url(#borderBlobClip)",
-          }}
-          animate={{
             background: isLocked 
-              ? [
-                  "linear-gradient(0deg, hsl(263 60% 59%), hsl(263 76% 75%), hsl(340 80% 75%), hsl(263 60% 59%))",
-                  "linear-gradient(120deg, hsl(340 80% 75%), hsl(263 60% 59%), hsl(263 76% 75%), hsl(340 80% 75%))",
-                  "linear-gradient(240deg, hsl(263 76% 75%), hsl(340 80% 75%), hsl(263 60% 59%), hsl(263 76% 75%))",
-                  "linear-gradient(360deg, hsl(263 60% 59%), hsl(263 76% 75%), hsl(340 80% 75%), hsl(263 60% 59%))",
-                ]
-              : [
-                  "linear-gradient(0deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.7))",
-                  "linear-gradient(120deg, rgba(255,255,255,0.7), rgba(255,255,255,0.8), rgba(255,255,255,0.5))",
-                  "linear-gradient(240deg, rgba(255,255,255,0.5), rgba(255,255,255,0.7), rgba(255,255,255,0.8))",
-                  "linear-gradient(360deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.7))",
-                ],
-          }}
-          transition={{
-            background: {
-              duration: 3,
-              repeat: Infinity,
-              ease: "linear",
-            }
+              ? "linear-gradient(135deg, hsl(45 95% 65%), hsl(35 95% 55%), hsl(25 95% 60%), hsl(45 95% 65%))"
+              : "linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.7))",
           }}
         />
 
@@ -214,7 +195,7 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
               style={{
                 width: 6 + (i % 3) * 4,
                 height: 6 + (i % 3) * 4,
-                background: i % 2 === 0 ? "hsl(263 60% 59%)" : "hsl(340 80% 75%)",
+                background: i % 2 === 0 ? "hsl(45 95% 65%)" : "hsl(35 95% 55%)",
                 left: `${15 + i * 10}%`,
                 top: `${20 + (i % 4) * 15}%`,
               }}
