@@ -35,49 +35,43 @@ export function ShopHeader({ onHelpClick, onBuyGemsClick, onBuyCoinsClick }: Sho
         </div>
 
         {/* Currency Row */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           {/* Coins Balance with Add Button */}
           <motion.button
             onClick={onBuyCoinsClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full group"
-            style={{
-              background: "linear-gradient(180deg, hsl(160 60% 88%) 0%, hsl(155 55% 78%) 100%)",
-              boxShadow: "0 3px 0 hsl(150 50% 55%)",
-              border: "2px solid hsl(155 50% 70%)",
-            }}
+            className="flex items-center gap-2 group"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            <img src={coinIcon} alt="" className="w-5 h-5" />
-            <span className="font-bold text-emerald-800">{formatCompactNumber(coins)}</span>
-            <motion.div
-              className="w-5 h-5 rounded-full bg-emerald-700/20 flex items-center justify-center ml-0.5"
-              whileHover={{ scale: 1.1 }}
+            <div 
+              className="w-10 h-10 rounded-full bg-white flex items-center justify-center"
+              style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
             >
-              <Plus className="w-4 h-4 text-emerald-700" />
-            </motion.div>
+              <img src={coinIcon} alt="" className="w-6 h-6" />
+            </div>
+            <span className="font-bold text-lg text-foreground">{formatCompactNumber(coins)}</span>
+            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
+              <Plus className="w-4 h-4 text-primary" />
+            </div>
           </motion.button>
 
           {/* Gems Balance with Add Button */}
           <motion.button
             onClick={onBuyGemsClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full group"
-            style={{
-              background: "linear-gradient(180deg, hsl(263 76% 92%) 0%, hsl(263 70% 85%) 100%)",
-              boxShadow: "0 3px 0 hsl(263 60% 70%)",
-              border: "2px solid hsl(263 60% 80%)",
-            }}
+            className="flex items-center gap-2 group"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            <img src={gemIcon} alt="" className="w-5 h-5" />
-            <span className="font-bold text-primary">{formatCompactNumber(gems)}</span>
-            <motion.div
-              className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center ml-0.5"
-              whileHover={{ scale: 1.1 }}
+            <div 
+              className="w-10 h-10 rounded-full bg-white flex items-center justify-center"
+              style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
             >
+              <img src={gemIcon} alt="" className="w-6 h-6" />
+            </div>
+            <span className="font-bold text-lg text-foreground">{formatCompactNumber(gems)}</span>
+            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
               <Plus className="w-4 h-4 text-primary" />
-            </motion.div>
+            </div>
           </motion.button>
         </div>
       </div>
