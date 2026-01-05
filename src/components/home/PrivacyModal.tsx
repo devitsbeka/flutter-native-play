@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Shield, FileText, Trash2, Download, ChevronRight } from "lucide-react";
+import { X, Shield, FileText, Trash2, Download, ChevronRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useState } from "react";
@@ -17,22 +17,55 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
   const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleDeleteAccount = async () => {
     if (!user) return;
     
     setIsDeleting(true);
     try {
-      // Note: Full account deletion requires admin privileges
-      // This just signs out and shows a message
+      const { data, error } = await supabase.functions.invoke("delete-user-account");
+      
+      if (error) throw error;
+      
       await signOut();
-      notify.success("თქვენი მოთხოვნა მიღებულია", { description: "ანგარიში წაიშლება 30 დღეში." });
+      notify.success("ანგარიში წაიშალა", { description: "თქვენი ყველა მონაცემი წაიშალა." });
       onClose();
       navigate("/");
     } catch (error: any) {
-      notify.error("შეცდომა", { description: error.message });
+      console.error("Account deletion error:", error);
+      notify.error("შეცდომა", { description: error.message || "ანგარიშის წაშლა ვერ მოხერხდა" });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!user) return;
+    
+    setIsExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-user-data");
+      
+      if (error) throw error;
+      
+      // Create and download the JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `quizapp-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      notify.success("მონაცემები გადმოწერილია", { description: "თქვენი მონაცემების ფაილი მზადაა." });
+    } catch (error: any) {
+      console.error("Data export error:", error);
+      notify.error("შეცდომა", { description: error.message || "მონაცემების ექსპორტი ვერ მოხერხდა" });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -41,19 +74,21 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       icon: Shield,
       label: "კონფიდენციალურობის პოლიტიკა",
       sublabel: "როგორ ვიცავთ თქვენს მონაცემებს",
-      action: () => window.open("#privacy-policy", "_blank"),
+      action: () => { onClose(); navigate("/privacy-policy"); },
     },
     {
       icon: FileText,
       label: "მომსახურების პირობები",
       sublabel: "წესები და პირობები",
-      action: () => window.open("#terms", "_blank"),
+      action: () => { onClose(); navigate("/terms"); },
     },
     {
       icon: Download,
       label: "მონაცემების ჩამოტვირთვა",
-      sublabel: "გადმოწერეთ თქვენი ინფორმაცია",
-      action: () => notify.info("მონაცემები მალე გამოიგზავნება", { description: "თქვენს ელფოსტაზე", icon: "📧" }),
+      sublabel: isExporting ? "მიმდინარეობს..." : "გადმოწერეთ თქვენი ინფორმაცია",
+      action: handleExportData,
+      loading: isExporting,
+      requiresAuth: true,
     },
   ];
 
@@ -94,22 +129,32 @@ export function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
 
             {/* Content */}
             <div className="p-4 space-y-2">
-              {privacyItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={item.action}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <item.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-foreground">{item.label}</p>
-                    <p className="text-sm text-muted-foreground">{item.sublabel}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
-              ))}
+              {privacyItems.map((item) => {
+                // Skip items that require auth if user is not logged in
+                if (item.requiresAuth && !user) return null;
+                
+                return (
+                  <button
+                    key={item.label}
+                    onClick={item.action}
+                    disabled={item.loading}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-colors disabled:opacity-50"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      {item.loading ? (
+                        <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                      ) : (
+                        <item.icon className="h-5 w-5 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium text-foreground">{item.label}</p>
+                      <p className="text-sm text-muted-foreground">{item.sublabel}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                );
+              })}
 
               {/* Delete Account Section */}
               {user && (

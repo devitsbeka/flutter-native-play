@@ -175,11 +175,36 @@ export default function VIP() {
           </p>
         </motion.div>
 
-        {/* Terms */}
-        <p className="text-xs text-center text-slate-500 mt-6 px-4">
-          გამოწერის გაუქმება შესაძლებელია ნებისმიერ დროს.
-          გამოწერა ავტომატურად განახლდება, თუ არ გააუქმებთ.
-        </p>
+        {/* Apple Required Subscription Terms */}
+        <div className="mt-6 space-y-3 px-2">
+          <p className="text-xs text-slate-600 leading-relaxed">
+            <strong>ავტომატური განახლება:</strong> გამოწერა ავტომატურად განახლდება პერიოდის 
+            ბოლოს, თუ გაუქმება არ მოხდა მინიმუმ 24 საათით ადრე.
+          </p>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            <strong>გადახდა:</strong> თანხა ჩამოიჭრება თქვენი iTunes/Apple ID ანგარიშიდან 
+            შეძენის დადასტურებისას.
+          </p>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            <strong>გაუქმება:</strong> გამოწერის გაუქმება შეგიძლიათ App Store-ის პარამეტრებში 
+            ნებისმიერ დროს. მიმდინარე პერიოდის თანხა არ დაბრუნდება.
+          </p>
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button 
+              onClick={() => navigate("/privacy-policy")}
+              className="text-xs text-primary underline"
+            >
+              კონფიდენციალურობა
+            </button>
+            <span className="text-slate-300">|</span>
+            <button 
+              onClick={() => navigate("/terms")}
+              className="text-xs text-primary underline"
+            >
+              პირობები
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
