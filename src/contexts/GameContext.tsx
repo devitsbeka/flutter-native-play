@@ -118,44 +118,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // Reset mission tracker for new game session
     missionTracker.resetSession();
     
-    // Generate opponent while starting to fetch questions
+    // Generate opponent immediately
     const opponent = generateFakeOpponent();
     
-    // Start fetching questions - either from specific category or mixed
-    // If categoryId is provided, fetch all from that category
-    // Otherwise, fetch one from each random category (VS mode)
-    const questionsPromise = categoryId 
-      ? fetchQuestions(6, categoryId, 1, [], false) // Single category mode
-      : fetchQuestions(6, undefined, 1, [], true);  // Mixed categories mode
-    
-    // Matchmaking screen lasts ~2 seconds for the interactive experience
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Short delay for slot animation to start (0.8s instead of 2s)
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     setState(prev => ({ 
       ...prev, 
-      phase: "preparing",
-      opponent,
-    }));
-    
-    // Wait for questions to finish loading
-    const questions = await questionsPromise;
-    
-    // Start background icon preloading immediately - don't await
-    // Icons will be cached by the time user clicks "Start"
-    preloadQuestionIcons(
-      questions.map(q => ({ question: q.question, category: q.categoryId || q.category }))
-    );
-    
-    setState(prev => ({
-      ...prev,
       phase: "vs-screen",
-      questions,
+      opponent,
       userProgress: 0,
       opponentProgress: 0,
       userAnswerHistory: [],
       opponentAnswerHistory: [],
     }));
-  }, [fetchQuestions]);
+  }, []);
 
   // Sync preparation progress
   React.useEffect(() => {
