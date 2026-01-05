@@ -51,13 +51,12 @@ export function useVipStatus() {
           .from("vip_subscriptions")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== "PGRST116") throw error;
+        if (error) throw error;
 
         if (data) {
           setSubscription(data as VipSubscription);
-          // Check if VIP is still active
           const isActive = isAfter(new Date(data.expires_at), new Date());
           setIsVip(isActive);
         } else {
@@ -65,7 +64,9 @@ export function useVipStatus() {
           setIsVip(false);
         }
       } catch (error) {
-        console.error("Error fetching VIP status:", error);
+        // Silently handle - user just doesn't have VIP
+        setSubscription(null);
+        setIsVip(false);
       } finally {
         setLoading(false);
       }

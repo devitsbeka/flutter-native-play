@@ -229,8 +229,6 @@ export default function Index() {
 
   // Handle play button click - check auth status and plays remaining
   const handlePlayClick = useCallback(async () => {
-    console.log("[handlePlayClick] Called", { user: !!user, profile: !!profile, isVip, canPlay, needsWalkthrough, hasCompletedOnboarding });
-    
     if (!user) {
       // Guest user - check if they have plays remaining
       if (hasReachedGuestPlayLimit()) {
@@ -247,17 +245,13 @@ export default function Index() {
       }
     } else if (!profile?.avatar_url) {
       // Logged in but no avatar - go to avatar creation
-      console.log("[handlePlayClick] No avatar, starting avatar creation");
       skipToAvatarCreation();
     } else if (needsWalkthrough && !hasCompletedOnboarding) {
       // First time with avatar - show walkthrough
-      console.log("[handlePlayClick] Starting walkthrough");
       setStep("walkthrough");
     } else {
       // Check if user can play
-      console.log("[handlePlayClick] Attempting to record play and navigate");
       const canPlayGame = await recordPlay();
-      console.log("[handlePlayClick] recordPlay returned:", canPlayGame);
       if (canPlayGame) {
         navigate("/game");
       }
@@ -651,19 +645,19 @@ export default function Index() {
               )}
                 </motion.div>
           </motion.div>
-        </div>
-
-        {/* Universal Bottom Navigation */}
-        <UniversalBottomNav 
-          onPlayClick={handlePlayClick}
-          playsRemaining={user ? playsRemaining : guestPlaysRemaining}
-          maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
-          canPlay={user ? canPlay : guestPlaysRemaining > 0}
-          isVip={isVip}
-          onWatchAdClick={() => setShowWatchAdModal(true)}
-          isGuest={!user}
-        />
       </div>
+      </div>
+
+      {/* Universal Bottom Navigation - OUTSIDE touch handler container */}
+      <UniversalBottomNav 
+        onPlayClick={handlePlayClick}
+        playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+        maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+        canPlay={user ? canPlay : guestPlaysRemaining > 0}
+        isVip={isVip}
+        onWatchAdClick={() => setShowWatchAdModal(true)}
+        isGuest={!user}
+      />
     </>
   );
 }
