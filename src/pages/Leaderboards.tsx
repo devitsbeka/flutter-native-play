@@ -111,60 +111,62 @@ export default function Leaderboards() {
               isLocked={isLeagueLocked}
             />
 
-            {/* Leaderboard List */}
-            <div className="mt-6 px-4 space-y-1 relative">
-              {/* Divider */}
-              <div className="border-t border-border/50 mb-4" />
-              
-              <AnimatePresence mode="popLayout">
-                {leaderboard.map((entry, index) => {
-                  const isCurrentUser = entry.user_id === user?.id;
-                  const shouldAnimate = isCurrentUser && previousRank !== null && !isLeagueLocked;
-                  const totalPlayers = leaderboard.length;
-                  
-                  // Promotion zone: top 10 (except tier 5)
-                  const isPromotionZone = (viewingTier ?? userTier) < 5 && entry.rank <= 10;
-                  // Demotion zone: bottom 10 (except tier 1)
-                  const isDemotionZone = (viewingTier ?? userTier) > 1 && entry.rank > totalPlayers - 10;
-
-                  return (
-                    <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
-                      <LeaguePlayerRow
-                        entry={entry}
-                        isCurrentUser={isCurrentUser}
-                        index={index}
-                        previousRank={previousRank}
-                        shouldAnimate={shouldAnimate}
-                        totalPlayers={totalPlayers}
-                        isPromotionZone={isPromotionZone}
-                        isDemotionZone={isDemotionZone}
-                      />
-                    </div>
-                  );
-                })}
-              </AnimatePresence>
-
-              {/* Empty state */}
-              {leaderboard.length === 0 && (
-                <motion.div
-                  className="text-center py-12"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <p className="text-muted-foreground">
-                    ჯერ არავინ არ არის ამ ლიგაში
-                  </p>
-                </motion.div>
-              )}
-
-              {/* Locked Overlay for higher tiers */}
-              {isLeagueLocked && (
+            {/* Locked Overlay for higher tiers - render instead of list */}
+            {isLeagueLocked ? (
+              <div className="mt-6 px-4">
                 <LeagueLockedOverlay 
                   league={currentLeague} 
                   userTier={userTier} 
                 />
-              )}
-            </div>
+              </div>
+            ) : (
+              /* Leaderboard List */
+              <div className="mt-6 px-4 space-y-1 relative">
+                {/* Divider */}
+                <div className="border-t border-border/50 mb-4" />
+                
+                <AnimatePresence mode="popLayout">
+                  {leaderboard.map((entry, index) => {
+                    const isCurrentUser = entry.user_id === user?.id;
+                    const shouldAnimate = isCurrentUser && previousRank !== null;
+                    const totalPlayers = leaderboard.length;
+                    
+                    // Promotion zone: top 10 (except tier 5)
+                    const isPromotionZone = (viewingTier ?? userTier) < 5 && entry.rank <= 10;
+                    // Demotion zone: bottom 10 (except tier 1)
+                    const isDemotionZone = (viewingTier ?? userTier) > 1 && entry.rank > totalPlayers - 10;
+
+                    return (
+                      <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+                        <LeaguePlayerRow
+                          entry={entry}
+                          isCurrentUser={isCurrentUser}
+                          index={index}
+                          previousRank={previousRank}
+                          shouldAnimate={shouldAnimate}
+                          totalPlayers={totalPlayers}
+                          isPromotionZone={isPromotionZone}
+                          isDemotionZone={isDemotionZone}
+                        />
+                      </div>
+                    );
+                  })}
+                </AnimatePresence>
+
+                {/* Empty state */}
+                {leaderboard.length === 0 && (
+                  <motion.div
+                    className="text-center py-12"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <p className="text-muted-foreground">
+                      ჯერ არავინ არ არის ამ ლიგაში
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </div>
