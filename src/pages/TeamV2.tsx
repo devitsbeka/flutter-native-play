@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Tv } from "lucide-react";
+import { Users, Plus, Tv, Bell, MessageCircle } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -22,6 +22,10 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { NotificationsPanel } from "@/components/home/NotificationsPanel";
+import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 
 function TeamContentV2() {
   const navigate = useNavigate();
@@ -45,6 +49,11 @@ function TeamContentV2() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
   const [showTVJoinModal, setShowTVJoinModal] = useState(false);
+  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
+  const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
+
+  const { unreadCount } = useNotifications();
+  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
 
   // Handle join code from URL
   useEffect(() => {
@@ -117,12 +126,41 @@ function TeamContentV2() {
         title="ონლაინ თამაში"
         showBack={false}
         rightElements={
-          <button
-            onClick={() => setShowHelpModal(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm hover:bg-white transition-colors"
-          >
-            ?
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Notifications Button */}
+            <button
+              onClick={() => setShowNotificationsPanel(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Messages Button */}
+            <button
+              onClick={() => setShowRoomChatsPanel(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                </span>
+              )}
+            </button>
+
+            {/* Help Button */}
+            <button
+              onClick={() => setShowHelpModal(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm hover:bg-white transition-colors"
+            >
+              ?
+            </button>
+          </div>
         }
       />
 
@@ -240,6 +278,14 @@ function TeamContentV2() {
       <TVJoinModal
         open={showTVJoinModal}
         onOpenChange={setShowTVJoinModal}
+      />
+      <NotificationsPanel
+        isOpen={showNotificationsPanel}
+        onClose={() => setShowNotificationsPanel(false)}
+      />
+      <RoomChatsPanel
+        isOpen={showRoomChatsPanel}
+        onClose={() => setShowRoomChatsPanel(false)}
       />
 
       {/* Bottom Navigation - hide when CreateRoomPage is open */}
