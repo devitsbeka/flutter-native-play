@@ -309,7 +309,7 @@ function Hex3DPlayButton({
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -top-2 left-1/2 -translate-x-1/2 z-20"
+          className="absolute -top-2 left-1/2 -translate-x-1/2 z-[70]"
         >
           {isVip ? (
             // VIP badge with crown
@@ -442,6 +442,12 @@ function Hex3DPlayButton({
                   strokeWidth={2.5}
                 />
               </motion.div>
+            ) : isVip ? (
+              <Crown 
+                className="w-7 h-7" 
+                color="#ffffff"
+                strokeWidth={2.5}
+              />
             ) : isPlayButton ? (
               <Play 
                 className="w-8 h-8 ml-1" 
