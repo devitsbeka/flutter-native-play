@@ -31,7 +31,7 @@ export default function Leaderboards() {
   const userRowRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Track scroll to hide fixed bar when user's actual row is visible
+  // Track scroll to hide fixed bar when user's actual row is visible or passed
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container || !userEntry) return;
@@ -42,22 +42,20 @@ export default function Leaderboards() {
         return;
       }
       
-      const containerRect = container.getBoundingClientRect();
       const rowRect = userRowRef.current.getBoundingClientRect();
       
-      // Bottom nav height + fixed bar area (about 180px total from viewport bottom)
+      // Bottom nav height + fixed bar area
       const bottomOffset = 180;
+      const viewportBottom = window.innerHeight - bottomOffset;
       
-      // Check if user's actual row is visible in the viewport (above the bottom bar)
-      const isRowVisible = 
-        rowRect.top >= containerRect.top && 
-        rowRect.bottom <= window.innerHeight - bottomOffset;
+      // Show fixed bar only if user's row is BELOW the visible area
+      // Once they scroll to it or past it, keep it hidden
+      const isRowBelowViewport = rowRect.top > viewportBottom;
       
-      setShowFixedBar(!isRowVisible);
+      setShowFixedBar(isRowBelowViewport);
     };
 
     container.addEventListener("scroll", handleScroll);
-    // Delay initial check to ensure refs are populated
     const timer = setTimeout(handleScroll, 100);
     
     return () => {
