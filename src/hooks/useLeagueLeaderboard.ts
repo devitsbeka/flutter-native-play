@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ export interface LeagueEntry {
   rank: number;
   league_tier: number;
   rankChange?: "up" | "down" | "same" | "new";
+  isAI?: boolean;
 }
 
 export interface LeagueInfo {
@@ -27,7 +28,33 @@ export const LEAGUES: LeagueInfo[] = [
   { tier: 5, name: "Champion League", nameKa: "ჩემპიონთა ლიგა" },
 ];
 
-export function useLeagueLeaderboard() {
+// AI user names for each league tier
+const AI_NAMES: Record<number, string[]> = {
+  1: ["ნიკა", "მარიამი", "გიორგი", "ანა", "დავით", "ელენე", "ლუკა", "სოფო", "ალექსი", "თეა", "ბექა", "ნინო"],
+  2: ["kiyo", "Uyên Lê", "りゅう", "Ayşe", "秋草勇士郎", "Hải Dương", "Marco", "李明", "София", "Ahmed"],
+  3: ["Sarah_M", "TechWiz", "QuizPro", "GameMaster", "StarPlayer", "TopGun", "Ninja99", "Eagle", "Phoenix", "Thunder"],
+  4: ["Champion1", "ProPlayer", "LeaderX", "MasterMind", "Genius", "BrainPower", "QuizKing", "TopRank", "Elite", "Legend"],
+  5: ["WorldChamp", "Ultimate", "Supreme", "Invincible", "TheOne", "Godlike", "Unstoppable", "Legendary", "Mythical", "Eternal"],
+};
+
+// Generate fake users for a league tier
+function generateFakeUsers(tier: number, count: number = 15): LeagueEntry[] {
+  const names = AI_NAMES[tier] || AI_NAMES[1];
+  const baseXp = tier * 100;
+  
+  return Array.from({ length: count }, (_, i) => ({
+    user_id: `ai-${tier}-${i}`,
+    nickname: names[i % names.length] + (i >= names.length ? `_${Math.floor(i / names.length)}` : ""),
+    avatar_url: null,
+    weekly_xp: Math.max(10, baseXp + Math.floor(Math.random() * 400) - i * 20),
+    rank: i + 1,
+    league_tier: tier,
+    rankChange: "same" as const,
+    isAI: true,
+  }));
+}
+
+export function useLeagueLeaderboard(viewingTier?: number) {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [previousRank, setPreviousRank] = useState<number | null>(null);
@@ -53,7 +80,7 @@ export function useLeagueLeaderboard() {
   };
 
   // Fetch or create user league data
-  const { data: userLeagueData, refetch: refetchUserData } = useQuery({
+  const { data: userLeagueData } = useQuery({
     queryKey: ["userLeagueData", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -110,13 +137,14 @@ export function useLeagueLeaderboard() {
     enabled: !!user?.id,
   });
 
-  // Fetch leaderboard for user's league tier
-  const { data: leaderboard, isLoading } = useQuery({
-    queryKey: ["leagueLeaderboard", userLeagueData?.league_tier],
-    queryFn: async () => {
-      const tier = userLeagueData?.league_tier || 1;
+  const userTier = userLeagueData?.league_tier || 1;
+  const activeTier = viewingTier ?? userTier;
 
-      // Get all users in this league tier with their profiles
+  // Fetch leaderboard for the viewing tier
+  const { data: leaderboard, isLoading } = useQuery({
+    queryKey: ["leagueLeaderboard", activeTier],
+    queryFn: async () => {
+      // Get all real users in this league tier
       const { data: leagueUsers, error } = await supabase
         .from("user_league_data")
         .select(`
@@ -126,13 +154,13 @@ export function useLeagueLeaderboard() {
           previous_rank,
           current_rank
         `)
-        .eq("league_tier", tier)
+        .eq("league_tier", activeTier)
         .order("weekly_xp", { ascending: false })
         .limit(50);
 
       if (error) throw error;
 
-      // Get profile info for these users
+      // Get profile info for real users
       const userIds = leagueUsers?.map(u => u.user_id) || [];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -141,18 +169,13 @@ export function useLeagueLeaderboard() {
 
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      // Map to LeagueEntry format with ranks
-      const entries: LeagueEntry[] = (leagueUsers || []).map((u, index) => {
+      // Map real users
+      const realEntries: LeagueEntry[] = (leagueUsers || []).map((u) => {
         const profile = profileMap.get(u.user_id);
-        const currentRank = index + 1;
         
-        let rankChange: "up" | "down" | "same" | "new" = "same";
+        let rankChangeStatus: "up" | "down" | "same" | "new" = "same";
         if (u.previous_rank === null) {
-          rankChange = "new";
-        } else if (currentRank < u.previous_rank) {
-          rankChange = "up";
-        } else if (currentRank > u.previous_rank) {
-          rankChange = "down";
+          rankChangeStatus = "new";
         }
 
         return {
@@ -160,20 +183,32 @@ export function useLeagueLeaderboard() {
           nickname: profile?.nickname || "Unknown",
           avatar_url: profile?.avatar_url || null,
           weekly_xp: u.weekly_xp,
-          rank: currentRank,
+          rank: 0, // Will be assigned after sorting
           league_tier: u.league_tier,
-          rankChange,
+          rankChange: rankChangeStatus,
+          isAI: false,
         };
       });
 
-      return entries;
+      // Generate AI users to fill the league
+      const aiUsers = generateFakeUsers(activeTier, Math.max(10, 20 - realEntries.length));
+
+      // Combine and sort by XP
+      const allEntries = [...realEntries, ...aiUsers]
+        .sort((a, b) => b.weekly_xp - a.weekly_xp)
+        .map((entry, index) => ({
+          ...entry,
+          rank: index + 1,
+        }));
+
+      return allEntries;
     },
-    enabled: !!userLeagueData,
+    enabled: true,
   });
 
-  // Update rank tracking when user visits
+  // Update rank tracking when user visits their own league
   useEffect(() => {
-    if (!user?.id || !leaderboard || hasAnimated.current) return;
+    if (!user?.id || !leaderboard || hasAnimated.current || viewingTier !== undefined) return;
 
     const userEntry = leaderboard.find(e => e.user_id === user.id);
     if (!userEntry) return;
@@ -198,7 +233,6 @@ export function useLeagueLeaderboard() {
           .eq("user_id", user.id);
       }, 2000);
     } else if (!storedPreviousRank) {
-      // First time visiting, just set the current rank
       supabase
         .from("user_league_data")
         .update({ 
@@ -208,7 +242,7 @@ export function useLeagueLeaderboard() {
         })
         .eq("user_id", user.id);
     }
-  }, [user?.id, leaderboard, userLeagueData]);
+  }, [user?.id, leaderboard, userLeagueData, viewingTier]);
 
   // Sync XP from profile
   useEffect(() => {
@@ -229,17 +263,20 @@ export function useLeagueLeaderboard() {
     syncXp();
   }, [profile?.total_points, user?.id, queryClient]);
 
-  const currentLeague = LEAGUES.find(l => l.tier === (userLeagueData?.league_tier || 1)) || LEAGUES[0];
+  const currentLeague = LEAGUES.find(l => l.tier === activeTier) || LEAGUES[0];
   const userEntry = leaderboard?.find(e => e.user_id === user?.id);
 
   return {
     leaderboard: leaderboard || [],
     isLoading,
     userLeagueData,
+    userTier,
     currentLeague,
     userEntry,
     previousRank,
     rankChange,
     daysLeft: getDaysLeft(),
+    isViewingOwnLeague: viewingTier === undefined || viewingTier === userTier,
+    isLeagueLocked: activeTier > userTier,
   };
 }

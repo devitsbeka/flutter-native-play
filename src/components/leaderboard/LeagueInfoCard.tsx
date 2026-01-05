@@ -6,31 +6,29 @@ interface LeagueInfoCardProps {
   league: LeagueInfo;
   daysLeft: number;
   rankChange: number;
+  isLocked?: boolean;
 }
 
-export function LeagueInfoCard({ league, daysLeft, rankChange }: LeagueInfoCardProps) {
+export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: LeagueInfoCardProps) {
   const getRankChangeDisplay = () => {
     if (rankChange === 0) {
       return {
-        text: "იგივე პოზიცია",
+        text: "იგივე",
         icon: <Minus className="w-4 h-4" />,
         color: "text-muted-foreground",
-        bgColor: "bg-muted/50",
       };
     }
     if (rankChange > 0) {
       return {
-        text: `▲ ${rankChange} პოზიცია`,
+        text: `${rankChange} ადგ.`,
         icon: <TrendingUp className="w-4 h-4" />,
         color: "text-emerald-500",
-        bgColor: "bg-emerald-500/10",
       };
     }
     return {
-      text: `▼ ${Math.abs(rankChange)} პოზიცია`,
+      text: `${Math.abs(rankChange)} ადგ.`,
       icon: <TrendingDown className="w-4 h-4" />,
       color: "text-rose-500",
-      bgColor: "bg-rose-500/10",
     };
   };
 
@@ -52,34 +50,33 @@ export function LeagueInfoCard({ league, daysLeft, rankChange }: LeagueInfoCardP
       <div className="flex gap-3 justify-center">
         {/* Time Left */}
         <motion.div
-          className="flex-1 max-w-[140px] bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50"
+          className="flex-1 max-w-[150px] bg-card rounded-2xl p-4 border border-border"
           whileHover={{ scale: 1.02 }}
         >
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <Clock className="w-3 h-3" />
-            <span>დარჩენილია</span>
+          <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 text-center">
+            დარჩენილი დრო
           </div>
-          <p className="text-lg font-bold text-foreground">
-            {daysLeft} დღე
-          </p>
+          <div className="flex items-center justify-center gap-2 text-amber-500">
+            <Clock className="w-4 h-4" />
+            <span className="text-lg font-bold">{daysLeft} დღე</span>
+          </div>
         </motion.div>
 
         {/* Rank Change */}
-        <motion.div
-          className={`flex-1 max-w-[140px] rounded-xl p-3 border border-border/50 ${rankDisplay.bgColor}`}
-          whileHover={{ scale: 1.02 }}
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 300 }}
-        >
-          <div className={`flex items-center gap-2 text-xs mb-1 ${rankDisplay.color}`}>
-            {rankDisplay.icon}
-            <span>დღეს</span>
-          </div>
-          <p className={`text-lg font-bold ${rankDisplay.color}`}>
-            {rankDisplay.text}
-          </p>
-        </motion.div>
+        {!isLocked && (
+          <motion.div
+            className="flex-1 max-w-[150px] bg-card rounded-2xl p-4 border border-border"
+            whileHover={{ scale: 1.02 }}
+          >
+            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 text-center">
+              დღეს
+            </div>
+            <div className={`flex items-center justify-center gap-2 ${rankDisplay.color}`}>
+              {rankDisplay.icon}
+              <span className="text-lg font-bold">{rankDisplay.text}</span>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

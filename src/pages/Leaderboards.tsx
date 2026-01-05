@@ -1,31 +1,41 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useLeagueLeaderboard } from "@/hooks/useLeagueLeaderboard";
+import { useLeagueLeaderboard, LEAGUES } from "@/hooks/useLeagueLeaderboard";
 import { LeagueBadgeRow } from "@/components/leaderboard/LeagueBadgeRow";
 import { LeagueInfoCard } from "@/components/leaderboard/LeagueInfoCard";
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
+import { LeagueLockedOverlay } from "@/components/leaderboard/LeagueLockedOverlay";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 
 export default function Leaderboards() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [viewingTier, setViewingTier] = useState<number | undefined>(undefined);
+  
   const {
     leaderboard,
     isLoading,
+    userTier,
     currentLeague,
     userEntry,
     previousRank,
     rankChange,
     daysLeft,
-  } = useLeagueLeaderboard();
+    isLeagueLocked,
+  } = useLeagueLeaderboard(viewingTier);
+
+  const handleSelectTier = (tier: number) => {
+    setViewingTier(tier);
+  };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
       {/* Header */}
       <motion.header
-        className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50"
+        className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border/50"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
@@ -36,13 +46,13 @@ export default function Leaderboards() {
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-semibold text-foreground">ლიგა</h1>
+          <h1 className="text-lg font-semibold text-foreground">ლიდერბორდი</h1>
           <div className="w-10" />
         </div>
       </motion.header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pb-24">
+      <div className="flex-1 overflow-auto pb-24 relative">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -52,23 +62,32 @@ export default function Leaderboards() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
+            className="relative"
           >
             {/* League Badges Row */}
-            <LeagueBadgeRow currentTier={currentLeague.tier} />
+            <LeagueBadgeRow 
+              currentTier={viewingTier ?? userTier} 
+              userTier={userTier}
+              onSelectTier={handleSelectTier}
+            />
 
             {/* League Info Card */}
             <LeagueInfoCard
               league={currentLeague}
               daysLeft={daysLeft}
               rankChange={rankChange}
+              isLocked={isLeagueLocked}
             />
 
             {/* Leaderboard List */}
-            <div className="mt-6 px-4 space-y-2">
+            <div className="mt-6 px-4 space-y-1 relative">
+              {/* Divider */}
+              <div className="border-t border-border/50 mb-4" />
+              
               <AnimatePresence mode="popLayout">
                 {leaderboard.map((entry, index) => {
                   const isCurrentUser = entry.user_id === user?.id;
-                  const shouldAnimate = isCurrentUser && previousRank !== null;
+                  const shouldAnimate = isCurrentUser && previousRank !== null && !isLeagueLocked;
 
                   return (
                     <LeaguePlayerRow
@@ -93,36 +112,15 @@ export default function Leaderboards() {
                   <p className="text-muted-foreground">
                     ჯერ არავინ არ არის ამ ლიგაში
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    იყავი პირველი!
-                  </p>
                 </motion.div>
               )}
 
-              {/* Show user's position if not in top 50 */}
-              {user && !userEntry && leaderboard.length > 0 && (
-                <motion.div
-                  className="mt-4 pt-4 border-t border-border/50"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <p className="text-center text-sm text-muted-foreground mb-2">
-                    შენი პოზიცია
-                  </p>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border border-primary/30">
-                    <div className="w-8 flex justify-center">
-                      <span className="text-muted-foreground font-medium">—</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-primary">შენ</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-foreground">0</span>
-                      <span className="text-muted-foreground text-sm ml-1">XP</span>
-                    </div>
-                  </div>
-                </motion.div>
+              {/* Locked Overlay for higher tiers */}
+              {isLeagueLocked && (
+                <LeagueLockedOverlay 
+                  league={currentLeague} 
+                  userTier={userTier} 
+                />
               )}
             </div>
           </motion.div>
