@@ -10,8 +10,11 @@ const config: CapacitorConfig = {
     cleartext: true,
   },
   ios: {
-    // Required for AdMob
     contentInset: 'automatic',
+    // App Tracking Transparency description for iOS 14.5+
+    infoPlist: {
+      NSUserTrackingUsageDescription: 'This app uses tracking to show you personalized ads. Your data helps us provide relevant content and improve your experience.',
+    },
   },
   plugins: {
     // AdMob configuration
