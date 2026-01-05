@@ -229,6 +229,8 @@ export default function Index() {
 
   // Handle play button click - check auth status and plays remaining
   const handlePlayClick = useCallback(async () => {
+    console.log("[handlePlayClick] Called", { user: !!user, profile: !!profile, isVip, canPlay, needsWalkthrough, hasCompletedOnboarding });
+    
     if (!user) {
       // Guest user - check if they have plays remaining
       if (hasReachedGuestPlayLimit()) {
@@ -236,8 +238,8 @@ export default function Index() {
         setShowGuestMaxPlaysModal(true);
       } else {
         // Record guest play and navigate to game
-        const canPlay = recordGuestPlay();
-        if (canPlay) {
+        const canPlayGuest = recordGuestPlay();
+        if (canPlayGuest) {
           navigate("/game");
         } else {
           setShowGuestMaxPlaysModal(true);
@@ -245,18 +247,22 @@ export default function Index() {
       }
     } else if (!profile?.avatar_url) {
       // Logged in but no avatar - go to avatar creation
+      console.log("[handlePlayClick] No avatar, starting avatar creation");
       skipToAvatarCreation();
     } else if (needsWalkthrough && !hasCompletedOnboarding) {
       // First time with avatar - show walkthrough
+      console.log("[handlePlayClick] Starting walkthrough");
       setStep("walkthrough");
     } else {
       // Check if user can play
+      console.log("[handlePlayClick] Attempting to record play and navigate");
       const canPlayGame = await recordPlay();
+      console.log("[handlePlayClick] recordPlay returned:", canPlayGame);
       if (canPlayGame) {
         navigate("/game");
       }
     }
-  }, [user, profile, navigate, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay]);
+  }, [user, profile, navigate, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay]);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
