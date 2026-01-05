@@ -139,21 +139,21 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
     >
       <div className="space-y-3">
         {/* Exchange Direction - Icons only */}
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-4 py-2">
           <motion.div 
-            className={`flex items-center justify-center w-12 h-12 rounded-xl transition-colors ${
+            className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-colors ${
               isCoinsToGems 
                 ? "bg-amber-100 border-2 border-amber-300" 
                 : "bg-muted border-2 border-transparent"
             }`}
             animate={{ scale: isCoinsToGems ? 1.05 : 1 }}
           >
-            <img src={coinIcon} alt="" className="w-7 h-7" />
+            <img src={coinIcon} alt="" className="w-8 h-8" />
           </motion.div>
           
           <motion.button
             onClick={handleDirectionSwitch}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg"
+            className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg"
             whileHover={{ scale: 1.1, rotate: 180 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300 }}
@@ -162,14 +162,14 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
           </motion.button>
           
           <motion.div 
-            className={`flex items-center justify-center w-12 h-12 rounded-xl transition-colors ${
+            className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-colors ${
               !isCoinsToGems 
                 ? "bg-violet-100 border-2 border-violet-300" 
                 : "bg-muted border-2 border-transparent"
             }`}
             animate={{ scale: !isCoinsToGems ? 1.05 : 1 }}
           >
-            <img src={gemIcon} alt="" className="w-7 h-7" />
+            <img src={gemIcon} alt="" className="w-8 h-8" />
           </motion.div>
         </div>
 
