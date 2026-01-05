@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users } from "lucide-react";
+import { Users, Bell, MessageCircle } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -23,11 +23,14 @@ import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
 import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
 import { GameInvitationsSection } from "@/components/team/GameInvitationsSection";
+import { NotificationsPanel } from "@/components/home/NotificationsPanel";
+import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
+import { useNotifications } from "@/hooks/useNotifications";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Category } from "@/data/categories";
 
@@ -56,9 +59,13 @@ function TeamContent() {
     sendInvitation,
   } = useGameInvitations();
 
+  const { unreadCount } = useNotifications();
+
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
+  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
+  const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [chatFriend, setChatFriend] = useState<Friend | null>(null);
   const [quickPlayFriend, setQuickPlayFriend] = useState<Friend | null>(null);
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
@@ -191,12 +198,36 @@ function TeamContent() {
         title="მეგობრები"
         showBack={true}
         rightElements={
-          <button
-            onClick={() => setShowHelpModal(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm hover:bg-white transition-colors"
-          >
-            ?
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Notifications Button */}
+            <button
+              onClick={() => setShowNotificationsPanel(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Messages Button */}
+            <button
+              onClick={() => setShowRoomChatsPanel(true)}
+              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
+
+            {/* Help Button */}
+            <button
+              onClick={() => setShowHelpModal(true)}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm hover:bg-white transition-colors"
+            >
+              ?
+            </button>
+          </div>
         }
       />
 
@@ -299,6 +330,14 @@ function TeamContent() {
       <AllRecentRoomsModal
         isOpen={showAllGamesModal}
         onClose={() => setShowAllGamesModal(false)}
+      />
+      <NotificationsPanel
+        isOpen={showNotificationsPanel}
+        onClose={() => setShowNotificationsPanel(false)}
+      />
+      <RoomChatsPanel
+        isOpen={showRoomChatsPanel}
+        onClose={() => setShowRoomChatsPanel(false)}
       />
 
       {/* Bottom Navigation - hide when CreateRoomPage is open */}
