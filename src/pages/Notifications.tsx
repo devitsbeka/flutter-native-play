@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, BellOff, CheckCheck, Check, Trash2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
 import { Button } from '@/components/ui/button';
@@ -31,16 +33,20 @@ function NotificationCard({
   onMarkRead,
   onDelete,
   onNavigate,
+  t,
+  dateLocale,
 }: {
   notification: Notification;
   onMarkRead: (id: string) => void;
   onDelete: (id: string) => void;
   onNavigate: (notification: Notification) => void;
+  t: (key: string) => string;
+  dateLocale: typeof ka;
 }) {
   const isUnread = !notification.read_at;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), { 
     addSuffix: true,
-    locale: ka 
+    locale: dateLocale 
   });
 
   // Get icon slug based on notification type or from data
@@ -110,7 +116,7 @@ function NotificationCard({
             className="h-8 px-3 text-xs gap-1.5"
           >
             <Check className="w-3.5 h-3.5" />
-            წაკითხულად
+            {t('notifications.markAsRead')}
           </Button>
         )}
         <Button
@@ -123,7 +129,7 @@ function NotificationCard({
           className="h-8 px-3 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
         >
           <Trash2 className="w-3.5 h-3.5" />
-          წაშლა
+          {t('notifications.delete')}
         </Button>
       </div>
     </motion.div>
@@ -132,8 +138,11 @@ function NotificationCard({
 
 export default function Notifications() {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const [filter, setFilter] = useState<FilterType>('all');
+
+  const dateLocale = language === 'ka' ? ka : enUS;
 
   const filteredNotifications = notifications.filter((n) => {
     switch (filter) {
@@ -190,10 +199,10 @@ export default function Notifications() {
   };
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'ყველა' },
-    { key: 'unread', label: 'წაუკითხავი' },
-    { key: 'friends', label: 'მეგობრები' },
-    { key: 'games', label: 'თამაშები' },
+    { key: 'all', label: t('notifications.all') },
+    { key: 'unread', label: t('notifications.unread') },
+    { key: 'friends', label: t('notifications.friends') },
+    { key: 'games', label: t('notifications.games') },
   ];
 
   return (
@@ -210,10 +219,10 @@ export default function Notifications() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="font-bold text-xl">შეტყობინებები</h1>
+            <h1 className="font-bold text-xl">{t('notifications.title')}</h1>
             {unreadCount > 0 && (
               <p className="text-xs text-muted-foreground">
-                {unreadCount} წაუკითხავი
+                {unreadCount} {t('notifications.unread').toLowerCase()}
               </p>
             )}
           </div>
@@ -250,29 +259,29 @@ export default function Notifications() {
             className="w-full gap-2"
           >
             <CheckCheck className="w-4 h-4" />
-            ყველას წაკითხულად მონიშვნა
+            {t('notifications.markAllAsRead')}
           </Button>
         )}
 
         {loading ? (
           <div className="flex flex-col items-center py-12">
             <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-muted-foreground mt-4">იტვირთება...</p>
+            <p className="text-sm text-muted-foreground mt-4">{t('notifications.loading')}</p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="flex flex-col items-center py-12">
             <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
               <BellOff className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h3 className="font-bold text-lg text-foreground mb-2">შეტყობინებები არ არის</h3>
+            <h3 className="font-bold text-lg text-foreground mb-2">{t('notifications.noNotifications')}</h3>
             <p className="text-sm text-muted-foreground text-center max-w-[280px]">
               {filter === 'unread'
-                ? "ყველაფერი წაკითხული გაქვს!"
+                ? t('notifications.allRead')
                 : filter === 'friends'
-                ? "მეგობრების აქტივობა ჯერ არ არის"
+                ? t('notifications.noFriendActivity')
                 : filter === 'games'
-                ? "თამაშის შეტყობინებები არ არის"
-                : "როცა რამე მოხდება, აქ ნახავ"}
+                ? t('notifications.noGameNotifications')
+                : t('notifications.whenSomethingHappens')}
             </p>
           </div>
         ) : (
@@ -284,6 +293,8 @@ export default function Notifications() {
                 onMarkRead={markAsRead}
                 onDelete={deleteNotification}
                 onNavigate={handleNavigate}
+                t={t}
+                dateLocale={dateLocale}
               />
             ))}
           </AnimatePresence>

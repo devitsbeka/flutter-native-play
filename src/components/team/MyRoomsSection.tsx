@@ -2,12 +2,14 @@ import { motion } from "framer-motion";
 import { Plus, Users, Gamepad2 } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
 
 export function MyRoomsSection() {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
+  const { t } = useLanguage();
 
   // Clear unread activity when joining a room
   const handleJoin = async (room: MyRoom) => {
@@ -60,7 +62,7 @@ export function MyRoomsSection() {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-800 tracking-wide">შენი ოთახები</span>
+          <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2].map((i) => (
@@ -75,7 +77,7 @@ export function MyRoomsSection() {
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-800 tracking-wide">შენი ოთახები</span>
+        <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
       </div>
 
       {/* Rooms List */}
@@ -86,7 +88,7 @@ export function MyRoomsSection() {
           className="flex flex-col items-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
         >
           <Gamepad2 className="w-12 h-12 text-slate-400 mb-3" />
-          <p className="text-slate-500 text-sm">აქტიური ოთახი არ გაქვს</p>
+          <p className="text-slate-500 text-sm">{t('team.noActiveRooms')}</p>
         </motion.div>
       ) : (
         <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
@@ -113,6 +115,8 @@ interface RoomCardProps {
 }
 
 function RoomCard({ room, index, onJoin }: RoomCardProps) {
+  const { t } = useLanguage();
+  
   // Gradient backgrounds based on index for variety
   const gradients = [
     "linear-gradient(135deg, #FFFFFF 0%, #F3E8FF 50%, #E9D5FF 100%)",
@@ -122,7 +126,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
   ];
 
   // Display name: room_name or fallback to generated name
-  const displayName = room.room_name || `ოთახი #${room.room_code.slice(-4)}`;
+  const displayName = room.room_name || `${t('team.room')} #${room.room_code.slice(-4)}`;
 
   return (
     <motion.div
@@ -150,7 +154,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         {room.status === "playing" && (
           <div className="flex items-center gap-1.5 text-slate-500 text-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-            მიმდინარე
+            {t('team.inProgress')}
           </div>
         )}
       </div>
@@ -207,7 +211,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         size="sm"
         variant="outline"
       >
-        {room.status === "playing" ? "გაგრძელება" : "შეუერთდი"}
+        {room.status === "playing" ? t('team.continue') : t('team.join')}
       </ChunkyButton>
     </motion.div>
   );

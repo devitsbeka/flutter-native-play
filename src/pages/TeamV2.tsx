@@ -5,6 +5,7 @@ import { Users, Plus, Tv, Bell, MessageCircle } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { CreateRoomPage } from "@/components/team/CreateRoomPage";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
@@ -31,6 +32,7 @@ function TeamContentV2() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { 
     phase, 
     currentRoom,
@@ -109,10 +111,10 @@ function TeamContentV2() {
           >
             <Users className="w-12 h-12 text-slate-700" />
           </motion.div>
-          <h1 className="font-display text-2xl text-slate-800 mb-3">მულტიპლეიერი</h1>
-          <p className="text-slate-600 text-center mb-6">მეგობრებთან სათამაშოდ გაიარე ავტორიზაცია</p>
+          <h1 className="font-display text-2xl text-slate-800 mb-3">{t('team.multiplayer')}</h1>
+          <p className="text-slate-600 text-center mb-6">{t('team.signInToPlay')}</p>
           <ChunkyButton variant="secondary" onClick={() => navigate("/auth")}>
-            შესვლა
+            {t('auth.signIn')}
           </ChunkyButton>
         </div>
       </div>
@@ -123,7 +125,7 @@ function TeamContentV2() {
     <div className="min-h-screen relative overflow-hidden pb-24">
       {/* Header */}
       <PageHeader
-        title="ონლაინ თამაში"
+        title={t('team.onlineGame')}
         showBack={false}
         rightElements={
           <div className="flex items-center gap-2">
@@ -173,7 +175,7 @@ function TeamContentV2() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <span className="text-sm font-bold text-slate-800 tracking-wide mb-3 block">მეგობრები</span>
+          <span className="text-sm font-bold text-slate-800 tracking-wide mb-3 block">{t('team.friends')}</span>
           <FriendsStoriesBar
             onAddFriendClick={() => setShowAddFriendModal(true)}
             onFriendClick={() => {}}
@@ -208,7 +210,7 @@ function TeamContentV2() {
             >
               <span className="flex items-center gap-2">
                 <Plus className="w-5 h-5" />
-                ახალი ოთახი
+                {t('team.newRoom')}
               </span>
             </ChunkyButton>
             

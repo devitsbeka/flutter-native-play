@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Play, User, Star, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import { useCategoryLeaderboard } from "@/hooks/useCategoryLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import medalGold from "@/assets/icons/medal-gold.png";
@@ -22,6 +23,7 @@ export function CategoryLeaderboard({
   lightMode = false,
 }: CategoryLeaderboardProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { leaderboard, isLoading, userRank } = useCategoryLeaderboard(categoryId);
 
   const getRankIcon = (rank: number) => {
@@ -85,7 +87,7 @@ export function CategoryLeaderboard({
           variant="mint"
           icon={<Play className="h-5 w-5 fill-current" />}
         >
-          ითამაშე
+          {t('common.play')}
         </ChunkyButton>
 
         {/* User's Current Position */}
@@ -107,12 +109,12 @@ export function CategoryLeaderboard({
                   <Trophy className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>შენი პოზიცია</p>
+                  <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.yourRank')}</p>
                   <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>ვარსკვლავები</p>
+                <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.stars')}</p>
                 <div className="flex items-center gap-1 justify-end">
                   <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                   <p className="text-xl font-bold text-amber-500">{userRank.total_stars}</p>
@@ -133,7 +135,7 @@ export function CategoryLeaderboard({
             }`}
           >
             <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>
-              ითამაშე რათა გამოჩნდე ლიდერბორდზე!
+              {t('leaderboard.playToAppear')}
             </p>
           </motion.div>
         )}
@@ -142,7 +144,7 @@ export function CategoryLeaderboard({
       {/* Leaderboard Header */}
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="h-5 w-5 text-amber-400" />
-        <h3 className={`text-lg font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>ლიდერბორდი</h3>
+        <h3 className={`text-lg font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>{t('leaderboard.title')}</h3>
       </div>
 
       {/* Leaderboard List */}
@@ -154,8 +156,8 @@ export function CategoryLeaderboard({
         ) : leaderboard.length === 0 ? (
           <div className="text-center py-12">
             <Trophy className={`h-12 w-12 mx-auto mb-3 ${lightMode ? "text-slate-300" : "text-white/20"}`} />
-            <p className={lightMode ? "text-slate-500" : "text-white/50"}>ჯერ არავინ არ ითამაშა</p>
-            <p className={`text-sm mt-1 ${lightMode ? "text-slate-400" : "text-white/30"}`}>იყავი პირველი!</p>
+            <p className={lightMode ? "text-slate-500" : "text-white/50"}>{t('leaderboard.noOnePlayedYet')}</p>
+            <p className={`text-sm mt-1 ${lightMode ? "text-slate-400" : "text-white/30"}`}>{t('leaderboard.beTheFirst')}</p>
           </div>
         ) : (
           <>
@@ -266,10 +268,10 @@ export function CategoryLeaderboard({
                         isCurrentUser ? "text-primary" : lightMode ? "text-slate-800" : "text-white"
                       }`}>
                         {entry.nickname}
-                        {isCurrentUser && " (შენ)"}
+                        {isCurrentUser && ` (${t('leaderboard.you')})`}
                       </p>
                       <p className={`text-xs ${lightMode ? "text-slate-500" : "text-white/50"}`}>
-                        {entry.levels_completed} დონე დასრულებული
+                        {entry.levels_completed} {t('leaderboard.levelsCompleted')}
                       </p>
                     </div>
 
@@ -318,8 +320,8 @@ export function CategoryLeaderboard({
                     <User className={`h-5 w-5 ${lightMode ? "text-slate-400" : "text-white/50"}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-primary truncate">შენ</p>
-                    <p className={`text-xs ${lightMode ? "text-slate-500" : "text-white/50"}`}>{userRank.levels_completed} დონე</p>
+                    <p className="font-semibold text-primary truncate">{t('leaderboard.you')}</p>
+                    <p className={`text-xs ${lightMode ? "text-slate-500" : "text-white/50"}`}>{userRank.levels_completed} {t('leaderboard.level')}</p>
                   </div>
                   <div className="text-right flex items-center gap-1">
                     <Star className="h-4 w-4 text-amber-400 fill-amber-400" />

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Users } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 
 // Shimmer skeleton component
@@ -22,6 +23,7 @@ interface FriendsStoriesBarProps {
 
 export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsStoriesBarProps) {
   const { friends, loading } = useFriends();
+  const { t } = useLanguage();
 
   // Sort online friends first
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
@@ -56,7 +58,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
             <Plus className="w-6 h-6 text-purple-600" />
           </div>
           <span className="text-xs font-medium text-slate-600 truncate max-w-[64px]">
-            დამატება
+            {t('team.add')}
           </span>
         </motion.button>
 
@@ -69,7 +71,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsSt
               className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-100"
             >
               <Users className="w-5 h-5 text-slate-400" />
-              <span className="text-sm text-slate-500">ჯერ მეგობრები არ გყავს</span>
+              <span className="text-sm text-slate-500">{t('team.noFriendsYet')}</span>
             </motion.div>
           ) : (
             sortedFriends.map((friend, index) => (

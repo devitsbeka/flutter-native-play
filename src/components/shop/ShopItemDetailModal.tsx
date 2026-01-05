@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { GameModal } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 import iconGem from "@/assets/icons/icon-gem.png";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -94,7 +95,7 @@ function parseItemContents(item: { id: string; description: string }) {
 }
 
 // Component to display item contents visually
-function ItemContentsDisplay({ item }: { item: { id: string; description: string } }) {
+function ItemContentsDisplay({ item, t }: { item: { id: string; description: string }; t: (key: string) => string }) {
   const contents = parseItemContents(item);
   
   if (contents.type === "bundle") {
@@ -109,7 +110,7 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
             <img src={timeDrainIcon} alt="Time+" className="w-8 h-8 object-contain" />
           </div>
           <span className="text-sm font-medium text-foreground">
-            {contents.powers}x ყველა ძალა
+            {contents.powers}x {t('shop.allPowers')}
           </span>
         </div>
         
@@ -118,7 +119,7 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
           <div className="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-xl">
             <img src={iconCoin} alt="Coins" className="w-6 h-6 object-contain" />
             <span className="text-sm font-bold text-amber-600">
-              + {contents.coins} მონეტა
+              + {contents.coins} {t('shop.coin')}
             </span>
           </div>
         )}
@@ -127,18 +128,20 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
   }
   
   if (contents.type === "vip") {
-    const daysText = contents.days === 1 ? "1 დღე" : contents.days === 7 ? "7 დღე" : "30 დღე";
+    const daysText = contents.days === 1 
+      ? `1 ${t('shop.day')}` 
+      : `${contents.days} ${t('shop.days')}`;
     return (
       <div className="flex flex-col items-center gap-3">
         <div className="flex flex-col items-center gap-1">
-          <span className="text-sm font-bold text-amber-500">VIP სტატუსი</span>
+          <span className="text-sm font-bold text-amber-500">{t('shop.vipStatus')}</span>
           <span className="text-xs text-muted-foreground">{daysText}</span>
         </div>
         <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-          <span className="bg-muted px-2 py-1 rounded-lg">2x XP</span>
-          <span className="bg-muted px-2 py-1 rounded-lg">უსასრულო სპინი</span>
+          <span className="bg-muted px-2 py-1 rounded-lg">{t('shop.doubleXp')}</span>
+          <span className="bg-muted px-2 py-1 rounded-lg">{t('shop.unlimitedSpin')}</span>
         </div>
-        <span className="bg-muted px-2 py-1 rounded-lg text-xs text-muted-foreground">ექსკლუზიური ჩარჩოები</span>
+        <span className="bg-muted px-2 py-1 rounded-lg text-xs text-muted-foreground">{t('shop.exclusiveFrames')}</span>
       </div>
     );
   }
@@ -146,9 +149,9 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
   if (contents.type === "power") {
     const powerNames: Record<string, string> = {
       "5050": "50/50",
-      "freeze": "გაყინვა",
-      "replace": "შეცვლა",
-      "time-drain": "დრო+",
+      "freeze": t('shop.freeze'),
+      "replace": t('shop.replace'),
+      "time-drain": t('shop.timePlus'),
     };
     const name = powerNames[contents.powerType || "5050"];
     
@@ -165,7 +168,7 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
     return (
       <div className="flex flex-col items-center gap-2">
         <span className="text-sm font-bold text-amber-500">
-          {contents.amount} მონეტა
+          {contents.amount} {t('shop.coin')}
         </span>
       </div>
     );
@@ -188,6 +191,8 @@ export function ShopItemDetailModal({
   isLoading,
   onBuy,
 }: ShopItemDetailModalProps) {
+  const { t } = useLanguage();
+  
   if (!item) return null;
 
   const currencyIcon = item.currency === "gems" ? iconGem : iconCoin;
@@ -218,7 +223,7 @@ export function ShopItemDetailModal({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15 }}
         >
-          <ItemContentsDisplay item={item} />
+          <ItemContentsDisplay item={item} t={t} />
         </motion.div>
 
         {/* Buy Button */}
@@ -231,7 +236,7 @@ export function ShopItemDetailModal({
           {isPurchased ? (
             <div className="flex items-center justify-center gap-2 text-success font-bold py-3">
               <span>✓</span>
-              <span>შეძენილია</span>
+              <span>{t('shop.purchased')}</span>
             </div>
           ) : (
             <button
@@ -244,7 +249,7 @@ export function ShopItemDetailModal({
               }}
             >
               <img src={currencyIcon} alt="" className="w-5 h-5" />
-              <span>{isLoading ? "..." : `ყიდვა ${item.price}`}</span>
+              <span>{isLoading ? "..." : `${t('shop.buy')} ${item.price}`}</span>
             </button>
           )}
         </motion.div>

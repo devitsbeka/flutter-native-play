@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { LeagueInfo } from "@/hooks/useLeagueLeaderboard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LeagueInfoCardProps {
   league: LeagueInfo;
@@ -10,23 +11,25 @@ interface LeagueInfoCardProps {
 }
 
 export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: LeagueInfoCardProps) {
+  const { t } = useLanguage();
+  
   const getRankChangeDisplay = () => {
     if (rankChange === 0) {
       return {
-        text: "იგივე",
+        text: t('leaderboard.same'),
         icon: <Minus className="w-4 h-4" />,
         color: "text-muted-foreground",
       };
     }
     if (rankChange > 0) {
       return {
-        text: `${rankChange} ადგ.`,
+        text: `${rankChange} ${t('leaderboard.positions')}`,
         icon: <TrendingUp className="w-4 h-4" />,
         color: "text-emerald-500",
       };
     }
     return {
-      text: `${Math.abs(rankChange)} ადგ.`,
+      text: `${Math.abs(rankChange)} ${t('leaderboard.positions')}`,
       icon: <TrendingDown className="w-4 h-4" />,
       color: "text-rose-500",
     };
@@ -54,11 +57,11 @@ export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: Leagu
           whileHover={{ scale: 1.02 }}
         >
           <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 text-center">
-            დარჩენილი დრო
+            {t('leaderboard.timeRemaining')}
           </div>
           <div className="flex items-center justify-center gap-2 text-amber-500">
             <Clock className="w-4 h-4" />
-            <span className="text-lg font-bold">{daysLeft} დღე</span>
+            <span className="text-lg font-bold">{daysLeft} {t('leaderboard.days')}</span>
           </div>
         </motion.div>
 
@@ -69,7 +72,7 @@ export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: Leagu
             whileHover={{ scale: 1.02 }}
           >
             <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 text-center">
-              დღეს
+              {t('leaderboard.today')}
             </div>
             <div className={`flex items-center justify-center gap-2 ${rankDisplay.color}`}>
               {rankDisplay.icon}
