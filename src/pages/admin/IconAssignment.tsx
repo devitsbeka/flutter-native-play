@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { BrokenIconsModal } from '@/components/admin/BrokenIconsModal';
 import { IconAssignmentHistory } from '@/components/admin/IconAssignmentHistory';
+import { IconUploadPanel } from '@/components/admin/IconUploadPanel';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
@@ -501,6 +502,10 @@ export default function IconAssignment() {
           <TabsTrigger value="questions" className="gap-2">
             <Image className="h-4 w-4" />
             კითხვები
+          </TabsTrigger>
+          <TabsTrigger value="upload" className="gap-2">
+            <Upload className="h-4 w-4" />
+            ატვირთვა
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" />
@@ -1061,6 +1066,14 @@ export default function IconAssignment() {
           </ScrollArea>
         </div>
       </div>
+      </TabsContent>
+
+      {/* Upload Tab Content */}
+      <TabsContent value="upload" className="flex-1 mt-0 overflow-hidden p-4">
+        <IconUploadPanel onSuccess={() => {
+          // Reload icons after successful upload
+          toast.success('აიკონები განახლდა');
+        }} />
       </TabsContent>
 
       {/* History Tab Content */}

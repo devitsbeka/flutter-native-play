@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Users } from "lucide-react";
+import { X, Send, MessageCircle, Users, MoreVertical } from "lucide-react";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserModeration } from "@/hooks/useUserModeration";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { cn } from "@/lib/utils";
 
 interface RoomChatsPanelProps {
@@ -21,10 +23,15 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const { messages, loading: messagesLoading, sendMessage } = useRoomChat(selectedRoomId);
   const { unreadCounts, markRoomAsRead, totalUnread } = useUnreadRoomMessages();
   const { typingUsers, setIsTyping } = useTypingIndicator(selectedRoomId);
+  const { filterBlockedUsers } = useUserModeration();
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
+  const [userMenuTarget, setUserMenuTarget] = useState<{ userId: string; nickname: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter blocked users from messages
+  const filteredMessages = filterBlockedUsers(messages);
 
   // Auto-select first room if none selected
   useEffect(() => {
@@ -193,7 +200,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                 </div>
               ) : (
                 <>
-                  {messages.map((message) => {
+                  {filteredMessages.map((message) => {
                     const isMe = message.user_id === user?.id;
 
                     return (
@@ -204,12 +211,17 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         className={cn("flex gap-2", isMe ? "justify-end" : "justify-start")}
                       >
                         {!isMe && (
-                          <Avatar className="w-8 h-8 flex-shrink-0">
-                            <AvatarImage src={message.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                              {message.nickname.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <button
+                            onClick={() => setUserMenuTarget({ userId: message.user_id, nickname: message.nickname })}
+                            className="flex-shrink-0"
+                          >
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage src={message.avatar_url || undefined} />
+                              <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                                {message.nickname.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </button>
                         )}
 
                         <div
@@ -221,9 +233,12 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           )}
                         >
                           {!isMe && (
-                            <p className="text-xs font-medium opacity-70 mb-0.5">
+                            <button
+                              onClick={() => setUserMenuTarget({ userId: message.user_id, nickname: message.nickname })}
+                              className="text-xs font-medium opacity-70 mb-0.5 hover:opacity-100 transition-opacity"
+                            >
                               {message.nickname}
-                            </p>
+                            </button>
                           )}
                           <p className="text-sm break-words">{message.message}</p>
                           <p className={cn(
@@ -285,6 +300,17 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   </motion.button>
                 </div>
               </div>
+            )}
+
+            {/* User Action Menu for Report/Block */}
+            {userMenuTarget && (
+              <UserActionMenu
+                isOpen={!!userMenuTarget}
+                onClose={() => setUserMenuTarget(null)}
+                targetUserId={userMenuTarget.userId}
+                targetUserName={userMenuTarget.nickname}
+                roomId={selectedRoomId || undefined}
+              />
             )}
           </motion.div>
         </>

@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+import { Flag } from 'lucide-react';
+
 const navItems = [
   { 
     to: '/admin', 
@@ -65,6 +67,11 @@ const navItems = [
     to: '/admin/users', 
     icon: Users, 
     label: 'მომხმარებლები' 
+  },
+  { 
+    to: '/admin/reports', 
+    icon: Flag, 
+    label: 'რეპორტები' 
   },
   { 
     to: '/admin/push', 
