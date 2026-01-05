@@ -7,11 +7,12 @@ const borderRectPath = "M0.5,0.04 C0.84,0.04 0.96,0.16 0.96,0.5 C0.96,0.84 0.84,
 
 interface InteractiveBlobVideoProps {
   imageSrc: string;
+  videoSrc?: string;
   isLocked: boolean;
   showCategorySlot: boolean;
 }
 
-export function InteractiveBlobVideo({ imageSrc, isLocked, showCategorySlot }: InteractiveBlobVideoProps) {
+export function InteractiveBlobVideo({ imageSrc, videoSrc, isLocked, showCategorySlot }: InteractiveBlobVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPoking, setIsPoking] = useState(false);
   const [flipKey, setFlipKey] = useState(0);
@@ -88,12 +89,24 @@ export function InteractiveBlobVideo({ imageSrc, isLocked, showCategorySlot }: I
               }}
               style={{ transformStyle: "preserve-3d" }}
             >
-              <img
-                src={imageSrc}
-                alt="Category"
-                className="w-full h-full object-cover"
-                style={{ transform: "scale(1.3)" }}
-              />
+              {isLocked && videoSrc ? (
+                <video
+                  src={videoSrc}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                  style={{ transform: "scale(1.3)" }}
+                />
+              ) : (
+                <img
+                  src={imageSrc}
+                  alt="Category"
+                  className="w-full h-full object-cover"
+                  style={{ transform: "scale(1.3)" }}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
