@@ -43,26 +43,9 @@ export function UniversalBottomNav({
   const isPurpleVariant = false;
 
   const handleCenterClick = () => {
-    console.log("[handleCenterClick] Called", { 
-      isHome, 
-      isVip, 
-      canPlay, 
-      isGuest, 
-      hasOnPlayClick: !!onPlayClick,
-      playsRemaining,
-      maxPlays 
-    });
-    
     if (isHome) {
-      // Always try to call onPlayClick - let the handler decide what to do
-      console.log("[handleCenterClick] Calling onPlayClick");
-      if (onPlayClick) {
-        onPlayClick();
-      } else {
-        console.error("[handleCenterClick] onPlayClick is undefined!");
-      }
+      onPlayClick?.();
     } else {
-      console.log("[handleCenterClick] Navigating to home");
       navigate("/");
     }
   };
@@ -370,11 +353,7 @@ function Hex3DPlayButton({
       )}
 
       <motion.button
-        onClick={(e) => {
-          e.stopPropagation();
-          console.log("[Hex3DPlayButton] Button clicked!");
-          onClick();
-        }}
+        onClick={onClick}
         className="relative z-[60]"
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.92, y: 4 }}
