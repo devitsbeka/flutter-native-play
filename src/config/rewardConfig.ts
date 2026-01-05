@@ -42,7 +42,7 @@ export const REWARDS = {
   ],
 
   // ===== WATCH AD REWARD =====
-  AD_WATCH_COINS: 150,
+  AD_WATCH_COINS: 1000,
 
   // ===== GEM EXCHANGE =====
   GEM_TO_COINS_RATE: 50, // 1 gem = 50 coins
