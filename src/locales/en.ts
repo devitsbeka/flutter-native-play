@@ -38,6 +38,7 @@ export const en: KaTranslations = {
     bestValue: "Best Value",
     limited: "Limited",
     new: "New",
+    or: "or",
   },
 
   // ==========================================
@@ -586,6 +587,16 @@ export const en: KaTranslations = {
     addsTime: "Adds 10 seconds",
     exchangedCoins: "Exchanged {coins} coins → {gems} 💎",
     exchangedGems: "Exchanged {gems} gems → {coins} 🪙",
+    // Ad-Free
+    goAdFree: "Go Ad-Free!",
+    unlockPremium: "Unlock premium experience",
+    noAdsWhilePlaying: "No ads while playing",
+    unlimitedPowerUpsDaily: "Unlimited power-ups daily",
+    exclusiveAvatarFrames: "Exclusive avatar frames",
+    priorityMatchmaking: "Priority matchmaking",
+    unlockFor: "Unlock for $4.99",
+    restorePurchase: "Restore Purchase",
+    processing: "Processing...",
   },
 
   // ==========================================
@@ -698,6 +709,7 @@ export const en: KaTranslations = {
     leaderboardParticipation: "Leaderboard participation",
     registerFree: "Register for Free",
     later: "Later",
+    continueAsGuest: "Continue as guest",
     playsLimit: "Plays Limit",
     playsRemaining: "Remaining: {current}/{max} plays",
     watchAdGetPlays: "Watch an ad and get",

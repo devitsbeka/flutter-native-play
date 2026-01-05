@@ -1,29 +1,31 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles, RotateCcw } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdFreeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const benefits = [
-  "No ads while playing",
-  "Unlimited power-ups daily",
-  "Exclusive avatar frames",
-  "Priority matchmaking",
-];
-
 export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { purchase, restorePurchases, purchasing } = useInAppPurchases();
   const [restoring, setRestoring] = useState(false);
+
+  const benefits = [
+    t("shop.noAdsWhilePlaying"),
+    t("shop.unlimitedPowerUpsDaily"),
+    t("shop.exclusiveAvatarFrames"),
+    t("shop.priorityMatchmaking"),
+  ];
 
   const handlePurchase = async () => {
     if (!user) {
@@ -77,8 +79,8 @@ export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Go Ad-Free!"
-      subtitle="Unlock premium experience"
+      title={t("shop.goAdFree")}
+      subtitle={t("shop.unlockPremium")}
       icon={customIcon}
       showSparkles
     >
@@ -111,9 +113,9 @@ export function AdFreeModal({ isOpen, onClose }: AdFreeModalProps) {
       </div>
 
       <GameModalFooter
-        primaryLabel={purchasing ? "მიმდინარეობს..." : "Unlock for $4.99"}
+        primaryLabel={purchasing ? t("shop.processing") : t("shop.unlockFor")}
         onPrimary={handlePurchase}
-        secondaryLabel={restoring ? "მიმდინარეობს..." : "Restore Purchase"}
+        secondaryLabel={restoring ? t("shop.processing") : t("shop.restorePurchase")}
         onSecondary={handleRestore}
         primaryVariant="primary"
       />

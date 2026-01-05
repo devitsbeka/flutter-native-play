@@ -2,11 +2,15 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Shield, Mail, Globe } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PrivacyPolicy() {
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
+
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="კონფიდენციალურობა" />
+      <PageHeader title={t("legal.privacyPolicy")} />
       
       <div className="p-4 pb-12">
         <motion.div
@@ -20,150 +24,150 @@ export default function PrivacyPolicy() {
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-bold text-foreground">კონფიდენციალურობის პოლიტიკა</h1>
-              <p className="text-sm text-muted-foreground">ძალაშია: 2025 წლის იანვარი</p>
+              <h1 className="text-xl font-display font-bold text-foreground">{t("legal.privacyPolicyFull")}</h1>
+              <p className="text-sm text-muted-foreground">{t("legal.effectiveDate")}</p>
             </div>
           </div>
 
           <div className="space-y-6 text-foreground">
             {/* Introduction */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">შესავალი</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.introduction")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                ჩვენ ვიცავთ თქვენს კონფიდენციალურობას. ეს პოლიტიკა აღწერს, როგორ ვაგროვებთ, 
-                ვიყენებთ და ვიცავთ თქვენს პერსონალურ მონაცემებს MyTrivia-ს გამოყენებისას.
+                {t("legal.introText")}
               </p>
             </section>
 
             {/* Data Collection */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">რა მონაცემებს ვაგროვებთ</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.dataCollection")}</h2>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>ანგარიშის ინფორმაცია:</strong> ელ-ფოსტა, მომხმარებლის სახელი, პაროლი (დაშიფრული)</span>
+                  <span><strong>{t("legal.accountInfo")}</strong> {t("legal.accountInfoDesc")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>პროფილის მონაცემები:</strong> ავატარი, ქვეყანა, თამაშის სტატისტიკა</span>
+                  <span><strong>{t("legal.profileData")}</strong> {t("legal.profileDataDesc")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>თამაშის მონაცემები:</strong> ქულები, მიღწევები, თამაშის ისტორია</span>
+                  <span><strong>{t("legal.gameData")}</strong> {t("legal.gameDataDesc")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>ტექნიკური მონაცემები:</strong> მოწყობილობის ტიპი, IP მისამართი, ბრაუზერი</span>
+                  <span><strong>{t("legal.technicalData")}</strong> {t("legal.technicalDataDesc")}</span>
                 </li>
               </ul>
             </section>
 
             {/* Data Usage */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">როგორ ვიყენებთ მონაცემებს</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.dataUsage")}</h2>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>თქვენი ანგარიშის მართვა და ავტორიზაცია</span>
+                  <span>{t("legal.dataUsage1")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>თამაშის პროგრესის და ქულების შენახვა</span>
+                  <span>{t("legal.dataUsage2")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>ლიდერბორდებზე თქვენი რანკის ჩვენება</span>
+                  <span>{t("legal.dataUsage3")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>აპლიკაციის გაუმჯობესება და ხარვეზების გასწორება</span>
+                  <span>{t("legal.dataUsage4")}</span>
                 </li>
               </ul>
             </section>
 
             {/* Data Sharing */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">მონაცემების გაზიარება</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.dataSharing")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                ჩვენ <strong>არ ვყიდით</strong> თქვენს პერსონალურ მონაცემებს მესამე პირებზე. 
-                თქვენი მონაცემები გაზიარდება მხოლოდ:
+                {t("legal.dataSharingText")}
               </p>
               <ul className="text-sm text-muted-foreground space-y-2 mt-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>თქვენი თანხმობით</span>
+                  <span>{t("legal.withConsent")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>კანონით მოთხოვნის შემთხვევაში</span>
+                  <span>{t("legal.byLaw")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>სერვისის მიმწოდებლებთან (Supabase, Cloudflare)</span>
+                  <span>{t("legal.withProviders")}</span>
                 </li>
               </ul>
             </section>
 
             {/* Data Retention */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">მონაცემების შენახვა</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.dataRetention")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                თქვენი მონაცემები ინახება, სანამ თქვენი ანგარიში აქტიურია. 
-                ანგარიშის წაშლის მოთხოვნის შემდეგ, ყველა მონაცემი წაიშლება 30 დღის განმავლობაში.
+                {t("legal.dataRetentionText")}
               </p>
             </section>
 
             {/* User Rights */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">თქვენი უფლებები</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.userRights")}</h2>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>წვდომა:</strong> მოითხოვეთ თქვენი მონაცემების ასლი</span>
+                  <span><strong>{t("legal.access")}</strong> {t("legal.accessDesc")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>შესწორება:</strong> განაახლეთ თქვენი პროფილი</span>
+                  <span><strong>{t("legal.correction")}</strong> {t("legal.correctionDesc")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>წაშლა:</strong> წაშალეთ თქვენი ანგარიში და მონაცემები</span>
+                  <span><strong>{t("legal.deletion")}</strong> {t("legal.deletionDesc")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span><strong>გადატანა:</strong> გადმოწერეთ თქვენი მონაცემები</span>
+                  <span><strong>{t("legal.portability")}</strong> {t("legal.portabilityDesc")}</span>
                 </li>
               </ul>
             </section>
 
             {/* Children's Privacy */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">ბავშვების კონფიდენციალურობა</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.childrenPrivacy")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                ჩვენი სერვისი განკუთვნილია 13 წელზე უფროსი ასაკის მომხმარებლებისთვის. 
-                ჩვენ შეგნებულად არ ვაგროვებთ 13 წლამდე ბავშვების მონაცემებს.
+                {t("legal.childrenPrivacyText")}
               </p>
             </section>
 
             {/* Language Toggle */}
             <section className="bg-primary/5 rounded-xl p-4 border border-primary/20">
               <Link 
-                to="/privacy-policy-en"
+                to={isEnglish ? "/privacy-policy" : "/privacy-policy-en"}
                 className="flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
                   <Globe className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium text-foreground">English Version</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {isEnglish ? "ქართული ვერსია" : "English Version"}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">View in English →</span>
+                <span className="text-xs text-muted-foreground">
+                  {isEnglish ? "ნახე ქართულად →" : "View in English →"}
+                </span>
               </Link>
             </section>
 
             {/* Contact */}
             <section className="bg-muted/50 rounded-xl p-4">
-              <h2 className="text-lg font-semibold mb-2">კონტაქტი</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.contact")}</h2>
               <p className="text-sm text-muted-foreground mb-3">
-                კითხვების შემთხვევაში დაგვიკავშირდით:
+                {t("legal.contactText")}
               </p>
               <a 
                 href="mailto:support@mytrivia.io" 
