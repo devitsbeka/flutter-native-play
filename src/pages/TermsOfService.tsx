@@ -2,11 +2,15 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FileText, Mail, Globe } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function TermsOfService() {
+  const { t, language } = useLanguage();
+  const isEnglish = language === 'en';
+
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader title="პირობები" />
+      <PageHeader title={t("legal.termsOfService")} />
       
       <div className="p-4 pb-12">
         <motion.div
@@ -20,169 +24,165 @@ export default function TermsOfService() {
               <FileText className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-bold text-foreground">მომსახურების პირობები</h1>
-              <p className="text-sm text-muted-foreground">ძალაშია: 2025 წლის იანვარი</p>
+              <h1 className="text-xl font-display font-bold text-foreground">{t("legal.termsOfServiceFull")}</h1>
+              <p className="text-sm text-muted-foreground">{t("legal.effectiveDate")}</p>
             </div>
           </div>
 
           <div className="space-y-6 text-foreground">
             {/* Acceptance */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">1. პირობების მიღება</h2>
+              <h2 className="text-lg font-semibold mb-2">1. {t("legal.acceptance")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                MyTrivia-ს გამოყენებით თქვენ ეთანხმებით ამ მომსახურების პირობებს.
-                თუ არ ეთანხმებით რომელიმე პირობას, გთხოვთ, არ გამოიყენოთ აპლიკაცია.
+                {t("legal.acceptanceText")}
               </p>
             </section>
 
             {/* Account Rules */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">2. ანგარიშის წესები</h2>
+              <h2 className="text-lg font-semibold mb-2">2. {t("legal.accountRules")}</h2>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>თქვენ პასუხისმგებელი ხართ თქვენი ანგარიშის უსაფრთხოებაზე</span>
+                  <span>{t("legal.accountRule1")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>არ გაუზიაროთ თქვენი პაროლი სხვებს</span>
+                  <span>{t("legal.accountRule2")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>დაუყოვნებლივ შეგვატყობინეთ უნებართვო წვდომის შესახებ</span>
+                  <span>{t("legal.accountRule3")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>თითო მომხმარებელს ერთი ანგარიშის ქონა შეუძლია</span>
+                  <span>{t("legal.accountRule4")}</span>
                 </li>
               </ul>
             </section>
 
             {/* Prohibited Conduct */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">3. აკრძალული ქმედებები</h2>
-              <p className="text-sm text-muted-foreground mb-2">თქვენ არ შეგიძლიათ:</p>
+              <h2 className="text-lg font-semibold mb-2">3. {t("legal.prohibitedConduct")}</h2>
+              <p className="text-sm text-muted-foreground mb-2">{t("legal.youCannot")}</p>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-destructive mt-1">✕</span>
-                  <span>გამოიყენოთ ჩიტები, ბოტები ან ავტომატიზაციის ხელსაწყოები</span>
+                  <span>{t("legal.prohibited1")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive mt-1">✕</span>
-                  <span>შეურაცხყოთ ან შეავიწროვოთ სხვა მომხმარებლები</span>
+                  <span>{t("legal.prohibited2")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive mt-1">✕</span>
-                  <span>გავრცელოთ შეურაცხმყოფელი ან უკანონო კონტენტი</span>
+                  <span>{t("legal.prohibited3")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive mt-1">✕</span>
-                  <span>სცადოთ სისტემის გატეხვა ან მანიპულაცია</span>
+                  <span>{t("legal.prohibited4")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive mt-1">✕</span>
-                  <span>იყოთ ცრუ ინფორმაცია თქვენს ვინაობაზე</span>
+                  <span>{t("legal.prohibited5")}</span>
                 </li>
               </ul>
             </section>
 
             {/* Virtual Items */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">4. ვირტუალური საგნები</h2>
+              <h2 className="text-lg font-semibold mb-2">4. {t("legal.virtualItems")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                თამაშში არსებული ვირტუალური ვალუტა (მონეტები, ალმასები) და საგნები 
-                არ აქვს რეალური ღირებულება და არ შეიძლება რეალურ ფულზე გაცვლა. 
-                ჩვენ ვინარჩუნებთ უფლებას შევცვალოთ ან წავშალოთ ვირტუალური საგნები.
+                {t("legal.virtualItemsText")}
               </p>
             </section>
 
             {/* Subscriptions */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">5. VIP გამოწერა</h2>
+              <h2 className="text-lg font-semibold mb-2">5. {t("legal.vipSubscription")}</h2>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>გამოწერა ავტომატურად განახლდება პერიოდის ბოლოს</span>
+                  <span>{t("legal.vip1")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>გაუქმება შესაძლებელია ნებისმიერ დროს</span>
+                  <span>{t("legal.vip2")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>უკვე გადახდილი თანხა არ დაბრუნდება</span>
+                  <span>{t("legal.vip3")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">•</span>
-                  <span>ფასები შეიძლება შეიცვალოს წინასწარი შეტყობინებით</span>
+                  <span>{t("legal.vip4")}</span>
                 </li>
               </ul>
             </section>
 
             {/* IP Rights */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">6. ინტელექტუალური საკუთრება</h2>
+              <h2 className="text-lg font-semibold mb-2">6. {t("legal.ipRights")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                MyTrivia-ს კონტენტი, დიზაინი, ლოგო და სასაქონლო ნიშნები არის ჩვენი საკუთრება.
-                თქვენ მიიღებთ შეზღუდულ ლიცენზიას აპლიკაციის პირადი მოხმარებისთვის.
+                {t("legal.ipRightsText")}
               </p>
             </section>
 
             {/* Disclaimers */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">7. პასუხისმგებლობის შეზღუდვა</h2>
+              <h2 className="text-lg font-semibold mb-2">7. {t("legal.disclaimers")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                აპლიკაცია მოწოდებულია „როგორც არის" პრინციპით. ჩვენ არ ვიძლევით გარანტიას 
-                უწყვეტ მუშაობაზე. არ ვაგებთ პასუხს არაპირდაპირ ზარალზე.
+                {t("legal.disclaimersText")}
               </p>
             </section>
 
             {/* Termination */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">8. ანგარიშის შეჩერება</h2>
+              <h2 className="text-lg font-semibold mb-2">8. {t("legal.termination")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                ჩვენ ვინარჩუნებთ უფლებას შევაჩეროთ ან წავშალოთ ანგარიში პირობების დარღვევის 
-                ან უმოქმედობის შემთხვევაში. თქვენ ნებისმიერ დროს შეგიძლიათ თქვენი ანგარიშის წაშლა.
+                {t("legal.terminationText")}
               </p>
             </section>
 
             {/* Changes */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">9. პირობების ცვლილება</h2>
+              <h2 className="text-lg font-semibold mb-2">9. {t("legal.changes")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                ჩვენ შეგვიძლია განვაახლოთ ეს პირობები. მნიშვნელოვანი ცვლილებების შესახებ 
-                შეტყობინება გამოგიგზავნით. აპლიკაციის გამოყენების გაგრძელება ნიშნავს ახალი პირობების მიღებას.
+                {t("legal.changesText")}
               </p>
             </section>
 
             {/* Governing Law */}
             <section>
-              <h2 className="text-lg font-semibold mb-2">10. მოქმედი კანონმდებლობა</h2>
+              <h2 className="text-lg font-semibold mb-2">10. {t("legal.governingLaw")}</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                ეს პირობები რეგულირდება საქართველოს კანონმდებლობით. დავები განიხილება 
-                საქართველოს სასამართლოებში.
+                {t("legal.governingLawText")}
               </p>
             </section>
 
             {/* Language Toggle */}
             <section className="bg-primary/5 rounded-xl p-4 border border-primary/20">
               <Link 
-                to="/terms-en"
+                to={isEnglish ? "/terms" : "/terms-en"}
                 className="flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
                   <Globe className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium text-foreground">English Version</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {isEnglish ? "ქართული ვერსია" : "English Version"}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground">View in English →</span>
+                <span className="text-xs text-muted-foreground">
+                  {isEnglish ? "ნახე ქართულად →" : "View in English →"}
+                </span>
               </Link>
             </section>
 
             {/* Contact */}
             <section className="bg-muted/50 rounded-xl p-4">
-              <h2 className="text-lg font-semibold mb-2">კონტაქტი</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("legal.contact")}</h2>
               <p className="text-sm text-muted-foreground mb-3">
-                კითხვების შემთხვევაში დაგვიკავშირდით:
+                {t("legal.contactText")}
               </p>
               <a 
                 href="mailto:support@mytrivia.io" 

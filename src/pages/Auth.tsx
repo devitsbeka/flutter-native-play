@@ -9,19 +9,10 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { ArrowLeft, Mail, Lock, User, Apple } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
-
-const signUpSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  nickname: z.string().min(2, "Nickname must be at least 2 characters").max(20, "Nickname must be less than 20 characters"),
-});
-
-const signInSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-});
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Auth() {
+  const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +24,17 @@ export default function Auth() {
   const isIOS = Capacitor.getPlatform() === 'ios';
   const { notify } = useNotificationModal();
   const navigate = useNavigate();
+
+  const signUpSchema = z.object({
+    email: z.string().email(t("auth.invalidCredentials")),
+    password: z.string().min(6, t("auth.passwordTooShort")),
+    nickname: z.string().min(2, t("auth.usernameTooShort")).max(20, t("auth.usernameTooShort")),
+  });
+
+  const signInSchema = z.object({
+    email: z.string().email(t("auth.invalidCredentials")),
+    password: z.string().min(1, t("auth.passwordRequired")),
+  });
 
   useEffect(() => {
     if (user) {
@@ -63,12 +65,12 @@ export default function Auth() {
         const { error } = await signUp(email, password, nickname);
         if (error) {
           if (error.message.includes("already registered")) {
-            notify.error("Account exists", { description: "This email is already registered. Please sign in instead." });
+            notify.error(t("auth.alreadyHaveAccount"), { description: t("auth.invalidCredentials") });
           } else {
-            notify.error("Sign up failed", { description: error.message });
+            notify.error(t("common.error"), { description: error.message });
           }
         } else {
-          notify.success("კეთილი იყოს შენი მობრძანება!", { description: "ანგარიში შეიქმნა.", icon: "🎉" });
+          notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: "🎉" });
           navigate("/");
         }
       } else {
@@ -87,14 +89,14 @@ export default function Auth() {
 
         const { error } = await signIn(email, password);
         if (error) {
-          notify.error("Sign in failed", { description: "Invalid email or password. Please try again." });
+          notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
         } else {
-          notify.success("Welcome back!", { description: "You've successfully signed in.", icon: "👋" });
+          notify.success(t("auth.welcomeBack"), { description: t("auth.signIn"), icon: "👋" });
           navigate("/");
         }
       }
     } catch (err) {
-      notify.error("Error", { description: "Something went wrong. Please try again." });
+      notify.error(t("common.error"), { description: t("errors.generic") });
     } finally {
       setLoading(false);
     }
@@ -106,14 +108,14 @@ export default function Auth() {
       const { error } = await signInWithApple();
       if (error) {
         if (!error.message?.includes('cancelled')) {
-          notify.error("Apple Sign In failed", { description: error.message });
+          notify.error(t("common.error"), { description: error.message });
         }
       } else {
-        notify.success("Welcome!", { description: "You've signed in with Apple.", icon: "🍎" });
+        notify.success(t("common.welcome"), { description: t("auth.signIn"), icon: "🍎" });
         navigate("/");
       }
     } catch (err) {
-      notify.error("Error", { description: "Something went wrong. Please try again." });
+      notify.error(t("common.error"), { description: t("errors.generic") });
     } finally {
       setLoading(false);
     }
@@ -129,7 +131,7 @@ export default function Auth() {
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
       >
         <ArrowLeft className="w-5 h-5" />
-        <span>Back</span>
+        <span>{t("common.back")}</span>
       </motion.button>
 
       <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
@@ -140,12 +142,12 @@ export default function Auth() {
           className="text-center mb-8"
         >
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            {isSignUp ? "Create Account" : "Welcome Back"}
+            {isSignUp ? t("auth.createAccount") : t("auth.welcomeBack")}
           </h1>
           <p className="text-muted-foreground">
             {isSignUp
-              ? "Join the quiz battle and compete globally!"
-              : "Sign in to continue your quiz journey"}
+              ? t("onboarding.welcomeSubtitle")
+              : t("onboarding.startAdventure")}
           </p>
         </motion.div>
 
@@ -159,13 +161,13 @@ export default function Auth() {
         >
           {isSignUp && (
             <div className="space-y-2">
-              <Label htmlFor="nickname">Nickname</Label>
+              <Label htmlFor="nickname">{t("auth.username")}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="nickname"
                   type="text"
-                  placeholder="QuizMaster123"
+                  placeholder={t("auth.usernamePlaceholder")}
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   className="pl-10"
@@ -178,7 +180,7 @@ export default function Auth() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("help.email")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -196,7 +198,7 @@ export default function Auth() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -220,7 +222,7 @@ export default function Auth() {
             className="w-full mt-6"
             disabled={loading}
           >
-            {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+            {loading ? t("common.loading") : isSignUp ? t("auth.createAccount") : t("auth.signIn")}
           </ChunkyButton>
 
           {/* Sign in with Apple - iOS only */}
@@ -228,7 +230,7 @@ export default function Auth() {
             <>
               <div className="flex items-center gap-3 mt-4">
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">or</span>
+                <span className="text-xs text-muted-foreground">{t("common.or") || "or"}</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
               
@@ -255,7 +257,7 @@ export default function Auth() {
           className="mt-6 text-center"
         >
           <p className="text-muted-foreground">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+            {isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}{" "}
             <button
               type="button"
               onClick={() => {
@@ -264,7 +266,7 @@ export default function Auth() {
               }}
               className="text-primary font-semibold hover:underline"
             >
-              {isSignUp ? "Sign In" : "Sign Up"}
+              {isSignUp ? t("auth.signIn") : t("auth.signUp")}
             </button>
           </p>
         </motion.div>
@@ -281,7 +283,7 @@ export default function Auth() {
             onClick={() => navigate("/")}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Continue as guest →
+            {t("modals.continueAsGuest")} →
           </button>
         </motion.div>
       </div>

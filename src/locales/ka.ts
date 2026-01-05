@@ -36,6 +36,7 @@ export const ka = {
     bestValue: "საუკეთესო ფასი",
     limited: "შეზღუდული",
     new: "ახალი",
+    or: "ან",
   },
 
   // ==========================================
@@ -584,6 +585,16 @@ export const ka = {
     addsTime: "ამატებს 10 წამს",
     exchangedCoins: "გადაცვალე {coins} მონეტა → {gems} 💎",
     exchangedGems: "გადაცვალე {gems} ალმასი → {coins} 🪙",
+    // Ad-Free
+    goAdFree: "გახდი რეკლამისგან თავისუფალი!",
+    unlockPremium: "გახსენი პრემიუმ გამოცდილება",
+    noAdsWhilePlaying: "რეკლამა თამაშისას არ იქნება",
+    unlimitedPowerUpsDaily: "ულიმიტო ძალები ყოველდღე",
+    exclusiveAvatarFrames: "ექსკლუზიური ავატარის ჩარჩოები",
+    priorityMatchmaking: "პრიორიტეტული მატჩინგი",
+    unlockFor: "გახსნა $4.99-ად",
+    restorePurchase: "შეძენის აღდგენა",
+    processing: "მიმდინარეობს...",
   },
 
   // ==========================================
@@ -696,6 +707,7 @@ export const ka = {
     leaderboardParticipation: "მონაწილეობა ლიდერბორდში",
     registerFree: "დარეგისტრირდი უფასოდ",
     later: "მოგვიანებით",
+    continueAsGuest: "გაგრძელება სტუმრად",
     playsLimit: "თამაშების ლიმიტი",
     playsRemaining: "დარჩენილია: {current}/{max} თამაში",
     watchAdGetPlays: "უყურე რეკლამას და მიიღე",
