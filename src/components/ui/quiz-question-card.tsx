@@ -19,9 +19,13 @@ interface QuizQuestionCardProps {
   freezeTimeLeft?: number;
 }
 
-// Dynamic font sizing based on question length - conservative for viewport fit
+// Dynamic font sizing based on question length - handles very long questions
 function getQuestionStyles(text: string) {
   const length = text.length;
+  if (length > 150) return { fontSize: "12px" };
+  if (length > 120) return { fontSize: "13px" };
+  if (length > 100) return { fontSize: "14px" };
+  if (length > 80) return { fontSize: "15px" };
   if (length > 55) return { fontSize: "16px" };
   if (length > 40) return { fontSize: "17px" };
   return { fontSize: "18px" };
@@ -159,7 +163,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             </div>
           ) : (
             <p
-              className="text-center font-semibold leading-snug text-[#2A2550] line-clamp-3"
+              className="text-center font-semibold leading-snug text-[#2A2550]"
               style={{
                 fontSize: questionStyles.fontSize,
               }}

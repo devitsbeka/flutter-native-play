@@ -12,6 +12,7 @@ import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { cn } from "@/lib/utils";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Georgian answer labels
 const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
@@ -31,6 +32,7 @@ export function MultiplayerGameScreenV2() {
     opponentAnswers,
     participants,
     exitRoom,
+    currentRoom,
   } = useMultiplayerV2();
 
   // Start background music when game starts
@@ -291,6 +293,16 @@ export function MultiplayerGameScreenV2() {
 
       {/* Question Card */}
       <div className="px-4 flex-shrink-0 mt-3 relative">
+        {/* Category Icon - only show if available */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-20 z-20 w-28 h-28">
+          <DynamicIcon 
+            categoryId={currentRoom?.category_id || undefined}
+            size={112}
+            className="drop-shadow-lg"
+            hideIfEmpty={true}
+          />
+        </div>
+        
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={progressPercent}
