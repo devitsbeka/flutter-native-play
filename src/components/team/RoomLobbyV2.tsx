@@ -193,6 +193,15 @@ export function RoomLobbyV2() {
     }
   };
 
+  const handleMentionPlayer = (nickname: string) => {
+    setChatMessage((prev) => {
+      if (!prev || prev.endsWith(' ')) {
+        return `${prev}@${nickname} `;
+      }
+      return `${prev} @${nickname} `;
+    });
+  };
+
   if (!currentRoom) return null;
 
   const canStartGame = participants.length >= (currentRoom.min_players || 2);
@@ -373,27 +382,27 @@ export function RoomLobbyV2() {
                   </motion.button>
                 </div>
 
-                {/* Participants row */}
-                <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto border-b border-border/50 bg-muted/30">
-                  {participants.slice(0, participants.length > 8 ? 5 : 8).map((p) => (
-                    <div key={p.user_id} className="flex items-center gap-1.5 flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-muted">
+                {/* Participants row - avatars only, scrollable, clickable for mentions */}
+                <div className="flex items-center gap-3 px-4 py-3 overflow-x-auto border-b border-border/50 bg-muted/30 scrollbar-hide">
+                  {participants.map((p) => (
+                    <motion.button
+                      key={p.user_id}
+                      onClick={() => handleMentionPlayer(p.nickname)}
+                      className="flex-shrink-0 focus:outline-none"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div className="w-11 h-11 rounded-full overflow-hidden bg-muted ring-2 ring-transparent hover:ring-primary transition-all">
                         {p.avatar_url ? (
-                          <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                          <img src={p.avatar_url} alt={p.nickname} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
+                          <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                             {p.nickname?.charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
-                      <span className="text-sm text-muted-foreground">{p.nickname}</span>
-                    </div>
+                    </motion.button>
                   ))}
-                  {participants.length > 8 && (
-                    <span className="text-sm font-medium text-muted-foreground flex-shrink-0">
-                      +{participants.length - 5}
-                    </span>
-                  )}
                 </div>
 
                 {/* Messages area - scrollable */}
