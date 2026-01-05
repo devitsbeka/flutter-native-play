@@ -48,6 +48,7 @@ import Notifications from "./pages/Notifications";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PrivacyPolicyEN from "./pages/PrivacyPolicyEN";
 import TermsOfService from "./pages/TermsOfService";
+import TermsOfServiceEN from "./pages/TermsOfServiceEN";
 import Support from "./pages/Support";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/privacy-policy-en" element={<PrivacyPolicyEN />} />
               <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/terms-en" element={<TermsOfServiceEN />} />
               <Route path="/support" element={<Support />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
