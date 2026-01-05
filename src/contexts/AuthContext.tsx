@@ -28,6 +28,7 @@ interface AuthContextType {
   signUpWithUsername: (username: string, password: string) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signInWithUsername: (username: string, password: string) => Promise<{ data: any; error: any }>;
+  signInWithApple: () => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ data?: any; error: any }>;
   fetchProfile: (userId: string) => Promise<void>;
@@ -194,6 +195,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { data, error };
   };
 
+  const signInWithApple = async () => {
+    try {
+      // Dynamically import to avoid issues on web
+      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+      
+      const result = await SignInWithApple.authorize({
+        clientId: 'app.lovable.f54c9281c7aa40a48ea74b75d0ffa3d4',
+        redirectURI: 'https://sqwpzezkhpqkdyltvsim.supabase.co/auth/v1/callback',
+        scopes: 'email name',
+      });
+
+      if (result.response) {
+        const { identityToken, givenName, familyName, email } = result.response;
+        
+        // Sign in with Supabase using the Apple ID token
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: identityToken,
+        });
+
+        // If this is a new user, update their profile with the name from Apple
+        if (!error && data.user && (givenName || familyName)) {
+          const nickname = givenName || familyName || 'Player';
+          setTimeout(async () => {
+            await supabase
+              .from('profiles')
+              .update({ nickname })
+              .eq('user_id', data.user.id);
+          }, 1000);
+        }
+
+        return { data, error };
+      }
+      
+      return { data: null, error: new Error('Apple Sign In cancelled') };
+    } catch (error: any) {
+      console.error('Apple Sign In error:', error);
+      return { data: null, error };
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
@@ -235,6 +277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUpWithUsername,
         signIn,
         signInWithUsername,
+        signInWithApple,
         signOut,
         updateProfile,
         fetchProfile,

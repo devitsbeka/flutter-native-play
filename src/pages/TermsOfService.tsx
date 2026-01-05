@@ -170,11 +170,11 @@ export default function TermsOfService() {
                 კითხვების შემთხვევაში დაგვიკავშირდით:
               </p>
               <a 
-                href="mailto:legal@quizapp.ge" 
+                href="mailto:support@worldquizzes.app" 
                 className="inline-flex items-center gap-2 text-sm text-primary font-medium"
               >
                 <Mail className="w-4 h-4" />
-                legal@quizapp.ge
+                support@worldquizzes.app
               </a>
             </section>
           </div>
