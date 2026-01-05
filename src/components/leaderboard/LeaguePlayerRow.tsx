@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LeagueEntry } from "@/hooks/useLeagueLeaderboard";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 interface LeaguePlayerRowProps {
   entry: LeagueEntry;
@@ -132,9 +133,9 @@ export function LeaguePlayerRow({
         </p>
       </div>
 
-      {/* XP */}
+      {/* Coins */}
       <motion.div
-        className="text-right shrink-0"
+        className="flex items-center gap-1.5 shrink-0"
         animate={
           isCurrentUser && shouldAnimate
             ? { scale: [1, 1.1, 1] }
@@ -142,10 +143,10 @@ export function LeaguePlayerRow({
         }
         transition={{ delay: 1.6, duration: 0.3 }}
       >
+        <img src={coinIcon} alt="" className="w-5 h-5" />
         <span className={`font-bold text-base ${isCurrentUser ? "text-primary" : "text-foreground"}`}>
-          {entry.weekly_xp.toLocaleString()}
+          {(entry.coins || entry.weekly_xp).toLocaleString()}
         </span>
-        <span className="text-muted-foreground text-sm ml-1">XP</span>
       </motion.div>
     </motion.div>
   );
