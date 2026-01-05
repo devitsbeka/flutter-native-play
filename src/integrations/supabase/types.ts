@@ -543,6 +543,36 @@ export type Database = {
         }
         Relationships: []
       }
+      icon_verification_results: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          icon_url: string
+          id: string
+          is_valid: boolean
+          last_checked_at: string | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          icon_url: string
+          id?: string
+          is_valid?: boolean
+          last_checked_at?: string | null
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          icon_url?: string
+          id?: string
+          is_valid?: boolean
+          last_checked_at?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
       level_positions: {
         Row: {
           created_at: string

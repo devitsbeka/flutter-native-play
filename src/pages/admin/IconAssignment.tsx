@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
 import { useIconLibrary } from '@/hooks/useIconLibrary';
+import { useIconVerification } from '@/hooks/useIconVerification';
 import { supabase } from '@/integrations/supabase/client';
 
 interface IconItem {
@@ -53,6 +54,16 @@ export default function IconAssignment() {
   } = useAdminIconAssignment();
 
   const { getIconBySlug } = useIconLibrary();
+  
+  // Server-side icon verification
+  const { 
+    stats: verificationStats, 
+    brokenIcons: serverBrokenIcons, 
+    isVerifying, 
+    verifyProgress, 
+    runVerification,
+    markIconAsFixed 
+  } = useIconVerification();
 
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionForAssignment | null>(null);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
@@ -63,8 +74,8 @@ export default function IconAssignment() {
   const [iconsLoadProgress, setIconsLoadProgress] = useState(0);
   const [autoAdvance, setAutoAdvance] = useState(true);
   
-  // Track broken icons
-  const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
+  // Use server-side broken icons instead of client-side tracking
+  const brokenIconSlugs = useMemo(() => new Set(serverBrokenIcons.map(i => i.slug)), [serverBrokenIcons]);
   const [showBrokenIconsModal, setShowBrokenIconsModal] = useState(false);
   
   // Track recently fixed icons to show them first
@@ -134,8 +145,8 @@ export default function IconAssignment() {
 
   // Filter icons based on search and exclude broken ones, show recently fixed first
   const filteredIcons = useMemo(() => {
-    // First filter out broken icons
-    const validIcons = icons.filter(icon => !brokenIcons.has(icon.slug));
+    // First filter out broken icons using server-verified data
+    const validIcons = icons.filter(icon => !brokenIconSlugs.has(icon.slug));
     
     let result = validIcons;
     if (iconSearchTerm) {
@@ -156,24 +167,21 @@ export default function IconAssignment() {
       if (!aRecent && bRecent) return 1;
       return 0;
     });
-  }, [icons, iconSearchTerm, brokenIcons, recentlyFixedSlugs]);
+  }, [icons, iconSearchTerm, brokenIconSlugs, recentlyFixedSlugs]);
 
-  // Handle icon load error - mark as broken
+  // Handle icon load error - no-op since we use server-side verification
   const handleIconError = (slug: string) => {
-    setBrokenIcons(prev => new Set([...prev, slug]));
+    // Client-side errors are now ignored; use runVerification() for accurate data
+    console.log('Icon load error (ignored, use server verification):', slug);
   };
 
-
   // Handle icon fixed from modal
-  const handleIconFixed = (slug: string, newUrl: string) => {
+  const handleIconFixed = async (slug: string, newUrl: string) => {
     setIcons(prev => prev.map(i => 
       i.slug === slug ? { ...i, url: newUrl } : i
     ));
-    setBrokenIcons(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(slug);
-      return newSet;
-    });
+    // Update server-side verification
+    await markIconAsFixed(slug, newUrl);
     // Track as recently fixed to show first in grid
     setRecentlyFixedSlugs(prev => new Set([slug, ...prev]));
   };
@@ -332,7 +340,7 @@ export default function IconAssignment() {
     const accumulatedMethods: Record<string, number> = {};
 
     const functionName = 'batch-assign-icons';
-    const brokenSlugsArray = Array.from(brokenIcons);
+    const brokenSlugsArray = Array.from(brokenIconSlugs);
     
     const modeLabel = mode === 'diversify' ? 'დივერსიფიკაცია' : 'სწრაფი მინიჭება';
     toast.info(`${modeLabel} დაიწყო... (${brokenSlugsArray.length} გატეხილი გამორიცხულია)`);
@@ -492,9 +500,23 @@ export default function IconAssignment() {
               <div className="text-xs text-muted-foreground">უიკონო</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-red-500">{brokenIcons.size.toLocaleString()}</div>
+              <div className="text-lg font-bold text-red-500">{verificationStats.broken.toLocaleString()}</div>
               <div className="text-xs text-muted-foreground">გატეხილი</div>
             </div>
+            {isVerifying ? (
+              <Button size="sm" variant="ghost" disabled className="gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+              </Button>
+            ) : (
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => runVerification().then(() => toast.success('ვერიფიკაცია დასრულდა'))}
+                title="ხელახლა შემოწმება"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
         
@@ -983,13 +1005,13 @@ export default function IconAssignment() {
                   {recentlyFixedSlugs.size} გასწორებული
                 </button>
               )}
-              {brokenIcons.size > 0 && (
+              {verificationStats.broken > 0 && (
                 <button
                   onClick={() => setShowBrokenIconsModal(true)}
                   className="text-orange-500 hover:text-orange-600 flex items-center gap-1.5 font-medium"
                 >
                   <AlertTriangle className="h-3 w-3" />
-                  {brokenIcons.size} გატეხილი
+                  {verificationStats.broken} გატეხილი
                 </button>
               )}
             </div>
@@ -999,7 +1021,7 @@ export default function IconAssignment() {
           <BrokenIconsModal
             open={showBrokenIconsModal}
             onOpenChange={setShowBrokenIconsModal}
-            brokenIcons={brokenIcons}
+            brokenIcons={brokenIconSlugs}
             icons={icons}
             onIconFixed={handleIconFixed}
             totalIconsInLibrary={icons.length}

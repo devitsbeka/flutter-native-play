@@ -78,3 +78,6 @@ verify_jwt = false
 
 [functions.translate-questions]
 verify_jwt = false
+
+[functions.verify-icons]
+verify_jwt = false
