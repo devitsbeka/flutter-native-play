@@ -43,25 +43,24 @@ export default function Leaderboards() {
       }
       
       const rowRect = userRowRef.current.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
       
-      // Bottom nav height + fixed bar area
-      const bottomOffset = 180;
-      const viewportBottom = window.innerHeight - bottomOffset;
+      // The fixed bar sits about 112px from viewport bottom (bottom-28)
+      // Plus bottom nav ~80px = ~192px total
+      const bottomCutoff = window.innerHeight - 192;
       
-      // Show fixed bar only if user's row is BELOW the visible area
-      // Once they scroll to it or past it, keep it hidden
-      const isRowBelowViewport = rowRect.top > viewportBottom;
+      // Show fixed bar only if user's row TOP is below the visible cutoff point
+      // This means the row hasn't been scrolled into view yet
+      const shouldShow = rowRect.top > bottomCutoff;
       
-      setShowFixedBar(isRowBelowViewport);
+      setShowFixedBar(shouldShow);
     };
 
-    container.addEventListener("scroll", handleScroll);
-    const timer = setTimeout(handleScroll, 100);
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    // Run check after render
+    requestAnimationFrame(handleScroll);
     
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-      clearTimeout(timer);
-    };
+    return () => container.removeEventListener("scroll", handleScroll);
   }, [userEntry]);
 
   const handleSelectTier = (tier: number) => {
