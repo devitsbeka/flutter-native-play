@@ -307,20 +307,8 @@ function Hex3DPlayButton({
   const colors = colorSchemes[variant];
   const showExhausted = variant === "exhausted" && isPlayButton;
 
-  // Don't show anything until VIP status is loaded
-  if (isLoading) {
-    return (
-      <div className="relative pointer-events-auto">
-        <div 
-          className="relative z-[60] opacity-0"
-          style={{ width: 90, height: 90 }}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="relative pointer-events-auto animate-scale-in">
+    <div className="relative pointer-events-auto">
       {/* Badge above button */}
       {isPlayButton && !isPlusIcon && (
         <motion.div
