@@ -31,7 +31,7 @@ export default function PrivacyPolicy() {
               <h2 className="text-lg font-semibold mb-2">შესავალი</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 ჩვენ ვიცავთ თქვენს კონფიდენციალურობას. ეს პოლიტიკა აღწერს, როგორ ვაგროვებთ, 
-                ვიყენებთ და ვიცავთ თქვენს პერსონალურ მონაცემებს World Quizzes-ის გამოყენებისას.
+                ვიყენებთ და ვიცავთ თქვენს პერსონალურ მონაცემებს MyTrivia-ს გამოყენებისას.
               </p>
             </section>
 
@@ -166,11 +166,11 @@ export default function PrivacyPolicy() {
                 კითხვების შემთხვევაში დაგვიკავშირდით:
               </p>
               <a 
-                href="mailto:support@worldquizzes.app" 
+                href="mailto:support@mytrivia.io" 
                 className="inline-flex items-center gap-2 text-sm text-primary font-medium"
               >
                 <Mail className="w-4 h-4" />
-                support@worldquizzes.app
+                support@mytrivia.io
               </a>
             </section>
           </div>

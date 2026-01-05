@@ -45,7 +45,7 @@ interface SoundContextType {
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
-const SOUND_STORAGE_KEY = "worldquizzes_sound_settings";
+const SOUND_STORAGE_KEY = "mytrivia_sound_settings";
 
 interface SoundSettings {
   musicEnabled: boolean;

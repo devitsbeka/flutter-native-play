@@ -29,7 +29,7 @@ export default function PrivacyPolicyEN() {
             <section>
               <h2 className="text-lg font-semibold mb-2">1. Introduction</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                World Quizzes ("we", "our", "us") respects your privacy. This Privacy Policy explains 
+                MyTrivia ("we", "our", "us") respects your privacy. This Privacy Policy explains 
                 how we collect, use, disclose, and safeguard your information when you use our mobile 
                 application.
               </p>
@@ -195,11 +195,11 @@ export default function PrivacyPolicyEN() {
                 If you have questions about this Privacy Policy, please contact us:
               </p>
               <a 
-                href="mailto:support@worldquizzes.app" 
+                href="mailto:support@mytrivia.io" 
                 className="inline-flex items-center gap-2 text-sm text-primary font-medium"
               >
                 <Mail className="w-4 h-4" />
-                support@worldquizzes.app
+                support@mytrivia.io
               </a>
             </section>
           </div>

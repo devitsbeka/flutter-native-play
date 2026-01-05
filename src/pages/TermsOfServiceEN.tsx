@@ -29,7 +29,7 @@ export default function TermsOfServiceEN() {
             <section>
               <h2 className="text-lg font-semibold mb-2">1. Acceptance of Terms</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                By downloading, installing, or using World Quizzes ("App", "Service"), you agree to be bound 
+                By downloading, installing, or using MyTrivia ("App", "Service"), you agree to be bound 
                 by these Terms of Service. If you do not agree to these terms, please do not use the App.
               </p>
             </section>
@@ -134,7 +134,7 @@ export default function TermsOfServiceEN() {
             <section>
               <h2 className="text-lg font-semibold mb-2">6. Intellectual Property</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                All content, design, graphics, logos, and trademarks in World Quizzes are owned by us 
+                All content, design, graphics, logos, and trademarks in MyTrivia are owned by us 
                 or our licensors. You are granted a limited, non-exclusive, non-transferable license 
                 to use the App for personal, non-commercial purposes only.
               </p>
@@ -188,11 +188,11 @@ export default function TermsOfServiceEN() {
                 If you have any questions about these Terms, please contact us:
               </p>
               <a 
-                href="mailto:support@worldquizzes.app" 
+                href="mailto:support@mytrivia.io" 
                 className="inline-flex items-center gap-2 text-sm text-primary font-medium"
               >
                 <Mail className="w-4 h-4" />
-                support@worldquizzes.app
+                support@mytrivia.io
               </a>
             </section>
           </div>

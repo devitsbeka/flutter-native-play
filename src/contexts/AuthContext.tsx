@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Username-only signup - creates pseudo-email internally
   const signUpWithUsername = async (username: string, password: string) => {
-    const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@worldquizzes.local`;
+    const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@mytrivia.local`;
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Username-only sign in - converts to pseudo-email
   const signInWithUsername = async (username: string, password: string) => {
-    const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@worldquizzes.local`;
+    const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@mytrivia.local`;
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email: pseudoEmail,

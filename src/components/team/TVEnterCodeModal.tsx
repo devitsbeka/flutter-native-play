@@ -211,7 +211,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
               </ChunkyButton>
 
               <p className="text-sm text-muted-foreground text-center mt-4">
-                ჯერ გახსენი <span className="text-primary font-medium">worldquizzes.com/tv</span> შენს TV-ზე
+                ჯერ გახსენი <span className="text-primary font-medium">mytrivia.io/tv</span> შენს TV-ზე
               </p>
             </motion.div>
           )}

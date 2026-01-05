@@ -23,7 +23,7 @@ const helpItems = [
     icon: Mail,
     label: "ელფოსტა",
     sublabel: "support@worldquizzes.com",
-    action: () => window.open("mailto:support@worldquizzes.com", "_blank"),
+    action: () => window.open("mailto:support@mytrivia.io", "_blank"),
   },
   {
     icon: FileText,
