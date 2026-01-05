@@ -1,19 +1,14 @@
 import { motion } from "framer-motion";
 import { LEAGUES } from "@/hooks/useLeagueLeaderboard";
+import leagueTrophy from "@/assets/league-trophy.png";
 
-// League badge imports
-import leagueBronze from "@/assets/leagues/league-bronze.png";
-import leagueSilver from "@/assets/leagues/league-silver.png";
-import leagueGold from "@/assets/leagues/league-gold.png";
-import leagueDiamond from "@/assets/leagues/league-diamond.png";
-import leagueChampion from "@/assets/leagues/league-champion.png";
-
-export const LEAGUE_BADGES: Record<number, string> = {
-  1: leagueBronze,
-  2: leagueSilver,
-  3: leagueGold,
-  4: leagueDiamond,
-  5: leagueChampion,
+// CSS filter styles for each league tier color
+const LEAGUE_FILTERS: Record<number, string> = {
+  1: "sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.85)", // Bronze
+  2: "saturate(0) brightness(1.1) contrast(0.95)", // Silver (grayscale with brightness)
+  3: "sepia(1) saturate(5) hue-rotate(15deg) brightness(1.05)", // Gold
+  4: "sepia(1) saturate(3) hue-rotate(170deg) brightness(1.1)", // Diamond (cyan/blue)
+  5: "sepia(1) saturate(4) hue-rotate(250deg) brightness(1)", // Champion (purple)
 };
 
 interface LeagueBadgeRowProps {
@@ -56,15 +51,20 @@ export function LeagueBadgeRow({ currentTier, userTier, onSelectTier }: LeagueBa
               }}
             >
               <img
-                src={LEAGUE_BADGES[league.tier]}
+                src={leagueTrophy}
                 alt={league.name}
                 className={`w-full h-full object-contain transition-all duration-300 ${
                   isLocked 
-                    ? "grayscale opacity-40" 
+                    ? "opacity-40" 
                     : isActive 
                       ? "drop-shadow-lg" 
                       : "opacity-70"
                 }`}
+                style={{
+                  filter: isLocked 
+                    ? "grayscale(1) brightness(0.8)" 
+                    : LEAGUE_FILTERS[league.tier],
+                }}
               />
               
               {/* Selection indicator */}
