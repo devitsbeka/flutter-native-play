@@ -15,6 +15,7 @@ import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopPromoSection } from "@/components/shop/ShopPromoSection";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
+import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -342,6 +343,7 @@ export default function PowerUps() {
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
 
   const handlePurchase = async (item: ShopItem) => {
@@ -425,8 +427,8 @@ export default function PowerUps() {
       {/* Sticky Header */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
-        onBuyGemsClick={() => notify.info("ალმასების შეძენა მალე!", { icon: "💎" })}
-        onBuyCoinsClick={() => notify.info("მონეტების შეძენა მალე!", { icon: "🪙" })}
+        onBuyGemsClick={() => setShowExchangeModal(true)}
+        onBuyCoinsClick={() => setShowExchangeModal(true)}
       />
 
       {/* Scrollable Content - Section-based layout with scroll snap */}
@@ -470,6 +472,11 @@ export default function PowerUps() {
         onClose={() => setShowSuccess(false)}
         itemName={successItem.name}
         quantity={successItem.quantity}
+      />
+
+      <CurrencyExchangeModal
+        isOpen={showExchangeModal}
+        onClose={() => setShowExchangeModal(false)}
       />
 
       {/* Bottom Navigation */}
