@@ -42,11 +42,22 @@ export function RoomLobbyV2() {
   const [isStarting, setIsStarting] = useState(false);
   const [isStartingTV, setIsStartingTV] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
+  const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate unread count
+  const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
+  
+  // Mark messages as read when chat is opened
+  useEffect(() => {
+    if (showChat) {
+      setLastSeenMessageCount(messages.length);
+    }
+  }, [showChat, messages.length]);
 
   // Play sound when new participant joins
   useEffect(() => {
@@ -231,9 +242,9 @@ export function RoomLobbyV2() {
               whileTap={{ scale: 0.95 }}
             >
               <MessageCircle className={`w-4 h-4 ${showChat ? "text-primary-foreground" : "text-muted-foreground"}`} />
-              {messages.length > 0 && !showChat && (
+              {unreadMessageCount > 0 && !showChat && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {messages.length}
+                  {unreadMessageCount}
                 </span>
               )}
             </motion.button>
