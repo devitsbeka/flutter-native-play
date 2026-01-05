@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { QuizPlayerAvatar, QuizPlayerAvatarState } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
@@ -34,8 +35,6 @@ interface QuizGameScreenProps {
   onGameEnd?: (results: { winner: Player; scores: Record<string, number> }) => void;
   className?: string;
 }
-
-const georgianLabels = ["ა", "ბ", "გ", "დ"];
 
 const defaultQuestions: Question[] = [
   {
@@ -110,6 +109,16 @@ const QuizGameScreen = ({
   onGameEnd,
   className,
 }: QuizGameScreenProps) => {
+  const { t } = useLanguage();
+  
+  // Answer labels from translations
+  const answerLabels = useMemo(() => [
+    t("game.labelA"),
+    t("game.labelB"),
+    t("game.labelC"),
+    t("game.labelD"),
+  ], [t]);
+  
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(10);
   const [answerStates, setAnswerStates] = useState<QuizAnswerState[]>(["default", "default", "default", "default"]);
@@ -369,9 +378,9 @@ const QuizGameScreen = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <QuizAnswerButton
+              <QuizAnswerButton
                   state={answerStates[index]}
-                  label={georgianLabels[index]}
+                  label={answerLabels[index]}
                   text={answer}
                   onClick={() => handleAnswer(index)}
                   disabled={answerStates[index] === "disabled" || isAnswering}
@@ -410,7 +419,7 @@ const QuizGameScreen = ({
               className="bg-white rounded-3xl p-8 max-w-sm w-full mx-6 text-center"
             >
               <h2 className="text-2xl font-bold text-[#514F7F] mb-4">
-                {playerScores[0] > playerScores[1] ? "🎉 You Win!" : playerScores[0] < playerScores[1] ? "😢 You Lose" : "🤝 It's a Tie!"}
+                {playerScores[0] > playerScores[1] ? t("game.youWin") : playerScores[0] < playerScores[1] ? t("game.youLose") : t("game.itsTie")}
               </h2>
               <div className="flex justify-center gap-8 mb-6">
                 <div className="text-center">
@@ -420,7 +429,7 @@ const QuizGameScreen = ({
                     position="left"
                     state={playerScores[0] >= playerScores[1] ? "correct" : "wrong"}
                   />
-                  <p className="text-sm text-[#514F7F] mt-2">You</p>
+                  <p className="text-sm text-[#514F7F] mt-2">{t("game.you")}</p>
                 </div>
                 <div className="text-center">
                   <QuizPlayerAvatar
@@ -429,14 +438,14 @@ const QuizGameScreen = ({
                     position="right"
                     state={playerScores[1] >= playerScores[0] ? "correct" : "wrong"}
                   />
-                  <p className="text-sm text-[#514F7F] mt-2">Opponent</p>
+                  <p className="text-sm text-[#514F7F] mt-2">{t("game.opponent")}</p>
                 </div>
               </div>
               <button
                 onClick={resetGame}
                 className="w-full py-3 bg-[#7E7ADB] text-white font-bold rounded-xl hover:bg-[#6A66C4] transition-colors"
               >
-                Play Again
+                {t("game.playAgain")}
               </button>
             </motion.div>
           </motion.div>
