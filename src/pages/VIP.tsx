@@ -116,15 +116,6 @@ export default function VIP() {
             <p className="text-white/80 text-sm mb-4">
               განბლოკე ყველა ექსკლუზიური ფუნქცია
             </p>
-            <div className="flex items-center justify-center gap-1 mb-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star
-                  key={i}
-                  className="w-5 h-5 fill-white text-white"
-                />
-              ))}
-            </div>
-            <p className="text-white/70 text-xs">4.9 (2,500+ მომხმარებელი)</p>
           </div>
         </motion.div>
 
@@ -249,6 +240,7 @@ export default function VIP() {
 
         {/* Apple Required Subscription Terms */}
         <div className="mt-6 space-y-3 px-2">
+          {/* Georgian Terms */}
           <p className="text-xs text-slate-600 leading-relaxed">
             <strong>ავტომატური განახლება:</strong> გამოწერა ავტომატურად განახლდება პერიოდის 
             ბოლოს, თუ გაუქმება არ მოხდა მინიმუმ 24 საათით ადრე.
@@ -261,6 +253,20 @@ export default function VIP() {
             <strong>გაუქმება:</strong> გამოწერის გაუქმება შეგიძლიათ App Store-ის პარამეტრებში 
             ნებისმიერ დროს. მიმდინარე პერიოდის თანხა არ დაბრუნდება.
           </p>
+
+          {/* English Terms (Required by Apple) */}
+          <div className="border-t border-slate-200 pt-3 mt-3">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>Auto-renewal:</strong> Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>Payment:</strong> Payment will be charged to your iTunes/Apple ID account at confirmation of purchase.
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              <strong>Cancellation:</strong> You can manage and cancel your subscription in your App Store account settings. No refund for the current period.
+            </p>
+          </div>
+
           <div className="flex items-center justify-center gap-4 pt-2">
             <button 
               onClick={() => navigate("/privacy-policy")}
