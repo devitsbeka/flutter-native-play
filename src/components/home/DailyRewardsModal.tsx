@@ -10,6 +10,7 @@ import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DailyRewardsModalProps {
   isOpen: boolean;
@@ -53,14 +54,14 @@ const TimerBadge = ({ timeLeft }: { timeLeft: string }) => (
 );
 
 // Streak badge component
-const StreakBadge = ({ streak }: { streak: number }) => (
+const StreakBadge = ({ streak, t }: { streak: number; t: (key: string, params?: Record<string, string | number>) => string }) => (
   <div className="flex items-center justify-center gap-2 mb-4">
     <div 
       className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-full px-4 py-2 flex items-center gap-2"
       style={{ boxShadow: "0 3px 0 #D97706" }}
     >
       <Flame className="w-5 h-5 text-white" />
-      <span className="text-white font-bold text-lg">{streak} დღე</span>
+      <span className="text-white font-bold text-lg">{streak} {t("missions.days")}</span>
     </div>
   </div>
 );
@@ -73,6 +74,7 @@ const DayRewardCard = ({
   claimedToday,
   canClaim,
   onClaim,
+  t,
 }: {
   reward: (typeof dailyRewards)[0];
   index: number;
@@ -80,6 +82,7 @@ const DayRewardCard = ({
   claimedToday: boolean;
   canClaim: boolean;
   onClaim: () => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) => {
   const isToday = index === currentDay;
   const isClaimed = index < currentDay || (index === currentDay && claimedToday);
@@ -119,7 +122,7 @@ const DayRewardCard = ({
           isAvailable ? "text-white" : isClaimed ? "text-emerald-700" : "text-gray-500"
         }`}
       >
-        დღე {reward.day}
+        {t("dailyRewards.day", { day: reward.day })}
       </span>
 
       {/* Reward content */}
@@ -160,7 +163,7 @@ const DayRewardCard = ({
             transition={{ repeat: Infinity, duration: 1.5 }}
             className="text-xs font-bold text-amber-900 bg-white/30 rounded-full px-2 py-0.5"
           >
-            აიღე!
+            {t("dailyRewards.claim")}
           </motion.div>
         )}
       </div>
@@ -181,6 +184,7 @@ const DayRewardCard = ({
 };
 
 export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: DailyRewardsModalProps) {
+  const { t } = useLanguage();
   const { addCurrency } = useCurrency();
   const { playSound, vibrate } = useSound();
   const { canClaimDaily, dailyTimeLeft, refreshTimers } = useRewardTimers();
@@ -250,14 +254,14 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
         isOpen={isOpen}
         onClose={onClose}
         icon={headerIcon}
-        title="დღიური ჯილდოები"
-        subtitle="შემოდი ყოველდღე და აიღე ჯილდოები!"
+        title={t("dailyRewards.title")}
+        subtitle={t("dailyRewards.subtitle")}
         showSparkles
         hideFooter
       >
         {/* Timer or Streak Badge */}
         <div className="flex flex-col items-center gap-2 mb-4">
-          <StreakBadge streak={currentStreak} />
+          <StreakBadge streak={currentStreak} t={t} />
           {!canClaimDaily && (
             <TimerBadge timeLeft={dailyTimeLeft} />
           )}
@@ -278,13 +282,14 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
               claimedToday={claimedToday}
               canClaim={canClaimDaily}
               onClaim={handleClaim}
+              t={t}
             />
           ))}
         </div>
 
         {/* Hint */}
         <p className="text-center text-muted-foreground text-xs mt-3">
-          ← გადაფურცლე ყველა დღის სანახავად →
+          {t("missions.swipeHint")}
         </p>
       </GameModal>
 

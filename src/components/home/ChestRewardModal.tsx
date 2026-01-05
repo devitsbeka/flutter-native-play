@@ -12,6 +12,7 @@ import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChestRewardModalProps {
   isOpen: boolean;
@@ -19,17 +20,18 @@ interface ChestRewardModalProps {
   onClaim: (newPoints?: number) => void;
 }
 
-const rewards = [
-  { icon: coinIcon, isImage: true, label: `${REWARDS.CHEST_COINS} მონეტა`, type: "coins", value: REWARDS.CHEST_COINS, gradient: "from-amber-400 to-yellow-500" },
-  { icon: gemIcon, isImage: true, label: `${REWARDS.CHEST_GEMS} ალმასი`, type: "gems", value: REWARDS.CHEST_GEMS, gradient: "from-purple-400 to-pink-500" },
-  { icon: "⭐", isImage: false, label: `${REWARDS.CHEST_XP} XP`, type: "xp", value: REWARDS.CHEST_XP, gradient: "from-blue-400 to-cyan-500" },
+// Rewards config - labels will be translated in component
+const rewardsConfig = [
+  { icon: coinIcon, isImage: true, type: "coins", value: REWARDS.CHEST_COINS, gradient: "from-amber-400 to-yellow-500" },
+  { icon: gemIcon, isImage: true, type: "gems", value: REWARDS.CHEST_GEMS, gradient: "from-purple-400 to-pink-500" },
+  { icon: "⭐", isImage: false, type: "xp", value: REWARDS.CHEST_XP, gradient: "from-blue-400 to-cyan-500" },
 ];
 
 // Timer display component - clean countdown only
-const ChestTimer = ({ timeLeft }: { timeLeft: string }) => (
+const ChestTimer = ({ timeLeft, t }: { timeLeft: string; t: (key: string) => string }) => (
   <div className="flex flex-col items-center gap-4 py-6">
     <div className="text-center">
-      <p className="text-sm text-muted-foreground mb-3">მომდევნო განძი</p>
+      <p className="text-sm text-muted-foreground mb-3">{t("chest.nextChest")}</p>
       <div 
         className="px-8 py-4 rounded-2xl inline-flex items-center gap-2"
         style={{
@@ -44,6 +46,7 @@ const ChestTimer = ({ timeLeft }: { timeLeft: string }) => (
 );
 
 export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalProps) {
+  const { t } = useLanguage();
   const { recordChestReward } = useRewards();
   const { canClaimChest, chestTimeLeft, refreshTimers } = useRewardTimers();
   const { claimChestReward } = useDailyRewardsClaim();
@@ -52,6 +55,14 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
   const [isClaiming, setIsClaiming] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
+
+  // Create rewards with translated labels
+  const rewards = rewardsConfig.map(r => ({
+    ...r,
+    label: r.type === "xp" 
+      ? `${r.value} XP` 
+      : `${r.value} ${t(`chest.${r.type === "coins" ? "coins" : "gems"}`)}`
+  }));
 
   useEffect(() => {
     if (isOpen && canClaimChest) {
@@ -94,7 +105,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     );
 
     if (result.success) {
-      notify.success("ჯილდოები მიღებულია!", { icon: "🎉" });
+      notify.success(t("chest.rewardsReceived"), { icon: "🎉" });
     }
 
     // Refresh timers
@@ -121,8 +132,8 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
       onClose={onClose}
       variant="gold"
       icon={chestIcon}
-      title={canClaimChest ? "განძი გახსნილია!" : "განძი"}
-      subtitle={canClaimChest ? "გილოცავ! მიიღე შენი ჯილდოები" : "მალე მზად იქნება!"}
+      title={canClaimChest ? t("chest.titleOpened") : t("chest.title")}
+      subtitle={canClaimChest ? t("chest.subtitle") : t("chest.subtitleWait")}
       showSparkles={canClaimChest}
       showStars={canClaimChest}
     >
@@ -161,14 +172,14 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
           </div>
 
           <GameModalFooter
-            primaryLabel={isClaiming ? "იტვირთება..." : "მიღება"}
+            primaryLabel={isClaiming ? t("chest.loading") : t("chest.claim")}
             onPrimary={handleClaim}
             primaryIcon={<Gift className="w-5 h-5" />}
             isLoading={isClaiming}
           />
         </>
       ) : (
-        <ChestTimer timeLeft={chestTimeLeft} />
+        <ChestTimer timeLeft={chestTimeLeft} t={t} />
       )}
 
       {/* Flying Currency Animations */}
