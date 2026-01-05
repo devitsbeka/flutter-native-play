@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Clock } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
-import chestTabletIcon from "@/assets/icons/icon-chest-tablet.png";
+import chestTabletIcon from "@/assets/icons/icon-chest-box.png";
 import confetti from "canvas-confetti";
 import { useRewards } from "@/hooks/useRewards";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
