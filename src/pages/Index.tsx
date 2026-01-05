@@ -154,7 +154,7 @@ export default function Index() {
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
-  const { playsRemaining, maxPlays, canPlay, isVip, recordPlay, watchAdForPlays } = useDailyPlays();
+  const { playsRemaining, maxPlays, canPlay, isVip, vipLoading, recordPlay, watchAdForPlays } = useDailyPlays();
   const { unreadCount } = useNotifications();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   
@@ -655,6 +655,7 @@ export default function Index() {
         maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
         canPlay={user ? canPlay : guestPlaysRemaining > 0}
         isVip={isVip}
+        vipLoading={vipLoading}
         onWatchAdClick={() => setShowWatchAdModal(true)}
         isGuest={!user}
       />

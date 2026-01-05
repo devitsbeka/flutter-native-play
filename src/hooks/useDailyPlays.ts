@@ -17,7 +17,7 @@ interface DailyPlaysData {
 
 export function useDailyPlays() {
   const { user } = useAuth();
-  const { isVip } = useVipStatus();
+  const { isVip, loading: vipLoading } = useVipStatus();
   const [dailyPlays, setDailyPlays] = useState<DailyPlaysData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -154,6 +154,7 @@ export function useDailyPlays() {
     canPlay,
     isVip,
     loading,
+    vipLoading,
     recordPlay,
     watchAdForPlays,
     getTimeUntilReset,
