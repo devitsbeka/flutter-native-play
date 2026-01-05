@@ -1,42 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useRef, useState, useCallback } from "react";
 
-// Soft rounded rectangle path (consistent shape)
+// Soft rounded rectangle path
 const roundedRectPath = "M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 C0.94,0.82 0.82,0.94 0.5,0.94 C0.18,0.94 0.06,0.82 0.06,0.5 C0.06,0.18 0.18,0.06 0.5,0.06";
 const borderRectPath = "M0.5,0.04 C0.84,0.04 0.96,0.16 0.96,0.5 C0.96,0.84 0.84,0.96 0.5,0.96 C0.16,0.96 0.04,0.84 0.04,0.5 C0.04,0.16 0.16,0.04 0.5,0.04";
 
 interface InteractiveBlobVideoProps {
-  imageSrc: string;
-  videoSrc?: string;
+  videoSrc: string;
   isLocked: boolean;
-  showCategorySlot: boolean;
 }
 
-export function InteractiveBlobVideo({ imageSrc, videoSrc, isLocked, showCategorySlot }: InteractiveBlobVideoProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isPoking, setIsPoking] = useState(false);
-  const [flipKey, setFlipKey] = useState(0);
-
-  // Handle touch/click interaction - trigger a flip
-  const handlePointerDown = useCallback(() => {
-    if (!isLocked) {
-      setFlipKey(prev => prev + 1);
-    }
-    setIsPoking(true);
-  }, [isLocked]);
-
-  const handlePointerUp = useCallback(() => {
-    setIsPoking(false);
-  }, []);
-
+export function InteractiveBlobVideo({ videoSrc, isLocked }: InteractiveBlobVideoProps) {
   return (
     <div 
-      ref={containerRef}
-      className="relative w-[300px] h-[300px] cursor-pointer select-none touch-none"
-      style={{ perspective: "1000px" }}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
+      className="relative w-[280px] h-[280px] select-none"
     >
       {/* SVG Definitions */}
       <svg className="absolute w-0 h-0">
@@ -50,14 +26,8 @@ export function InteractiveBlobVideo({ imageSrc, videoSrc, isLocked, showCategor
         </defs>
       </svg>
 
-      {/* Main container with flip animation */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          scale: isPoking ? 0.95 : 1,
-        }}
-        transition={{ duration: 0.15 }}
-      >
+      {/* Main container */}
+      <div className="absolute inset-0">
         {/* Pastel yellow border */}
         <div
           className="absolute inset-0"
@@ -65,69 +35,44 @@ export function InteractiveBlobVideo({ imageSrc, videoSrc, isLocked, showCategor
             clipPath: "url(#borderBlobClip)",
             background: isLocked 
               ? "linear-gradient(135deg, hsl(48 70% 80%), hsl(42 65% 75%), hsl(38 60% 78%), hsl(48 70% 80%))"
-              : "linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.7))",
+              : "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3), rgba(255,255,255,0.5))",
           }}
         />
 
-        {/* Video container with flip */}
+        {/* Video container with flip animation */}
         <div
-          className="absolute inset-[8px]"
+          className="absolute inset-[8px] overflow-hidden"
           style={{
             clipPath: "url(#mainBlobClip)",
           }}
         >
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${imageSrc}-${flipKey}`}
+              key={videoSrc}
               className="w-full h-full"
               initial={{ rotateY: 90, opacity: 0 }}
               animate={{ rotateY: 0, opacity: 1 }}
               exit={{ rotateY: -90, opacity: 0 }}
-              transition={{ 
-                duration: 0.3, 
-                ease: [0.4, 0, 0.2, 1]
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              style={{ 
+                transformStyle: "preserve-3d",
+                perspective: "1000px"
               }}
-              style={{ transformStyle: "preserve-3d" }}
             >
-              {isLocked && videoSrc ? (
-                <video
-                  src={videoSrc}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  style={{ transform: "scale(1.3)" }}
-                />
-              ) : (
-                <img
-                  src={imageSrc}
-                  alt="Category"
-                  className="w-full h-full object-cover"
-                  style={{ transform: "scale(1.3)" }}
-                />
-              )}
+              <video
+                key={videoSrc}
+                src={videoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                style={{ transform: "scale(1.3)" }}
+              />
             </motion.div>
           </AnimatePresence>
         </div>
-
-        {/* Touch ripple effect */}
-        <AnimatePresence>
-          {isPoking && (
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                clipPath: "url(#mainBlobClip)",
-                background: "radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)",
-              }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1.1 }}
-              exit={{ opacity: 0, scale: 1.2 }}
-              transition={{ duration: 0.3 }}
-            />
-          )}
-        </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* Floating particles when locked */}
       {isLocked && (
@@ -159,18 +104,6 @@ export function InteractiveBlobVideo({ imageSrc, videoSrc, isLocked, showCategor
             />
           ))}
         </>
-      )}
-
-      {/* Hint text */}
-      {!isLocked && showCategorySlot && (
-        <motion.p
-          className="absolute -bottom-1 left-0 right-0 text-center text-white/50 text-xs"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-        >
-          შეეხე 👆
-        </motion.p>
       )}
     </div>
   );

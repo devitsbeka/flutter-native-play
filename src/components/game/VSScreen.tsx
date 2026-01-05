@@ -6,12 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
-import { extractFirstFrame, getCachedFrame } from "@/utils/videoFrameExtractor";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -77,11 +75,8 @@ export function VSScreen() {
   // Category slot state
   const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; imageUrl: string} | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
   const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Frame extraction state
-  const [categoryFrames, setCategoryFrames] = useState<Map<string, string>>(new Map());
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -89,36 +84,15 @@ export function VSScreen() {
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
-  // Current category for display during slot - use extracted frame from video
+  // Current category video URL
   const currentCategory = categoryPool[currentCategoryIndex];
-  const getFrameUrl = (catId: string): string => {
-    const videoUrl = CATEGORY_VIDEOS[catId];
-    if (videoUrl && categoryFrames.has(videoUrl)) {
-      return categoryFrames.get(videoUrl)!;
-    }
-    return "/placeholder.svg";
-  };
-  const currentImageUrl = currentCategory ? getFrameUrl(currentCategory.id) : "/placeholder.svg";
+  const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "") : "";
 
-  // Initialize category pool and extract video frames when categories load
+  // Initialize category pool when categories load
   useEffect(() => {
     if (categories.length > 0 && categoryPool.length === 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      const pool = shuffled.slice(0, Math.min(8, shuffled.length));
-      setCategoryPool(pool);
-      
-      // Extract first frames from all category videos
-      pool.forEach(async (cat) => {
-        const videoUrl = CATEGORY_VIDEOS[cat.id];
-        if (videoUrl) {
-          try {
-            const frame = await extractFirstFrame(videoUrl);
-            setCategoryFrames(prev => new Map(prev).set(videoUrl, frame));
-          } catch (err) {
-            console.warn(`Failed to extract frame for ${cat.id}:`, err);
-          }
-        }
-      });
+      setCategoryPool(shuffled.slice(0, Math.min(8, shuffled.length)));
     }
   }, [categories, categoryPool.length]);
 
@@ -195,9 +169,8 @@ export function VSScreen() {
         const winnerIndex = Math.floor(Math.random() * categoryPool.length);
         setCurrentCategoryIndex(winnerIndex);
         const winner = categoryPool[winnerIndex];
-        const videoUrl = CATEGORY_VIDEOS[winner.id];
-        const imageUrl = videoUrl && categoryFrames.has(videoUrl) ? categoryFrames.get(videoUrl)! : "/placeholder.svg";
-        setSelectedCategory({ id: winner.id, name: winner.name, imageUrl });
+        const videoUrl = CATEGORY_VIDEOS[winner.id] || "";
+        setSelectedCategory({ id: winner.id, name: winner.name, videoUrl });
         setStage("category-found");
       }
     };
@@ -398,10 +371,8 @@ export function VSScreen() {
           >
             {/* Interactive Multi-Blob Video Container */}
             <InteractiveBlobVideo
-              imageSrc={showCategorySlot ? (selectedCategory?.imageUrl || currentImageUrl) : "/placeholder.svg"}
-              videoSrc={isCategoryLocked && selectedCategory ? CATEGORY_VIDEOS[selectedCategory.id] : undefined}
+              videoSrc={selectedCategory?.videoUrl || currentVideoUrl}
               isLocked={isCategoryLocked}
-              showCategorySlot={showCategorySlot}
             />
             
             {/* Category Name */}
