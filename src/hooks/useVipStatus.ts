@@ -34,7 +34,7 @@ export function useVipStatus() {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState<VipSubscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isVip, setIsVip] = useState(false);
+  const [isVip, setIsVip] = useState(true); // Optimistically assume VIP, verify after
 
   // Fetch VIP status
   useEffect(() => {
