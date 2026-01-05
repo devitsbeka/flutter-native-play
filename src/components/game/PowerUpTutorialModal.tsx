@@ -121,16 +121,20 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
         <ChunkyButton
           onClick={handlePrev}
           variant="secondary"
-          className="flex-1"
+          size="compact"
+          className="flex-1 whitespace-nowrap"
         >
-          <ChevronLeft className="w-5 h-5 mr-1" />
-          უკან
+          <span className="flex items-center gap-1">
+            <ChevronLeft className="w-4 h-4" />
+            უკან
+          </span>
         </ChunkyButton>
       )}
       
       <ChunkyButton
         onClick={handleNext}
         variant="success"
+        size="compact"
         className="flex-1 whitespace-nowrap"
       >
         {isLastSlide ? (
@@ -138,7 +142,7 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
         ) : (
           <span className="flex items-center gap-1">
             შემდეგი
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </span>
         )}
       </ChunkyButton>
