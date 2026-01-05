@@ -11,7 +11,6 @@ export type OnboardingStep =
   | "avatar-camera"
   | "avatar-generating"
   | "avatar-preview"
-  | "walkthrough"
   | "complete";
 
 interface OnboardingContextType {
@@ -33,7 +32,6 @@ interface OnboardingContextType {
   // Flow control
   startOnboarding: () => void;
   skipToAvatarCreation: () => void;
-  skipWalkthrough: () => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
   
@@ -41,18 +39,11 @@ interface OnboardingContextType {
   isOnboarding: boolean;
   hasCompletedOnboarding: boolean;
   needsAvatar: boolean;
-  needsWalkthrough: boolean;
-  
-  // Walkthrough
-  walkthroughStep: number;
-  setWalkthroughStep: (step: number) => void;
-  totalWalkthroughSteps: number;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 const ONBOARDING_STORAGE_KEY = "mytrivia_onboarding_completed";
-const WALKTHROUGH_STORAGE_KEY = "mytrivia_walkthrough_completed";
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
@@ -62,9 +53,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [password, setPassword] = useState("");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [generatedAvatar, setGeneratedAvatar] = useState<string | null>(null);
-  const [walkthroughStep, setWalkthroughStep] = useState(0);
-  
-  const totalWalkthroughSteps = 6;
   
   // Check localStorage for completion status
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
@@ -74,17 +62,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     return false;
   });
   
-  const [hasCompletedWalkthrough, setHasCompletedWalkthrough] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(WALKTHROUGH_STORAGE_KEY) === "true";
-    }
-    return false;
-  });
-  
   // Derived states
   const isOnboarding = step !== "idle" && step !== "complete";
   const needsAvatar = !!user && !profile?.avatar_url;
-  const needsWalkthrough = !!user && !!profile?.avatar_url && !hasCompletedWalkthrough;
   
   // Start onboarding for new users
   const startOnboarding = useCallback(() => {
@@ -102,20 +82,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setGeneratedAvatar(null);
   }, []);
   
-  // Skip walkthrough
-  const skipWalkthrough = useCallback(() => {
-    setStep("complete");
-    setHasCompletedWalkthrough(true);
-    localStorage.setItem(WALKTHROUGH_STORAGE_KEY, "true");
-  }, []);
-  
   // Complete the entire onboarding
   const completeOnboarding = useCallback(() => {
     setStep("complete");
     setHasCompletedOnboarding(true);
-    setHasCompletedWalkthrough(true);
     localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
-    localStorage.setItem(WALKTHROUGH_STORAGE_KEY, "true");
   }, []);
   
   // Reset onboarding (for testing/debugging)
@@ -125,11 +96,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setPassword("");
     setUploadedImage(null);
     setGeneratedAvatar(null);
-    setWalkthroughStep(0);
     setHasCompletedOnboarding(false);
-    setHasCompletedWalkthrough(false);
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
-    localStorage.removeItem(WALKTHROUGH_STORAGE_KEY);
   }, []);
   
   // Auto-detect what step to show based on user state
@@ -140,12 +108,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     if (user && profile && !profile.avatar_url && hasCompletedOnboarding) {
       // Don't auto-trigger, let user click play
     }
-    
-    // User logged in, has avatar, but hasn't seen walkthrough
-    if (user && profile?.avatar_url && !hasCompletedWalkthrough) {
-      // Could auto-trigger walkthrough here, but we'll let Index handle it
-    }
-  }, [user, profile, step, hasCompletedOnboarding, hasCompletedWalkthrough]);
+  }, [user, profile, step, hasCompletedOnboarding]);
   
   return (
     <OnboardingContext.Provider
@@ -162,16 +125,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         setGeneratedAvatar,
         startOnboarding,
         skipToAvatarCreation,
-        skipWalkthrough,
         completeOnboarding,
         resetOnboarding,
         isOnboarding,
         hasCompletedOnboarding,
         needsAvatar,
-        needsWalkthrough,
-        walkthroughStep,
-        setWalkthroughStep,
-        totalWalkthroughSteps,
       }}
     >
       {children}
