@@ -5,6 +5,7 @@ import { useCategories } from './useCategories';
 export interface QuestionForAssignment {
   id: string;
   question_text: string;
+  correct_answer?: string;
   icon_slug: string | null;
   category_id: string;
   category_name?: string;
@@ -62,7 +63,7 @@ export function useAdminIconAssignment() {
     
     let query = supabase
       .from('questions')
-      .select('id, question_text, icon_slug, category_id')
+      .select('id, question_text, correct_answer, icon_slug, category_id')
       .eq('is_active', true)
       .order('icon_slug', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })

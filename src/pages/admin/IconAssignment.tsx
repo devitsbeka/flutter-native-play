@@ -19,6 +19,7 @@ import {
 import { BrokenIconsModal } from '@/components/admin/BrokenIconsModal';
 import { IconAssignmentHistory } from '@/components/admin/IconAssignmentHistory';
 import { IconUploadPanel } from '@/components/admin/IconUploadPanel';
+import { IconSuggestionsPanel } from '@/components/admin/IconSuggestionsPanel';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
@@ -987,6 +988,20 @@ export default function IconAssignment() {
                 <Label htmlFor="auto-advance" className="text-xs">ავტო-გადასვლა შემდეგ კითხვაზე</Label>
               </div>
             </div>
+          )}
+
+          {/* Icon Suggestions Panel - shows keywords and suggested icons */}
+          {selectedQuestion && selectedQuestionIds.size === 0 && (
+            <IconSuggestionsPanel
+              question={{
+                id: selectedQuestion.id,
+                question_text: selectedQuestion.question_text,
+                correct_answer: selectedQuestion.correct_answer,
+                icon_slug: selectedQuestion.icon_slug
+              }}
+              onAssignIcon={handleAssignIcon}
+              getIconUrl={getIconUrl}
+            />
           )}
 
           {/* Icon Search */}

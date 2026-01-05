@@ -84,3 +84,6 @@ verify_jwt = false
 
 [functions.export-icon-library]
 verify_jwt = false
+
+[functions.suggest-icons]
+verify_jwt = false
