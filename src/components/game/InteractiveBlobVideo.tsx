@@ -137,7 +137,7 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
           style={{
             clipPath: "url(#borderBlobClip)",
             background: isLocked 
-              ? "linear-gradient(135deg, #FFD700, #FF8C00, #FF6347, #FFD700)"
+              ? "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success-foreground)), hsl(var(--success)))"
               : "linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4), rgba(255,255,255,0.6))",
           }}
           animate={{
@@ -203,7 +203,7 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
               style={{
                 width: 6 + (i % 3) * 4,
                 height: 6 + (i % 3) * 4,
-                background: i % 2 === 0 ? "#FFD700" : "#FF8C00",
+                background: "hsl(var(--success))",
                 left: `${15 + i * 10}%`,
                 top: `${20 + (i % 4) * 15}%`,
               }}
