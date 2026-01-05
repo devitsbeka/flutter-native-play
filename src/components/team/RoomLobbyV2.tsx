@@ -5,6 +5,7 @@ import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Sen
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ export function RoomLobbyV2() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { playSound } = useSound();
+  const { t } = useLanguage();
   const { 
     currentRoom, 
     participants, 
@@ -68,7 +70,7 @@ export function RoomLobbyV2() {
       const newParticipants = currentIds.filter(id => !prevIds.includes(id));
       if (newParticipants.length > 0 && newParticipants[0] !== user?.id) {
         playSound("room-join");
-        toast.success("ახალი მოთამაშე შემოუერთდა!");
+        toast.success(t("team.newPlayerJoined"));
       }
     }
     
@@ -105,10 +107,10 @@ export function RoomLobbyV2() {
       const link = getShareLink(currentRoom.room_code);
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast.success("ლინკი დაკოპირდა!");
+      toast.success(t("team.linkCopied"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("კოპირება ვერ მოხერხდა");
+      toast.error(t("team.copyFailed"));
     }
   };
 
@@ -127,11 +129,11 @@ export function RoomLobbyV2() {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(link);
-        toast.success("ლინკი დაკოპირდა!");
+        toast.success(t("team.linkCopied"));
       }
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
-        toast.error("გაზიარება ვერ მოხერხდა");
+        toast.error(t("team.shareFailed"));
       }
     }
   };
@@ -151,7 +153,7 @@ export function RoomLobbyV2() {
   };
 
   const handleDeleteRoom = async () => {
-    const confirmed = window.confirm("დარწმუნებული ხარ, რომ გინდა ამ ოთახის წაშლა?");
+    const confirmed = window.confirm(t("team.deleteRoomConfirm"));
     if (confirmed) {
       await deleteRoom();
       navigate("/team");
@@ -188,11 +190,11 @@ export function RoomLobbyV2() {
         .update({ room_name: editedName.trim() })
         .eq("id", currentRoom.id);
       
-      toast.success("სახელი განახლდა!");
+      toast.success(t("team.nameUpdated"));
       setIsEditingName(false);
     } catch (error) {
       console.error("Error updating room name:", error);
-      toast.error("სახელის განახლება ვერ მოხერხდა");
+      toast.error(t("team.nameUpdateFailed"));
     }
   };
 
@@ -344,7 +346,7 @@ export function RoomLobbyV2() {
             onClick={handleCopyLink}
             icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
           >
-            ლინკის კოპირება
+            {t("team.copyLink")}
           </ChunkyButton>
           
           <ChunkyButton
@@ -353,7 +355,7 @@ export function RoomLobbyV2() {
             onClick={handleShare}
             icon={<Share2 className="w-4 h-4" />}
           >
-            გაზიარება
+            {t("team.share")}
           </ChunkyButton>
         </motion.div>
 
@@ -418,9 +420,9 @@ export function RoomLobbyV2() {
 
                 {/* Messages area - scrollable */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {messages.length === 0 ? (
+                {messages.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">
-                      ჯერ შეტყობინებები არ არის
+                      {t("team.noMessagesYet")}
                     </p>
                   ) : (
                     messages.map((msg) => (
@@ -522,7 +524,7 @@ export function RoomLobbyV2() {
                 transition={{ duration: 2, repeat: Infinity }}
                 className="text-muted-foreground"
               >
-                ველოდებით ჰოსტს თამაშის დასაწყებად...
+                {t("team.waitingForHost")}
               </motion.div>
             </div>
           )}
@@ -534,7 +536,7 @@ export function RoomLobbyV2() {
             className="w-full"
             onClick={handleLeaveConfirm}
           >
-            ოთახის დატოვება
+            {t("team.leaveRoom")}
           </ChunkyButton>
         </div>
       </div>
@@ -554,9 +556,9 @@ export function RoomLobbyV2() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-card rounded-2xl p-6 max-w-sm w-full shadow-xl"
             >
-              <h3 className="text-lg font-bold text-foreground mb-2">დატოვება?</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">{t("team.leaveConfirmTitle")}</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                შეგიძლია გახვიდე და მოგვიანებით დაბრუნდე, ან სამუდამოდ დატოვო ოთახი.
+                {t("team.leaveConfirmMessage")}
               </p>
               <div className="space-y-2">
                 <ChunkyButton
@@ -565,7 +567,7 @@ export function RoomLobbyV2() {
                   className="w-full"
                   onClick={handleExitRoom}
                 >
-                  გასვლა (დარჩენა ოთახში)
+                  {t("team.exitKeepRoom")}
                 </ChunkyButton>
                 <ChunkyButton
                   variant="danger"
@@ -573,13 +575,13 @@ export function RoomLobbyV2() {
                   className="w-full"
                   onClick={handleLeavePermanently}
                 >
-                  სამუდამოდ დატოვება
+                  {t("team.leavePermanently")}
                 </ChunkyButton>
                 <button
                   onClick={() => setShowLeaveConfirm(false)}
                   className="w-full py-2 text-muted-foreground text-sm hover:text-foreground"
                 >
-                  გაუქმება
+                  {t("common.cancel")}
                 </button>
               </div>
             </motion.div>

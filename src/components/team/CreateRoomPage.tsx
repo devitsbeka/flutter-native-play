@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ interface CreateRoomPageProps {
 
 export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { createRoom, loading, currentRoom } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation } = useGameInvitations();
@@ -143,26 +145,26 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-xl font-display text-foreground">ახალი ოთახი</h1>
+        <h1 className="text-xl font-display text-foreground">{t("team.newRoom")}</h1>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {/* Room Name Input */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-2">{t("team.roomName")}</h2>
           <div className="relative">
             <Input
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              placeholder="შეიყვანეთ ოთახის სახელი"
+              placeholder={t("team.enterRoomName")}
               className="pr-10 bg-muted/50 border-border/50 text-foreground"
               maxLength={30}
             />
             <button
               onClick={() => setRoomName(generateRoomName())}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-muted transition-colors"
-              title="შემთხვევითი სახელი"
+              title={t("team.randomName")}
             >
               <Shuffle className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -171,7 +173,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
 
         {/* Category Selection */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">კატეგორია</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-3">{t("team.category")}</h2>
           
           {loadingCategories ? (
             <div className="flex items-center justify-center py-12">
@@ -205,7 +207,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   {/* Category Name - bottom left, no emoji */}
                   <div className="absolute bottom-3 left-3 right-3">
                     <span className="text-sm font-bold text-foreground leading-tight drop-shadow-sm">
-                      შემთხვევითი
+                      {t("team.random")}
                     </span>
                   </div>
                   
@@ -281,7 +283,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   whileTap={{ scale: 0.99 }}
                 >
                   <span className="text-sm font-medium">
-                    {showAllCategories ? "ნაკლების ჩვენება" : "მეტის ჩვენება"}
+                    {showAllCategories ? t("team.showLess") : t("team.showMore")}
                   </span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
                 </motion.button>
@@ -293,10 +295,10 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         {/* Friend Invitation Section */}
         {acceptedFriends.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3">
               <Users className="w-4 h-4 text-muted-foreground" />
               <h2 className="text-sm font-medium text-muted-foreground">
-                მოიწვიე მეგობრები ({selectedFriends.size} არჩეული)
+                {t("team.inviteFriends").replace("{count}", String(selectedFriends.size))}
               </h2>
             </div>
             
@@ -332,7 +334,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   <div className="flex-1 text-left">
                     <p className="font-medium text-foreground">{friend.nickname}</p>
                     <p className="text-xs text-muted-foreground">
-                      {friend.isOnline ? "ონლაინ" : "ოფლაინ"}
+                      {friend.isOnline ? t("team.online") : t("team.offline")}
                     </p>
                   </div>
                   
@@ -357,8 +359,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         {acceptedFriends.length === 0 && (
           <div className="text-center py-6 text-muted-foreground">
             <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">მეგობრები ჯერ არ გყავს</p>
-            <p className="text-xs">დაამატე მეგობრები თამაშის შემდეგ მოსაწვევად</p>
+            <p className="text-sm">{t("team.noFriendsYet")}</p>
+            <p className="text-xs">{t("team.addFriendsHint")}</p>
           </div>
         )}
       </div>

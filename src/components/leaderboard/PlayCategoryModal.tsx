@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories, TransformedCategory } from "@/hooks/useCategories";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,10 +24,11 @@ export function PlayCategoryModal({
   onSelectCategory 
 }: PlayCategoryModalProps) {
   const { categories, loading: categoriesLoading } = useCategories();
+  const { t } = useLanguage();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isMatchmaking, setIsMatchmaking] = useState(false);
   const [matchmakingProgress, setMatchmakingProgress] = useState(0);
-  const [matchmakingText, setMatchmakingText] = useState("მოთამაშის ძებნა...");
+  const [matchmakingText, setMatchmakingText] = useState("");
 
   // Reset state when modal opens
   useEffect(() => {
@@ -34,18 +36,19 @@ export function PlayCategoryModal({
       setSelectedCategoryId(null);
       setIsMatchmaking(false);
       setMatchmakingProgress(0);
+      setMatchmakingText(t("game.searchingPlayer"));
     }
-  }, [open]);
+  }, [open, t]);
 
   // Matchmaking animation
   useEffect(() => {
     if (!isMatchmaking) return;
 
     const texts = [
-      "მოთამაშის ძებნა...",
-      "მოთამაშე ნაპოვნია!",
-      "კითხვების მომზადება...",
-      "თამაშის დაწყება!"
+      t("game.searchingPlayer"),
+      t("game.playerFound"),
+      t("game.preparingQuestions"),
+      t("game.startingGame")
     ];
 
     let progress = 0;
@@ -73,7 +76,7 @@ export function PlayCategoryModal({
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isMatchmaking, selectedCategoryId, onSelectCategory, onOpenChange]);
+  }, [isMatchmaking, selectedCategoryId, onSelectCategory, onOpenChange, t]);
 
   const handlePlay = () => {
     setIsMatchmaking(true);
@@ -85,7 +88,7 @@ export function PlayCategoryModal({
     <GameModal
       isOpen={open}
       onClose={!isMatchmaking ? () => onOpenChange(false) : undefined}
-      title="აირჩიე კატეგორია"
+      title={t("game.selectCategory")}
       iconEmoji="🎯"
       showStars={true}
       hideCloseButton={isMatchmaking}
@@ -184,23 +187,23 @@ export function PlayCategoryModal({
       >
         <div className="flex items-center justify-center gap-2 mb-3">
           <span className="text-lg">🎁</span>
-          <span className="font-bold text-amber-800">ჯილდოები</span>
+          <span className="font-bold text-amber-800">{t("game.rewards")}</span>
         </div>
         <div className="flex items-center justify-around">
           <div className="flex flex-col items-center gap-1">
             <img src={iconCoin} alt="coins" className="w-8 h-8" />
             <span className="text-sm font-bold text-amber-900">+100</span>
-            <span className="text-xs text-amber-700">მონეტა</span>
+            <span className="text-xs text-amber-700">{t("game.coin")}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <img src={iconGem} alt="gems" className="w-8 h-8" />
             <span className="text-sm font-bold text-amber-900">+2</span>
-            <span className="text-xs text-amber-700">ალმასი</span>
+            <span className="text-xs text-amber-700">{t("game.gem")}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <img src={iconXp} alt="xp" className="w-8 h-8" />
             <span className="text-sm font-bold text-amber-900">+50</span>
-            <span className="text-xs text-amber-700">XP</span>
+            <span className="text-xs text-amber-700">{t("common.xp")}</span>
           </div>
         </div>
       </motion.div>
@@ -239,7 +242,7 @@ export function PlayCategoryModal({
                 "text-xs font-bold text-center leading-tight",
                 selectedCategoryId === null ? "text-white" : "text-gray-700"
               )}>
-                შემთხვევითი
+                {t("game.random")}
               </span>
             </motion.button>
 
@@ -266,7 +269,7 @@ export function PlayCategoryModal({
           onClick={handlePlay}
           disabled={isMatchmaking}
         >
-          ითამაშე
+          {t("game.letsPlay")}
         </ChunkyButton>
       </div>
     </GameModal>

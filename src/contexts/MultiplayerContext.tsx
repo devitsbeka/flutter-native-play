@@ -176,7 +176,7 @@ export function MultiplayerProvider({ children }: { children: React.ReactNode })
               setState(prev => ({ ...prev, phase: "playing" }));
             }
           } else if (updated.status === "cancelled") {
-            toast.info("ოთახი დაიხურა");
+            // Note: Toast will be shown in component that handles language
             resetMultiplayer();
           }
         }

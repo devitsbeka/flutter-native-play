@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useMissions } from "@/hooks/useMissions";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { missionTracker } from "@/services/missionTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -57,12 +58,14 @@ const PlayerCard = ({
   score,
   level,
   isWinner,
+  winnerLabel,
 }: { 
   avatarUrl?: string | null; 
   name: string;
   score: number;
   level: number;
   isWinner: boolean;
+  winnerLabel: string;
 }) => (
   <motion.div 
     className="flex flex-col items-center overflow-visible"
@@ -134,7 +137,7 @@ const PlayerCard = ({
             boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
           }}
         >
-          გამარჯვებული
+          {winnerLabel}
         </div>
       </motion.div>
     )}
@@ -166,6 +169,7 @@ export function MatchResultScreen() {
   const { user, profile, updateProfile } = useAuth();
   const { playSound } = useSound();
   const { updateMissionProgress } = useMissions();
+  const { t } = useLanguage();
   const { awardWin, awardDraw, awardLose, netWinProfit, netLoss, stakeAmount } = useGameStake();
   const navigate = useNavigate();
 
@@ -322,18 +326,18 @@ export function MatchResultScreen() {
     if (isWin) {
       return {
         icon: <FloatingTrophy />,
-        text: "გამარჯვება!",
+        text: t("game.victory"),
       };
     }
     if (isDraw) {
       return {
         icon: <Target className="w-16 h-16 text-white" />,
-        text: "ფრე",
+        text: t("game.tie"),
       };
     }
     return {
       icon: <span className="text-5xl">😔</span>,
-      text: "წაგება",
+      text: t("game.lose"),
     };
   };
 
@@ -468,19 +472,21 @@ export function MatchResultScreen() {
             {/* Player */}
             <PlayerCard 
               avatarUrl={profile?.avatar_url} 
-              name={profile?.nickname || "შენ"}
+              name={profile?.nickname || t("game.you")}
               score={userScore}
               level={userLevel}
               isWinner={isWin}
+              winnerLabel={t("game.winner")}
             />
 
             {/* Opponent */}
             <PlayerCard 
               avatarUrl={opponent?.avatarUrl} 
-              name={opponent?.name || "მოწინააღმდეგე"}
+              name={opponent?.name || t("game.opponent")}
               score={opponentScore}
               level={opponentLevel}
               isWinner={!isWin && !isDraw}
+              winnerLabel={t("game.winner")}
             />
           </motion.div>
         </div>
@@ -498,7 +504,7 @@ export function MatchResultScreen() {
             onClick={handlePlayAgain}
             className="w-full"
           >
-            თავიდან თამაში
+            {t("game.playAgain")}
           </ChunkyButton>
         </motion.div>
       </div>

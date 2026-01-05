@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -65,6 +66,7 @@ type GameStage = "finding-opponent" | "opponent-found" | "finding-category" | "c
 export function VSScreen() {
   const { opponent, beginPlaying, phase } = useGame();
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { categories } = useCategories();
   const { stakeAmount, deductStake } = useGameStake();
@@ -338,7 +340,7 @@ export function VSScreen() {
           <span className="text-white font-bold text-sm">
             {stakeDeducted ? `-${stakeAmount}` : stakeAmount}
           </span>
-          <span className="text-white/70 text-xs">შესანახი</span>
+          <span className="text-white/70 text-xs">{t("game.stake")}</span>
         </motion.div>
         
         <motion.button 
@@ -381,10 +383,10 @@ export function VSScreen() {
                     textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                   }}
                 >
-                  {isOpponentLocked ? (opponent?.name || "მოწინააღმდეგე") : "ძებნა..."}
+                  {isOpponentLocked ? (opponent?.name || t("game.opponent")) : t("game.searching")}
                 </h3>
                 <p className="text-white/70 text-sm">
-                  {isOpponentLocked ? `დონე ${opponentLevelInfo.level}` : "დონე ?"}
+                  {isOpponentLocked ? `${t("common.level")} ${opponentLevelInfo.level}` : t("game.levelQuestion")}
                 </p>
                 <p className="text-amber-300 text-sm font-medium">
                   {isOpponentLocked ? opponentPoints.toLocaleString() : "---"}
@@ -424,8 +426,8 @@ export function VSScreen() {
               }}
             >
               {showCategorySlot 
-                ? (selectedCategory?.name || currentCategory?.name || "კატეგორია...") 
-                : "იპოვე მოწინააღმდეგე..."}
+                ? (selectedCategory?.name || currentCategory?.name || t("game.category")) 
+                : t("game.findingCategory")}
             </motion.h2>
           </motion.div>
 
@@ -446,10 +448,10 @@ export function VSScreen() {
                     textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                   }}
                 >
-                  {profile?.nickname || "შენ"}
+                  {profile?.nickname || t("game.you")}
                 </h3>
                 <p className="text-white/70 text-sm">
-                  დონე {playerLevelInfo.level}
+                  {t("common.level")} {playerLevelInfo.level}
                 </p>
                 <p className="text-amber-300 text-sm font-medium">
                   {playerPoints.toLocaleString()}
@@ -489,7 +491,7 @@ export function VSScreen() {
             disabled={!showStartButton}
             className="w-full"
           >
-            დაწყება
+            {t("game.start")}
           </ChunkyButton>
         </motion.div>
       </div>
