@@ -4,6 +4,8 @@
  * Falls back to simulated ads on web
  */
 
+import { trackingService } from './trackingService';
+
 // AdMob Configuration
 const ADMOB_CONFIG = {
   // Production ad unit IDs
@@ -49,6 +51,10 @@ class AdService {
           const admobModule = await import('@capacitor-community/admob');
           this.AdMob = admobModule.AdMob;
           this.RewardAdPluginEvents = admobModule.RewardAdPluginEvents;
+          
+          // Initialize tracking service and request ATT authorization
+          await trackingService.initialize();
+          await trackingService.requestAuthorization();
           
           await this.AdMob.initialize({
             testingDevices: [],
