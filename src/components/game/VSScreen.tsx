@@ -11,6 +11,7 @@ import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { extractFirstFrame, getCachedFrame } from "@/utils/videoFrameExtractor";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -78,6 +79,9 @@ export function VSScreen() {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; imageUrl: string} | null>(null);
   const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Frame extraction state
+  const [categoryFrames, setCategoryFrames] = useState<Map<string, string>>(new Map());
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -85,15 +89,36 @@ export function VSScreen() {
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
-  // Current category for display during slot - use image_url from database
+  // Current category for display during slot - use extracted frame from video
   const currentCategory = categoryPool[currentCategoryIndex];
-  const currentImageUrl = currentCategory?.image_url || "/placeholder.svg";
+  const getFrameUrl = (catId: string): string => {
+    const videoUrl = CATEGORY_VIDEOS[catId];
+    if (videoUrl && categoryFrames.has(videoUrl)) {
+      return categoryFrames.get(videoUrl)!;
+    }
+    return "/placeholder.svg";
+  };
+  const currentImageUrl = currentCategory ? getFrameUrl(currentCategory.id) : "/placeholder.svg";
 
-  // Initialize category pool when categories load
+  // Initialize category pool and extract video frames when categories load
   useEffect(() => {
     if (categories.length > 0 && categoryPool.length === 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      setCategoryPool(shuffled.slice(0, Math.min(8, shuffled.length)));
+      const pool = shuffled.slice(0, Math.min(8, shuffled.length));
+      setCategoryPool(pool);
+      
+      // Extract first frames from all category videos
+      pool.forEach(async (cat) => {
+        const videoUrl = CATEGORY_VIDEOS[cat.id];
+        if (videoUrl) {
+          try {
+            const frame = await extractFirstFrame(videoUrl);
+            setCategoryFrames(prev => new Map(prev).set(videoUrl, frame));
+          } catch (err) {
+            console.warn(`Failed to extract frame for ${cat.id}:`, err);
+          }
+        }
+      });
     }
   }, [categories, categoryPool.length]);
 
@@ -170,7 +195,8 @@ export function VSScreen() {
         const winnerIndex = Math.floor(Math.random() * categoryPool.length);
         setCurrentCategoryIndex(winnerIndex);
         const winner = categoryPool[winnerIndex];
-        const imageUrl = winner.image_url || "/placeholder.svg";
+        const videoUrl = CATEGORY_VIDEOS[winner.id];
+        const imageUrl = videoUrl && categoryFrames.has(videoUrl) ? categoryFrames.get(videoUrl)! : "/placeholder.svg";
         setSelectedCategory({ id: winner.id, name: winner.name, imageUrl });
         setStage("category-found");
       }
