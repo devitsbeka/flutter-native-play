@@ -37,38 +37,38 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
     }
   }, [isOpen, categories]);
 
-  // Animation timeline
+  // Animation timeline - OPTIMIZED for 2.2s total
   useEffect(() => {
     if (!isOpen || displayCategories.length === 0) return;
 
-    // Phase 1: Float for 1.8 seconds
-    const focusTimer = setTimeout(() => setPhase("focusing"), 1800);
+    // Phase 1: Float for 0.6 seconds
+    const focusTimer = setTimeout(() => setPhase("focusing"), 600);
     
-    // Phase 2: Reveal after focusing
+    // Phase 2: Reveal after 0.5s focusing (1.1s total)
     const revealTimer = setTimeout(() => {
       setPhase("revealed");
       
       // Confetti!
       confetti({
-        particleCount: 80,
-        spread: 60,
+        particleCount: 60,
+        spread: 50,
         origin: { y: 0.5 },
         colors: ["#FFD700", "#FFA500", "#FFFFFF"],
       });
-    }, 2600);
+    }, 1100);
 
-    // Phase 3: Start transition out
+    // Phase 3: Start transition out (1.8s total)
     const transitionTimer = setTimeout(() => {
       setPhase("transitioning");
-    }, 4000);
+    }, 1800);
 
-    // Phase 4: Complete and callback
+    // Phase 4: Complete and callback (2.2s total)
     const completeTimer = setTimeout(() => {
       const winner = displayCategories[winnerIndex];
       const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.mp4";
       // Pass category_id (e.g., "coding") not uuid for question fetching
       onCategorySelected(winner.id, winner.name, videoUrl);
-    }, 4600);
+    }, 2200);
 
     return () => {
       clearTimeout(focusTimer);

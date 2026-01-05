@@ -5,7 +5,7 @@ import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { CloudCategoryFlight } from "./CloudCategoryFlight";
@@ -71,7 +71,7 @@ export function VSScreen() {
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [selectedCategoryVideo, setSelectedCategoryVideo] = useState<string | null>(null);
   const [showCategoryBubble, setShowCategoryBubble] = useState(false);
-  const [canStart, setCanStart] = useState(false);
+  
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -85,20 +85,19 @@ export function VSScreen() {
   const opponentPointsDisplay = isMatchFound ? opponentPoints : 0;
   const opponentLevelDisplay = isMatchFound ? `Lvl.${opponentLevelInfo.level}` : "Lvl.?";
 
-  // Slot machine cycling effect
+  // Slot machine cycling effect - OPTIMIZED for speed
   useEffect(() => {
     if (phase !== "matchmaking" && phase !== "preparing" && phase !== "vs-screen") return;
     if (slotPhase === "found" || slotPhase === "ready") return;
 
     let cycleCount = 0;
-    const maxCycles = 20;
+    const maxCycles = 12; // Reduced from 20
     
     const getDelay = (count: number): number => {
-      if (count < 10) return 60;
-      if (count < 14) return 120;
-      if (count < 17) return 200;
-      if (count < 19) return 350;
-      return 500;
+      if (count < 6) return 50;  // Faster initial
+      if (count < 9) return 100;
+      if (count < 11) return 180;
+      return 300;
     };
 
     const cycleSlot = () => {
@@ -107,7 +106,7 @@ export function VSScreen() {
       const randomAvatar = slotAvatars[Math.floor(Math.random() * slotAvatars.length)];
       setCurrentAvatar(randomAvatar);
 
-      if (cycleCount < 10) {
+      if (cycleCount < 6) {
         setSlotPhase("searching");
       } else if (cycleCount < maxCycles) {
         setSlotPhase("slowing");
@@ -123,7 +122,7 @@ export function VSScreen() {
       }
     };
 
-    intervalRef.current = setTimeout(cycleSlot, 300);
+    intervalRef.current = setTimeout(cycleSlot, 150); // Start faster
 
     return () => {
       if (intervalRef.current) {
@@ -139,36 +138,30 @@ export function VSScreen() {
     }
   }, [slotPhase, opponent]);
 
-  // Transition to ready state after found - then show wheel
+  // Transition to ready state after found - then show wheel immediately
   useEffect(() => {
     if (slotPhase === "found") {
       const timer = setTimeout(() => {
         setSlotPhase("ready");
         // Automatically show wheel when match is ready
         setShowWheel(true);
-      }, 600);
+      }, 300); // Reduced from 600ms
       return () => clearTimeout(timer);
     }
   }, [slotPhase]);
 
-  // Handle when category is selected by wheel
+  // Handle when category is selected by wheel - AUTO START GAME
   const handleCategorySelected = (categoryId: string, categoryName: string, videoUrl: string) => {
     setShowWheel(false);
     setSelectedCategoryId(categoryId);
     setSelectedCategoryName(categoryName);
     setSelectedCategoryVideo(videoUrl);
-    // Delay showing the bubble for smooth entrance
+    setShowCategoryBubble(true);
+    
+    // Auto-start the game after brief reveal (0.5s)
     setTimeout(() => {
-      setShowCategoryBubble(true);
-      setCanStart(true);
-    }, 100);
-  };
-
-  // Start button now begins the game with the selected category
-  const handleStart = () => {
-    if (selectedCategoryId) {
-      beginPlaying(selectedCategoryId);
-    }
+      beginPlaying(categoryId);
+    }, 500);
   };
 
   return (
@@ -508,28 +501,7 @@ export function VSScreen() {
         )}
       </div>
 
-      {/* Button Section - Fixed at bottom */}
-      <div className="w-full max-w-sm mx-auto pb-4 sm:pb-8 pt-4 px-6 relative z-10">
-        <motion.div
-          className="w-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ 
-            opacity: canStart ? 1 : 0,
-            y: canStart ? 0 : 20,
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          <ChunkyButton
-            variant="mint"
-            size="xl"
-            onClick={handleStart}
-            disabled={!canStart}
-            className="w-full"
-          >
-            დაწყება
-          </ChunkyButton>
-        </motion.div>
-      </div>
+      {/* Game auto-starts after category selection - no button needed */}
 
       {/* Help Modal */}
       <VSMatchHelpModal 
