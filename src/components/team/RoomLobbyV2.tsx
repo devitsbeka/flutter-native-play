@@ -358,12 +358,38 @@ export function RoomLobbyV2() {
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className="fixed inset-0 z-[60] bg-card flex flex-col"
               >
-                {/* Header with title and close button */}
+                {/* Header with title, members, and close button */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
-                  <h2 className="text-xl font-bold text-foreground">ჩატი</h2>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-bold text-foreground truncate">
+                      {currentRoom.room_name || `Room #${currentRoom.room_code.slice(-4)}`}
+                    </h2>
+                    {/* Participants row */}
+                    <div className="flex items-center gap-1 mt-1 overflow-hidden">
+                      {participants.slice(0, participants.length > 8 ? 5 : 8).map((p) => (
+                        <div key={p.user_id} className="flex items-center gap-1 flex-shrink-0">
+                          <div className="w-5 h-5 rounded-full overflow-hidden bg-muted">
+                            {p.avatar_url ? (
+                              <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold">
+                                {p.nickname?.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground truncate max-w-[60px]">{p.nickname}</span>
+                        </div>
+                      ))}
+                      {participants.length > 8 && (
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          +{participants.length - 5}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <motion.button
                     onClick={() => setShowChat(false)}
-                    className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 border border-border"
+                    className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 border border-border flex-shrink-0 ml-3"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
