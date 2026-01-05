@@ -5,6 +5,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useVipStatus, VipDuration, VIP_PRICES } from "@/hooks/useVipStatus";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { AvatarFrameShop } from "@/components/home/AvatarFrameShop";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -25,8 +26,8 @@ import { TimeIcon } from "@/components/shared/TimeIcon";
 
 interface ShopItem {
   id: string;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   price: number;
   icon: React.ReactNode;
   category: "powerup" | "vip" | "coins";
@@ -42,8 +43,8 @@ const SHOP_ITEMS: ShopItem[] = [
   // Coin Packs
   {
     id: "coins_100",
-    name: "100 მონეტა",
-    description: "მცირე პაკეტი",
+    nameKey: "100",
+    descriptionKey: "smallPackage",
     price: 2,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
@@ -52,8 +53,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "coins_500",
-    name: "500 მონეტა",
-    description: "საშუალო პაკეტი",
+    nameKey: "500",
+    descriptionKey: "mediumPackage",
     price: 5,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
@@ -62,8 +63,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "coins_1500",
-    name: "1500 მონეტა",
-    description: "დიდი პაკეტი +20% ბონუსი",
+    nameKey: "1500",
+    descriptionKey: "largePackage",
     price: 12,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
@@ -73,8 +74,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "coins_5000",
-    name: "5000 მონეტა",
-    description: "მეგა პაკეტი +50% ბონუსი",
+    nameKey: "5000",
+    descriptionKey: "megaPackage",
     price: 35,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
@@ -83,8 +84,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "coins_10000",
-    name: "10000 მონეტა",
-    description: "უზარმაზარი +70% ბონუსი",
+    nameKey: "10000",
+    descriptionKey: "hugePackage",
     price: 60,
     icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
     category: "coins",
@@ -94,8 +95,8 @@ const SHOP_ITEMS: ShopItem[] = [
   // Individual Power-Ups
   {
     id: "power_5050",
-    name: "50/50 ×3",
-    description: "წაშალე 2 არასწორი პასუხი",
+    nameKey: "5050x3",
+    descriptionKey: "deletesWrongAnswers",
     price: 8,
     icon: <img src={powerIcon5050} alt="" className="w-8 h-8" />,
     category: "powerup",
@@ -105,8 +106,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "power_freeze",
-    name: "გაყინვა ×3",
-    description: "გააყინე დრო 10 წამით",
+    nameKey: "freezex3",
+    descriptionKey: "freezesTime",
     price: 8,
     icon: <img src={powerIconFreeze} alt="" className="w-8 h-8" />,
     category: "powerup",
@@ -116,8 +117,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "power_replace",
-    name: "შეცვლა ×3",
-    description: "შეცვალე კითხვა ახლით",
+    nameKey: "replacex3",
+    descriptionKey: "replacesQuestion",
     price: 8,
     icon: <img src={powerIconReplace} alt="" className="w-8 h-8" />,
     category: "powerup",
@@ -127,8 +128,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "power_timedrain",
-    name: "დრო+ ×3",
-    description: "დაამატე 10 წამი დროს",
+    nameKey: "timePlusx3",
+    descriptionKey: "addsTime",
     price: 8,
     icon: <TimeIcon size={32} />,
     category: "powerup",
@@ -139,8 +140,8 @@ const SHOP_ITEMS: ShopItem[] = [
   // Power Bundles
   {
     id: "power_bundle_small",
-    name: "მცირე პაკეტი",
-    description: "2x ყველა ძალა",
+    nameKey: "smallPackage",
+    descriptionKey: "allPowers2x",
     price: 8,
     icon: <Zap className="w-8 h-8 text-blue-400" />,
     category: "powerup",
@@ -148,8 +149,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "power_bundle",
-    name: "საშუალო პაკეტი",
-    description: "5x ყველა ძალა",
+    nameKey: "mediumPackage",
+    descriptionKey: "allPowers5x",
     price: 15,
     icon: <Zap className="w-8 h-8 text-blue-500" />,
     category: "powerup",
@@ -158,8 +159,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "power_bundle_large",
-    name: "დიდი პაკეტი",
-    description: "10x ყველა ძალა",
+    nameKey: "largePackage",
+    descriptionKey: "allPowers10x",
     price: 25,
     icon: <Zap className="w-8 h-8 text-indigo-500" />,
     category: "powerup",
@@ -168,8 +169,8 @@ const SHOP_ITEMS: ShopItem[] = [
   // VIP Features
   {
     id: "vip_day",
-    name: "VIP დღე",
-    description: "ყველა VIP ბენეფიტი 1 დღე",
+    nameKey: "vipDay",
+    descriptionKey: "vipBenefitsDay",
     price: 5,
     icon: <Crown className="w-8 h-8 text-amber-400" />,
     category: "vip",
@@ -178,8 +179,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "vip_week",
-    name: "VIP კვირა",
-    description: "2x XP, +3 სპინი, ექსკლუზიური აქსესუარები",
+    nameKey: "vipWeek",
+    descriptionKey: "vipBenefitsWeek",
     price: 15,
     icon: <Crown className="w-8 h-8 text-amber-500" />,
     category: "vip",
@@ -189,8 +190,8 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "vip_month",
-    name: "VIP თვე",
-    description: "ყველა VIP ბენეფიტი 30 დღე",
+    nameKey: "vipMonth",
+    descriptionKey: "vipBenefitsMonth",
     price: 40,
     icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" />,
     category: "vip",
@@ -199,12 +200,35 @@ const SHOP_ITEMS: ShopItem[] = [
   },
 ];
 
-const CATEGORIES = [
-  { id: "all", name: "ყველა", icon: "🛒" },
-  { id: "coins", name: "მონეტები", icon: "🪙" },
-  { id: "powerup", name: "ძალები", icon: "⚡" },
-  { id: "vip", name: "VIP", icon: "👑" },
-  { id: "frames", name: "ჩარჩოები", icon: "🎨" },
+// Helper function to get item display name
+function getItemDisplayName(item: ShopItem, t: (key: string) => string): string {
+  if (item.category === "coins") {
+    return `${item.nameKey} ${t('shop.coin')}`;
+  }
+  if (item.nameKey.includes("x3")) {
+    const powerName = item.nameKey.replace("x3", "");
+    if (powerName === "5050") return "50/50 ×3";
+    if (powerName === "freeze") return `${t('shop.freeze')} ×3`;
+    if (powerName === "replace") return `${t('shop.replace')} ×3`;
+    if (powerName === "timePlus") return `${t('shop.timePlus')} ×3`;
+  }
+  return t(`shop.${item.nameKey}`);
+}
+
+// Helper function to get item description
+function getItemDescription(item: ShopItem, t: (key: string) => string): string {
+  if (item.descriptionKey === "allPowers2x") return `2x ${t('shop.allPowers')}`;
+  if (item.descriptionKey === "allPowers5x") return `5x ${t('shop.allPowers')}`;
+  if (item.descriptionKey === "allPowers10x") return `10x ${t('shop.allPowers')}`;
+  return t(`shop.${item.descriptionKey}`);
+}
+
+const CATEGORY_KEYS = [
+  { id: "all", nameKey: "tabAll", icon: "🛒" },
+  { id: "coins", nameKey: "tabCoins", icon: "🪙" },
+  { id: "powerup", nameKey: "tabPowers", icon: "⚡" },
+  { id: "vip", nameKey: "tabVip", icon: "👑" },
+  { id: "frames", nameKey: "tabFrames", icon: "🎨" },
 ];
 
 export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalProps) {
@@ -212,6 +236,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
   const { playSound } = useSound();
   const { activateVip, isVip, getDaysRemaining } = useVipStatus();
   const { addPowerUp } = useUserPowerUps();
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory || "all");
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null);
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
@@ -273,10 +298,11 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
       });
 
       setPurchasedItems(prev => new Set([...prev, item.id]));
-      toast.success(`${item.name} შეძენილია! 🎉`);
+      const itemName = getItemDisplayName(item, t);
+      toast.success(t('shop.itemPurchased').replace('{name}', itemName));
     } catch (error) {
       console.error("Purchase failed:", error);
-      toast.error("შეძენა ვერ მოხერხდა");
+      toast.error(t('shop.purchaseFailed'));
     } finally {
       setIsPurchasing(null);
     }
@@ -326,9 +352,9 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
-                      <span>💎</span> ალმასების მაღაზია
+                      <span>💎</span> {t('shop.gemShop')}
                     </h2>
-                    <p className="text-gray-500 text-sm">პრემიუმ აითემები ალმასებით</p>
+                    <p className="text-gray-500 text-sm">{t('shop.premiumItems')}</p>
                   </div>
                   
                   {/* Gem Balance */}
@@ -360,17 +386,17 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                   >
                     <div className="flex items-center gap-2">
                       <Crown className="w-5 h-5 text-amber-600" />
-                      <span className="text-amber-800 font-semibold">VIP აქტიური</span>
+                      <span className="text-amber-800 font-semibold">{t('shop.vipActive')}</span>
                     </div>
                     <span className="text-amber-700 text-sm font-bold">
-                      {getDaysRemaining()} დღე დარჩენილი
+                      {t('shop.daysRemaining').replace('{days}', String(getDaysRemaining()))}
                     </span>
                   </motion.div>
                 )}
 
                 {/* Category Tabs - 3D chunky style */}
                 <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
-                  {CATEGORIES.map((category) => (
+                  {CATEGORY_KEYS.map((category) => (
                     <motion.button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
@@ -389,7 +415,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                       whileTap={{ scale: 0.95, y: 2 }}
                     >
                       <span>{category.icon}</span>
-                      <span>{category.name}</span>
+                      <span>{t(`shop.${category.nameKey}`)}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -427,7 +453,7 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
                               animate={{ scale: [1, 1.05, 1] }}
                               transition={{ duration: 2, repeat: Infinity }}
                             >
-                              პოპულარული
+                              {t('shop.popular')}
                             </motion.div>
                           )}
 
@@ -468,17 +494,17 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
 
                             {/* Name & Description */}
                             <h3 className="font-bold text-gray-800 text-sm text-center mb-1">
-                              {item.name}
+                              {getItemDisplayName(item, t)}
                             </h3>
                             <p className="text-gray-500 text-xs text-center mb-3 line-clamp-2">
-                              {item.description}
+                              {getItemDescription(item, t)}
                             </p>
 
                             {/* Price */}
                             <div className="flex items-center justify-center gap-1.5">
                               <img src={gemIcon} alt="" className="w-5 h-5" />
                               <span className={`font-bold ${canAfford ? "text-gray-800" : "text-red-500"}`}>
-                                {isPurchased ? "შეძენილია" : isVipActive ? "გაახანგრძლივე" : item.price}
+                                {isPurchased ? t('shop.purchased') : isVipActive ? t('team.continue') : item.price}
                               </span>
                             </div>
                           </motion.button>

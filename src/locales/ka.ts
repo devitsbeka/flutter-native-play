@@ -599,6 +599,7 @@ export const ka = {
     mediumPackage: "საშუალო პაკეტი",
     largePackage: "დიდი პაკეტი",
     megaPackage: "მეგა პაკეტი",
+    hugePackage: "უზარმაზარი",
     allPowers: "ყველა ძალა",
     allPowersTimes: "{count}x ყველა ძალა",
     plusCoins: "+ {amount} მონეტა",
@@ -655,6 +656,28 @@ export const ka = {
     unlockFor: "გახსნა $4.99-ად",
     restorePurchase: "შეძენის აღდგენა",
     processing: "მიმდინარეობს...",
+    // Gem Shop Modal
+    gemShop: "ალმასების მაღაზია",
+    premiumItems: "პრემიუმ აითემები ალმასებით",
+    vipActive: "VIP აქტიური",
+    daysRemaining: "{days} დღე დარჩენილი",
+    popular: "პოპულარული",
+    tabAll: "ყველა",
+    tabCoins: "მონეტები",
+    tabPowers: "ძალები",
+    tabVip: "VIP",
+    tabFrames: "ჩარჩოები",
+    itemPurchased: "{name} შეძენილია! 🎉",
+    bonus: "ბონუსი",
+    allVipBenefits: "ყველა VIP ბენეფიტი {days} დღე",
+    exclusiveAccessories: "ექსკლუზიური აქსესუარები",
+    // Power Shop Modal
+    powerShop: "ძალები",
+    buyPowers: "შეიძინე სუპერ ძალები",
+    purchasing: "იძენება...",
+    notEnoughCoinsLong: "არ გაქვს საკმარისი მონეტები",
+    purchasedSuccess: "წარმატებით შეიძინე!",
+    purchasedPower: "შეძენილია {count}x {name}! ⚡",
   },
 
   // ==========================================
@@ -900,6 +923,60 @@ export const ka = {
   // ==========================================
   tv: {
     start: "დაწყება! 🚀",
+  },
+
+  // ==========================================
+  // Spin / სპინი
+  // ==========================================
+  spin: {
+    title: "Lucky Spin!",
+    coins: "{amount} მონეტა",
+    gems: "{amount} ალმასი",
+    power: "ძალა",
+    received: "მიღებულია {item}! 🎉",
+    youWon: "მოიგე {item}!",
+    claimReward: "აიღე ჯილდო",
+    freeSpinsLeft: "{count} უფასო სპინი დარჩა",
+    comeBackTomorrow: "ხვალ დაბრუნდი მეტი სპინებისთვის!",
+    loading: "იტვირთება...",
+    winChances: "მოგების შანსები",
+    eachSegmentChance: "თითოეულ სეგმენტზე მოხვედრის შანსი:",
+    allSegmentsEqual: "ყველა სეგმენტს თანაბარი შანსი აქვს (1/8)",
+  },
+
+  // ==========================================
+  // Game Additional / თამაშის დამატებითი
+  // ==========================================
+  gameExtra: {
+    prize: "პრიზი",
+  },
+
+  // ==========================================
+  // IAP / In-App Purchases
+  // ==========================================
+  iap: {
+    pleaseSignIn: "გთხოვთ გაიაროთ ავტორიზაცია",
+    purchaseOnlyMobile: "შესყიდვა ხელმისაწვდომია მხოლოდ მობილურ აპლიკაციაში",
+    purchaseComplete: "შესყიდვა წარმატებით დასრულდა! 🎉",
+    purchaseFailed: "შესყიდვა ვერ მოხერხდა",
+    purchasesRestored: "შესყიდვები აღდგენილია! 🎉",
+    noPreviousPurchases: "წინა შესყიდვები ვერ მოიძებნა",
+    restoreFailed: "აღდგენა ვერ მოხერხდა",
+  },
+
+  // ==========================================
+  // Featured Carousel / მთავარი კარუსელი
+  // ==========================================
+  featured: {
+    starterPack: "სტარტერ პაკეტი",
+    starterPackDesc: "2x ყველა ძალა • 200 მონეტა • იდეალური დამწყებთათვის",
+    megaPowers: "მეგა ძალები",
+    megaPowersDesc: "5x ყველა ძალა • საუკეთესო მოთამაშეებისთვის",
+    vipWeek: "VIP კვირა",
+    vipWeekDesc: "2x XP • უსასრულო სპინი • ექსკლუზიური ჩარჩოები",
+    badgeNew: "ახალი",
+    badgePopular: "პოპულარული",
+    badgeBestPrice: "საუკეთესო ფასი",
   },
 };
 

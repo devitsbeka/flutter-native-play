@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
 import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
@@ -8,9 +9,9 @@ import { ShopTab } from "./ShopTabBar";
 
 interface FeaturedDeal {
   id: string;
-  title: string;
-  subtitle: string;
-  badge: string;
+  titleKey: string;
+  subtitleKey: string;
+  badgeKey: string;
   badgeColor: string;
   originalPrice?: number;
   price: number;
@@ -22,9 +23,9 @@ interface FeaturedDeal {
 const FEATURED_DEALS: FeaturedDeal[] = [
   {
     id: "starter_bundle",
-    title: "სტარტერ პაკეტი",
-    subtitle: "2x ყველა ძალა • 200 მონეტა • იდეალური დამწყებთათვის",
-    badge: "ახალი",
+    titleKey: "starterPack",
+    subtitleKey: "starterPackDesc",
+    badgeKey: "badgeNew",
     badgeColor: "hsl(200 80% 50%)",
     price: 8,
     icon: iconStarterPack,
@@ -33,9 +34,9 @@ const FEATURED_DEALS: FeaturedDeal[] = [
   },
   {
     id: "mega_power_bundle",
-    title: "მეგა ძალები",
-    subtitle: "5x ყველა ძალა • საუკეთესო მოთამაშეებისთვის",
-    badge: "პოპულარული",
+    titleKey: "megaPowers",
+    subtitleKey: "megaPowersDesc",
+    badgeKey: "badgePopular",
     badgeColor: "hsl(340 80% 55%)",
     originalPrice: 25,
     price: 15,
@@ -45,9 +46,9 @@ const FEATURED_DEALS: FeaturedDeal[] = [
   },
   {
     id: "vip_week_deal",
-    title: "VIP კვირა",
-    subtitle: "2x XP • უსასრულო სპინი • ექსკლუზიური ჩარჩოები",
-    badge: "საუკეთესო ფასი",
+    titleKey: "vipWeek",
+    subtitleKey: "vipWeekDesc",
+    badgeKey: "badgeBestPrice",
     badgeColor: "hsl(45 90% 50%)",
     originalPrice: 20,
     price: 15,
@@ -65,6 +66,7 @@ interface ShopFeaturedCarouselProps {
 export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeaturedCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const { t } = useLanguage();
 
   // Auto-rotate
   useEffect(() => {
@@ -141,15 +143,15 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                {deal.badge}
+                {t(`featured.${deal.badgeKey}`)}
               </motion.div>
 
               {/* Text content */}
               <div className="flex-1">
                 <h3 className="text-2xl font-display font-bold text-gray-900 mb-1">
-                  {deal.title}
+                  {t(`featured.${deal.titleKey}`)}
                 </h3>
-                <p className="text-gray-700 text-sm mb-3">{deal.subtitle}</p>
+                <p className="text-gray-700 text-sm mb-3">{t(`featured.${deal.subtitleKey}`)}</p>
 
                 {/* Price */}
                 <div className="flex items-center gap-3">

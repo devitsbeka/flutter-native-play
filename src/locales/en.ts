@@ -601,6 +601,7 @@ export const en: KaTranslations = {
     mediumPackage: "Medium Package",
     largePackage: "Large Package",
     megaPackage: "Mega Package",
+    hugePackage: "Huge Package",
     allPowers: "All Powers",
     allPowersTimes: "{count}x All Powers",
     plusCoins: "+ {amount} Coins",
@@ -657,6 +658,28 @@ export const en: KaTranslations = {
     unlockFor: "Unlock for $4.99",
     restorePurchase: "Restore Purchase",
     processing: "Processing...",
+    // Gem Shop Modal
+    gemShop: "Gem Shop",
+    premiumItems: "Premium items with gems",
+    vipActive: "VIP Active",
+    daysRemaining: "{days} days remaining",
+    popular: "Popular",
+    tabAll: "All",
+    tabCoins: "Coins",
+    tabPowers: "Powers",
+    tabVip: "VIP",
+    tabFrames: "Frames",
+    itemPurchased: "{name} purchased! 🎉",
+    bonus: "bonus",
+    allVipBenefits: "All VIP benefits for {days} days",
+    exclusiveAccessories: "Exclusive accessories",
+    // Power Shop Modal
+    powerShop: "Powers",
+    buyPowers: "Buy super powers",
+    purchasing: "Purchasing...",
+    notEnoughCoinsLong: "Not enough coins",
+    purchasedSuccess: "Successfully purchased!",
+    purchasedPower: "Purchased {count}x {name}! ⚡",
   },
 
   // ==========================================
@@ -902,6 +925,60 @@ export const en: KaTranslations = {
   // ==========================================
   tv: {
     start: "Go! 🚀",
+  },
+
+  // ==========================================
+  // Spin
+  // ==========================================
+  spin: {
+    title: "Lucky Spin!",
+    coins: "{amount} Coins",
+    gems: "{amount} Gems",
+    power: "Power",
+    received: "Received {item}! 🎉",
+    youWon: "You won {item}!",
+    claimReward: "Claim Reward",
+    freeSpinsLeft: "{count} free spins left",
+    comeBackTomorrow: "Come back tomorrow for more spins!",
+    loading: "Loading...",
+    winChances: "Win chances",
+    eachSegmentChance: "Each segment has equal chance:",
+    allSegmentsEqual: "All segments have equal chance (1/8)",
+  },
+
+  // ==========================================
+  // Game Additional
+  // ==========================================
+  gameExtra: {
+    prize: "Prize",
+  },
+
+  // ==========================================
+  // IAP
+  // ==========================================
+  iap: {
+    pleaseSignIn: "Please sign in",
+    purchaseOnlyMobile: "Purchases only available in mobile app",
+    purchaseComplete: "Purchase completed! 🎉",
+    purchaseFailed: "Purchase failed",
+    purchasesRestored: "Purchases restored! 🎉",
+    noPreviousPurchases: "No previous purchases found",
+    restoreFailed: "Restore failed",
+  },
+
+  // ==========================================
+  // Featured Carousel
+  // ==========================================
+  featured: {
+    starterPack: "Starter Pack",
+    starterPackDesc: "2x All Powers • 200 Coins • Perfect for beginners",
+    megaPowers: "Mega Powers",
+    megaPowersDesc: "5x All Powers • For top players",
+    vipWeek: "VIP Week",
+    vipWeekDesc: "2x XP • Unlimited spin • Exclusive frames",
+    badgeNew: "New",
+    badgePopular: "Popular",
+    badgeBestPrice: "Best Price",
   },
 };
 

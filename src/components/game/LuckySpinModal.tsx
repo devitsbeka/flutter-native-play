@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, VolumeX } from "lucide-react";
 import { useRewards } from "@/hooks/useRewards";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -15,15 +16,23 @@ interface LuckySpinModalProps {
   onClose: () => void;
 }
 
-const WHEEL_SEGMENTS = [
-  { label: "50 მონეტა", color: "#FFD700", value: 50, type: "coins", icon: coinIcon },
-  { label: "1 ალმასი", color: "#A855F7", value: 1, type: "gems", icon: gemIcon },
-  { label: "100 მონეტა", color: "#22C55E", value: 100, type: "coins", icon: coinIcon },
-  { label: "ძალა", color: "#3B82F6", value: 1, type: "powerup", icon: "⚡" },
-  { label: "25 მონეტა", color: "#EC4899", value: 25, type: "coins", icon: coinIcon },
-  { label: "200 მონეტა", color: "#F97316", value: 200, type: "coins", icon: coinIcon },
-  { label: "3 ალმასი", color: "#8B5CF6", value: 3, type: "gems", icon: gemIcon },
-  { label: "75 მონეტა", color: "#14B8A6", value: 75, type: "coins", icon: coinIcon },
+interface WheelSegment {
+  labelKey: string;
+  amount: number;
+  color: string;
+  type: "coins" | "gems" | "powerup";
+  icon: string;
+}
+
+const WHEEL_SEGMENTS: WheelSegment[] = [
+  { labelKey: "coins50", amount: 50, color: "#FFD700", type: "coins", icon: coinIcon },
+  { labelKey: "gems1", amount: 1, color: "#A855F7", type: "gems", icon: gemIcon },
+  { labelKey: "coins100", amount: 100, color: "#22C55E", type: "coins", icon: coinIcon },
+  { labelKey: "power", amount: 1, color: "#3B82F6", type: "powerup", icon: "⚡" },
+  { labelKey: "coins25", amount: 25, color: "#EC4899", type: "coins", icon: coinIcon },
+  { labelKey: "coins200", amount: 200, color: "#F97316", type: "coins", icon: coinIcon },
+  { labelKey: "gems3", amount: 3, color: "#8B5CF6", type: "gems", icon: gemIcon },
+  { labelKey: "coins75", amount: 75, color: "#14B8A6", type: "coins", icon: coinIcon },
 ];
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
@@ -31,11 +40,23 @@ const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
 export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
   const { dailySpinInfo, loading, recordSpinReward, refreshSpinInfo } = useRewards();
   const { playSound, vibrate } = useSound();
+  const { t } = useLanguage();
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [result, setResult] = useState<typeof WHEEL_SEGMENTS[0] | null>(null);
+  const [result, setResult] = useState<WheelSegment | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showFlyingCurrency, setShowFlyingCurrency] = useState(false);
+
+  // Helper to get translated label for a segment
+  const getSegmentLabel = (segment: WheelSegment): string => {
+    if (segment.type === "coins") {
+      return t('spin.coins').replace('{amount}', String(segment.amount));
+    }
+    if (segment.type === "gems") {
+      return t('spin.gems').replace('{amount}', String(segment.amount));
+    }
+    return t('spin.power');
+  };
 
   // Refresh spin info when modal opens
   useEffect(() => {
@@ -90,14 +111,15 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
       }
 
       // Record the reward to database
+      const segmentLabel = getSegmentLabel(wonSegment);
       const success = await recordSpinReward({
-        label: wonSegment.label,
-        value: wonSegment.value,
+        label: segmentLabel,
+        value: wonSegment.amount,
         type: wonSegment.type,
       });
 
       if (success) {
-        toast.success(`მიღებულია ${wonSegment.label}! 🎉`);
+        toast.success(t('spin.received').replace('{item}', segmentLabel));
       }
     }, 4000);
   };
@@ -109,7 +131,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
     onClose();
   };
 
-  const getRewardDisplay = (segment: typeof WHEEL_SEGMENTS[0]) => {
+  const getRewardDisplay = (segment: WheelSegment) => {
     if (typeof segment.icon === "string" && !segment.icon.includes("/")) {
       return <span className="text-2xl">{segment.icon}</span>;
     }
@@ -233,7 +255,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                             className="text-white font-bold text-xs whitespace-nowrap"
                             style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
                           >
-                            {segment.label}
+                            {getSegmentLabel(segment)}
                           </span>
                         </div>
                       );
@@ -306,7 +328,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                     >
                       {getRewardDisplay(result)}
                       <span className="font-display text-amber-800 text-lg font-bold">
-                        მოიგე {result.label}!
+                        {t('spin.youWon').replace('{item}', getSegmentLabel(result))}
                       </span>
                     </motion.div>
                   </motion.div>
@@ -317,7 +339,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               {result && (result.type === "coins" || result.type === "gems") && (
                 <FlyingCurrency 
                   type={result.type as "coins" | "gems"} 
-                  amount={result.value} 
+                  amount={result.amount} 
                   isActive={showFlyingCurrency} 
                 />
               )}
@@ -329,7 +351,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   className="w-full"
                   onClick={handleClose}
                 >
-                  აიღე ჯილდო
+                  {t('spin.claimReward')}
                 </ChunkyButton>
               ) : (
                 <div 
@@ -339,10 +361,10 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   }}
                 >
                   <span className="text-gray-600 text-sm">
-                    {loading ? "იტვირთება..." :
+                    {loading ? t('spin.loading') :
                       dailySpinInfo.canSpin 
-                        ? `${dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed} უფასო სპინი დარჩა`
-                        : "ხვალ დაბრუნდი მეტი სპინებისთვის!"
+                        ? t('spin.freeSpinsLeft').replace('{count}', String(dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed))
+                        : t('spin.comeBackTomorrow')
                     }
                   </span>
                 </div>
@@ -351,18 +373,18 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               {/* Probability Disclosure - Apple Required */}
               <details className="mt-3">
                 <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 text-center">
-                  📊 მოგების შანსები
+                  📊 {t('spin.winChances')}
                 </summary>
                 <div className="mt-2 p-3 bg-gray-50 rounded-xl text-xs text-gray-600 space-y-1">
-                  <p className="font-medium text-gray-700 mb-2">თითოეულ სეგმენტზე მოხვედრის შანსი:</p>
+                  <p className="font-medium text-gray-700 mb-2">{t('spin.eachSegmentChance')}</p>
                   {WHEEL_SEGMENTS.map((segment, i) => (
                     <div key={i} className="flex justify-between items-center">
-                      <span>{segment.label}</span>
+                      <span>{getSegmentLabel(segment)}</span>
                       <span className="font-mono text-gray-500">12.5%</span>
                     </div>
                   ))}
                   <p className="text-gray-400 mt-2 pt-2 border-t border-gray-200">
-                    ყველა სეგმენტს თანაბარი შანსი აქვს (1/8)
+                    {t('spin.allSegmentsEqual')}
                   </p>
                 </div>
               </details>
