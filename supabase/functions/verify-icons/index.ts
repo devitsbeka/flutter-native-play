@@ -18,19 +18,36 @@ serve(async (req) => {
 
     console.log('Starting icon verification...');
 
-    // Fetch all icons from icon_library
-    const { data: icons, error: fetchError } = await supabase
-      .from('icon_library')
-      .select('slug, icon_url')
-      .not('icon_url', 'is', null);
+    // Fetch ALL icons using pagination (Supabase has 1000 row default limit)
+    const allIcons: Array<{ slug: string; icon_url: string }> = [];
+    const pageSize = 1000;
+    let offset = 0;
+    let hasMore = true;
 
-    if (fetchError) {
-      throw new Error(`Failed to fetch icons: ${fetchError.message}`);
+    while (hasMore) {
+      const { data: batch, error: fetchError } = await supabase
+        .from('icon_library')
+        .select('slug, icon_url')
+        .not('icon_url', 'is', null)
+        .range(offset, offset + pageSize - 1);
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch icons: ${fetchError.message}`);
+      }
+
+      if (batch && batch.length > 0) {
+        allIcons.push(...batch);
+        offset += batch.length;
+        hasMore = batch.length === pageSize;
+        console.log(`Fetched ${allIcons.length} icons so far...`);
+      } else {
+        hasMore = false;
+      }
     }
 
-    console.log(`Found ${icons?.length || 0} icons to verify`);
+    console.log(`Found ${allIcons.length} total icons to verify`);
 
-    if (!icons || icons.length === 0) {
+    if (allIcons.length === 0) {
       return new Response(JSON.stringify({ 
         success: true, 
         total: 0, 
@@ -47,7 +64,7 @@ serve(async (req) => {
 
     let validCount = 0;
     let brokenCount = 0;
-    const batchSize = 50;
+    const verifyBatchSize = 50;
     const results: Array<{
       slug: string;
       icon_url: string;
@@ -56,9 +73,9 @@ serve(async (req) => {
     }> = [];
 
     // Process icons in batches
-    for (let i = 0; i < icons.length; i += batchSize) {
-      const batch = icons.slice(i, i + batchSize);
-      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(icons.length / batchSize)}`);
+    for (let i = 0; i < allIcons.length; i += verifyBatchSize) {
+      const batch = allIcons.slice(i, i + verifyBatchSize);
+      console.log(`Verifying batch ${Math.floor(i / verifyBatchSize) + 1}/${Math.ceil(allIcons.length / verifyBatchSize)} (${i + batch.length}/${allIcons.length})`);
 
       const batchResults = await Promise.all(
         batch.map(async (icon) => {
@@ -91,26 +108,28 @@ serve(async (req) => {
       );
 
       results.push(...batchResults);
+
+      // Insert results in chunks to avoid payload limits
+      if (results.length >= 500 || i + verifyBatchSize >= allIcons.length) {
+        const { error: insertError } = await supabase
+          .from('icon_verification_results')
+          .upsert(results, { onConflict: 'slug' });
+
+        if (insertError) {
+          console.error('Insert error:', insertError);
+        }
+        results.length = 0; // Clear results array
+      }
     }
 
-    // Insert all results
-    const { error: insertError } = await supabase
-      .from('icon_verification_results')
-      .insert(results);
-
-    if (insertError) {
-      console.error('Insert error:', insertError);
-      throw new Error(`Failed to save results: ${insertError.message}`);
-    }
-
-    console.log(`Verification complete: ${validCount} valid, ${brokenCount} broken`);
+    console.log(`Verification complete: ${validCount} valid, ${brokenCount} broken out of ${allIcons.length}`);
 
     return new Response(JSON.stringify({
       success: true,
-      total: icons.length,
+      total: allIcons.length,
       valid: validCount,
       broken: brokenCount,
-      message: `Verified ${icons.length} icons: ${validCount} valid, ${brokenCount} broken`
+      message: `Verified ${allIcons.length} icons: ${validCount} valid, ${brokenCount} broken`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

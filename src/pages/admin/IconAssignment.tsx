@@ -503,6 +503,12 @@ export default function IconAssignment() {
               <div className="text-lg font-bold text-red-500">{verificationStats.broken.toLocaleString()}</div>
               <div className="text-xs text-muted-foreground">გატეხილი</div>
             </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-amber-500">
+                {(icons.length - verificationStats.total).toLocaleString()}
+              </div>
+              <div className="text-xs text-muted-foreground">შეუმოწმ.</div>
+            </div>
             {isVerifying ? (
               <Button size="sm" variant="ghost" disabled className="gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
