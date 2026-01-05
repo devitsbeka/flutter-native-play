@@ -1,6 +1,5 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // 3D cube-style power-up icons
@@ -53,18 +52,6 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
           {/* Just the icon - no container */}
           {isLoading ? (
             <div className="w-16 h-16 rounded-full bg-white/20 animate-pulse" />
-          ) : type === "hint" ? (
-            <div 
-              className="w-16 h-16 rounded-full flex items-center justify-center"
-              style={{
-                background: isDisabled 
-                  ? "hsl(var(--muted-foreground))" 
-                  : "linear-gradient(180deg, #E8B4F8 0%, #C084FC 100%)",
-                boxShadow: isDisabled ? "none" : "0 4px 12px rgba(192, 132, 252, 0.4)"
-              }}
-            >
-              <Clock className="w-8 h-8 text-white" strokeWidth={2.5} />
-            </div>
           ) : (
             <motion.img
               src={config.image}
