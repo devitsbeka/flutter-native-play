@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
-import { ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Apple } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 
 const signUpSchema = z.object({
@@ -28,7 +29,8 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, signInWithApple, user } = useAuth();
+  const isIOS = Capacitor.getPlatform() === 'ios';
   const { notify } = useNotificationModal();
   const navigate = useNavigate();
 
@@ -90,6 +92,25 @@ export default function Auth() {
           notify.success("Welcome back!", { description: "You've successfully signed in.", icon: "👋" });
           navigate("/");
         }
+      }
+    } catch (err) {
+      notify.error("Error", { description: "Something went wrong. Please try again." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    try {
+      const { error } = await signInWithApple();
+      if (error) {
+        if (!error.message?.includes('cancelled')) {
+          notify.error("Apple Sign In failed", { description: error.message });
+        }
+      } else {
+        notify.success("Welcome!", { description: "You've signed in with Apple.", icon: "🍎" });
+        navigate("/");
       }
     } catch (err) {
       notify.error("Error", { description: "Something went wrong. Please try again." });
@@ -201,6 +222,29 @@ export default function Auth() {
           >
             {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
           </ChunkyButton>
+
+          {/* Sign in with Apple - iOS only */}
+          {isIOS && (
+            <>
+              <div className="flex items-center gap-3 mt-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              
+              <ChunkyButton
+                type="button"
+                variant="secondary"
+                size="lg"
+                className="w-full mt-4 bg-foreground text-background hover:bg-foreground/90"
+                onClick={handleAppleSignIn}
+                disabled={loading}
+              >
+                <Apple className="w-5 h-5 mr-2" />
+                Sign in with Apple
+              </ChunkyButton>
+            </>
+          )}
         </motion.form>
 
         {/* Toggle */}

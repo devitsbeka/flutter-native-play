@@ -151,11 +151,11 @@ export default function PrivacyPolicy() {
                 კითხვების შემთხვევაში დაგვიკავშირდით:
               </p>
               <a 
-                href="mailto:privacy@quizapp.ge" 
+                href="mailto:support@worldquizzes.app" 
                 className="inline-flex items-center gap-2 text-sm text-primary font-medium"
               >
                 <Mail className="w-4 h-4" />
-                privacy@quizapp.ge
+                support@worldquizzes.app
               </a>
             </section>
           </div>
