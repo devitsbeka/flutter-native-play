@@ -27,18 +27,23 @@ export function usePushNotifications(): UsePushNotificationsResult {
     if (!user) return;
 
     try {
-      // Store the FCM token in user's profile or a dedicated table
-      // You may need to create a push_tokens table for this
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          // Add fcm_token column to profiles table via migration if needed
-          // For now, we'll just log it
-        })
-        .eq('user_id', user.id);
+      const platform = Capacitor.getPlatform() as 'ios' | 'android';
+      
+      // Upsert token to push_tokens table
+      const { error: upsertError } = await supabase
+        .from('push_tokens')
+        .upsert(
+          { 
+            user_id: user.id,
+            token,
+            platform,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id,token' }
+        );
 
-      if (updateError) {
-        console.error('Failed to save FCM token:', updateError);
+      if (upsertError) {
+        console.error('Failed to save FCM token:', upsertError);
       } else {
         console.log('FCM token saved successfully');
       }
