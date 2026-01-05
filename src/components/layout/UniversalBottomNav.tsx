@@ -320,7 +320,7 @@ function Hex3DPlayButton({
   }
 
   return (
-    <div className="relative pointer-events-auto">
+    <div className="relative pointer-events-auto animate-scale-in">
       {/* Badge above button */}
       {isPlayButton && !isPlusIcon && (
         <motion.div
