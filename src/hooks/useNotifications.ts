@@ -6,7 +6,7 @@ import { useSound } from '@/contexts/SoundContext';
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'friend_request' | 'friend_accepted' | 'challenge' | 'game_result' | 'reward' | 'achievement' | 'system';
+  type: 'friend_request' | 'friend_accepted' | 'challenge' | 'game_result' | 'reward' | 'achievement' | 'system' | 'game_started' | 'room_invite';
   title: string;
   message: string | null;
   data: Record<string, unknown>;
