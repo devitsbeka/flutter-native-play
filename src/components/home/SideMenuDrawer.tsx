@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
@@ -12,7 +13,6 @@ import { SettingsModal } from "./SettingsModal";
 import { HelpModal } from "./HelpModal";
 import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 
@@ -29,24 +29,20 @@ interface SideMenuDrawerProps {
   onClose: () => void;
 }
 
-const menuItems = [
-  { icon: iconRewards, label: "ჯილდოები", onClick: "rewards" },
-  { icon: iconMissions, label: "მისიები", onClick: "missions" },
-  { icon: iconTreasure, label: "განძის ყუთი", onClick: "treasure" },
-  { icon: iconShop, label: "მაღაზია", onClick: "shop" },
-  { icon: iconParty, label: "Party", onClick: "party" },
-  { icon: iconOtherGames, label: "სხვა თამაშები", onClick: "other-games" },
-];
-
-const bottomLinks = [
-  { label: "პარამეტრები", onClick: "settings" },
-  { label: "დახმარება", onClick: "help" },
-  { label: "კონფიდენციალურობა", onClick: "privacy" },
+// Menu items now use translation keys
+const menuItemsConfig = [
+  { icon: iconRewards, labelKey: "menu.rewards", onClick: "rewards" },
+  { icon: iconMissions, labelKey: "menu.missions", onClick: "missions" },
+  { icon: iconTreasure, labelKey: "menu.treasure", onClick: "treasure" },
+  { icon: iconShop, labelKey: "menu.shop", onClick: "shop" },
+  { icon: iconParty, labelKey: "menu.party", onClick: "party" },
+  { icon: iconOtherGames, labelKey: "menu.otherGames", onClick: "other-games" },
 ];
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { t } = useLanguage();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
@@ -77,7 +73,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       return;
     }
     if (action === "other-games") {
-      toast.info("მალე დაემატება!");
+      toast.info(t("menu.comingSoon"));
       return;
     }
     if (action === "avatar") {
@@ -110,8 +106,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     navigate("/");
   };
 
-  // Grid items only (first 5), bottom links separate
-  const visibleGridItems = menuItems;
+  // Build menu items with translations
+  const menuItems = menuItemsConfig.map(item => ({
+    ...item,
+    label: t(item.labelKey)
+  }));
 
   return (
     <>
@@ -164,14 +163,14 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-display text-xl font-bold text-foreground truncate">
-                        {profile?.nickname || "მოთამაშე"}
+                        {profile?.nickname || t("menu.player")}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs font-semibold">
-                          დონე {levelInfo.level}
+                          {t("common.level")} {levelInfo.level}
                         </span>
                         <span className="text-sm text-muted-foreground">
-                          {profile?.total_points?.toLocaleString() || 0} ქულა
+                          {profile?.total_points?.toLocaleString() || 0} {t("menu.points")}
                         </span>
                       </div>
                     </div>
@@ -185,7 +184,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                     className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 mt-8"
                   >
                     <User className="h-5 w-5" />
-                    შესვლა
+                    {t("menu.signIn")}
                   </button>
                 )}
               </div>
@@ -198,9 +197,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               {/* Grid Menu */}
               <div className="p-4 pb-2">
                 <div className="grid grid-cols-3 gap-2">
-                  {visibleGridItems.map((item, index) => (
+                  {menuItems.map((item, index) => (
                     <motion.button
-                      key={item.label}
+                      key={item.labelKey}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -228,28 +227,25 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               {/* Bottom Text Links */}
               <div className="px-4 pb-4 pt-2 border-t border-border mt-2">
                 <div className="flex flex-col gap-1">
-                  {/* პარამეტრები */}
                   <button
                     onClick={() => handleItemClick("settings")}
                     className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    პარამეტრები
+                    {t("menu.settings")}
                   </button>
 
-                  {/* დახმარება */}
                   <button
                     onClick={() => handleItemClick("help")}
                     className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    დახმარება
+                    {t("menu.help")}
                   </button>
 
-                  {/* კონფიდენციალურობა */}
                   <button
                     onClick={() => handleItemClick("privacy")}
                     className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    კონფიდენციალურობა
+                    {t("menu.privacy")}
                   </button>
 
                   {user && (
@@ -257,7 +253,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       onClick={handleSignOut}
                       className="text-left py-2 px-1 text-sm text-destructive hover:text-destructive/80 transition-colors"
                     >
-                      გამოსვლა
+                      {t("menu.signOut")}
                     </button>
                   )}
                 </div>
