@@ -131,15 +131,15 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
       <ChunkyButton
         onClick={handleNext}
         variant="success"
-        className="flex-1"
+        className="flex-1 whitespace-nowrap"
       >
         {isLastSlide ? (
           "გასაგებია!"
         ) : (
-          <>
+          <span className="flex items-center gap-1">
             შემდეგი
-            <ChevronRight className="w-5 h-5 ml-1" />
-          </>
+            <ChevronRight className="w-5 h-5" />
+          </span>
         )}
       </ChunkyButton>
     </div>
@@ -200,17 +200,14 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
           
           {/* How to use tip */}
           <div 
-            className="p-4 rounded-2xl"
+            className="p-4 rounded-xl"
             style={{
-              background: `linear-gradient(135deg, ${slide.color.from}10, ${slide.color.to}10)`,
-              border: `1px solid ${slide.color.from}20`,
-              boxShadow: `0 2px 0 ${slide.color.from}15`,
+              background: "#FEF7ED",
+              border: "1px solid #FDE9D9",
+              boxShadow: "0 2px 0 #FDDFC9",
             }}
           >
-            <p 
-              className="text-sm font-medium"
-              style={{ color: slide.color.from }}
-            >
+            <p className="text-sm font-medium text-gray-700">
               💡 {slide.howToUse}
             </p>
           </div>
