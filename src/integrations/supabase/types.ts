@@ -1301,6 +1301,48 @@ export type Database = {
           },
         ]
       }
+      user_league_data: {
+        Row: {
+          created_at: string | null
+          current_rank: number | null
+          current_xp: number | null
+          id: string
+          last_visited_at: string | null
+          league_tier: number | null
+          previous_rank: number | null
+          updated_at: string | null
+          user_id: string
+          week_start_date: string | null
+          weekly_xp: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_rank?: number | null
+          current_xp?: number | null
+          id?: string
+          last_visited_at?: string | null
+          league_tier?: number | null
+          previous_rank?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_start_date?: string | null
+          weekly_xp?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          current_rank?: number | null
+          current_xp?: number | null
+          id?: string
+          last_visited_at?: string | null
+          league_tier?: number | null
+          previous_rank?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_start_date?: string | null
+          weekly_xp?: number | null
+        }
+        Relationships: []
+      }
       user_level_progress: {
         Row: {
           category_id: string
