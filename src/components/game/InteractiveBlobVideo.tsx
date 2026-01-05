@@ -33,6 +33,7 @@ interface InteractiveBlobVideoProps {
 export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimate = false }: InteractiveBlobVideoProps) {
   const { categories } = useCategories();
   const [slotIndex, setSlotIndex] = useState(0);
+  const [iconsPreloaded, setIconsPreloaded] = useState(false);
   const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Get all category icons for slot animation - build URLs from icon_slug
@@ -43,9 +44,34 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
     [categories]
   );
 
-  // Slot machine animation - only runs when shouldAnimate is true and not locked
+  // Preload all category icons immediately when available
   useEffect(() => {
-    if (isLocked || !shouldAnimate || categoryIcons.length === 0) {
+    if (categoryIcons.length === 0 || iconsPreloaded) return;
+    
+    let loadedCount = 0;
+    const totalIcons = categoryIcons.length;
+    
+    categoryIcons.forEach(url => {
+      const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === totalIcons) {
+          setIconsPreloaded(true);
+        }
+      };
+      img.onerror = () => {
+        loadedCount++;
+        if (loadedCount === totalIcons) {
+          setIconsPreloaded(true);
+        }
+      };
+      img.src = url;
+    });
+  }, [categoryIcons, iconsPreloaded]);
+
+  // Slot machine animation - only runs when shouldAnimate is true, not locked, and icons are preloaded
+  useEffect(() => {
+    if (isLocked || !shouldAnimate || categoryIcons.length === 0 || !iconsPreloaded) {
       if (slotIntervalRef.current) {
         clearInterval(slotIntervalRef.current);
         slotIntervalRef.current = null;
@@ -63,12 +89,12 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
         clearInterval(slotIntervalRef.current);
       }
     };
-  }, [isLocked, shouldAnimate, categoryIcons.length]);
+  }, [isLocked, shouldAnimate, categoryIcons.length, iconsPreloaded]);
 
   // Current slot data
   const currentIconUrl = categoryIcons[slotIndex] || "";
   const currentColor = SLOT_COLORS[slotIndex % SLOT_COLORS.length];
-  const isSpinning = shouldAnimate && !isLocked && categoryIcons.length > 0;
+  const isSpinning = shouldAnimate && !isLocked && categoryIcons.length > 0 && iconsPreloaded;
 
   return (
     <div className="relative w-[280px] h-[280px] select-none">
