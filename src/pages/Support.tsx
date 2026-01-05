@@ -23,6 +23,14 @@ const faqs = [
     question: "რატომ არ მუშაობს push შეტყობინებები?",
     answer: "გადადი iPhone-ის Settings → Notifications → World Quizzes და ჩართე შეტყობინებები. ასევე დარწმუნდი რომ Do Not Disturb გამორთულია.",
   },
+  {
+    question: "How do I delete my account?",
+    answer: "Go to Profile → Settings (gear icon) → Privacy → Delete Account. All your data will be permanently removed within 30 days.",
+  },
+  {
+    question: "How do I restore my purchases?",
+    answer: "Go to the VIP page and tap 'Restore Purchases'. Make sure you're signed in with the same Apple ID used for the original purchase.",
+  },
 ];
 
 const contactOptions = [
