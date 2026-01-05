@@ -37,16 +37,23 @@ const AI_NAMES: Record<number, string[]> = {
   5: ["WorldChamp", "Ultimate", "Supreme", "Invincible", "TheOne", "Godlike", "Unstoppable", "Legendary", "Mythical", "Eternal"],
 };
 
-// Generate fake users for a league tier
-function generateFakeUsers(tier: number, count: number = 15): LeagueEntry[] {
+// Generate fake users for a league tier with seeded random for consistency
+function generateFakeUsers(tier: number, count: number = 15, existingXpRange?: { min: number; max: number }): LeagueEntry[] {
   const names = AI_NAMES[tier] || AI_NAMES[1];
-  const baseXp = tier * 100;
+  const baseXp = existingXpRange?.max || tier * 300;
+  const minXp = existingXpRange?.min || tier * 50;
+  
+  // Seed random based on tier for consistent results per session
+  const seededRandom = (i: number) => {
+    const x = Math.sin(tier * 1000 + i) * 10000;
+    return x - Math.floor(x);
+  };
   
   return Array.from({ length: count }, (_, i) => ({
     user_id: `ai-${tier}-${i}`,
     nickname: names[i % names.length] + (i >= names.length ? `_${Math.floor(i / names.length)}` : ""),
     avatar_url: null,
-    weekly_xp: Math.max(10, baseXp + Math.floor(Math.random() * 400) - i * 20),
+    weekly_xp: Math.floor(minXp + seededRandom(i) * (baseXp - minXp)),
     rank: i + 1,
     league_tier: tier,
     rankChange: "same" as const,
@@ -144,54 +151,103 @@ export function useLeagueLeaderboard(viewingTier?: number) {
   const { data: leaderboard, isLoading } = useQuery({
     queryKey: ["leagueLeaderboard", activeTier],
     queryFn: async () => {
-      // Get all real users in this league tier
-      const { data: leagueUsers, error } = await supabase
-        .from("user_league_data")
-        .select(`
-          user_id,
-          weekly_xp,
-          league_tier,
-          previous_rank,
-          current_rank
-        `)
-        .eq("league_tier", activeTier)
-        .order("weekly_xp", { ascending: false })
-        .limit(50);
+      // For user's own tier, get league data; for other tiers, get all profiles
+      let realEntries: LeagueEntry[] = [];
+      
+      if (activeTier === userTier || !user?.id) {
+        // Get users from user_league_data for the active tier
+        const { data: leagueUsers, error } = await supabase
+          .from("user_league_data")
+          .select(`
+            user_id,
+            weekly_xp,
+            league_tier,
+            previous_rank,
+            current_rank
+          `)
+          .eq("league_tier", activeTier)
+          .order("weekly_xp", { ascending: false })
+          .limit(50);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Get profile info for real users
-      const userIds = leagueUsers?.map(u => u.user_id) || [];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, nickname, avatar_url")
-        .in("user_id", userIds);
+        // Get profile info for real users
+        const userIds = leagueUsers?.map(u => u.user_id) || [];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, nickname, avatar_url, total_points")
+          .in("user_id", userIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      // Map real users
-      const realEntries: LeagueEntry[] = (leagueUsers || []).map((u) => {
-        const profile = profileMap.get(u.user_id);
-        
-        let rankChangeStatus: "up" | "down" | "same" | "new" = "same";
-        if (u.previous_rank === null) {
-          rankChangeStatus = "new";
+        // Map real users
+        realEntries = (leagueUsers || []).map((u) => {
+          const profile = profileMap.get(u.user_id);
+          
+          let rankChangeStatus: "up" | "down" | "same" | "new" = "same";
+          if (u.previous_rank === null) {
+            rankChangeStatus = "new";
+          }
+
+          return {
+            user_id: u.user_id,
+            nickname: profile?.nickname || "Unknown",
+            avatar_url: profile?.avatar_url || null,
+            weekly_xp: u.weekly_xp || profile?.total_points || 0,
+            rank: 0,
+            league_tier: u.league_tier,
+            rankChange: rankChangeStatus,
+            isAI: false,
+          };
+        });
+      } else {
+        // For other tiers (locked tiers), fetch real profiles and distribute them
+        const { data: allProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, nickname, avatar_url, total_points")
+          .order("total_points", { ascending: false })
+          .limit(100);
+
+        if (allProfiles && allProfiles.length > 0) {
+          // Distribute profiles across tiers based on points
+          const tierRanges = [
+            { tier: 1, minPoints: 0, maxPoints: 500 },
+            { tier: 2, minPoints: 500, maxPoints: 2000 },
+            { tier: 3, minPoints: 2000, maxPoints: 5000 },
+            { tier: 4, minPoints: 5000, maxPoints: 15000 },
+            { tier: 5, minPoints: 15000, maxPoints: Infinity },
+          ];
+          
+          const tierRange = tierRanges.find(t => t.tier === activeTier);
+          if (tierRange) {
+            realEntries = allProfiles
+              .filter(p => p.total_points >= tierRange.minPoints && p.total_points < tierRange.maxPoints)
+              .slice(0, 10)
+              .map((p) => ({
+                user_id: p.user_id,
+                nickname: p.nickname,
+                avatar_url: p.avatar_url,
+                weekly_xp: p.total_points || 0,
+                rank: 0,
+                league_tier: activeTier,
+                rankChange: "same" as const,
+                isAI: false,
+              }));
+          }
         }
+      }
 
-        return {
-          user_id: u.user_id,
-          nickname: profile?.nickname || "Unknown",
-          avatar_url: profile?.avatar_url || null,
-          weekly_xp: u.weekly_xp,
-          rank: 0, // Will be assigned after sorting
-          league_tier: u.league_tier,
-          rankChange: rankChangeStatus,
-          isAI: false,
-        };
-      });
+      // Calculate XP range for AI users
+      const existingXpRange = realEntries.length > 0 
+        ? { 
+            min: Math.min(...realEntries.map(e => e.weekly_xp), 50),
+            max: Math.max(...realEntries.map(e => e.weekly_xp), 500)
+          }
+        : undefined;
 
-      // Generate AI users to fill the league
-      const aiUsers = generateFakeUsers(activeTier, Math.max(10, 20 - realEntries.length));
+      // Generate AI users to fill the league (ensure 20-30 total)
+      const aiCount = Math.max(15, 25 - realEntries.length);
+      const aiUsers = generateFakeUsers(activeTier, aiCount, existingXpRange);
 
       // Combine and sort by XP
       const allEntries = [...realEntries, ...aiUsers]
