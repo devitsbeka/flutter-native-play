@@ -4,11 +4,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameModal } from "@/components/ui/game-modal";
 
-// New hexagonal badge icons
-import fiftyFiftyBadge from "@/assets/powers/5050-badge.png";
-import freezeBadge from "@/assets/powers/freeze-badge.png";
-import replaceBadge from "@/assets/powers/replace-badge.png";
-import timeDrainBadge from "@/assets/powers/time-drain-badge.png";
+// 3D hexagonal badge icons
+import fiftyFiftyIcon from "@/assets/powers/5050.png";
+import freezeIcon from "@/assets/powers/freeze.png";
+import replaceIcon from "@/assets/powers/replace.png";
+import timeDrainIcon from "@/assets/powers/time-drain.png";
 
 interface PowerUpTutorialModalProps {
   isOpen: boolean;
@@ -25,28 +25,28 @@ interface TutorialSlide {
 
 const TUTORIAL_SLIDES: TutorialSlide[] = [
   {
-    icon: fiftyFiftyBadge,
+    icon: fiftyFiftyIcon,
     title: "50/50",
     description: "წაშლის 2 არასწორ პასუხს და დარჩება მხოლოდ 2 ვარიანტი",
     howToUse: "გამოიყენე როცა დარწმუნებული არ ხარ პასუხში. დაგეხმარება შანსების გაორმაგებაში! ⚡",
     color: { from: "#E85C3A", to: "#FFB347" },
   },
   {
-    icon: freezeBadge,
+    icon: freezeIcon,
     title: "გაყინვა",
     description: "დრო გაიყინება 10 წამით. მშვიდად დაფიქრდი კითხვაზე დროის დაკარგვის გარეშე!",
     howToUse: "გამოიყენე როცა კითხვა რთულია და მეტი დრო გჭირდება! ❄️",
     color: { from: "#1C8CA8", to: "#95EBE9" },
   },
   {
-    icon: replaceBadge,
+    icon: replaceIcon,
     title: "შეცვლა",
     description: "ცვლის მიმდინარე კითხვას სრულიად ახალი კითხვით",
     howToUse: "გამოიყენე როცა კითხვა საერთოდ არ იცი. მიიღებ ახალ შანსს! 🔄",
     color: { from: "#1CA88C", to: "#95EBD4" },
   },
   {
-    icon: timeDrainBadge,
+    icon: timeDrainIcon,
     title: "დრო+",
     description: "ამატებს 10 წამს ტაიმერზე მყისიერად",
     howToUse: "გამოიყენე როცა დრო იწურება და კიდევ ცოტა გჭირდება პასუხისთვის! ⏰",
