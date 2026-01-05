@@ -30,11 +30,15 @@ interface InteractiveBlobVideoProps {
   shouldAnimate?: boolean;
 }
 
+const SLOT_SPIN_COUNT = 6; // Number of categories to show before landing
+
 export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimate = false }: InteractiveBlobVideoProps) {
   const { categories } = useCategories();
   const [slotIndex, setSlotIndex] = useState(0);
   const [iconsPreloaded, setIconsPreloaded] = useState(false);
+  const [slotSequence, setSlotSequence] = useState<number[]>([]);
   const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const spinCountRef = useRef(0);
   
   // Get all category icons for slot animation - build URLs from icon_slug
   const categoryIcons = useMemo(() => 
@@ -43,6 +47,25 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
       .map(c => getIconUrl(c.icon_slug!)),
     [categories]
   );
+
+  // Generate random slot sequence when animation should start
+  useEffect(() => {
+    if (shouldAnimate && !isLocked && categoryIcons.length > 0 && iconsPreloaded) {
+      // Pick 5-6 random indices to show before stopping
+      const randomIndices: number[] = [];
+      const availableIndices = [...Array(categoryIcons.length).keys()];
+      
+      for (let i = 0; i < SLOT_SPIN_COUNT && availableIndices.length > 0; i++) {
+        const randIdx = Math.floor(Math.random() * availableIndices.length);
+        randomIndices.push(availableIndices[randIdx]);
+        availableIndices.splice(randIdx, 1);
+      }
+      
+      setSlotSequence(randomIndices);
+      spinCountRef.current = 0;
+      setSlotIndex(0);
+    }
+  }, [shouldAnimate, isLocked, categoryIcons.length, iconsPreloaded]);
 
   // Preload all category icons immediately when available
   useEffect(() => {
@@ -69,9 +92,9 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
     });
   }, [categoryIcons, iconsPreloaded]);
 
-  // Slot machine animation - only runs when shouldAnimate is true, not locked, and icons are preloaded
+  // Slot machine animation - cycles through random sequence only
   useEffect(() => {
-    if (isLocked || !shouldAnimate || categoryIcons.length === 0 || !iconsPreloaded) {
+    if (isLocked || !shouldAnimate || slotSequence.length === 0 || !iconsPreloaded) {
       if (slotIntervalRef.current) {
         clearInterval(slotIntervalRef.current);
         slotIntervalRef.current = null;
@@ -79,22 +102,28 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
       return;
     }
 
-    // Start cycling immediately
+    // Start cycling through the random sequence
     slotIntervalRef.current = setInterval(() => {
-      setSlotIndex(prev => (prev + 1) % categoryIcons.length);
-    }, 120);
+      spinCountRef.current++;
+      if (spinCountRef.current >= slotSequence.length) {
+        // Reset and loop
+        spinCountRef.current = 0;
+      }
+      setSlotIndex(spinCountRef.current);
+    }, 150);
 
     return () => {
       if (slotIntervalRef.current) {
         clearInterval(slotIntervalRef.current);
       }
     };
-  }, [isLocked, shouldAnimate, categoryIcons.length, iconsPreloaded]);
+  }, [isLocked, shouldAnimate, slotSequence.length, iconsPreloaded]);
 
-  // Current slot data
-  const currentIconUrl = categoryIcons[slotIndex] || "";
+  // Current slot data - use the sequence index to get actual category
+  const actualCategoryIndex = slotSequence[slotIndex] ?? 0;
+  const currentIconUrl = categoryIcons[actualCategoryIndex] || "";
   const currentColor = SLOT_COLORS[slotIndex % SLOT_COLORS.length];
-  const isSpinning = shouldAnimate && !isLocked && categoryIcons.length > 0 && iconsPreloaded;
+  const isSpinning = shouldAnimate && !isLocked && slotSequence.length > 0 && iconsPreloaded;
 
   return (
     <div className="relative w-[280px] h-[280px] select-none">
