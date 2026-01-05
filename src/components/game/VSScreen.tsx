@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
 
+import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { CloudCategoryFlight } from "./CloudCategoryFlight";
@@ -71,6 +72,7 @@ export function VSScreen() {
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [selectedCategoryVideo, setSelectedCategoryVideo] = useState<string | null>(null);
   const [showCategoryBubble, setShowCategoryBubble] = useState(false);
+  const [canStart, setCanStart] = useState(false);
   
 
   // Player data
@@ -150,18 +152,23 @@ export function VSScreen() {
     }
   }, [slotPhase]);
 
-  // Handle when category is selected by wheel - AUTO START GAME
+  // Handle when category is selected by wheel
   const handleCategorySelected = (categoryId: string, categoryName: string, videoUrl: string) => {
     setShowWheel(false);
     setSelectedCategoryId(categoryId);
     setSelectedCategoryName(categoryName);
     setSelectedCategoryVideo(videoUrl);
-    setShowCategoryBubble(true);
-    
-    // Auto-start the game after brief reveal (0.5s)
     setTimeout(() => {
-      beginPlaying(categoryId);
-    }, 500);
+      setShowCategoryBubble(true);
+      setCanStart(true);
+    }, 100);
+  };
+
+  // Start button begins the game with the selected category
+  const handleStart = () => {
+    if (selectedCategoryId) {
+      beginPlaying(selectedCategoryId);
+    }
   };
 
   return (
@@ -501,7 +508,28 @@ export function VSScreen() {
         )}
       </div>
 
-      {/* Game auto-starts after category selection - no button needed */}
+      {/* Button Section - Fixed at bottom */}
+      <div className="w-full max-w-sm mx-auto pb-4 sm:pb-8 pt-4 px-6 relative z-10">
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: canStart ? 1 : 0,
+            y: canStart ? 0 : 20,
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          <ChunkyButton
+            variant="mint"
+            size="xl"
+            onClick={handleStart}
+            disabled={!canStart}
+            className="w-full"
+          >
+            დაწყება
+          </ChunkyButton>
+        </motion.div>
+      </div>
 
       {/* Help Modal */}
       <VSMatchHelpModal 
