@@ -4,7 +4,7 @@ import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { missionTracker } from "@/services/missionTracker";
 
-export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "category-wheel" | "playing" | "question-result" | "match-result";
+export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
 
 export interface AnswerHistory {
@@ -53,7 +53,6 @@ interface GameState {
 
 interface GameContextType extends GameState {
   startMatchmaking: (categoryId?: string) => Promise<void>;
-  startMatch: () => void;
   beginPlaying: (categoryId: string) => Promise<void>;
   answerQuestion: (answer: string, timeRemaining: number) => void;
   nextQuestion: () => void;
@@ -142,13 +141,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [preparationProgress, state.phase]);
 
-  const startMatch = useCallback(() => {
-    // First show the category wheel
-    setState(prev => ({
-      ...prev,
-      phase: "category-wheel",
-    }));
-  }, []);
+  // startMatch is no longer needed - VSScreen handles category selection directly
 
   const beginPlaying = useCallback(async (categoryId: string) => {
     try {
@@ -377,7 +370,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       value={{
         ...state,
         startMatchmaking,
-        startMatch,
         beginPlaying,
         answerQuestion,
         nextQuestion,

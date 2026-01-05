@@ -18,7 +18,7 @@ function GameContent() {
   }, [phase, startMatchmaking, categoryId]);
 
   // Phases that have their own full-screen background
-  const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "category-wheel" || phase === "playing" || phase === "question-result" || phase === "match-result";
+  const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
 
   return (
     <div className="h-screen w-full flex flex-col relative overflow-hidden bg-transparent">

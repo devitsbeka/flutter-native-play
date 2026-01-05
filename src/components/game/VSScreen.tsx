@@ -1,16 +1,17 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
-
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
-import { CloudCategoryFlight } from "./CloudCategoryFlight";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { useCategories } from "@/hooks/useCategories";
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import confetti from "canvas-confetti";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
 import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
@@ -28,7 +29,7 @@ const slotAvatars = [
   botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10
 ];
 
-// Topographic wave pattern SVG (matching MatchResultScreen)
+// Topographic wave pattern SVG
 const WavePattern = () => (
   <svg
     className="absolute bottom-0 left-0 w-full"
@@ -55,25 +56,27 @@ const WavePattern = () => (
   </svg>
 );
 
-type SlotPhase = "searching" | "slowing" | "found" | "ready";
+type GameStage = "finding-opponent" | "opponent-found" | "finding-category" | "category-found" | "ready";
 
 export function VSScreen() {
-  const { opponent, startMatch, beginPlaying, phase } = useGame();
+  const { opponent, beginPlaying, phase } = useGame();
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { categories } = useCategories();
   
-  // Slot machine state
-  const [slotPhase, setSlotPhase] = useState<SlotPhase>("searching");
-  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Game stage state
+  const [stage, setStage] = useState<GameStage>("finding-opponent");
   const [showHelpModal, setShowHelpModal] = useState(false);
-  const [showWheel, setShowWheel] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
-  const [selectedCategoryVideo, setSelectedCategoryVideo] = useState<string | null>(null);
-  const [showCategoryBubble, setShowCategoryBubble] = useState(false);
-  const [canStart, setCanStart] = useState(false);
   
+  // Opponent slot state
+  const [currentAvatar, setCurrentAvatar] = useState<string>(slotAvatars[0]);
+  const opponentIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Category slot state
+  const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
+  const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Player data
   const playerPoints = profile?.total_points || 0;
@@ -81,95 +84,134 @@ export function VSScreen() {
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
-  // Derived display values
-  const isMatchFound = slotPhase === "found" || slotPhase === "ready";
-  const opponentName = isMatchFound ? (opponent?.name || "მოწინააღმდეგე") : "ძებნა...";
-  const opponentPointsDisplay = isMatchFound ? opponentPoints : 0;
-  const opponentLevelDisplay = isMatchFound ? `Lvl.${opponentLevelInfo.level}` : "Lvl.?";
+  // Current category for display during slot
+  const currentCategory = categoryPool[currentCategoryIndex];
+  const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "/videos/galaxy.mp4") : "/videos/galaxy.mp4";
 
-  // Slot machine cycling effect - OPTIMIZED for speed
+  // Initialize category pool when categories load
   useEffect(() => {
-    if (phase !== "matchmaking" && phase !== "preparing" && phase !== "vs-screen") return;
-    if (slotPhase === "found" || slotPhase === "ready") return;
+    if (categories.length > 0 && categoryPool.length === 0) {
+      const shuffled = [...categories].sort(() => Math.random() - 0.5);
+      setCategoryPool(shuffled.slice(0, Math.min(8, shuffled.length)));
+    }
+  }, [categories, categoryPool.length]);
+
+  // Stage 1: Opponent slot machine animation
+  useEffect(() => {
+    if (stage !== "finding-opponent") return;
 
     let cycleCount = 0;
-    const maxCycles = 12; // Reduced from 20
+    const maxCycles = 12;
     
     const getDelay = (count: number): number => {
-      if (count < 6) return 50;  // Faster initial
-      if (count < 9) return 100;
-      if (count < 11) return 180;
-      return 300;
+      if (count < 6) return 60;
+      if (count < 9) return 120;
+      if (count < 11) return 200;
+      return 350;
     };
 
     const cycleSlot = () => {
       cycleCount++;
-      
       const randomAvatar = slotAvatars[Math.floor(Math.random() * slotAvatars.length)];
       setCurrentAvatar(randomAvatar);
 
-      if (cycleCount < 6) {
-        setSlotPhase("searching");
-      } else if (cycleCount < maxCycles) {
-        setSlotPhase("slowing");
-      }
-
       if (cycleCount < maxCycles) {
-        intervalRef.current = setTimeout(cycleSlot, getDelay(cycleCount));
+        opponentIntervalRef.current = setTimeout(cycleSlot, getDelay(cycleCount));
       } else {
-        setSlotPhase("found");
+        // Lock in opponent
         if (opponent) {
           setCurrentAvatar(opponent.avatarUrl);
         }
+        setStage("opponent-found");
       }
     };
 
-    intervalRef.current = setTimeout(cycleSlot, 150); // Start faster
+    opponentIntervalRef.current = setTimeout(cycleSlot, 200);
 
     return () => {
-      if (intervalRef.current) {
-        clearTimeout(intervalRef.current);
+      if (opponentIntervalRef.current) clearTimeout(opponentIntervalRef.current);
+    };
+  }, [stage, opponent]);
+
+  // Stage 2: Brief pause after opponent found, then start category slot
+  useEffect(() => {
+    if (stage !== "opponent-found") return;
+
+    const timer = setTimeout(() => {
+      setStage("finding-category");
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [stage]);
+
+  // Stage 3: Category slot machine animation
+  useEffect(() => {
+    if (stage !== "finding-category" || categoryPool.length === 0) return;
+
+    let cycleCount = 0;
+    const maxCycles = 14;
+    
+    const getDelay = (count: number): number => {
+      if (count < 7) return 80;
+      if (count < 10) return 150;
+      if (count < 12) return 250;
+      return 400;
+    };
+
+    const cycleCategory = () => {
+      cycleCount++;
+      setCurrentCategoryIndex(prev => (prev + 1) % categoryPool.length);
+
+      if (cycleCount < maxCycles) {
+        categoryIntervalRef.current = setTimeout(cycleCategory, getDelay(cycleCount));
+      } else {
+        // Lock in category
+        const winnerIndex = Math.floor(Math.random() * categoryPool.length);
+        setCurrentCategoryIndex(winnerIndex);
+        const winner = categoryPool[winnerIndex];
+        const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.mp4";
+        setSelectedCategory({ id: winner.id, name: winner.name, videoUrl });
+        setStage("category-found");
       }
     };
-  }, [phase, opponent]);
 
-  // Update to final opponent when found
+    categoryIntervalRef.current = setTimeout(cycleCategory, 200);
+
+    return () => {
+      if (categoryIntervalRef.current) clearTimeout(categoryIntervalRef.current);
+    };
+  }, [stage, categoryPool]);
+
+  // Stage 4: Confetti and transition to ready
   useEffect(() => {
-    if (slotPhase === "found" && opponent) {
-      setCurrentAvatar(opponent.avatarUrl);
-    }
-  }, [slotPhase, opponent]);
+    if (stage !== "category-found") return;
 
-  // Transition to ready state after found - then show wheel immediately
-  useEffect(() => {
-    if (slotPhase === "found") {
-      const timer = setTimeout(() => {
-        setSlotPhase("ready");
-        // Automatically show wheel when match is ready
-        setShowWheel(true);
-      }, 300); // Reduced from 600ms
-      return () => clearTimeout(timer);
-    }
-  }, [slotPhase]);
+    // Fire confetti
+    confetti({
+      particleCount: 70,
+      spread: 55,
+      origin: { y: 0.5 },
+      colors: ["#FFD700", "#FFA500", "#FFFFFF"],
+    });
 
-  // Handle when category is selected by wheel
-  const handleCategorySelected = (categoryId: string, categoryName: string, videoUrl: string) => {
-    setShowWheel(false);
-    setSelectedCategoryId(categoryId);
-    setSelectedCategoryName(categoryName);
-    setSelectedCategoryVideo(videoUrl);
-    setTimeout(() => {
-      setShowCategoryBubble(true);
-      setCanStart(true);
-    }, 100);
-  };
+    const timer = setTimeout(() => {
+      setStage("ready");
+    }, 400);
 
-  // Start button begins the game with the selected category
+    return () => clearTimeout(timer);
+  }, [stage]);
+
+  // Handle start button
   const handleStart = () => {
-    if (selectedCategoryId) {
-      beginPlaying(selectedCategoryId);
+    if (selectedCategory) {
+      beginPlaying(selectedCategory.id);
     }
   };
+
+  const isOpponentLocked = stage !== "finding-opponent";
+  const isCategoryLocked = stage === "category-found" || stage === "ready";
+  const showStartButton = stage === "ready";
+  const showCategorySlot = stage === "finding-category" || stage === "category-found" || stage === "ready";
 
   return (
     <div 
@@ -179,83 +221,80 @@ export function VSScreen() {
       {/* Wave Pattern Background */}
       <WavePattern />
 
-      {/* Full-screen Diagonal VS Divider - at root level for full coverage */}
-      {selectedCategoryName && (
+      {/* Full-screen Diagonal VS Divider */}
+      <motion.div 
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ zIndex: 5 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Diagonal golden line */}
         <motion.div 
-          className="absolute inset-0 overflow-hidden pointer-events-none"
-          style={{ zIndex: 5 }}
+          className="absolute"
+          initial={{ 
+            clipPath: "polygon(0% 0%, 0% 0%, 0% 0%)",
+            opacity: 0 
+          }}
+          animate={{ 
+            clipPath: isOpponentLocked ? "polygon(0% 0%, 100% 100%, 100% 100%, 0% 100%, 0% 0%)" : "polygon(0% 0%, 0% 0%, 0% 0%)",
+            opacity: isOpponentLocked ? 1 : 0
+          }}
+          transition={{ 
+            duration: 0.8, 
+            ease: "easeOut",
+          }}
+          style={{
+            top: "-50%",
+            left: "-50%",
+            width: "200%",
+            height: "200%",
+            background: "linear-gradient(135deg, transparent 47%, rgba(255,215,0,0.5) 49%, rgba(255,215,0,0.6) 50%, rgba(255,215,0,0.5) 51%, transparent 53%)",
+            filter: "blur(2px)",
+          }}
+        />
+        
+        {/* Pulsing glow overlay */}
+        <motion.div 
+          className="absolute"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          animate={{ 
+            opacity: isOpponentLocked ? [0.3, 0.7, 0.3] : 0,
+          }}
+          transition={{ 
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          style={{
+            top: "-50%",
+            left: "-50%",
+            width: "200%",
+            height: "200%",
+            background: "linear-gradient(135deg, transparent 48%, rgba(255,215,0,0.4) 49.5%, rgba(255,215,0,0.5) 50%, rgba(255,215,0,0.4) 50.5%, transparent 52%)",
+            filter: "blur(8px)",
+          }}
+        />
+        
+        {/* VS watermark */}
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: isOpponentLocked ? 1 : 0, scale: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          {/* Diagonal golden line with draw-in animation */}
-          <motion.div 
-            className="absolute"
-            initial={{ 
-              clipPath: "polygon(0% 0%, 0% 0%, 0% 0%)",
-              opacity: 0 
+          <span 
+            className="text-[180px] font-black text-white/[0.06]"
+            style={{ 
+              fontFamily: "'TASolivare', sans-serif",
+              letterSpacing: "-0.05em"
             }}
-            animate={{ 
-              clipPath: "polygon(0% 0%, 100% 100%, 100% 100%, 0% 100%, 0% 0%)",
-              opacity: 1 
-            }}
-            transition={{ 
-              duration: 0.8, 
-              ease: "easeOut",
-              delay: 0.1
-            }}
-            style={{
-              top: "-50%",
-              left: "-50%",
-              width: "200%",
-              height: "200%",
-              background: "linear-gradient(135deg, transparent 47%, rgba(255,215,0,0.5) 49%, rgba(255,215,0,0.6) 50%, rgba(255,215,0,0.5) 51%, transparent 53%)",
-              filter: "blur(2px)",
-            }}
-          />
-          
-          {/* Pulsing glow overlay on the line */}
-          <motion.div 
-            className="absolute"
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: [0.3, 0.7, 0.3],
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.9
-            }}
-            style={{
-              top: "-50%",
-              left: "-50%",
-              width: "200%",
-              height: "200%",
-              background: "linear-gradient(135deg, transparent 48%, rgba(255,215,0,0.4) 49.5%, rgba(255,215,0,0.5) 50%, rgba(255,215,0,0.4) 50.5%, transparent 52%)",
-              filter: "blur(8px)",
-            }}
-          />
-          
-          {/* Large VS watermark behind content */}
-          <motion.div 
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <span 
-              className="text-[180px] font-black text-white/[0.06]"
-              style={{ 
-                fontFamily: "'TASolivare', sans-serif",
-                letterSpacing: "-0.05em"
-              }}
-            >
-              VS
-            </span>
-          </motion.div>
+            VS
+          </span>
         </motion.div>
-      )}
+      </motion.div>
+
       {/* Header */}
       <motion.div 
         className="flex items-center justify-between px-4 pt-4 pb-2 relative z-30 shrink-0"
@@ -280,232 +319,170 @@ export function VSScreen() {
         </motion.button>
       </motion.div>
 
-      {/* Main Content Area */}
+      {/* Main Content - Diagonal Layout */}
       <div className="flex-1 min-h-0 flex flex-col relative z-10 px-5">
-        
-        {/* Before Category Selected: Vertical VS Layout */}
-        {!selectedCategoryName && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-1 sm:gap-2">
-            {/* Player Section - Top */}
-            <motion.div 
-              className="flex flex-col items-center gap-2"
-              initial={{ opacity: 0, y: -30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <QuizPlayerAvatar
-                avatarUrl={profile?.avatar_url}
-                animatedAvatarUrl={profile?.animated_avatar_url}
-                score={playerPoints}
-                position="left"
-                state="active"
-                size="xlarge"
-              />
-              <h2
-                className="text-2xl font-black tracking-wide"
-                style={{
-                  fontFamily: "'TASolivare', sans-serif",
-                  color: "#FFFFFF",
-                  textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+        <div className="flex-1 flex flex-col justify-between py-4 relative">
+          
+          {/* Opponent - Top Left */}
+          <motion.div 
+            className="flex justify-start relative z-10"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <div className="flex items-center gap-3">
+              {/* Avatar with golden gradient stroke when locked */}
+              <motion.div 
+                className="p-1 rounded-full"
+                animate={{
+                  background: isOpponentLocked 
+                    ? "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)"
+                    : "rgba(255,255,255,0.3)",
+                  boxShadow: isOpponentLocked 
+                    ? "0 4px 15px rgba(255,215,0,0.4)"
+                    : "0 4px 15px rgba(255,255,255,0.2)",
                 }}
+                transition={{ duration: 0.3 }}
               >
-                {profile?.nickname || "შენ"}
-              </h2>
-              <p className="text-white/70 text-sm">
-                დონე {playerLevelInfo.level}
-              </p>
-            </motion.div>
-
-            {/* VS Badge - Center */}
-            <motion.div 
-              className="py-2 sm:py-4"
-              animate={!isMatchFound ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-              transition={{ duration: 1.2, repeat: !isMatchFound ? Infinity : 0, ease: "easeInOut" }}
-            >
-              <span 
-                className="text-4xl sm:text-6xl font-black text-white"
-                style={{ 
-                  textShadow: "0 6px 30px rgba(0,0,0,0.4)",
-                  fontFamily: "'TASolivare', sans-serif",
-                }}
-              >
-                VS
-              </span>
-            </motion.div>
-
-            {/* Opponent Section - Bottom */}
-            <motion.div 
-              className="flex flex-col items-center gap-2"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <QuizPlayerAvatar
-                avatarUrl={currentAvatar || slotAvatars[0]}
-                score={opponentPointsDisplay}
-                position="right"
-                state="default"
-                size="xlarge"
-              />
-              <h2
-                className="text-2xl font-black tracking-wide"
-                style={{
-                  fontFamily: "'TASolivare', sans-serif",
-                  color: "#FFFFFF",
-                  textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                {opponentName}
-              </h2>
-              <p className="text-white/70 text-sm">
-                {isMatchFound ? `დონე ${opponentLevelInfo.level}` : "დონე ?"}
-              </p>
-            </motion.div>
-          </div>
-        )}
-
-        {/* After Category Selected: Diagonal Layout */}
-        {selectedCategoryName && (
-          <div className="flex-1 flex flex-col justify-between py-4 relative">
-            
-            {/* Opponent - Top Left */}
-            <motion.div 
-              className="flex justify-start relative z-10"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              <div className="flex items-center gap-3">
-                {/* Avatar with golden gradient stroke */}
-                <div 
-                  className="p-1 rounded-full"
-                  style={{
-                    background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
-                    boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
-                  }}
+                <motion.div
+                  animate={!isOpponentLocked ? { scale: [1, 1.05, 1] } : {}}
+                  transition={{ duration: 0.15, repeat: !isOpponentLocked ? Infinity : 0 }}
                 >
                   <SmartAvatar
-                    avatarUrl={opponent?.avatarUrl || currentAvatar || slotAvatars[0]}
-                    fallback={opponent?.name || "O"}
+                    avatarUrl={currentAvatar}
+                    fallback={opponent?.name || "?"}
                     size="2xl"
                     autoPlay={false}
                     showSparkle={false}
                   />
-                </div>
-                {/* Text Info - Right of avatar */}
-                <div className="flex flex-col">
-                  <h3
-                    className="text-2xl font-black text-white"
-                    style={{
-                      fontFamily: "'TASolivare', sans-serif",
-                      textShadow: "0 2px 10px rgba(0,0,0,0.4)",
-                    }}
-                  >
-                    {opponent?.name || "მოწინააღმდეგე"}
-                  </h3>
-                  <p className="text-white/70 text-sm">
-                    დონე {opponentLevelInfo.level}
-                  </p>
-                  <p className="text-amber-300 text-sm font-medium">
-                    {opponentPoints.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Category - Center */}
-            <motion.div 
-              className="flex flex-col items-center justify-center gap-3 relative z-10"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-            >
-              {/* Video Container - Rectangular */}
-              {selectedCategoryVideo && showCategoryBubble && (
-                <motion.div
-                  initial={{ scale: 1.5, y: -50, opacity: 0 }}
-                  animate={{ scale: 1, y: 0, opacity: 1 }}
-                  transition={{ 
-                    duration: 0.6, 
-                    ease: [0.34, 1.56, 0.64, 1],
-                    delay: 0.3
-                  }}
-                  className="w-[304px] h-[179px] rounded-[18px] overflow-hidden"
-                  style={{ 
-                    border: "4px solid rgba(255,215,0,0.7)",
-                    boxShadow: "0 0 25px rgba(255,215,0,0.4), 0 8px 32px rgba(0,0,0,0.3)"
+                </motion.div>
+              </motion.div>
+              {/* Text Info */}
+              <div className="flex flex-col">
+                <h3
+                  className="text-2xl font-black text-white"
+                  style={{
+                    fontFamily: "'TASolivare', sans-serif",
+                    textShadow: "0 2px 10px rgba(0,0,0,0.4)",
                   }}
                 >
-                  <video
-                    src={selectedCategoryVideo}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                </motion.div>
-              )}
-              
-              {/* Category Name */}
-              <h2 
-                className="text-2xl font-black text-white text-center"
-                style={{ 
-                  fontFamily: "'TASolivare', sans-serif",
-                  textShadow: "0 4px 20px rgba(0,0,0,0.4)"
+                  {isOpponentLocked ? (opponent?.name || "მოწინააღმდეგე") : "ძებნა..."}
+                </h3>
+                <p className="text-white/70 text-sm">
+                  {isOpponentLocked ? `დონე ${opponentLevelInfo.level}` : "დონე ?"}
+                </p>
+                <p className="text-amber-300 text-sm font-medium">
+                  {isOpponentLocked ? opponentPoints.toLocaleString() : "---"}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Category - Center */}
+          <motion.div 
+            className="flex flex-col items-center justify-center gap-3 relative z-10"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {/* Video Container */}
+            <motion.div
+              className="w-[304px] h-[179px] rounded-[18px] overflow-hidden"
+              animate={{
+                border: isCategoryLocked 
+                  ? "4px solid rgba(255,215,0,0.9)" 
+                  : "4px solid rgba(255,255,255,0.4)",
+                boxShadow: isCategoryLocked
+                  ? "0 0 25px rgba(255,215,0,0.4), 0 8px 32px rgba(0,0,0,0.3)"
+                  : "0 8px 32px rgba(0,0,0,0.3)",
+                scale: isCategoryLocked ? [1, 1.02, 1] : 1,
+              }}
+              transition={{ 
+                duration: isCategoryLocked ? 0.3 : 0.15,
+                scale: { duration: 0.4, ease: "easeOut" }
+              }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.video
+                  key={showCategorySlot ? (selectedCategory?.videoUrl || currentVideoUrl) : "placeholder"}
+                  src={showCategorySlot ? (selectedCategory?.videoUrl || currentVideoUrl) : "/videos/galaxy.mp4"}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.1 }}
+                />
+              </AnimatePresence>
+            </motion.div>
+            
+            {/* Category Name */}
+            <motion.h2 
+              className="text-2xl font-black text-white text-center"
+              style={{ 
+                fontFamily: "'TASolivare', sans-serif",
+                textShadow: "0 4px 20px rgba(0,0,0,0.4)"
+              }}
+              animate={{
+                scale: isCategoryLocked ? [1, 1.05, 1] : 1,
+              }}
+              transition={{ duration: 0.4 }}
+            >
+              {showCategorySlot 
+                ? (selectedCategory?.name || currentCategory?.name || "კატეგორია...") 
+                : "იპოვე მოწინააღმდეგე..."}
+            </motion.h2>
+          </motion.div>
+
+          {/* Player - Bottom Right */}
+          <motion.div 
+            className="flex justify-end relative z-10"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <div className="flex items-center gap-3">
+              {/* Text Info - Left of avatar */}
+              <div className="flex flex-col items-end">
+                <h3
+                  className="text-2xl font-black text-white"
+                  style={{
+                    fontFamily: "'TASolivare', sans-serif",
+                    textShadow: "0 2px 10px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  {profile?.nickname || "შენ"}
+                </h3>
+                <p className="text-white/70 text-sm">
+                  დონე {playerLevelInfo.level}
+                </p>
+                <p className="text-amber-300 text-sm font-medium">
+                  {playerPoints.toLocaleString()}
+                </p>
+              </div>
+              {/* Avatar with golden gradient stroke */}
+              <div 
+                className="p-1 rounded-full"
+                style={{
+                  background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
+                  boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
                 }}
               >
-                {selectedCategoryName}
-              </h2>
-            </motion.div>
-
-            {/* Player - Bottom Right */}
-            <motion.div 
-              className="flex justify-end relative z-10"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              <div className="flex items-center gap-3">
-                {/* Text Info - Left of avatar */}
-                <div className="flex flex-col items-end">
-                  <h3
-                    className="text-2xl font-black text-white"
-                    style={{
-                      fontFamily: "'TASolivare', sans-serif",
-                      textShadow: "0 2px 10px rgba(0,0,0,0.4)",
-                    }}
-                  >
-                    {profile?.nickname || "შენ"}
-                  </h3>
-                  <p className="text-white/70 text-sm">
-                    დონე {playerLevelInfo.level}
-                  </p>
-                  <p className="text-amber-300 text-sm font-medium">
-                    {playerPoints.toLocaleString()}
-                  </p>
-                </div>
-                {/* Avatar with golden gradient stroke */}
-                <div 
-                  className="p-1 rounded-full"
-                  style={{
-                    background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
-                    boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
-                  }}
-                >
-                  <SmartAvatar
-                    avatarUrl={profile?.avatar_url}
-                    animatedAvatarUrl={profile?.animated_avatar_url}
-                    fallback={profile?.nickname || "P"}
-                    size="2xl"
-                    autoPlay={true}
-                    showSparkle={false}
-                  />
-                </div>
+                <SmartAvatar
+                  avatarUrl={profile?.avatar_url}
+                  animatedAvatarUrl={profile?.animated_avatar_url}
+                  fallback={profile?.nickname || "P"}
+                  size="2xl"
+                  autoPlay={true}
+                  showSparkle={false}
+                />
               </div>
-            </motion.div>
-          </div>
-        )}
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Button Section - Fixed at bottom */}
@@ -514,8 +491,8 @@ export function VSScreen() {
           className="w-full"
           initial={{ opacity: 0, y: 20 }}
           animate={{ 
-            opacity: canStart ? 1 : 0,
-            y: canStart ? 0 : 20,
+            opacity: showStartButton ? 1 : 0,
+            y: showStartButton ? 0 : 20,
           }}
           transition={{ duration: 0.3 }}
         >
@@ -523,7 +500,7 @@ export function VSScreen() {
             variant="mint"
             size="xl"
             onClick={handleStart}
-            disabled={!canStart}
+            disabled={!showStartButton}
             className="w-full"
           >
             დაწყება
@@ -535,12 +512,6 @@ export function VSScreen() {
       <VSMatchHelpModal 
         isOpen={showHelpModal} 
         onClose={() => setShowHelpModal(false)} 
-      />
-
-      {/* Cloud Category Flight */}
-      <CloudCategoryFlight
-        isOpen={showWheel}
-        onCategorySelected={handleCategorySelected}
       />
     </div>
   );
