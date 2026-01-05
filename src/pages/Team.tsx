@@ -31,6 +31,7 @@ import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Category } from "@/data/categories";
 
@@ -60,6 +61,7 @@ function TeamContent() {
   } = useGameInvitations();
 
   const { unreadCount } = useNotifications();
+  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -218,6 +220,11 @@ function TeamContent() {
               className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
             >
               <MessageCircle className="w-5 h-5" />
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                  {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                </span>
+              )}
             </button>
 
             {/* Help Button */}
