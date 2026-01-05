@@ -43,18 +43,23 @@ export function UniversalBottomNav({
   const isPurpleVariant = false;
 
   const handleCenterClick = () => {
-    console.log("[handleCenterClick] Called", { isHome, isVip, canPlay, isGuest, hasOnPlayClick: !!onPlayClick });
+    console.log("[handleCenterClick] Called", { 
+      isHome, 
+      isVip, 
+      canPlay, 
+      isGuest, 
+      hasOnPlayClick: !!onPlayClick,
+      playsRemaining,
+      maxPlays 
+    });
+    
     if (isHome) {
-      if (isVip || canPlay) {
-        // VIP users can always play, or if user has plays remaining
-        console.log("[handleCenterClick] Calling onPlayClick");
-        onPlayClick?.();
-      } else if (!isGuest) {
-        console.log("[handleCenterClick] Calling onWatchAdClick");
-        onWatchAdClick?.();
+      // Always try to call onPlayClick - let the handler decide what to do
+      console.log("[handleCenterClick] Calling onPlayClick");
+      if (onPlayClick) {
+        onPlayClick();
       } else {
-        console.log("[handleCenterClick] Guest - calling onPlayClick for modal");
-        onPlayClick?.(); // For guests, this will trigger the max plays modal
+        console.error("[handleCenterClick] onPlayClick is undefined!");
       }
     } else {
       console.log("[handleCenterClick] Navigating to home");
