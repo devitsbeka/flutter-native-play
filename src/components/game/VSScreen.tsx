@@ -331,32 +331,16 @@ export function VSScreen() {
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
             <div className="flex items-center gap-3">
-              {/* Avatar with golden gradient stroke when locked */}
-              <motion.div 
-                className="p-1 rounded-full"
-                animate={{
-                  background: isOpponentLocked 
-                    ? "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)"
-                    : "rgba(255,255,255,0.3)",
-                  boxShadow: isOpponentLocked 
-                    ? "0 4px 15px rgba(255,215,0,0.4)"
-                    : "0 4px 15px rgba(255,255,255,0.2)",
-                }}
-                transition={{ duration: 0.3 }}
-              >
-                <motion.div
-                  animate={!isOpponentLocked ? { scale: [1, 1.05, 1] } : {}}
-                  transition={{ duration: 0.15, repeat: !isOpponentLocked ? Infinity : 0 }}
-                >
-                  <SmartAvatar
-                    avatarUrl={currentAvatar}
-                    fallback={opponent?.name || "?"}
-                    size="2xl"
-                    autoPlay={false}
-                    showSparkle={false}
-                  />
-                </motion.div>
-              </motion.div>
+              {/* Avatar container - fixed size to prevent layout shift */}
+              <div className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <SmartAvatar
+                  avatarUrl={currentAvatar}
+                  fallback={opponent?.name || "?"}
+                  size="2xl"
+                  autoPlay={false}
+                  showSparkle={false}
+                />
+              </div>
               {/* Text Info */}
               <div className="flex flex-col">
                 <h3
@@ -463,14 +447,8 @@ export function VSScreen() {
                   {playerPoints.toLocaleString()}
                 </p>
               </div>
-              {/* Avatar with golden gradient stroke */}
-              <div 
-                className="p-1 rounded-full"
-                style={{
-                  background: "linear-gradient(135deg, #FFD700, #FFA500, #FFEC8B, #FFD700)",
-                  boxShadow: "0 4px 15px rgba(255,215,0,0.4)"
-                }}
-              >
+              {/* Avatar container - fixed size */}
+              <div className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 <SmartAvatar
                   avatarUrl={profile?.avatar_url}
                   animatedAvatarUrl={profile?.animated_avatar_url}
