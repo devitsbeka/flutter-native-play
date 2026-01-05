@@ -5,15 +5,14 @@ const roundedRectPath = "M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 C0.94,0.82 0.82
 const borderRectPath = "M0.5,0.04 C0.84,0.04 0.96,0.16 0.96,0.5 C0.96,0.84 0.84,0.96 0.5,0.96 C0.16,0.96 0.04,0.84 0.04,0.5 C0.04,0.16 0.16,0.04 0.5,0.04";
 
 interface InteractiveBlobVideoProps {
-  videoSrc: string;
+  iconUrl?: string;
+  videoSrc?: string;
   isLocked: boolean;
 }
 
-export function InteractiveBlobVideo({ videoSrc, isLocked }: InteractiveBlobVideoProps) {
+export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: InteractiveBlobVideoProps) {
   return (
-    <div 
-      className="relative w-[280px] h-[280px] select-none"
-    >
+    <div className="relative w-[280px] h-[280px] select-none">
       {/* SVG Definitions */}
       <svg className="absolute w-0 h-0">
         <defs>
@@ -28,7 +27,7 @@ export function InteractiveBlobVideo({ videoSrc, isLocked }: InteractiveBlobVide
 
       {/* Main container */}
       <div className="absolute inset-0">
-        {/* Pastel yellow border */}
+        {/* Border */}
         <div
           className="absolute inset-0"
           style={{
@@ -39,28 +38,15 @@ export function InteractiveBlobVideo({ videoSrc, isLocked }: InteractiveBlobVide
           }}
         />
 
-        {/* Video container with flip animation */}
+        {/* Content container */}
         <div
-          className="absolute inset-[8px] overflow-hidden"
-          style={{
-            clipPath: "url(#mainBlobClip)",
-          }}
+          className="absolute inset-[8px] overflow-hidden bg-white/10"
+          style={{ clipPath: "url(#mainBlobClip)" }}
         >
           <AnimatePresence mode="wait">
-            <motion.div
-              key={videoSrc}
-              className="w-full h-full"
-              initial={{ rotateY: 90, opacity: 0 }}
-              animate={{ rotateY: 0, opacity: 1 }}
-              exit={{ rotateY: -90, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              style={{ 
-                transformStyle: "preserve-3d",
-                perspective: "1000px"
-              }}
-            >
-              <video
-                key={videoSrc}
+            {isLocked && videoSrc ? (
+              <motion.video
+                key="video"
                 src={videoSrc}
                 autoPlay
                 loop
@@ -68,8 +54,29 @@ export function InteractiveBlobVideo({ videoSrc, isLocked }: InteractiveBlobVide
                 playsInline
                 className="w-full h-full object-cover"
                 style={{ transform: "scale(1.3)" }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
               />
-            </motion.div>
+            ) : (
+              <motion.div
+                key={iconUrl || "empty"}
+                className="w-full h-full flex items-center justify-center bg-white/20"
+                initial={{ rotateY: 90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: -90, opacity: 0 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                {iconUrl && (
+                  <img 
+                    src={iconUrl} 
+                    alt="" 
+                    className="w-32 h-32 object-contain"
+                  />
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>

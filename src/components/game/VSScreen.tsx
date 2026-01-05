@@ -369,9 +369,10 @@ export function VSScreen() {
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Interactive Multi-Blob Video Container */}
+            {/* Interactive Blob - Icons during spin, Video on reveal */}
             <InteractiveBlobVideo
-              videoSrc={selectedCategory?.videoUrl || currentVideoUrl}
+              iconUrl={currentCategory?.image_url || undefined}
+              videoSrc={selectedCategory?.videoUrl}
               isLocked={isCategoryLocked}
             />
             
