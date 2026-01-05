@@ -94,7 +94,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
@@ -104,7 +104,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-50 bg-card flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[60] bg-card flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/50">

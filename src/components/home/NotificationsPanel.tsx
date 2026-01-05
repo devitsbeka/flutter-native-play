@@ -282,7 +282,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
@@ -292,7 +292,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-50 bg-card flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[60] bg-card flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/50">
