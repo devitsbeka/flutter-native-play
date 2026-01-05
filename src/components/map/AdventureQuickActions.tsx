@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { HelpCircle } from "lucide-react";
 
 // Import custom 3D icons
-import giftBottleIcon from "@/assets/icons/icon-gift-bottle.png";
-import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
+import giftBottleIcon from "@/assets/icons/icon-gem.png";
+import missionCrystalIcon from "@/assets/icons/icon-compass.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 
 interface AdventureQuickActionsProps {

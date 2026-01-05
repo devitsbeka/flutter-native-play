@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Trophy, Clock, Sparkles, Gift, Check, Flame, Award, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
+import missionCrystalIcon from "@/assets/icons/icon-compass.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
