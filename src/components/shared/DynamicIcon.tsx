@@ -47,9 +47,10 @@ export function DynamicIcon({
 }: DynamicIconProps) {
   const [imageError, setImageError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
+  const [asyncIconUrl, setAsyncIconUrl] = React.useState<string | null>(null);
   const maxRetries = 2;
   
-  const { findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
+  const { findIcon, getIconBySlug, fetchIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
 
   // Use stable seed based on categoryId for consistent fallback icons
   const stableSeed = React.useMemo(() => {
@@ -108,7 +109,22 @@ export function DynamicIcon({
   React.useEffect(() => {
     setImageError(false);
     setRetryCount(0);
+    setAsyncIconUrl(null);
   }, [iconUrl]);
+
+  // Async fallback: if iconUrl is null but we have a slug, try direct DB lookup
+  React.useEffect(() => {
+    if (!iconUrl && slug && isLoaded && !asyncIconUrl) {
+      const slugs = slug.includes(',') ? slug.split(',').map(s => s.trim()) : [slug];
+      // Try fetching the first slug directly from database
+      fetchIconBySlug(slugs[0]).then(url => {
+        if (url) {
+          console.log(`[DynamicIcon] Found icon via async DB lookup: ${slugs[0]}`);
+          setAsyncIconUrl(url);
+        }
+      });
+    }
+  }, [iconUrl, slug, isLoaded, asyncIconUrl, fetchIconBySlug]);
 
   const handleImageError = React.useCallback(() => {
     if (retryCount < maxRetries) {
@@ -133,8 +149,11 @@ export function DynamicIcon({
     );
   }
 
+  // Use async URL if available
+  const finalIconUrl = iconUrl || asyncIconUrl;
+
   // Show fallback icon if no URL or image error
-  if (!iconUrl || imageError) {
+  if (!finalIconUrl || imageError) {
     if (hideIfEmpty) {
       return null;
     }
@@ -164,8 +183,8 @@ export function DynamicIcon({
 
   return (
     <motion.img
-      key={`${iconUrl}-${retryCount}`} // Force new img element on retry
-      src={iconUrl}
+      key={`${finalIconUrl}-${retryCount}`} // Force new img element on retry
+      src={finalIconUrl}
       alt="Category icon"
       width={size}
       height={size}
