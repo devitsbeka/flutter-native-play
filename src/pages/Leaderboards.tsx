@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -27,6 +27,36 @@ export default function Leaderboards() {
     isLeagueLocked,
   } = useLeagueLeaderboard(viewingTier);
 
+  const [showFixedBar, setShowFixedBar] = useState(true);
+  const userRowRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Track scroll to hide fixed bar when user's actual row is visible
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !userEntry) return;
+
+    const handleScroll = () => {
+      if (!userRowRef.current) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      const rowRect = userRowRef.current.getBoundingClientRect();
+      
+      // Fixed bar height + some padding (roughly 100px from bottom nav)
+      const fixedBarHeight = 100;
+      
+      // Check if user's actual row is visible above the fixed bar
+      const isRowVisible = rowRect.top < containerRect.bottom - fixedBarHeight && rowRect.bottom > containerRect.top;
+      
+      setShowFixedBar(!isRowVisible);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+    
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [userEntry]);
+
   const handleSelectTier = (tier: number) => {
     setViewingTier(tier);
   };
@@ -52,7 +82,7 @@ export default function Leaderboards() {
       </motion.header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pb-40 relative">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto pb-40 relative">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -96,17 +126,18 @@ export default function Leaderboards() {
                   const isDemotionZone = (viewingTier ?? userTier) > 1 && entry.rank > totalPlayers - 10;
 
                   return (
-                    <LeaguePlayerRow
-                      key={entry.user_id}
-                      entry={entry}
-                      isCurrentUser={isCurrentUser}
-                      index={index}
-                      previousRank={previousRank}
-                      shouldAnimate={shouldAnimate}
-                      totalPlayers={totalPlayers}
-                      isPromotionZone={isPromotionZone}
-                      isDemotionZone={isDemotionZone}
-                    />
+                    <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+                      <LeaguePlayerRow
+                        entry={entry}
+                        isCurrentUser={isCurrentUser}
+                        index={index}
+                        previousRank={previousRank}
+                        shouldAnimate={shouldAnimate}
+                        totalPlayers={totalPlayers}
+                        isPromotionZone={isPromotionZone}
+                        isDemotionZone={isDemotionZone}
+                      />
+                    </div>
                   );
                 })}
               </AnimatePresence>
@@ -137,13 +168,15 @@ export default function Leaderboards() {
       </div>
 
       {/* Fixed User Position Bar */}
-      {userEntry && !isLeagueLocked && (
-        <motion.div
-          className="fixed bottom-20 left-0 right-0 z-40 px-4 pb-2"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
+      <AnimatePresence>
+        {userEntry && !isLeagueLocked && showFixedBar && (
+          <motion.div
+            className="fixed bottom-20 left-0 right-0 z-40 px-4 pb-2"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
           <div className="bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50">
             <LeaguePlayerRow
               entry={userEntry}
@@ -158,7 +191,8 @@ export default function Leaderboards() {
             />
           </div>
         </motion.div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation */}
       <UniversalBottomNav />
