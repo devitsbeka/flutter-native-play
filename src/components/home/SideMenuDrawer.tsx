@@ -14,6 +14,7 @@ import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { toast } from "sonner";
+import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 
 // Icon imports for menu items
 import iconRewards from "@/assets/icons/icon-coin-purse.png";
@@ -187,6 +188,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                     შესვლა
                   </button>
                 )}
+              </div>
+
+              {/* Language Switcher */}
+              <div className="px-4 py-3 border-b border-border/30">
+                <LanguageSwitcher />
               </div>
 
               {/* Grid Menu */}
