@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage, type KaTranslations } from '@/locales';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 const STORAGE_KEY = 'app-language';
 
@@ -33,7 +32,8 @@ function getNestedValue(obj: any, path: string): string | undefined {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  // Track user ID for profile sync (use Supabase directly to avoid circular deps)
+  const [userId, setUserId] = useState<string | null>(null);
   
   // Initialize from localStorage or default
   const [language, setLanguageState] = useState<string>(() => {
@@ -42,6 +42,19 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
     return DEFAULT_LANGUAGE;
   });
+
+  // Listen for auth state changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Compute region based on language
   const region = useMemo(() => getRegionForLanguage(language), [language]);
@@ -95,7 +108,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, lang);
     
     // Sync to profile if logged in
-    if (user) {
+    if (userId) {
       const newRegion = getRegionForLanguage(lang);
       try {
         await supabase
@@ -104,23 +117,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             preferred_language: lang,
             region: newRegion 
           })
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
       } catch (error) {
         console.error('Failed to sync language to profile:', error);
       }
     }
-  }, [user]);
+  }, [userId]);
 
   // On mount, sync from profile if logged in
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     const syncFromProfile = async () => {
       try {
         const { data } = await supabase
           .from('profiles')
           .select('preferred_language')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .single();
         
         if (data?.preferred_language && data.preferred_language !== language) {
@@ -134,7 +147,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     };
 
     syncFromProfile();
-  }, [user]);
+  }, [userId]);
 
   const value = useMemo(() => ({
     language,
