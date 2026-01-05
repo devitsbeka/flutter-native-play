@@ -60,3 +60,9 @@ verify_jwt = false
 
 [functions.shorten-questions]
 verify_jwt = false
+
+[functions.delete-user-account]
+verify_jwt = true
+
+[functions.export-user-data]
+verify_jwt = true

@@ -313,7 +313,6 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                 )}
               </AnimatePresence>
 
-              {/* Footer */}
               {/* Flying Currency Animation */}
               {result && (result.type === "coins" || result.type === "gems") && (
                 <FlyingCurrency 
@@ -348,6 +347,25 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   </span>
                 </div>
               )}
+              
+              {/* Probability Disclosure - Apple Required */}
+              <details className="mt-3">
+                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 text-center">
+                  📊 მოგების შანსები
+                </summary>
+                <div className="mt-2 p-3 bg-gray-50 rounded-xl text-xs text-gray-600 space-y-1">
+                  <p className="font-medium text-gray-700 mb-2">თითოეულ სეგმენტზე მოხვედრის შანსი:</p>
+                  {WHEEL_SEGMENTS.map((segment, i) => (
+                    <div key={i} className="flex justify-between items-center">
+                      <span>{segment.label}</span>
+                      <span className="font-mono text-gray-500">12.5%</span>
+                    </div>
+                  ))}
+                  <p className="text-gray-400 mt-2 pt-2 border-t border-gray-200">
+                    ყველა სეგმენტს თანაბარი შანსი აქვს (1/8)
+                  </p>
+                </div>
+              </details>
             </div>
           </motion.div>
         </>

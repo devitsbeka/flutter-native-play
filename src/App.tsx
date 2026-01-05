@@ -43,6 +43,8 @@ import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
 import Notifications from "./pages/Notifications";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const App = () => (
   <AuthProvider>
@@ -75,6 +77,8 @@ const App = () => (
               <Route path="/vip" element={<VIP />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="content" element={<ContentManager />} />
