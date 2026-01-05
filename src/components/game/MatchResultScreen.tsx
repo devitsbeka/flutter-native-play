@@ -8,9 +8,10 @@ import { useSound } from "@/contexts/SoundContext";
 import { useMissions } from "@/hooks/useMissions";
 import { missionTracker } from "@/services/missionTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { Target, ArrowLeft, Crown } from "lucide-react";
+import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
+import { useGameStake } from "@/hooks/useGameStake";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
@@ -163,9 +164,9 @@ const PlayerCard = ({
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
   const { user, profile, updateProfile } = useAuth();
-  const { addCoins } = useCurrency();
   const { playSound } = useSound();
   const { updateMissionProgress } = useMissions();
+  const { awardWin, awardDraw, awardLose, netWinProfit, netLoss, stakeAmount } = useGameStake();
   const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
@@ -177,7 +178,7 @@ export function MatchResultScreen() {
   
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
-  const [coinsEarned, setCoinsEarned] = useState(0);
+  const [coinChange, setCoinChange] = useState(0);
   const hasCheckedLevelUp = useRef(false);
   const hasSoundPlayed = useRef(false);
 
@@ -229,19 +230,17 @@ export function MatchResultScreen() {
         const oldLevelInfo = calculateLevel(oldPoints);
         const newLevelInfo = calculateLevel(newPoints);
 
-        // Calculate coins earned
-        let earnedCoins = 0;
+        // Stake-based rewards: Winner takes all, loser already paid
         if (isWin) {
-          earnedCoins = REWARDS.GAME_WIN_BASE_COINS + (userScore * REWARDS.GAME_WIN_PER_POINT_COINS);
+          await awardWin();
+          setCoinChange(netWinProfit); // +500 net profit
         } else if (isDraw) {
-          earnedCoins = REWARDS.GAME_DRAW_COINS;
+          await awardDraw();
+          setCoinChange(REWARDS.GAME_DRAW_REFUND - stakeAmount); // -250 net
         } else {
-          earnedCoins = REWARDS.GAME_LOSE_CONSOLATION_COINS;
+          awardLose();
+          setCoinChange(-netLoss); // -500 (already paid)
         }
-        setCoinsEarned(earnedCoins);
-
-        // Add coins
-        await addCoins(earnedCoins);
 
         // Calculate level-up rewards upfront (instead of in modal)
         let levelUpCoins = 0;
@@ -430,17 +429,32 @@ export function MatchResultScreen() {
             {resultConfig.text}
           </motion.h1>
 
-          {/* Coins Earned Badge */}
-          {coinsEarned > 0 && (
+          {/* Coin Change Badge - Shows profit or loss */}
+          {coinChange !== 0 && (
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, type: "spring" }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 mb-8"
-              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full mb-8 ${
+                coinChange > 0 
+                  ? "bg-emerald-500/90" 
+                  : coinChange < 0 
+                    ? "bg-red-500/90" 
+                    : "bg-gray-500/90"
+              }`}
+              style={{ boxShadow: coinChange > 0 ? "0 4px 0 rgba(5,150,105,0.4)" : "0 4px 0 rgba(180,0,0,0.4)" }}
             >
+              {coinChange > 0 ? (
+                <TrendingUp className="w-5 h-5 text-white" />
+              ) : coinChange < 0 ? (
+                <TrendingDown className="w-5 h-5 text-white" />
+              ) : (
+                <Minus className="w-5 h-5 text-white" />
+              )}
               <img src={coinIcon} alt="" className="w-6 h-6" />
-              <span className="font-bold text-white text-lg">+{coinsEarned}</span>
+              <span className="font-bold text-white text-lg">
+                {coinChange > 0 ? `+${coinChange}` : coinChange}
+              </span>
             </motion.div>
           )}
 

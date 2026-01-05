@@ -7,7 +7,8 @@ export interface LeagueEntry {
   user_id: string;
   nickname: string;
   avatar_url: string | null;
-  weekly_xp: number;
+  weekly_xp: number; // Keep for backwards compat, but this is now coins or wins
+  coins: number;     // New: actual coin balance
   rank: number;
   league_tier: number;
   rankChange?: "up" | "down" | "same" | "new";
@@ -38,10 +39,10 @@ const AI_NAMES: Record<number, string[]> = {
 };
 
 // Generate fake users for a league tier with seeded random for consistency
-function generateFakeUsers(tier: number, count: number = 15, existingXpRange?: { min: number; max: number }): LeagueEntry[] {
+function generateFakeUsers(tier: number, count: number = 15, existingCoinsRange?: { min: number; max: number }): LeagueEntry[] {
   const names = AI_NAMES[tier] || AI_NAMES[1];
-  const baseXp = existingXpRange?.max || tier * 300;
-  const minXp = existingXpRange?.min || tier * 50;
+  const baseCoins = existingCoinsRange?.max || (tier * 2000 + 1000);
+  const minCoins = existingCoinsRange?.min || tier * 500;
   
   // Seed random based on tier for consistent results per session
   const seededRandom = (i: number) => {
@@ -53,7 +54,8 @@ function generateFakeUsers(tier: number, count: number = 15, existingXpRange?: {
     user_id: `ai-${tier}-${i}`,
     nickname: names[i % names.length] + (i >= names.length ? `_${Math.floor(i / names.length)}` : ""),
     avatar_url: null,
-    weekly_xp: Math.floor(minXp + seededRandom(i) * (baseXp - minXp)),
+    weekly_xp: Math.floor(minCoins + seededRandom(i) * (baseCoins - minCoins)),
+    coins: Math.floor(minCoins + seededRandom(i) * (baseCoins - minCoins)),
     rank: i + 1,
     league_tier: tier,
     rankChange: "same" as const,
@@ -175,14 +177,15 @@ export function useLeagueLeaderboard(viewingTier?: number) {
         const userIds = leagueUsers?.map(u => u.user_id) || [];
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, nickname, avatar_url, total_points")
+          .select("user_id, nickname, avatar_url, coins")
           .in("user_id", userIds);
 
         const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-        // Map real users
+        // Map real users - rank by coins now
         realEntries = (leagueUsers || []).map((u) => {
           const profile = profileMap.get(u.user_id);
+          const userCoins = profile?.coins || 0;
           
           let rankChangeStatus: "up" | "down" | "same" | "new" = "same";
           if (u.previous_rank === null) {
@@ -193,7 +196,8 @@ export function useLeagueLeaderboard(viewingTier?: number) {
             user_id: u.user_id,
             nickname: profile?.nickname || "Unknown",
             avatar_url: profile?.avatar_url || null,
-            weekly_xp: u.weekly_xp || profile?.total_points || 0,
+            weekly_xp: userCoins, // Use coins for sorting
+            coins: userCoins,
             rank: 0,
             league_tier: u.league_tier,
             rankChange: rankChangeStatus,
@@ -204,30 +208,31 @@ export function useLeagueLeaderboard(viewingTier?: number) {
         // For other tiers (locked tiers), fetch real profiles and distribute them
         const { data: allProfiles } = await supabase
           .from("profiles")
-          .select("user_id, nickname, avatar_url, total_points")
-          .order("total_points", { ascending: false })
+          .select("user_id, nickname, avatar_url, coins")
+          .order("coins", { ascending: false })
           .limit(100);
 
         if (allProfiles && allProfiles.length > 0) {
-          // Distribute profiles across tiers based on points
+          // Distribute profiles across tiers based on coins
           const tierRanges = [
-            { tier: 1, minPoints: 0, maxPoints: 500 },
-            { tier: 2, minPoints: 500, maxPoints: 2000 },
-            { tier: 3, minPoints: 2000, maxPoints: 5000 },
-            { tier: 4, minPoints: 5000, maxPoints: 15000 },
-            { tier: 5, minPoints: 15000, maxPoints: Infinity },
+            { tier: 1, minCoins: 0, maxCoins: 2000 },
+            { tier: 2, minCoins: 2000, maxCoins: 5000 },
+            { tier: 3, minCoins: 5000, maxCoins: 15000 },
+            { tier: 4, minCoins: 15000, maxCoins: 50000 },
+            { tier: 5, minCoins: 50000, maxCoins: Infinity },
           ];
           
           const tierRange = tierRanges.find(t => t.tier === activeTier);
           if (tierRange) {
             realEntries = allProfiles
-              .filter(p => p.total_points >= tierRange.minPoints && p.total_points < tierRange.maxPoints)
+              .filter(p => (p.coins || 0) >= tierRange.minCoins && (p.coins || 0) < tierRange.maxCoins)
               .slice(0, 10)
               .map((p) => ({
                 user_id: p.user_id,
                 nickname: p.nickname,
                 avatar_url: p.avatar_url,
-                weekly_xp: p.total_points || 0,
+                weekly_xp: p.coins || 0,
+                coins: p.coins || 0,
                 rank: 0,
                 league_tier: activeTier,
                 rankChange: "same" as const,
@@ -237,21 +242,21 @@ export function useLeagueLeaderboard(viewingTier?: number) {
         }
       }
 
-      // Calculate XP range for AI users
-      const existingXpRange = realEntries.length > 0 
+      // Calculate coins range for AI users
+      const existingCoinsRange = realEntries.length > 0 
         ? { 
-            min: Math.min(...realEntries.map(e => e.weekly_xp), 50),
-            max: Math.max(...realEntries.map(e => e.weekly_xp), 500)
+            min: Math.min(...realEntries.map(e => e.coins), 500),
+            max: Math.max(...realEntries.map(e => e.coins), 3000)
           }
         : undefined;
 
       // Generate AI users to fill the league (ensure 20-30 total)
       const aiCount = Math.max(15, 25 - realEntries.length);
-      const aiUsers = generateFakeUsers(activeTier, aiCount, existingXpRange);
+      const aiUsers = generateFakeUsers(activeTier, aiCount, existingCoinsRange);
 
-      // Combine and sort by XP
+      // Combine and sort by coins
       const allEntries = [...realEntries, ...aiUsers]
-        .sort((a, b) => b.weekly_xp - a.weekly_xp)
+        .sort((a, b) => b.coins - a.coins)
         .map((entry, index) => ({
           ...entry,
           rank: index + 1,

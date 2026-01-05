@@ -11,6 +11,7 @@ import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
+import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -26,6 +27,8 @@ import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
+import { useGameStake } from "@/hooks/useGameStake";
+import { REWARDS } from "@/config/rewardConfig";
 
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -149,13 +152,14 @@ export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, needsWalkthrough, setStep, hasCompletedOnboarding } = useOnboarding();
-  const { coins, gems } = useCurrency();
+  const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, vipLoading, recordPlay, watchAdForPlays } = useDailyPlays();
   const { unreadCount } = useNotifications();
+  const { hasEnoughCoins, stakeAmount } = useGameStake();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   
   // Calculate incomplete missions count
@@ -174,6 +178,7 @@ export default function Index() {
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
   const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
+  const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
   
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
@@ -250,13 +255,39 @@ export default function Index() {
       // First time with avatar - show walkthrough
       setStep("walkthrough");
     } else {
-      // Check if user can play
+      // Check if user has enough coins for stake
+      if (!hasEnoughCoins) {
+        setShowNotEnoughCoinsModal(true);
+        return;
+      }
+      
+      // Check if user can play (daily limit)
       const canPlayGame = await recordPlay();
       if (canPlayGame) {
         navigate("/game");
       }
     }
-  }, [user, profile, navigate, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay]);
+  }, [user, profile, navigate, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay, hasEnoughCoins]);
+
+  // Handle exchange gems for coins
+  const handleExchangeGems = useCallback(async () => {
+    const gemsNeeded = Math.ceil((stakeAmount - coins) / REWARDS.GEM_TO_COINS_RATE);
+    if (gems >= gemsNeeded) {
+      const coinsToAdd = gemsNeeded * REWARDS.GEM_TO_COINS_RATE;
+      const success = await spendGems(gemsNeeded);
+      if (success) {
+        await addCoins(coinsToAdd);
+        setShowNotEnoughCoinsModal(false);
+      }
+    }
+  }, [stakeAmount, coins, gems, spendGems, addCoins]);
+
+  // Handle watch ad for coins
+  const handleWatchAdForCoins = useCallback(async () => {
+    // In a real implementation, this would show an ad and then add coins
+    await addCoins(REWARDS.AD_WATCH_COINS);
+    setShowNotEnoughCoinsModal(false);
+  }, [addCoins]);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
@@ -326,6 +357,19 @@ export default function Index() {
         onRegister={() => {
           setShowGuestMaxPlaysModal(false);
           startOnboarding();
+        }}
+      />
+      <NotEnoughCoinsModal
+        isOpen={showNotEnoughCoinsModal}
+        onClose={() => setShowNotEnoughCoinsModal(false)}
+        currentCoins={coins}
+        requiredCoins={stakeAmount}
+        userGems={gems}
+        onWatchAd={handleWatchAdForCoins}
+        onExchangeGems={handleExchangeGems}
+        onOpenDailyRewards={() => {
+          setShowNotEnoughCoinsModal(false);
+          setIsDailyRewardsOpen(true);
         }}
       />
       <div 

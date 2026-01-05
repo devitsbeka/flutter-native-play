@@ -12,6 +12,9 @@ import { useCategories } from "@/hooks/useCategories";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
+import { useGameStake } from "@/hooks/useGameStake";
+import { REWARDS } from "@/config/rewardConfig";
+import coinIcon from "@/assets/icons/icon-coin.png";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
 import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
@@ -63,10 +66,12 @@ export function VSScreen() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { categories } = useCategories();
+  const { stakeAmount, deductStake } = useGameStake();
   
   // Game stage state
   const [stage, setStage] = useState<GameStage>("finding-opponent");
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [stakeDeducted, setStakeDeducted] = useState(false);
   
   // Opponent slot state
   const [currentAvatar, setCurrentAvatar] = useState<string>(slotAvatars[0]);
@@ -201,6 +206,17 @@ export function VSScreen() {
     return () => clearTimeout(timer);
   }, [stage]);
 
+  // Deduct stake when opponent is found (commit to game)
+  useEffect(() => {
+    if (stage === "opponent-found" && !stakeDeducted) {
+      deductStake().then(success => {
+        if (success) {
+          setStakeDeducted(true);
+        }
+      });
+    }
+  }, [stage, stakeDeducted, deductStake]);
+
   // Handle start button
   const handleStart = () => {
     if (selectedCategory) {
@@ -309,6 +325,20 @@ export function VSScreen() {
         >
           <ArrowLeft className="w-6 h-6 text-white" strokeWidth={2.5} />
         </motion.button>
+
+        {/* Stake indicator */}
+        <motion.div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <img src={coinIcon} alt="" className="w-5 h-5" />
+          <span className="text-white font-bold text-sm">
+            {stakeDeducted ? `-${stakeAmount}` : stakeAmount}
+          </span>
+          <span className="text-white/70 text-xs">შესანახი</span>
+        </motion.div>
         
         <motion.button 
           className="p-2" 
