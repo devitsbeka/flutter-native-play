@@ -50,7 +50,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
           ))}
         </div>
         <p className="text-muted-foreground text-center mt-4 text-sm">
-          ან გადადით: <span className="text-primary font-mono">worldquizzes.com/tv/{pairingCode}</span>
+          ან გადადით: <span className="text-primary font-mono">mytrivia.io/tv/{pairingCode}</span>
         </p>
       </motion.div>
 

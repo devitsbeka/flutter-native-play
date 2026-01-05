@@ -111,7 +111,7 @@ export function RoomLobby() {
     if (!room) return;
     
     const shareData = {
-      title: "WorldQuizzes - მოწვევა",
+      title: "MyTrivia - მოწვევა",
       text: `შემოგვიერთდი ტრივია ბრძოლაში! კოდი: ${room.room_code}`,
       url: `${window.location.origin}/team?join=${room.room_code}`,
     };

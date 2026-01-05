@@ -17,11 +17,11 @@ const faqs = [
   },
   {
     question: "როგორ გავაუქმო VIP გამოწერა?",
-    answer: "გახსენი iPhone-ის Settings → Apple ID → Subscriptions და იპოვე World Quizzes. აქედან შეგიძლია გაუქმება.",
+    answer: "გახსენი iPhone-ის Settings → Apple ID → Subscriptions და იპოვე MyTrivia. აქედან შეგიძლია გაუქმება.",
   },
   {
     question: "რატომ არ მუშაობს push შეტყობინებები?",
-    answer: "გადადი iPhone-ის Settings → Notifications → World Quizzes და ჩართე შეტყობინებები. ასევე დარწმუნდი რომ Do Not Disturb გამორთულია.",
+    answer: "გადადი iPhone-ის Settings → Notifications → MyTrivia და ჩართე შეტყობინებები. ასევე დარწმუნდი რომ Do Not Disturb გამორთულია.",
   },
   {
     question: "How do I delete my account?",
@@ -38,21 +38,21 @@ const contactOptions = [
     icon: Mail,
     title: "ელ-ფოსტა",
     description: "დაგვიკავშირდი ელ-ფოსტით",
-    action: "mailto:support@worldquizzes.app",
+    action: "mailto:support@mytrivia.io",
     color: "from-blue-400 to-cyan-500",
   },
   {
     icon: Bug,
     title: "ხარვეზის რეპორტი",
     description: "შეგვატყობინე პრობლემის შესახებ",
-    action: "mailto:bugs@worldquizzes.app?subject=Bug Report",
+    action: "mailto:bugs@mytrivia.io?subject=Bug Report",
     color: "from-red-400 to-orange-500",
   },
   {
     icon: Lightbulb,
     title: "შეთავაზება",
     description: "გაგვიზიარე იდეა",
-    action: "mailto:ideas@worldquizzes.app?subject=Feature Request",
+    action: "mailto:ideas@mytrivia.io?subject=Feature Request",
     color: "from-amber-400 to-yellow-500",
   },
 ];
@@ -151,10 +151,10 @@ export default function Support() {
           className="text-center pt-4"
         >
           <p className="text-xs text-muted-foreground">
-            World Quizzes v1.0.0
+            MyTrivia v1.0.0
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            © 2025 World Quizzes. ყველა უფლება დაცულია.
+            © 2025 MyTrivia. ყველა უფლება დაცულია.
           </p>
         </motion.div>
       </div>

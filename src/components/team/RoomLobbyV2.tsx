@@ -117,7 +117,7 @@ export function RoomLobbyV2() {
     
     const link = getShareLink(currentRoom.room_code);
     const shareData = {
-      title: "WorldQuizzes - Join my game!",
+      title: "MyTrivia - Join my game!",
       text: `Join my trivia game! Code: ${currentRoom.room_code}`,
       url: link,
     };

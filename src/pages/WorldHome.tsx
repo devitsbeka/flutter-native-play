@@ -54,7 +54,7 @@ export default function WorldHome() {
         >
           <p className="text-trivia-teal-foreground/80 text-sm mb-1">Welcome back!</p>
           <h1 className="text-2xl font-bold text-trivia-teal-foreground">
-            Trivia World
+            MyTrivia
           </h1>
         </motion.div>
       </div>

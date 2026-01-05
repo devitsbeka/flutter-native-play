@@ -51,8 +51,8 @@ interface OnboardingContextType {
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-const ONBOARDING_STORAGE_KEY = "worldquizzes_onboarding_completed";
-const WALKTHROUGH_STORAGE_KEY = "worldquizzes_walkthrough_completed";
+const ONBOARDING_STORAGE_KEY = "mytrivia_onboarding_completed";
+const WALKTHROUGH_STORAGE_KEY = "mytrivia_walkthrough_completed";
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();

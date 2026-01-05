@@ -6,9 +6,9 @@ import { toast } from "sonner";
 
 // Product IDs configured in App Store Connect
 export const IAP_PRODUCTS = {
-  VIP_MONTHLY: "app.worldquizzes.vip.monthly",
-  VIP_ANNUAL: "app.worldquizzes.vip.annual",
-  AD_FREE: "app.worldquizzes.adfree",
+  VIP_MONTHLY: "io.mytrivia.vip.monthly",
+  VIP_ANNUAL: "io.mytrivia.vip.annual",
+  AD_FREE: "io.mytrivia.adfree",
 } as const;
 
 export interface IAPProduct {
