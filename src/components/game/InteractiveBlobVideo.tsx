@@ -22,12 +22,6 @@ const borderBlobPaths = irregularBlobPaths.map(path =>
   path.replace(/0\.02/g, '0').replace(/0\.05/g, '0.02').replace(/0\.08/g, '0.05').replace(/0\.98/g, '1').replace(/0\.95/g, '0.98').replace(/0\.92/g, '0.95')
 );
 
-// Secondary decorative blob positions
-const decorativeBlobs = [
-  { x: -25, y: -35, size: 80, delay: 0 },
-  { x: 180, y: -25, size: 60, delay: 0.5 },
-  { x: 200, y: 150, size: 70, delay: 1 },
-];
 
 interface InteractiveBlobVideoProps {
   videoSrc: string;
@@ -124,62 +118,8 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
             />
           </clipPath>
 
-          {/* Decorative small blobs */}
-          {decorativeBlobs.map((_, i) => (
-            <clipPath key={i} id={`decoBlob${i}`} clipPathUnits="objectBoundingBox">
-              <motion.path
-                animate={{
-                  d: [
-                    "M0.5,0.1 C0.8,0.1 0.9,0.3 0.85,0.55 C0.9,0.8 0.7,0.9 0.45,0.88 C0.2,0.9 0.1,0.7 0.15,0.45 C0.1,0.2 0.25,0.1 0.5,0.1",
-                    "M0.55,0.08 C0.85,0.15 0.92,0.4 0.8,0.6 C0.88,0.85 0.6,0.92 0.38,0.85 C0.15,0.88 0.08,0.6 0.2,0.4 C0.12,0.18 0.3,0.05 0.55,0.08",
-                    "M0.5,0.1 C0.8,0.1 0.9,0.3 0.85,0.55 C0.9,0.8 0.7,0.9 0.45,0.88 C0.2,0.9 0.1,0.7 0.15,0.45 C0.1,0.2 0.25,0.1 0.5,0.1",
-                  ]
-                }}
-                transition={{
-                  d: { duration: 4 + i, repeat: Infinity, ease: "easeInOut" }
-                }}
-              />
-            </clipPath>
-          ))}
         </defs>
       </svg>
-
-      {/* Decorative background blobs showing video peek */}
-      {decorativeBlobs.map((blob, i) => (
-        <motion.div
-          key={i}
-          className="absolute pointer-events-none"
-          style={{
-            left: blob.x,
-            top: blob.y,
-            width: blob.size,
-            height: blob.size,
-            clipPath: `url(#decoBlob${i})`,
-            opacity: 0.6,
-          }}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ 
-            opacity: showCategorySlot ? 0.5 : 0.2, 
-            scale: 1,
-            rotate: [0, 10, -10, 0],
-          }}
-          transition={{ 
-            delay: blob.delay * 0.3,
-            duration: 0.5,
-            rotate: { duration: 6 + i * 2, repeat: Infinity, ease: "easeInOut" }
-          }}
-        >
-          <video
-            src={videoSrc}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-            style={{ transform: "scale(3)", opacity: 0.7 }}
-          />
-        </motion.div>
-      ))}
 
       {/* Main interactive blob container */}
       <motion.div
