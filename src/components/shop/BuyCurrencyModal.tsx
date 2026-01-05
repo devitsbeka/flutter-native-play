@@ -4,6 +4,7 @@ import { Sparkles, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -19,37 +20,6 @@ interface BuyCurrencyModalProps {
   currencyType: CurrencyType;
 }
 
-// Enhanced coin packages with power-ups
-const COIN_PACKAGES = [
-  { 
-    gems: 5, 
-    coins: 250, 
-    powers: { "5050": 1, freeze: 1 },
-    label: "მცირე პაკეტი"
-  },
-  { 
-    gems: 12, 
-    coins: 600, 
-    powers: { "5050": 2, freeze: 2, replace: 2 },
-    label: "საშუალო პაკეტი",
-    bonus: "+10%"
-  },
-  { 
-    gems: 25, 
-    coins: 1500, 
-    powers: { "5050": 5, freeze: 5, replace: 5, "time-drain": 3 },
-    label: "დიდი პაკეტი",
-    bonus: "+20%"
-  },
-];
-
-const POWER_ICONS: Record<string, string | null> = {
-  "5050": fiftyFiftyIcon,
-  freeze: freezeIcon,
-  replace: replaceIcon,
-  "time-drain": null, // Uses Clock icon
-};
-
 export function BuyCurrencyModal({
   isOpen,
   onClose,
@@ -57,15 +27,47 @@ export function BuyCurrencyModal({
 }: BuyCurrencyModalProps) {
   const { gems, spendGems, addCoins } = useCurrency();
   const { playSound } = useSound();
+  const { t } = useLanguage();
   const [isPurchasing, setIsPurchasing] = useState<number | null>(null);
 
   const isCoins = currencyType === "coins";
+
+  // Enhanced coin packages with power-ups
+  const COIN_PACKAGES = [
+    { 
+      gems: 5, 
+      coins: 250, 
+      powers: { "5050": 1, freeze: 1 },
+      label: t("shop.smallPackage")
+    },
+    { 
+      gems: 12, 
+      coins: 600, 
+      powers: { "5050": 2, freeze: 2, replace: 2 },
+      label: t("shop.mediumPackage"),
+      bonus: "+10%"
+    },
+    { 
+      gems: 25, 
+      coins: 1500, 
+      powers: { "5050": 5, freeze: 5, replace: 5, "time-drain": 3 },
+      label: t("shop.largePackage"),
+      bonus: "+20%"
+    },
+  ];
+
+  const POWER_ICONS: Record<string, string | null> = {
+    "5050": fiftyFiftyIcon,
+    freeze: freezeIcon,
+    replace: replaceIcon,
+    "time-drain": null, // Uses Clock icon
+  };
 
   const handlePurchase = async (packageIndex: number) => {
     const pkg = COIN_PACKAGES[packageIndex];
     
     if (gems < pkg.gems) {
-      toast.error("არ გაქვს საკმარისი ალმასი!");
+      toast.error(t("shop.notEnoughGems"));
       playSound("wrong-answer");
       return;
     }
@@ -89,14 +91,14 @@ export function BuyCurrencyModal({
         colors: ["#fbbf24", "#f59e0b", "#d97706"],
       });
       
-      toast.success(`მიიღე ${pkg.coins} მონეტა და ძალები!`, {
+      toast.success(t("shop.receivedCoinsAndPowers").replace("{coins}", String(pkg.coins)), {
         icon: "🎁",
       });
       
       onClose();
     } catch (error) {
       console.error("Purchase failed:", error);
-      toast.error("შეძენა ვერ მოხერხდა");
+      toast.error(t("shop.purchaseFailed"));
     } finally {
       setIsPurchasing(null);
     }
@@ -108,7 +110,7 @@ export function BuyCurrencyModal({
       <GameModal
         isOpen={isOpen}
         onClose={onClose}
-        title="ალმასების შეძენა"
+        title={t("shop.buyGems")}
         icon={<img src={gemIcon} alt="" className="w-10 h-10" />}
         variant="primary"
       >
@@ -117,7 +119,7 @@ export function BuyCurrencyModal({
             <Sparkles className="w-8 h-8 text-violet-500" />
           </div>
           <p className="text-center text-muted-foreground">
-            ალმასების შეძენა მალე იქნება ხელმისაწვდომი!
+            {t("shop.gemsPurchaseSoon")}
           </p>
         </div>
       </GameModal>
@@ -128,7 +130,7 @@ export function BuyCurrencyModal({
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="პაკეტების შეძენა"
+      title={t("shop.buyPackages")}
       icon={<img src={coinIcon} alt="" className="w-10 h-10" />}
       variant="primary"
     >
@@ -162,7 +164,7 @@ export function BuyCurrencyModal({
                 {/* Coins row */}
                 <div className="flex items-center gap-2">
                   <img src={coinIcon} alt="" className="w-5 h-5" />
-                  <span className="font-semibold text-amber-700">{pkg.coins.toLocaleString()} მონეტა</span>
+                  <span className="font-semibold text-amber-700">{pkg.coins.toLocaleString()} {t("shop.coin")}</span>
                 </div>
                 
                 {/* Powers row */}
@@ -202,7 +204,7 @@ export function BuyCurrencyModal({
                 whileTap={canAfford ? { y: 2, boxShadow: "0 0 0 #B45309" } : {}}
               >
                 <img src={gemIcon} alt="" className="w-5 h-5" />
-                <span>{isPurchasingThis ? "..." : `ყიდვა ${pkg.gems}`}</span>
+                <span>{isPurchasingThis ? "..." : t("shop.buyFor").replace("{price}", String(pkg.gems))}</span>
               </motion.button>
             </motion.div>
           );
@@ -211,7 +213,7 @@ export function BuyCurrencyModal({
         {/* Current balance */}
         <div className="flex items-center justify-center gap-2 pt-2 text-sm text-muted-foreground">
           <img src={gemIcon} alt="" className="w-4 h-4" />
-          <span>ბალანსი: {gems}</span>
+          <span>{t("shop.balance")}: {gems}</span>
         </div>
       </div>
     </GameModal>

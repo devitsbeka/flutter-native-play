@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export type ShopItemBadge = "popular" | "best-value" | "limited" | "new" | null;
 
@@ -23,29 +24,6 @@ export interface ShopItemCardProps {
   onClick: () => void;
 }
 
-const BADGE_STYLES: Record<string, { text: string; bg: string; shadow: string }> = {
-  popular: {
-    text: "პოპულარული",
-    bg: "linear-gradient(135deg, hsl(340 80% 55%) 0%, hsl(25 90% 55%) 100%)",
-    shadow: "0 2px 0 hsl(340 70% 40%)",
-  },
-  "best-value": {
-    text: "საუკეთესო ფასი",
-    bg: "linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(160 60% 40%) 100%)",
-    shadow: "0 2px 0 hsl(142 60% 30%)",
-  },
-  limited: {
-    text: "შეზღუდული",
-    bg: "linear-gradient(135deg, hsl(25 95% 55%) 0%, hsl(0 80% 50%) 100%)",
-    shadow: "0 2px 0 hsl(15 80% 40%)",
-  },
-  new: {
-    text: "ახალი",
-    bg: "linear-gradient(135deg, hsl(200 80% 50%) 0%, hsl(180 70% 45%) 100%)",
-    shadow: "0 2px 0 hsl(200 70% 35%)",
-  },
-};
-
 export function ShopItemCard({
   name,
   price,
@@ -59,7 +37,42 @@ export function ShopItemCard({
   index = 0,
   onClick,
 }: ShopItemCardProps) {
+  const { t } = useLanguage();
   const currencyIcon = currency === "gems" ? gemIcon : coinIcon;
+
+  const BADGE_STYLES: Record<string, { textKey: string; bg: string; shadow: string }> = {
+    popular: {
+      textKey: "popular",
+      bg: "linear-gradient(135deg, hsl(340 80% 55%) 0%, hsl(25 90% 55%) 100%)",
+      shadow: "0 2px 0 hsl(340 70% 40%)",
+    },
+    "best-value": {
+      textKey: "bestValue",
+      bg: "linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(160 60% 40%) 100%)",
+      shadow: "0 2px 0 hsl(142 60% 30%)",
+    },
+    limited: {
+      textKey: "limited",
+      bg: "linear-gradient(135deg, hsl(25 95% 55%) 0%, hsl(0 80% 50%) 100%)",
+      shadow: "0 2px 0 hsl(15 80% 40%)",
+    },
+    new: {
+      textKey: "new",
+      bg: "linear-gradient(135deg, hsl(200 80% 50%) 0%, hsl(180 70% 45%) 100%)",
+      shadow: "0 2px 0 hsl(200 70% 35%)",
+    },
+  };
+
+  const getBadgeText = (badgeKey: string): string => {
+    const badgeTexts: Record<string, string> = {
+      popular: t("common.popular") || "პოპულარული",
+      bestValue: t("common.bestValue") || "საუკეთესო ფასი",
+      limited: t("common.limited") || "შეზღუდული",
+      new: t("common.new") || "ახალი",
+    };
+    return badgeTexts[badgeKey] || badgeKey;
+  };
+
   const badgeStyle = badge ? BADGE_STYLES[badge] : null;
 
   return (
@@ -80,7 +93,7 @@ export function ShopItemCard({
           animate={{ scale: [1, 1.03, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          {badgeStyle.text}
+          {getBadgeText(badgeStyle.textKey)}
         </motion.div>
       )}
 

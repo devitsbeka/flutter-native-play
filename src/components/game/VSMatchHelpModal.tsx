@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { Trophy, Zap, Coins, Target, Timer } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VSMatchHelpModalProps {
   isOpen: boolean;
@@ -37,35 +38,37 @@ const HelpItem = ({ icon, title, description, gradient, index }: HelpItemProps) 
 );
 
 export function VSMatchHelpModal({ isOpen, onClose }: VSMatchHelpModalProps) {
+  const { t } = useLanguage();
+
   const helpItems = [
     {
       icon: <Target className="w-5 h-5 text-white" />,
-      title: "რა არის სწრაფი მატჩი?",
-      description: "შეჯიბრი რანდომ მოწინააღმდეგესთან და უპასუხე კითხვებს მასზე სწრაფად!",
+      title: t("game.whatIsQuickMatch"),
+      description: t("game.quickMatchDescription"),
       gradient: "linear-gradient(135deg, #6366F1, #8B5CF6)",
     },
     {
       icon: <Timer className="w-5 h-5 text-white" />,
-      title: "როგორ მოვიგოთ?",
-      description: "უპასუხე კითხვებს სწორად და რაც შეიძლება სწრაფად. რაც უფრო სწრაფად პასუხობ, მით მეტ ქულას იღებ!",
+      title: t("game.howToWin"),
+      description: t("game.howToWinDescription"),
       gradient: "linear-gradient(135deg, #F59E0B, #EF4444)",
     },
     {
       icon: <Trophy className="w-5 h-5 text-white" />,
-      title: "XP ქულები",
-      description: "მოიგე მატჩი და მიიღე XP ქულები შენი დონის ასამაღლებლად. მეტი XP = მაღალი დონე!",
+      title: t("game.xpPoints"),
+      description: t("game.xpPointsDescription"),
       gradient: "linear-gradient(135deg, #10B981, #059669)",
     },
     {
       icon: <Coins className="w-5 h-5 text-white" />,
-      title: "მონეტები",
-      description: "ყოველ მატჩში იღებ მონეტებს. გამოიყენე ისინი მაღაზიაში power-up-ების შესაძენად!",
+      title: t("game.coinsReward"),
+      description: t("game.coinsRewardDescription"),
       gradient: "linear-gradient(135deg, #F2C860, #F59E0B)",
     },
     {
       icon: <Zap className="w-5 h-5 text-white" />,
-      title: "Power-Ups",
-      description: "გამოიყენე სპეციალური ძალები თამაშში უპირატესობის მოსაპოვებლად!",
+      title: t("game.powerUpsHelp"),
+      description: t("game.powerUpsHelpDescription"),
       gradient: "linear-gradient(135deg, #EC4899, #8B5CF6)",
     },
   ];
@@ -74,7 +77,7 @@ export function VSMatchHelpModal({ isOpen, onClose }: VSMatchHelpModalProps) {
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="სწრაფი მატჩი"
+      title={t("game.quickMatch")}
       iconEmoji="⚔️"
       showSparkles={false}
     >
@@ -92,7 +95,7 @@ export function VSMatchHelpModal({ isOpen, onClose }: VSMatchHelpModalProps) {
       </div>
       
       <GameModalFooter
-        primaryLabel="გასაგებია!"
+        primaryLabel={t("common.gotIt")}
         onPrimary={onClose}
       />
     </GameModal>

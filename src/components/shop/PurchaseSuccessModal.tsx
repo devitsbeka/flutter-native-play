@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import confetti from "canvas-confetti";
 import { Check, Sparkles } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PurchaseSuccessModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export function PurchaseSuccessModal({
   quantity = 1,
   icon,
 }: PurchaseSuccessModalProps) {
+  const { t } = useLanguage();
+
   useEffect(() => {
     if (isOpen) {
       // Trigger confetti
@@ -114,7 +117,7 @@ export function PurchaseSuccessModal({
               transition={{ delay: 0.2 }}
               className="text-2xl font-display font-bold text-foreground mb-2"
             >
-              წარმატებით შეძენილია!
+              {t("shop.purchaseSuccess")}
             </motion.h2>
 
             {/* Item Badge */}
@@ -169,7 +172,7 @@ export function PurchaseSuccessModal({
               transition={{ delay: 0.5 }}
             >
               <ChunkyButton onClick={onClose} variant="primary" className="w-full">
-                გაგრძელება
+                {t("shop.continue")}
               </ChunkyButton>
             </motion.div>
           </motion.div>

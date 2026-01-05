@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameModal } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // 3D hexagonal badge icons
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -17,49 +18,79 @@ interface PowerUpTutorialModalProps {
 
 interface TutorialSlide {
   icon: string;
-  title: string;
-  description: string;
-  howToUse: string;
+  titleKey: string;
+  descriptionKey: string;
+  hintKey: string;
   color: { from: string; to: string };
 }
 
 const TUTORIAL_SLIDES: TutorialSlide[] = [
   {
     icon: fiftyFiftyIcon,
-    title: "50/50",
-    description: "წაშლის 2 არასწორ პასუხს და დარჩება მხოლოდ 2 ვარიანტი",
-    howToUse: "გამოიყენე როცა დარწმუნებული არ ხარ პასუხში. დაგეხმარება შანსების გაორმაგებაში! ⚡",
+    titleKey: "fiftyFifty",
+    descriptionKey: "fiftyFiftyDescription",
+    hintKey: "fiftyFiftyHint",
     color: { from: "#E85C3A", to: "#FFB347" },
   },
   {
     icon: freezeIcon,
-    title: "გაყინვა",
-    description: "დრო გაიყინება 10 წამით. მშვიდად დაფიქრდი კითხვაზე დროის დაკარგვის გარეშე!",
-    howToUse: "გამოიყენე როცა კითხვა რთულია და მეტი დრო გჭირდება! ❄️",
+    titleKey: "freeze",
+    descriptionKey: "freezeDescription",
+    hintKey: "freezeHint",
     color: { from: "#1C8CA8", to: "#95EBE9" },
   },
   {
     icon: replaceIcon,
-    title: "შეცვლა",
-    description: "ცვლის მიმდინარე კითხვას სრულიად ახალი კითხვით",
-    howToUse: "გამოიყენე როცა კითხვა საერთოდ არ იცი. მიიღებ ახალ შანსს! 🔄",
+    titleKey: "replace",
+    descriptionKey: "replaceDescription",
+    hintKey: "replaceHint",
     color: { from: "#1CA88C", to: "#95EBD4" },
   },
   {
     icon: timeDrainIcon,
-    title: "დრო+",
-    description: "ამატებს 10 წამს ტაიმერზე მყისიერად",
-    howToUse: "გამოიყენე როცა დრო იწურება და კიდევ ცოტა გჭირდება პასუხისთვის! ⏰",
+    titleKey: "timeDrain",
+    descriptionKey: "timeDrainDescription",
+    hintKey: "timeDrainHint",
     color: { from: "#7B4BBF", to: "#C9A8E9" },
   },
 ];
 
 export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { t } = useLanguage();
   
   const slide = TUTORIAL_SLIDES[currentSlide];
   const isFirstSlide = currentSlide === 0;
   const isLastSlide = currentSlide === TUTORIAL_SLIDES.length - 1;
+  
+  // Get translated text for slides
+  const getSlideContent = (slideData: TutorialSlide) => {
+    const contentMap: Record<string, { title: string; description: string; hint: string }> = {
+      fiftyFifty: {
+        title: t("powerups.fiftyFifty.name"),
+        description: t("powerups.fiftyFifty.description"),
+        hint: t("powerups.fiftyFifty.hint"),
+      },
+      freeze: {
+        title: t("powerups.freeze.name"),
+        description: t("powerups.freeze.description"),
+        hint: t("powerups.freeze.hint"),
+      },
+      replace: {
+        title: t("powerups.replace.name"),
+        description: t("powerups.replace.description"),
+        hint: t("powerups.replace.hint"),
+      },
+      timeDrain: {
+        title: t("powerups.timeDrain.name"),
+        description: t("powerups.timeDrain.description"),
+        hint: t("powerups.timeDrain.hint"),
+      },
+    };
+    return contentMap[slideData.titleKey] || { title: "", description: "", hint: "" };
+  };
+
+  const slideContent = getSlideContent(slide);
   
   const handleNext = () => {
     if (isLastSlide) {
@@ -126,7 +157,7 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
         >
           <span className="flex items-center gap-1">
             <ChevronLeft className="w-4 h-4" />
-            უკან
+            {t("common.back")}
           </span>
         </ChunkyButton>
       )}
@@ -138,10 +169,10 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
         className="flex-1 whitespace-nowrap"
       >
         {isLastSlide ? (
-          "გასაგებია!"
+          t("common.gotIt")
         ) : (
           <span className="flex items-center gap-1">
-            შემდეგი
+            {t("common.next")}
             <ChevronRight className="w-4 h-4" />
           </span>
         )}
@@ -154,8 +185,8 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
       isOpen={isOpen}
       onClose={onClose}
       icon={headerIcon}
-      title="როგორ გამოვიყენო ძალები?"
-      subtitle="გაეცანი თითოეულ ძალას"
+      title={t("help.howToUsePowers")}
+      subtitle={t("help.learnEachPower")}
       footer={footer}
       showSparkles
     >
@@ -173,7 +204,7 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
           {/* Power-up icon - just the badge */}
           <motion.img 
             src={slide.icon} 
-            alt={slide.title} 
+            alt={slideContent.title} 
             className="w-20 h-20 mx-auto mb-4 object-contain"
             style={{
               filter: `drop-shadow(0 4px 8px ${slide.color.from}40)`,
@@ -194,12 +225,12 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
               WebkitTextFillColor: "transparent",
             }}
           >
-            {slide.title}
+            {slideContent.title}
           </h3>
           
           {/* Description */}
           <p className="text-muted-foreground mb-4">
-            {slide.description}
+            {slideContent.description}
           </p>
           
           {/* How to use tip */}
@@ -212,7 +243,7 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
             }}
           >
             <p className="text-sm font-medium text-gray-700">
-              💡 {slide.howToUse}
+              💡 {slideContent.hint}
             </p>
           </div>
         </motion.div>
