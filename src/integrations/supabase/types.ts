@@ -886,6 +886,7 @@ export type Database = {
           is_host: boolean | null
           joined_at: string | null
           last_played_at: string | null
+          last_read_at: string | null
           nickname: string
           room_id: string
           score: number | null
@@ -904,6 +905,7 @@ export type Database = {
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
+          last_read_at?: string | null
           nickname: string
           room_id: string
           score?: number | null
@@ -922,6 +924,7 @@ export type Database = {
           is_host?: boolean | null
           joined_at?: string | null
           last_played_at?: string | null
+          last_read_at?: string | null
           nickname?: string
           room_id?: string
           score?: number | null
