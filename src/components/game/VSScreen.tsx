@@ -10,7 +10,7 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { CATEGORY_IMAGES } from "@/config/videoConfig";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -76,7 +76,7 @@ export function VSScreen() {
   // Category slot state
   const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; imageUrl: string} | null>(null);
   const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Player data
@@ -87,7 +87,7 @@ export function VSScreen() {
 
   // Current category for display during slot
   const currentCategory = categoryPool[currentCategoryIndex];
-  const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "/videos/galaxy.mp4") : "/videos/galaxy.mp4";
+  const currentImageUrl = currentCategory ? (CATEGORY_IMAGES[currentCategory.id] || "/images/categories/galaxy.jpg") : "/images/categories/galaxy.jpg";
 
   // Initialize category pool when categories load
   useEffect(() => {
@@ -170,8 +170,8 @@ export function VSScreen() {
         const winnerIndex = Math.floor(Math.random() * categoryPool.length);
         setCurrentCategoryIndex(winnerIndex);
         const winner = categoryPool[winnerIndex];
-        const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.mp4";
-        setSelectedCategory({ id: winner.id, name: winner.name, videoUrl });
+        const imageUrl = CATEGORY_IMAGES[winner.id] || "/images/categories/galaxy.jpg";
+        setSelectedCategory({ id: winner.id, name: winner.name, imageUrl });
         setStage("category-found");
       }
     };
@@ -372,7 +372,7 @@ export function VSScreen() {
           >
             {/* Interactive Multi-Blob Video Container */}
             <InteractiveBlobVideo
-              videoSrc={showCategorySlot ? (selectedCategory?.videoUrl || currentVideoUrl) : "/videos/galaxy.mp4"}
+              imageSrc={showCategorySlot ? (selectedCategory?.imageUrl || currentImageUrl) : "/images/galaxy-frame.jpg"}
               isLocked={isCategoryLocked}
               showCategorySlot={showCategorySlot}
             />
