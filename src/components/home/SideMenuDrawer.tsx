@@ -5,12 +5,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
+import { DailyRewardsModal } from "./DailyRewardsModal";
+import { ChestRewardModal } from "./ChestRewardModal";
 import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
 import { SettingsModal } from "./SettingsModal";
 import { HelpModal } from "./HelpModal";
 import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { toast } from "sonner";
 
 // Icon imports for menu items
 import iconRewards from "@/assets/icons/icon-coin-purse.png";
@@ -44,16 +47,36 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
+  const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
+  const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
+  const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
   const handleItemClick = (action: string) => {
+    if (action === "rewards") {
+      setIsDailyRewardsOpen(true);
+      return;
+    }
     if (action === "missions") {
       setIsMissionsOpen(true);
+      return;
+    }
+    if (action === "treasure") {
+      setIsChestModalOpen(true);
+      return;
+    }
+    if (action === "shop") {
+      onClose();
+      navigate("/power-ups");
+      return;
+    }
+    if (action === "other-games") {
+      toast.info("მალე დაემატება!");
       return;
     }
     if (action === "avatar") {
@@ -92,6 +115,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   return (
     <>
       <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
+      <DailyRewardsModal isOpen={isDailyRewardsOpen} onClose={() => setIsDailyRewardsOpen(false)} currentStreak={currentStreak} />
+      <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <AvatarGeneratorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
