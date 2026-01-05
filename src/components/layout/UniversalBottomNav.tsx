@@ -14,6 +14,7 @@ interface UniversalBottomNavProps {
   maxPlays?: number;
   canPlay?: boolean;
   isVip?: boolean;
+  vipLoading?: boolean;
   onWatchAdClick?: () => void;
   isGuest?: boolean;
 }
@@ -26,6 +27,7 @@ export function UniversalBottomNav({
   maxPlays = 5,
   canPlay = true,
   isVip = false,
+  vipLoading = false,
   onWatchAdClick,
   isGuest = false,
 }: UniversalBottomNavProps) {
@@ -120,6 +122,7 @@ export function UniversalBottomNav({
                 maxPlays={maxPlays}
                 isVip={isVip}
                 canPlay={canPlay}
+                isLoading={vipLoading}
               />
             </div>
           </div>
@@ -256,6 +259,7 @@ interface Hex3DPlayButtonProps {
   maxPlays?: number;
   isVip?: boolean;
   canPlay?: boolean;
+  isLoading?: boolean;
 }
 
 function Hex3DPlayButton({ 
@@ -267,6 +271,7 @@ function Hex3DPlayButton({
   maxPlays = 5,
   isVip = false,
   canPlay = true,
+  isLoading = false,
 }: Hex3DPlayButtonProps) {
   const colorSchemes = {
     mint: {
@@ -301,6 +306,18 @@ function Hex3DPlayButton({
 
   const colors = colorSchemes[variant];
   const showExhausted = variant === "exhausted" && isPlayButton;
+
+  // Don't show anything until VIP status is loaded
+  if (isLoading) {
+    return (
+      <div className="relative pointer-events-auto">
+        <div 
+          className="relative z-[60] opacity-0"
+          style={{ width: 90, height: 90 }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative pointer-events-auto">
