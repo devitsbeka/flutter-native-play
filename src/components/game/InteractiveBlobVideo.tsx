@@ -1,4 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { useCategories } from "@/hooks/useCategories";
 
 // Soft rounded rectangle path
 const roundedRectPath = "M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 C0.94,0.82 0.82,0.94 0.5,0.94 C0.18,0.94 0.06,0.82 0.06,0.5 C0.06,0.18 0.18,0.06 0.5,0.06";
@@ -11,6 +13,44 @@ interface InteractiveBlobVideoProps {
 }
 
 export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: InteractiveBlobVideoProps) {
+  const { categories } = useCategories();
+  const [slotIconUrl, setSlotIconUrl] = useState<string>("");
+  const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Get all category icons for slot animation
+  const categoryIcons = categories
+    .map(c => c.image_url)
+    .filter((url): url is string => !!url);
+
+  // Slot machine animation - runs until locked
+  useEffect(() => {
+    if (isLocked || categoryIcons.length === 0) {
+      if (slotIntervalRef.current) {
+        clearInterval(slotIntervalRef.current);
+        slotIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Start cycling immediately
+    let index = 0;
+    setSlotIconUrl(categoryIcons[index]);
+    
+    slotIntervalRef.current = setInterval(() => {
+      index = (index + 1) % categoryIcons.length;
+      setSlotIconUrl(categoryIcons[index]);
+    }, 100); // Fast cycling
+
+    return () => {
+      if (slotIntervalRef.current) {
+        clearInterval(slotIntervalRef.current);
+      }
+    };
+  }, [isLocked, categoryIcons.length]);
+
+  // Determine which icon to show
+  const displayIcon = isLocked ? iconUrl : slotIconUrl;
+
   return (
     <div className="relative w-[280px] h-[280px] select-none">
       {/* SVG Definitions */}
@@ -60,17 +100,17 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: Interactiv
               />
             ) : (
               <motion.div
-                key={iconUrl || "empty"}
+                key={displayIcon || "empty"}
                 className="w-full h-full flex items-center justify-center bg-white/20"
                 initial={{ rotateY: 90, opacity: 0 }}
                 animate={{ rotateY: 0, opacity: 1 }}
                 exit={{ rotateY: -90, opacity: 0 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
+                transition={{ duration: 0.08, ease: "easeOut" }}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                {iconUrl && (
+                {displayIcon && (
                   <img 
-                    src={iconUrl} 
+                    src={displayIcon} 
                     alt="" 
                     className="w-32 h-32 object-contain"
                   />
