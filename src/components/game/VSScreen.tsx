@@ -12,6 +12,7 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useCategories } from "@/hooks/useCategories";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import confetti from "canvas-confetti";
+import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
 import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
@@ -362,148 +363,19 @@ export function VSScreen() {
             </div>
           </motion.div>
 
-          {/* Category - Center with Morphing Blob */}
+          {/* Category - Center with Interactive Morphing Blobs */}
           <motion.div 
             className="flex flex-col items-center justify-center gap-4 relative z-10"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Morphing Blob Video Container */}
-            <div className="relative w-[280px] h-[280px]">
-              {/* SVG Definitions for Clip Paths */}
-              <svg className="absolute w-0 h-0">
-                <defs>
-                  {/* Main blob clip path */}
-                  <clipPath id="blobClip" clipPathUnits="objectBoundingBox">
-                    <motion.path
-                      animate={{
-                        d: isCategoryLocked 
-                          ? "M0.5,0.02 C0.85,0.02 0.98,0.15 0.98,0.5 C0.98,0.85 0.85,0.98 0.5,0.98 C0.15,0.98 0.02,0.85 0.02,0.5 C0.02,0.15 0.15,0.02 0.5,0.02"
-                          : [
-                              "M0.5,0.05 C0.75,0.02 0.95,0.25 0.92,0.55 C0.88,0.85 0.7,0.98 0.45,0.95 C0.15,0.92 0.02,0.7 0.08,0.4 C0.12,0.15 0.3,0.08 0.5,0.05",
-                              "M0.55,0.02 C0.88,0.08 0.95,0.35 0.9,0.6 C0.85,0.88 0.6,0.98 0.35,0.92 C0.08,0.85 0.02,0.55 0.1,0.3 C0.18,0.08 0.35,-0.02 0.55,0.02",
-                              "M0.48,0.05 C0.8,0.05 0.98,0.2 0.95,0.52 C0.92,0.82 0.75,0.95 0.42,0.95 C0.12,0.95 0.02,0.78 0.05,0.48 C0.08,0.2 0.2,0.05 0.48,0.05",
-                              "M0.5,0.05 C0.75,0.02 0.95,0.25 0.92,0.55 C0.88,0.85 0.7,0.98 0.45,0.95 C0.15,0.92 0.02,0.7 0.08,0.4 C0.12,0.15 0.3,0.08 0.5,0.05"
-                            ]
-                      }}
-                      transition={{
-                        d: isCategoryLocked 
-                          ? { duration: 0.5, ease: "easeOut" }
-                          : { duration: 3, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                    />
-                  </clipPath>
-                  {/* Border blob - slightly larger */}
-                  <clipPath id="blobBorder" clipPathUnits="objectBoundingBox">
-                    <motion.path
-                      animate={{
-                        d: isCategoryLocked 
-                          ? "M0.5,0 C0.87,0 1,0.13 1,0.5 C1,0.87 0.87,1 0.5,1 C0.13,1 0,0.87 0,0.5 C0,0.13 0.13,0 0.5,0"
-                          : [
-                              "M0.5,0.03 C0.77,0 0.97,0.23 0.94,0.53 C0.9,0.87 0.72,1 0.43,0.97 C0.13,0.94 0,0.72 0.06,0.38 C0.1,0.13 0.28,0.06 0.5,0.03",
-                              "M0.57,0 C0.9,0.06 0.97,0.33 0.92,0.58 C0.87,0.9 0.62,1 0.33,0.94 C0.06,0.87 0,0.57 0.08,0.28 C0.16,0.06 0.33,-0.04 0.57,0",
-                              "M0.46,0.03 C0.82,0.03 1,0.18 0.97,0.5 C0.94,0.84 0.77,0.97 0.4,0.97 C0.1,0.97 0,0.8 0.03,0.46 C0.06,0.18 0.18,0.03 0.46,0.03",
-                              "M0.5,0.03 C0.77,0 0.97,0.23 0.94,0.53 C0.9,0.87 0.72,1 0.43,0.97 C0.13,0.94 0,0.72 0.06,0.38 C0.1,0.13 0.28,0.06 0.5,0.03"
-                            ]
-                      }}
-                      transition={{
-                        d: isCategoryLocked 
-                          ? { duration: 0.5, ease: "easeOut" }
-                          : { duration: 3, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                    />
-                  </clipPath>
-                </defs>
-              </svg>
-
-              {/* Glowing background blob */}
-              <motion.div
-                className="absolute inset-0"
-                style={{
-                  clipPath: "url(#blobBorder)",
-                  background: isCategoryLocked 
-                    ? "linear-gradient(135deg, #FFD700, #FFA500, #FF6B6B, #FFD700)"
-                    : "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3))",
-                  filter: isCategoryLocked ? "blur(0px)" : "blur(1px)",
-                }}
-                animate={{
-                  rotate: isCategoryLocked ? 0 : [0, 5, -5, 0],
-                  scale: isCategoryLocked ? 1 : [1, 1.02, 0.98, 1],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-
-              {/* Video container with blob clip */}
-              <motion.div
-                className="absolute inset-[6px]"
-                style={{
-                  clipPath: "url(#blobClip)",
-                }}
-                animate={{
-                  rotate: isCategoryLocked ? 0 : [0, -3, 3, 0],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.video
-                    key={showCategorySlot ? (selectedCategory?.videoUrl || currentVideoUrl) : "placeholder"}
-                    src={showCategorySlot ? (selectedCategory?.videoUrl || currentVideoUrl) : "/videos/galaxy.mp4"}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-full h-full object-cover"
-                    style={{ 
-                      transform: "scale(1.2)",
-                    }}
-                    initial={{ opacity: 0, scale: 1.3 }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: 1.2,
-                    }}
-                    exit={{ opacity: 0, scale: 1.1 }}
-                    transition={{ duration: 0.15 }}
-                  />
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Floating particles when locked */}
-              {isCategoryLocked && (
-                <>
-                  {[...Array(6)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute w-2 h-2 rounded-full bg-amber-300"
-                      style={{
-                        left: `${20 + i * 12}%`,
-                        top: `${10 + (i % 3) * 30}%`,
-                      }}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{
-                        opacity: [0, 1, 0],
-                        scale: [0, 1.5, 0],
-                        y: [-10, -40],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        delay: i * 0.15,
-                        repeat: Infinity,
-                        repeatDelay: 1,
-                      }}
-                    />
-                  ))}
-                </>
-              )}
-            </div>
+            {/* Interactive Multi-Blob Video Container */}
+            <InteractiveBlobVideo
+              videoSrc={showCategorySlot ? (selectedCategory?.videoUrl || currentVideoUrl) : "/videos/galaxy.mp4"}
+              isLocked={isCategoryLocked}
+              showCategorySlot={showCategorySlot}
+            />
             
             {/* Category Name */}
             <motion.h2 
