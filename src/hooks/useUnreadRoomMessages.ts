@@ -118,6 +118,28 @@ export function useUnreadRoomMessages() {
     [user]
   );
 
+  const markAllRoomsAsRead = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const roomIds = Object.keys(unreadCounts).filter(id => unreadCounts[id] > 0);
+      if (roomIds.length === 0) return;
+
+      const { error } = await supabase
+        .from("room_participants")
+        .update({ last_read_at: new Date().toISOString() } as any)
+        .eq("user_id", user.id)
+        .in("room_id", roomIds);
+
+      if (error) throw error;
+
+      // Clear all unread counts
+      setUnreadCounts({});
+    } catch (error) {
+      console.error("Error marking all rooms as read:", error);
+    }
+  }, [user, unreadCounts]);
+
   const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
 
   return {
@@ -125,6 +147,7 @@ export function useUnreadRoomMessages() {
     totalUnread,
     loading,
     markRoomAsRead,
+    markAllRoomsAsRead,
     refreshUnreadCounts: fetchUnreadCounts,
   };
 }

@@ -19,7 +19,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const { rooms, loading: roomsLoading } = useMyRooms();
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const { messages, loading: messagesLoading, sendMessage } = useRoomChat(selectedRoomId);
-  const { unreadCounts, markRoomAsRead } = useUnreadRoomMessages();
+  const { unreadCounts, markRoomAsRead, totalUnread } = useUnreadRoomMessages();
   const { typingUsers, setIsTyping } = useTypingIndicator(selectedRoomId);
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);

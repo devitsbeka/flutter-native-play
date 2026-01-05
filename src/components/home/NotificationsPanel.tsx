@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff, Check, CheckCheck, Users, Swords, Gift, Trophy, Info, Trash2, UserPlus, Gamepad2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
@@ -174,6 +174,13 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [filter, setFilter] = useState<FilterType>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Mark all as read when panel opens
+  useEffect(() => {
+    if (isOpen && unreadCount > 0) {
+      markAllAsRead();
+    }
+  }, [isOpen]);
 
   const filteredNotifications = notifications.filter((n) => {
     switch (filter) {
