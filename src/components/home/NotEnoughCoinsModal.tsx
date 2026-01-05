@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Coins, Gem, Gift, Play } from "lucide-react";
+import { X, Play, Gift } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface NotEnoughCoinsModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export function NotEnoughCoinsModal({
   onOpenDailyRewards,
   userGems,
 }: NotEnoughCoinsModalProps) {
+  const { t } = useLanguage();
   const coinsNeeded = requiredCoins - currentCoins;
   const gemsNeeded = Math.ceil(coinsNeeded / REWARDS.GEM_TO_COINS_RATE);
   const canExchangeGems = userGems >= gemsNeeded;
@@ -87,24 +89,24 @@ export function NotEnoughCoinsModal({
               </motion.div>
 
               <h2 className="text-2xl font-black text-amber-800">
-                არასაკმარისი მონეტა
+                {t("modals.notEnoughCoins")}
               </h2>
               <p className="text-amber-700 mt-1">
-                თამაშისთვის საჭიროა <span className="font-bold">{requiredCoins}</span> მონეტა
+                {t("modals.coinsRequired", { amount: requiredCoins })}
               </p>
             </div>
 
             {/* Current balance */}
             <div className="px-6 py-4 border-b border-gray-100">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">შენი ბალანსი:</span>
+                <span className="text-gray-600">{t("modals.yourBalance")}</span>
                 <div className="flex items-center gap-2">
                   <img src={coinIcon} alt="" className="w-6 h-6" />
                   <span className="font-bold text-lg text-gray-800">{currentCoins}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-red-500 font-medium">გაკლია:</span>
+                <span className="text-red-500 font-medium">{t("modals.youNeed")}</span>
                 <div className="flex items-center gap-2">
                   <img src={coinIcon} alt="" className="w-5 h-5" />
                   <span className="font-bold text-red-500">{coinsNeeded}</span>
@@ -123,8 +125,8 @@ export function NotEnoughCoinsModal({
                   <Play className="w-6 h-6 text-amber-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-gray-800">რეკლამის ყურება</p>
-                  <p className="text-sm text-gray-500">+{REWARDS.AD_WATCH_COINS} მონეტა</p>
+                  <p className="font-bold text-gray-800">{t("modals.watchAd")}</p>
+                  <p className="text-sm text-gray-500">+{REWARDS.AD_WATCH_COINS} {t("modals.coin")}</p>
                 </div>
               </button>
 
@@ -142,10 +144,10 @@ export function NotEnoughCoinsModal({
                   <img src={gemIcon} alt="" className="w-8 h-8" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-gray-800">ალმასით გადახდა</p>
+                  <p className="font-bold text-gray-800">{t("modals.payWithGems")}</p>
                   <p className="text-sm text-gray-500">
-                    {gemsNeeded} ალმასი = {gemsNeeded * REWARDS.GEM_TO_COINS_RATE} მონეტა
-                    {!canExchangeGems && ` (გაქვს: ${userGems})`}
+                    {gemsNeeded} {t("modals.gem")} = {gemsNeeded * REWARDS.GEM_TO_COINS_RATE} {t("modals.coin")}
+                    {!canExchangeGems && ` (${userGems})`}
                   </p>
                 </div>
               </button>
@@ -159,8 +161,8 @@ export function NotEnoughCoinsModal({
                   <Gift className="w-6 h-6 text-green-600" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-gray-800">დღიური საჩუქარი</p>
-                  <p className="text-sm text-gray-500">აიღე უფასო მონეტები</p>
+                  <p className="font-bold text-gray-800">{t("modals.dailyGift")}</p>
+                  <p className="text-sm text-gray-500">{t("modals.getFreeCoins")}</p>
                 </div>
               </button>
             </div>
@@ -173,7 +175,7 @@ export function NotEnoughCoinsModal({
                 onClick={onClose}
                 className="w-full"
               >
-                დახურვა
+                {t("common.close")}
               </ChunkyButton>
             </div>
           </motion.div>

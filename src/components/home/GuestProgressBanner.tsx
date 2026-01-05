@@ -4,10 +4,12 @@ import { LogIn, Star, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getGuestProgress, hasGuestProgress } from "@/hooks/useGuestProgress";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function GuestProgressBanner() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Don't show if user is logged in or no guest progress
@@ -83,10 +85,10 @@ export function GuestProgressBanner() {
               {/* Content */}
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-display font-bold text-white text-sm leading-tight mb-1.5">
-                  შენი პროგრესი არ არის შენახული!
+                  {t("guest.progressNotSaved")}
                 </p>
                 <p className="text-white/70 text-xs mb-2 truncate">
-                  დარეგისტრირდი რომ არ დაკარგო მიღწევები
+                  {t("guest.registerToKeep")}
                 </p>
                 
                 {/* Stats */}
@@ -94,13 +96,13 @@ export function GuestProgressBanner() {
                   <div className="flex items-center gap-1 whitespace-nowrap">
                     <Trophy className="h-3.5 w-3.5 text-white/90 shrink-0" />
                     <span className="text-white font-semibold text-xs">
-                      {totalLevels} დონე
+                      {totalLevels} {t("guest.levels")}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 whitespace-nowrap">
                     <Star className="h-3.5 w-3.5 text-white/90 fill-white/90 shrink-0" />
                     <span className="text-white font-semibold text-xs">
-                      {totalStars} ვარსკვლავი
+                      {totalStars} {t("guest.stars")}
                     </span>
                   </div>
                 </div>

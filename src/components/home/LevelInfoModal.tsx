@@ -3,6 +3,7 @@ import { TrendingUp, Gift, Play } from "lucide-react";
 import { GameModal, GameModalStat } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { LevelInfo, getLevelRewards } from "@/utils/levelCalculation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LevelInfoModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface LevelInfoModalProps {
 }
 
 export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: LevelInfoModalProps) {
+  const { t } = useLanguage();
   const nextLevelRewards = getLevelRewards(levelInfo.level + 1);
 
   return (
@@ -19,8 +21,8 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
       isOpen={isOpen}
       onClose={onClose}
       variant="info"
-      title={`დონე ${levelInfo.level}`}
-      subtitle={levelInfo.isMaxLevel ? "✨ მაქსიმალური დონე!" : undefined}
+      title={`${t("modals.levelLabel")} ${levelInfo.level}`}
+      subtitle={levelInfo.isMaxLevel ? `✨ ${t("modals.maximum")}!` : undefined}
       showSparkles
     >
       {/* Continue Playing Button */}
@@ -33,7 +35,7 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
             icon={<Play className="w-5 h-5" />}
             className="w-full"
           >
-            თამაშის გაგრძელება
+            {t("modals.continueGame")}
           </ChunkyButton>
         </div>
       )}
@@ -47,7 +49,7 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
         }}
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-500">XP პროგრესი</span>
+          <span className="text-sm font-medium text-gray-500">{t("modals.xpProgress")}</span>
           <span className="text-sm font-bold text-gray-800">
             {levelInfo.xpInCurrentLevel} / {levelInfo.xpNeededForNextLevel}
           </span>
@@ -65,8 +67,8 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center">
           {levelInfo.isMaxLevel
-            ? "შენ მიაღწიე მაქსიმალურ დონეს! 🎉"
-            : `დარჩა ${levelInfo.xpNeededForNextLevel - levelInfo.xpInCurrentLevel} XP შემდეგ დონემდე`}
+            ? t("modals.maxLevelReached")
+            : t("modals.xpToNextLevel", { amount: levelInfo.xpNeededForNextLevel - levelInfo.xpInCurrentLevel })}
         </p>
       </div>
 
@@ -75,12 +77,12 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
         <GameModalStat
           icon={<TrendingUp className="h-5 w-5 text-primary" />}
           value={levelInfo.currentXP}
-          label="სულ XP"
+          label={t("modals.totalXp")}
         />
         <GameModalStat
           icon={<Gift className="h-5 w-5 text-amber-500" />}
           value={levelInfo.isMaxLevel ? "✓" : levelInfo.level + 1}
-          label={levelInfo.isMaxLevel ? "მაქსიმუმი" : "შემდეგი დონე"}
+          label={levelInfo.isMaxLevel ? t("modals.maximum") : t("modals.nextLevel")}
           highlight={!levelInfo.isMaxLevel}
         />
       </div>
@@ -97,23 +99,23 @@ export function LevelInfoModal({ isOpen, onClose, levelInfo, onContinue }: Level
         >
           <h3 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
             <span>🎁</span>
-            დონე {levelInfo.level + 1}-ის ჯილდოები
+            {t("modals.levelRewards", { level: levelInfo.level + 1 })}
           </h3>
           <div className="space-y-1.5">
             <p className="text-sm text-gray-600 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
-              +{nextLevelRewards.xpBonus} XP ბონუსი
+              +{nextLevelRewards.xpBonus} {t("modals.xpBonus")}
             </p>
             {nextLevelRewards.powerUps > 0 && (
               <p className="text-sm text-gray-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400" />
-                +{nextLevelRewards.powerUps} Power-Ups
+                +{nextLevelRewards.powerUps} {t("modals.powers")}
               </p>
             )}
             {nextLevelRewards.spinTickets > 0 && (
               <p className="text-sm text-gray-600 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400" />
-                +{nextLevelRewards.spinTickets} Spin Tickets
+                +{nextLevelRewards.spinTickets} {t("modals.spinTickets")}
               </p>
             )}
             {nextLevelRewards.specialRewards.map((reward, i) => (

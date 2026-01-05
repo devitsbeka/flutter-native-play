@@ -5,23 +5,25 @@ import { GameModal } from "@/components/ui/game-modal";
 import { PowerUpBadge, PowerUpType as BadgePowerUpType } from "@/components/game/PowerUpBadge";
 import { useUserPowerUps, PowerUpType as HookPowerUpType } from "@/hooks/useUserPowerUps";
 import powerBottleIcon from "@/assets/icons/icon-power-bottle.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MyPowersModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Map from hook types to badge types
-const POWER_UP_ORDER: { hookType: HookPowerUpType; badgeType: BadgePowerUpType; name: string }[] = [
-  { hookType: "5050", badgeType: "fifty-fifty", name: "50/50" },
-  { hookType: "freeze", badgeType: "freeze", name: "გაყინვა" },
-  { hookType: "replace", badgeType: "replace", name: "ჩანაცვლება" },
-  { hookType: "time-drain", badgeType: "time-drain", name: "დრო+" },
-];
-
 export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
   const navigate = useNavigate();
   const { powerUps, isLoading } = useUserPowerUps();
+  const { t } = useLanguage();
+
+  // Map from hook types to badge types
+  const POWER_UP_ORDER: { hookType: HookPowerUpType; badgeType: BadgePowerUpType; nameKey: string }[] = [
+    { hookType: "5050", badgeType: "fifty-fifty", nameKey: "powerups.fiftyFifty.name" },
+    { hookType: "freeze", badgeType: "freeze", nameKey: "powerups.freeze.name" },
+    { hookType: "replace", badgeType: "replace", nameKey: "powerups.replace.name" },
+    { hookType: "time-drain", badgeType: "time-drain", nameKey: "powerups.timeDrain.name" },
+  ];
 
   const handleGoToShop = () => {
     onClose();
@@ -32,7 +34,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="ჩემი ძალები"
+      title={t("modals.myPowers")}
       icon={<img src={powerBottleIcon} alt="" className="w-20 h-20 object-contain" />}
       variant="info"
     >
@@ -63,7 +65,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
                   disabled={false}
                 />
                 <span className="text-xs font-medium text-muted-foreground text-center">
-                  {powerUp.name}
+                  {t(powerUp.nameKey)}
                 </span>
               </motion.div>
             ))
@@ -86,7 +88,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
         >
           <ShoppingBag className="w-5 h-5 text-white" />
           <span className="font-bold text-white">
-            მაღაზიაში გადასვლა
+            {t("modals.goToShop")}
           </span>
         </motion.button>
       </div>
