@@ -115,9 +115,9 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
         
         {/* Coins row if applicable */}
         {contents.coins > 0 && (
-          <div className="flex items-center gap-2 bg-amber-500/20 px-4 py-2 rounded-xl">
+          <div className="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-xl">
             <img src={iconCoin} alt="Coins" className="w-6 h-6 object-contain" />
-            <span className="text-sm font-bold text-amber-300">
+            <span className="text-sm font-bold text-amber-600">
               + {contents.coins} მონეტა
             </span>
           </div>
@@ -130,39 +130,30 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
     const daysText = contents.days === 1 ? "1 დღე" : contents.days === 7 ? "7 დღე" : "30 დღე";
     return (
       <div className="flex flex-col items-center gap-3">
-        <img src={iconVipCrown} alt="VIP" className="w-12 h-12 object-contain" />
         <div className="flex flex-col items-center gap-1">
-          <span className="text-sm font-bold text-amber-300">VIP სტატუსი</span>
+          <span className="text-sm font-bold text-amber-500">VIP სტატუსი</span>
           <span className="text-xs text-muted-foreground">{daysText}</span>
         </div>
         <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-          <span className="bg-white/10 px-2 py-1 rounded-lg">2x XP</span>
-          <span className="bg-white/10 px-2 py-1 rounded-lg">უსასრულო სპინი</span>
-          <span className="bg-white/10 px-2 py-1 rounded-lg">ექსკლუზიური ჩარჩოები</span>
+          <span className="bg-muted px-2 py-1 rounded-lg">2x XP</span>
+          <span className="bg-muted px-2 py-1 rounded-lg">უსასრულო სპინი</span>
         </div>
+        <span className="bg-muted px-2 py-1 rounded-lg text-xs text-muted-foreground">ექსკლუზიური ჩარჩოები</span>
       </div>
     );
   }
   
   if (contents.type === "power") {
-    const powerIcons: Record<string, string> = {
-      "5050": fiftyFiftyIcon,
-      "freeze": freezeIcon,
-      "replace": replaceIcon,
-      "time-drain": timeDrainIcon,
-    };
     const powerNames: Record<string, string> = {
       "5050": "50/50",
       "freeze": "გაყინვა",
       "replace": "შეცვლა",
       "time-drain": "დრო+",
     };
-    const icon = powerIcons[contents.powerType || "5050"];
     const name = powerNames[contents.powerType || "5050"];
     
     return (
       <div className="flex flex-col items-center gap-2">
-        <img src={icon} alt={name} className="w-12 h-12 object-contain" />
         <span className="text-sm font-medium text-foreground">
           {contents.amount}x {name}
         </span>
@@ -173,8 +164,7 @@ function ItemContentsDisplay({ item }: { item: { id: string; description: string
   if (contents.type === "coins") {
     return (
       <div className="flex flex-col items-center gap-2">
-        <img src={iconCoin} alt="Coins" className="w-12 h-12 object-contain" />
-        <span className="text-sm font-bold text-amber-300">
+        <span className="text-sm font-bold text-amber-500">
           {contents.amount} მონეტა
         </span>
       </div>
