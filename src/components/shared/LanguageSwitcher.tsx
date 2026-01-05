@@ -64,21 +64,20 @@ export function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -8 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-xl p-3 shadow-xl min-w-[280px]"
+            className="absolute left-0 top-full mt-2 z-50 bg-card border border-border rounded-xl p-2 shadow-xl min-w-[300px] max-h-[400px] overflow-y-auto"
           >
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-1">
               {languages.map(lang => (
                 <button
                   key={lang.code}
                   onClick={() => handleSelect(lang.code)}
                   className={cn(
-                    "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors hover:bg-accent/50",
+                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-accent/50 text-left",
                     language === lang.code && "bg-primary/10 ring-1 ring-primary/50"
                   )}
-                  title={lang.name}
                 >
-                  <span className="text-2xl">{lang.flag}</span>
-                  <span className="text-[10px] text-muted-foreground uppercase">{lang.code}</span>
+                  <span className="text-xl">{lang.flag}</span>
+                  <span className="text-sm font-medium">{lang.nativeName}</span>
                 </button>
               ))}
             </div>
