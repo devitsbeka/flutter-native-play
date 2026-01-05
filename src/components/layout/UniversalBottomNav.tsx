@@ -44,7 +44,8 @@ export function UniversalBottomNav({
 
   const handleCenterClick = () => {
     if (isHome) {
-      if (canPlay) {
+      if (isVip || canPlay) {
+        // VIP users can always play, or if user has plays remaining
         onPlayClick?.();
       } else if (!isGuest) {
         onWatchAdClick?.();
