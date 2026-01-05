@@ -2,8 +2,10 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Trophy, X, Clock } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { useMemo } from "react";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -33,12 +35,15 @@ const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/ob
 export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
   const { rooms, loading } = useRecentRooms(10);
   const { getIconBySlug } = useIconLibrary();
+  const { t, language } = useLanguage();
+
+  const dateLocale = language === 'ka' ? ka : enUS;
 
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
+          <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.recentGames')}</span>
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
@@ -53,10 +58,10 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-800 tracking-wide">ბოლო თამაშები</span>
+        <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.recentGames')}</span>
         {onViewAll && rooms.length > 0 && (
           <ChunkyButton onClick={onViewAll} variant="secondary" size="sm">
-            ყველა
+            {t('team.all')}
           </ChunkyButton>
         )}
       </div>
@@ -72,12 +77,12 @@ export function GameHistoryTable({ onViewAll }: GameHistoryTableProps) {
           className="text-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
         >
           <Clock className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-500 text-sm">ჯერ თამაშები არ გაქვს</p>
+          <p className="text-slate-500 text-sm">{t('team.noGamesYet')}</p>
         </motion.div>
       ) : (
         <div className="space-y-2">
           {rooms.map((room, index) => (
-            <GameHistoryRow key={room.id} room={room} index={index} getIconBySlug={getIconBySlug} />
+            <GameHistoryRow key={room.id} room={room} index={index} getIconBySlug={getIconBySlug} dateLocale={dateLocale} />
           ))}
         </div>
       )}
@@ -161,12 +166,14 @@ interface GameHistoryRowProps {
   room: RecentRoom;
   index: number;
   getIconBySlug: (slug: string) => string | null;
+  dateLocale: typeof ka;
 }
 
 const GameHistoryRow = React.forwardRef<HTMLDivElement, GameHistoryRowProps>(
-  ({ room, index, getIconBySlug }, ref) => {
+  ({ room, index, getIconBySlug, dateLocale }, ref) => {
+  const { t } = useLanguage();
   const timeAgo = room.played_at
-    ? formatDistanceToNow(new Date(room.played_at), { addSuffix: true, locale: ka })
+    ? formatDistanceToNow(new Date(room.played_at), { addSuffix: true, locale: dateLocale })
     : "";
 
   // Get first opponent (the main person you played against)
@@ -228,7 +235,7 @@ const GameHistoryRow = React.forwardRef<HTMLDivElement, GameHistoryRowProps>(
       {/* Category name, room code, and time */}
       <div className="flex-1 min-w-0 overflow-hidden">
         <p className="font-bold text-slate-800 text-base truncate">
-          {room.category_name || "თამაში"}
+          {room.category_name || t('team.game')}
         </p>
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">

@@ -358,6 +358,56 @@ export const en: KaTranslations = {
     daysLeft: "{days} days left",
     regionLeaderboard: "{region} Leaderboard",
     globalLeaderboard: "Global Leaderboard",
+    // League leaderboard
+    same: "Same",
+    positions: "pos.",
+    timeRemaining: "Time remaining",
+    days: "days",
+    today: "Today",
+    leagueLockedMessage: "This league is not unlocked yet. Win in {previousLeague} for at least one week to unlock!",
+    requiredToUnlock: "Required to unlock",
+    topPlace: "TOP 10 place in {league}",
+    youAreCurrentlyIn: "You are currently in:",
+    // Category leaderboard
+    stars: "Stars",
+    playToAppear: "Play to appear on the leaderboard!",
+    noOnePlayedYet: "No one has played yet",
+    beTheFirst: "Be the first!",
+    you: "You",
+    levelsCompleted: "levels completed",
+    level: "level",
+  },
+
+  // ==========================================
+  // Category
+  // ==========================================
+  category: {
+    leaderboard: "Leaderboard",
+    map: "Map",
+    chooseLevel: "Choose Level",
+    loginToSaveProgress: "Sign in to save your progress!",
+    resultsWillSave: "Your results will be saved after signing in.",
+    notFound: "Category not found",
+  },
+
+  // ==========================================
+  // Notifications
+  // ==========================================
+  notifications: {
+    title: "Notifications",
+    unread: "Unread",
+    all: "All",
+    friends: "Friends",
+    games: "Games",
+    markAsRead: "Mark as read",
+    delete: "Delete",
+    markAllAsRead: "Mark all as read",
+    loading: "Loading...",
+    noNotifications: "No notifications",
+    allRead: "You have read everything!",
+    noFriendActivity: "No friend activity yet",
+    noGameNotifications: "No game notifications",
+    whenSomethingHappens: "When something happens, you'll see it here",
   },
 
   // ==========================================
@@ -587,6 +637,16 @@ export const en: KaTranslations = {
     addsTime: "Adds 10 seconds",
     exchangedCoins: "Exchanged {coins} coins → {gems} 💎",
     exchangedGems: "Exchanged {gems} gems → {coins} 🪙",
+    // Additional shop translations
+    day: "day",
+    days: "days",
+    doubleXp: "2x XP",
+    unlimitedSpin: "Unlimited spin",
+    exclusiveFrames: "Exclusive frames",
+    purchased: "Purchased",
+    freeze: "Freeze",
+    replace: "Replace",
+    timePlus: "Time+",
     // Ad-Free
     goAdFree: "Go Ad-Free!",
     unlockPremium: "Unlock premium experience",
@@ -673,6 +733,22 @@ export const en: KaTranslations = {
     leaveConfirmMessage: "You can exit and return later, or permanently leave the room.",
     exitKeepRoom: "Exit (Stay in Room)",
     leavePermanently: "Leave Permanently",
+    // Additional team translations
+    multiplayer: "Multiplayer",
+    signInToPlay: "Sign in to play with friends",
+    onlineGame: "Online Game",
+    friends: "Friends",
+    yourRooms: "Your Rooms",
+    noActiveRooms: "You have no active rooms",
+    inProgress: "In progress",
+    room: "Room",
+    continue: "Continue",
+    join: "Join",
+    recentGames: "Recent Games",
+    noGamesYet: "No games yet",
+    game: "Game",
+    add: "Add",
+    all: "All",
   },
 
   // ==========================================

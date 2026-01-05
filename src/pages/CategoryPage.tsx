@@ -4,6 +4,7 @@ import { ArrowLeft, Star, Lock, Play, LogIn, Trophy, Map } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
@@ -46,6 +47,7 @@ export default function CategoryPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
 
@@ -92,10 +94,10 @@ export default function CategoryPage() {
 
   const handlePlayFromLeaderboard = () => {
     if (!user) {
-      toast.info("შედით სისტემაში პროგრესის შესანახად!", {
-        description: "თქვენი შედეგები შეინახება სისტემაში შესვლის შემდეგ.",
+      toast.info(t('category.loginToSaveProgress'), {
+        description: t('category.resultsWillSave'),
         action: {
-          label: "შესვლა",
+          label: t('auth.signIn'),
           onClick: () => navigate("/auth"),
         },
       });
@@ -115,9 +117,9 @@ export default function CategoryPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">კატეგორია ვერ მოიძებნა</p>
+          <p className="text-muted-foreground">{t('category.notFound')}</p>
           <ChunkyButton onClick={() => navigate("/")} className="mt-4">
-            მთავარი
+            {t('nav.home')}
           </ChunkyButton>
         </div>
       </div>
@@ -128,10 +130,10 @@ export default function CategoryPage() {
     if (!isUnlocked) return;
     
     if (!user) {
-      toast.info("შედით სისტემაში პროგრესის შესანახად!", {
-        description: "თქვენი შედეგები შეინახება სისტემაში შესვლის შემდეგ.",
+      toast.info(t('category.loginToSaveProgress'), {
+        description: t('category.resultsWillSave'),
         action: {
-          label: "შესვლა",
+          label: t('auth.signIn'),
           onClick: () => navigate("/auth"),
         },
       });
@@ -190,7 +192,7 @@ export default function CategoryPage() {
                 className="flex items-center gap-1.5 text-sm text-white font-medium bg-black/25 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full"
               >
                 <LogIn className="h-4 w-4" />
-                შესვლა
+                {t('auth.signIn')}
               </button>
             )}
           </div>
@@ -225,7 +227,7 @@ export default function CategoryPage() {
               }}
             >
               <Trophy className="h-4 w-4" />
-              ლიდერბორდი
+              {t('category.leaderboard')}
             </button>
             <button
               onClick={() => setActiveTab("map")}
@@ -241,7 +243,7 @@ export default function CategoryPage() {
               }}
             >
               <Map className="h-4 w-4" />
-              რუკა
+              {t('category.map')}
             </button>
           </div>
         </div>
@@ -259,7 +261,7 @@ export default function CategoryPage() {
               <>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-slate-800">
-                    აირჩიე დონე
+                    {t('category.chooseLevel')}
                   </h2>
                 </div>
 

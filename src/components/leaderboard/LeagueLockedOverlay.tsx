@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Lock, Trophy } from "lucide-react";
 import { LeagueInfo, LEAGUES } from "@/hooks/useLeagueLeaderboard";
+import { useLanguage } from "@/contexts/LanguageContext";
 import leagueTrophy from "@/assets/league-trophy.png";
 
 interface LeagueLockedOverlayProps {
@@ -9,6 +10,7 @@ interface LeagueLockedOverlayProps {
 }
 
 export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayProps) {
+  const { t } = useLanguage();
   const previousLeague = LEAGUES.find(l => l.tier === league.tier - 1);
   
   return (
@@ -46,7 +48,7 @@ export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayPro
 
         {/* Description */}
         <p className="text-muted-foreground text-sm mb-6">
-          ეს ლიგა ჯერ არ გაგხსნია. მოიგე {previousLeague?.nameKa || "წინა ლიგაში"} მინიმუმ ერთი კვირა რომ გაიხსნას!
+          {t('leaderboard.leagueLockedMessage').replace('{previousLeague}', previousLeague?.nameKa || "")}
         </p>
 
         {/* Unlock requirement */}
@@ -56,17 +58,17 @@ export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayPro
           </div>
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">
-              გასახსნელად საჭიროა
+              {t('leaderboard.requiredToUnlock')}
             </p>
             <p className="text-xs text-muted-foreground">
-              TOP 10 ადგილი {previousLeague?.nameKa || "წინა ლიგაში"}
+              {t('leaderboard.topPlace').replace('{league}', previousLeague?.nameKa || "")}
             </p>
           </div>
         </div>
 
         {/* Current tier info */}
         <p className="mt-6 text-xs text-muted-foreground">
-          შენ ახლა ხარ: {LEAGUES.find(l => l.tier === userTier)?.nameKa}
+          {t('leaderboard.youAreCurrentlyIn')} {LEAGUES.find(l => l.tier === userTier)?.nameKa}
         </p>
       </motion.div>
     </motion.div>

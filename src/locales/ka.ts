@@ -356,6 +356,56 @@ export const ka = {
     daysLeft: "{days} დღე დარჩა",
     regionLeaderboard: "{region} ლიდერბორდი",
     globalLeaderboard: "გლობალური ლიდერბორდი",
+    // League leaderboard
+    same: "იგივე",
+    positions: "ადგ.",
+    timeRemaining: "დარჩენილი დრო",
+    days: "დღე",
+    today: "დღეს",
+    leagueLockedMessage: "ეს ლიგა ჯერ არ გაგხსნია. მოიგე {previousLeague} მინიმუმ ერთი კვირა რომ გაიხსნას!",
+    requiredToUnlock: "გასახსნელად საჭიროა",
+    topPlace: "TOP 10 ადგილი {league}",
+    youAreCurrentlyIn: "შენ ახლა ხარ:",
+    // Category leaderboard
+    stars: "ვარსკვლავები",
+    playToAppear: "ითამაშე რათა გამოჩნდე ლიდერბორდზე!",
+    noOnePlayedYet: "ჯერ არავინ არ ითამაშა",
+    beTheFirst: "იყავი პირველი!",
+    you: "შენ",
+    levelsCompleted: "დონე დასრულებული",
+    level: "დონე",
+  },
+
+  // ==========================================
+  // Category / კატეგორია
+  // ==========================================
+  category: {
+    leaderboard: "ლიდერბორდი",
+    map: "რუკა",
+    chooseLevel: "აირჩიე დონე",
+    loginToSaveProgress: "შედით სისტემაში პროგრესის შესანახად!",
+    resultsWillSave: "თქვენი შედეგები შეინახება სისტემაში შესვლის შემდეგ.",
+    notFound: "კატეგორია ვერ მოიძებნა",
+  },
+
+  // ==========================================
+  // Notifications / შეტყობინებები
+  // ==========================================
+  notifications: {
+    title: "შეტყობინებები",
+    unread: "წაუკითხავი",
+    all: "ყველა",
+    friends: "მეგობრები",
+    games: "თამაშები",
+    markAsRead: "წაკითხულად",
+    delete: "წაშლა",
+    markAllAsRead: "ყველას წაკითხულად მონიშვნა",
+    loading: "იტვირთება...",
+    noNotifications: "შეტყობინებები არ არის",
+    allRead: "ყველაფერი წაკითხული გაქვს!",
+    noFriendActivity: "მეგობრების აქტივობა ჯერ არ არის",
+    noGameNotifications: "თამაშის შეტყობინებები არ არის",
+    whenSomethingHappens: "როცა რამე მოხდება, აქ ნახავ",
   },
 
   // ==========================================
@@ -585,6 +635,16 @@ export const ka = {
     addsTime: "ამატებს 10 წამს",
     exchangedCoins: "გადაცვალე {coins} მონეტა → {gems} 💎",
     exchangedGems: "გადაცვალე {gems} ალმასი → {coins} 🪙",
+    // Additional shop translations
+    day: "დღე",
+    days: "დღე",
+    doubleXp: "2x XP",
+    unlimitedSpin: "უსასრულო სპინი",
+    exclusiveFrames: "ექსკლუზიური ჩარჩოები",
+    purchased: "შეძენილია",
+    freeze: "გაყინვა",
+    replace: "შეცვლა",
+    timePlus: "დრო+",
     // Ad-Free
     goAdFree: "გახდი რეკლამისგან თავისუფალი!",
     unlockPremium: "გახსენი პრემიუმ გამოცდილება",
@@ -671,6 +731,22 @@ export const ka = {
     leaveConfirmMessage: "შეგიძლია გახვიდე და მოგვიანებით დაბრუნდე, ან სამუდამოდ დატოვო ოთახი.",
     exitKeepRoom: "გასვლა (დარჩენა ოთახში)",
     leavePermanently: "სამუდამოდ დატოვება",
+    // Additional team translations
+    multiplayer: "მულტიპლეიერი",
+    signInToPlay: "მეგობრებთან სათამაშოდ გაიარე ავტორიზაცია",
+    onlineGame: "ონლაინ თამაში",
+    friends: "მეგობრები",
+    yourRooms: "შენი ოთახები",
+    noActiveRooms: "აქტიური ოთახი არ გაქვს",
+    inProgress: "მიმდინარე",
+    room: "ოთახი",
+    continue: "გაგრძელება",
+    join: "შეუერთდი",
+    recentGames: "ბოლო თამაშები",
+    noGamesYet: "ჯერ თამაშები არ გაქვს",
+    game: "თამაში",
+    add: "დამატება",
+    all: "ყველა",
   },
 
   // ==========================================
