@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, Trophy, Clock, Sparkles, Gift, Check, Flame, Award, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import missionCrystalIcon from "@/assets/icons/icon-compass.png";
+import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
@@ -460,56 +460,6 @@ function CarouselDots({ count, current, onSelect }: { count: number; current: nu
   );
 }
 
-function RewardPreview({ missions }: { missions: Mission[] }) {
-  const unclaimedMissions = missions.filter(m => !m.reward_claimed);
-  const completedUnclaimed = missions.filter(m => m.completed && !m.reward_claimed).length;
-  
-  const totalCoins = unclaimedMissions.reduce((sum, m) => sum + m.reward_coins, 0);
-  const totalGems = unclaimedMissions.reduce((sum, m) => sum + m.reward_gems, 0);
-  const totalXp = unclaimedMissions.reduce((sum, m) => sum + m.reward_xp, 0);
-  const totalPowerUps = unclaimedMissions.reduce((sum, m) => sum + m.reward_power_up_count, 0);
-
-  if (unclaimedMissions.length === 0) return null;
-
-  return (
-    <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl p-2 mb-2 border border-violet-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-violet-600 font-medium">შესაძლო ჯილდოები</p>
-          {completedUnclaimed > 0 && (
-            <p className="text-[10px] text-violet-500">{completedUnclaimed} მზადაა ასაღებად</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          {totalCoins > 0 && (
-            <div className="flex items-center gap-1">
-              <img src={coinIcon} alt="" className="w-4 h-4" />
-              <span className="text-xs font-bold text-amber-600">{totalCoins}</span>
-            </div>
-          )}
-          {totalGems > 0 && (
-            <div className="flex items-center gap-1">
-              <img src={gemIcon} alt="" className="w-4 h-4" />
-              <span className="text-xs font-bold text-cyan-600">{totalGems}</span>
-            </div>
-          )}
-          {totalXp > 0 && (
-            <div className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-violet-500" />
-              <span className="text-xs font-bold text-violet-600">{totalXp}</span>
-            </div>
-          )}
-          {totalPowerUps > 0 && (
-            <div className="flex items-center gap-1">
-              <span className="text-xs">⚡</span>
-              <span className="text-xs font-bold text-rose-600">{totalPowerUps}x</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
   const { dailyMissions, weeklyMissions, loading, claimMissionReward, allDailyComplete, allDailyClaimed } = useMissions();
@@ -715,7 +665,6 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               </div>
             ) : (
               <>
-                <RewardPreview missions={dailyMissions} />
                 <Carousel 
                   setApi={setDailyApi}
                   opts={{ align: "center", loop: false }}
@@ -754,7 +703,6 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               </div>
             ) : (
               <>
-                <RewardPreview missions={weeklyMissions} />
                 <Carousel 
                   setApi={setWeeklyApi}
                   opts={{ align: "center", loop: false }}
