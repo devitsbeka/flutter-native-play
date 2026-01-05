@@ -16,6 +16,8 @@ import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopPromoSection } from "@/components/shop/ShopPromoSection";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
+import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
+import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 import fiftyFiftyIcon from "@/assets/powers/5050.png";
@@ -344,8 +346,25 @@ export default function PowerUps() {
   const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
   const [showSuccess, setShowSuccess] = useState(false);
   const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>("coins");
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
 
+  const handleCurrencyPlusClick = (currencyType: CurrencyType) => {
+    setSelectedCurrency(currencyType);
+    setShowActionModal(true);
+  };
+
+  const handleBuyClick = () => {
+    setShowActionModal(false);
+    setShowBuyModal(true);
+  };
+
+  const handleExchangeClick = () => {
+    setShowActionModal(false);
+    setShowExchangeModal(true);
+  };
   const handlePurchase = async (item: ShopItem) => {
     if (!user) {
       notify.error("შესვლა საჭიროა შეძენისთვის!");
@@ -427,8 +446,7 @@ export default function PowerUps() {
       {/* Sticky Header */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
-        onBuyGemsClick={() => setShowExchangeModal(true)}
-        onBuyCoinsClick={() => setShowExchangeModal(true)}
+        onCurrencyPlusClick={handleCurrencyPlusClick}
       />
 
       {/* Scrollable Content - Section-based layout with scroll snap */}
@@ -477,6 +495,20 @@ export default function PowerUps() {
       <CurrencyExchangeModal
         isOpen={showExchangeModal}
         onClose={() => setShowExchangeModal(false)}
+      />
+
+      <CurrencyActionModal
+        isOpen={showActionModal}
+        onClose={() => setShowActionModal(false)}
+        currencyType={selectedCurrency}
+        onBuyClick={handleBuyClick}
+        onExchangeClick={handleExchangeClick}
+      />
+
+      <BuyCurrencyModal
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+        currencyType={selectedCurrency}
       />
 
       {/* Bottom Navigation */}
