@@ -1,0 +1,73 @@
+import { motion } from "framer-motion";
+import { Lock, Trophy } from "lucide-react";
+import { LeagueInfo, LEAGUES } from "@/hooks/useLeagueLeaderboard";
+import { LEAGUE_BADGES } from "./LeagueBadgeRow";
+
+interface LeagueLockedOverlayProps {
+  league: LeagueInfo;
+  userTier: number;
+}
+
+export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayProps) {
+  const previousLeague = LEAGUES.find(l => l.tier === league.tier - 1);
+  
+  return (
+    <motion.div
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className="flex flex-col items-center text-center px-8 max-w-sm"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
+        {/* League badge with lock */}
+        <div className="relative mb-6">
+          <img
+            src={LEAGUE_BADGES[league.tier]}
+            alt={league.name}
+            className="w-24 h-28 object-contain grayscale opacity-50"
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shadow-lg">
+              <Lock className="w-6 h-6 text-muted-foreground" />
+            </div>
+          </div>
+        </div>
+
+        {/* Title */}
+        <h2 className="text-xl font-bold text-foreground mb-2">
+          {league.nameKa}
+        </h2>
+
+        {/* Description */}
+        <p className="text-muted-foreground text-sm mb-6">
+          ეს ლიგა ჯერ არ გაგხსნია. მოიგე {previousLeague?.nameKa || "წინა ლიგაში"} მინიმუმ ერთი კვირა რომ გაიხსნას!
+        </p>
+
+        {/* Unlock requirement */}
+        <div className="flex items-center gap-3 bg-card rounded-xl p-4 border border-border">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Trophy className="w-5 h-5 text-primary" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-medium text-foreground">
+              გასახსნელად საჭიროა
+            </p>
+            <p className="text-xs text-muted-foreground">
+              TOP 10 ადგილი {previousLeague?.nameKa || "წინა ლიგაში"}
+            </p>
+          </div>
+        </div>
+
+        {/* Current tier info */}
+        <p className="mt-6 text-xs text-muted-foreground">
+          შენ ახლა ხარ: {LEAGUES.find(l => l.tier === userTier)?.nameKa}
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+}
