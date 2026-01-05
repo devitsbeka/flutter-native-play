@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Lock, Trophy } from "lucide-react";
 import { LeagueInfo, LEAGUES } from "@/hooks/useLeagueLeaderboard";
-import { LEAGUE_BADGES } from "./LeagueBadgeRow";
+import leagueTrophy from "@/assets/league-trophy.png";
 
 interface LeagueLockedOverlayProps {
   league: LeagueInfo;
@@ -27,9 +27,10 @@ export function LeagueLockedOverlay({ league, userTier }: LeagueLockedOverlayPro
         {/* League badge with lock */}
         <div className="relative mb-6">
           <img
-            src={LEAGUE_BADGES[league.tier]}
+            src={leagueTrophy}
             alt={league.name}
-            className="w-24 h-28 object-contain grayscale opacity-50"
+            className="w-24 h-28 object-contain opacity-50"
+            style={{ filter: "grayscale(1) brightness(0.8)" }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center shadow-lg">
