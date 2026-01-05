@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,13 +15,19 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { cn } from "@/lib/utils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
-// Georgian answer labels
-const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
-
 export function MultiplayerGameScreenV2() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { t } = useLanguage();
   const { playSound, vibrate, startBackgroundMusic, stopBackgroundMusic } = useSound();
+  
+  // Answer labels from translations
+  const ANSWER_LABELS = useMemo(() => [
+    t("game.labelA"),
+    t("game.labelB"),
+    t("game.labelC"),
+    t("game.labelD"),
+  ], [t]);
   const {
     questions,
     currentQuestionIndex,
@@ -154,7 +161,7 @@ export function MultiplayerGameScreenV2() {
     return (
       <div className="w-full h-[100dvh] flex flex-col items-center justify-center bg-[#7E7BDC]">
         <div className="animate-spin w-10 h-10 border-4 border-white border-t-transparent rounded-full mb-4" />
-        <p className="text-white/80 text-lg">თამაში იტვირთება...</p>
+        <p className="text-white/80 text-lg">{t("game.gameLoading")}</p>
       </div>
     );
   }
@@ -242,7 +249,7 @@ export function MultiplayerGameScreenV2() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="flex-1 text-white text-sm truncate">
-                    {p.user_id === user?.id ? "შენ" : p.nickname}
+                    {p.user_id === user?.id ? t("game.you") : p.nickname}
                   </span>
                   <span className="text-white font-bold text-sm">{p.score || 0}</span>
                 </div>
@@ -261,7 +268,7 @@ export function MultiplayerGameScreenV2() {
         >
           <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-full bg-white/10 mx-auto w-fit">
             <span className="text-white/80 text-xs">
-              {answeredCount}/{opponents.length} უპასუხა
+              {answeredCount}/{opponents.length} {t("game.answered")}
             </span>
           </div>
         </motion.div>
@@ -398,7 +405,7 @@ export function MultiplayerGameScreenV2() {
                   onClick={handleNext}
                   className="w-full"
                 >
-                  {isLastQuestion ? "შედეგების ნახვა" : "შემდეგი კითხვა"}
+                  {isLastQuestion ? t("game.viewResults") : t("game.nextQuestion")}
                 </ChunkyButton>
               </motion.div>
             )}
