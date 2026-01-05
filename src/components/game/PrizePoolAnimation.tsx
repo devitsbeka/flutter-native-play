@@ -105,7 +105,7 @@ export function PrizePoolAnimation({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="absolute -top-[20px] left-0 right-0 z-20 flex justify-center px-4"
+          className="absolute -top-[25px] left-0 right-0 z-20 flex justify-center px-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -185,7 +185,7 @@ export function PrizePoolAnimation({
                   key={poolAmount}
                 >
                   <motion.span
-                    className="text-2xl font-black text-amber-300"
+                    className="text-2xl font-black text-gray-900"
                     style={{ 
                       fontFamily: "'TASolivare', sans-serif",
                       textShadow: "0 2px 8px rgba(255,165,0,0.5)"
