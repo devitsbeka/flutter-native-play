@@ -131,22 +131,33 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
           rotate: wobbleRotate,
         }}
       >
-        {/* Gradient border blob */}
+        {/* Gradient border blob - animated iridescent effect */}
         <motion.div
           className="absolute inset-0"
           style={{
             clipPath: "url(#borderBlobClip)",
-            background: isLocked 
-              ? "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success-foreground)), hsl(var(--success)))"
-              : "linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4), rgba(255,255,255,0.6))",
           }}
           animate={{
-            rotate: isLocked ? 0 : [0, 3, -3, 0],
+            background: isLocked 
+              ? [
+                  "linear-gradient(0deg, hsl(263 60% 59%), hsl(263 76% 75%), hsl(340 80% 75%), hsl(263 60% 59%))",
+                  "linear-gradient(120deg, hsl(340 80% 75%), hsl(263 60% 59%), hsl(263 76% 75%), hsl(340 80% 75%))",
+                  "linear-gradient(240deg, hsl(263 76% 75%), hsl(340 80% 75%), hsl(263 60% 59%), hsl(263 76% 75%))",
+                  "linear-gradient(360deg, hsl(263 60% 59%), hsl(263 76% 75%), hsl(340 80% 75%), hsl(263 60% 59%))",
+                ]
+              : [
+                  "linear-gradient(0deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.7))",
+                  "linear-gradient(120deg, rgba(255,255,255,0.7), rgba(255,255,255,0.8), rgba(255,255,255,0.5))",
+                  "linear-gradient(240deg, rgba(255,255,255,0.5), rgba(255,255,255,0.7), rgba(255,255,255,0.8))",
+                  "linear-gradient(360deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5), rgba(255,255,255,0.7))",
+                ],
           }}
           transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut"
+            background: {
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear",
+            }
           }}
         />
 
@@ -203,7 +214,7 @@ export function InteractiveBlobVideo({ videoSrc, isLocked, showCategorySlot }: I
               style={{
                 width: 6 + (i % 3) * 4,
                 height: 6 + (i % 3) * 4,
-                background: "hsl(var(--success))",
+                background: i % 2 === 0 ? "hsl(263 60% 59%)" : "hsl(340 80% 75%)",
                 left: `${15 + i * 10}%`,
                 top: `${20 + (i % 4) * 15}%`,
               }}
