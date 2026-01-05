@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
@@ -8,6 +8,9 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
+import fiftyFiftyIcon from "@/assets/powers/5050.png";
+import freezeIcon from "@/assets/powers/freeze.png";
+import replaceIcon from "@/assets/powers/replace.png";
 import { CurrencyType } from "./CurrencyActionModal";
 
 interface BuyCurrencyModalProps {
@@ -16,13 +19,36 @@ interface BuyCurrencyModalProps {
   currencyType: CurrencyType;
 }
 
-// Coin packages (buy coins with gems)
+// Enhanced coin packages with power-ups
 const COIN_PACKAGES = [
-  { gems: 2, coins: 100, bonus: 0 },
-  { gems: 5, coins: 275, bonus: 10 },
-  { gems: 10, coins: 600, bonus: 20 },
-  { gems: 25, coins: 1750, bonus: 40 },
+  { 
+    gems: 5, 
+    coins: 250, 
+    powers: { "5050": 1, freeze: 1 },
+    label: "მცირე პაკეტი"
+  },
+  { 
+    gems: 12, 
+    coins: 600, 
+    powers: { "5050": 2, freeze: 2, replace: 2 },
+    label: "საშუალო პაკეტი",
+    bonus: "+10%"
+  },
+  { 
+    gems: 25, 
+    coins: 1500, 
+    powers: { "5050": 5, freeze: 5, replace: 5, "time-drain": 3 },
+    label: "დიდი პაკეტი",
+    bonus: "+20%"
+  },
 ];
+
+const POWER_ICONS: Record<string, string | null> = {
+  "5050": fiftyFiftyIcon,
+  freeze: freezeIcon,
+  replace: replaceIcon,
+  "time-drain": null, // Uses Clock icon
+};
 
 export function BuyCurrencyModal({
   isOpen,
@@ -63,8 +89,8 @@ export function BuyCurrencyModal({
         colors: ["#fbbf24", "#f59e0b", "#d97706"],
       });
       
-      toast.success(`მიიღე ${pkg.coins} მონეტა!`, {
-        icon: "🪙",
+      toast.success(`მიიღე ${pkg.coins} მონეტა და ძალები!`, {
+        icon: "🎁",
       });
       
       onClose();
@@ -102,49 +128,83 @@ export function BuyCurrencyModal({
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title="მონეტების შეძენა"
+      title="პაკეტების შეძენა"
       icon={<img src={coinIcon} alt="" className="w-10 h-10" />}
       variant="primary"
     >
-      <div className="space-y-2 pt-2">
+      <div className="space-y-3 pt-2">
         {COIN_PACKAGES.map((pkg, index) => {
           const canAfford = gems >= pkg.gems;
           const isPurchasingThis = isPurchasing === index;
           
           return (
-            <motion.button
+            <motion.div
               key={index}
-              onClick={() => handlePurchase(index)}
-              disabled={!canAfford || isPurchasing !== null}
-              className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors ${
+              className={`rounded-2xl p-4 transition-colors ${
                 canAfford
-                  ? "bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 hover:border-amber-300"
+                  ? "bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200"
                   : "bg-muted/50 border-2 border-transparent opacity-60"
               }`}
               whileHover={canAfford ? { scale: 1.01 } : {}}
-              whileTap={canAfford ? { scale: 0.99 } : {}}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                  <img src={coinIcon} alt="" className="w-6 h-6" />
+              {/* Package Label */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-bold text-foreground">{pkg.label}</span>
+                {pkg.bonus && (
+                  <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                    {pkg.bonus}
+                  </span>
+                )}
+              </div>
+
+              {/* Contents */}
+              <div className="space-y-2 mb-4">
+                {/* Coins row */}
+                <div className="flex items-center gap-2">
+                  <img src={coinIcon} alt="" className="w-5 h-5" />
+                  <span className="font-semibold text-amber-700">{pkg.coins.toLocaleString()} მონეტა</span>
                 </div>
-                <div className="text-left">
-                  <div className="font-bold text-foreground">
-                    {pkg.coins.toLocaleString()} მონეტა
-                  </div>
-                  {pkg.bonus > 0 && (
-                    <div className="text-xs text-green-600 font-medium">
-                      +{pkg.bonus}% ბონუსი
+                
+                {/* Powers row */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {Object.entries(pkg.powers).map(([type, count]) => (
+                    <div 
+                      key={type}
+                      className="flex items-center gap-1 bg-white/80 px-2 py-1 rounded-lg border border-border/50"
+                    >
+                      {type === "time-drain" ? (
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-b from-purple-300 to-purple-500 flex items-center justify-center">
+                          <Clock className="w-3 h-3 text-white" />
+                        </div>
+                      ) : (
+                        <img src={POWER_ICONS[type]!} alt="" className="w-5 h-5" />
+                      )}
+                      <span className="text-xs font-bold text-foreground">×{count}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
-              
-              <div className="flex items-center gap-1.5 bg-violet-100 px-3 py-1.5 rounded-full">
-                <img src={gemIcon} alt="" className="w-4 h-4" />
-                <span className="font-bold text-violet-700">{pkg.gems}</span>
-              </div>
-            </motion.button>
+
+              {/* Buy Button */}
+              <motion.button
+                onClick={() => handlePurchase(index)}
+                disabled={!canAfford || isPurchasing !== null}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-white"
+                style={{
+                  background: canAfford 
+                    ? "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)"
+                    : "hsl(var(--muted-foreground))",
+                  boxShadow: canAfford 
+                    ? "0 4px 0 #B45309, inset 0 1px 2px rgba(255,255,255,0.4)"
+                    : "0 3px 0 hsl(var(--border))",
+                }}
+                whileHover={canAfford ? { y: -2 } : {}}
+                whileTap={canAfford ? { y: 2, boxShadow: "0 0 0 #B45309" } : {}}
+              >
+                <img src={gemIcon} alt="" className="w-5 h-5" />
+                <span>{isPurchasingThis ? "..." : `ყიდვა ${pkg.gems}`}</span>
+              </motion.button>
+            </motion.div>
           );
         })}
         
