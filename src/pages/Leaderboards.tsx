@@ -29,38 +29,34 @@ export default function Leaderboards() {
 
   const [showFixedBar, setShowFixedBar] = useState(true);
   const userRowRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Track scroll to hide fixed bar when user's actual row is visible or passed
+  // Use IntersectionObserver to detect when user's row is visible
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container || !userEntry) return;
+    if (!userEntry) return;
 
-    const handleScroll = () => {
-      if (!userRowRef.current) {
-        setShowFixedBar(true);
-        return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Hide fixed bar when the actual row is visible (or has been scrolled past)
+        // rootMargin accounts for bottom nav + fixed bar area
+        setShowFixedBar(!entry.isIntersecting);
+      },
+      {
+        root: null, // viewport
+        rootMargin: "0px 0px -200px 0px", // 200px from bottom to account for nav
+        threshold: 0,
       }
-      
-      const rowRect = userRowRef.current.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      
-      // The fixed bar sits about 112px from viewport bottom (bottom-28)
-      // Plus bottom nav ~80px = ~192px total
-      const bottomCutoff = window.innerHeight - 192;
-      
-      // Show fixed bar only if user's row TOP is below the visible cutoff point
-      // This means the row hasn't been scrolled into view yet
-      const shouldShow = rowRect.top > bottomCutoff;
-      
-      setShowFixedBar(shouldShow);
-    };
+    );
 
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    // Run check after render
-    requestAnimationFrame(handleScroll);
-    
-    return () => container.removeEventListener("scroll", handleScroll);
+    const currentRef = userRowRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
   }, [userEntry]);
 
   const handleSelectTier = (tier: number) => {
@@ -88,7 +84,7 @@ export default function Leaderboards() {
       </motion.header>
 
       {/* Main Content */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto pb-40 relative">
+      <div className="flex-1 overflow-auto pb-40 relative">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
