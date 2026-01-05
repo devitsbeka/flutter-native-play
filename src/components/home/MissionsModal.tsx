@@ -9,6 +9,7 @@ import { useMissions, getMissionTheme } from "@/hooks/useMissions";
 import { useMissionStreak, getStreakBonus } from "@/hooks/useMissionStreak";
 import { useMissionAchievements, ACHIEVEMENTS, RARITY_COLORS } from "@/hooks/useMissionAchievements";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { GameModal } from "@/components/ui/game-modal";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,11 +36,11 @@ const POWER_UP_ICONS: Record<string, string | null> = {
   "time-drain": null, // Use TimeIcon component instead
 };
 
-const POWER_UP_NAMES: Record<string, string> = {
-  "5050": "50/50",
-  "freeze": "გაყინვა",
-  "replace": "ჩანაცვლება",
-  "time-drain": "დროის გამოწვა",
+const POWER_UP_NAME_KEYS: Record<string, string> = {
+  "5050": "missions.powerUpNames.fiftyFifty",
+  "freeze": "missions.powerUpNames.freeze",
+  "replace": "missions.powerUpNames.replace",
+  "time-drain": "missions.powerUpNames.timeDrain",
 };
 
 const celebrateClaim = () => {
@@ -140,13 +141,15 @@ function MissionCarouselCard({
   onClaim, 
   isClaiming,
   claimAnimation,
-  missionType
+  missionType,
+  t,
 }: { 
   mission: Mission; 
   onClaim: (id: string) => void; 
   isClaiming: boolean;
   claimAnimation: ClaimAnimationState | null;
   missionType: "daily" | "weekly";
+  t: (key: string) => string;
 }) {
   const theme = getMissionTheme(mission.mission_id);
   const progress = Math.min((mission.current_progress / mission.target_value) * 100, 100);
@@ -205,7 +208,7 @@ function MissionCarouselCard({
                 transition={{ delay: 0.2 }}
                 className="text-2xl font-black text-white mb-4"
               >
-                მიღებულია!
+                {t("missions.received")}
               </motion.h3>
               
               {/* Reward Display */}
@@ -417,9 +420,9 @@ function MissionCarouselCard({
                     <Sparkles className="w-6 h-6" />
                   </motion.div>
                 ) : (
-                  <>
+                <>
                     <Gift className="w-6 h-6 mr-2" />
-                    მიიღე ჯილდო
+                    {t("missions.claimReward")}
                   </>
                 )}
               </Button>
@@ -428,11 +431,11 @@ function MissionCarouselCard({
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center gap-1.5 text-emerald-600 bg-emerald-100 rounded-full px-4 py-1.5">
                 <Check className="w-4 h-4" />
-                <span className="font-medium text-sm">აღებულია</span>
+                <span className="font-medium text-sm">{t("missions.claimed")}</span>
               </div>
               <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                 <Clock className="w-3 h-3" />
-                <span>ახალი: {missionType === "daily" ? getTimeUntilMidnight() : getTimeUntilMonday()}</span>
+                <span>{t("missions.newIn")}: {missionType === "daily" ? getTimeUntilMidnight() : getTimeUntilMonday()}</span>
               </div>
             </div>
           ) : null}
@@ -462,6 +465,7 @@ function CarouselDots({ count, current, onSelect }: { count: number; current: nu
 
 
 export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
+  const { t } = useLanguage();
   const { dailyMissions, weeklyMissions, loading, claimMissionReward, allDailyComplete, allDailyClaimed } = useMissions();
   const { currentStreak, bestStreak, canClaimBonus, claimStreakBonus, recordDailyCompletion, totalCompletions } = useMissionStreak();
   const { achievements, isUnlocked, checkAndUnlockAchievements, unlockedCount, totalCount } = useMissionAchievements();
@@ -539,7 +543,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
           const newAchievements = await checkAndUnlockAchievements(streakResult.newStreak, totalCompletions + 1);
           for (const achievement of newAchievements) {
             toast({
-              title: `🏅 მიღწევა გახსნილია!`,
+              title: `🏅 ${t("missions.achievementUnlocked")}`,
               description: `${achievement.icon} ${achievement.title}`,
             });
           }
@@ -558,8 +562,8 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       if (result.coins > 0) triggerFlyingCurrency("coins", Math.min(result.coins / 10, 10));
       if (result.gems > 0) triggerFlyingCurrency("gems", result.gems);
       toast({
-        title: "🔥 სტრიქის ბონუსი!",
-        description: `${result.coins} მონეტა • ${result.gems} ლალი • ${result.xp} XP`,
+        title: `🔥 ${t("missions.streakBonus")}`,
+        description: `${result.coins} ${t("dailyRewards.coins")} • ${result.gems} ${t("dailyRewards.gems")} • ${result.xp} XP`,
       });
     }
   };
@@ -583,12 +587,12 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
     <div className="flex items-center justify-center gap-4 py-2">
       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <Clock className="w-4 h-4" />
-        <span>დღის: <span className="font-mono font-bold">{getTimeUntilMidnight()}</span></span>
+        <span>{t("missions.daily")}: <span className="font-mono font-bold">{getTimeUntilMidnight()}</span></span>
       </div>
       <div className="w-px h-4 bg-border" />
       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
         <Calendar className="w-4 h-4" />
-        <span>კვირის: <span className="font-mono font-bold">{getTimeUntilMonday()}</span></span>
+        <span>{t("missions.weekly")}: <span className="font-mono font-bold">{getTimeUntilMonday()}</span></span>
       </div>
     </div>
   );
@@ -600,8 +604,8 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
         isOpen={isOpen}
         onClose={onClose}
         icon={headerIcon}
-        title="მისიები"
-        subtitle="შეასრულე მისიები და აიღე ჯილდოები!"
+        title={t("missions.title")}
+        subtitle={t("missions.subtitle")}
         footer={footer}
         showSparkles
         className="max-h-[90vh]"
@@ -610,11 +614,11 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
         <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-2.5 mb-2 border border-orange-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
-                <Flame className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm font-bold text-orange-700">სტრიქი: {currentStreak} დღე</span>
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+              <Flame className="w-4 h-4 text-white" />
             </div>
+            <span className="text-sm font-bold text-orange-700">{t("missions.streak")}: {currentStreak} {t("missions.days")}</span>
+          </div>
             {canClaimStreakBonus && (
               <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
                 <Button
@@ -634,7 +638,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-2">
             <TabsTrigger value="daily" className="text-xs">
-              დღის
+              {t("missions.daily")}
               {dailyMissions.filter((m) => m.completed && !m.reward_claimed).length > 0 && (
                 <span className="ml-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center">
                   {dailyMissions.filter((m) => m.completed && !m.reward_claimed).length}
@@ -642,7 +646,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
               )}
             </TabsTrigger>
             <TabsTrigger value="weekly" className="text-xs">
-              კვირის
+              {t("missions.weekly")}
               {weeklyMissions.filter((m) => m.completed && !m.reward_claimed).length > 0 && (
                 <span className="ml-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center">
                   {weeklyMissions.filter((m) => m.completed && !m.reward_claimed).length}
@@ -651,7 +655,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
             </TabsTrigger>
             <TabsTrigger value="achievements" className="text-xs">
               <Award className="w-3 h-3 mr-1" />
-              მიღწევები
+              {t("missions.achievements")}
             </TabsTrigger>
           </TabsList>
 
@@ -661,7 +665,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
             ) : dailyMissions.length === 0 ? (
               <div className="text-center py-8">
                 <Target className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">მისიები არ არის</p>
+                <p className="text-muted-foreground">{t("missions.noMissions")}</p>
               </div>
             ) : (
               <>
@@ -679,6 +683,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                           isClaiming={claimingId === mission.mission_id}
                           claimAnimation={claimingId === mission.mission_id ? claimAnimation : null}
                           missionType="daily"
+                          t={t}
                         />
                       </CarouselItem>
                     ))}
@@ -699,7 +704,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
             ) : weeklyMissions.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">კვირული მისიები არ არის</p>
+                <p className="text-muted-foreground">{t("missions.noWeeklyMissions")}</p>
               </div>
             ) : (
               <>
@@ -717,6 +722,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                           isClaiming={claimingId === mission.mission_id}
                           claimAnimation={claimingId === mission.mission_id ? claimAnimation : null}
                           missionType="weekly"
+                          t={t}
                         />
                       </CarouselItem>
                     ))}
@@ -733,7 +739,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
 
           <TabsContent value="achievements" className="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
             <div className="flex items-center justify-between mb-2 px-1">
-              <p className="text-xs text-muted-foreground">გახსნილია: {unlockedCount}/{totalCount}</p>
+              <p className="text-xs text-muted-foreground">{t("missions.unlocked")}: {unlockedCount}/{totalCount}</p>
               <div className="flex items-center gap-1">
                 <Trophy className="w-4 h-4 text-amber-500" />
               </div>
@@ -769,10 +775,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                       <p className="text-xs text-muted-foreground">{achievement.description}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${rarityStyle.bg} ${rarityStyle.text}`}>
-                          {achievement.rarity === "common" && "ჩვეულებრივი"}
-                          {achievement.rarity === "rare" && "იშვიათი"}
-                          {achievement.rarity === "epic" && "ეპიკური"}
-                          {achievement.rarity === "legendary" && "ლეგენდარული"}
+                          {t(`missions.rarity.${achievement.rarity}`)}
                         </span>
                         {unlocked && (
                           <div className="flex items-center gap-1">

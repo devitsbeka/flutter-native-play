@@ -377,6 +377,58 @@ export const en: KaTranslations = {
   },
 
   // ==========================================
+  // Missions
+  // ==========================================
+  missions: {
+    title: "Missions",
+    subtitle: "Complete missions and claim rewards!",
+    daily: "Daily",
+    weekly: "Weekly",
+    achievements: "Achievements",
+    streak: "Streak",
+    days: "days",
+    claimReward: "Claim Reward",
+    claimed: "Claimed",
+    received: "Received!",
+    noMissions: "No missions available",
+    noWeeklyMissions: "No weekly missions available",
+    newIn: "New in",
+    unlocked: "Unlocked",
+    achievementUnlocked: "Achievement Unlocked!",
+    streakBonus: "Streak Bonus!",
+    rarity: {
+      common: "Common",
+      rare: "Rare",
+      epic: "Epic",
+      legendary: "Legendary",
+    },
+    powerUpNames: {
+      fiftyFifty: "50/50",
+      freeze: "Freeze",
+      replace: "Replace",
+      timeDrain: "Time Drain",
+    },
+    swipeHint: "← Swipe to see all days →",
+  },
+
+  // ==========================================
+  // Treasure Chest
+  // ==========================================
+  chest: {
+    title: "Treasure",
+    titleOpened: "Treasure Opened!",
+    subtitle: "Congratulations! Claim your rewards",
+    subtitleWait: "Coming soon!",
+    nextChest: "Next chest",
+    claim: "Claim",
+    loading: "Loading...",
+    rewardsReceived: "Rewards received!",
+    coins: "Coin",
+    gems: "Gem",
+    xp: "XP",
+  },
+
+  // ==========================================
   // Countries (for leaderboard regions)
   // ==========================================
   countries: {
