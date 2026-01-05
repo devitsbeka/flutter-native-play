@@ -25,14 +25,12 @@ import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
-import { GuestActivationFlow } from "@/components/home/GuestActivationFlow";
+import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 
-
-import { AdventureHelpModal } from "@/components/map/AdventureHelpModal";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import xpIcon from "@/assets/icons/icon-xp.png";
+import defaultGuestAvatar from "@/assets/avatars/bot-avatar-1.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { t } from "@/lib/i18n";
@@ -47,6 +45,12 @@ import { useDailyPlays } from "@/hooks/useDailyPlays";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useRewardTimers as useRewardTimersWithTime } from "@/hooks/useRewardTimers";
+import { 
+  getGuestPlaysRemaining, 
+  recordGuestPlay, 
+  hasReachedGuestPlayLimit,
+  MAX_GUEST_PLAYS_COUNT 
+} from "@/hooks/useGuestPlays";
 
 // Theme colors (background now comes from global Spline)
 const theme = {
@@ -169,6 +173,11 @@ export default function Index() {
   const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMyPowersModal, setShowMyPowersModal] = useState(false);
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
+  const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
+  
+  // Guest play tracking
+  const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
+  
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -221,8 +230,19 @@ export default function Index() {
   // Handle play button click - check auth status and plays remaining
   const handlePlayClick = useCallback(async () => {
     if (!user) {
-      // Not logged in - start signup onboarding
-      startOnboarding();
+      // Guest user - check if they have plays remaining
+      if (hasReachedGuestPlayLimit()) {
+        // Show modal to register
+        setShowGuestMaxPlaysModal(true);
+      } else {
+        // Record guest play and navigate to game
+        const canPlay = recordGuestPlay();
+        if (canPlay) {
+          navigate("/game");
+        } else {
+          setShowGuestMaxPlaysModal(true);
+        }
+      }
     } else if (!profile?.avatar_url) {
       // Logged in but no avatar - go to avatar creation
       skipToAvatarCreation();
@@ -236,7 +256,7 @@ export default function Index() {
         navigate("/game");
       }
     }
-  }, [user, profile, navigate, startOnboarding, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay]);
+  }, [user, profile, navigate, skipToAvatarCreation, needsWalkthrough, hasCompletedOnboarding, setStep, recordPlay]);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
@@ -299,6 +319,14 @@ export default function Index() {
         onClose={() => setShowWatchAdModal(false)}
         onWatchAd={watchAdForPlays}
         playsRemaining={playsRemaining}
+      />
+      <GuestMaxPlaysModal
+        isOpen={showGuestMaxPlaysModal}
+        onClose={() => setShowGuestMaxPlaysModal(false)}
+        onRegister={() => {
+          setShowGuestMaxPlaysModal(false);
+          startOnboarding();
+        }}
       />
       <div 
         ref={containerRef}
@@ -517,15 +545,7 @@ export default function Index() {
                 </div>
               )}
               
-              {/* Guest activation flow - show ABOVE avatar for logged-out users */}
-              {!user && (
-                <div 
-                  className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-20"
-                  style={{ top: -100, width: 340 }}
-                >
-                  <GuestActivationFlow />
-                </div>
-              )}
+              {/* Empty space above avatar for guests - no more activation flow */}
 
               <motion.div 
                 animate={isRefreshing ? {
@@ -556,15 +576,15 @@ export default function Index() {
                   onClick={() => user && setIsAvatarModalOpen(true)}
                 >
                   <AvatarCircle 
-                    avatarUrl={profile?.avatar_url} 
-                    animatedAvatarUrl={profile?.animated_avatar_url}
+                    avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
+                    animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
                     size={280} 
-                    coins={coins}
-                    gems={gems}
-                    level={levelInfo.level}
-                    xpProgress={levelInfo.progress}
-                    xpCurrent={levelInfo.xpInCurrentLevel}
-                    xpTotal={levelInfo.xpNeededForNextLevel}
+                    coins={user ? coins : 0}
+                    gems={user ? gems : 0}
+                    level={user ? levelInfo.level : 1}
+                    xpProgress={user ? levelInfo.progress : 0}
+                    xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
+                    xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                   />
                 </div>
               </motion.div>
@@ -584,11 +604,11 @@ export default function Index() {
                 <>
                   {/* Flag and Name */}
                   <div className="flex items-center justify-center gap-2.5">
-                    {profile?.country_code && (
+                    {user && profile?.country_code && (
                       <FlagIcon countryCode={profile.country_code} size="md" />
                     )}
                     <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
-                      {profile?.nickname || t("game.guest")}
+                      {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
                     </span>
                   </div>
                   
@@ -604,7 +624,7 @@ export default function Index() {
                         <img src={coinIcon} alt="Coins" className="w-10 h-10" />
                       </div>
                       <span className="font-bold text-gray-700 text-lg">
-                        {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                        {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -617,7 +637,7 @@ export default function Index() {
                         <img src={gemIcon} alt="Gems" className="w-10 h-10" />
                       </div>
                       <span className="font-bold text-gray-700 text-lg">
-                        {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
+                        {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
                       </span>
                     </div>
                   </div>
@@ -630,11 +650,12 @@ export default function Index() {
         {/* Universal Bottom Navigation */}
         <UniversalBottomNav 
           onPlayClick={handlePlayClick}
-          playsRemaining={playsRemaining}
-          maxPlays={maxPlays}
-          canPlay={canPlay}
+          playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+          maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+          canPlay={user ? canPlay : guestPlaysRemaining > 0}
           isVip={isVip}
           onWatchAdClick={() => setShowWatchAdModal(true)}
+          isGuest={!user}
         />
       </div>
     </>

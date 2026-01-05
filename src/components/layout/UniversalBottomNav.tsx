@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown } from "lucide-react";
+import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
+import { toast } from "sonner";
 
 interface UniversalBottomNavProps {
   onPlayClick?: () => void;
@@ -14,6 +15,7 @@ interface UniversalBottomNavProps {
   canPlay?: boolean;
   isVip?: boolean;
   onWatchAdClick?: () => void;
+  isGuest?: boolean;
 }
 
 export function UniversalBottomNav({ 
@@ -25,6 +27,7 @@ export function UniversalBottomNav({
   canPlay = true,
   isVip = false,
   onWatchAdClick,
+  isGuest = false,
 }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,12 +46,20 @@ export function UniversalBottomNav({
     if (isHome) {
       if (canPlay) {
         onPlayClick?.();
-      } else {
+      } else if (!isGuest) {
         onWatchAdClick?.();
+      } else {
+        onPlayClick?.(); // For guests, this will trigger the max plays modal
       }
     } else {
       navigate("/");
     }
+  };
+
+  const handleLockedNavClick = () => {
+    toast("დარეგისტრირდი ამ ფუნქციის გასახსნელად! 🔒", {
+      description: "ითამაშე კიდევ რამდენიმე თამაში ან შექმენი ანგარიში",
+    });
   };
 
   return (
@@ -81,20 +92,22 @@ export function UniversalBottomNav({
           {/* Explore */}
           <div className="flex-1 flex justify-center">
             <NavButton
-              onClick={() => navigate("/discover")}
+              onClick={isGuest ? handleLockedNavClick : () => navigate("/discover")}
               isActive={isActive("/discover")}
               icon={Compass}
-              hasNewContent={indicators.explore}
+              hasNewContent={!isGuest && indicators.explore}
+              isLocked={isGuest}
             />
           </div>
 
           {/* Shop */}
           <div className="flex-1 flex justify-center pr-4">
             <NavButton
-              onClick={() => navigate("/power-ups")}
+              onClick={isGuest ? handleLockedNavClick : () => navigate("/power-ups")}
               isActive={isActive("/power-ups")}
               icon={Store}
-              hasNewContent={indicators.shop}
+              hasNewContent={!isGuest && indicators.shop}
+              isLocked={isGuest}
             />
           </div>
 
@@ -119,21 +132,23 @@ export function UniversalBottomNav({
           {/* Rank */}
           <div className="flex-1 flex justify-center pl-4">
             <NavButton
-              onClick={() => navigate("/leaderboards")}
+              onClick={isGuest ? handleLockedNavClick : () => navigate("/leaderboards")}
               isActive={isActive("/leaderboards")}
               icon={Trophy}
-              hasNewContent={indicators.rank}
+              hasNewContent={!isGuest && indicators.rank}
+              isLocked={isGuest}
             />
           </div>
 
           {/* Team */}
           <div className="flex-1 flex justify-center">
             <NavButton
-              onClick={onTeamClick || (() => navigate("/team"))}
+              onClick={isGuest ? handleLockedNavClick : (onTeamClick || (() => navigate("/team")))}
               isActive={isActive("/team")}
               icon={Headphones}
-              badgeCount={pendingChallenges.length}
-              hasNewContent={indicators.team}
+              badgeCount={isGuest ? 0 : pendingChallenges.length}
+              hasNewContent={!isGuest && indicators.team}
+              isLocked={isGuest}
             />
           </div>
         </div>
@@ -148,6 +163,7 @@ function NavButton({
   icon: Icon,
   badgeCount = 0,
   hasNewContent = false,
+  isLocked = false,
 }: { 
   onClick: () => void;
   isActive: boolean;
@@ -155,6 +171,7 @@ function NavButton({
   label?: string;
   badgeCount?: number;
   hasNewContent?: boolean;
+  isLocked?: boolean;
 }) {
   return (
     <motion.button
@@ -163,14 +180,29 @@ function NavButton({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      <div className="relative" style={{ opacity: isActive ? 1 : 0.5 }}>
+      <div className="relative" style={{ opacity: isLocked ? 0.35 : isActive ? 1 : 0.5 }}>
         {/* Icon */}
         <div className="w-8 h-8 flex items-center justify-center">
           <Icon className="w-6 h-6 text-gray-800" />
         </div>
         
+        {/* Lock indicator for guests */}
+        {isLocked && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+            style={{
+              background: "linear-gradient(180deg, #6B7280 0%, #4B5563 100%)",
+              boxShadow: "0 2px 4px rgba(75, 85, 99, 0.5)",
+            }}
+          >
+            <Lock className="w-2.5 h-2.5 text-white" />
+          </motion.div>
+        )}
+        
         {/* Badge count (for Team challenges) */}
-        {badgeCount > 0 && (
+        {!isLocked && badgeCount > 0 && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -187,7 +219,7 @@ function NavButton({
         )}
         
         {/* Purple "new content" indicator dot */}
-        {hasNewContent && badgeCount === 0 && (
+        {!isLocked && hasNewContent && badgeCount === 0 && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -201,19 +233,21 @@ function NavButton({
       </div>
       
       {/* Active indicator dot */}
-      <motion.div
-        initial={false}
-        animate={{ 
-          scale: isActive ? 1 : 0,
-          opacity: isActive ? 1 : 0 
-        }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className="w-1 h-1 rounded-full"
-        style={{
-          background: "linear-gradient(180deg, #5EE8B5 0%, #3FC99A 100%)",
-          boxShadow: "0 0 4px rgba(94, 232, 181, 0.6)",
-        }}
-      />
+      {!isLocked && (
+        <motion.div
+          initial={false}
+          animate={{ 
+            scale: isActive ? 1 : 0,
+            opacity: isActive ? 1 : 0 
+          }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="w-1 h-1 rounded-full"
+          style={{
+            background: "linear-gradient(180deg, #5EE8B5 0%, #3FC99A 100%)",
+            boxShadow: "0 0 4px rgba(94, 232, 181, 0.6)",
+          }}
+        />
+      )}
     </motion.button>
   );
 }
