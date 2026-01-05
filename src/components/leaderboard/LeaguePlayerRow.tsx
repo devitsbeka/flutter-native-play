@@ -8,6 +8,9 @@ interface LeaguePlayerRowProps {
   index: number;
   previousRank?: number | null;
   shouldAnimate?: boolean;
+  totalPlayers: number;
+  isPromotionZone?: boolean;
+  isDemotionZone?: boolean;
 }
 
 // Rank badge colors matching Duolingo
@@ -39,6 +42,9 @@ export function LeaguePlayerRow({
   index,
   previousRank,
   shouldAnimate,
+  totalPlayers,
+  isPromotionZone,
+  isDemotionZone,
 }: LeaguePlayerRowProps) {
   const rankStyle = RANK_COLORS[entry.rank];
   const isTopThree = entry.rank <= 3;
@@ -48,13 +54,23 @@ export function LeaguePlayerRow({
   const rowHeight = 72;
   const initialOffset = rankDiff * rowHeight;
 
+  // Determine background styling based on zone
+  const getRowBackground = () => {
+    if (isCurrentUser) {
+      return "bg-emerald-500/10 border-2 border-emerald-500/30";
+    }
+    if (isPromotionZone) {
+      return "bg-emerald-500/5 border-l-4 border-l-emerald-500";
+    }
+    if (isDemotionZone) {
+      return "bg-red-500/5 border-l-4 border-l-red-500";
+    }
+    return "hover:bg-muted/30";
+  };
+
   return (
     <motion.div
-      className={`flex items-center gap-4 py-3 px-2 rounded-2xl transition-colors ${
-        isCurrentUser
-          ? "bg-emerald-500/10 border-2 border-emerald-500/30"
-          : "hover:bg-muted/30"
-      }`}
+      className={`flex items-center gap-4 py-3 px-2 rounded-2xl transition-colors ${getRowBackground()}`}
       initial={
         shouldAnimate && rankDiff !== 0 
           ? { y: initialOffset, opacity: 0.8, scale: 0.98 } 

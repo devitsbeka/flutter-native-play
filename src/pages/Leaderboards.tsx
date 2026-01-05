@@ -88,6 +88,12 @@ export default function Leaderboards() {
                 {leaderboard.map((entry, index) => {
                   const isCurrentUser = entry.user_id === user?.id;
                   const shouldAnimate = isCurrentUser && previousRank !== null && !isLeagueLocked;
+                  const totalPlayers = leaderboard.length;
+                  
+                  // Promotion zone: top 10 (except tier 5)
+                  const isPromotionZone = (viewingTier ?? userTier) < 5 && entry.rank <= 10;
+                  // Demotion zone: bottom 10 (except tier 1)
+                  const isDemotionZone = (viewingTier ?? userTier) > 1 && entry.rank > totalPlayers - 10;
 
                   return (
                     <LeaguePlayerRow
@@ -97,6 +103,9 @@ export default function Leaderboards() {
                       index={index}
                       previousRank={previousRank}
                       shouldAnimate={shouldAnimate}
+                      totalPlayers={totalPlayers}
+                      isPromotionZone={isPromotionZone}
+                      isDemotionZone={isDemotionZone}
                     />
                   );
                 })}
