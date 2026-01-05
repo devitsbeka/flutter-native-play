@@ -66,3 +66,6 @@ verify_jwt = true
 
 [functions.export-user-data]
 verify_jwt = true
+
+[functions.send-push-notification]
+verify_jwt = false
