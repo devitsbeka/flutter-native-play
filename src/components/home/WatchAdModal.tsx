@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Play, Tv, Gift } from "lucide-react";
+import { X, Play, Tv, Gift, AlertCircle } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { adService } from "@/services/adService";
 
 interface WatchAdModalProps {
   isOpen: boolean;
@@ -13,34 +14,90 @@ interface WatchAdModalProps {
 export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: WatchAdModalProps) {
   const [isWatching, setIsWatching] = useState(false);
   const [watchProgress, setWatchProgress] = useState(0);
+  const [adError, setAdError] = useState<string | null>(null);
+  const [isAdReady, setIsAdReady] = useState(false);
+
+  // Initialize ad service and preload ad when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setAdError(null);
+      
+      // Preload the ad
+      adService.loadRewardedAd({
+        onAdLoaded: () => {
+          setIsAdReady(true);
+        },
+        onAdFailedToLoad: (error) => {
+          console.warn('Failed to preload ad:', error);
+          // Don't show error yet, we can still try to show
+        },
+      });
+    } else {
+      setIsAdReady(false);
+    }
+  }, [isOpen]);
 
   const handleWatchAd = async () => {
     setIsWatching(true);
     setWatchProgress(0);
+    setAdError(null);
 
-    // Simulate ad progress
-    const interval = setInterval(() => {
+    // Start progress animation
+    const progressInterval = setInterval(() => {
       setWatchProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
+        if (prev >= 90) {
+          return 90; // Cap at 90% until ad completes
         }
-        return prev + 5;
+        return prev + 3;
       });
-    }, 75);
+    }, 50);
 
-    const success = await onWatchAd();
-    
-    clearInterval(interval);
-    setWatchProgress(100);
-    
-    setTimeout(() => {
+    try {
+      const adSuccess = await adService.showRewardedAdWithPreload({
+        onAdShowed: () => {
+          console.log('Ad started showing');
+        },
+        onRewardEarned: (reward) => {
+          console.log('Reward earned:', reward);
+        },
+        onAdDismissed: () => {
+          console.log('Ad dismissed');
+        },
+        onAdFailedToShow: (error) => {
+          console.error('Ad failed to show:', error);
+          setAdError('რეკლამის ჩვენება ვერ მოხერხდა');
+        },
+      });
+
+      clearInterval(progressInterval);
+
+      if (adSuccess) {
+        setWatchProgress(100);
+        
+        // Call the actual callback to update plays in database
+        const dbSuccess = await onWatchAd();
+        
+        setTimeout(() => {
+          setIsWatching(false);
+          setWatchProgress(0);
+          if (dbSuccess) {
+            onClose();
+          }
+        }, 500);
+      } else {
+        setIsWatching(false);
+        setWatchProgress(0);
+        if (!adError) {
+          setAdError('რეკლამის ყურება ვერ მოხერხდა');
+        }
+      }
+    } catch (error) {
+      clearInterval(progressInterval);
       setIsWatching(false);
       setWatchProgress(0);
-      if (success) {
-        onClose();
-      }
-    }, 500);
+      setAdError('დაფიქსირდა შეცდომა');
+      console.error('Error watching ad:', error);
+    }
   };
 
   if (!isOpen) return null;
@@ -59,7 +116,7 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="w-full max-w-sm rounded-3xl overflow-hidden"
+          className="w-full max-w-sm rounded-3xl overflow-hidden relative"
           style={{
             background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)",
             border: "1px solid rgba(255,255,255,0.1)",
@@ -112,6 +169,14 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
               <span className="text-amber-400 font-bold">+2 თამაში</span>
             </div>
 
+            {/* Error message */}
+            {adError && (
+              <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg mb-4 bg-red-500/20 border border-red-500/30">
+                <AlertCircle className="w-4 h-4 text-red-400" />
+                <span className="text-red-300 text-sm">{adError}</span>
+              </div>
+            )}
+
             {/* Progress bar when watching */}
             {isWatching && (
               <div className="mb-4">
@@ -125,6 +190,9 @@ export function WatchAdModal({ isOpen, onClose, onWatchAd, playsRemaining }: Wat
                       background: "linear-gradient(90deg, #4ECDC4, #45B7D1)",
                       width: `${watchProgress}%`,
                     }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${watchProgress}%` }}
+                    transition={{ duration: 0.1 }}
                   />
                 </div>
                 <p className="text-white/40 text-xs mt-2">რეკლამის ყურება...</p>
