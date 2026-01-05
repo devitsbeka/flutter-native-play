@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, BellOff, Check, CheckCheck, Users, Swords, Gift, Trophy, Info, Trash2 } from 'lucide-react';
+import { X, Bell, BellOff, Check, CheckCheck, Users, Swords, Gift, Trophy, Info, Trash2, UserPlus, Gamepad2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useFriends } from '@/hooks/useFriends';
+import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -14,9 +17,10 @@ interface NotificationsPanelProps {
 type FilterType = 'all' | 'unread' | 'friends' | 'games';
 
 const NOTIFICATION_ICONS: Record<string, React.ReactNode> = {
-  friend_request: <Users className="w-5 h-5 text-blue-400" />,
+  friend_request: <UserPlus className="w-5 h-5 text-blue-400" />,
   friend_accepted: <Users className="w-5 h-5 text-green-400" />,
-  challenge: <Swords className="w-5 h-5 text-orange-400" />,
+  challenge: <Gamepad2 className="w-5 h-5 text-orange-400" />,
+  game_invite: <Swords className="w-5 h-5 text-purple-400" />,
   game_result: <Trophy className="w-5 h-5 text-yellow-400" />,
   reward: <Gift className="w-5 h-5 text-pink-400" />,
   achievement: <Trophy className="w-5 h-5 text-purple-400" />,
@@ -28,14 +32,47 @@ function NotificationCard({
   onMarkRead,
   onDelete,
   onNavigate,
+  onAcceptFriend,
+  onDeclineFriend,
+  onAcceptInvite,
+  onDeclineInvite,
+  actionLoading,
 }: {
   notification: Notification;
   onMarkRead: (id: string) => void;
   onDelete: (id: string) => void;
   onNavigate: (notification: Notification) => void;
+  onAcceptFriend?: (friendshipId: string, notificationId: string) => void;
+  onDeclineFriend?: (friendshipId: string, notificationId: string) => void;
+  onAcceptInvite?: (invitationId: string, notificationId: string) => void;
+  onDeclineInvite?: (invitationId: string, notificationId: string) => void;
+  actionLoading?: string | null;
 }) {
   const isUnread = !notification.read_at;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
+  
+  const isFriendRequest = notification.type === 'friend_request';
+  const isGameInvite = notification.type === 'challenge';
+  const hasActions = (isFriendRequest || isGameInvite) && isUnread;
+  const isLoading = actionLoading === notification.id;
+
+  const handleAccept = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFriendRequest && notification.data?.friendship_id) {
+      onAcceptFriend?.(notification.data.friendship_id as string, notification.id);
+    } else if (isGameInvite && notification.data?.invitation_id) {
+      onAcceptInvite?.(notification.data.invitation_id as string, notification.id);
+    }
+  };
+
+  const handleDecline = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFriendRequest && notification.data?.friendship_id) {
+      onDeclineFriend?.(notification.data.friendship_id as string, notification.id);
+    } else if (isGameInvite && notification.data?.invitation_id) {
+      onDeclineInvite?.(notification.data.invitation_id as string, notification.id);
+    }
+  };
 
   return (
     <motion.div
@@ -43,18 +80,21 @@ function NotificationCard({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       className={cn(
-        "relative p-4 rounded-xl border transition-all cursor-pointer group",
+        "relative p-4 rounded-xl border transition-all group",
         isUnread
           ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
-          : "bg-secondary/50 border-border/50 hover:bg-secondary"
+          : "bg-secondary/50 border-border/50 hover:bg-secondary",
+        !hasActions && "cursor-pointer"
       )}
       onClick={() => {
-        if (isUnread) onMarkRead(notification.id);
-        onNavigate(notification);
+        if (!hasActions) {
+          if (isUnread) onMarkRead(notification.id);
+          onNavigate(notification);
+        }
       }}
     >
       {/* Unread indicator */}
-      {isUnread && (
+      {isUnread && !hasActions && (
         <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary animate-pulse" />
       )}
 
@@ -80,20 +120,48 @@ function NotificationCard({
           <p className="text-xs text-muted-foreground/60 mt-1">
             {timeAgo}
           </p>
+
+          {/* Action buttons for friend requests and game invites */}
+          {hasActions && (
+            <div className="flex gap-2 mt-3">
+              <motion.button
+                onClick={handleAccept}
+                disabled={isLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Check className="w-4 h-4" />
+                {isFriendRequest ? "მიღება" : "შესვლა"}
+              </motion.button>
+              <motion.button
+                onClick={handleDecline}
+                disabled={isLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <X className="w-4 h-4" />
+                უარყოფა
+              </motion.button>
+            </div>
+          )}
         </div>
 
-        {/* Actions */}
-        <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(notification.id);
-            }}
-            className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Delete action - only show for non-actionable items */}
+        {!hasActions && (
+          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(notification.id);
+              }}
+              className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -102,7 +170,10 @@ function NotificationCard({
 export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
   const navigate = useNavigate();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { acceptFriendRequest, declineFriendRequest } = useFriends();
+  const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const filteredNotifications = notifications.filter((n) => {
     switch (filter) {
@@ -117,6 +188,61 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     }
   });
 
+  const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      await acceptFriendRequest(friendshipId);
+      await markAsRead(notificationId);
+      toast.success("მეგობრის მოთხოვნა მიღებულია!");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeclineFriend = async (friendshipId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      await declineFriendRequest(friendshipId);
+      await deleteNotification(notificationId);
+      toast.success("მოთხოვნა უარყოფილია");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAcceptInvite = async (invitationId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      const roomCode = await acceptInvitation(invitationId);
+      await markAsRead(notificationId);
+      if (roomCode) {
+        onClose();
+        navigate(`/team?join=${roomCode}`);
+      }
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeclineInvite = async (invitationId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      await declineInvitation(invitationId);
+      await deleteNotification(notificationId);
+      toast.success("მოწვევა უარყოფილია");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleNavigate = (notification: Notification) => {
     // Navigate based on notification type
     switch (notification.type) {
@@ -126,11 +252,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
         break;
       case 'challenge':
       case 'game_result':
-        if (notification.data?.room_id) {
-          navigate('/team');
-        } else {
-          navigate('/team');
-        }
+        navigate('/team');
         break;
       case 'reward':
         // Stay on home, maybe open rewards modal
@@ -271,6 +393,11 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                         onMarkRead={markAsRead}
                         onDelete={deleteNotification}
                         onNavigate={handleNavigate}
+                        onAcceptFriend={handleAcceptFriend}
+                        onDeclineFriend={handleDeclineFriend}
+                        onAcceptInvite={handleAcceptInvite}
+                        onDeclineInvite={handleDeclineInvite}
+                        actionLoading={actionLoading}
                       />
                     ))}
                   </AnimatePresence>
