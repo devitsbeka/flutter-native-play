@@ -374,6 +374,7 @@ export function VSScreen() {
               iconUrl={currentCategory?.image_url || undefined}
               videoSrc={selectedCategory?.videoUrl}
               isLocked={isCategoryLocked}
+              shouldAnimate={showCategorySlot && !isCategoryLocked}
             />
             
             {/* Category Name */}

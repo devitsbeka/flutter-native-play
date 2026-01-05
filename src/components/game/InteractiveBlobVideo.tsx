@@ -15,9 +15,10 @@ interface InteractiveBlobVideoProps {
   iconUrl?: string;
   videoSrc?: string;
   isLocked: boolean;
+  shouldAnimate?: boolean; // Only animate when true
 }
 
-export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: InteractiveBlobVideoProps) {
+export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimate = false }: InteractiveBlobVideoProps) {
   const { categories } = useCategories();
   const [slotIconUrl, setSlotIconUrl] = useState<string>("");
   const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,9 +31,10 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: Interactiv
     [categories]
   );
 
-  // Slot machine animation - runs until locked
+  // Slot machine animation - only runs when shouldAnimate is true and not locked
   useEffect(() => {
-    if (isLocked || categoryIcons.length === 0) {
+    // Don't animate if locked or shouldAnimate is false
+    if (isLocked || !shouldAnimate || categoryIcons.length === 0) {
       if (slotIntervalRef.current) {
         clearInterval(slotIntervalRef.current);
         slotIntervalRef.current = null;
@@ -54,7 +56,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked }: Interactiv
         clearInterval(slotIntervalRef.current);
       }
     };
-  }, [isLocked, categoryIcons]);
+  }, [isLocked, shouldAnimate, categoryIcons]);
 
   // Determine which icon to show
   const displayIcon = isLocked ? iconUrl : slotIconUrl;
