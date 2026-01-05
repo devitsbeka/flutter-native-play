@@ -312,9 +312,10 @@ export function OnboardingWalkthrough() {
   if (!isOpen || !currentStep) return null;
   
   return (
-    <AnimatePresence>
-      <SpotlightOverlay targetRect={targetRect} />
+    <AnimatePresence mode="wait">
+      <SpotlightOverlay key={`spotlight-${currentStep.id}`} targetRect={targetRect} />
       <WalkthroughTooltip
+        key={`tooltip-${currentStep.id}`}
         step={currentStep}
         targetRect={targetRect}
         currentIndex={walkthroughStep}
