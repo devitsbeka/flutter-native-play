@@ -941,6 +941,17 @@ export const ka = {
     waitingForHost: "მასპინძელს ველოდებით...",
     waitingForPlayers: "მოთამაშეებს ველოდებით...",
     scanToJoin: "დაასკანერე შესაერთებლად",
+    // New TV mirroring translations
+    playOnTV: "TV-ზე თამაში",
+    playOnTVDescription: "გადაიტანე თამაში TV-ზე საუკეთესო წვეულებისთვის",
+    mirrorDescription: "აჩვენე ტელეფონის ეკრანი TV-ზე",
+    startHosting: "მასპინძლობის დაწყება",
+    startHostingDescription: "TV უკვე აჩვენებს თამაშს? დაიწყე მასპინძლობა",
+    nearbyTVs: "ახლომდებარე TV-ები",
+    imConnected: "დაკავშირებული ვარ",
+    creating: "იქმნება...",
+    sessionCreated: "სესია შეიქმნა!",
+    sessionCreateFailed: "სესიის შექმნა ვერ მოხერხდა",
   },
 
   // ==========================================
