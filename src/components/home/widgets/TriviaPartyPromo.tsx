@@ -35,7 +35,7 @@ export function TriviaPartyPromo() {
             <Tv className="w-5 h-5 text-primary" />
           </div>
           <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-            Trivia TV მეგობრებთან ერთად
+            ითამაშე Trivia TV
           </h3>
         </div>
         
