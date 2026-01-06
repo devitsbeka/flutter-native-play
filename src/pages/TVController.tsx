@@ -69,20 +69,43 @@ const TVControllerContent: React.FC = () => {
           setAvatarUrl(profile.avatar_url || undefined);
         }
 
+        const upperCode = code.toUpperCase();
+
         // Find session by pairing_code (6-char guest join code)
-        const { data: sessionData, error: sessionError } = await supabase
+        // Try multiple queries to be more resilient
+        let sessionData = null;
+        
+        // First try: paired session with exact code
+        const { data: pairedSession } = await supabase
           .from('tv_sessions')
           .select('*')
-          .eq('pairing_code', code.toUpperCase())
-          .eq('is_paired', true)
-          .single();
+          .eq('pairing_code', upperCode)
+          .in('status', ['waiting', 'countdown', 'playing'])
+          .maybeSingle();
+        
+        if (pairedSession) {
+          sessionData = pairedSession;
+        } else {
+          // Second try: any session with this code (maybe is_paired is false due to race condition)
+          const { data: anySession } = await supabase
+            .from('tv_sessions')
+            .select('*')
+            .eq('pairing_code', upperCode)
+            .maybeSingle();
+          
+          if (anySession) {
+            sessionData = anySession;
+          }
+        }
 
-        if (sessionError || !sessionData) {
-          setError('სესია ვერ მოიძებნა ან არ არის აქტიური');
+        if (!sessionData) {
+          console.error('Session not found for code:', upperCode);
+          setError('სესია ვერ მოიძებნა. შეამოწმე კოდი და სცადე თავიდან.');
           setLoading(false);
           return;
         }
 
+        console.log('Found session:', sessionData.id, 'Status:', sessionData.status);
         setSession(sessionData);
         
         // Set questions if available
@@ -126,12 +149,16 @@ const TVControllerContent: React.FC = () => {
               if (newData.status === 'waiting') setPhase('waiting');
               else if (newData.status === 'countdown') setPhase('countdown');
               else if (newData.status === 'playing') {
+                // Check if question changed
+                const newIndex = newData.current_question_index || 0;
+                if (newIndex !== currentQuestionIndex) {
+                  setCurrentQuestionIndex(newIndex);
+                  setTimeRemaining(15);
+                  setSelectedAnswer(null);
+                  setHasAnswered(false);
+                  setLastResult(null);
+                }
                 setPhase('playing');
-                setCurrentQuestionIndex(newData.current_question_index || 0);
-                setTimeRemaining(15);
-                setSelectedAnswer(null);
-                setHasAnswered(false);
-                setLastResult(null);
               }
               else if (newData.status === 'reveal') setPhase('reveal');
               else if (newData.status === 'completed') setPhase('completed');
@@ -150,9 +177,12 @@ const TVControllerContent: React.FC = () => {
                 user_id: user.id,
                 nickname: profile?.nickname || 'Player',
                 avatar_url: profile?.avatar_url,
-                isGuest: true, // Mark as guest so TV knows to show them
+                isGuest: true, // Mark as guest
+                isHost: false,
+                score: 0,
                 online_at: new Date().toISOString(),
               });
+              console.log('Guest presence tracked successfully');
             }
           });
 
@@ -224,6 +254,7 @@ const TVControllerContent: React.FC = () => {
           points_earned: points,
           tv_session_id: session.id,
         }]);
+      console.log('Answer submitted successfully');
     } catch (err) {
       console.error('Error submitting answer:', err);
     }
@@ -231,10 +262,10 @@ const TVControllerContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">TV-სთან დაკავშირება...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-purple-200">TV-სთან დაკავშირება...</p>
         </div>
       </div>
     );
@@ -242,9 +273,9 @@ const TVControllerContent: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-destructive text-xl mb-4">{error}</p>
+          <p className="text-red-400 text-xl mb-4">{error}</p>
           <ChunkyButton onClick={() => navigate('/team')}>
             უკან
           </ChunkyButton>
@@ -256,16 +287,16 @@ const TVControllerContent: React.FC = () => {
   // Waiting for game to start
   if (phase === 'waiting' || phase === 'countdown') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring' }}
         >
-          <Tv className="w-24 h-24 text-primary mb-6" />
+          <Tv className="w-24 h-24 text-purple-300 mb-6" />
         </motion.div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">დაკავშირებული! ✓</h1>
-        <p className="text-muted-foreground text-center mb-4">
+        <h1 className="text-2xl font-bold text-white mb-2">დაკავშირებული! ✓</h1>
+        <p className="text-purple-200 text-center mb-4">
           {phase === 'countdown' 
             ? 'მოემზადე! თამაში იწყება...'
             : 'უყურე TV ეკრანს. ველოდებით თამაშის დაწყებას...'}
@@ -274,7 +305,7 @@ const TVControllerContent: React.FC = () => {
         <motion.div
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="flex items-center gap-2 text-primary"
+          className="flex items-center gap-2 text-purple-300"
         >
           <Sparkles className="w-5 h-5" />
           <span className="font-medium">{nickname}</span>
@@ -286,7 +317,7 @@ const TVControllerContent: React.FC = () => {
   // Reveal phase - show if answer was correct
   if (phase === 'reveal') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <AnimatePresence>
           {lastResult !== null && (
             <motion.div
@@ -305,7 +336,7 @@ const TVControllerContent: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
+        <h2 className="text-2xl font-bold text-white mb-2">
           {lastResult ? 'სწორია! 🎉' : 'არასწორია! 😔'}
         </h2>
         <div className="flex items-center gap-2 text-yellow-500">
@@ -319,17 +350,17 @@ const TVControllerContent: React.FC = () => {
   // Final scoreboard
   if (phase === 'completed') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="text-center"
         >
-          <h1 className="text-3xl font-bold text-foreground mb-2">თამაში დასრულდა!</h1>
-          <p className="text-muted-foreground mb-6">შეხედე TV-ს სრული შედეგებისთვის</p>
+          <h1 className="text-3xl font-bold text-white mb-2">თამაში დასრულდა!</h1>
+          <p className="text-purple-200 mb-6">შეხედე TV-ს სრული შედეგებისთვის</p>
           
-          <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-            <p className="text-muted-foreground mb-2">შენი ქულა</p>
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-6">
+            <p className="text-purple-200 mb-2">შენი ქულა</p>
             <div className="flex items-center justify-center gap-2 text-yellow-500">
               <Star className="w-8 h-8 fill-yellow-500" />
               <span className="font-bold text-4xl">{score}</span>
@@ -346,28 +377,28 @@ const TVControllerContent: React.FC = () => {
 
   // Question phase - show answer buttons
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="bg-card border border-border rounded-full px-4 py-2">
-          <span className="text-muted-foreground text-sm">Q </span>
-          <span className="text-primary font-bold">{currentQuestionIndex + 1}</span>
-          <span className="text-muted-foreground text-sm"> / {questions.length}</span>
+        <div className="bg-white/10 border border-white/20 rounded-full px-4 py-2">
+          <span className="text-purple-200 text-sm">Q </span>
+          <span className="text-white font-bold">{currentQuestionIndex + 1}</span>
+          <span className="text-purple-200 text-sm"> / {questions.length}</span>
         </div>
-        <div className={`rounded-full px-4 py-2 ${timeRemaining <= 5 ? 'bg-red-500/20 border-red-500' : 'bg-card'} border border-border`}>
-          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-500' : 'text-foreground'}`}>
+        <div className={`rounded-full px-4 py-2 ${timeRemaining <= 5 ? 'bg-red-500/30 border-red-500' : 'bg-white/10'} border border-white/20`}>
+          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>
             {timeRemaining}წმ
           </span>
         </div>
-        <div className="flex items-center gap-1 bg-card border border-border rounded-full px-4 py-2">
+        <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-4 py-2">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-foreground font-bold">{score}</span>
+          <span className="text-white font-bold">{score}</span>
         </div>
       </div>
 
       {/* Instructions */}
       <div className="text-center mb-6">
-        <p className="text-muted-foreground">
+        <p className="text-purple-200">
           {hasAnswered ? 'პასუხი გაგზავნილია! უყურე TV-ს...' : 'უყურე TV-ს და აირჩიე პასუხი:'}
         </p>
       </div>
