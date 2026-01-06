@@ -34,14 +34,9 @@ export function TriviaPartyPromo() {
           <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
             <Tv className="w-5 h-5 text-primary" />
           </div>
-          <div>
-            <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
-              TRIVIA PARTY
-            </h3>
-            <p className="text-[13px] text-muted-foreground">
-              TV-ზე მეგობრებთან ერთად
-            </p>
-          </div>
+          <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
+            Trivia TV მეგობრებთან ერთად
+          </h3>
         </div>
         
         <svg
