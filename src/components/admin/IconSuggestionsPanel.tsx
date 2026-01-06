@@ -114,8 +114,16 @@ export function IconSuggestionsPanel({
 
   const { keywords, suggestions } = result;
 
+  // Filter out useless keywords (only show ones with real translations, not raw phonetic)
+  const usefulKeywords = keywords.filter(kw => 
+    kw.keyword !== kw.transliterated || // Has real translation
+    kw.source === 'question_english' || // English words are always useful
+    kw.source === 'answer_english' ||
+    suggestions.some(s => s.matchedKeyword === kw.transliterated) // Matched something
+  );
+
   // Group keywords by source
-  const keywordsBySource = keywords.reduce((acc, kw) => {
+  const keywordsBySource = usefulKeywords.reduce((acc, kw) => {
     if (!acc[kw.source]) acc[kw.source] = [];
     acc[kw.source].push(kw);
     return acc;
