@@ -731,7 +731,7 @@ export default function IconAssignment() {
       </div>
 
       {/* Main Content - Two Panel Layout */}
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-0">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-0 overflow-hidden">
         {/* Left Panel - Questions */}
         <div className="flex min-h-0 flex-col border-r border-border/50">
           {/* Question Filters */}
@@ -915,7 +915,7 @@ export default function IconAssignment() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/20">
           {/* Bulk Selection Preview */}
           {selectedQuestionIds.size > 0 && (
-            <div className="border-b border-border/30 p-4 bg-primary/5">
+            <div className="shrink-0 border-b border-border/30 p-4 bg-primary/5">
               <div className="flex items-center gap-3">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/20">
                   <CheckCheck className="h-8 w-8 text-primary" />
@@ -944,7 +944,7 @@ export default function IconAssignment() {
 
           {/* Selected Question Preview - only show when no bulk selection */}
           {selectedQuestion && selectedQuestionIds.size === 0 && (
-            <div className="border-b border-border/30 p-4 bg-card/50">
+            <div className="shrink-0 border-b border-border/30 p-4 bg-card/50">
               <div className="flex items-start gap-3">
                 <div className={cn(
                   "flex h-16 w-16 shrink-0 items-center justify-center rounded-xl",
@@ -1006,7 +1006,7 @@ export default function IconAssignment() {
           )}
 
           {/* Icon Search */}
-          <div className="p-3 border-b border-border/30">
+          <div className="shrink-0 p-3 border-b border-border/30">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -1050,7 +1050,7 @@ export default function IconAssignment() {
           />
 
           {/* Icon Grid */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             {iconsLoading ? (
               <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
