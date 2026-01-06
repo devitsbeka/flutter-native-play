@@ -13,18 +13,18 @@ interface Player {
 }
 
 interface TVWaitingForPlayersScreenProps {
-  sessionId: string;
+  guestJoinCode: string;
   players: Player[];
   onStartGame: () => void;
 }
 
 export const TVWaitingForPlayersScreen: React.FC<TVWaitingForPlayersScreenProps> = ({
-  sessionId,
+  guestJoinCode,
   players,
   onStartGame,
 }) => {
-  // Generate the controller join URL
-  const joinUrl = `${window.location.origin}/controller/${sessionId}`;
+  // Generate the controller join URL using the guest join code
+  const joinUrl = `${window.location.origin}/controller/${guestJoinCode}`;
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col p-8">
