@@ -105,38 +105,68 @@ const gradients = [
   "linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)",
 ];
 
-// Topic-specific cover images - using reliable image sources
+// Topic-specific cover images - high quality real photos from Pexels
 const coverImages = {
-  friends: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&q=80",
-  oscars: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800&q=80",
-  championsLeague: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80",
-  beatles: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80",
-  harryPotter: "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=800&q=80",
-  marvel: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=800&q=80",
-  got: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-  geography: "https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?w=800&q=80",
-  paintings: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&q=80",
-  nineties: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80",
-  nba: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80",
-  space: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=80",
-  greek: "https://images.unsplash.com/photo-1555993539-1732b0258235?w=800&q=80",
-  taylorSwift: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
-  breakingBad: "https://images.unsplash.com/photo-1585435557343-3b348031cd87?w=800&q=80",
-  theOffice: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",
-  f1: "https://images.unsplash.com/photo-1541889403752-158e4e1cf3df?w=800&q=80",
-  literature: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-  gaming: "https://images.unsplash.com/photo-1552820728-8b83bb6b2b38?w=800&q=80",
-  scientists: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=80",
-  strangerThings: "https://images.unsplash.com/photo-1509248961895-e35f67c1b922?w=800&q=80",
-  kpop: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
-  capitals: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80",
-  quotes: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&q=80",
-  disney: "https://images.unsplash.com/photo-1597733336794-12d05021d510?w=800&q=80",
-  olympics: "https://images.unsplash.com/photo-1569517282132-25d22f4573e6?w=800&q=80",
-  food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
-  animals: "https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800&q=80",
-  history: "https://images.unsplash.com/photo-1461360370896-922624d12a74?w=800&q=80",
-  popCulture: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80",
+  // Friends TV Show - real friends sitting on couch
+  friends: "https://images.pexels.com/photos/1438072/pexels-photo-1438072.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Oscars - golden Oscar statue
+  oscars: "https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Champions League - real football stadium
+  championsLeague: "https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Beatles - vinyl records & guitar (classic rock vibe)
+  beatles: "https://images.pexels.com/photos/1389429/pexels-photo-1389429.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Harry Potter - old castle (Hogwarts-like)
+  harryPotter: "https://images.pexels.com/photos/2166553/pexels-photo-2166553.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Marvel - superhero comic books
+  marvel: "https://images.pexels.com/photos/3945683/pexels-photo-3945683.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Game of Thrones - medieval castle fortress
+  got: "https://images.pexels.com/photos/2832034/pexels-photo-2832034.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Geography - world map
+  geography: "https://images.pexels.com/photos/335393/pexels-photo-335393.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Paintings - art museum gallery
+  paintings: "https://images.pexels.com/photos/1839919/pexels-photo-1839919.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // 90s Music - retro boombox cassette
+  nineties: "https://images.pexels.com/photos/1626481/pexels-photo-1626481.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // NBA - basketball court
+  nba: "https://images.pexels.com/photos/358042/pexels-photo-358042.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Space - NASA rocket launch
+  space: "https://images.pexels.com/photos/586030/pexels-photo-586030.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Greek Mythology - Parthenon temple
+  greek: "https://images.pexels.com/photos/772689/pexels-photo-772689.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Taylor Swift - concert crowd with stage lights
+  taylorSwift: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Breaking Bad - desert landscape (New Mexico vibe)
+  breakingBad: "https://images.pexels.com/photos/1173777/pexels-photo-1173777.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // The Office - modern office workspace
+  theOffice: "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // F1 Racing - Formula 1 car on track
+  f1: "https://images.pexels.com/photos/12801/pexels-photo-12801.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Literature - stack of classic books
+  literature: "https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Gaming - gaming setup with RGB
+  gaming: "https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Scientists - laboratory microscope
+  scientists: "https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Stranger Things - dark forest with fog
+  strangerThings: "https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // K-Pop - neon stage performance
+  kpop: "https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // World Capitals - city skyline
+  capitals: "https://images.pexels.com/photos/466685/pexels-photo-466685.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Movie Quotes - cinema film reels
+  quotes: "https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Disney - magical castle at night
+  disney: "https://images.pexels.com/photos/2659475/pexels-photo-2659475.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Olympics - Olympic rings
+  olympics: "https://images.pexels.com/photos/34514/spot-runs-start-la.jpg?auto=compress&cs=tinysrgb&w=800",
+  // Food - world cuisine dishes
+  food: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Animals - wildlife photography
+  animals: "https://images.pexels.com/photos/247502/pexels-photo-247502.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // History - ancient Roman Colosseum
+  history: "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Pop Culture - retro arcade games
+  popCulture: "https://images.pexels.com/photos/1293269/pexels-photo-1293269.jpeg?auto=compress&cs=tinysrgb&w=800",
 };
 
 export const samplePosts: SamplePost[] = [
