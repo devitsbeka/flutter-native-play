@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const ImageIcons: Record<string, React.ReactNode> = {
   whale: (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="24" cy="28" rx="18" ry="12" fill="#60A5FA" />
       <ellipse cx="24" cy="28" rx="14" ry="9" fill="#93C5FD" />
       <circle cx="16" cy="26" r="2" fill="#1E3A5F" />
@@ -13,14 +13,14 @@ const ImageIcons: Record<string, React.ReactNode> = {
     </svg>
   ),
   brain: (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M24 8C16 8 12 14 12 20C12 26 14 32 24 36C34 32 36 26 36 20C36 14 32 8 24 8Z" fill="#F472B6" />
       <path d="M24 12C20 12 18 16 18 20C18 24 20 28 24 30C28 28 30 24 30 20C30 16 28 12 24 12Z" fill="#EC4899" />
       <path d="M20 18C20 18 22 20 24 20C26 20 28 18 28 18" stroke="#BE185D" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
   bee: (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="24" cy="28" rx="10" ry="8" fill="#FCD34D" />
       <rect x="20" y="24" width="8" height="3" fill="#1F2937" />
       <rect x="20" y="30" width="8" height="3" fill="#1F2937" />
@@ -32,7 +32,7 @@ const ImageIcons: Record<string, React.ReactNode> = {
     </svg>
   ),
   octopus: (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="24" cy="20" rx="12" ry="10" fill="#A78BFA" />
       <circle cx="20" cy="18" r="2" fill="#1E1B4B" />
       <circle cx="28" cy="18" r="2" fill="#1E1B4B" />
@@ -44,7 +44,7 @@ const ImageIcons: Record<string, React.ReactNode> = {
     </svg>
   ),
   moon: (
-    <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="24" cy="24" r="14" fill="#FDE68A" />
       <circle cx="20" cy="20" r="3" fill="#FCD34D" />
       <circle cx="28" cy="26" r="2" fill="#FCD34D" />
@@ -54,43 +54,6 @@ const ImageIcons: Record<string, React.ReactNode> = {
   ),
 };
 
-// 3D chunky button component for voting
-function ChunkyVoteButton({ 
-  children, 
-  onClick, 
-  disabled,
-  variant = "default"
-}: { 
-  children: React.ReactNode; 
-  onClick: () => void; 
-  disabled?: boolean;
-  variant?: "default" | "primary";
-}) {
-  return (
-    <motion.button
-      onClick={onClick}
-      disabled={disabled}
-      whileTap={{ y: 2 }}
-      className={`
-        flex-1 py-2.5 px-3 rounded-xl font-bold text-sm
-        transition-all duration-150 relative
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${variant === "primary" 
-          ? "bg-primary text-primary-foreground" 
-          : "bg-card text-foreground border-2 border-border"
-        }
-      `}
-      style={{
-        boxShadow: variant === "primary"
-          ? "inset 0 2px 0 0 rgba(255,255,255,0.2), 0 4px 0 0 hsl(var(--primary) / 0.6), 0 5px 10px -3px rgba(0,0,0,0.2)"
-          : "inset 0 2px 0 0 rgba(255,255,255,0.1), 0 4px 0 0 hsl(var(--border)), 0 5px 10px -3px rgba(0,0,0,0.1)",
-      }}
-    >
-      {children}
-    </motion.button>
-  );
-}
-
 export function DidYouKnowWidget() {
   const { user } = useAuth();
   const { fact, loading, voting, voteResult, hasVoted, countdown, vote } = useDidYouKnow();
@@ -98,17 +61,17 @@ export function DidYouKnowWidget() {
   if (loading) {
     return (
       <div 
-        className="bg-card rounded-2xl p-5 border-2 border-border"
+        className="bg-card rounded-2xl p-5 border border-border/60"
         style={{
-          boxShadow: "inset 0 2px 0 0 rgba(255,255,255,0.1), 0 4px 0 0 hsl(var(--border)), 0 6px 15px -3px rgba(0,0,0,0.15)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
         }}
       >
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-muted rounded w-3/4" />
-          <div className="h-14 bg-muted rounded" />
+          <div className="h-4 bg-muted/60 rounded w-2/3" />
+          <div className="h-16 bg-muted/40 rounded-lg" />
           <div className="flex gap-3">
-            <div className="h-10 bg-muted rounded-xl flex-1" />
-            <div className="h-10 bg-muted rounded-xl flex-1" />
+            <div className="h-11 bg-muted/50 rounded-xl flex-1" />
+            <div className="h-11 bg-muted/50 rounded-xl flex-1" />
           </div>
         </div>
       </div>
@@ -121,28 +84,36 @@ export function DidYouKnowWidget() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl p-5 border-2 border-border"
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="bg-card rounded-2xl p-5 border border-border/60"
       style={{
-        boxShadow: "inset 0 2px 0 0 rgba(255,255,255,0.1), 0 4px 0 0 hsl(var(--border)), 0 6px 15px -3px rgba(0,0,0,0.15)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-bold text-foreground">
+      <div className="flex items-start justify-between mb-3">
+        <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
           იცოდით თუ არა რომ:
         </h3>
-        <div className="w-10 h-10">{icon}</div>
+        <div 
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.06) 100%)",
+          }}
+        >
+          {icon}
+        </div>
       </div>
 
       {/* Fact text */}
-      <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+      <p className="text-[14px] text-muted-foreground leading-[1.6] mb-2.5">
         {fact.fact_text}
       </p>
 
       {/* Source */}
-      <p className="text-xs text-muted-foreground/70 mb-4">
+      <p className="text-xs text-muted-foreground/50 mb-4 tracking-wide">
         {fact.source} ®
       </p>
 
@@ -151,64 +122,82 @@ export function DidYouKnowWidget() {
           <motion.div
             key="buttons"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex gap-3"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="flex gap-2.5"
           >
-            <ChunkyVoteButton
+            {/* ვიცოდი button */}
+            <motion.button
               onClick={() => vote("knew")}
               disabled={voting || !user}
+              whileTap={{ y: 1, scale: 0.98 }}
+              className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-[13px] tracking-wide
+                bg-card text-foreground border border-border/80
+                transition-all duration-150
+                disabled:opacity-40 disabled:cursor-not-allowed
+                hover:border-border hover:bg-muted/30"
+              style={{
+                boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02)",
+              }}
             >
               ვიცოდი
-            </ChunkyVoteButton>
-            <ChunkyVoteButton
+            </motion.button>
+            
+            {/* არ ვიცოდი button */}
+            <motion.button
               onClick={() => vote("didnt_know")}
               disabled={voting || !user}
+              whileTap={{ y: 1, scale: 0.98 }}
+              className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-[13px] tracking-wide
+                bg-card text-foreground border border-border/80
+                transition-all duration-150
+                disabled:opacity-40 disabled:cursor-not-allowed
+                hover:border-border hover:bg-muted/30"
+              style={{
+                boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02)",
+              }}
             >
               არ ვიცოდი
-            </ChunkyVoteButton>
+            </motion.button>
           </motion.div>
         ) : (
           <motion.div
             key="results"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="space-y-3"
           >
             {/* Progress bar */}
             <div 
-              className="h-3 bg-muted rounded-full overflow-hidden flex border border-border"
+              className="h-2 bg-muted/50 rounded-full overflow-hidden flex"
               style={{
-                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.1)",
+                boxShadow: "inset 0 1px 2px rgba(0,0,0,0.06)",
               }}
             >
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${voteResult?.knewPercentage}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="h-full"
+                transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+                className="h-full rounded-full"
                 style={{
-                  background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)",
+                  background: "linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.85) 100%)",
                 }}
-              />
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${voteResult?.didntKnowPercentage}%` }}
-                transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-                className="bg-muted-foreground/30 h-full"
               />
             </div>
 
-            {/* Stats */}
-            <div className="flex justify-between text-xs font-medium text-muted-foreground">
-              <span className={voteResult?.userVote === "knew" ? "font-bold text-primary" : ""}>
+            {/* Stats row */}
+            <div className="flex justify-between items-center">
+              <span className={`text-xs font-medium ${voteResult?.userVote === "knew" ? "text-primary" : "text-muted-foreground/70"}`}>
                 ვიცოდი: {voteResult?.knewPercentage}%
               </span>
-              <span className={voteResult?.userVote === "didnt_know" ? "font-bold text-primary" : ""}>
+              <span className={`text-xs font-medium ${voteResult?.userVote === "didnt_know" ? "text-primary" : "text-muted-foreground/70"}`}>
                 არ ვიცოდი: {voteResult?.didntKnowPercentage}%
               </span>
             </div>
 
-            <p className="text-sm font-semibold text-center text-foreground">
+            {/* Total votes */}
+            <p className="text-[13px] font-medium text-center text-muted-foreground">
               {voteResult?.totalVotes.toLocaleString()} ხმა
             </p>
             
@@ -217,7 +206,7 @@ export function DidYouKnowWidget() {
               <motion.p 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-xs text-center text-muted-foreground"
+                className="text-[11px] text-center text-muted-foreground/60"
               >
                 ახალი ფაქტი {countdown} წამში...
               </motion.p>
@@ -227,7 +216,7 @@ export function DidYouKnowWidget() {
       </AnimatePresence>
 
       {!user && !hasVoted && (
-        <p className="text-xs text-muted-foreground/60 text-center mt-2">
+        <p className="text-[11px] text-muted-foreground/50 text-center mt-3">
           შედით ანგარიშზე ხმის მისაცემად
         </p>
       )}
