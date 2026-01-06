@@ -1,17 +1,22 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, Gamepad2, Tv } from "lucide-react";
+import { Plus, Users, Gamepad2, Tv, Airplay, Cast } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
-import { TVConnectModal } from "./TVConnectModal";
+import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
+import { Capacitor } from "@capacitor/core";
+
 export function MyRoomsSection() {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
   const [showTVModal, setShowTVModal] = useState(false);
+  
+  const platform = Capacitor.getPlatform();
+  const TVIcon = platform === 'ios' ? Airplay : platform === 'android' ? Cast : Tv;
 
   // Clear unread activity when joining a room
   const handleJoin = async (room: MyRoom) => {
@@ -84,15 +89,15 @@ export function MyRoomsSection() {
         {/* TV Button */}
         <button
           onClick={() => setShowTVModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all"
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
         >
-          <Tv className="w-4 h-4 text-purple-600" />
-          <span className="text-sm font-medium text-slate-700">{t('tv.connectToTV')}</span>
+          <TVIcon className="w-4 h-4" />
+          <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
         </button>
       </div>
       
-      {/* TV Connect Modal */}
-      <TVConnectModal open={showTVModal} onOpenChange={setShowTVModal} />
+      {/* TV Mirror Modal */}
+      <TVMirrorModal open={showTVModal} onOpenChange={setShowTVModal} />
 
       {/* Rooms List */}
       {rooms.length === 0 ? (

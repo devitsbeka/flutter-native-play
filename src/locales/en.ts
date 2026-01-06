@@ -943,6 +943,17 @@ export const en: KaTranslations = {
     waitingForHost: "Waiting for host...",
     waitingForPlayers: "Waiting for players...",
     scanToJoin: "Scan to join",
+    // New TV mirroring translations
+    playOnTV: "Play on TV",
+    playOnTVDescription: "Mirror game to your TV for the ultimate party experience",
+    mirrorDescription: "Mirror your phone screen to TV",
+    startHosting: "Start Hosting",
+    startHostingDescription: "TV already showing the game? Start hosting now",
+    nearbyTVs: "Nearby TVs",
+    imConnected: "I'm Connected",
+    creating: "Creating...",
+    sessionCreated: "Session created!",
+    sessionCreateFailed: "Failed to create session",
   },
 
   // ==========================================
