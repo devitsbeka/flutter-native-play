@@ -333,6 +333,7 @@ export function useIconLibrary() {
   const [iconIndex, setIconIndex] = useState<IconItem[]>([]);
   const [dbIcons, setDbIcons] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [dbLoaded, setDbLoaded] = useState(false);
 
   // Load local JSON icons
   useEffect(() => {
@@ -344,12 +345,19 @@ export function useIconLibrary() {
 
   // Load database icons using module-level cache
   useEffect(() => {
-    loadDbIcons().then(setDbIcons);
+    loadDbIcons().then(icons => {
+      setDbIcons(icons);
+      setDbLoaded(true);
+    });
     
     // Listen for refresh events from Icon Library admin
     const handleRefresh = () => {
+      setDbLoaded(false);
       refreshDbIconsCache();
-      loadDbIcons().then(setDbIcons);
+      loadDbIcons().then(icons => {
+        setDbIcons(icons);
+        setDbLoaded(true);
+      });
     };
     
     window.addEventListener('icon-library-refresh', handleRefresh);
@@ -523,7 +531,7 @@ export function useIconLibrary() {
     fetchIconBySlug,
     getIconForCategory,
     getRandomIconForCategory,
-    isLoaded: !isLoading && iconIndex.length > 0,
+    isLoaded: !isLoading && iconIndex.length > 0 && dbLoaded,
     iconCount: iconIndex.length,
   };
 }
