@@ -93,6 +93,9 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         return;
       }
 
+      // Generate a 6-character player join code
+      const playerJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
       // Update the TV session - pair it with this host
       const { error: updateError } = await supabase
         .from('tv_sessions')
@@ -101,7 +104,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
           room_id: roomId,
           is_paired: true,
           status: 'waiting',
-          pairing_code: session.id.substring(0, 6).toUpperCase(), // Generate a player join code
+          pairing_code: playerJoinCode, // This is the code guests use to join
           questions: formattedQuestions as unknown as any,
         })
         .eq('id', session.id);
@@ -124,10 +127,10 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
 
       toast.success('წარმატებით დაკავშირდა!');
 
-      // Navigate to the controller page after a short delay
+      // Navigate to the controller page using the player join code (not session ID)
       setTimeout(() => {
         onOpenChange(false);
-        navigate(`/controller/${session.id}`);
+        navigate(`/controller/${playerJoinCode}`);
       }, 1500);
 
     } catch (error) {
