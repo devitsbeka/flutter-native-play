@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, CheckCircle } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SamplePost } from "@/data/samplePosts";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FeedPostProps {
   post: SamplePost;
@@ -24,10 +31,57 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
   const handleLike = () => {
     if (liked) {
       setLikesCount(prev => prev - 1);
+      toast("Removed from likes");
     } else {
       setLikesCount(prev => prev + 1);
+      toast.success("Added to likes ❤️");
     }
     setLiked(!liked);
+  };
+
+  const handleSave = () => {
+    setSaved(!saved);
+    if (!saved) {
+      toast.success("Saved to collection 📌");
+    } else {
+      toast("Removed from saved");
+    }
+  };
+
+  const handleComment = () => {
+    toast.info("Comments coming soon! 💬");
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: post.title,
+      text: `Check out this trivia: ${post.title}`,
+      url: window.location.href
+    };
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // User cancelled or error
+      }
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard! 📋");
+    }
+  };
+
+  const handleReport = () => {
+    toast.success("Report submitted. Thank you!");
+  };
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied! 📋");
+  };
+
+  const handleNotInterested = () => {
+    toast("We'll show you less content like this");
   };
 
   const formatNumber = (num: number): string => {
@@ -74,9 +128,31 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
           </div>
         </div>
         
-        <button className="p-2 hover:bg-accent rounded-full transition-colors">
-          <MoreHorizontal className="w-5 h-5 text-foreground" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 hover:bg-muted rounded-full transition-colors">
+              <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleReport} className="gap-2">
+              <Flag className="w-4 h-4" />
+              Report
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleShare} className="gap-2">
+              <Send className="w-4 h-4" />
+              Share
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleCopyLink} className="gap-2">
+              <Link2 className="w-4 h-4" />
+              Copy Link
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleNotInterested} className="gap-2">
+              <EyeOff className="w-4 h-4" />
+              Not Interested
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Quiz Card/Banner */}
@@ -84,8 +160,27 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
         className="relative aspect-[4/3] mx-4 rounded-xl overflow-hidden"
         style={{ background: post.coverGradient }}
       >
+        {/* Background image with overlay */}
+        {post.coverImage && (
+          <div className="absolute inset-0">
+            <img 
+              src={post.coverImage} 
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            {/* Dark overlay for text contrast */}
+            <div className="absolute inset-0 bg-black/50" />
+          </div>
+        )}
+        
+        {/* Gradient overlay for visual consistency */}
+        <div 
+          className="absolute inset-0 opacity-60 mix-blend-overlay"
+          style={{ background: post.coverGradient }}
+        />
+
         {/* Content overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
           {/* Quiz Title */}
           <h3 className="text-white text-2xl font-bold mb-3 drop-shadow-lg">
             {post.title}
@@ -105,7 +200,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
         {/* Play Button Overlay */}
         <button 
           onClick={() => onPlay?.(post)}
-          className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity"
+          className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity z-20"
         >
           <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
             <Play className="w-8 h-8 text-slate-800 ml-1" />
@@ -129,12 +224,18 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
           </button>
           
           {/* Comment */}
-          <button className="hover:opacity-70 transition-opacity">
+          <button 
+            onClick={handleComment}
+            className="hover:opacity-70 transition-opacity"
+          >
             <MessageCircle className="w-6 h-6 text-foreground" />
           </button>
           
           {/* Share */}
-          <button className="hover:opacity-70 transition-opacity">
+          <button 
+            onClick={handleShare}
+            className="hover:opacity-70 transition-opacity"
+          >
             <Send className="w-6 h-6 text-foreground" />
           </button>
         </div>
@@ -151,7 +252,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
           
           {/* Save */}
           <button 
-            onClick={() => setSaved(!saved)}
+            onClick={handleSave}
             className="hover:opacity-70 transition-opacity"
           >
             <Bookmark 
