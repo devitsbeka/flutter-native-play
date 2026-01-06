@@ -84,6 +84,7 @@ const App = () => (
               <Route path="/team" element={<TeamV2 />} />
               <Route path="/room/:code" element={<RoomRedirect />} />
               <Route path="/tv" element={<TVReceiver />} />
+              <Route path="/tv/receiver" element={<TVReceiver />} />
               <Route path="/tv/:code" element={<TVDisplay />} />
               <Route path="/controller/:code" element={<TVController />} />
               <Route path="/vip" element={<VIP />} />
