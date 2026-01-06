@@ -7,7 +7,7 @@ export function DesktopSidebars() {
   return (
     <div className="hidden xl:flex absolute inset-0 z-[5] pointer-events-none">
       {/* Left Sidebar */}
-      <div className="w-80 flex flex-col gap-4 p-6 pt-24 pointer-events-auto">
+      <div className="w-80 flex flex-col gap-3 p-4 pt-20 pb-24 pointer-events-auto">
         <DidYouKnowWidget />
         <TriviaPartyPromo />
       </div>
@@ -16,7 +16,7 @@ export function DesktopSidebars() {
       <div className="flex-1" />
       
       {/* Right Sidebar */}
-      <div className="w-80 flex flex-col gap-4 p-6 pt-24 pointer-events-auto">
+      <div className="w-80 flex flex-col gap-3 p-4 pt-20 pb-24 pointer-events-auto">
         <LiveGamesWidget />
         <ShopPromoWidget />
       </div>
