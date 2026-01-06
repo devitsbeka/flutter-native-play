@@ -39,9 +39,9 @@ export function MyTriviaTab({ onCreateQuiz }: MyTriviaTabProps) {
           შექმენი შენი საკუთარი ქვიზები და გაუზიარე მეგობრებს!
         </p>
         
-        <ChunkyButton onClick={onCreateQuiz} className="gap-2">
-          <Plus className="w-5 h-5" />
-          შექმენი Trivia
+        <ChunkyButton onClick={onCreateQuiz} className="whitespace-nowrap flex-row">
+          <Plus className="w-5 h-5 flex-shrink-0" />
+          <span>შექმენი Trivia</span>
         </ChunkyButton>
       </motion.div>
     );
@@ -55,9 +55,9 @@ export function MyTriviaTab({ onCreateQuiz }: MyTriviaTabProps) {
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-foreground">შენი Trivia-ები ({myPosts.length})</h3>
-        <ChunkyButton size="sm" onClick={onCreateQuiz} className="gap-1">
-          <Plus className="w-4 h-4" />
-          ახალი
+        <ChunkyButton size="sm" onClick={onCreateQuiz} className="whitespace-nowrap flex-row">
+          <Plus className="w-4 h-4 flex-shrink-0" />
+          <span>ახალი</span>
         </ChunkyButton>
       </div>
 
