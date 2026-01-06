@@ -20,6 +20,7 @@ const TVReceiverContent: React.FC = () => {
   const navigate = useNavigate();
   const [tvPairingCode, setTvPairingCode] = useState<string>('');
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [guestJoinCode, setGuestJoinCode] = useState<string | null>(null); // The 6-char code for guests
   const [isPaired, setIsPaired] = useState(false);
   const [hostId, setHostId] = useState<string | null>(null);
   const [phase, setPhase] = useState<'awaiting' | 'waiting' | 'countdown' | 'question' | 'reveal' | 'scoreboard'>('awaiting');
@@ -85,6 +86,7 @@ const TVReceiverContent: React.FC = () => {
             if (newData.is_paired && !isPaired) {
               setIsPaired(true);
               setHostId(newData.host_user_id);
+              setGuestJoinCode(newData.pairing_code); // This is the guest join code
               setPhase('waiting');
               if (newData.questions) {
                 setQuestions(newData.questions);
@@ -222,7 +224,7 @@ const TVReceiverContent: React.FC = () => {
     case 'waiting':
       return (
         <TVWaitingForPlayersScreen
-          sessionId={sessionId!}
+          guestJoinCode={guestJoinCode || ''}
           players={players}
           onStartGame={handleStartGame}
         />
