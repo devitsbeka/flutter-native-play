@@ -175,47 +175,26 @@ export const TVSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [user]);
 
-  // Join an existing session (player)
+  // Join an existing session (player/guest)
+  // This is used by guests scanning the QR code or entering the 6-char pairing_code
   const joinSession = useCallback(async (code: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
       const upperCode = code.toUpperCase();
       
-      // Try to find session by pairing_code first (host-created sessions)
-      let { data: session, error } = await supabase
+      // Find session by pairing_code (6-char guest join code)
+      // This is the code displayed on TV and host's phone for guests to join
+      const { data: session, error } = await supabase
         .from('tv_sessions')
         .select('*')
         .eq('pairing_code', upperCode)
+        .eq('is_paired', true) // Only allow joining paired sessions
         .maybeSingle();
 
-      // If not found, try tv_pairing_code (TV-initiated sessions)
-      if (!session) {
-        const result = await supabase
-          .from('tv_sessions')
-          .select('*')
-          .eq('tv_pairing_code', upperCode)
-          .maybeSingle();
-        
-        session = result.data;
-        error = result.error;
-      }
-
       if (error || !session) {
-        console.error('Session not found:', error);
+        console.error('Session not found or not yet paired:', error);
         return false;
-      }
-      
-      // If this is a TV-initiated session, update it to pair with this user as host
-      if (!session.host_user_id && session.tv_pairing_code) {
-        await supabase
-          .from('tv_sessions')
-          .update({ 
-            host_user_id: user.id,
-            is_paired: true,
-            status: 'waiting'
-          })
-          .eq('id', session.id);
       }
 
       // Get user profile
@@ -233,16 +212,26 @@ export const TVSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ? (session.status === 'playing' ? 'question' : session.status === 'completed' ? 'scoreboard' : session.status) as TVPhase
         : 'pairing';
 
+      // Add this player to the players list
+      const newPlayer: TVPlayer = {
+        id: user.id,
+        nickname: profile?.nickname || 'Player',
+        avatar_url: profile?.avatar_url || undefined,
+        score: 0,
+        hasAnswered: false,
+      };
+
       setState(prev => ({
         ...prev,
         sessionId: session.id,
-        pairingCode: code.toUpperCase(),
+        pairingCode: upperCode,
         roomId: session.room_id,
         phase: sessionPhase,
         questions: sessionQuestions,
         currentQuestionIndex: session.current_question_index || 0,
-        isHost: session.host_user_id === user.id,
+        isHost: false, // Guests joining via this code are never hosts
         hostUserId: session.host_user_id,
+        players: [...prev.players.filter(p => p.id !== user.id), newPlayer],
       }));
 
       return true;
