@@ -1,0 +1,4 @@
+// Korean - extending English
+import type { KaTranslations } from './ka';
+import { en } from './en';
+export const ko: KaTranslations = { ...en, common: { ...en.common, play: "플레이", back: "뒤로", next: "다음", close: "닫기", save: "저장", cancel: "취소", loading: "로딩 중...", error: "오류", success: "성공!", continue: "계속", coins: "코인", gems: "보석" }, nav: { ...en.nav, explore: "탐색", map: "지도", play: "플레이", rank: "순위", profile: "프로필", settings: "설정", home: "홈", menu: "메뉴" }, team: { ...en.team, multiplayer: "멀티플레이", signInToPlay: "친구와 플레이하려면 로그인하세요", friends: "친구", yourRooms: "내 방", noActiveRooms: "활성 방 없음", join: "참가", recentGames: "최근 게임", noGamesYet: "아직 게임 없음" }, auth: { ...en.auth, signIn: "로그인", signUp: "가입", signOut: "로그아웃" }, featured: { ...en.featured, badgeNew: "신규", badgePopular: "인기", badgeBestPrice: "최저가" } };

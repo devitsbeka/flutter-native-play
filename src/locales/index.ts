@@ -2,11 +2,47 @@
 
 import { ka, type KaTranslations } from './ka';
 import { en } from './en';
+import { ru } from './ru';
+import { es } from './es';
+import { fr } from './fr';
+import { de } from './de';
+import { it } from './it';
+import { pt } from './pt';
+import { tr } from './tr';
+import { pl } from './pl';
+import { nl } from './nl';
+import { uk } from './uk';
+import { ja } from './ja';
+import { ko } from './ko';
+import { zh } from './zh';
+import { ar } from './ar';
+import { hi } from './hi';
+import { he } from './he';
+import { sv } from './sv';
+import { az } from './az';
 
 // All available translations
 export const translations: Record<string, KaTranslations> = {
   ka,
   en,
+  ru,
+  es,
+  fr,
+  de,
+  it,
+  pt,
+  tr,
+  pl,
+  nl,
+  uk,
+  ja,
+  ko,
+  zh,
+  ar,
+  hi,
+  he,
+  sv,
+  az,
 };
 
 // Supported languages with metadata (20 languages)
@@ -52,4 +88,4 @@ export const DEFAULT_LANGUAGE = 'ka';
 
 // Re-export types
 export type { KaTranslations };
-export { ka, en };
+export { ka, en, ru, es, fr, de, it, pt, tr, pl, nl, uk, ja, ko, zh, ar, hi, he, sv, az };
