@@ -34,6 +34,9 @@ import { Category } from "@/data/categories";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
+import { CreateQuizModal } from "@/components/social/CreateQuizModal";
+import { QuizPlayModal } from "@/components/social/QuizPlayModal";
+import { SamplePost } from "@/data/samplePosts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 
@@ -76,6 +79,8 @@ function TeamContent() {
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
   const [currentInvitation, setCurrentInvitation] = useState<typeof pendingInvitations[0] | null>(null);
   const [activeTab, setActiveTab] = useState("for-me");
+  const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
+  const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
 
   // Show latest pending invitation
   useEffect(() => {
@@ -315,11 +320,11 @@ function TeamContent() {
           </div>
 
           <TabsContent value="for-me" className="mt-0">
-            <SocialFeed onPlayQuiz={(post) => console.log('Play quiz:', post.title)} />
+            <SocialFeed onPlayQuiz={(post) => setPlayingQuiz(post)} />
           </TabsContent>
 
           <TabsContent value="my-trivia" className="mt-0 px-4">
-            <MyTriviaTab onCreateQuiz={() => console.log('Create quiz')} />
+            <MyTriviaTab onCreateQuiz={() => setShowCreateQuizModal(true)} />
           </TabsContent>
         </Tabs>
 
@@ -383,6 +388,16 @@ function TeamContent() {
       <RoomChatsPanel
         isOpen={showRoomChatsPanel}
         onClose={() => setShowRoomChatsPanel(false)}
+      />
+      <CreateQuizModal
+        open={showCreateQuizModal}
+        onOpenChange={setShowCreateQuizModal}
+        onQuizCreated={() => setActiveTab("my-trivia")}
+      />
+      <QuizPlayModal
+        open={!!playingQuiz}
+        onOpenChange={(open) => !open && setPlayingQuiz(null)}
+        post={playingQuiz}
       />
 
       {!showCreateModal && (
