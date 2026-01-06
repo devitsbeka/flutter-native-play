@@ -6,7 +6,7 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
-import { TVDiscoveryModal } from "./TVDiscoveryModal";
+import { TVConnectModal } from "./TVConnectModal";
 export function MyRoomsSection() {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
@@ -91,8 +91,8 @@ export function MyRoomsSection() {
         </button>
       </div>
       
-      {/* TV Discovery Modal */}
-      <TVDiscoveryModal open={showTVModal} onOpenChange={setShowTVModal} />
+      {/* TV Connect Modal */}
+      <TVConnectModal open={showTVModal} onOpenChange={setShowTVModal} />
 
       {/* Rooms List */}
       {rooms.length === 0 ? (
