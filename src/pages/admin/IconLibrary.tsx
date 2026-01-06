@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw, Download } from "lucide-react";
 import { refreshDbIconsCache } from "@/hooks/useIconLibrary";
 
 interface ImportStatus {
@@ -28,6 +28,7 @@ export default function IconLibraryAdmin() {
   });
   const [iconCount, setIconCount] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Check how many icons are already imported
   const checkIconCount = async () => {
@@ -51,6 +52,34 @@ export default function IconLibraryAdmin() {
       setIsRefreshing(false);
     }
   }, []);
+
+  // Export icons to JSON file for local caching
+  const handleExportJson = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('export-icon-library');
+      
+      if (error) throw error;
+      
+      // Download as file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'icon-library-meta.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${data.total_count} icons to JSON file`);
+    } catch (error: any) {
+      console.error("Export error:", error);
+      toast.error("Failed to export icons: " + error.message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Import metadata from JSON file
   const importMetadata = async () => {
@@ -218,6 +247,30 @@ export default function IconLibraryAdmin() {
 
       {/* Action Cards */}
       <div className="grid gap-4">
+        {/* Export JSON */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Export Icon Library JSON</CardTitle>
+            <CardDescription>
+              Download all icons from the database as a JSON file. Replace the local icon-library-meta.json to keep it in sync.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleExportJson}
+              variant="secondary"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Export {iconCount?.toLocaleString() || ''} Icons to JSON
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Import Metadata */}
         <Card>
           <CardHeader>
