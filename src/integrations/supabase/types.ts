@@ -1189,8 +1189,121 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_players: {
+        Row: {
+          avatar_url: string | null
+          current_round_score: number | null
+          id: string
+          is_authenticated: boolean | null
+          is_host: boolean | null
+          is_ready: boolean | null
+          joined_at: string | null
+          nickname: string
+          player_id: string
+          questions_answered: number | null
+          rounds_played: number | null
+          total_score: number | null
+          tv_session_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          current_round_score?: number | null
+          id?: string
+          is_authenticated?: boolean | null
+          is_host?: boolean | null
+          is_ready?: boolean | null
+          joined_at?: string | null
+          nickname: string
+          player_id: string
+          questions_answered?: number | null
+          rounds_played?: number | null
+          total_score?: number | null
+          tv_session_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          current_round_score?: number | null
+          id?: string
+          is_authenticated?: boolean | null
+          is_host?: boolean | null
+          is_ready?: boolean | null
+          joined_at?: string | null
+          nickname?: string
+          player_id?: string
+          questions_answered?: number | null
+          rounds_played?: number | null
+          total_score?: number | null
+          tv_session_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_players_tv_session_id_fkey"
+            columns: ["tv_session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_round_history: {
+        Row: {
+          category_icon: string | null
+          category_id: string | null
+          category_name: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          player_scores: Json
+          round_number: number
+          started_at: string | null
+          total_questions: number | null
+          tv_session_id: string
+        }
+        Insert: {
+          category_icon?: string | null
+          category_id?: string | null
+          category_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          player_scores?: Json
+          round_number: number
+          started_at?: string | null
+          total_questions?: number | null
+          tv_session_id: string
+        }
+        Update: {
+          category_icon?: string | null
+          category_id?: string | null
+          category_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          player_scores?: Json
+          round_number?: number
+          started_at?: string | null
+          total_questions?: number | null
+          tv_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_round_history_tv_session_id_fkey"
+            columns: ["tv_session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_sessions: {
         Row: {
+          accumulated_scores: Json | null
           category_icon: string | null
           category_name: string | null
           created_at: string | null
@@ -1204,10 +1317,14 @@ export type Database = {
           question_start_time: string | null
           questions: Json | null
           room_id: string | null
+          room_name: string | null
+          round_number: number | null
           status: string | null
+          total_rounds_played: number | null
           tv_pairing_code: string | null
         }
         Insert: {
+          accumulated_scores?: Json | null
           category_icon?: string | null
           category_name?: string | null
           created_at?: string | null
@@ -1221,10 +1338,14 @@ export type Database = {
           question_start_time?: string | null
           questions?: Json | null
           room_id?: string | null
+          room_name?: string | null
+          round_number?: number | null
           status?: string | null
+          total_rounds_played?: number | null
           tv_pairing_code?: string | null
         }
         Update: {
+          accumulated_scores?: Json | null
           category_icon?: string | null
           category_name?: string | null
           created_at?: string | null
@@ -1238,7 +1359,10 @@ export type Database = {
           question_start_time?: string | null
           questions?: Json | null
           room_id?: string | null
+          room_name?: string | null
+          round_number?: number | null
           status?: string | null
+          total_rounds_played?: number | null
           tv_pairing_code?: string | null
         }
         Relationships: [
