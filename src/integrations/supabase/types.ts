@@ -1100,9 +1100,12 @@ export type Database = {
       }
       tv_sessions: {
         Row: {
+          category_icon: string | null
+          category_name: string | null
           created_at: string | null
           current_question_index: number | null
           expires_at: string | null
+          game_name: string | null
           host_user_id: string | null
           id: string
           is_paired: boolean | null
@@ -1114,9 +1117,12 @@ export type Database = {
           tv_pairing_code: string | null
         }
         Insert: {
+          category_icon?: string | null
+          category_name?: string | null
           created_at?: string | null
           current_question_index?: number | null
           expires_at?: string | null
+          game_name?: string | null
           host_user_id?: string | null
           id?: string
           is_paired?: boolean | null
@@ -1128,9 +1134,12 @@ export type Database = {
           tv_pairing_code?: string | null
         }
         Update: {
+          category_icon?: string | null
+          category_name?: string | null
           created_at?: string | null
           current_question_index?: number | null
           expires_at?: string | null
+          game_name?: string | null
           host_user_id?: string | null
           id?: string
           is_paired?: boolean | null

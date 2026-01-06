@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { TVAwaitingPairingScreen } from '@/components/tv/TVAwaitingPairingScreen';
@@ -16,6 +15,8 @@ interface Player {
   nickname: string;
   avatar_url?: string;
   score: number;
+  hasAnswered?: boolean;
+  isHost?: boolean;
 }
 
 interface Question {
@@ -27,8 +28,9 @@ interface Question {
 
 type Phase = 'awaiting' | 'waiting' | 'countdown' | 'question' | 'reveal' | 'scoreboard';
 
+const QUESTION_DURATION = 15;
+
 const TVReceiverContent: React.FC = () => {
-  const navigate = useNavigate();
   const [tvPairingCode, setTvPairingCode] = useState<string>('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [guestJoinCode, setGuestJoinCode] = useState<string | null>(null);
@@ -38,8 +40,15 @@ const TVReceiverContent: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [timeRemaining, setTimeRemaining] = useState(QUESTION_DURATION);
+  const [categoryName, setCategoryName] = useState<string>('');
+  const [categoryIcon, setCategoryIcon] = useState<string>('');
+  const [gameName, setGameName] = useState<string>('TV კვიზი');
+  
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const answersChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate 4-digit code
   const generatePairingCode = () => {
@@ -57,7 +66,6 @@ const TVReceiverContent: React.FC = () => {
       const code = generatePairingCode();
       setTvPairingCode(code);
 
-      // Create a TV session with just the pairing code (no host yet)
       const { data, error } = await supabase
         .from('tv_sessions')
         .insert([{
@@ -98,6 +106,11 @@ const TVReceiverContent: React.FC = () => {
               setGuestJoinCode(newData.pairing_code);
             }
 
+            // Update category info
+            if (newData.category_name) setCategoryName(newData.category_name);
+            if (newData.category_icon) setCategoryIcon(newData.category_icon);
+            if (newData.game_name) setGameName(newData.game_name);
+
             // Update questions if available
             if (newData.questions && Array.isArray(newData.questions)) {
               setQuestions(newData.questions);
@@ -106,12 +119,19 @@ const TVReceiverContent: React.FC = () => {
               }
             }
 
+            // Update current question index
+            if (typeof newData.current_question_index === 'number') {
+              setCurrentQuestionIndex(newData.current_question_index);
+            }
+
             // Update phase based on status
             if (newData.status === 'countdown') {
               setPhase('countdown');
             } else if (newData.status === 'playing') {
               setPhase('question');
-              setCurrentQuestionIndex(newData.current_question_index || 0);
+              setTimeRemaining(QUESTION_DURATION);
+              // Reset answer status for all players
+              setPlayers(prev => prev.map(p => ({ ...p, hasAnswered: false })));
             } else if (newData.status === 'reveal') {
               setPhase('reveal');
             } else if (newData.status === 'completed') {
@@ -132,10 +152,13 @@ const TVReceiverContent: React.FC = () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     };
   }, []);
 
-  // Set up presence channel when session is paired
+  // Set up presence channel when session is paired - track ALL players including host
   useEffect(() => {
     if (!sessionId || !isPaired) return;
 
@@ -147,19 +170,27 @@ const TVReceiverContent: React.FC = () => {
         
         Object.values(presenceState).forEach((presences: any) => {
           presences.forEach((presence: any) => {
-            // Add all players from presence (guests have isGuest: true)
-            if (presence.isGuest) {
-              connectedPlayers.push({
-                id: presence.user_id,
-                nickname: presence.nickname || 'Player',
-                avatar_url: presence.avatar_url,
-                score: 0,
-              });
-            }
+            // Include ALL players (both host and guests)
+            connectedPlayers.push({
+              id: presence.user_id,
+              nickname: presence.nickname || 'Player',
+              avatar_url: presence.avatar_url,
+              score: presence.score || 0,
+              hasAnswered: false,
+              isHost: presence.isHost || false,
+            });
           });
         });
         
-        setPlayers(connectedPlayers);
+        // Merge with existing player scores
+        setPlayers(prev => {
+          return connectedPlayers.map(newPlayer => {
+            const existing = prev.find(p => p.id === newPlayer.id);
+            return existing 
+              ? { ...newPlayer, score: existing.score, hasAnswered: existing.hasAnswered }
+              : newPlayer;
+          });
+        });
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
         console.log('Player joined TV session:', newPresences);
@@ -178,35 +209,84 @@ const TVReceiverContent: React.FC = () => {
     };
   }, [sessionId, isPaired]);
 
-  // Handle start game from TV (fallback, usually host controls this)
-  const handleStartGame = async () => {
-    if (!sessionId) return;
+  // Subscribe to player answers to update who has answered
+  useEffect(() => {
+    if (!sessionId || phase !== 'question') return;
+
+    const answersChannel = supabase
+      .channel(`tv-answers-${sessionId}-${currentQuestionIndex}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'player_answers',
+          filter: `tv_session_id=eq.${sessionId}`,
+        },
+        async (payload) => {
+          const answer = payload.new as any;
+          
+          // Only update if it's for the current question
+          if (answer.question_index !== currentQuestionIndex) return;
+
+          // Update player's hasAnswered status and score
+          setPlayers(prev => prev.map(p => {
+            if (p.id === answer.user_id) {
+              return {
+                ...p,
+                hasAnswered: true,
+                score: p.score + (answer.points_earned || 0),
+              };
+            }
+            return p;
+          }));
+        }
+      )
+      .subscribe();
+
+    answersChannelRef.current = answersChannel;
+
+    return () => {
+      if (answersChannelRef.current) {
+        supabase.removeChannel(answersChannelRef.current);
+      }
+    };
+  }, [sessionId, phase, currentQuestionIndex]);
+
+  // Timer for questions
+  useEffect(() => {
+    if (phase !== 'question') {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      return;
+    }
+
+    setTimeRemaining(QUESTION_DURATION);
     
-    await supabase
-      .from('tv_sessions')
-      .update({ status: 'countdown', current_question_index: 0 })
-      .eq('id', sessionId);
+    timerRef.current = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-    setPhase('countdown');
-
-    setTimeout(async () => {
-      await supabase
-        .from('tv_sessions')
-        .update({ 
-          status: 'playing',
-          question_start_time: new Date().toISOString(),
-        })
-        .eq('id', sessionId);
-      setPhase('question');
-    }, 3000);
-  };
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [phase, currentQuestionIndex]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground text-xl">მზადდება...</p>
+          <Loader2 className="w-16 h-16 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-purple-200 text-xl">მზადდება...</p>
         </div>
       </div>
     );
@@ -232,13 +312,22 @@ const TVReceiverContent: React.FC = () => {
         <TVWaitingForPlayersScreen
           guestJoinCode={guestJoinCode || ''}
           players={players}
-          onStartGame={handleStartGame}
+          gameName={gameName}
+          categoryName={categoryName}
+          categoryIcon={categoryIcon}
         />
       );
     case 'countdown':
       return <TVCountdownScreen />;
     case 'question':
-      return <TVQuestionScreen />;
+      return (
+        <TVQuestionScreen
+          questions={questions}
+          currentQuestionIndex={currentQuestionIndex}
+          timeRemaining={timeRemaining}
+          players={players}
+        />
+      );
     case 'reveal':
       return <TVRevealScreen />;
     case 'scoreboard':

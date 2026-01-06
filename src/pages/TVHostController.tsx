@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Tv, Play, SkipForward, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft } from 'lucide-react';
+import { Tv, Play, SkipForward, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -14,6 +14,7 @@ interface Player {
   nickname: string;
   avatar_url?: string;
   score: number;
+  isHost?: boolean;
 }
 
 interface Category {
@@ -24,7 +25,21 @@ interface Category {
   color: string;
 }
 
-type Phase = 'category-select' | 'waiting' | 'countdown' | 'playing' | 'completed';
+interface Question {
+  id: string;
+  question_text: string;
+  options: string[];
+  correct_answer: string;
+}
+
+const OPTION_COLORS = [
+  { bg: 'bg-red-500', hover: 'hover:bg-red-600', label: 'A' },
+  { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', label: 'B' },
+  { bg: 'bg-yellow-500', hover: 'hover:bg-yellow-600', label: 'C' },
+  { bg: 'bg-green-500', hover: 'hover:bg-green-600', label: 'D' },
+];
+
+type Phase = 'category-select' | 'waiting' | 'countdown' | 'playing' | 'reveal' | 'completed';
 
 const TVHostController: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -41,18 +56,42 @@ const TVHostController: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [phase, setPhase] = useState<Phase>('category-select');
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(15);
+  const [lastResult, setLastResult] = useState<boolean | null>(null);
+  const [nickname, setNickname] = useState('Host');
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const joinUrl = `${window.location.origin}/controller/${guestJoinCode}`;
+  const currentQuestion = questions[currentQuestionIndex];
 
   // Load session and categories
   useEffect(() => {
     const loadData = async () => {
-      if (!sessionId) {
+      if (!sessionId || !user) {
         setError('No session ID');
         setLoading(false);
         return;
+      }
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('nickname, avatar_url')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        setNickname(profile.nickname || 'Host');
+        setAvatarUrl(profile.avatar_url || undefined);
       }
 
       // Load session
@@ -78,9 +117,17 @@ const TVHostController: React.FC = () => {
       setSession(sessionData);
       setGuestJoinCode(sessionData.pairing_code || '');
       
-      // Check if questions already loaded (category was already selected)
+      // Check if questions already loaded
       if (sessionData.questions && Array.isArray(sessionData.questions) && sessionData.questions.length > 0) {
-        setPhase(sessionData.status === 'waiting' ? 'waiting' : sessionData.status as Phase);
+        setQuestions(sessionData.questions as unknown as Question[]);
+        const status = sessionData.status;
+        if (status === 'waiting') setPhase('waiting');
+        else if (status === 'countdown') setPhase('countdown');
+        else if (status === 'playing') {
+          setPhase('playing');
+          setCurrentQuestionIndex(sessionData.current_question_index || 0);
+        }
+        else if (status === 'completed') setPhase('completed');
       }
 
       // Load categories
@@ -111,9 +158,24 @@ const TVHostController: React.FC = () => {
             const newData = payload.new as any;
             setSession(newData);
             
+            if (newData.questions && Array.isArray(newData.questions)) {
+              setQuestions(newData.questions as unknown as Question[]);
+            }
+            
             // Update phase based on status
             if (newData.status === 'countdown') setPhase('countdown');
-            else if (newData.status === 'playing') setPhase('playing');
+            else if (newData.status === 'playing') {
+              const newIndex = newData.current_question_index || 0;
+              if (newIndex !== currentQuestionIndex) {
+                setCurrentQuestionIndex(newIndex);
+                setTimeRemaining(15);
+                setSelectedAnswer(null);
+                setHasAnswered(false);
+                setLastResult(null);
+              }
+              setPhase('playing');
+            }
+            else if (newData.status === 'reveal') setPhase('reveal');
             else if (newData.status === 'completed') setPhase('completed');
           }
         )
@@ -121,7 +183,7 @@ const TVHostController: React.FC = () => {
 
       channelRef.current = channel;
 
-      // Set up presence channel for tracking players
+      // Set up presence channel - host tracks their presence too!
       const presenceChannel = supabase
         .channel(`tv-presence-${sessionId}`)
         .on('presence', { event: 'sync' }, () => {
@@ -130,26 +192,33 @@ const TVHostController: React.FC = () => {
           
           Object.values(presenceState).forEach((presences: any) => {
             presences.forEach((presence: any) => {
-              if (presence.user_id !== user?.id) { // Don't show host in player list
-                connectedPlayers.push({
-                  id: presence.user_id,
-                  nickname: presence.nickname || 'Player',
-                  avatar_url: presence.avatar_url,
-                  score: 0,
-                });
-              }
+              connectedPlayers.push({
+                id: presence.user_id,
+                nickname: presence.nickname || 'Player',
+                avatar_url: presence.avatar_url,
+                score: presence.score || 0,
+                isHost: presence.isHost || false,
+              });
             });
           });
           
           setPlayers(connectedPlayers);
         })
-        .on('presence', { event: 'join' }, ({ newPresences }) => {
-          console.log('Player joined:', newPresences);
-        })
-        .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-          console.log('Player left:', leftPresences);
-        })
-        .subscribe();
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            // Host tracks their own presence
+            await presenceChannel.track({
+              user_id: user.id,
+              nickname: profile?.nickname || 'Host',
+              avatar_url: profile?.avatar_url,
+              isHost: true,
+              isGuest: false,
+              score: 0,
+              online_at: new Date().toISOString(),
+            });
+            console.log('Host presence tracked');
+          }
+        });
 
       presenceChannelRef.current = presenceChannel;
     };
@@ -157,21 +226,38 @@ const TVHostController: React.FC = () => {
     loadData();
 
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-      }
-      if (presenceChannelRef.current) {
-        supabase.removeChannel(presenceChannelRef.current);
-      }
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [sessionId, user?.id]);
+
+  // Timer for questions
+  useEffect(() => {
+    if (phase === 'playing' && timeRemaining > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [phase, currentQuestionIndex]);
+
+  // Check answer result on reveal
+  useEffect(() => {
+    if (phase === 'reveal' && selectedAnswer && currentQuestion) {
+      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+      setLastResult(isCorrect);
+    }
+  }, [phase, selectedAnswer, currentQuestion]);
 
   const handleSelectCategory = async (category: Category) => {
     setSelectedCategory(category);
     setIsLoadingQuestions(true);
 
     try {
-      // Fetch questions for this category
       const { data: questionsData, error: questionsError } = await supabase
         .from('questions')
         .select('id, question_text, correct_answer, incorrect_answers, difficulty')
@@ -194,7 +280,6 @@ const TVHostController: React.FC = () => {
           question_text: q.question_text,
           options: shuffledOptions,
           correct_answer: q.correct_answer,
-          difficulty: q.difficulty || undefined,
         };
       });
 
@@ -205,12 +290,16 @@ const TVHostController: React.FC = () => {
         return;
       }
 
-      // Update session with questions
+      setQuestions(formattedQuestions);
+
+      // Update session with questions and category info
       await supabase
         .from('tv_sessions')
         .update({
           questions: formattedQuestions as unknown as any,
           status: 'waiting',
+          category_name: category.name,
+          category_icon: category.icon,
         })
         .eq('id', sessionId);
 
@@ -235,7 +324,6 @@ const TVHostController: React.FC = () => {
 
     setPhase('countdown');
 
-    // After countdown, start the first question
     setTimeout(async () => {
       await supabase
         .from('tv_sessions')
@@ -245,15 +333,14 @@ const TVHostController: React.FC = () => {
         })
         .eq('id', sessionId);
       setPhase('playing');
+      setTimeRemaining(15);
     }, 3000);
   };
 
   const handleNextQuestion = async () => {
     if (!sessionId || !session) return;
 
-    const questions = session.questions || [];
-    const currentIndex = session.current_question_index || 0;
-    const nextIndex = currentIndex + 1;
+    const nextIndex = currentQuestionIndex + 1;
 
     if (nextIndex >= questions.length) {
       await supabase
@@ -270,6 +357,11 @@ const TVHostController: React.FC = () => {
           question_start_time: new Date().toISOString(),
         })
         .eq('id', sessionId);
+      setCurrentQuestionIndex(nextIndex);
+      setTimeRemaining(15);
+      setSelectedAnswer(null);
+      setHasAnswered(false);
+      setLastResult(null);
     }
   };
 
@@ -292,12 +384,42 @@ const TVHostController: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleAnswer = async (answer: string) => {
+    if (hasAnswered || !session || !user || !currentQuestion) return;
+    
+    setSelectedAnswer(answer);
+    setHasAnswered(true);
+
+    const isCorrect = answer === currentQuestion.correct_answer;
+    const timeBonus = Math.max(0, timeRemaining);
+    const points = isCorrect ? 100 + (timeBonus * 5) : 0;
+    
+    setScore(prev => prev + points);
+
+    try {
+      await supabase
+        .from('player_answers')
+        .insert([{
+          user_id: user.id,
+          room_id: session.room_id || session.id,
+          question_index: currentQuestionIndex,
+          answer: answer,
+          is_correct: isCorrect,
+          time_remaining: timeRemaining,
+          points_earned: points,
+          tv_session_id: session.id,
+        }]);
+    } catch (err) {
+      console.error('Error submitting answer:', err);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">იტვირთება...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-purple-200">იტვირთება...</p>
         </div>
       </div>
     );
@@ -305,9 +427,9 @@ const TVHostController: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-destructive text-xl mb-4">{error}</p>
+          <p className="text-red-400 text-xl mb-4">{error}</p>
           <ChunkyButton onClick={() => navigate('/team')}>
             უკან
           </ChunkyButton>
@@ -316,35 +438,33 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  const currentQuestionIndex = session?.current_question_index || 0;
-  const totalQuestions = session?.questions?.length || 0;
+  const totalQuestions = questions.length;
 
   // Category selection phase
   if (phase === 'category-select') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 p-4">
-        {/* Header */}
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 mb-6"
         >
-          <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-muted">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10">
+            <ArrowLeft className="w-5 h-5 text-purple-200" />
           </button>
-          <Tv className="w-6 h-6 text-primary" />
-          <span className="font-bold text-foreground">აირჩიე კატეგორია</span>
+          <Tv className="w-6 h-6 text-purple-300" />
+          <span className="font-bold text-white">აირჩიე კატეგორია</span>
         </motion.div>
 
         {/* QR Code section */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-card border border-border rounded-2xl p-4 mb-6"
+          className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6"
         >
           <div className="flex items-center gap-2 mb-3">
-            <QrCode className="w-5 h-5 text-primary" />
-            <h2 className="font-bold text-foreground">მოთამაშეებმა დაასკანერონ</h2>
+            <QrCode className="w-5 h-5 text-purple-300" />
+            <h2 className="font-bold text-white">მოთამაშეებმა დაასკანერონ</h2>
           </div>
 
           <div className="flex gap-4">
@@ -352,21 +472,21 @@ const TVHostController: React.FC = () => {
               <QRCodeSVG value={joinUrl} size={100} level="H" />
             </div>
             <div className="flex-1 flex flex-col justify-center">
-              <p className="text-sm text-muted-foreground mb-1">კოდი:</p>
+              <p className="text-sm text-purple-200 mb-1">კოდი:</p>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-mono font-bold text-primary tracking-wider">
+                <span className="text-xl font-mono font-bold text-white tracking-wider">
                   {guestJoinCode}
                 </span>
                 <button
                   onClick={handleCopyCode}
-                  className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
+                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                 >
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-primary" />}
+                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-purple-300" />}
                 </button>
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{players.length} მოთამაშე</span>
+                <Users className="w-4 h-4 text-purple-300" />
+                <span className="text-sm text-purple-200">{players.length} მოთამაშე</span>
               </div>
             </div>
           </div>
@@ -388,10 +508,11 @@ const TVHostController: React.FC = () => {
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex flex-col items-center gap-1 min-w-[60px]"
+                    className={`flex flex-col items-center gap-1 min-w-[60px] ${player.isHost ? 'ring-2 ring-yellow-500 rounded-xl p-1' : ''}`}
                   >
                     <Avatar imageUrl={player.avatar_url} emoji={player.nickname?.[0] || '👤'} size="sm" />
-                    <span className="text-xs text-muted-foreground truncate max-w-[60px]">{player.nickname}</span>
+                    <span className="text-xs text-purple-200 truncate max-w-[60px]">{player.nickname}</span>
+                    {player.isHost && <span className="text-xs text-yellow-500">HOST</span>}
                   </motion.div>
                 ))}
               </div>
@@ -411,16 +532,16 @@ const TVHostController: React.FC = () => {
               disabled={isLoadingQuestions}
               className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${
                 selectedCategory?.id === category.id
-                  ? 'bg-primary/10 border-primary'
-                  : 'bg-card border-border hover:border-primary/50'
+                  ? 'bg-purple-500/30 border-purple-400'
+                  : 'bg-white/10 border-white/20 hover:border-purple-400/50'
               }`}
             >
               <span className="text-2xl">{category.icon}</span>
-              <span className="flex-1 text-left font-medium text-foreground">{category.name}</span>
+              <span className="flex-1 text-left font-medium text-white">{category.name}</span>
               {isLoadingQuestions && selectedCategory?.id === category.id ? (
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <Loader2 className="w-5 h-5 animate-spin text-purple-300" />
               ) : (
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <ChevronRight className="w-5 h-5 text-purple-300" />
               )}
             </motion.button>
           ))}
@@ -429,36 +550,109 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Waiting for players / game control phase
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 p-4">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-6"
-      >
-        <div className="flex items-center gap-2">
-          <Tv className="w-6 h-6 text-primary" />
-          <span className="font-bold text-foreground">მართვის პანელი</span>
-        </div>
-        <div className="bg-card border border-border rounded-full px-3 py-1">
-          <span className="text-sm text-muted-foreground capitalize">
-            {phase === 'waiting' ? 'მოლოდინი' : phase === 'playing' ? 'მიმდინარე' : phase === 'countdown' ? 'დაწყება' : 'დასრულებული'}
-          </span>
-        </div>
-      </motion.div>
+  // Countdown phase
+  if (phase === 'countdown') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ repeat: Infinity, duration: 1 }}
+          className="text-8xl mb-4"
+        >
+          🎮
+        </motion.div>
+        <p className="text-2xl text-white font-bold">თამაში იწყება...</p>
+        <p className="text-purple-200 mt-2">მოემზადე პასუხებისთვის!</p>
+      </div>
+    );
+  }
 
-      {/* QR Code for guests */}
-      {phase === 'waiting' && (
+  // Reveal phase
+  if (phase === 'reveal') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+        <AnimatePresence>
+          {lastResult !== null && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className={`w-32 h-32 rounded-full flex items-center justify-center mb-6 ${
+                lastResult ? 'bg-green-500' : 'bg-red-500'
+              }`}
+            >
+              {lastResult ? (
+                <Check className="w-16 h-16 text-white" />
+              ) : (
+                <X className="w-16 h-16 text-white" />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <h2 className="text-2xl font-bold text-white mb-2">
+          {lastResult ? 'სწორია! 🎉' : 'არასწორია! 😔'}
+        </h2>
+        <div className="flex items-center gap-2 text-yellow-500 mb-6">
+          <Star className="w-5 h-5 fill-yellow-500" />
+          <span className="font-bold text-xl">{score}</span>
+        </div>
+        <ChunkyButton variant="primary" onClick={handleNextQuestion}>
+          {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგები' : 'შემდეგი კითხვა'}
+        </ChunkyButton>
+      </div>
+    );
+  }
+
+  // Completed phase
+  if (phase === 'completed') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
+          <h1 className="text-3xl font-bold text-white mb-2">თამაში დასრულდა! 🎉</h1>
+          <p className="text-purple-200 mb-6">შეხედე TV-ს სრული შედეგებისთვის</p>
+          
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-6">
+            <p className="text-purple-200 mb-2">შენი ქულა</p>
+            <div className="flex items-center justify-center gap-2 text-yellow-500">
+              <Star className="w-8 h-8 fill-yellow-500" />
+              <span className="font-bold text-4xl">{score}</span>
+            </div>
+          </div>
+
+          <ChunkyButton onClick={() => navigate('/team')}>
+            უკან დაბრუნება
+          </ChunkyButton>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Waiting phase - show QR and start button
+  if (phase === 'waiting') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-6"
+        >
+          <div className="flex items-center gap-2">
+            <Tv className="w-6 h-6 text-purple-300" />
+            <span className="font-bold text-white">მართვის პანელი</span>
+          </div>
+          <div className="bg-white/10 border border-white/20 rounded-full px-3 py-1">
+            <span className="text-sm text-purple-200">მოლოდინი</span>
+          </div>
+        </motion.div>
+
+        {/* QR Code for guests */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-card border border-border rounded-2xl p-4 mb-6"
+          className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6"
         >
           <div className="flex items-center gap-2 mb-3">
-            <QrCode className="w-5 h-5 text-primary" />
-            <h2 className="font-bold text-foreground">მოთამაშეებს გადაუგზავნე</h2>
+            <QrCode className="w-5 h-5 text-purple-300" />
+            <h2 className="font-bold text-white">მოთამაშეებს გადაუგზავნე</h2>
           </div>
 
           <div className="flex gap-4">
@@ -466,76 +660,59 @@ const TVHostController: React.FC = () => {
               <QRCodeSVG value={joinUrl} size={120} level="H" />
             </div>
             <div className="flex-1 flex flex-col justify-center">
-              <p className="text-sm text-muted-foreground mb-1">კოდი:</p>
+              <p className="text-sm text-purple-200 mb-1">კოდი:</p>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-mono font-bold text-primary tracking-wider">
+                <span className="text-2xl font-mono font-bold text-white tracking-wider">
                   {guestJoinCode}
                 </span>
                 <button
                   onClick={handleCopyCode}
-                  className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
+                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
                 >
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-primary" />}
+                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-purple-300" />}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 break-all">{joinUrl}</p>
+              <p className="text-xs text-purple-300 mt-2 break-all">{joinUrl}</p>
             </div>
           </div>
         </motion.div>
-      )}
 
-      {/* Players section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="bg-card border border-border rounded-2xl p-4 mb-6"
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="w-5 h-5 text-muted-foreground" />
-          <span className="text-foreground font-medium">{players.length} მოთამაშე</span>
-        </div>
-        
-        {players.length > 0 && (
-          <div className="flex gap-3 flex-wrap">
-            {players.map((player, index) => (
-              <motion.div
-                key={player.id}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: index * 0.1, type: 'spring' }}
-                className="flex items-center gap-2 bg-background rounded-full px-3 py-2 border border-border"
-              >
-                <Avatar imageUrl={player.avatar_url} emoji={player.nickname?.[0] || '👤'} size="sm" />
-                <span className="text-sm font-medium text-foreground">{player.nickname}</span>
-                <Sparkles className="w-4 h-4 text-primary" />
-              </motion.div>
-            ))}
+        {/* Players section */}
+        <motion.div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="w-5 h-5 text-purple-300" />
+            <span className="text-white font-medium">{players.length} მოთამაშე</span>
           </div>
-        )}
-        
-        {players.length === 0 && phase === 'waiting' && (
-          <p className="text-muted-foreground text-sm">ველოდებით მოთამაშეებს...</p>
-        )}
-      </motion.div>
-
-      {/* Game progress */}
-      {phase === 'playing' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-card border border-border rounded-2xl p-4 mb-6"
-        >
-          <p className="text-muted-foreground text-sm mb-2">პროგრესი</p>
-          <p className="text-2xl font-bold text-foreground">
-            კითხვა {currentQuestionIndex + 1} / {totalQuestions}
-          </p>
+          
+          {players.length > 0 && (
+            <div className="flex gap-3 flex-wrap">
+              {players.map((player, index) => (
+                <motion.div
+                  key={player.id}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`flex items-center gap-2 bg-white/10 rounded-full px-3 py-2 border ${player.isHost ? 'border-yellow-500' : 'border-white/20'}`}
+                >
+                  <Avatar imageUrl={player.avatar_url} emoji={player.nickname?.[0] || '👤'} size="sm" />
+                  <span className="text-sm font-medium text-white">{player.nickname}</span>
+                  {player.isHost ? (
+                    <span className="text-xs bg-yellow-500/30 text-yellow-300 px-1.5 py-0.5 rounded">HOST</span>
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-purple-300" />
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+          
+          {players.length === 0 && (
+            <p className="text-purple-200 text-sm">ველოდებით მოთამაშეებს...</p>
+          )}
         </motion.div>
-      )}
 
-      {/* Control buttons */}
-      <div className="space-y-3">
-        {phase === 'waiting' && (
+        {/* Control buttons */}
+        <div className="space-y-3">
           <ChunkyButton
             variant="primary"
             className="w-full"
@@ -545,42 +722,7 @@ const TVHostController: React.FC = () => {
             <Play className="w-5 h-5 mr-2" />
             თამაშის დაწყება {players.length < 1 && '(საჭიროა მინ. 1 მოთამაშე)'}
           </ChunkyButton>
-        )}
 
-        {phase === 'playing' && (
-          <ChunkyButton
-            variant="primary"
-            className="w-full"
-            onClick={handleNextQuestion}
-          >
-            <SkipForward className="w-5 h-5 mr-2" />
-            {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგების ჩვენება' : 'შემდეგი კითხვა'}
-          </ChunkyButton>
-        )}
-
-        {phase === 'countdown' && (
-          <div className="text-center py-8">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-              className="text-6xl font-bold text-primary mb-4"
-            >
-              🎮
-            </motion.div>
-            <p className="text-xl text-foreground">თამაში იწყება...</p>
-          </div>
-        )}
-
-        {phase === 'completed' && (
-          <div className="text-center py-8">
-            <h2 className="text-2xl font-bold text-foreground mb-4">თამაში დასრულდა! 🎉</h2>
-            <ChunkyButton onClick={() => navigate('/team')}>
-              უკან დაბრუნება
-            </ChunkyButton>
-          </div>
-        )}
-
-        {phase !== 'completed' && phase !== 'countdown' && (
           <ChunkyButton
             variant="secondary"
             className="w-full"
@@ -588,7 +730,79 @@ const TVHostController: React.FC = () => {
           >
             თამაშის დასრულება
           </ChunkyButton>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  // Playing phase - host can answer questions AND has control buttons
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="bg-white/10 border border-white/20 rounded-full px-4 py-2">
+          <span className="text-purple-200 text-sm">Q </span>
+          <span className="text-white font-bold">{currentQuestionIndex + 1}</span>
+          <span className="text-purple-200 text-sm"> / {totalQuestions}</span>
+        </div>
+        <div className={`rounded-full px-4 py-2 ${timeRemaining <= 5 ? 'bg-red-500/30 border-red-500' : 'bg-white/10'} border border-white/20`}>
+          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>
+            {timeRemaining}წმ
+          </span>
+        </div>
+        <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-4 py-2">
+          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+          <span className="text-white font-bold">{score}</span>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <div className="text-center mb-4">
+        <p className="text-purple-200">
+          {hasAnswered ? 'პასუხი გაგზავნილია!' : 'უყურე TV-ს და აირჩიე პასუხი:'}
+        </p>
+      </div>
+
+      {/* Answer Buttons */}
+      <div className="flex-1 grid grid-cols-2 gap-3 mb-4">
+        {currentQuestion?.options.map((option, index) => {
+          const color = OPTION_COLORS[index];
+          const isSelected = selectedAnswer === option;
+
+          return (
+            <motion.button
+              key={index}
+              whileTap={{ scale: 0.95 }}
+              disabled={hasAnswered}
+              onClick={() => handleAnswer(option)}
+              className={`${color.bg} ${!hasAnswered && color.hover} rounded-2xl flex items-center justify-center transition-all ${
+                hasAnswered && !isSelected ? 'opacity-30' : ''
+              } ${isSelected ? 'ring-4 ring-white' : ''}`}
+            >
+              <span className="text-white text-5xl font-bold">{color.label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Host controls */}
+      <div className="space-y-2">
+        <ChunkyButton
+          variant="primary"
+          className="w-full"
+          onClick={handleNextQuestion}
+        >
+          <SkipForward className="w-5 h-5 mr-2" />
+          {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგების ჩვენება' : 'შემდეგი კითხვა'}
+        </ChunkyButton>
+        
+        <ChunkyButton
+          variant="secondary"
+          className="w-full"
+          onClick={handleEndGame}
+        >
+          თამაშის დასრულება
+        </ChunkyButton>
       </div>
     </div>
   );
