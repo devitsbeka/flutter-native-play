@@ -25,6 +25,7 @@ import RoomRedirect from "./pages/RoomRedirect";
 import TVDisplay from "./pages/TVDisplay";
 import TVController from "./pages/TVController";
 import TVReceiver from "./pages/TVReceiver";
+import TVHostController from "./pages/TVHostController";
 
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
@@ -85,6 +86,7 @@ const App = () => (
               <Route path="/room/:code" element={<RoomRedirect />} />
               <Route path="/tv" element={<TVReceiver />} />
               <Route path="/tv/receiver" element={<TVReceiver />} />
+              <Route path="/tv/host/:sessionId" element={<TVHostController />} />
               <Route path="/tv/:code" element={<TVDisplay />} />
               <Route path="/controller/:code" element={<TVController />} />
               <Route path="/vip" element={<VIP />} />
