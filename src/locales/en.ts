@@ -925,6 +925,24 @@ export const en: KaTranslations = {
   // ==========================================
   tv: {
     start: "Go! 🚀",
+    connectToTV: "Connect to TV",
+    discoverNearbyTVs: "Find nearby TVs to play on the big screen",
+    scanningForDevices: "Scanning for TVs...",
+    lookingForTVs: "Looking for TVs on your network...",
+    noDevicesFound: "No TVs found",
+    scanAgain: "Scan Again",
+    enterCodeManually: "Enter code manually",
+    enterCodeFromTV: "Enter the code from the TV screen",
+    connect: "Connect",
+    connecting: "Connecting...",
+    connected: "Connected!",
+    connectionFailed: "Connection failed",
+    code: "Code",
+    playersConnected: "players connected",
+    startGame: "Start Game",
+    waitingForHost: "Waiting for host...",
+    waitingForPlayers: "Waiting for players...",
+    scanToJoin: "Scan to join",
   },
 
   // ==========================================
