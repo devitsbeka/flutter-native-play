@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -81,6 +81,49 @@ export default function IconAssignment() {
   
   // Track recently fixed icons to show them first
   const [recentlyFixedSlugs, setRecentlyFixedSlugs] = useState<Set<string>>(new Set());
+  
+  // Track recently used icons for quick access
+  const [recentlyUsedSlugs, setRecentlyUsedSlugs] = useState<string[]>([]);
+  
+  // Load recently used icons from assignment history on mount
+  useEffect(() => {
+    const loadRecentlyUsed = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('icon_assignment_history')
+          .select('new_icon_slug')
+          .not('new_icon_slug', 'is', null)
+          .order('assigned_at', { ascending: false })
+          .limit(50);
+        
+        if (error) throw error;
+        
+        // Get unique slugs preserving order
+        const uniqueSlugs: string[] = [];
+        const seen = new Set<string>();
+        for (const row of data || []) {
+          if (row.new_icon_slug && !seen.has(row.new_icon_slug)) {
+            seen.add(row.new_icon_slug);
+            uniqueSlugs.push(row.new_icon_slug);
+          }
+          if (uniqueSlugs.length >= 20) break;
+        }
+        
+        setRecentlyUsedSlugs(uniqueSlugs);
+      } catch (error) {
+        console.error('Error loading recently used icons:', error);
+      }
+    };
+    loadRecentlyUsed();
+  }, []);
+  
+  // Add to recently used when assigning
+  const addToRecentlyUsed = useCallback((slug: string) => {
+    setRecentlyUsedSlugs(prev => {
+      const filtered = prev.filter(s => s !== slug);
+      return [slug, ...filtered].slice(0, 20);
+    });
+  }, []);
   
   // Batch assignment state
   const [batchRunning, setBatchRunning] = useState(false);
@@ -249,6 +292,9 @@ export default function IconAssignment() {
       successCount = questionIds.length;
       toast.success(`${successCount} კითხვას მინიჭდა აიკონი: ${iconSlug}`);
       
+      // Add to recently used
+      addToRecentlyUsed(iconSlug);
+      
       // Clear selection and refresh
       setSelectedQuestionIds(new Set());
       setSelectedQuestion(null);
@@ -289,6 +335,9 @@ export default function IconAssignment() {
         category_name: selectedQuestion.category_name,
         assigned_by: null // Could add user id if needed
       });
+      
+      // Add to recently used
+      addToRecentlyUsed(iconSlug);
       
       toast.success(`აიკონი მინიჭებულია: ${iconSlug}`);
       
@@ -826,6 +875,43 @@ export default function IconAssignment() {
                 getIconUrl={getIconUrl}
                 onRefresh={refetch}
               />
+            </div>
+          )}
+
+          {/* Recently Used Icons - Quick Access */}
+          {recentlyUsedSlugs.length > 0 && !iconSearchTerm && (
+            <div className="shrink-0 border-b border-border/30 p-3 bg-amber-500/5">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                <span className="text-xs font-medium text-amber-600">ბოლოს გამოყენებული</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {recentlyUsedSlugs.slice(0, 10).map((slug) => {
+                  const icon = icons.find(i => i.slug === slug);
+                  if (!icon) return null;
+                  const hasSelection = selectedQuestion || selectedQuestionIds.size > 0;
+                  return (
+                    <button
+                      key={slug}
+                      onClick={() => handleAssignIcon(slug)}
+                      disabled={!hasSelection || bulkAssigning}
+                      title={icon.title}
+                      className={cn(
+                        "relative flex items-center justify-center rounded-lg p-1.5 transition-all bg-background/80 border border-border/50 hover:border-amber-500/50 hover:shadow-sm",
+                        (!hasSelection || bulkAssigning) && "opacity-50 cursor-not-allowed",
+                        selectedQuestion?.icon_slug === slug && selectedQuestionIds.size === 0 && "ring-2 ring-primary"
+                      )}
+                    >
+                      <img
+                        src={icon.url}
+                        alt={icon.title}
+                        className="h-8 w-8 object-contain"
+                        loading="lazy"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
