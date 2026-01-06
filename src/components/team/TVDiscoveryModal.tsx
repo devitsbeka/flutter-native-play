@@ -31,6 +31,7 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [connectingToId, setConnectingToId] = useState<string | null>(null);
+  const [playerJoinCode, setPlayerJoinCode] = useState<string | null>(null);
 
   // Start scanning when modal opens
   useEffect(() => {
@@ -41,38 +42,40 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
       setShowManualInput(false);
       setManualCode('');
       setConnectingToId(null);
+      setPlayerJoinCode(null);
     }
   }, [open, startScanning, stopScanning]);
 
   // Navigate to controller when connected
   useEffect(() => {
-    if (connectionState === 'connected' && connectedSessionId) {
+    if (connectionState === 'connected' && connectedSessionId && playerJoinCode) {
       toast.success(t('tv.connected'));
-      // Find the connected TV to get its pairing code
-      const connectedTV = discoveredTVs.find(tv => tv.status === 'paired');
-      const pairingCode = connectedTV?.pairingCode || manualCode;
       
       setTimeout(() => {
         onOpenChange(false);
-        navigate(`/controller/${pairingCode}`);
+        navigate(`/controller/${playerJoinCode}`);
       }, 500);
     }
-  }, [connectionState, connectedSessionId, discoveredTVs, manualCode, navigate, onOpenChange, t]);
+  }, [connectionState, connectedSessionId, playerJoinCode, navigate, onOpenChange, t]);
 
   const handleConnectToTV = async (tv: DiscoveredTV) => {
     setConnectingToId(tv.id);
-    const sessionId = await connectToTV(tv);
-    if (!sessionId) {
+    const result = await connectToTV(tv);
+    if (!result) {
       toast.error(t('tv.connectionFailed'));
       setConnectingToId(null);
+    } else {
+      setPlayerJoinCode(result.playerJoinCode);
     }
   };
 
   const handleManualConnect = async () => {
     if (manualCode.length !== 4) return;
-    const sessionId = await connectWithCode(manualCode);
-    if (!sessionId) {
+    const result = await connectWithCode(manualCode);
+    if (!result) {
       toast.error(t('tv.connectionFailed'));
+    } else {
+      setPlayerJoinCode(result.playerJoinCode);
     }
   };
 
