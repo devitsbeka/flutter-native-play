@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil } from "lucide-react";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil, Tv } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
@@ -12,6 +12,7 @@ import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { generateRoomName } from "@/utils/roomNameGenerator";
 import { Input } from "@/components/ui/input";
+import { TVPlayModal } from "@/components/team/TVPlayModal";
 
 interface Category {
   id: string;
