@@ -51,7 +51,7 @@ const TVReceiverContent: React.FC = () => {
         .from('tv_sessions')
         .insert([{
           tv_pairing_code: code,
-          status: 'awaiting',
+          status: 'waiting',
           is_paired: false,
           host_user_id: null,
           pairing_code: null,
