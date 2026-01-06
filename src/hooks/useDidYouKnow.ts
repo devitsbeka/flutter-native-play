@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -18,6 +18,18 @@ interface VoteResult {
   userVote: "knew" | "didnt_know";
 }
 
+// Generate fake vote counts (4,000 - 15,000 range) with consistent results per fact
+const generateFakeVotes = (factId: string) => {
+  const seed = factId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const total = 4000 + (seed * 137) % 11000;
+  const knewPercentage = 35 + (seed * 17) % 30; // 35% - 65% range
+  return {
+    total: Math.floor(total),
+    knewPercentage,
+    didntKnowPercentage: 100 - knewPercentage,
+  };
+};
+
 export function useDidYouKnow() {
   const { user } = useAuth();
   const [fact, setFact] = useState<TriviaPact | null>(null);
@@ -25,9 +37,17 @@ export function useDidYouKnow() {
   const [voting, setVoting] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchRandomFact = useCallback(async () => {
     setLoading(true);
+    // Clear any existing timers
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setCountdown(0);
+    
     try {
       // First get all active facts
       const { data: facts, error: factsError } = await supabase
@@ -53,25 +73,6 @@ export function useDidYouKnow() {
 
         const votedFactIds = new Set(votes?.map((v) => v.fact_id) || []);
         
-        // Check if user already voted on a fact - show that one with results
-        const votedFact = facts.find((f) => votedFactIds.has(f.id));
-        if (votedFact && votes) {
-          const userVote = votes.find((v) => v.fact_id === votedFact.id);
-          if (userVote) {
-            setFact(votedFact);
-            const total = votedFact.votes_knew + votedFact.votes_didnt_know;
-            setVoteResult({
-              totalVotes: total,
-              knewPercentage: total > 0 ? Math.round((votedFact.votes_knew / total) * 100) : 50,
-              didntKnowPercentage: total > 0 ? Math.round((votedFact.votes_didnt_know / total) * 100) : 50,
-              userVote: userVote.vote_type as "knew" | "didnt_know",
-            });
-            setHasVoted(true);
-            setLoading(false);
-            return;
-          }
-        }
-
         // Filter to unvoted facts
         availableFacts = facts.filter((f) => !votedFactIds.has(f.id));
         
@@ -80,15 +81,19 @@ export function useDidYouKnow() {
           const randomFact = facts[Math.floor(Math.random() * facts.length)];
           const userVote = votes?.find((v) => v.fact_id === randomFact.id);
           setFact(randomFact);
-          const total = randomFact.votes_knew + randomFact.votes_didnt_know;
+          
+          const fakeVotes = generateFakeVotes(randomFact.id);
           setVoteResult({
-            totalVotes: total,
-            knewPercentage: total > 0 ? Math.round((randomFact.votes_knew / total) * 100) : 50,
-            didntKnowPercentage: total > 0 ? Math.round((randomFact.votes_didnt_know / total) * 100) : 50,
+            totalVotes: fakeVotes.total,
+            knewPercentage: fakeVotes.knewPercentage,
+            didntKnowPercentage: fakeVotes.didntKnowPercentage,
             userVote: (userVote?.vote_type as "knew" | "didnt_know") || "knew",
           });
           setHasVoted(true);
           setLoading(false);
+          
+          // Start auto-advance countdown
+          startAutoAdvance();
           return;
         }
       }
@@ -105,8 +110,34 @@ export function useDidYouKnow() {
     }
   }, [user]);
 
+  const startAutoAdvance = useCallback(() => {
+    // Start countdown from 5
+    setCountdown(5);
+    
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Auto-advance after 5 seconds
+    timerRef.current = setTimeout(() => {
+      setHasVoted(false);
+      setVoteResult(null);
+      fetchRandomFact();
+    }, 5000);
+  }, []);
+
   useEffect(() => {
     fetchRandomFact();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
   }, [fetchRandomFact]);
 
   const vote = async (voteType: "knew" | "didnt_know") => {
@@ -144,18 +175,19 @@ export function useDidYouKnow() {
         console.error("Error updating vote count:", updateError);
       }
 
-      // Calculate and show results
-      const newKnew = voteType === "knew" ? fact.votes_knew + 1 : fact.votes_knew;
-      const newDidntKnow = voteType === "didnt_know" ? fact.votes_didnt_know + 1 : fact.votes_didnt_know;
-      const total = newKnew + newDidntKnow;
+      // Generate fake vote results
+      const fakeVotes = generateFakeVotes(fact.id);
 
       setVoteResult({
-        totalVotes: total,
-        knewPercentage: Math.round((newKnew / total) * 100),
-        didntKnowPercentage: Math.round((newDidntKnow / total) * 100),
+        totalVotes: fakeVotes.total,
+        knewPercentage: fakeVotes.knewPercentage,
+        didntKnowPercentage: fakeVotes.didntKnowPercentage,
         userVote: voteType,
       });
       setHasVoted(true);
+      
+      // Start auto-advance countdown
+      startAutoAdvance();
     } catch (error) {
       console.error("Error voting:", error);
     } finally {
@@ -169,6 +201,7 @@ export function useDidYouKnow() {
     voting,
     voteResult,
     hasVoted,
+    countdown,
     vote,
     refresh: fetchRandomFact,
   };
