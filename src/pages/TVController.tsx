@@ -41,6 +41,7 @@ const TVControllerContent: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState(15);
   const [nickname, setNickname] = useState('Player');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  const [playerId, setPlayerId] = useState<string | null>(null);
   
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -50,24 +51,37 @@ const TVControllerContent: React.FC = () => {
 
   useEffect(() => {
     const joinSession = async () => {
-      if (!code || !user) {
-        setError('კოდი ან მომხმარებელი არ მოიძებნა');
+      if (!code) {
+        setError('კოდი არ მოიძებნა');
         setLoading(false);
         return;
       }
 
-      try {
-        // Get user profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('nickname, avatar_url')
-          .eq('user_id', user.id)
-          .single();
+      // Generate a guest ID if user is not logged in
+      const guestId = user?.id || `guest-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const guestNickname = `Player${Math.floor(Math.random() * 9999)}`;
 
-        if (profile) {
-          setNickname(profile.nickname || 'Player');
-          setAvatarUrl(profile.avatar_url || undefined);
+      try {
+        // Get user profile if logged in
+        let playerNickname = guestNickname;
+        let playerAvatarUrl: string | undefined;
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname, avatar_url')
+            .eq('user_id', user.id)
+            .single();
+
+          if (profile) {
+            playerNickname = profile.nickname || guestNickname;
+            playerAvatarUrl = profile.avatar_url || undefined;
+          }
         }
+
+        setNickname(playerNickname);
+        setAvatarUrl(playerAvatarUrl);
+        setPlayerId(guestId);
 
         const upperCode = code.toUpperCase();
 
@@ -174,9 +188,9 @@ const TVControllerContent: React.FC = () => {
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
               await presenceChannel.track({
-                user_id: user.id,
-                nickname: profile?.nickname || 'Player',
-                avatar_url: profile?.avatar_url,
+                user_id: guestId,
+                nickname: playerNickname,
+                avatar_url: playerAvatarUrl,
                 isGuest: true, // Mark as guest
                 isHost: false,
                 score: 0,
@@ -229,7 +243,7 @@ const TVControllerContent: React.FC = () => {
   }, [phase, selectedAnswer, currentQuestion]);
 
   const handleAnswer = async (answer: string) => {
-    if (hasAnswered || !session || !user || !currentQuestion) return;
+    if (hasAnswered || !session || !playerId || !currentQuestion) return;
     
     setSelectedAnswer(answer);
     setHasAnswered(true);
@@ -240,23 +254,25 @@ const TVControllerContent: React.FC = () => {
     
     setScore(prev => prev + points);
 
-    // Submit answer to database
-    try {
-      await supabase
-        .from('player_answers')
-        .insert([{
-          user_id: user.id,
-          room_id: session.room_id || session.id,
-          question_index: currentQuestionIndex,
-          answer: answer,
-          is_correct: isCorrect,
-          time_remaining: timeRemaining,
-          points_earned: points,
-          tv_session_id: session.id,
-        }]);
-      console.log('Answer submitted successfully');
-    } catch (err) {
-      console.error('Error submitting answer:', err);
+    // Submit answer to database only if user is logged in
+    if (user) {
+      try {
+        await supabase
+          .from('player_answers')
+          .insert([{
+            user_id: user.id,
+            room_id: session.room_id || session.id,
+            question_index: currentQuestionIndex,
+            answer: answer,
+            is_correct: isCorrect,
+            time_remaining: timeRemaining,
+            points_earned: points,
+            tv_session_id: session.id,
+          }]);
+        console.log('Answer submitted successfully');
+      } catch (err) {
+        console.error('Error submitting answer:', err);
+      }
     }
   };
 
