@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Bell, MessageCircle } from "lucide-react";
+import { Users, Bell, MessageCircle, Clock, HelpCircle, ArrowLeft } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -15,19 +15,15 @@ import { WaitingForOpponentScreen } from "@/components/team/WaitingForOpponentSc
 import { AsyncResultScreen } from "@/components/team/AsyncResultScreen";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
-import { GameHistoryTable } from "@/components/team/GameHistoryTable";
 import { AddFriendModal } from "@/components/team/AddFriendModal";
 import { ChatModal } from "@/components/team/ChatModal";
 import { GameInviteModal } from "@/components/team/GameInviteModal";
 import { QuickPlayModal } from "@/components/team/QuickPlayModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
-import { PendingChallengesSection } from "@/components/team/PendingChallengesSection";
-import { GameInvitationsSection } from "@/components/team/GameInvitationsSection";
 import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { Friend } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -35,6 +31,11 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Category } from "@/data/categories";
+import { LiveBadge } from "@/components/social/LiveBadge";
+import { SocialFeed } from "@/components/social/SocialFeed";
+import { MyTriviaTab } from "@/components/social/MyTriviaTab";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Plus } from "lucide-react";
 
 function TeamContent() {
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ function TeamContent() {
   const [quickPlayFriend, setQuickPlayFriend] = useState<Friend | null>(null);
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
   const [currentInvitation, setCurrentInvitation] = useState<typeof pendingInvitations[0] | null>(null);
+  const [activeTab, setActiveTab] = useState("for-me");
 
   // Show latest pending invitation
   useEffect(() => {
@@ -90,20 +92,19 @@ function TeamContent() {
     }
   }, [searchParams, user, joinRoom]);
 
-  // Handle quick play with friend (opens category picker)
+  // Handle quick play with friend
   const handleQuickPlay = (friend: Friend) => {
     playSound("button-click");
     setQuickPlayFriend(friend);
   };
 
-  // Handle starting a challenge from quick play modal
+  // Handle starting a challenge
   const handleStartChallenge = async (friend: Friend, category: Category) => {
     setIsCreatingChallenge(true);
     try {
       const success = await createChallengeRoom(friend.friendId, category.id, category.name, friend.isOnline || false);
       if (success) {
         setQuickPlayFriend(null);
-        // If friend is online, send real-time invitation as well
         if (friend.isOnline && room) {
           await sendInvitation(friend.friendId, room.id);
         }
@@ -136,22 +137,19 @@ function TeamContent() {
     joinRoom(roomCode);
   };
 
-  // Show game screen if playing
+  // Show game screens based on phase
   if (phase === "playing" || phase === "question-result") {
     return <MultiplayerGameScreen />;
   }
 
-  // Show waiting screen if waiting for opponent
   if (phase === "waiting-for-opponent") {
     return <WaitingForOpponentScreen />;
   }
 
-  // Show result screen
   if (phase === "match-result") {
     return <MultiplayerResultScreen />;
   }
 
-  // Show async result screen
   if (phase === "async-result") {
     const isChallenger = room?.host_user_id === user?.id;
     const opponentUserId = isChallenger ? room?.challenged_user_id : room?.host_user_id;
@@ -168,7 +166,6 @@ function TeamContent() {
     );
   }
 
-  // Show lobby if in room
   if (phase === "lobby" || phase === "countdown") {
     return <RoomLobby />;
   }
@@ -197,57 +194,84 @@ function TeamContent() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-24">
-      {/* Header */}
-      <PageHeader
-        title={t('team.friends')}
-        showBack={true}
-        rightElements={
+      {/* New Header */}
+      <header className="sticky top-0 z-20 backdrop-blur-md bg-background/80">
+        <div className="flex items-center justify-between px-4 h-14 safe-top">
+          {/* Left Side: Back + History */}
           <div className="flex items-center gap-2">
-            {/* Notifications Button */}
-            <button
+            <motion.button
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </motion.button>
+            
+            <motion.button
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 }}
+              onClick={() => setShowAllGamesModal(true)}
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
+            >
+              <Clock className="w-5 h-5" />
+            </motion.button>
+          </div>
+
+          {/* Center: MyTrivia LIVE */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center"
+          >
+            <span className="text-lg font-bold text-foreground tracking-tight">
+              MyTrivia
+            </span>
+            <LiveBadge />
+          </motion.div>
+
+          {/* Right Side: Notifications + Messages */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
               onClick={() => setShowNotificationsPanel(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+              className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-red-500 rounded-full">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
-            </button>
+            </motion.button>
 
-            {/* Messages Button */}
-            <button
+            <motion.button
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 }}
               onClick={() => setShowRoomChatsPanel(true)}
-              className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+              className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
             >
               <MessageCircle className="w-5 h-5" />
               {unreadMessagesCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-red-500 rounded-full">
                   {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
                 </span>
               )}
-            </button>
-
-            {/* Help Button */}
-            <button
-              onClick={() => setShowHelpModal(true)}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 text-lg font-bold shadow-sm hover:bg-white transition-colors"
-            >
-              ?
-            </button>
+            </motion.button>
           </div>
-        }
-      />
+        </div>
+      </header>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col px-4 pb-6">
-
+      <div className="relative z-10 flex flex-col">
         {/* Friends Stories Bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="px-4 py-3"
         >
           <FriendsStoriesBar
             onAddFriendClick={() => setShowAddFriendModal(true)}
@@ -255,51 +279,63 @@ function TeamContent() {
           />
         </motion.div>
 
-        {/* My Rooms Section */}
+        {/* My Rooms Section - Compact */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
+          className="px-4 mb-3"
         >
-          <MyRoomsSection />
+          <MyRoomsSection hideTV />
         </motion.div>
 
-        {/* Game Invitations Section - with green glow */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.11 }}
-          className="mb-6"
-        >
-          <GameInvitationsSection 
-            onAcceptInvitation={handleAcceptInvitation}
-            onJoinRoom={handleJoinFromInvitation}
-          />
-        </motion.div>
+        {/* New Room Button */}
+        <div className="px-4 mb-4">
+          <ChunkyButton 
+            onClick={() => setShowCreateModal(true)}
+            className="w-full gap-2"
+            variant="secondary"
+          >
+            <Plus className="w-5 h-5" />
+            + ახალი ოთახი
+          </ChunkyButton>
+        </div>
 
-        {/* Pending Challenges Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-          className="mb-6"
-        >
-          <PendingChallengesSection onAcceptChallenge={handleAcceptChallenge} />
-        </motion.div>
+        {/* Tabs: For Me / My Trivia */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <div className="px-4 mb-2">
+            <TabsList className="w-full grid grid-cols-2">
+              <TabsTrigger value="for-me" className="text-sm font-semibold">
+                For Me
+              </TabsTrigger>
+              <TabsTrigger value="my-trivia" className="text-sm font-semibold">
+                My Trivia
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Game History Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14 }}
-          className="mb-6"
-        >
-          <GameHistoryTable onViewAll={() => setShowAllGamesModal(true)} />
-        </motion.div>
+          <TabsContent value="for-me" className="mt-0">
+            <SocialFeed onPlayQuiz={(post) => console.log('Play quiz:', post.title)} />
+          </TabsContent>
+
+          <TabsContent value="my-trivia" className="mt-0 px-4">
+            <MyTriviaTab onCreateQuiz={() => console.log('Create quiz')} />
+          </TabsContent>
+        </Tabs>
+
+        {/* How it works button */}
+        <div className="px-4 py-6">
+          <button
+            onClick={() => setShowHelpModal(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-muted text-muted-foreground text-sm font-medium hover:bg-muted/80 transition-colors"
+          >
+            <HelpCircle className="w-4 h-4" />
+            How it works
+          </button>
+        </div>
       </div>
 
-      {/* Create Room Page (full screen) */}
+      {/* Modals */}
       <AnimatePresence>
         {showCreateModal && (
           <CreateRoomPage onClose={() => setShowCreateModal(false)} />
@@ -349,7 +385,6 @@ function TeamContent() {
         onClose={() => setShowRoomChatsPanel(false)}
       />
 
-      {/* Bottom Navigation - hide when CreateRoomPage is open */}
       {!showCreateModal && (
         <UniversalBottomNav 
           onTeamPlayClick={() => {
