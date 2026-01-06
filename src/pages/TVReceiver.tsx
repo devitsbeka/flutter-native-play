@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-import { Tv, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { TVAwaitingPairingScreen } from '@/components/tv/TVAwaitingPairingScreen';
 import { TVWaitingForPlayersScreen } from '@/components/tv/TVWaitingForPlayersScreen';
 import { TVCountdownScreen } from '@/components/tv/TVCountdownScreen';
@@ -10,25 +9,37 @@ import { TVQuestionScreen } from '@/components/tv/TVQuestionScreen';
 import { TVRevealScreen } from '@/components/tv/TVRevealScreen';
 import { TVScoreboardScreen } from '@/components/tv/TVScoreboardScreen';
 import { TVBroadcastMode } from '@/components/tv/TVBroadcastMode';
-import { TVSessionProvider, useTVSession } from '@/contexts/TVSessionContext';
+import { TVSessionProvider } from '@/contexts/TVSessionContext';
 
-// This page is displayed on the TV itself
-// It generates its own 4-digit pairing code and waits for a host to connect
-// It also broadcasts presence via Supabase Realtime for phone discovery
+interface Player {
+  id: string;
+  nickname: string;
+  avatar_url?: string;
+  score: number;
+}
+
+interface Question {
+  id: string;
+  question_text: string;
+  options: string[];
+  correct_answer: string;
+}
+
+type Phase = 'awaiting' | 'waiting' | 'countdown' | 'question' | 'reveal' | 'scoreboard';
 
 const TVReceiverContent: React.FC = () => {
   const navigate = useNavigate();
   const [tvPairingCode, setTvPairingCode] = useState<string>('');
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [guestJoinCode, setGuestJoinCode] = useState<string | null>(null); // The 6-char code for guests
+  const [guestJoinCode, setGuestJoinCode] = useState<string | null>(null);
   const [isPaired, setIsPaired] = useState(false);
-  const [hostId, setHostId] = useState<string | null>(null);
-  const [phase, setPhase] = useState<'awaiting' | 'waiting' | 'countdown' | 'question' | 'reveal' | 'scoreboard'>('awaiting');
-  const [players, setPlayers] = useState<any[]>([]);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [phase, setPhase] = useState<Phase>('awaiting');
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Generate 4-digit code
   const generatePairingCode = () => {
@@ -47,7 +58,6 @@ const TVReceiverContent: React.FC = () => {
       setTvPairingCode(code);
 
       // Create a TV session with just the pairing code (no host yet)
-      // host_user_id and pairing_code are now nullable for TV-initiated sessions
       const { data, error } = await supabase
         .from('tv_sessions')
         .insert([{
@@ -85,11 +95,14 @@ const TVReceiverContent: React.FC = () => {
             
             if (newData.is_paired && !isPaired) {
               setIsPaired(true);
-              setHostId(newData.host_user_id);
-              setGuestJoinCode(newData.pairing_code); // This is the guest join code
-              setPhase('waiting');
-              if (newData.questions) {
-                setQuestions(newData.questions);
+              setGuestJoinCode(newData.pairing_code);
+            }
+
+            // Update questions if available
+            if (newData.questions && Array.isArray(newData.questions)) {
+              setQuestions(newData.questions);
+              if (newData.status === 'waiting' && phase === 'awaiting') {
+                setPhase('waiting');
               }
             }
 
@@ -103,55 +116,9 @@ const TVReceiverContent: React.FC = () => {
               setPhase('reveal');
             } else if (newData.status === 'completed') {
               setPhase('scoreboard');
+            } else if (newData.status === 'waiting' && newData.questions) {
+              setPhase('waiting');
             }
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'player_answers',
-            filter: `tv_session_id=eq.${data.id}`,
-          },
-          async (payload) => {
-            const answer = payload.new as any;
-            // Fetch player profile
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('nickname, avatar_url')
-              .eq('user_id', answer.user_id)
-              .single();
-
-            setPlayers(prev => {
-              const existing = prev.find(p => p.id === answer.user_id);
-              if (existing) {
-                return prev.map(p =>
-                  p.id === answer.user_id
-                    ? {
-                        ...p,
-                        hasAnswered: true,
-                        lastAnswer: answer.answer,
-                        lastAnswerCorrect: answer.is_correct,
-                        score: p.score + (answer.points_earned || 0),
-                      }
-                    : p
-                );
-              } else {
-                return [
-                  ...prev,
-                  {
-                    id: answer.user_id,
-                    nickname: profile?.nickname || 'Player',
-                    avatar_url: profile?.avatar_url,
-                    score: answer.points_earned || 0,
-                    hasAnswered: true,
-                    lastAnswer: answer.answer,
-                    lastAnswerCorrect: answer.is_correct,
-                  },
-                ];
-              }
-            });
           }
         )
         .subscribe();
@@ -168,7 +135,50 @@ const TVReceiverContent: React.FC = () => {
     };
   }, []);
 
-  // Handle start game from host
+  // Set up presence channel when session is paired
+  useEffect(() => {
+    if (!sessionId || !isPaired) return;
+
+    const presenceChannel = supabase
+      .channel(`tv-presence-${sessionId}`)
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = presenceChannel.presenceState();
+        const connectedPlayers: Player[] = [];
+        
+        Object.values(presenceState).forEach((presences: any) => {
+          presences.forEach((presence: any) => {
+            // Add all players from presence (guests have isGuest: true)
+            if (presence.isGuest) {
+              connectedPlayers.push({
+                id: presence.user_id,
+                nickname: presence.nickname || 'Player',
+                avatar_url: presence.avatar_url,
+                score: 0,
+              });
+            }
+          });
+        });
+        
+        setPlayers(connectedPlayers);
+      })
+      .on('presence', { event: 'join' }, ({ newPresences }) => {
+        console.log('Player joined TV session:', newPresences);
+      })
+      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+        console.log('Player left TV session:', leftPresences);
+      })
+      .subscribe();
+
+    presenceChannelRef.current = presenceChannel;
+
+    return () => {
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+      }
+    };
+  }, [sessionId, isPaired]);
+
+  // Handle start game from TV (fallback, usually host controls this)
   const handleStartGame = async () => {
     if (!sessionId) return;
     
@@ -179,7 +189,6 @@ const TVReceiverContent: React.FC = () => {
 
     setPhase('countdown');
 
-    // After 3 seconds, start the first question
     setTimeout(async () => {
       await supabase
         .from('tv_sessions')
@@ -208,7 +217,6 @@ const TVReceiverContent: React.FC = () => {
     case 'awaiting':
       return (
         <div className="relative">
-          {/* Broadcast presence for discovery */}
           {sessionId && (
             <TVBroadcastMode
               sessionId={sessionId}
@@ -216,9 +224,7 @@ const TVReceiverContent: React.FC = () => {
               deviceName="Living Room TV"
             />
           )}
-          <TVAwaitingPairingScreen
-            pairingCode={tvPairingCode}
-          />
+          <TVAwaitingPairingScreen pairingCode={tvPairingCode} />
         </div>
       );
     case 'waiting':
@@ -232,21 +238,13 @@ const TVReceiverContent: React.FC = () => {
     case 'countdown':
       return <TVCountdownScreen />;
     case 'question':
-      return (
-        <TVQuestionScreen 
-          // These props will be passed through context in the wrapper
-        />
-      );
+      return <TVQuestionScreen />;
     case 'reveal':
       return <TVRevealScreen />;
     case 'scoreboard':
       return <TVScoreboardScreen />;
     default:
-      return (
-        <TVAwaitingPairingScreen
-          pairingCode={tvPairingCode}
-        />
-      );
+      return <TVAwaitingPairingScreen pairingCode={tvPairingCode} />;
   }
 };
 

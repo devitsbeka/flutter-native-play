@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TVSessionProvider, useTVSession } from '@/contexts/TVSessionContext';
+import { TVSessionProvider } from '@/contexts/TVSessionContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Check, X, Loader2, Tv, Star } from 'lucide-react';
+import { Check, X, Loader2, Tv, Star, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -14,71 +14,219 @@ const OPTION_COLORS = [
   { bg: 'bg-green-500', hover: 'hover:bg-green-600', label: 'D' },
 ];
 
+interface Question {
+  id: string;
+  question_text: string;
+  options: string[];
+  correct_answer: string;
+}
+
+type Phase = 'connecting' | 'waiting' | 'countdown' | 'playing' | 'reveal' | 'completed';
+
 const TVControllerContent: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { 
-    phase, 
-    joinSession, 
-    submitAnswer, 
-    questions, 
-    currentQuestionIndex,
-    players,
-    timeRemaining,
-    pairingCode,
-  } = useTVSession();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [phase, setPhase] = useState<Phase>('connecting');
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [lastResult, setLastResult] = useState<boolean | null>(null);
+  const [score, setScore] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(15);
+  const [nickname, setNickname] = useState('Player');
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentPlayer = players.find(p => p.id === user?.id);
   const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
-    const initSession = async () => {
-      if (!code) {
-        setError('No code provided');
+    const joinSession = async () => {
+      if (!code || !user) {
+        setError('კოდი ან მომხმარებელი არ მოიძებნა');
         setLoading(false);
         return;
       }
 
-      const success = await joinSession(code);
-      if (!success) {
-        setError('Session not found or expired');
+      try {
+        // Get user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname, avatar_url')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile) {
+          setNickname(profile.nickname || 'Player');
+          setAvatarUrl(profile.avatar_url || undefined);
+        }
+
+        // Find session by pairing_code (6-char guest join code)
+        const { data: sessionData, error: sessionError } = await supabase
+          .from('tv_sessions')
+          .select('*')
+          .eq('pairing_code', code.toUpperCase())
+          .eq('is_paired', true)
+          .single();
+
+        if (sessionError || !sessionData) {
+          setError('სესია ვერ მოიძებნა ან არ არის აქტიური');
+          setLoading(false);
+          return;
+        }
+
+        setSession(sessionData);
+        
+        // Set questions if available
+        if (sessionData.questions && Array.isArray(sessionData.questions)) {
+          setQuestions(sessionData.questions as unknown as Question[]);
+        }
+
+        // Set phase based on status
+        const status = sessionData.status;
+        if (status === 'waiting') setPhase('waiting');
+        else if (status === 'countdown') setPhase('countdown');
+        else if (status === 'playing') {
+          setPhase('playing');
+          setCurrentQuestionIndex(sessionData.current_question_index || 0);
+        }
+        else if (status === 'completed') setPhase('completed');
+
+        setLoading(false);
+
+        // Subscribe to session updates
+        const channel = supabase
+          .channel(`guest-session-${sessionData.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'tv_sessions',
+              filter: `id=eq.${sessionData.id}`,
+            },
+            (payload) => {
+              const newData = payload.new as any;
+              setSession(newData);
+              
+              // Update questions
+              if (newData.questions && Array.isArray(newData.questions)) {
+                setQuestions(newData.questions as unknown as Question[]);
+              }
+              
+              // Update phase
+              if (newData.status === 'waiting') setPhase('waiting');
+              else if (newData.status === 'countdown') setPhase('countdown');
+              else if (newData.status === 'playing') {
+                setPhase('playing');
+                setCurrentQuestionIndex(newData.current_question_index || 0);
+                setTimeRemaining(15);
+                setSelectedAnswer(null);
+                setHasAnswered(false);
+                setLastResult(null);
+              }
+              else if (newData.status === 'reveal') setPhase('reveal');
+              else if (newData.status === 'completed') setPhase('completed');
+            }
+          )
+          .subscribe();
+
+        channelRef.current = channel;
+
+        // Join presence channel to show up in player list
+        const presenceChannel = supabase
+          .channel(`tv-presence-${sessionData.id}`)
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await presenceChannel.track({
+                user_id: user.id,
+                nickname: profile?.nickname || 'Player',
+                avatar_url: profile?.avatar_url,
+                isGuest: true, // Mark as guest so TV knows to show them
+                online_at: new Date().toISOString(),
+              });
+            }
+          });
+
+        presenceChannelRef.current = presenceChannel;
+
+      } catch (err) {
+        console.error('Error joining session:', err);
+        setError('შეცდომა სესიასთან დაკავშირებისას');
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    initSession();
-  }, [code, joinSession]);
+    joinSession();
 
-  // Reset state when question changes
-  useEffect(() => {
-    setSelectedAnswer(null);
-    setHasAnswered(false);
-    setLastResult(null);
-  }, [currentQuestionIndex]);
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [code, user]);
 
-  // Update result after reveal
+  // Timer for questions
   useEffect(() => {
-    if (phase === 'reveal' && currentPlayer) {
-      setLastResult(currentPlayer.lastAnswerCorrect || false);
-      // Vibrate on result
+    if (phase === 'playing' && timeRemaining > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeRemaining(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [phase, currentQuestionIndex]);
+
+  // Check answer result on reveal
+  useEffect(() => {
+    if (phase === 'reveal' && selectedAnswer && currentQuestion) {
+      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+      setLastResult(isCorrect);
       if ('vibrate' in navigator) {
-        navigator.vibrate(currentPlayer.lastAnswerCorrect ? [100] : [100, 50, 100]);
+        navigator.vibrate(isCorrect ? [100] : [100, 50, 100]);
       }
     }
-  }, [phase, currentPlayer]);
+  }, [phase, selectedAnswer, currentQuestion]);
 
   const handleAnswer = async (answer: string) => {
-    if (hasAnswered) return;
+    if (hasAnswered || !session || !user || !currentQuestion) return;
+    
     setSelectedAnswer(answer);
     setHasAnswered(true);
-    await submitAnswer(answer);
+
+    const isCorrect = answer === currentQuestion.correct_answer;
+    const timeBonus = Math.max(0, timeRemaining);
+    const points = isCorrect ? 100 + (timeBonus * 5) : 0;
+    
+    setScore(prev => prev + points);
+
+    // Submit answer to database
+    try {
+      await supabase
+        .from('player_answers')
+        .insert([{
+          user_id: user.id,
+          room_id: session.room_id || session.id,
+          question_index: currentQuestionIndex,
+          answer: answer,
+          is_correct: isCorrect,
+          time_remaining: timeRemaining,
+          points_earned: points,
+          tv_session_id: session.id,
+        }]);
+    } catch (err) {
+      console.error('Error submitting answer:', err);
+    }
   };
 
   if (loading) {
@@ -86,7 +234,7 @@ const TVControllerContent: React.FC = () => {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Connecting to TV...</p>
+          <p className="text-muted-foreground">TV-სთან დაკავშირება...</p>
         </div>
       </div>
     );
@@ -96,9 +244,9 @@ const TVControllerContent: React.FC = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-red-500 text-xl mb-4">{error}</p>
+          <p className="text-destructive text-xl mb-4">{error}</p>
           <ChunkyButton onClick={() => navigate('/team')}>
-            Back
+            უკან
           </ChunkyButton>
         </div>
       </div>
@@ -106,7 +254,7 @@ const TVControllerContent: React.FC = () => {
   }
 
   // Waiting for game to start
-  if (phase === 'pairing' || phase === 'countdown') {
+  if (phase === 'waiting' || phase === 'countdown') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-6">
         <motion.div
@@ -116,23 +264,26 @@ const TVControllerContent: React.FC = () => {
         >
           <Tv className="w-24 h-24 text-primary mb-6" />
         </motion.div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Connected!</h1>
-        <p className="text-muted-foreground text-center mb-8">
+        <h1 className="text-2xl font-bold text-foreground mb-2">დაკავშირებული! ✓</h1>
+        <p className="text-muted-foreground text-center mb-4">
           {phase === 'countdown' 
-            ? 'Get ready! Game is starting...'
-            : 'Look at the TV screen. Waiting for host to start...'}
+            ? 'მოემზადე! თამაში იწყება...'
+            : 'უყურე TV ეკრანს. ველოდებით თამაშის დაწყებას...'}
         </p>
-        {currentPlayer && (
-          <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3">
-            <Star className="w-5 h-5 text-yellow-500" />
-            <span className="text-foreground">Score: {currentPlayer.score}</span>
-          </div>
-        )}
+        
+        <motion.div
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="flex items-center gap-2 text-primary"
+        >
+          <Sparkles className="w-5 h-5" />
+          <span className="font-medium">{nickname}</span>
+        </motion.div>
       </div>
     );
   }
 
-  // Show results
+  // Reveal phase - show if answer was correct
   if (phase === 'reveal') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-6">
@@ -155,24 +306,18 @@ const TVControllerContent: React.FC = () => {
           )}
         </AnimatePresence>
         <h2 className="text-2xl font-bold text-foreground mb-2">
-          {lastResult ? 'Correct! 🎉' : 'Wrong! 😔'}
+          {lastResult ? 'სწორია! 🎉' : 'არასწორია! 😔'}
         </h2>
-        {currentPlayer && (
-          <div className="flex items-center gap-2 text-yellow-500">
-            <Star className="w-5 h-5 fill-yellow-500" />
-            <span className="font-bold text-xl">{currentPlayer.score}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-yellow-500">
+          <Star className="w-5 h-5 fill-yellow-500" />
+          <span className="font-bold text-xl">{score}</span>
+        </div>
       </div>
     );
   }
 
   // Final scoreboard
-  const isScoreboardPhase = phase === 'scoreboard' || (phase as string) === 'completed';
-  if (isScoreboardPhase) {
-    const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-    const myRank = sortedPlayers.findIndex(p => p.id === user?.id) + 1;
-
+  if (phase === 'completed') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-6">
         <motion.div
@@ -180,22 +325,19 @@ const TVControllerContent: React.FC = () => {
           animate={{ scale: 1 }}
           className="text-center"
         >
-          <h1 className="text-3xl font-bold text-foreground mb-2">Game Over!</h1>
-          <p className="text-muted-foreground mb-6">Check the TV for full results</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">თამაში დასრულდა!</h1>
+          <p className="text-muted-foreground mb-6">შეხედე TV-ს სრული შედეგებისთვის</p>
           
           <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-            <p className="text-muted-foreground mb-2">Your Position</p>
-            <p className="text-5xl font-bold text-primary mb-2">#{myRank}</p>
-            {currentPlayer && (
-              <div className="flex items-center justify-center gap-2 text-yellow-500">
-                <Star className="w-5 h-5 fill-yellow-500" />
-                <span className="font-bold text-xl">{currentPlayer.score} points</span>
-              </div>
-            )}
+            <p className="text-muted-foreground mb-2">შენი ქულა</p>
+            <div className="flex items-center justify-center gap-2 text-yellow-500">
+              <Star className="w-8 h-8 fill-yellow-500" />
+              <span className="font-bold text-4xl">{score}</span>
+            </div>
           </div>
 
           <ChunkyButton onClick={() => navigate('/team')}>
-            Back to Lobby
+            უკან დაბრუნება
           </ChunkyButton>
         </motion.div>
       </div>
@@ -214,21 +356,19 @@ const TVControllerContent: React.FC = () => {
         </div>
         <div className={`rounded-full px-4 py-2 ${timeRemaining <= 5 ? 'bg-red-500/20 border-red-500' : 'bg-card'} border border-border`}>
           <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-500' : 'text-foreground'}`}>
-            {timeRemaining}s
+            {timeRemaining}წმ
           </span>
         </div>
-        {currentPlayer && (
-          <div className="flex items-center gap-1 bg-card border border-border rounded-full px-4 py-2">
-            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-            <span className="text-foreground font-bold">{currentPlayer.score}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-1 bg-card border border-border rounded-full px-4 py-2">
+          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+          <span className="text-foreground font-bold">{score}</span>
+        </div>
       </div>
 
       {/* Instructions */}
       <div className="text-center mb-6">
         <p className="text-muted-foreground">
-          {hasAnswered ? 'Answer submitted! Look at TV...' : 'Look at TV and tap your answer:'}
+          {hasAnswered ? 'პასუხი გაგზავნილია! უყურე TV-ს...' : 'უყურე TV-ს და აირჩიე პასუხი:'}
         </p>
       </div>
 

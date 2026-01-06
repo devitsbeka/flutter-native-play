@@ -16,8 +16,7 @@ import { RoomScoreboard } from "./RoomScoreboard";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
-import { TVSessionProvider, useTVSession } from "@/contexts/TVSessionContext";
-import { TVEnterCodeModal } from "./TVEnterCodeModal";
+import { TVConnectModal } from "./TVConnectModal";
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
@@ -589,15 +588,11 @@ export function RoomLobbyV2() {
         )}
       </AnimatePresence>
 
-      {/* TV Enter Code Modal */}
-      {currentRoom && (
-        <TVEnterCodeModal
-          open={showTVModal}
-          onOpenChange={setShowTVModal}
-          roomId={currentRoom.id}
-          categoryId={currentRoom.category_id || ''}
-        />
-      )}
+      {/* TV Connect Modal */}
+      <TVConnectModal
+        open={showTVModal}
+        onOpenChange={setShowTVModal}
+      />
     </div>
   );
 }
