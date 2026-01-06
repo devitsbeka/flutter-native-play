@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Gift } from "lucide-react";
+import { Gift } from "lucide-react";
 
 export function ShopPromoWidget() {
   const navigate = useNavigate();
@@ -10,10 +10,13 @@ export function ShopPromoWidget() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
+      whileTap={{ y: 2 }}
       onClick={() => navigate("/shop")}
-      className="relative overflow-hidden rounded-xl p-4 cursor-pointer group"
+      className="relative overflow-hidden rounded-2xl p-4 cursor-pointer group border-2"
       style={{
         background: "linear-gradient(135deg, hsl(187, 92%, 69%) 0%, hsl(181, 77%, 47%) 100%)",
+        borderColor: "hsl(181, 77%, 40% / 0.3)",
+        boxShadow: "inset 0 2px 0 0 rgba(255,255,255,0.2), 0 4px 0 0 hsl(181, 77%, 35%), 0 6px 15px -3px rgba(0,0,0,0.25)",
       }}
     >
       {/* Decorative elements */}
@@ -21,16 +24,16 @@ export function ShopPromoWidget() {
       
       {/* Content */}
       <div className="relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Gift className="w-4 h-4 text-white" />
-          <h3 className="text-sm font-bold text-white">
+        <div className="flex items-center gap-3">
+          <Gift className="w-5 h-5 text-white" />
+          <h3 className="text-base font-bold text-white">
             საჩუქრები მაღაზიაში
           </h3>
         </div>
         
         <svg
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 16 16"
           fill="none"
           className="text-white/70 group-hover:text-white transition-colors"
@@ -38,7 +41,7 @@ export function ShopPromoWidget() {
           <path
             d="M6 3L11 8L6 13"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
