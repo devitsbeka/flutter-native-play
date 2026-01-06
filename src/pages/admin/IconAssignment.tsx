@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Select,
   SelectContent,
@@ -878,41 +879,47 @@ export default function IconAssignment() {
             </div>
           )}
 
-          {/* Recently Used Icons - Quick Access */}
+          {/* Recently Used Icons - Collapsible Quick Access */}
           {recentlyUsedSlugs.length > 0 && !iconSearchTerm && (
-            <div className="shrink-0 border-b border-border/30 p-3 bg-amber-500/5">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="h-3.5 w-3.5 text-amber-500" />
-                <span className="text-xs font-medium text-amber-600">ბოლოს გამოყენებული</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {recentlyUsedSlugs.slice(0, 10).map((slug) => {
-                  const icon = icons.find(i => i.slug === slug);
-                  if (!icon) return null;
-                  const hasSelection = selectedQuestion || selectedQuestionIds.size > 0;
-                  return (
-                    <button
-                      key={slug}
-                      onClick={() => handleAssignIcon(slug)}
-                      disabled={!hasSelection || bulkAssigning}
-                      title={icon.title}
-                      className={cn(
-                        "relative flex items-center justify-center rounded-lg p-1.5 transition-all bg-background/80 border border-border/50 hover:border-amber-500/50 hover:shadow-sm",
-                        (!hasSelection || bulkAssigning) && "opacity-50 cursor-not-allowed",
-                        selectedQuestion?.icon_slug === slug && selectedQuestionIds.size === 0 && "ring-2 ring-primary"
-                      )}
-                    >
-                      <img
-                        src={icon.url}
-                        alt={icon.title}
-                        className="h-8 w-8 object-contain"
-                        loading="lazy"
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <Collapsible className="shrink-0 border-b border-border/30">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 hover:bg-amber-500/10 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="text-xs font-medium text-amber-600">ბოლოს გამოყენებული</span>
+                  <span className="text-[10px] text-muted-foreground">({recentlyUsedSlugs.length})</span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {recentlyUsedSlugs.slice(0, 10).map((slug) => {
+                    const icon = icons.find(i => i.slug === slug);
+                    if (!icon) return null;
+                    const hasSelection = selectedQuestion || selectedQuestionIds.size > 0;
+                    return (
+                      <button
+                        key={slug}
+                        onClick={() => handleAssignIcon(slug)}
+                        disabled={!hasSelection || bulkAssigning}
+                        title={icon.title}
+                        className={cn(
+                          "relative flex items-center justify-center rounded-lg p-1.5 transition-all bg-background/80 border border-border/50 hover:border-amber-500/50 hover:shadow-sm",
+                          (!hasSelection || bulkAssigning) && "opacity-50 cursor-not-allowed",
+                          selectedQuestion?.icon_slug === slug && selectedQuestionIds.size === 0 && "ring-2 ring-primary"
+                        )}
+                      >
+                        <img
+                          src={icon.url}
+                          alt={icon.title}
+                          className="h-8 w-8 object-contain"
+                          loading="lazy"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
 
           {/* Icon Search + Grid Section */}
