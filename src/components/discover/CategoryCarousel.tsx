@@ -76,7 +76,7 @@ export function CategoryCarousel({
           const favoriteId = category.uuid || category.id;
           
           return (
-            <div key={category.id} className="flex-shrink-0 snap-start" style={{ width: 'calc(80vw - 24px)', maxWidth: '320px' }}>
+            <div key={category.id} className="flex-shrink-0 snap-center" style={{ width: 'calc(80vw - 24px)', maxWidth: '320px' }}>
               <AirbnbCategoryCard
                 id={category.id}
                 categoryId={category.category_id || category.id}
