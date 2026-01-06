@@ -880,7 +880,7 @@ export default function IconAssignment() {
           )}
 
           {/* Recently Used Icons - Quick Access (Always Open) */}
-          {recentlyUsedSlugs.length > 0 && !iconSearchTerm && (
+          {recentlyUsedSlugs.length > 0 && (
             <div className="shrink-0 border-b border-border/30 p-3 bg-amber-500/5">
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="h-3.5 w-3.5 text-amber-500" />
