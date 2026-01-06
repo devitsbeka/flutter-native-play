@@ -19,6 +19,8 @@ export interface DatabaseCategory {
   is_active: boolean | null;
   sort_order: number | null;
   image_url: string | null;
+  language?: string | null;
+  is_language_specific?: boolean | null;
 }
 
 export interface TransformedCategory extends Category {
@@ -53,6 +55,7 @@ export const useCategories = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [translations, setTranslations] = useState<Record<string, { name: string; description?: string }>>({});
+  const [currentLanguage, setCurrentLanguage] = useState<string>(DEFAULT_LANGUAGE);
 
   // Get current language from localStorage
   const getCurrentLanguage = useCallback(() => {
@@ -62,7 +65,17 @@ export const useCategories = () => {
     return DEFAULT_LANGUAGE;
   }, []);
 
-  const language = useMemo(() => getCurrentLanguage(), [getCurrentLanguage]);
+  // Update language on mount and when storage changes
+  useEffect(() => {
+    setCurrentLanguage(getCurrentLanguage());
+    
+    const handleStorageChange = () => {
+      setCurrentLanguage(getCurrentLanguage());
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [getCurrentLanguage]);
 
   const fetchTranslations = useCallback(async (lang: string) => {
     if (lang === 'ka') {
@@ -81,6 +94,7 @@ export const useCategories = () => {
 
       const transMap: Record<string, { name: string; description?: string }> = {};
       (data || []).forEach(t => {
+        // category_id in translations references categories.id (UUID)
         transMap[t.category_id] = { name: t.name, description: t.description || undefined };
       });
       setTranslations(transMap);
@@ -89,8 +103,14 @@ export const useCategories = () => {
     }
   }, []);
 
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (lang: string) => {
     try {
+      // Fetch categories logic:
+      // 1. Universal categories (is_language_specific = false) - show for all languages
+      // 2. Language-specific categories (is_language_specific = true) - only show if language matches
+      
+      // For Georgian, show all categories (backward compatible)
+      // For other languages, show universal + matching language-specific ones
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -99,7 +119,17 @@ export const useCategories = () => {
 
       if (error) throw error;
 
-      const transformed = (data || []).map(transformCategory);
+      // Filter categories based on language rules
+      const filtered = (data || []).filter(cat => {
+        // Universal categories are shown to everyone
+        if (!cat.is_language_specific) {
+          return true;
+        }
+        // Language-specific categories only shown if language matches
+        return cat.language === lang;
+      });
+
+      const transformed = filtered.map(transformCategory);
       setCategories(transformed);
       
       // Preload category icons for faster rendering
@@ -119,7 +149,7 @@ export const useCategories = () => {
   }, []);
 
   useEffect(() => {
-    fetchCategories();
+    fetchCategories(currentLanguage);
 
     // Subscribe to real-time changes
     const channel = supabase
@@ -133,7 +163,7 @@ export const useCategories = () => {
         },
         () => {
           // Refetch on any change
-          fetchCategories();
+          fetchCategories(currentLanguage);
         }
       )
       .subscribe();
@@ -141,14 +171,14 @@ export const useCategories = () => {
     // Refetch when app comes back to foreground (fixes iOS homescreen app issue)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchCategories();
+        fetchCategories(currentLanguage);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Also refetch on focus (for desktop browsers)
     const handleFocus = () => {
-      fetchCategories();
+      fetchCategories(currentLanguage);
     };
     window.addEventListener('focus', handleFocus);
 
@@ -157,12 +187,12 @@ export const useCategories = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, [fetchCategories]);
+  }, [fetchCategories, currentLanguage]);
 
   // Fetch translations when language changes
   useEffect(() => {
-    fetchTranslations(language);
-  }, [language, fetchTranslations]);
+    fetchTranslations(currentLanguage);
+  }, [currentLanguage, fetchTranslations]);
 
   // Apply translations to categories
   const translatedCategories = useMemo(() => {
@@ -171,6 +201,7 @@ export const useCategories = () => {
     }
 
     return categories.map(cat => {
+      // translations are keyed by category_id (UUID)
       const trans = translations[cat.uuid];
       if (trans) {
         return {
@@ -183,11 +214,15 @@ export const useCategories = () => {
     });
   }, [categories, translations]);
 
+  const refetch = useCallback(() => {
+    fetchCategories(currentLanguage);
+  }, [fetchCategories, currentLanguage]);
+
   return { 
     categories: translatedCategories, 
     loading, 
     error, 
-    refetch: fetchCategories,
-    language,
+    refetch,
+    language: currentLanguage,
   };
 };

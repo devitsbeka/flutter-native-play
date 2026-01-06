@@ -61,6 +61,7 @@ export default function Flow() {
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [stats, setStats] = useState({ inLib: 0, inProd: 0 });
+  const [languageStats, setLanguageStats] = useState<Record<string, { inLib: number; inProd: number }>>({});
   const [focusedQuestionId, setFocusedQuestionId] = useState<string | null>(null);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -180,6 +181,27 @@ export default function Flow() {
       .eq('in_production', true);
     
     setStats({ inLib: libCount || 0, inProd: prodCount || 0 });
+
+    // Fetch per-language stats
+    const { data: langData } = await supabase
+      .from('questions')
+      .select('language, in_production');
+    
+    if (langData) {
+      const langStats: Record<string, { inLib: number; inProd: number }> = {};
+      langData.forEach(q => {
+        const lang = q.language || 'ka';
+        if (!langStats[lang]) {
+          langStats[lang] = { inLib: 0, inProd: 0 };
+        }
+        if (q.in_production) {
+          langStats[lang].inProd++;
+        } else {
+          langStats[lang].inLib++;
+        }
+      });
+      setLanguageStats(langStats);
+    }
   };
 
   // Check for duplicate questions in the database
@@ -325,6 +347,7 @@ export default function Flow() {
       incorrect_answers: q.incorrectAnswers,
       category_id: q.categoryId,
       difficulty: q.difficulty,
+      language: q.language,
       icon_slug: q.iconSlug,
       in_production: false,
       is_active: true,
@@ -356,6 +379,7 @@ export default function Flow() {
       incorrect_answers: q.incorrectAnswers,
       category_id: q.categoryId,
       difficulty: q.difficulty,
+      language: q.language,
       icon_slug: q.iconSlug,
       in_production: true,
       is_active: true,
@@ -407,6 +431,33 @@ export default function Flow() {
           <div className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
             <kbd className="font-mono">Enter</kbd> Approve • <kbd className="font-mono">⌫</kbd> Reject • <kbd className="font-mono">Tab</kbd> Navigate
           </div>
+        </div>
+        
+        {/* Language Stats Bar */}
+        <div className="mt-3 flex flex-wrap gap-1">
+          {LANGUAGES.map(lang => {
+            const langStat = languageStats[lang.code] || { inLib: 0, inProd: 0 };
+            const total = langStat.inLib + langStat.inProd;
+            const hasQuestions = total > 0;
+            
+            return (
+              <div
+                key={lang.code}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs border ${
+                  hasQuestions 
+                    ? 'bg-card/50 border-border/50' 
+                    : 'bg-destructive/10 border-destructive/30 text-destructive'
+                }`}
+                title={`${lang.name}: ${langStat.inLib} in Library, ${langStat.inProd} in Production`}
+              >
+                <span>{lang.flag}</span>
+                <span className="font-medium">{lang.code.toUpperCase()}</span>
+                <span className="text-muted-foreground">
+                  {langStat.inLib}/{langStat.inProd}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
