@@ -144,7 +144,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
           "relative inline-flex items-center justify-center gap-2.5 font-semibold",
           "disabled:opacity-50 disabled:pointer-events-none",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "overflow-visible whitespace-nowrap",
+          "overflow-visible",
           styles.face,
           styles.textColor,
           sizeStyles[size],
@@ -226,9 +226,9 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
         )}
 
         {/* Button content */}
-        <span className="relative z-10 flex items-center justify-center gap-2.5">
-          {icon && <span className="text-xl drop-shadow-sm">{icon}</span>}
-          <span className="drop-shadow-sm">{children}</span>
+        <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">
+          {icon && <span className="text-xl drop-shadow-sm flex-shrink-0">{icon}</span>}
+          {children}
         </span>
 
         {/* Bottom inner shadow for depth */}

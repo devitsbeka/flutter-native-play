@@ -158,7 +158,8 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      className={`flex-shrink-0 w-64 p-5 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 flex flex-col ${
+      onClick={onJoin}
+      className={`flex-shrink-0 w-64 p-4 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity 
           ? "border-2 border-emerald-400" 
           : "border border-white/50"
@@ -174,21 +175,16 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-purple-300/50 to-pink-300/50 rounded-full blur-2xl" />
       <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-gradient-to-br from-blue-200/40 to-purple-200/40 rounded-full blur-xl" />
       
-      {/* Subtle status indicator */}
-      <div className="h-5 mb-2">
-        {room.status === "playing" && (
-          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-            {t('team.inProgress')}
-          </div>
-        )}
-      </div>
-
       {/* Room name as main headline */}
-      <div className="mb-4 relative z-10">
-        <h3 className="font-bold text-slate-800 text-lg leading-tight truncate">
-          {displayName}
-        </h3>
+      <div className="mb-3 relative z-10">
+        <div className="flex items-center gap-2">
+          <h3 className="font-bold text-slate-800 text-lg leading-tight truncate flex-1">
+            {displayName}
+          </h3>
+          {room.status === "playing" && (
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+          )}
+        </div>
         {room.category_name && (
           <p className="text-xs text-slate-500 mt-0.5 truncate">
             {room.category_name}
@@ -196,13 +192,13 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
         )}
       </div>
 
-      {/* Participants - flex-grow to push button down */}
-      <div className="flex items-center gap-2 mb-4 relative z-10 flex-grow">
+      {/* Participants */}
+      <div className="flex items-center gap-2 relative z-10">
         <div className="flex -space-x-2.5">
           {room.participants.slice(0, 4).map((p) => (
             <div 
               key={p.user_id} 
-              className="w-9 h-9 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
+              className="w-8 h-8 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
             >
               {p.avatar_url ? (
                 <img 
@@ -211,7 +207,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold">
+                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
                   {p.nickname?.charAt(0).toUpperCase() || "?"}
                 </div>
               )}
@@ -228,16 +224,6 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
           <span className="text-xs font-medium text-slate-600">{room.participants.length}</span>
         </div>
       </div>
-
-      {/* Join button - always at bottom */}
-      <ChunkyButton
-        onClick={onJoin}
-        className="w-full whitespace-nowrap relative z-10"
-        size="sm"
-        variant="outline"
-      >
-        {room.status === "playing" ? t('team.continue') : t('team.join')}
-      </ChunkyButton>
     </motion.div>
   );
 }
