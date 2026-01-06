@@ -880,6 +880,64 @@ export type Database = {
           },
         ]
       }
+      quiz_post_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "user_quiz_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_post_saves: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "user_quiz_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_chat_messages: {
         Row: {
           avatar_url: string | null
@@ -1740,6 +1798,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_quiz_posts: {
+        Row: {
+          answer_format: string
+          cover_gradient: string
+          created_at: string | null
+          description: string | null
+          hashtags: string[] | null
+          icon_slug: string | null
+          id: string
+          likes_count: number | null
+          plays_count: number | null
+          question_count: number
+          questions: Json
+          subject: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          answer_format: string
+          cover_gradient: string
+          created_at?: string | null
+          description?: string | null
+          hashtags?: string[] | null
+          icon_slug?: string | null
+          id?: string
+          likes_count?: number | null
+          plays_count?: number | null
+          question_count: number
+          questions?: Json
+          subject: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          answer_format?: string
+          cover_gradient?: string
+          created_at?: string | null
+          description?: string | null
+          hashtags?: string[] | null
+          icon_slug?: string | null
+          id?: string
+          likes_count?: number | null
+          plays_count?: number | null
+          question_count?: number
+          questions?: Json
+          subject?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_reports: {
         Row: {
           created_at: string | null
@@ -1940,6 +2052,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_quiz_plays: { Args: { post_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
