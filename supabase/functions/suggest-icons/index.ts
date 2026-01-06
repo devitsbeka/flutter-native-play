@@ -342,26 +342,21 @@ serve(async (req) => {
     // Extract keywords from all sources
     const keywordSources: KeywordSource[] = [];
 
-    // 1. Georgian words from question - add BOTH phonetic and semantic translations
+    // 1. Georgian words from question - add ONLY semantic translations (not useless phonetic)
     const georgianFromQuestion = extractGeorgianWords(questionText);
     for (const word of georgianFromQuestion) {
-      // Add phonetic transliteration (fondiu → fondue via fuzzy)
-      const transliterated = transliterateGeorgian(word);
-      keywordSources.push({
-        keyword: word,
-        transliterated,
-        source: 'question_georgian'
-      });
-      
       // Add semantic translations (ეკონომიკური → economics)
       const semanticTranslations = translateGeorgianToEnglish(word);
-      for (const translation of semanticTranslations) {
-        keywordSources.push({
-          keyword: word,
-          transliterated: translation,
-          source: 'question_georgian'
-        });
+      if (semanticTranslations.length > 0) {
+        for (const translation of semanticTranslations) {
+          keywordSources.push({
+            keyword: word,
+            transliterated: translation,
+            source: 'question_georgian'
+          });
+        }
       }
+      // Skip useless phonetic transliteration - it doesn't match real English words
     }
 
     // 2. English words from question
@@ -385,27 +380,22 @@ serve(async (req) => {
       });
     }
 
-    // 4. Georgian words from answer - add BOTH phonetic and semantic translations
+    // 4. Georgian words from answer - add ONLY semantic translations (not useless phonetic)
     if (correctAnswer) {
       const georgianFromAnswer = extractGeorgianWords(correctAnswer);
       for (const word of georgianFromAnswer) {
-        // Phonetic transliteration
-        const transliterated = transliterateGeorgian(word);
-        keywordSources.push({
-          keyword: word,
-          transliterated,
-          source: 'answer_georgian'
-        });
-        
-        // Semantic translations
+        // Add semantic translations only
         const semanticTranslations = translateGeorgianToEnglish(word);
-        for (const translation of semanticTranslations) {
-          keywordSources.push({
-            keyword: word,
-            transliterated: translation,
-            source: 'answer_georgian'
-          });
+        if (semanticTranslations.length > 0) {
+          for (const translation of semanticTranslations) {
+            keywordSources.push({
+              keyword: word,
+              transliterated: translation,
+              source: 'answer_georgian'
+            });
+          }
         }
+        // Skip useless phonetic transliteration
       }
 
       // 5. English words from answer
@@ -477,14 +467,23 @@ serve(async (req) => {
           score = 100;
           matchReason = `Exact slug match: "${keyword}"`;
         }
-        // Slug contains keyword
-        else if (slugLower.includes(keyword) && keyword.length >= 4) {
-          score = 85;
-          matchReason = `Slug contains: "${keyword}"`;
+        // Slug starts with keyword OR keyword matches a complete word in hyphenated slug
+        else if (keyword.length >= 4) {
+          const isStartMatch = slugLower.startsWith(keyword);
+          const slugParts = slugLower.split('-');
+          const isWordMatch = slugParts.some(part => part === keyword);
+          
+          if (isStartMatch) {
+            score = 85;
+            matchReason = `Slug starts with: "${keyword}"`;
+          } else if (isWordMatch) {
+            score = 80;
+            matchReason = `Slug word match: "${keyword}"`;
+          }
         }
-        // Keyword contains slug (e.g., "fondue" in "fondiu")
-        else if (keyword.includes(slugLower) && slugLower.length >= 4) {
-          score = 80;
+        // Keyword contains complete slug (e.g., "economics" contains "econ")
+        else if (keyword.includes(slugLower) && slugLower.length >= 5) {
+          score = 70;
           matchReason = `Keyword contains slug: "${slugLower}"`;
         }
         // Title exact match
