@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Tv, Users, Loader2, QrCode } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tv, Users, Loader2, QrCode, Sparkles } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { ChunkyButton } from '@/components/ui/chunky-button';
@@ -23,11 +23,51 @@ export const TVWaitingForPlayersScreen: React.FC<TVWaitingForPlayersScreenProps>
   players,
   onStartGame,
 }) => {
-  // Generate the controller join URL using the guest join code
   const joinUrl = `${window.location.origin}/controller/${guestJoinCode}`;
-  
+  const [newPlayerIds, setNewPlayerIds] = useState<Set<string>>(new Set());
+  const prevPlayersRef = useRef<Player[]>([]);
+
+  // Track new players for animation
+  useEffect(() => {
+    const prevIds = new Set(prevPlayersRef.current.map(p => p.id));
+    const newIds = players.filter(p => !prevIds.has(p.id)).map(p => p.id);
+    
+    if (newIds.length > 0) {
+      setNewPlayerIds(new Set(newIds));
+      // Clear the "new" status after animation
+      setTimeout(() => setNewPlayerIds(new Set()), 2000);
+    }
+    
+    prevPlayersRef.current = players;
+  }, [players]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col p-8 relative overflow-hidden">
+      {/* Animated background particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 rounded-full bg-primary/20"
+            initial={{ 
+              x: Math.random() * 100 + '%', 
+              y: '100%',
+              opacity: 0 
+            }}
+            animate={{ 
+              y: '-10%',
+              opacity: [0, 0.5, 0],
+            }}
+            transition={{
+              duration: 8 + Math.random() * 4,
+              repeat: Infinity,
+              delay: i * 2,
+              ease: 'linear'
+            }}
+          />
+        ))}
+      </div>
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -56,21 +96,35 @@ export const TVWaitingForPlayersScreen: React.FC<TVWaitingForPlayersScreenProps>
               დაასკანერე QR კოდი შენი ტელეფონით
             </p>
 
-            {/* QR Code */}
-            <div className="bg-white p-6 rounded-2xl inline-block mb-6">
+            {/* QR Code with pulse effect */}
+            <motion.div 
+              className="bg-white p-6 rounded-2xl inline-block mb-6 relative"
+              animate={{ 
+                boxShadow: [
+                  '0 0 0 0 rgba(var(--primary), 0)',
+                  '0 0 0 10px rgba(var(--primary), 0.1)',
+                  '0 0 0 0 rgba(var(--primary), 0)'
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
               <QRCodeSVG 
                 value={joinUrl} 
                 size={280}
                 level="H"
                 includeMargin
               />
+            </motion.div>
+
+            {/* Join code display */}
+            <div className="bg-primary/10 rounded-xl p-4 mb-4">
+              <p className="text-muted-foreground text-sm mb-1">ან შეიყვანე კოდი:</p>
+              <p className="text-primary font-mono text-3xl font-bold tracking-widest">
+                {guestJoinCode}
+              </p>
             </div>
 
-            {/* Manual URL */}
-            <p className="text-muted-foreground text-sm">
-              ან შედი ბმულზე:
-            </p>
-            <p className="text-primary font-mono text-lg break-all">
+            <p className="text-muted-foreground text-xs break-all max-w-[280px] mx-auto">
               {joinUrl}
             </p>
           </div>
@@ -84,33 +138,82 @@ export const TVWaitingForPlayersScreen: React.FC<TVWaitingForPlayersScreenProps>
           className="flex-1 flex flex-col"
         >
           <div className="bg-card border border-border rounded-3xl p-6 flex-1">
-            <div className="flex items-center justify-center gap-2 mb-6">
+            <motion.div 
+              className="flex items-center justify-center gap-2 mb-6"
+              animate={players.length > 0 ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
               <Users className="w-6 h-6 text-muted-foreground" />
               <span className="text-muted-foreground text-lg">
                 {players.length} მოთამაშე დაკავშირებულია
               </span>
-            </div>
+            </motion.div>
 
             {/* Players Grid */}
             <div className="grid grid-cols-3 gap-4 mb-8">
-              {players.map((player, index) => (
-                <motion.div
-                  key={player.id}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4 + index * 0.1, type: 'spring' }}
-                  className="bg-background border border-border rounded-2xl p-4 flex flex-col items-center gap-2"
-                >
-                  <Avatar
-                    imageUrl={player.avatar_url}
-                    emoji={player.nickname?.[0] || '👤'}
-                    size="lg"
-                  />
-                  <span className="text-foreground font-medium text-sm truncate max-w-full">
-                    {player.nickname}
-                  </span>
-                </motion.div>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {players.map((player) => {
+                  const isNew = newPlayerIds.has(player.id);
+                  return (
+                    <motion.div
+                      key={player.id}
+                      layout
+                      initial={{ scale: 0, rotate: -10, opacity: 0 }}
+                      animate={{ 
+                        scale: 1, 
+                        rotate: 0, 
+                        opacity: 1,
+                      }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ 
+                        type: 'spring',
+                        stiffness: 500,
+                        damping: 25
+                      }}
+                      className={`relative bg-background border-2 rounded-2xl p-4 flex flex-col items-center gap-2 ${
+                        isNew ? 'border-primary' : 'border-border'
+                      }`}
+                    >
+                      {/* New player sparkle effect */}
+                      {isNew && (
+                        <>
+                          <motion.div
+                            className="absolute -top-2 -right-2"
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <Sparkles className="w-6 h-6 text-primary" />
+                          </motion.div>
+                          <motion.div
+                            className="absolute inset-0 rounded-2xl bg-primary/20"
+                            initial={{ opacity: 1 }}
+                            animate={{ opacity: 0 }}
+                            transition={{ duration: 1 }}
+                          />
+                        </>
+                      )}
+                      
+                      <motion.div
+                        animate={isNew ? { 
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 5, -5, 0]
+                        } : {}}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Avatar
+                          imageUrl={player.avatar_url}
+                          emoji={player.nickname?.[0] || '👤'}
+                          size="lg"
+                        />
+                      </motion.div>
+                      <span className="text-foreground font-medium text-sm truncate max-w-full">
+                        {player.nickname}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
 
               {/* Waiting placeholder slots */}
               {Array.from({ length: Math.max(0, 6 - players.length) }).map((_, index) => (
@@ -138,14 +241,20 @@ export const TVWaitingForPlayersScreen: React.FC<TVWaitingForPlayersScreenProps>
               </p>
               
               {players.length >= 1 && (
-                <ChunkyButton
-                  variant="primary"
-                  size="lg"
-                  onClick={onStartGame}
-                  className="text-xl px-12"
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring' }}
                 >
-                  თამაშის დაწყება
-                </ChunkyButton>
+                  <ChunkyButton
+                    variant="primary"
+                    size="lg"
+                    onClick={onStartGame}
+                    className="text-xl px-12"
+                  >
+                    თამაშის დაწყება
+                  </ChunkyButton>
+                </motion.div>
               )}
             </motion.div>
           </div>
