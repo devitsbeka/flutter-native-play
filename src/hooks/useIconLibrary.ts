@@ -298,11 +298,10 @@ async function loadDbIcons(): Promise<Record<string, string>> {
   if (dbIconsPromise) return dbIconsPromise;
 
   dbIconsPromise = (async () => {
+    // Load ALL icons from database (no limit) for complete coverage
     const { data, error } = await supabase
       .from('icon_library')
-      .select('slug, icon_url')
-      .order('created_at', { ascending: false })
-      .limit(1000);
+      .select('slug, icon_url');
     
     if (error) {
       console.error('[IconLibrary] DB fetch error:', error);
