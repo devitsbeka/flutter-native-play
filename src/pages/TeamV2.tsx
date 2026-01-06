@@ -227,11 +227,11 @@ function TeamContentV2() {
         <div className="px-4 mb-4">
           <ChunkyButton 
             onClick={() => setShowCreateModal(true)}
-            className="w-full gap-2"
-            variant="secondary"
+            className="w-full gap-2 whitespace-nowrap"
+            variant="primary"
           >
             <Plus className="w-5 h-5" />
-            + ახალი ოთახი
+            ახალი ოთახი
           </ChunkyButton>
         </div>
 
