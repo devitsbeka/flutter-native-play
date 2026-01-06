@@ -6,6 +6,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Check, X, Loader2, Tv, Star, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
 
 const OPTION_COLORS = [
   { bg: 'bg-red-500', hover: 'hover:bg-red-600', label: 'A' },
@@ -19,6 +20,15 @@ interface Question {
   question_text: string;
   options: string[];
   correct_answer: string;
+}
+
+interface Player {
+  id: string;
+  nickname: string;
+  avatar_url?: string;
+  score: number;
+  hasAnswered?: boolean;
+  isHost?: boolean;
 }
 
 type Phase = 'connecting' | 'waiting' | 'countdown' | 'playing' | 'reveal' | 'completed';
@@ -42,12 +52,17 @@ const TVControllerContent: React.FC = () => {
   const [nickname, setNickname] = useState('Player');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const hasJoinedRef = useRef(false);
   
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
+  
+  // Helper function to delay
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   useEffect(() => {
     const joinSession = async () => {
@@ -56,6 +71,10 @@ const TVControllerContent: React.FC = () => {
         setLoading(false);
         return;
       }
+
+      // Prevent double joining
+      if (hasJoinedRef.current) return;
+      hasJoinedRef.current = true;
 
       // Generate a guest ID if user is not logged in
       const guestId = user?.id || `guest-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -85,36 +104,34 @@ const TVControllerContent: React.FC = () => {
 
         const upperCode = code.toUpperCase();
 
-        // Find session by pairing_code (6-char guest join code)
-        // Try multiple queries to be more resilient
+        // Retry session lookup up to 3 times with delay for resilience
         let sessionData = null;
-        
-        // First try: paired session with exact code
-        const { data: pairedSession } = await supabase
-          .from('tv_sessions')
-          .select('*')
-          .eq('pairing_code', upperCode)
-          .in('status', ['waiting', 'countdown', 'playing'])
-          .maybeSingle();
-        
-        if (pairedSession) {
-          sessionData = pairedSession;
-        } else {
-          // Second try: any session with this code (maybe is_paired is false due to race condition)
-          const { data: anySession } = await supabase
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts && !sessionData) {
+          // Try to find session with any status (waiting, countdown, playing, completed)
+          const { data, error: lookupError } = await supabase
             .from('tv_sessions')
             .select('*')
             .eq('pairing_code', upperCode)
+            .in('status', ['waiting', 'countdown', 'playing', 'completed'])
             .maybeSingle();
-          
-          if (anySession) {
-            sessionData = anySession;
+
+          if (data) {
+            sessionData = data;
+          } else {
+            attempts++;
+            if (attempts < maxAttempts) {
+              console.log(`Session lookup attempt ${attempts} failed, retrying in 500ms...`);
+              await delay(500);
+            }
           }
         }
 
         if (!sessionData) {
           console.error('Session not found for code:', upperCode);
-          setError('სესია ვერ მოიძებნა. შეამოწმე კოდი და სცადე თავიდან.');
+          setError('სესია ვერ მოიძებნა. შეამოწმეთ კოდი და სცადეთ თავიდან.');
           setLoading(false);
           return;
         }
@@ -182,18 +199,39 @@ const TVControllerContent: React.FC = () => {
 
         channelRef.current = channel;
 
-        // Join presence channel to show up in player list
-        const presenceChannel = supabase
-          .channel(`tv-presence-${sessionData.id}`)
+        // Join presence channel to show up in player list and track other players
+        const presenceChannel = supabase.channel(`tv-presence-${sessionData.id}`);
+        
+        presenceChannel
+          .on('presence', { event: 'sync' }, () => {
+            const state = presenceChannel.presenceState();
+            const allPlayers: Player[] = [];
+            
+            Object.values(state).forEach((presences: any) => {
+              presences.forEach((presence: any) => {
+                allPlayers.push({
+                  id: presence.user_id,
+                  nickname: presence.nickname || 'Player',
+                  avatar_url: presence.avatar_url,
+                  score: presence.score || 0,
+                  hasAnswered: presence.hasAnswered || false,
+                  isHost: presence.isHost || false,
+                });
+              });
+            });
+            
+            setPlayers(allPlayers);
+          })
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
               await presenceChannel.track({
                 user_id: guestId,
                 nickname: playerNickname,
                 avatar_url: playerAvatarUrl,
-                isGuest: true, // Mark as guest
+                isGuest: true,
                 isHost: false,
                 score: 0,
+                hasAnswered: false,
                 online_at: new Date().toISOString(),
               });
               console.log('Guest presence tracked successfully');
@@ -251,8 +289,23 @@ const TVControllerContent: React.FC = () => {
     const isCorrect = answer === currentQuestion.correct_answer;
     const timeBonus = Math.max(0, timeRemaining);
     const points = isCorrect ? 100 + (timeBonus * 5) : 0;
+    const newScore = score + points;
     
-    setScore(prev => prev + points);
+    setScore(newScore);
+
+    // Update presence with new score and answer status
+    if (presenceChannelRef.current) {
+      await presenceChannelRef.current.track({
+        user_id: playerId,
+        nickname: nickname,
+        avatar_url: avatarUrl,
+        isGuest: !user,
+        isHost: false,
+        score: newScore,
+        hasAnswered: true,
+        online_at: new Date().toISOString(),
+      });
+    }
 
     // Submit answer to database only if user is logged in
     if (user) {
@@ -274,6 +327,10 @@ const TVControllerContent: React.FC = () => {
         console.error('Error submitting answer:', err);
       }
     }
+  };
+
+  const handleExit = () => {
+    navigate('/team');
   };
 
   if (loading) {
@@ -363,31 +420,30 @@ const TVControllerContent: React.FC = () => {
     );
   }
 
-  // Final scoreboard
+  // Final scoreboard with game over screen
   if (phase === 'completed') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="text-center"
-        >
-          <h1 className="text-3xl font-bold text-white mb-2">თამაში დასრულდა!</h1>
-          <p className="text-purple-200 mb-6">შეხედე TV-ს სრული შედეგებისთვის</p>
-          
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-6">
-            <p className="text-purple-200 mb-2">შენი ქულა</p>
-            <div className="flex items-center justify-center gap-2 text-yellow-500">
-              <Star className="w-8 h-8 fill-yellow-500" />
-              <span className="font-bold text-4xl">{score}</span>
-            </div>
-          </div>
+    // Ensure current player is in the players list with correct score
+    const allPlayers = [...players];
+    const currentPlayerIdx = allPlayers.findIndex(p => p.id === playerId);
+    if (currentPlayerIdx === -1 && playerId) {
+      allPlayers.push({
+        id: playerId,
+        nickname: nickname,
+        avatar_url: avatarUrl,
+        score: score,
+        isHost: false,
+      });
+    } else if (currentPlayerIdx !== -1) {
+      allPlayers[currentPlayerIdx].score = score;
+    }
 
-          <ChunkyButton onClick={() => navigate('/team')}>
-            უკან დაბრუნება
-          </ChunkyButton>
-        </motion.div>
-      </div>
+    return (
+      <TVGameOverScreen
+        players={allPlayers}
+        currentPlayerId={playerId || undefined}
+        onExit={handleExit}
+        isHost={false}
+      />
     );
   }
 
