@@ -7,34 +7,34 @@ export function ShopPromoWidget() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+      transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
       whileTap={{ y: 2 }}
       onClick={() => navigate("/shop")}
-      className="relative overflow-hidden rounded-2xl p-4 cursor-pointer group bg-card border-2 border-border"
+      className="relative overflow-hidden rounded-2xl p-4 cursor-pointer group bg-card border border-border/60"
       style={{
-        boxShadow: "inset 0 2px 0 0 rgba(255,255,255,0.1), 0 4px 0 0 hsl(var(--border)), 0 6px 15px -3px rgba(0,0,0,0.15)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
       }}
     >
-      {/* Gradient overlay */}
+      {/* Subtle gradient overlay */}
       <div 
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-30"
         style={{
-          background: "linear-gradient(135deg, hsl(187, 70%, 60% / 0.3) 0%, hsl(var(--primary) / 0.2) 100%)",
+          background: "linear-gradient(135deg, hsl(187, 70%, 60% / 0.15) 0%, transparent 60%)",
         }}
       />
       
-      {/* Decorative elements */}
-      <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-primary/10 blur-xl" />
+      {/* Decorative element */}
+      <div className="absolute -right-6 -top-6 w-20 h-20 rounded-full bg-primary/5 blur-2xl" />
       
       {/* Content */}
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
             <Gift className="w-5 h-5 text-primary" />
           </div>
-          <h3 className="text-base font-bold text-foreground">
+          <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
             საჩუქრები მაღაზიაში
           </h3>
         </div>

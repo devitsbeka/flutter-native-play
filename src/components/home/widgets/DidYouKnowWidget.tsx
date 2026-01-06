@@ -124,20 +124,20 @@ export function DidYouKnowWidget() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15 }}
-            className="flex gap-2.5"
+            className="flex gap-3"
           >
             {/* ვიცოდი button */}
             <motion.button
               onClick={() => vote("knew")}
               disabled={voting || !user}
-              whileTap={{ y: 1, scale: 0.98 }}
-              className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-[13px] tracking-wide
-                bg-card text-foreground border border-border/80
+              whileTap={{ y: 2 }}
+              className="flex-1 py-3 px-4 rounded-xl font-bold text-sm
+                bg-card text-foreground border-2 border-border
                 transition-all duration-150
                 disabled:opacity-40 disabled:cursor-not-allowed
-                hover:border-border hover:bg-muted/30"
+                hover:bg-muted/30"
               style={{
-                boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 3px 0 0 hsl(var(--border)), 0 4px 8px rgba(0,0,0,0.06)",
               }}
             >
               ვიცოდი
@@ -147,14 +147,14 @@ export function DidYouKnowWidget() {
             <motion.button
               onClick={() => vote("didnt_know")}
               disabled={voting || !user}
-              whileTap={{ y: 1, scale: 0.98 }}
-              className="flex-1 py-2.5 px-4 rounded-xl font-semibold text-[13px] tracking-wide
-                bg-card text-foreground border border-border/80
+              whileTap={{ y: 2 }}
+              className="flex-1 py-3 px-4 rounded-xl font-bold text-sm
+                bg-card text-foreground border-2 border-border
                 transition-all duration-150
                 disabled:opacity-40 disabled:cursor-not-allowed
-                hover:border-border hover:bg-muted/30"
+                hover:bg-muted/30"
               style={{
-                boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.02)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 3px 0 0 hsl(var(--border)), 0 4px 8px rgba(0,0,0,0.06)",
               }}
             >
               არ ვიცოდი
