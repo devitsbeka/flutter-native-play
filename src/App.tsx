@@ -26,6 +26,8 @@ import TVDisplay from "./pages/TVDisplay";
 import TVController from "./pages/TVController";
 import TVReceiver from "./pages/TVReceiver";
 import TVHostController from "./pages/TVHostController";
+import TVLobby from "./pages/TVLobby";
+import TVJoin from "./pages/TVJoin";
 
 import AdventureMapAdmin from "./pages/AdventureMapAdmin";
 import VIP from "./pages/VIP";
@@ -84,10 +86,12 @@ const App = () => (
               <Route path="/game" element={<Game />} />
               <Route path="/team" element={<TeamV2 />} />
               <Route path="/room/:code" element={<RoomRedirect />} />
-              <Route path="/tv" element={<TVReceiver />} />
-              <Route path="/tv/receiver" element={<TVReceiver />} />
+              <Route path="/tv" element={<TVLobby />} />
+              <Route path="/tv/old" element={<TVReceiver />} />
               <Route path="/tv/host/:sessionId" element={<TVHostController />} />
               <Route path="/tv/:code" element={<TVDisplay />} />
+              <Route path="/join" element={<TVJoin />} />
+              <Route path="/join/:code" element={<TVJoin />} />
               <Route path="/controller/:code" element={<TVController />} />
               <Route path="/vip" element={<VIP />} />
               <Route path="/discover" element={<Discover />} />
