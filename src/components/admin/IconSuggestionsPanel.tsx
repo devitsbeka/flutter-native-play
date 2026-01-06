@@ -127,7 +127,7 @@ export function IconSuggestionsPanel({
   );
 
   return (
-    <div className="border-t border-border/30 bg-gradient-to-b from-primary/5 to-transparent">
+    <ScrollArea className="max-h-[280px] border-t border-border/30 bg-gradient-to-b from-primary/5 to-transparent">
       {/* Keywords Section */}
       <div className="p-3 border-b border-border/20">
         <div className="flex items-center gap-2 mb-2">
@@ -334,6 +334,6 @@ export function IconSuggestionsPanel({
           </>
         ) : null}
       </div>
-    </div>
+    </ScrollArea>
   );
 }
