@@ -5,6 +5,7 @@ import { Users, Bell, MessageCircle } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { CreateRoomPage } from "@/components/team/CreateRoomPage";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobby } from "@/components/team/RoomLobby";
@@ -39,6 +40,7 @@ function TeamContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { 
     phase, 
     room,
@@ -183,10 +185,10 @@ function TeamContent() {
           >
             <Users className="w-12 h-12 text-slate-700" />
           </motion.div>
-          <h1 className="font-display text-2xl text-slate-800 mb-3">მულტიპლეიერი</h1>
-          <p className="text-slate-600 text-center mb-6">შედი ანგარიშზე მეგობრებთან სათამაშოდ</p>
+          <h1 className="font-display text-2xl text-slate-800 mb-3">{t('team.multiplayer')}</h1>
+          <p className="text-slate-600 text-center mb-6">{t('team.signInToPlay')}</p>
           <ChunkyButton variant="secondary" onClick={() => navigate("/auth")}>
-            შესვლა
+            {t('auth.signIn')}
           </ChunkyButton>
         </div>
       </div>
@@ -197,7 +199,7 @@ function TeamContent() {
     <div className="min-h-screen relative overflow-hidden pb-24">
       {/* Header */}
       <PageHeader
-        title="მეგობრები"
+        title={t('team.friends')}
         showBack={true}
         rightElements={
           <div className="flex items-center gap-2">

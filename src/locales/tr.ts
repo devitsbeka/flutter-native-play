@@ -1,0 +1,4 @@
+// Turkish - extending English
+import type { KaTranslations } from './ka';
+import { en } from './en';
+export const tr: KaTranslations = { ...en, common: { ...en.common, play: "Oyna", back: "Geri", next: "İleri", close: "Kapat", save: "Kaydet", cancel: "İptal", loading: "Yükleniyor...", error: "Hata", success: "Başarılı!", continue: "Devam", coins: "Altın", gems: "Elmas" }, nav: { ...en.nav, explore: "Keşfet", map: "Harita", play: "Oyna", rank: "Sıralama", profile: "Profil", settings: "Ayarlar", home: "Ana Sayfa", menu: "Menü" }, team: { ...en.team, multiplayer: "Çok Oyunculu", signInToPlay: "Arkadaşlarla oynamak için giriş yap", friends: "Arkadaşlar", yourRooms: "Odalarınız", noActiveRooms: "Aktif oda yok", join: "Katıl", recentGames: "Son Oyunlar", noGamesYet: "Henüz oyun yok" }, auth: { ...en.auth, signIn: "Giriş Yap", signUp: "Kayıt Ol", signOut: "Çıkış" }, featured: { ...en.featured, badgeNew: "Yeni", badgePopular: "Popüler", badgeBestPrice: "En İyi Fiyat" } };
