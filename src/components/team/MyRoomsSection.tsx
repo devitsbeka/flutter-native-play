@@ -1,15 +1,17 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, Gamepad2 } from "lucide-react";
+import { Plus, Users, Gamepad2, Tv } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
-
+import { TVDiscoveryModal } from "./TVDiscoveryModal";
 export function MyRoomsSection() {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
+  const [showTVModal, setShowTVModal] = useState(false);
 
   // Clear unread activity when joining a room
   const handleJoin = async (room: MyRoom) => {
@@ -75,10 +77,22 @@ export function MyRoomsSection() {
 
   return (
     <div className="space-y-3">
-      {/* Header */}
+      {/* Header with TV button */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
+        
+        {/* TV Button */}
+        <button
+          onClick={() => setShowTVModal(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all"
+        >
+          <Tv className="w-4 h-4 text-purple-600" />
+          <span className="text-sm font-medium text-slate-700">{t('tv.connectToTV')}</span>
+        </button>
       </div>
+      
+      {/* TV Discovery Modal */}
+      <TVDiscoveryModal open={showTVModal} onOpenChange={setShowTVModal} />
 
       {/* Rooms List */}
       {rooms.length === 0 ? (

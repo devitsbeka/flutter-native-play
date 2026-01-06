@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Tv, Loader2 } from 'lucide-react';
 import { TVAwaitingPairingScreen } from '@/components/tv/TVAwaitingPairingScreen';
@@ -9,10 +9,12 @@ import { TVCountdownScreen } from '@/components/tv/TVCountdownScreen';
 import { TVQuestionScreen } from '@/components/tv/TVQuestionScreen';
 import { TVRevealScreen } from '@/components/tv/TVRevealScreen';
 import { TVScoreboardScreen } from '@/components/tv/TVScoreboardScreen';
+import { TVBroadcastMode } from '@/components/tv/TVBroadcastMode';
 import { TVSessionProvider, useTVSession } from '@/contexts/TVSessionContext';
 
 // This page is displayed on the TV itself
 // It generates its own 4-digit pairing code and waits for a host to connect
+// It also broadcasts presence via Supabase Realtime for phone discovery
 
 const TVReceiverContent: React.FC = () => {
   const navigate = useNavigate();
@@ -203,9 +205,19 @@ const TVReceiverContent: React.FC = () => {
   switch (phase) {
     case 'awaiting':
       return (
-        <TVAwaitingPairingScreen
-          pairingCode={tvPairingCode}
-        />
+        <div className="relative">
+          {/* Broadcast presence for discovery */}
+          {sessionId && (
+            <TVBroadcastMode
+              sessionId={sessionId}
+              pairingCode={tvPairingCode}
+              deviceName="Living Room TV"
+            />
+          )}
+          <TVAwaitingPairingScreen
+            pairingCode={tvPairingCode}
+          />
+        </div>
       );
     case 'waiting':
       return (

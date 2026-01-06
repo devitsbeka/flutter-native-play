@@ -923,6 +923,24 @@ export const ka = {
   // ==========================================
   tv: {
     start: "დაწყება! 🚀",
+    connectToTV: "TV-სთან დაკავშირება",
+    discoverNearbyTVs: "მოძებნე ახლომდებარე TV-ები თამაშისთვის",
+    scanningForDevices: "TV-ები იძებნება...",
+    lookingForTVs: "ვეძებთ TV-ებს შენს ქსელში...",
+    noDevicesFound: "TV-ები ვერ მოიძებნა",
+    scanAgain: "თავიდან მოძებნა",
+    enterCodeManually: "კოდის ხელით შეყვანა",
+    enterCodeFromTV: "შეიყვანე კოდი TV ეკრანიდან",
+    connect: "დაკავშირება",
+    connecting: "კავშირდება...",
+    connected: "დაკავშირებულია!",
+    connectionFailed: "დაკავშირება ვერ მოხერხდა",
+    code: "კოდი",
+    playersConnected: "მოთამაშე დაკავშირებულია",
+    startGame: "თამაშის დაწყება",
+    waitingForHost: "მასპინძელს ველოდებით...",
+    waitingForPlayers: "მოთამაშეებს ველოდებით...",
+    scanToJoin: "დაასკანერე შესაერთებლად",
   },
 
   // ==========================================
