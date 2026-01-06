@@ -1098,6 +1098,39 @@ export type Database = {
           },
         ]
       }
+      trivia_facts: {
+        Row: {
+          created_at: string | null
+          fact_text: string
+          id: string
+          image_type: string | null
+          is_active: boolean | null
+          source: string | null
+          votes_didnt_know: number | null
+          votes_knew: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          fact_text: string
+          id?: string
+          image_type?: string | null
+          is_active?: boolean | null
+          source?: string | null
+          votes_didnt_know?: number | null
+          votes_knew?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          fact_text?: string
+          id?: string
+          image_type?: string | null
+          is_active?: boolean | null
+          source?: string | null
+          votes_didnt_know?: number | null
+          votes_knew?: number | null
+        }
+        Relationships: []
+      }
       tv_sessions: {
         Row: {
           category_icon: string | null
@@ -1411,6 +1444,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_fact_votes: {
+        Row: {
+          created_at: string | null
+          fact_id: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          fact_id: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string | null
+          fact_id?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_fact_votes_fact_id_fkey"
+            columns: ["fact_id"]
+            isOneToOne: false
+            referencedRelation: "trivia_facts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_favorites: {
         Row: {

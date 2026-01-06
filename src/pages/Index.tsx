@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { DesktopSidebars } from "@/components/home/DesktopSidebars";
 import { Bell, Menu, Check, Clock } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
@@ -377,6 +378,9 @@ export default function Index() {
         onTouchEnd={handleTouchEnd}
       >
         {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
+        
+        {/* Desktop-only sidebars */}
+        <DesktopSidebars />
 
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
