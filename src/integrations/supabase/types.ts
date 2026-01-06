@@ -100,6 +100,8 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_language_specific: boolean | null
+          language: string | null
           name: string
           sort_order: number | null
           total_levels: number
@@ -116,6 +118,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_language_specific?: boolean | null
+          language?: string | null
           name: string
           sort_order?: number | null
           total_levels?: number
@@ -132,6 +136,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_language_specific?: boolean | null
+          language?: string | null
           name?: string
           sort_order?: number | null
           total_levels?: number
