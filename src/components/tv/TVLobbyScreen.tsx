@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Users, Crown, Smartphone } from 'lucide-react';
+import { Users, Crown, Smartphone, Sparkles } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { QRCodeSVG } from 'qrcode.react';
 
 export const TVLobbyScreen: React.FC = () => {
-  const { code, players } = useTVGame();
+  const { code, players, categoryName, categoryIcon } = useTVGame();
   
   const joinUrl = `${window.location.origin}/join?code=${code}`;
 
@@ -103,18 +103,25 @@ export const TVLobbyScreen: React.FC = () => {
             )}
           </div>
 
-          {/* Instructions */}
+          {/* Category display or Instructions */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="mt-8 text-center"
           >
-            <p className="text-purple-200 text-xl">
-              {players.some(p => p.isHost) 
-                ? "The host will start the game from their phone"
-                : "First player to join becomes the host"}
-            </p>
+            {categoryName ? (
+              <div className="inline-flex items-center gap-3 bg-purple-600/30 backdrop-blur rounded-2xl px-6 py-3 border border-purple-400/30">
+                <Sparkles className="w-6 h-6 text-yellow-400" />
+                <span className="text-white text-xl font-semibold">Category: {categoryName}</span>
+              </div>
+            ) : (
+              <p className="text-purple-200 text-xl">
+                {players.some(p => p.isHost) 
+                  ? "The host will start the game from their phone"
+                  : "First player to join becomes the host"}
+              </p>
+            )}
           </motion.div>
         </div>
       </div>
