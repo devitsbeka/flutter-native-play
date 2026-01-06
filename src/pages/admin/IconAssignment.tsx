@@ -992,21 +992,25 @@ export default function IconAssignment() {
 
           {/* Icon Suggestions Panel - shows keywords and suggested icons */}
           {selectedQuestion && selectedQuestionIds.size === 0 && (
-            <IconSuggestionsPanel
-              question={{
-                id: selectedQuestion.id,
-                question_text: selectedQuestion.question_text,
-                correct_answer: selectedQuestion.correct_answer,
-                icon_slug: selectedQuestion.icon_slug
-              }}
-              onAssignIcon={handleAssignIcon}
-              getIconUrl={getIconUrl}
-              onRefresh={refetch}
-            />
+            <div className="shrink-0 max-h-[250px] overflow-hidden">
+              <IconSuggestionsPanel
+                question={{
+                  id: selectedQuestion.id,
+                  question_text: selectedQuestion.question_text,
+                  correct_answer: selectedQuestion.correct_answer,
+                  icon_slug: selectedQuestion.icon_slug
+                }}
+                onAssignIcon={handleAssignIcon}
+                getIconUrl={getIconUrl}
+                onRefresh={refetch}
+              />
+            </div>
           )}
 
-          {/* Icon Search */}
-          <div className="shrink-0 p-3 border-b border-border/30">
+          {/* Icon Search + Grid Section */}
+          <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+            {/* Icon Search */}
+            <div className="shrink-0 p-3 border-b border-border/30">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -1108,6 +1112,7 @@ export default function IconAssignment() {
               </div>
             )}
           </ScrollArea>
+          </div>
         </div>
       </div>
       </TabsContent>
