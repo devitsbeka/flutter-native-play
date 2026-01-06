@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Georgian to English transliteration map
+// Georgian to English transliteration map (phonetic)
 const GEORGIAN_TO_ENGLISH: Record<string, string> = {
   'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e',
   'ვ': 'v', 'ზ': 'z', 'თ': 't', 'ი': 'i', 'კ': 'k',
@@ -17,6 +17,196 @@ const GEORGIAN_TO_ENGLISH: Record<string, string> = {
   'ჩ': 'ch', 'ც': 'ts', 'ძ': 'dz', 'წ': 'ts', 'ჭ': 'ch',
   'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
 };
+
+// Georgian to English SEMANTIC translation (meaning-based, not phonetic)
+const GEORGIAN_TO_ENGLISH_MEANING: Record<string, string[]> = {
+  // Economics & Finance
+  'ეკონომიკ': ['economics', 'economy', 'economic'],
+  'ეკონომიკური': ['economics', 'economic'],
+  'ფულ': ['money', 'cash', 'currency'],
+  'ფულის': ['money', 'cash'],
+  'ინფლაცია': ['inflation', 'price'],
+  'თეორია': ['theory', 'theorem'],
+  'მონეტარიზმ': ['monetary', 'monetarism', 'money'],
+  'ფინანს': ['finance', 'financial'],
+  'ბანკ': ['bank', 'banking'],
+  'ვალუტა': ['currency', 'exchange'],
+  'ინვესტ': ['investment', 'invest'],
+  'ბიზნეს': ['business', 'company'],
+  'კაპიტალ': ['capital', 'capitalism'],
+  'ბაზარ': ['market', 'trading'],
+  'მიწოდება': ['supply', 'delivery'],
+  'მოთხოვნა': ['demand', 'request'],
+  'გადასახად': ['tax', 'taxation'],
+  'ბიუჯეტ': ['budget', 'financial'],
+  'აქცია': ['stock', 'share', 'action'],
+  'ობლიგაცია': ['bond', 'obligation'],
+  'კრედიტ': ['credit', 'loan'],
+  'სესხ': ['loan', 'borrow'],
+  'პროცენტ': ['interest', 'percent'],
+  
+  // Science & Education
+  'მეცნიერ': ['science', 'scientist', 'scientific'],
+  'ფიზიკა': ['physics', 'physical'],
+  'ქიმია': ['chemistry', 'chemical'],
+  'ბიოლოგია': ['biology', 'biological'],
+  'მათემატიკა': ['math', 'mathematics'],
+  'ტექნოლოგია': ['technology', 'tech'],
+  'კომპიუტერ': ['computer', 'computing'],
+  'პროგრამ': ['program', 'programming', 'software'],
+  'ინტერნეტ': ['internet', 'web', 'online'],
+  'ელექტრ': ['electric', 'electricity', 'electronic'],
+  'ენერგია': ['energy', 'power'],
+  'ატომ': ['atom', 'atomic', 'nuclear'],
+  'მოლეკულა': ['molecule', 'molecular'],
+  'გენ': ['gene', 'genetic', 'genetics'],
+  'უჯრედ': ['cell', 'cellular'],
+  'ვირუს': ['virus', 'viral'],
+  'ბაქტერია': ['bacteria', 'bacterial'],
+  'ვაქცინა': ['vaccine', 'vaccination'],
+  'მედიცინ': ['medicine', 'medical'],
+  'ექიმ': ['doctor', 'physician'],
+  'საავადმყოფო': ['hospital', 'clinic'],
+  
+  // Geography & Nature
+  'მთა': ['mountain', 'peak', 'mount'],
+  'ზღვა': ['sea', 'ocean', 'marine'],
+  'მდინარე': ['river', 'stream'],
+  'ტყე': ['forest', 'tree', 'woods'],
+  'უდაბნო': ['desert', 'arid'],
+  'კუნძული': ['island', 'isle'],
+  'კონტინენტ': ['continent', 'continental'],
+  'ქვეყანა': ['country', 'nation'],
+  'დედაქალაქ': ['capital', 'city'],
+  'სახელმწიფო': ['state', 'government'],
+  'ევროპა': ['europe', 'european'],
+  'აზია': ['asia', 'asian'],
+  'აფრიკა': ['africa', 'african'],
+  'ამერიკა': ['america', 'american'],
+  'კლიმატ': ['climate', 'weather'],
+  'ატმოსფერო': ['atmosphere', 'air'],
+  'ეკოლოგია': ['ecology', 'environment'],
+  'ბუნება': ['nature', 'natural'],
+  
+  // History & Culture
+  'ისტორია': ['history', 'historical'],
+  'მეფე': ['king', 'royal', 'monarch'],
+  'დედოფალ': ['queen', 'royal'],
+  'ომი': ['war', 'battle', 'conflict'],
+  'რევოლუცია': ['revolution', 'revolutionary'],
+  'იმპერია': ['empire', 'imperial'],
+  'ცივილიზაცია': ['civilization', 'civilized'],
+  'კულტურა': ['culture', 'cultural'],
+  'ხელოვნება': ['art', 'artistic'],
+  'მუზეუმ': ['museum', 'gallery'],
+  'არქიტექტურა': ['architecture', 'building'],
+  'ძეგლ': ['monument', 'memorial'],
+  'რელიგია': ['religion', 'religious'],
+  'ეკლესია': ['church', 'cathedral'],
+  'მეჩეთ': ['mosque', 'islamic'],
+  'ტაძარ': ['temple', 'shrine'],
+  
+  // Sports
+  'ფეხბურთ': ['football', 'soccer'],
+  'კალათბურთ': ['basketball', 'basket'],
+  'ტენის': ['tennis', 'racket'],
+  'ჩემპიონ': ['champion', 'championship'],
+  'ოლიმპ': ['olympic', 'olympics'],
+  'სპორტ': ['sport', 'sports', 'athletic'],
+  'გუნდ': ['team', 'squad'],
+  'მოთამაშე': ['player', 'athlete'],
+  'მწვრთნელ': ['coach', 'trainer'],
+  'სტადიონ': ['stadium', 'arena'],
+  'ფინალ': ['final', 'finals'],
+  'თასი': ['cup', 'trophy'],
+  'მედალ': ['medal', 'medallion'],
+  
+  // Food & Cooking
+  'საჭმელ': ['food', 'meal', 'dish'],
+  'ხორც': ['meat', 'beef'],
+  'პურ': ['bread', 'bakery'],
+  'ყველ': ['cheese', 'dairy'],
+  'ღვინო': ['wine', 'grape'],
+  'ხილ': ['fruit', 'fruity'],
+  'ბოსტნეულ': ['vegetable', 'veggie'],
+  'რესტორან': ['restaurant', 'dining'],
+  'სამზარეულო': ['kitchen', 'cooking'],
+  'რეცეპტ': ['recipe', 'cooking'],
+  'ფონდიუ': ['fondue', 'cheese'],
+  'შვეიცარ': ['swiss', 'switzerland'],
+  'იტალ': ['italian', 'italy'],
+  'საფრანგეთ': ['france', 'french'],
+  'გერმან': ['german', 'germany'],
+  'ესპანეთ': ['spain', 'spanish'],
+  
+  // Music & Entertainment
+  'მუსიკა': ['music', 'musical'],
+  'სიმღერა': ['song', 'singing'],
+  'კონცერტ': ['concert', 'performance'],
+  'ინსტრუმენტ': ['instrument', 'musical'],
+  'პიანინო': ['piano', 'keyboard'],
+  'გიტარა': ['guitar', 'string'],
+  'ფილმ': ['film', 'movie', 'cinema'],
+  'თეატრ': ['theater', 'theatre', 'drama'],
+  'მსახიობ': ['actor', 'actress', 'acting'],
+  'რეჟისორ': ['director', 'directing'],
+  
+  // Animals
+  'ცხოველ': ['animal', 'creature'],
+  'ძაღლ': ['dog', 'canine'],
+  'კატა': ['cat', 'feline'],
+  'ფრინველ': ['bird', 'avian'],
+  'თევზ': ['fish', 'aquatic'],
+  'ცხენ': ['horse', 'equine'],
+  'ძროხა': ['cow', 'cattle'],
+  'ლომ': ['lion', 'big-cat'],
+  'ვეფხვ': ['tiger', 'big-cat'],
+  'სპილო': ['elephant', 'mammal'],
+  
+  // Transportation
+  'მანქანა': ['car', 'vehicle', 'automobile'],
+  'თვითმფრინავ': ['airplane', 'aircraft', 'aviation'],
+  'მატარებელ': ['train', 'railway'],
+  'გემი': ['ship', 'boat', 'vessel'],
+  'ველოსიპედ': ['bicycle', 'bike', 'cycling'],
+  'აეროპორტ': ['airport', 'aviation'],
+  'სადგურ': ['station', 'terminal'],
+  
+  // Technology & Innovation
+  'ხელოვნურ': ['artificial', 'ai'],
+  'ინტელექტ': ['intelligence', 'ai', 'smart'],
+  'რობოტ': ['robot', 'robotic'],
+  'კოსმოს': ['space', 'cosmos', 'cosmic'],
+  'სატელიტ': ['satellite', 'space'],
+  'რაკეტა': ['rocket', 'missile'],
+  'თანამგზავრ': ['satellite', 'moon'],
+};
+
+// Translate Georgian word to English meanings
+function translateGeorgianToEnglish(word: string): string[] {
+  const translations: string[] = [];
+  const wordLower = word.toLowerCase();
+  
+  // Check exact match first
+  if (GEORGIAN_TO_ENGLISH_MEANING[wordLower]) {
+    translations.push(...GEORGIAN_TO_ENGLISH_MEANING[wordLower]);
+  }
+  
+  // Check prefix/root matches (Georgian word variations)
+  for (const [georgianRoot, englishWords] of Object.entries(GEORGIAN_TO_ENGLISH_MEANING)) {
+    // Skip if already matched exactly
+    if (georgianRoot === wordLower) continue;
+    
+    // Check if word starts with root or root starts with word (min 4 chars for accuracy)
+    if (georgianRoot.length >= 4 && wordLower.length >= 4) {
+      if (wordLower.startsWith(georgianRoot) || georgianRoot.startsWith(wordLower)) {
+        translations.push(...englishWords);
+      }
+    }
+  }
+  
+  return [...new Set(translations)];
+}
 
 // Levenshtein distance for fuzzy matching
 function levenshteinDistance(a: string, b: string): number {
@@ -48,8 +238,6 @@ function isSimilar(a: string, b: string): boolean {
   if (a.length < 4 || b.length < 4) return false;
   const distance = levenshteinDistance(a, b);
   const maxLen = Math.max(a.length, b.length);
-  // Allow more edits for transliteration variations
-  // fondiu vs fondue = 2 edits, should match
   const threshold = maxLen <= 5 ? 1 : maxLen <= 8 ? 2 : 3;
   return distance <= threshold;
 }
@@ -66,11 +254,11 @@ function transliterateGeorgian(text: string): string {
 const GEORGIAN_STOP_WORDS = [
   'რა', 'არის', 'ეს', 'რომ', 'და', 'ან', 'თუ', 'რომელი', 'რომელია',
   'როგორ', 'როდის', 'სად', 'ვინ', 'რატომ', 'რამდენი', 'რომლის',
-  'მისი', 'ჩვენი', 'თქვენი', 'მათი', 'ყველა', 'ერთი', 'ორი', 'სამი'
+  'მისი', 'ჩვენი', 'თქვენი', 'მათი', 'ყველა', 'ერთი', 'ორი', 'სამი',
+  'იწვევს', 'ამტკიცებს', 'გამოიყენება', 'წარმოადგენს', 'შეიძლება'
 ];
 
 function extractGeorgianWords(text: string): string[] {
-  // Match Georgian word sequences
   const georgianPattern = /[\u10A0-\u10FF]+/g;
   const matches = text.match(georgianPattern) || [];
   return matches.filter(word => 
@@ -80,14 +268,12 @@ function extractGeorgianWords(text: string): string[] {
 }
 
 function extractEnglishWords(text: string): string[] {
-  // Match English word sequences (4+ chars)
   const englishPattern = /[a-zA-Z]{4,}/g;
   const matches = text.match(englishPattern) || [];
   return matches.map(w => w.toLowerCase());
 }
 
 function extractQuotedText(text: string): string[] {
-  // Match text in quotes (both types)
   const quotePattern = /["""''](.*?)["""'']/g;
   const results: string[] = [];
   let match;
@@ -156,15 +342,26 @@ serve(async (req) => {
     // Extract keywords from all sources
     const keywordSources: KeywordSource[] = [];
 
-    // 1. Georgian words from question
+    // 1. Georgian words from question - add BOTH phonetic and semantic translations
     const georgianFromQuestion = extractGeorgianWords(questionText);
     for (const word of georgianFromQuestion) {
+      // Add phonetic transliteration (fondiu → fondue via fuzzy)
       const transliterated = transliterateGeorgian(word);
       keywordSources.push({
         keyword: word,
         transliterated,
         source: 'question_georgian'
       });
+      
+      // Add semantic translations (ეკონომიკური → economics)
+      const semanticTranslations = translateGeorgianToEnglish(word);
+      for (const translation of semanticTranslations) {
+        keywordSources.push({
+          keyword: word,
+          transliterated: translation,
+          source: 'question_georgian'
+        });
+      }
     }
 
     // 2. English words from question
@@ -188,16 +385,27 @@ serve(async (req) => {
       });
     }
 
-    // 4. Georgian words from answer
+    // 4. Georgian words from answer - add BOTH phonetic and semantic translations
     if (correctAnswer) {
       const georgianFromAnswer = extractGeorgianWords(correctAnswer);
       for (const word of georgianFromAnswer) {
+        // Phonetic transliteration
         const transliterated = transliterateGeorgian(word);
         keywordSources.push({
           keyword: word,
           transliterated,
           source: 'answer_georgian'
         });
+        
+        // Semantic translations
+        const semanticTranslations = translateGeorgianToEnglish(word);
+        for (const translation of semanticTranslations) {
+          keywordSources.push({
+            keyword: word,
+            transliterated: translation,
+            source: 'answer_georgian'
+          });
+        }
       }
 
       // 5. English words from answer
