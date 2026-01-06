@@ -180,15 +180,42 @@ export const TVSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return false;
 
     try {
-      const { data: session, error } = await supabase
+      const upperCode = code.toUpperCase();
+      
+      // Try to find session by pairing_code first (host-created sessions)
+      let { data: session, error } = await supabase
         .from('tv_sessions')
         .select('*')
-        .eq('pairing_code', code.toUpperCase())
-        .single();
+        .eq('pairing_code', upperCode)
+        .maybeSingle();
+
+      // If not found, try tv_pairing_code (TV-initiated sessions)
+      if (!session) {
+        const result = await supabase
+          .from('tv_sessions')
+          .select('*')
+          .eq('tv_pairing_code', upperCode)
+          .maybeSingle();
+        
+        session = result.data;
+        error = result.error;
+      }
 
       if (error || !session) {
         console.error('Session not found:', error);
         return false;
+      }
+      
+      // If this is a TV-initiated session, update it to pair with this user as host
+      if (!session.host_user_id && session.tv_pairing_code) {
+        await supabase
+          .from('tv_sessions')
+          .update({ 
+            host_user_id: user.id,
+            is_paired: true,
+            status: 'waiting'
+          })
+          .eq('id', session.id);
       }
 
       // Get user profile
