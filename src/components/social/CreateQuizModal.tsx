@@ -69,9 +69,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
       });
 
       if (error) throw error;
+      
+      const generatedQuestions = data?.questions || [];
+      if (!generatedQuestions.length) {
+        throw new Error("No questions generated");
+      }
 
-      setQuestions(data.questions);
-      setTitle(data.suggestedTitle || `${subject} Quiz`);
+      setQuestions(generatedQuestions);
+      setTitle(data?.suggestedTitle || `${subject} Quiz`);
       setStep(4);
     } catch (error) {
       console.error("Error generating quiz:", error);
