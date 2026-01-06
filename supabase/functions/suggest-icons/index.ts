@@ -18,12 +18,41 @@ const GEORGIAN_TO_ENGLISH: Record<string, string> = {
   'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
 };
 
-// Common Georgian words to ignore (stop words)
-const GEORGIAN_STOP_WORDS = [
-  'რა', 'არის', 'ეს', 'რომ', 'და', 'ან', 'თუ', 'რომელი', 'რომელია',
-  'როგორ', 'როდის', 'სად', 'ვინ', 'რატომ', 'რამდენი', 'რომლის',
-  'მისი', 'ჩვენი', 'თქვენი', 'მათი', 'ყველა', 'ერთი', 'ორი', 'სამი'
-];
+// Levenshtein distance for fuzzy matching
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+// Check if two strings are similar (within edit distance based on length)
+function isSimilar(a: string, b: string): boolean {
+  if (a.length < 4 || b.length < 4) return false;
+  const distance = levenshteinDistance(a, b);
+  const maxLen = Math.max(a.length, b.length);
+  // Allow more edits for transliteration variations
+  // fondiu vs fondue = 2 edits, should match
+  const threshold = maxLen <= 5 ? 1 : maxLen <= 8 ? 2 : 3;
+  return distance <= threshold;
+}
 
 function transliterateGeorgian(text: string): string {
   let result = '';
@@ -32,6 +61,13 @@ function transliterateGeorgian(text: string): string {
   }
   return result;
 }
+
+// Common Georgian words to ignore (stop words)
+const GEORGIAN_STOP_WORDS = [
+  'რა', 'არის', 'ეს', 'რომ', 'და', 'ან', 'თუ', 'რომელი', 'რომელია',
+  'როგორ', 'როდის', 'სად', 'ვინ', 'რატომ', 'რამდენი', 'რომლის',
+  'მისი', 'ჩვენი', 'თქვენი', 'მათი', 'ყველა', 'ერთი', 'ორი', 'სამი'
+];
 
 function extractGeorgianWords(text: string): string[] {
   // Match Georgian word sequences
@@ -180,18 +216,36 @@ serve(async (req) => {
     // Get unique transliterated keywords
     const uniqueKeywords = [...new Set(keywordSources.map(k => k.transliterated))];
     
-    // Fetch all icons for matching
-    const { data: allIcons, error: iconsError } = await supabase
-      .from('icon_library')
-      .select('slug, title, tags, icon_url')
-      .limit(10000);
-
-    if (iconsError) {
-      console.error('Error fetching icons:', iconsError);
-      throw iconsError;
+    // Fetch icons in batches to overcome 1000 row limit
+    const allIcons: { slug: string; title: string; tags: string[]; icon_url: string | null }[] = [];
+    let offset = 0;
+    const batchSize = 1000;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const { data: batch, error: batchError } = await supabase
+        .from('icon_library')
+        .select('slug, title, tags, icon_url')
+        .range(offset, offset + batchSize - 1);
+      
+      if (batchError) {
+        console.error('Error fetching icons batch:', batchError);
+        throw batchError;
+      }
+      
+      if (batch && batch.length > 0) {
+        allIcons.push(...batch);
+        offset += batch.length;
+        hasMore = batch.length === batchSize;
+      } else {
+        hasMore = false;
+      }
+      
+      // Safety limit
+      if (offset >= 15000) break;
     }
 
-    console.log(`Loaded ${allIcons?.length} icons for matching`);
+    console.log(`Loaded ${allIcons.length} icons for matching`);
 
     // Score each icon against keywords
     const suggestions: IconSuggestion[] = [];
@@ -245,12 +299,21 @@ serve(async (req) => {
           score = 50;
           matchReason = `Partial tag match: "${keyword}"`;
         }
-        // Fuzzy matching for transliteration variations
+        // Fuzzy matching using Levenshtein distance (handles transliteration variations like fondiu ≈ fondue)
+        else if (isSimilar(keyword, slugLower)) {
+          score = 75;
+          matchReason = `Fuzzy match: "${keyword}" ≈ "${slugLower}"`;
+        }
+        // Fuzzy match against title
+        else if (isSimilar(keyword, titleLower)) {
+          score = 65;
+          matchReason = `Fuzzy title match: "${keyword}" ≈ "${titleLower}"`;
+        }
+        // Prefix matching as fallback
         else if (keyword.length >= 4) {
-          // Check if first 4+ chars match (handles transliteration variations)
           const keywordPrefix = keyword.substring(0, Math.min(5, keyword.length));
           if (slugLower.startsWith(keywordPrefix) || keywordPrefix.startsWith(slugLower.substring(0, 4))) {
-            score = 60;
+            score = 55;
             matchReason = `Prefix match: "${keywordPrefix}"`;
           }
         }
