@@ -1001,6 +1001,7 @@ export default function IconAssignment() {
               }}
               onAssignIcon={handleAssignIcon}
               getIconUrl={getIconUrl}
+              onRefresh={refetch}
             />
           )}
 

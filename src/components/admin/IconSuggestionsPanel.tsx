@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Sparkles, Tag, Check, Lightbulb, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, Tag, Check, Lightbulb, ArrowRight, Link2, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useIconSuggestions, KeywordSource, IconSuggestion } from '@/hooks/useIconSuggestions';
+import { useSimilarQuestions, SimilarQuestion } from '@/hooks/useSimilarQuestions';
+import { toast } from 'sonner';
 
 interface QuestionData {
   id: string;
@@ -17,6 +19,7 @@ interface IconSuggestionsPanelProps {
   question: QuestionData | null;
   onAssignIcon: (slug: string) => void;
   getIconUrl: (slug: string) => string | null;
+  onRefresh?: () => void;
 }
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
@@ -30,9 +33,18 @@ const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
 export function IconSuggestionsPanel({ 
   question, 
   onAssignIcon, 
-  getIconUrl 
+  getIconUrl,
+  onRefresh
 }: IconSuggestionsPanelProps) {
   const { loading, result, getSuggestions, clearSuggestions } = useIconSuggestions();
+  const { 
+    loading: loadingSimilar, 
+    similarQuestions, 
+    propagating,
+    findSimilar, 
+    propagateIcon,
+    clearSimilar 
+  } = useSimilarQuestions();
   const [lastQuestionId, setLastQuestionId] = useState<string | null>(null);
 
   // Auto-fetch suggestions when question changes
@@ -40,11 +52,43 @@ export function IconSuggestionsPanel({
     if (question && question.id !== lastQuestionId) {
       setLastQuestionId(question.id);
       getSuggestions(question.question_text, question.correct_answer, question.id);
+      findSimilar(question.id, question.question_text, 0.4);
     } else if (!question) {
       clearSuggestions();
+      clearSimilar();
       setLastQuestionId(null);
     }
-  }, [question, lastQuestionId, getSuggestions, clearSuggestions]);
+  }, [question, lastQuestionId, getSuggestions, clearSuggestions, findSimilar, clearSimilar]);
+
+  // Handle propagating icon to similar questions
+  const handleApplyToSimilar = async () => {
+    if (!question?.icon_slug || similarQuestions.length === 0) return;
+
+    const targetIds = similarQuestions
+      .filter(sq => sq.icon_slug !== question.icon_slug)
+      .map(sq => sq.id);
+
+    if (targetIds.length === 0) {
+      toast.info('ყველა მსგავს კითხვას უკვე აქვს ეს აიკონი');
+      return;
+    }
+
+    const result = await propagateIcon(
+      question.id,
+      question.icon_slug,
+      targetIds,
+      0.4
+    );
+
+    if (result.success) {
+      toast.success(`აიკონი მინიჭებულია ${result.updated} მსგავს კითხვას`);
+      onRefresh?.();
+      // Refresh similar questions
+      findSimilar(question.id, question.question_text, 0.4);
+    } else {
+      toast.error('შეცდომა აიკონის მინიჭებისას');
+    }
+  };
 
   if (!question) {
     return (
@@ -76,6 +120,11 @@ export function IconSuggestionsPanel({
     acc[kw.source].push(kw);
     return acc;
   }, {} as Record<string, KeywordSource[]>);
+
+  // Filter similar questions that have different icons
+  const questionsToUpdate = similarQuestions.filter(
+    sq => sq.icon_slug !== question.icon_slug
+  );
 
   return (
     <div className="border-t border-border/30 bg-gradient-to-b from-primary/5 to-transparent">
@@ -120,7 +169,7 @@ export function IconSuggestionsPanel({
       </div>
 
       {/* Suggestions Section */}
-      <div className="p-3">
+      <div className="p-3 border-b border-border/20">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
           <span className="text-xs font-medium text-amber-500">შეთავაზებული აიკონები</span>
@@ -190,6 +239,100 @@ export function IconSuggestionsPanel({
             </div>
           </ScrollArea>
         )}
+      </div>
+
+      {/* Similar Questions Section */}
+      <div className="p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Link2 className="h-3.5 w-3.5 text-cyan-500" />
+          <span className="text-xs font-medium text-cyan-500">მსგავსი კითხვები</span>
+          {loadingSimilar ? (
+            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+          ) : similarQuestions.length > 0 && (
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+              {similarQuestions.length}
+            </Badge>
+          )}
+        </div>
+
+        {!loadingSimilar && similarQuestions.length === 0 ? (
+          <p className="text-xs text-muted-foreground">მსგავსი კითხვები ვერ მოიძებნა</p>
+        ) : !loadingSimilar && similarQuestions.length > 0 ? (
+          <>
+            <ScrollArea className="max-h-[150px] mb-2">
+              <div className="space-y-1">
+                {similarQuestions.slice(0, 5).map((sq) => {
+                  const hasSameIcon = sq.icon_slug === question.icon_slug;
+                  const iconUrl = sq.icon_slug ? getIconUrl(sq.icon_slug) : null;
+                  
+                  return (
+                    <div 
+                      key={sq.id}
+                      className={cn(
+                        "flex items-center gap-2 p-1.5 rounded text-xs",
+                        hasSameIcon ? "bg-green-500/10" : "bg-amber-500/10"
+                      )}
+                    >
+                      {/* Icon */}
+                      <div className="w-5 h-5 rounded bg-background flex items-center justify-center shrink-0">
+                        {iconUrl ? (
+                          <img src={iconUrl} alt="" className="w-4 h-4 object-contain" />
+                        ) : (
+                          <AlertCircle className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </div>
+                      
+                      {/* Question text */}
+                      <span className="flex-1 truncate text-[11px]">{sq.question_text}</span>
+                      
+                      {/* Similarity */}
+                      <Badge variant="outline" className="text-[9px] h-4 px-1 shrink-0">
+                        {Math.round(sq.similarity * 100)}%
+                      </Badge>
+                      
+                      {/* Status */}
+                      {hasSameIcon ? (
+                        <Check className="h-3 w-3 text-green-500 shrink-0" />
+                      ) : (
+                        <span className="text-[9px] text-amber-500 shrink-0">
+                          {sq.icon_slug || 'არ აქვს'}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+                {similarQuestions.length > 5 && (
+                  <p className="text-[10px] text-muted-foreground text-center py-1">
+                    +{similarQuestions.length - 5} სხვა მსგავსი
+                  </p>
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Apply to Similar Button */}
+            {question.icon_slug && questionsToUpdate.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full h-7 text-xs border-cyan-500/50 text-cyan-500 hover:bg-cyan-500/10"
+                onClick={handleApplyToSimilar}
+                disabled={propagating}
+              >
+                {propagating ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    მინიჭება...
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="h-3 w-3 mr-1" />
+                    "{question.icon_slug}" მინიჭება {questionsToUpdate.length} მსგავს კითხვაზე
+                  </>
+                )}
+              </Button>
+            )}
+          </>
+        ) : null}
       </div>
     </div>
   );

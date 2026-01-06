@@ -87,3 +87,9 @@ verify_jwt = false
 
 [functions.suggest-icons]
 verify_jwt = false
+
+[functions.find-similar-questions]
+verify_jwt = false
+
+[functions.propagate-icons]
+verify_jwt = false
