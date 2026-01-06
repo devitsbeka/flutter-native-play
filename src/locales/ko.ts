@@ -1,4 +1,39 @@
-// Korean - extending English
+// Korean - Complete translation
 import type { KaTranslations } from './ka';
 import { en } from './en';
-export const ko: KaTranslations = { ...en, common: { ...en.common, play: "플레이", back: "뒤로", next: "다음", close: "닫기", save: "저장", cancel: "취소", loading: "로딩 중...", error: "오류", success: "성공!", continue: "계속", coins: "코인", gems: "보석" }, nav: { ...en.nav, explore: "탐색", map: "지도", play: "플레이", rank: "순위", profile: "프로필", settings: "설정", home: "홈", menu: "메뉴" }, team: { ...en.team, multiplayer: "멀티플레이", signInToPlay: "친구와 플레이하려면 로그인하세요", friends: "친구", yourRooms: "내 방", noActiveRooms: "활성 방 없음", join: "참가", recentGames: "최근 게임", noGamesYet: "아직 게임 없음" }, auth: { ...en.auth, signIn: "로그인", signUp: "가입", signOut: "로그아웃" }, featured: { ...en.featured, badgeNew: "신규", badgePopular: "인기", badgeBestPrice: "최저가" } };
+
+export const ko: KaTranslations = {
+  ...en,
+  common: { ...en.common, play: "플레이", back: "뒤로", next: "다음", close: "닫기", save: "저장", cancel: "취소", loading: "로딩 중...", error: "오류", success: "성공!", continue: "계속", coins: "코인", gems: "보석", skip: "건너뛰기", done: "완료", confirm: "확인", retry: "다시 시도", gotIt: "알겠어요!", letsGo: "시작!", awesome: "멋져요!", nice: "좋아요!", oops: "앗!", welcome: "환영합니다!", hello: "안녕하세요!", xp: "XP", level: "레벨", noQuestionsTitle: "질문이 없습니다", noQuestionsMessage: "이 언어의 질문이 곧 추가됩니다!", popular: "인기", bestValue: "최저가", limited: "한정", new: "신규", or: "또는" },
+  nav: { ...en.nav, explore: "탐색", map: "지도", play: "플레이", rank: "순위", profile: "프로필", settings: "설정", home: "홈", menu: "메뉴", sound: "소리" },
+  team: { ...en.team, multiplayer: "멀티플레이", signInToPlay: "친구와 플레이하려면 로그인하세요", friends: "친구", yourRooms: "내 방", noActiveRooms: "활성 방 없음", join: "참가", recentGames: "최근 게임", noGamesYet: "아직 게임 없음", newRoom: "새 방", roomName: "방 이름", category: "카테고리", random: "랜덤", online: "온라인", offline: "오프라인", startGame: "게임 시작", leaveRoom: "방 나가기", players: "플레이어", host: "호스트", ready: "준비 완료", notReady: "준비 중" },
+  auth: { ...en.auth, signIn: "로그인", signUp: "가입", signOut: "로그아웃", createAccount: "계정 만들기", username: "사용자 이름", password: "비밀번호", alreadyHaveAccount: "계정이 있으신가요?", dontHaveAccount: "계정이 없으신가요?", accountCreated: "계정 생성됨!", welcomeBack: "다시 오신 것을 환영합니다!" },
+  featured: { ...en.featured, badgeNew: "신규", badgePopular: "인기", badgeBestPrice: "최저가" },
+  game: { ...en.game, searching: "검색 중...", matchFound: "찾았습니다!", you: "나", getReady: "준비하세요!", timeUp: "시간 종료!", correct: "정답! ✓", incorrect: "오답 ✗", victory: "승리!", defeat: "패배", draw: "무승부", playAgain: "다시 플레이", opponent: "상대", selectCategory: "카테고리 선택", rewards: "보상", results: "결과" },
+  discover: { ...en.discover, title: "탐색", searchPlaceholder: "카테고리 검색...", all: "전체", favorites: "즐겨찾기", classic: "클래식", fun: "재미", educational: "교육", myFavorites: "내 즐겨찾기", popular: "인기", trending: "트렌드", home: "홈" },
+  profile: { ...en.profile, myProfile: "내 프로필", editProfile: "프로필 편집", statistics: "통계", gamesPlayed: "플레이한 게임", gamesWon: "승리", title: "프로필", signIn: "로그인", points: "포인트", country: "국가" },
+  leaderboard: { ...en.leaderboard, title: "순위", global: "전 세계", friends: "친구", weekly: "주간", allTime: "전체 기간", yourRank: "내 순위", stars: "별", you: "나", level: "레벨" },
+  powerups: { ...en.powerups, title: "파워업", subtitle: "게임에서 사용", fiftyFifty: { name: "50/50", description: "두 개의 오답이 사라집니다", hint: "확신이 없을 때!" }, freeze: { name: "시간 정지", description: "시간이 10초 동안 멈춥니다", hint: "어려운 문제에!" }, replace: { name: "교체", description: "문제를 바꿉니다", hint: "다른 문제를 시도해보세요" }, timeDrain: { name: "시간 훔치기", description: "상대방에게서 3초를 훔칩니다", hint: "마지막에 좋아요!" }, addPower: { name: "추가", description: "상점에서 더 많은 파워 구매", hint: "매일 새로운 보너스!" } },
+  menu: { ...en.menu, rewards: "보상", missions: "미션", treasure: "보물 상자", shop: "상점", settings: "설정", help: "도움말", privacy: "개인정보", signOut: "로그아웃", signIn: "로그인", comingSoon: "곧 출시!", player: "플레이어", points: "포인트" },
+  settings: { ...en.settings, title: "설정", editName: "이름 편집", changePassword: "비밀번호 변경", language: "언어" },
+  notifications: { ...en.notifications, title: "알림", all: "전체", noNotifications: "알림 없음" },
+  dailyRewards: { ...en.dailyRewards, title: "일일 보상", today: "오늘", claimed: "수령됨", claim: "수령", streak: "연속", coins: "코인", gems: "보석", xp: "XP", congratulations: "축하합니다!" },
+  missions: { ...en.missions, title: "미션", daily: "일일", weekly: "주간", achievements: "업적", claimReward: "보상 수령", claimed: "수령됨" },
+  chest: { ...en.chest, title: "보물", claim: "수령", loading: "로딩 중..." },
+  shop: { ...en.shop, title: "상점", powers: "파워", coins: "코인", gems: "보석", buy: "구매", exchange: "교환", notEnoughGems: "보석이 부족합니다!", notEnoughCoins: "코인이 부족합니다", purchaseSuccess: "구매 완료!", continue: "계속", balance: "잔액" },
+  modals: { ...en.modals, notEnoughCoins: "코인 부족", watchAd: "광고 시청", goToShop: "상점으로", levelUp: "레벨 업! 🎉", rewards: "보상", later: "나중에" },
+  errors: { ...en.errors, generic: "문제가 발생했습니다", network: "연결 없음", tryAgain: "다시 시도" },
+  success: { ...en.success, avatarSaved: "아바타 저장!", profileUpdated: "프로필 업데이트!", accountCreated: "계정 생성!" },
+  avatar: { ...en.avatar, title: "내 아바타", currentAvatar: "현재 아바타", myAvatars: "내 아바타", createNew: "새로 만들기", takeSelfie: "셀피", uploadPhoto: "업로드", avatarReady: "아바타 완성!", avatarSaved: "아바타 저장! 🎉" },
+  onboarding: { ...en.onboarding, welcomeTitle: "안녕하세요! 👋", startAdventure: "모험 시작!", createAvatar: "아바타 만들기", takePhoto: "사진 찍기", avatarReady: "아바타 완성!", useThis: "이것 사용", walkthroughSkip: "건너뛰기", walkthroughNext: "다음", walkthroughDone: "시작!" },
+  category: { ...en.category, leaderboard: "순위", map: "지도", chooseLevel: "레벨 선택", notFound: "찾을 수 없음" },
+  countries: { ...en.countries, ge: "조지아", global: "전 세계", us: "미국", uk: "영국", ru: "러시아", de: "독일", fr: "프랑스", es: "스페인", it: "이탈리아", tr: "터키" },
+  help: { ...en.help, title: "도움말", faq: "FAQ", guide: "가이드" },
+  guest: { ...en.guest, progressNotSaved: "진행 상황이 저장되지 않았습니다!", levels: "레벨", stars: "별" },
+  legal: { ...en.legal, privacyPolicy: "개인정보", termsOfService: "이용약관" },
+  tv: { ...en.tv, start: "시작! 🚀" },
+  spin: { ...en.spin, title: "럭키 스핀!", coins: "{amount} 코인", gems: "{amount} 보석", power: "파워", loading: "로딩 중..." },
+  gameExtra: { ...en.gameExtra, prize: "상품" },
+  iap: { ...en.iap, pleaseSignIn: "로그인해 주세요", purchaseComplete: "구매 완료! 🎉", purchaseFailed: "구매 실패" },
+  sound: { ...en.sound, title: "소리 설정", music: "음악", soundEffects: "효과음", vibration: "진동", on: "켜기", off: "끄기" },
+};
