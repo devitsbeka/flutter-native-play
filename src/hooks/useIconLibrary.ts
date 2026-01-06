@@ -192,7 +192,11 @@ function getIconUrl(fileName: string): string {
   return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${fileName}`;
 }
 
-// Load icons from local JSON file (much faster than database)
+// Storage URL for the synced icon library JSON
+const ICON_LIBRARY_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icons/icon-library-meta.json';
+const ICON_LIBRARY_LOCAL_FALLBACK = '/data/icon-library-meta.json';
+
+// Load icons from storage (with local fallback)
 async function loadIconIndex(): Promise<IconItem[]> {
   if (iconCache) return iconCache;
   
@@ -200,11 +204,19 @@ async function loadIconIndex(): Promise<IconItem[]> {
   
   cachePromise = (async () => {
     try {
-      const response = await fetch('/data/icon-library-meta.json');
+      // Try loading from storage first (always up-to-date)
+      let response = await fetch(ICON_LIBRARY_STORAGE_URL);
+      
+      // Fallback to local file if storage fails
+      if (!response.ok) {
+        console.warn('[IconLibrary] Storage fetch failed, falling back to local JSON');
+        response = await fetch(ICON_LIBRARY_LOCAL_FALLBACK);
+      }
+      
       const data = await response.json();
       
       iconCache = data.items || [];
-      console.log(`[IconLibrary] Loaded ${iconCache.length} icons from local JSON`);
+      console.log(`[IconLibrary] Loaded ${iconCache.length} icons from ${response.url.includes('storage') ? 'storage' : 'local'}`);
       return iconCache;
     } catch (error) {
       console.error('[IconLibrary] Failed to load icon library:', error);

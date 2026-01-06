@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw, Download } from "lucide-react";
+import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw, Download, Cloud } from "lucide-react";
 import { refreshDbIconsCache } from "@/hooks/useIconLibrary";
 
 interface ImportStatus {
@@ -29,6 +29,7 @@ export default function IconLibraryAdmin() {
   const [iconCount, setIconCount] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Check how many icons are already imported
   const checkIconCount = async () => {
@@ -53,7 +54,7 @@ export default function IconLibraryAdmin() {
     }
   }, []);
 
-  // Export icons to JSON file for local caching
+  // Export icons to JSON file for local download
   const handleExportJson = async () => {
     setIsExporting(true);
     try {
@@ -78,6 +79,24 @@ export default function IconLibraryAdmin() {
       toast.error("Failed to export icons: " + error.message);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Sync icons to storage for frontend use
+  const handleSyncToStorage = async () => {
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-icon-library');
+      
+      if (error) throw error;
+      
+      toast.success(`Synced ${data.total_count} icons to storage`);
+      refreshIconLibrary(); // Refresh frontend cache
+    } catch (error: any) {
+      console.error("Sync error:", error);
+      toast.error("Failed to sync icons: " + error.message);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -247,18 +266,44 @@ export default function IconLibraryAdmin() {
 
       {/* Action Cards */}
       <div className="grid gap-4">
-        {/* Export JSON */}
+        {/* Sync to Storage - Primary action */}
+        <Card className="border-primary/50">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Cloud className="w-5 h-5 text-primary" />
+              Sync Icons to Storage
+            </CardTitle>
+            <CardDescription>
+              Sync all {iconCount?.toLocaleString() || ''} icons from the database to storage. The frontend will automatically load from storage for fast icon resolution.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleSyncToStorage}
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Cloud className="w-4 h-4 mr-2" />
+              )}
+              Sync {iconCount?.toLocaleString() || ''} Icons to Storage
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Export JSON - Secondary action */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Export Icon Library JSON</CardTitle>
             <CardDescription>
-              Download all icons from the database as a JSON file. Replace the local icon-library-meta.json to keep it in sync.
+              Download all icons from the database as a JSON file for manual backup or local testing.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
               onClick={handleExportJson}
-              variant="secondary"
+              variant="outline"
               disabled={isExporting}
             >
               {isExporting ? (
@@ -266,7 +311,7 @@ export default function IconLibraryAdmin() {
               ) : (
                 <Download className="w-4 h-4 mr-2" />
               )}
-              Export {iconCount?.toLocaleString() || ''} Icons to JSON
+              Download JSON
             </Button>
           </CardContent>
         </Card>

@@ -93,3 +93,6 @@ verify_jwt = false
 
 [functions.propagate-icons]
 verify_jwt = false
+
+[functions.sync-icon-library]
+verify_jwt = false
