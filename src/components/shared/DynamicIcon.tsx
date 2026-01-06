@@ -112,17 +112,23 @@ export function DynamicIcon({
     setAsyncIconUrl(null);
   }, [iconUrl]);
 
-  // Async fallback: if iconUrl is null but we have a slug, try direct DB lookup
+  // Async fallback: if iconUrl doesn't match the requested slug, try direct DB lookup
   React.useEffect(() => {
-    if (!iconUrl && slug && isLoaded && !asyncIconUrl) {
+    if (slug && isLoaded && !asyncIconUrl) {
       const slugs = slug.includes(',') ? slug.split(',').map(s => s.trim()) : [slug];
-      // Try fetching the first slug directly from database
-      fetchIconBySlug(slugs[0]).then(url => {
-        if (url) {
-          console.log(`[DynamicIcon] Found icon via async DB lookup: ${slugs[0]}`);
-          setAsyncIconUrl(url);
-        }
-      });
+      const firstSlug = slugs[0];
+      
+      // Check if current iconUrl is a fallback (doesn't contain the requested slug)
+      const isUsingFallback = iconUrl && !iconUrl.includes(firstSlug);
+      
+      if (!iconUrl || isUsingFallback) {
+        fetchIconBySlug(firstSlug).then(url => {
+          if (url) {
+            console.log(`[DynamicIcon] Found icon via async DB lookup: ${firstSlug}`);
+            setAsyncIconUrl(url);
+          }
+        });
+      }
     }
   }, [iconUrl, slug, isLoaded, asyncIconUrl, fetchIconBySlug]);
 
