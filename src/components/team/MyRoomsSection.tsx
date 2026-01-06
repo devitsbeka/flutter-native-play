@@ -9,7 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 
-export function MyRoomsSection() {
+interface MyRoomsSectionProps {
+  hideTV?: boolean;
+}
+
+export function MyRoomsSection({ hideTV = false }: MyRoomsSectionProps) {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
@@ -82,18 +86,20 @@ export function MyRoomsSection() {
 
   return (
     <div className="space-y-3">
-      {/* Header with TV button */}
+      {/* Header with optional TV button */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
         
-        {/* TV Button */}
-        <button
-          onClick={() => setShowTVModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
-        >
-          <TVIcon className="w-4 h-4" />
-          <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
-        </button>
+        {/* TV Button - hidden when hideTV prop is true */}
+        {!hideTV && (
+          <button
+            onClick={() => setShowTVModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
+          >
+            <TVIcon className="w-4 h-4" />
+            <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
+          </button>
+        )}
       </div>
       
       {/* TV Mirror Modal */}
