@@ -123,18 +123,26 @@ export function useDidYouKnow() {
           vote_type: voteType,
         });
 
-      if (voteError) throw voteError;
+      // Handle duplicate vote error gracefully
+      if (voteError) {
+        if (voteError.code === '23505') {
+          // Already voted - refresh to show results
+          await fetchRandomFact();
+          return;
+        }
+        throw voteError;
+      }
 
       // Update the vote count
       const updateField = voteType === "knew" ? "votes_knew" : "votes_didnt_know";
-      const { data: updatedFact, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from("trivia_facts")
         .update({ [updateField]: fact[updateField] + 1 })
-        .eq("id", fact.id)
-        .select()
-        .single();
+        .eq("id", fact.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error updating vote count:", updateError);
+      }
 
       // Calculate and show results
       const newKnew = voteType === "knew" ? fact.votes_knew + 1 : fact.votes_knew;
