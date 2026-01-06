@@ -31,7 +31,6 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [connectingToId, setConnectingToId] = useState<string | null>(null);
-  const [playerJoinCode, setPlayerJoinCode] = useState<string | null>(null);
 
   // Start scanning when modal opens
   useEffect(() => {
@@ -42,21 +41,20 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
       setShowManualInput(false);
       setManualCode('');
       setConnectingToId(null);
-      setPlayerJoinCode(null);
     }
   }, [open, startScanning, stopScanning]);
 
-  // Navigate to controller when connected
+  // Navigate to host controller when connected
   useEffect(() => {
-    if (connectionState === 'connected' && connectedSessionId && playerJoinCode) {
+    if (connectionState === 'connected' && connectedSessionId) {
       toast.success(t('tv.connected'));
       
       setTimeout(() => {
         onOpenChange(false);
-        navigate(`/controller/${playerJoinCode}`);
+        navigate(`/tv/host/${connectedSessionId}`);
       }, 500);
     }
-  }, [connectionState, connectedSessionId, playerJoinCode, navigate, onOpenChange, t]);
+  }, [connectionState, connectedSessionId, navigate, onOpenChange, t]);
 
   const handleConnectToTV = async (tv: DiscoveredTV) => {
     setConnectingToId(tv.id);
@@ -64,8 +62,6 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
     if (!result) {
       toast.error(t('tv.connectionFailed'));
       setConnectingToId(null);
-    } else {
-      setPlayerJoinCode(result.playerJoinCode);
     }
   };
 
@@ -74,8 +70,6 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
     const result = await connectWithCode(manualCode);
     if (!result) {
       toast.error(t('tv.connectionFailed'));
-    } else {
-      setPlayerJoinCode(result.playerJoinCode);
     }
   };
 

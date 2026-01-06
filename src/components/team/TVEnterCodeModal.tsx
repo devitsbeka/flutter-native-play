@@ -127,10 +127,10 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
 
       toast.success('წარმატებით დაკავშირდა!');
 
-      // Navigate to the controller page using the player join code (not session ID)
+      // Navigate to the host controller page (host controls the game, not plays as guest)
       setTimeout(() => {
         onOpenChange(false);
-        navigate(`/controller/${playerJoinCode}`);
+        navigate(`/tv/host/${session.id}`);
       }, 1500);
 
     } catch (error) {
