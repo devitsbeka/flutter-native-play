@@ -331,7 +331,7 @@ const TVReceiverContent: React.FC = () => {
     case 'reveal':
       return <TVRevealScreen />;
     case 'scoreboard':
-      return <TVScoreboardScreen />;
+      return <TVScoreboardScreen players={players} />;
     default:
       return <TVAwaitingPairingScreen pairingCode={tvPairingCode} />;
   }

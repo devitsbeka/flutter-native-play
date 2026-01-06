@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
+import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
 
 interface Player {
   id: string;
@@ -602,27 +603,39 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Completed phase
+  // Completed phase - show game over screen with leaderboard
   if (phase === 'completed') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">თამაში დასრულდა! 🎉</h1>
-          <p className="text-purple-200 mb-6">შეხედე TV-ს სრული შედეგებისთვის</p>
-          
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-6">
-            <p className="text-purple-200 mb-2">შენი ქულა</p>
-            <div className="flex items-center justify-center gap-2 text-yellow-500">
-              <Star className="w-8 h-8 fill-yellow-500" />
-              <span className="font-bold text-4xl">{score}</span>
-            </div>
-          </div>
+    // Ensure host is in the players list with correct score
+    const allPlayers = [...players];
+    const hostPlayerIdx = allPlayers.findIndex(p => p.id === user?.id);
+    if (hostPlayerIdx === -1 && user) {
+      allPlayers.push({
+        id: user.id,
+        nickname: 'Host',
+        score: score,
+        isHost: true,
+      });
+    } else if (hostPlayerIdx !== -1) {
+      allPlayers[hostPlayerIdx].score = score;
+      allPlayers[hostPlayerIdx].isHost = true;
+    }
 
-          <ChunkyButton onClick={() => navigate('/team')}>
-            უკან დაბრუნება
-          </ChunkyButton>
-        </motion.div>
-      </div>
+    const handlePlayAgain = () => {
+      window.location.reload();
+    };
+
+    const handleExit = () => {
+      navigate('/team');
+    };
+
+    return (
+      <TVGameOverScreen
+        players={allPlayers}
+        currentPlayerId={user?.id}
+        onExit={handleExit}
+        onPlayAgain={handlePlayAgain}
+        isHost={true}
+      />
     );
   }
 
