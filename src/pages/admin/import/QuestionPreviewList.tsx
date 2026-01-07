@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X, Tag } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X, Tag, ImagePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
+import { GameStyleQuestionPreview } from '@/components/admin/GameStyleQuestionPreview';
+import { IconPickerModal } from '@/components/admin/IconPickerModal';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 
 export interface SelectableParsedQuestion extends ParsedQuestion {
   selected?: boolean;
@@ -50,9 +52,11 @@ function CharLimitIndicator({ length, limit }: { length: number; limit: { max: n
 }
 
 export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelectionChange, onSelectAll, showSelection = false }: QuestionPreviewListProps) {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<ParsedQuestion>>({});
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
 
   if (questions.length === 0) return null;
 
@@ -88,104 +92,172 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
 
   const toggleExpand = (idx: number) => {
     if (editingIndex === idx) return;
-    setExpandedIndex(expandedIndex === idx ? null : idx);
+    setExpandedIndex(idx);
   };
 
+  const openIconPicker = (idx: number) => {
+    setIconPickerIndex(idx);
+    setIconPickerOpen(true);
+  };
+
+  const handleIconSelect = (slug: string) => {
+    if (iconPickerIndex !== null && onUpdate) {
+      onUpdate(iconPickerIndex, { icon_keyword: slug || null });
+    }
+  };
+
+  const selectedQuestion = expandedIndex !== null ? questions[expandedIndex] : null;
+  const editingQuestion = editingIndex !== null ? questions[editingIndex] : null;
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* Questions List */}
-      <ScrollArea className="h-[500px] rounded-md border">
-        <div className="p-4 space-y-3">
-          {/* Select All Header */}
-          {showSelection && validQuestions.length > 0 && (
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <Checkbox
-                checked={allValidSelected}
-                onCheckedChange={(checked) => onSelectAll?.(!!checked)}
-              />
-              <span className="text-sm text-muted-foreground">
-                ყველას მონიშვნა ({selectedCount}/{validQuestions.length} არჩეულია)
-              </span>
-            </div>
-          )}
+    <>
+      {/* Icon Picker Modal */}
+      <IconPickerModal
+        open={iconPickerOpen}
+        onClose={() => setIconPickerOpen(false)}
+        currentSlug={iconPickerIndex !== null ? questions[iconPickerIndex]?.icon_keyword : null}
+        currentKeyword={iconPickerIndex !== null ? questions[iconPickerIndex]?.icon_keyword : null}
+        onSelect={handleIconSelect}
+      />
 
-          {questions.map((q, idx) => {
-            const isExpanded = expandedIndex === idx;
-            const isEditing = editingIndex === idx;
-
-            return (
-              <div
-                key={idx}
-                className={cn(
-                  'rounded-lg border transition-all',
-                  q.isValid ? 'bg-card' : 'bg-destructive/5 border-destructive/20',
-                  isExpanded && 'ring-2 ring-primary',
-                  showSelection && q.selected && q.isValid && 'ring-2 ring-green-500/50 bg-green-500/5'
-                )}
-              >
-                {/* Header - always visible */}
-                <div 
-                  className="p-3 flex items-start justify-between gap-2 cursor-pointer"
-                  onClick={() => toggleExpand(idx)}
-                >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {showSelection && q.isValid ? (
-                      <Checkbox
-                        checked={q.selected || false}
-                        onCheckedChange={(checked) => {
-                          onSelectionChange?.(idx, !!checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : q.isValid ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-destructive shrink-0" />
-                    )}
-                    <span className="text-sm font-medium">#{idx + 1}</span>
-                    <Badge variant="outline" className="text-xs shrink-0">
-                      {q.difficulty === 'easy' ? 'მარტივი' : q.difficulty === 'hard' ? 'რთული' : 'საშუალო'}
-                    </Badge>
-                    {(q as SelectableParsedQuestion).icon_keyword && (
-                      <Badge variant="secondary" className="text-xs shrink-0 gap-1">
-                        <Tag className="h-2.5 w-2.5" />
-                        {(q as SelectableParsedQuestion).icon_keyword}
-                      </Badge>
-                    )}
-                    <p className="text-sm truncate flex-1">{q.question_text || <span className="text-destructive italic">კითხვა ცარიელია</span>}</p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!isEditing && onUpdate && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startEdit(idx);
-                        }}
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                    )}
-                    {onRemove && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemove(idx);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    )}
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* Questions List - 3 columns */}
+        <div className="lg:col-span-3">
+          <ScrollArea className="h-[550px] rounded-md border">
+            <div className="p-3 space-y-2">
+              {/* Select All Header */}
+              {showSelection && validQuestions.length > 0 && (
+                <div className="flex items-center gap-2 pb-2 border-b mb-2">
+                  <Checkbox
+                    checked={allValidSelected}
+                    onCheckedChange={(checked) => onSelectAll?.(!!checked)}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    ყველას მონიშვნა ({selectedCount}/{validQuestions.length} არჩეულია)
+                  </span>
                 </div>
+              )}
+
+              {questions.map((q, idx) => {
+                const isExpanded = expandedIndex === idx;
+                const isEditing = editingIndex === idx;
+
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      'rounded-lg border transition-all',
+                      q.isValid ? 'bg-card' : 'bg-destructive/5 border-destructive/20',
+                      isExpanded && 'ring-2 ring-primary bg-primary/5',
+                      showSelection && q.selected && q.isValid && !isExpanded && 'border-green-500/50 bg-green-500/5'
+                    )}
+                  >
+                    {/* Header - always visible */}
+                    <div 
+                      className="p-2.5 flex items-center gap-2 cursor-pointer"
+                      onClick={() => toggleExpand(idx)}
+                    >
+                      {/* Checkbox */}
+                      {showSelection && q.isValid ? (
+                        <Checkbox
+                          checked={q.selected || false}
+                          onCheckedChange={(checked) => {
+                            onSelectionChange?.(idx, !!checked);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="shrink-0"
+                        />
+                      ) : q.isValid ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-destructive shrink-0" />
+                      )}
+
+                      {/* Question number */}
+                      <span className="text-xs font-bold text-muted-foreground w-6">#{idx + 1}</span>
+
+                      {/* Icon thumbnail - clickable */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openIconPicker(idx);
+                        }}
+                        className={cn(
+                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors border",
+                          q.icon_keyword 
+                            ? "bg-muted/50 border-border/50 hover:bg-muted" 
+                            : "bg-muted/30 border-dashed border-muted-foreground/30 hover:border-primary/50"
+                        )}
+                        title="აიკონის შეცვლა"
+                      >
+                        {q.icon_keyword ? (
+                          <DynamicIcon slug={q.icon_keyword} size={24} />
+                        ) : (
+                          <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+
+                      {/* Difficulty badge */}
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-[10px] px-1.5 shrink-0",
+                          q.difficulty === 'easy' && "border-green-500/50 text-green-600",
+                          q.difficulty === 'medium' && "border-yellow-500/50 text-yellow-600",
+                          q.difficulty === 'hard' && "border-red-500/50 text-red-600"
+                        )}
+                      >
+                        {q.difficulty === 'easy' ? 'მარტივი' : q.difficulty === 'hard' ? 'რთული' : 'საშუალო'}
+                      </Badge>
+
+                      {/* Keyword badge */}
+                      {q.icon_keyword && (
+                        <Badge variant="secondary" className="text-[10px] shrink-0 gap-0.5 max-w-[80px]">
+                          <Tag className="h-2 w-2" />
+                          <span className="truncate">{q.icon_keyword}</span>
+                        </Badge>
+                      )}
+
+                      {/* Question text - truncated */}
+                      <p className="text-sm truncate flex-1 min-w-0">
+                        {q.question_text || <span className="text-destructive italic">კითხვა ცარიელია</span>}
+                      </p>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        {!isEditing && onUpdate && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEdit(idx);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {onRemove && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemove(idx);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        )}
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
 
                 {/* Expanded content */}
                 {isExpanded && (
@@ -321,24 +393,41 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
               </div>
             );
           })}
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
 
-      {/* Preview Panel */}
-      <div className="flex items-center justify-center p-4 bg-muted/30 rounded-lg">
-        {expandedIndex !== null ? (
-          <QuestionMockupPreview
-            question={editingIndex === expandedIndex ? (editForm.question_text || '') : questions[expandedIndex].question_text}
-            correctAnswer={editingIndex === expandedIndex ? (editForm.correct_answer || '') : questions[expandedIndex].correct_answer}
-            incorrectAnswers={editingIndex === expandedIndex ? (editForm.incorrect_answers || []) : questions[expandedIndex].incorrect_answers}
-            difficulty={editingIndex === expandedIndex ? (editForm.difficulty as any) : questions[expandedIndex].difficulty}
-          />
-        ) : (
-          <div className="text-center text-muted-foreground">
-            <p className="text-sm">აირჩიეთ კითხვა პრევიუსთვის</p>
-          </div>
-        )}
+        {/* Preview Panel - 2 columns */}
+        <div className="lg:col-span-2 flex items-start justify-center p-4 bg-muted/30 rounded-lg sticky top-4">
+          {selectedQuestion ? (
+            <GameStyleQuestionPreview
+              question={editingIndex === expandedIndex ? (editForm.question_text || '') : selectedQuestion.question_text}
+              correctAnswer={editingIndex === expandedIndex ? (editForm.correct_answer || '') : selectedQuestion.correct_answer}
+              incorrectAnswers={editingIndex === expandedIndex ? (editForm.incorrect_answers || []) : selectedQuestion.incorrect_answers}
+              difficulty={editingIndex === expandedIndex ? (editForm.difficulty as 'easy' | 'medium' | 'hard') : selectedQuestion.difficulty}
+              iconSlug={selectedQuestion.icon_keyword}
+              iconKeyword={selectedQuestion.icon_keyword}
+              questionNumber={expandedIndex !== null ? expandedIndex + 1 : 1}
+              isEditable={true}
+              onIconClick={() => expandedIndex !== null && openIconPicker(expandedIndex)}
+              onQuestionEdit={(text) => {
+                if (expandedIndex !== null && onUpdate) {
+                  onUpdate(expandedIndex, { question_text: text });
+                }
+              }}
+              onAnswerEdit={(correct, incorrect) => {
+                if (expandedIndex !== null && onUpdate) {
+                  onUpdate(expandedIndex, { correct_answer: correct, incorrect_answers: incorrect });
+                }
+              }}
+            />
+          ) : (
+            <div className="text-center text-muted-foreground py-20">
+              <p className="text-sm">აირჩიეთ კითხვა პრევიუსთვის</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
