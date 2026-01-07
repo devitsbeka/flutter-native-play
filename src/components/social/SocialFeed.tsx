@@ -42,10 +42,10 @@ function ShopAdCard({ index }: { index: number }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border-y border-border"
+      className="bg-card border-y border-border my-2"
     >
       {/* Ad Label */}
-      <div className="px-4 py-2 flex items-center gap-2">
+      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
         <Badge variant="outline" className="text-xs font-medium bg-muted/50">
           <Sparkles className="w-3 h-3 mr-1" />
           სპონსორი
@@ -55,14 +55,14 @@ function ShopAdCard({ index }: { index: number }) {
       {/* Ad Content */}
       <div 
         onClick={() => navigate("/shop")}
-        className="cursor-pointer"
+        className="cursor-pointer px-4 pb-4"
       >
         {/* Gradient Banner */}
-        <div className="relative aspect-[2/1] bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 flex items-center justify-center overflow-hidden">
+        <div className="relative aspect-[16/9] rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.3),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(236,72,153,0.2),transparent_50%)]" />
           
-          <div className="relative z-10 text-center px-6">
+          <div className="relative z-10 text-center px-6 py-8">
             <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-primary" />
             <h3 className="text-xl font-bold text-foreground mb-2">
               {variant.title}

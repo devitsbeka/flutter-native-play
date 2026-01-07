@@ -248,15 +248,29 @@ function TeamContentV2() {
 
           {/* Tabs: For Me / My Trivia */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <div className="px-4 mb-2">
-              <TabsList className="w-full grid grid-cols-2">
-                <TabsTrigger value="for-me" className="text-sm font-semibold">
-                  For Me
-                </TabsTrigger>
-                <TabsTrigger value="my-trivia" className="text-sm font-semibold">
-                  My Trivia
-                </TabsTrigger>
-              </TabsList>
+            <div className="px-4 mb-4">
+              <div className="flex gap-2 p-1 bg-muted/50 rounded-2xl">
+                <button
+                  onClick={() => setActiveTab("for-me")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                    activeTab === "for-me"
+                      ? "bg-background text-foreground shadow-[0_4px_0_0_hsl(var(--border)),inset_0_1px_0_0_rgba(255,255,255,0.1)] translate-y-0"
+                      : "bg-muted text-muted-foreground shadow-[0_4px_0_0_hsl(var(--border)/0.5)] hover:translate-y-[-1px] active:translate-y-[2px] active:shadow-none"
+                  }`}
+                >
+                  შენთვის
+                </button>
+                <button
+                  onClick={() => setActiveTab("my-trivia")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                    activeTab === "my-trivia"
+                      ? "bg-background text-foreground shadow-[0_4px_0_0_hsl(var(--border)),inset_0_1px_0_0_rgba(255,255,255,0.1)] translate-y-0"
+                      : "bg-muted text-muted-foreground shadow-[0_4px_0_0_hsl(var(--border)/0.5)] hover:translate-y-[-1px] active:translate-y-[2px] active:shadow-none"
+                  }`}
+                >
+                  ჩემი ტრივია
+                </button>
+              </div>
             </div>
 
             <TabsContent value="for-me" className="mt-0">
