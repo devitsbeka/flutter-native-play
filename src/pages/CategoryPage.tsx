@@ -16,6 +16,7 @@ import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS, MAP_VIDEOS } from "@/config/videoConfig";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
+import crystalHourglass from "@/assets/crystal-hourglass.png";
 
 // Pastel color palettes for consistent styling with Discover page
 const PASTEL_PALETTES = [
@@ -292,7 +293,7 @@ export default function CategoryPage() {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-3xl">🎉</span>
+                      <img src={crystalHourglass} alt="Coming soon" className="w-12 h-12 object-contain" />
                       <div>
                         <h3 className="font-bold text-slate-800">{t('category.allCompleted') || 'გილოცავ!'}</h3>
                         <p className="text-sm text-slate-600">
@@ -314,6 +315,16 @@ export default function CategoryPage() {
                     {levels.map(({ level, isCompleted, isUnlocked, isCurrent, isComingSoon, stars }) => {
                       const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
                       
+                      // Medal colors for top 3 levels, star-based gradients for others
+                      const getMedalGradient = (levelNum: number) => {
+                        switch (levelNum) {
+                          case 1: return "linear-gradient(135deg, #FFD700, #FFA500)"; // Gold
+                          case 2: return "linear-gradient(135deg, #C0C0C0, #A8A8A8)"; // Silver
+                          case 3: return "linear-gradient(135deg, #CD7F32, #B87333)"; // Bronze
+                          default: return null;
+                        }
+                      };
+                      
                       // Star-based gradients for completed levels
                       const getCompletedGradient = (starCount: number) => {
                         switch (starCount) {
@@ -327,6 +338,9 @@ export default function CategoryPage() {
                       const getLevelBackground = () => {
                         if (isComingSoon) return "linear-gradient(135deg, #F8FAFC, #F1F5F9)"; // Very light gray for coming soon
                         if (!isUnlocked) return "linear-gradient(135deg, #E2E8F0, #CBD5E1)"; // Slate for locked
+                        // Apply medal colors for top 3 levels
+                        const medalGradient = getMedalGradient(level);
+                        if (medalGradient && isUnlocked) return medalGradient;
                         if (isCompleted && stars > 0) return getCompletedGradient(stars);
                         // Neutral white/gray for unlocked levels without stars (current level)
                         return "linear-gradient(135deg, #FFFFFF, #F1F5F9)";
