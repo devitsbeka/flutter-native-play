@@ -13,6 +13,7 @@ import confetti from "canvas-confetti";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import xpIcon from "@/assets/icons/icon-xp.png";
 import { toast } from "sonner";
 
 interface RankedParticipant {
@@ -391,8 +392,8 @@ export function MultiplayerResultScreen() {
             transition={{ delay: 0.6 }}
             className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-white/20"
           >
-            <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
-            <span className="text-white font-bold">+{myScore} ქულა</span>
+            <img src={xpIcon} alt="XP" className="w-5 h-5" />
+            <span className="text-white font-bold">+{myScore} XP</span>
           </motion.div>
         )}
 

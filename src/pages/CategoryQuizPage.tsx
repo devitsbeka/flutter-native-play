@@ -46,6 +46,10 @@ import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
 import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
 
+// Import reward icons
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
+
 const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
 
 interface TriviaQuestion {
@@ -820,8 +824,16 @@ export default function CategoryQuizPage() {
                   {previousProfileLevel} → {newProfileLevel}
                 </p>
                 <div className="flex items-center justify-center gap-3 mt-2 text-sm text-muted-foreground">
-                  {levelUpCoins > 0 && <span>+{levelUpCoins} 🪙</span>}
-                  {levelUpGems > 0 && <span>+{levelUpGems} 💎</span>}
+                  {levelUpCoins > 0 && (
+                    <span className="flex items-center gap-1">
+                      +{levelUpCoins} <img src={coinIcon} alt="" className="w-4 h-4 inline" />
+                    </span>
+                  )}
+                  {levelUpGems > 0 && (
+                    <span className="flex items-center gap-1">
+                      +{levelUpGems} <img src={gemIcon} alt="" className="w-4 h-4 inline" />
+                    </span>
+                  )}
                 </div>
               </motion.div>
             )}
