@@ -107,10 +107,29 @@ export function useSocialFeed() {
     },
   });
 
+  // Fallback gradients for posts without valid gradients
+  const fallbackGradients = [
+    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+    "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+    "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
+    "linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)",
+  ];
+
   // Convert db posts to SamplePost format and merge with sample posts
-  const convertedDbPosts: SamplePost[] = dbPosts.map((post) => {
+  const convertedDbPosts: SamplePost[] = dbPosts.map((post, index) => {
     const questions = (post.questions as Json[]) || [];
     const profileData = post.profile;
+    
+    // Ensure we have a valid gradient - use the stored one or fallback
+    const storedGradient = post.cover_gradient;
+    const hasValidGradient = storedGradient && storedGradient.includes('gradient');
+    const coverGradient = hasValidGradient 
+      ? storedGradient 
+      : fallbackGradients[index % fallbackGradients.length];
     
     return {
       id: post.id,
@@ -123,7 +142,7 @@ export function useSocialFeed() {
       description: post.description || "",
       subject: post.subject,
       hashtags: post.hashtags || [],
-      coverGradient: post.cover_gradient,
+      coverGradient,
       questionCount: post.question_count,
       answerFormat: post.answer_format as "4_answers" | "true_false",
       likesCount: post.likes_count || 0,
