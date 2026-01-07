@@ -1,6 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
 
 // 3D cube-style power-up icons
 import power5050 from "@/assets/powers/5050.png";
@@ -27,6 +28,13 @@ const powerUpConfig: Record<PowerUpType, {
   freeze: { image: powerFreeze, label: "Freeze" },
   replace: { image: powerReplace, label: "Replace" },
   hint: { image: powerTimeDrain, label: "Time+" },
+};
+
+const POWER_UP_BADGE_GRADIENTS: Record<PowerUpType, string> = {
+  "5050": "linear-gradient(180deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
+  freeze: "linear-gradient(180deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
+  replace: "linear-gradient(180deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
+  hint: "linear-gradient(180deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
 };
 
 const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonProps>(
@@ -64,24 +72,29 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
           )}
         </motion.button>
 
-        {/* Small count badge with × */}
+        {/* Badge: Plus icon for 0, colorful count for > 0 */}
         {!isLoading && (
           <motion.div
             className={cn(
-              "absolute -bottom-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full",
-              "flex items-center justify-center",
-              "bg-black/70 text-white",
-              "text-[10px] font-bold",
-              "border border-white/30"
+              "absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1 rounded-full",
+              "flex items-center justify-center"
             )}
             style={{
+              background: count === 0 
+                ? "hsl(var(--muted-foreground))" 
+                : POWER_UP_BADGE_GRADIENTS[type],
               boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+              border: count > 0 ? "2px solid white" : "none",
             }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.1 }}
           >
-            ×{count}
+            {count === 0 ? (
+              <Plus className="w-3.5 h-3.5 text-white" />
+            ) : (
+              <span className="text-white text-xs font-bold">{count}</span>
+            )}
           </motion.div>
         )}
       </motion.div>
