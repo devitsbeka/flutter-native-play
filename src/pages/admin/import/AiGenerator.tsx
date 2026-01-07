@@ -13,12 +13,39 @@ import { supabase } from '@/integrations/supabase/client';
 import { QuestionPreviewList, SelectableParsedQuestion } from './QuestionPreviewList';
 import { validateQuestion } from '@/hooks/useQuestionParser';
 
-// Normalize text for comparison (lowercase, trim, remove extra spaces)
+// Normalize text for comparison (lowercase, trim, remove extra spaces and punctuation)
 function normalizeText(text: string): string {
-  return text.toLowerCase().trim().replace(/\s+/g, ' ');
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[?.!,;:'"()]/g, '')
+    .replace(/\s+/g, ' ');
 }
 
-// Check if two questions are similar (simple similarity check)
+// Extract keywords from text (numbers, significant words)
+function extractKeywords(text: string): Set<string> {
+  const normalized = normalizeText(text);
+  // Extract numbers (years, quantities)
+  const numbers = text.match(/\d+/g) || [];
+  // Extract words longer than 3 characters
+  const words = normalized.split(' ').filter(w => w.length > 3);
+  return new Set([...numbers, ...words]);
+}
+
+// Calculate Jaccard similarity between two texts
+function calculateSimilarity(q1: string, q2: string): number {
+  const keywords1 = extractKeywords(q1);
+  const keywords2 = extractKeywords(q2);
+  
+  if (keywords1.size === 0 || keywords2.size === 0) return 0;
+  
+  const intersection = [...keywords1].filter(k => keywords2.has(k));
+  const union = new Set([...keywords1, ...keywords2]);
+  
+  return intersection.length / union.size;
+}
+
+// Check if two questions are similar using multiple methods
 function areSimilarQuestions(q1: string, q2: string): boolean {
   const n1 = normalizeText(q1);
   const n2 = normalizeText(q2);
@@ -27,9 +54,13 @@ function areSimilarQuestions(q1: string, q2: string): boolean {
   if (n1 === n2) return true;
   
   // Check if one contains the other (for slight variations)
-  if (n1.length > 20 && n2.length > 20) {
+  if (n1.length > 15 && n2.length > 15) {
     if (n1.includes(n2) || n2.includes(n1)) return true;
   }
+  
+  // Jaccard similarity check - 0.6 threshold catches semantic duplicates
+  const similarity = calculateSimilarity(q1, q2);
+  if (similarity >= 0.6) return true;
   
   return false;
 }
@@ -69,7 +100,10 @@ export function AiGenerator() {
       const { data: existingQuestions } = await supabase
         .from('questions')
         .select('question_text')
-        .eq('category_id', selectedCategory);
+        .eq('category_id', selectedCategory)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(200); // Get last 200 questions for thorough duplicate checking
 
       const existingTexts = (existingQuestions || []).map(q => q.question_text);
 
@@ -80,11 +114,13 @@ export function AiGenerator() {
       let totalDuplicates = 0;
 
       for (let i = 0; i < batches; i++) {
+        // Pass existing questions to AI so it knows what to avoid
         const { data, error } = await supabase.functions.invoke('generate-category-trivia', {
           body: {
             category: selectedCategoryData.name,
             difficulty,
             topic: topic || undefined,
+            existingQuestions: existingTexts, // Send existing questions to AI
           },
         });
 

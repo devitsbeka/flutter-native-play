@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { category, categoryId, level = 1, count = 5 } = await req.json();
+    const { category, categoryId, level = 1, count = 5, existingQuestions = [] } = await req.json();
 
     if (!category) {
       return new Response(
@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Generating ${count} Georgian trivia questions for category: ${category}, level: ${level}`);
+    console.log(`Generating ${count} Georgian trivia questions for category: ${category}, level: ${level}, excluding ${existingQuestions.length} existing questions`);
 
     const difficulty = level <= 5 ? "მარტივი" : level <= 15 ? "საშუალო" : "რთული";
     const difficultyEn = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
@@ -35,13 +35,27 @@ Deno.serve(async (req) => {
     ];
     const focusArea = focusAreas[Math.floor(Math.random() * focusAreas.length)];
 
+    // Build exclusion list for AI (limit to 50 most recent to keep prompt size manageable)
+    const exclusionList = existingQuestions.slice(0, 50);
+    const exclusionSection = exclusionList.length > 0 
+      ? `
+
+🚫 უკვე არსებული კითხვები - არ გაიმეორო ან მსგავსი არ შექმნა!
+${exclusionList.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}
+
+⚠️ ზემოთ ჩამოთვლილი კითხვები უკვე არსებობს მონაცემთა ბაზაში. 
+შექმენი სრულიად ახალი და განსხვავებული კითხვები!
+არ გაიმეორო იგივე თემები, პიროვნებები ან მოვლენები!
+`
+      : '';
+
     const prompt = `შექმენი ${count} უნიკალური ტრივია კითხვა თემაზე: "${category}" ქართულ ენაზე.
 
 სირთულე: ${difficulty}
 დონე: ${level}
 Random Seed: ${randomSeed}
 ფოკუსირება: ${focusArea}
-
+${exclusionSection}
 🚨 კრიტიკულად მნიშვნელოვანი წესები:
 
 1. ✅ კითხვის მაქსიმალური სიგრძე: 65 სიმბოლო (არა მეტი!)
