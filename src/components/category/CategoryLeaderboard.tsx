@@ -43,19 +43,22 @@ export function CategoryLeaderboard({
     // Base styles for top 3
     const baseStyles = {
       1: {
-        background: "linear-gradient(135deg, #E9D5FF 0%, #D8B4FE 100%)",
-        border: "3px solid #A855F7",
-        boxShadow: "0 2px 8px rgba(168, 85, 247, 0.3)",
+        // GOLD - warm golden gradient
+        background: "linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%)",
+        border: "3px solid #F59E0B",
+        boxShadow: "0 2px 8px rgba(245, 158, 11, 0.4)",
       },
       2: {
-        background: "linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%)",
-        border: "2px solid #60A5FA",
-        boxShadow: "0 2px 8px rgba(96, 165, 250, 0.3)",
+        // SILVER - cool gray gradient
+        background: "linear-gradient(135deg, #F1F5F9 0%, #CBD5E1 100%)",
+        border: "2px solid #94A3B8",
+        boxShadow: "0 2px 8px rgba(148, 163, 184, 0.4)",
       },
       3: {
-        background: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)",
-        border: "2px solid #FBBF24",
-        boxShadow: "0 2px 8px rgba(251, 191, 36, 0.3)",
+        // BRONZE - warm copper/bronze gradient
+        background: "linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%)",
+        border: "2px solid #EA580C",
+        boxShadow: "0 2px 8px rgba(234, 88, 12, 0.3)",
       },
     };
 
@@ -283,9 +286,9 @@ export function CategoryLeaderboard({
                     >
                       <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                       <p className={`font-bold ${
-                        entry.rank === 1 ? "text-emerald-700" : 
-                        entry.rank === 2 ? "text-blue-700" :
-                        entry.rank === 3 ? "text-amber-700" :
+                        entry.rank === 1 ? "text-amber-700" : 
+                        entry.rank === 2 ? "text-slate-600" :
+                        entry.rank === 3 ? "text-orange-700" :
                         lightMode ? "text-slate-700" : "text-white"
                       }`}>
                         {entry.total_stars}
