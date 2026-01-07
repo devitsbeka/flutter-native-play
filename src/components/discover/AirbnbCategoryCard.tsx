@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Heart, Trophy } from "lucide-react";
+import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 
@@ -260,15 +260,17 @@ export function AirbnbCategoryCard({
               </div>
             )}
 
-            {/* Leaderboard Rank Badge - Chunky style */}
-            {leaderboardRank && leaderboardRank > 0 && (
+            {/* Leaderboard Rank Badge - Only show for top 3 with medals */}
+            {leaderboardRank && leaderboardRank > 0 && leaderboardRank <= 3 && (
               <div 
                 className="absolute top-3 left-3 h-10 px-3 rounded-full flex items-center gap-1.5 z-10 bg-white border-2 border-white/80"
                 style={{
                   boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
                 }}
               >
-                <Trophy className="w-4 h-4 text-amber-500" />
+                <span className="text-lg">
+                  {leaderboardRank === 1 ? '🥇' : leaderboardRank === 2 ? '🥈' : '🥉'}
+                </span>
                 <span className="text-sm font-bold text-slate-700 leading-none">
                   #{leaderboardRank}
                 </span>
