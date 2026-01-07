@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Tv, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { Input } from '@/components/ui/input';
 
 interface TVPlayModalProps {
   isOpen: boolean;
@@ -20,47 +20,20 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
   categoryId,
   categoryName,
 }) => {
-  const { t } = useLanguage();
-  const [code, setCode] = useState(['', '', '', '']);
+  const [code, setCode] = useState('');
   const [isPairing, setIsPairing] = useState(false);
   const [pairSuccess, setPairSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleDigitChange = (index: number, value: string) => {
-    if (!/^[0-9]?$/.test(value)) return;
-    
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    setCode(value);
     setError(null);
-
-    // Auto-focus next input
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`tv-code-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      const prevInput = document.getElementById(`tv-code-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
-    if (pastedData.length === 4) {
-      setCode(pastedData.split(''));
-      setError(null);
-    }
   };
 
   const handlePair = async () => {
-    const fullCode = code.join('');
-    if (fullCode.length !== 4) {
-      setError('შეიყვანეთ 4-ნიშნა კოდი');
+    if (code.length !== 6) {
+      setError('შეიყვანეთ 6-სიმბოლოიანი კოდი');
       return;
     }
 
@@ -68,11 +41,11 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
     setError(null);
 
     try {
-      // Find TV session with this code
+      // Find TV session with this pairing code
       const { data: session, error: findError } = await supabase
         .from('tv_sessions')
         .select('*')
-        .eq('tv_pairing_code', fullCode)
+        .eq('pairing_code', code)
         .eq('status', 'waiting')
         .single();
 
@@ -87,7 +60,6 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
         .from('tv_sessions')
         .update({
           room_id: roomId || null,
-          category_id: categoryId || null,
           category_name: categoryName || null,
           is_paired: true,
           status: 'lobby',
@@ -101,6 +73,9 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
       // Close after success animation
       setTimeout(() => {
         onClose();
+        // Reset state for next use
+        setCode('');
+        setPairSuccess(false);
       }, 1500);
     } catch (err) {
       console.error('Pairing error:', err);
@@ -110,7 +85,14 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
     }
   };
 
-  const isComplete = code.every(d => d !== '');
+  const handleClose = () => {
+    setCode('');
+    setError(null);
+    setPairSuccess(false);
+    onClose();
+  };
+
+  const isComplete = code.length === 6;
 
   return (
     <AnimatePresence>
@@ -120,7 +102,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={handleClose}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -142,7 +124,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                 </div>
               </div>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
               >
                 <X className="w-5 h-5 text-muted-foreground" />
@@ -164,7 +146,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                   <CheckCircle2 className="w-20 h-20 text-green-500" />
                 </motion.div>
                 <p className="text-xl font-bold text-foreground">დაკავშირებულია!</p>
-                <p className="text-sm text-muted-foreground">გადახვალთ TV ეკრანზე...</p>
+                <p className="text-sm text-muted-foreground">TV ეკრანზე გამოჩნდება ლობი...</p>
               </motion.div>
             ) : (
               <>
@@ -174,27 +156,15 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                     გახსენით <span className="font-bold text-foreground">mytrivia.io/tv</span> თქვენს TV-ზე
                   </p>
                   
-                  <div className="flex justify-center gap-3" onPaste={handlePaste}>
-                    {code.map((digit, index) => (
-                      <motion.input
-                        key={index}
-                        id={`tv-code-${index}`}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handleDigitChange(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(index, e)}
-                        className="w-16 h-20 text-center text-3xl font-bold rounded-2xl bg-muted border-2 border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground"
-                        style={{
-                          boxShadow: digit ? '0 4px 12px hsl(var(--primary) / 0.2)' : 'none',
-                        }}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: index * 0.05 }}
-                      />
-                    ))}
-                  </div>
+                  <Input
+                    type="text"
+                    value={code}
+                    onChange={handleCodeChange}
+                    placeholder="ABC123"
+                    className="text-center text-3xl font-mono tracking-[0.5em] h-16 bg-muted border-2 border-border focus:border-primary"
+                    maxLength={6}
+                    autoFocus
+                  />
 
                   {/* Error Message */}
                   {error && (
@@ -224,7 +194,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                 {/* Instructions */}
                 <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
                   <p>1. გახსენით mytrivia.io/tv ბრაუზერში</p>
-                  <p>2. შეიყვანეთ 4-ნიშნა კოდი</p>
+                  <p>2. შეიყვანეთ 6-სიმბოლოიანი კოდი</p>
                   <p>3. მოიწვიეთ მეგობრები QR კოდით</p>
                 </div>
               </>

@@ -33,6 +33,9 @@ interface TVGameState {
   roundNumber: number;
   categoryName: string | null;
   categoryIcon: string | null;
+  roomName: string | null;
+  totalRoundsPlayed: number;
+  accumulatedScores: Record<string, number>;
 }
 
 interface TVGameContextType extends TVGameState {
@@ -43,6 +46,9 @@ interface TVGameContextType extends TVGameState {
   // Host actions
   startGame: (categoryId?: string) => Promise<void>;
   startNextRound: () => Promise<void>;
+  updateRoomName: (name: string) => Promise<void>;
+  updateCategory: (categoryId: string, categoryName: string) => Promise<void>;
+  saveRoundHistory: () => Promise<void>;
   // Player actions
   submitAnswer: (answer: string) => Promise<{ correct: boolean; points: number }>;
   // Shared
@@ -89,6 +95,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     roundNumber: 1,
     categoryName: null,
     categoryIcon: null,
+    roomName: null,
+    totalRoundsPlayed: 0,
+    accumulatedScores: {},
   });
 
   const [isHost, setIsHost] = useState(false);
@@ -545,6 +554,87 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [state.sessionId, state.currentQuestionIndex, state.questions.length, state.players, isHost, myPlayerId, myScore]);
 
+  // Update room name (host only)
+  const updateRoomName = useCallback(async (name: string) => {
+    if (!state.sessionId || !isHost) return;
+    
+    await supabase
+      .from('tv_sessions')
+      .update({ room_name: name })
+      .eq('id', state.sessionId);
+    
+    setState(prev => ({ ...prev, roomName: name }));
+  }, [state.sessionId, isHost]);
+
+  // Update category (host only)
+  const updateCategory = useCallback(async (categoryId: string, categoryName: string) => {
+    if (!state.sessionId || !isHost) return;
+    
+    const { data: category } = await supabase
+      .from('categories')
+      .select('icon')
+      .eq('id', categoryId)
+      .single();
+    
+    await supabase
+      .from('tv_sessions')
+      .update({ 
+        category_name: categoryName,
+        category_icon: category?.icon || null,
+      })
+      .eq('id', state.sessionId);
+    
+    setState(prev => ({ 
+      ...prev, 
+      categoryName, 
+      categoryIcon: category?.icon || null 
+    }));
+  }, [state.sessionId, isHost]);
+
+  // Save round history
+  const saveRoundHistory = useCallback(async () => {
+    if (!state.sessionId) return;
+    
+    const playerScores = state.players.reduce((acc, p) => ({
+      ...acc,
+      [p.id]: { 
+        nickname: p.nickname, 
+        score: p.score, 
+        avatar_url: p.avatar_url,
+        questions_answered: 0 // Could track this later
+      }
+    }), {});
+
+    await supabase.from('tv_round_history').insert({
+      tv_session_id: state.sessionId,
+      round_number: state.roundNumber,
+      category_name: state.categoryName,
+      category_icon: state.categoryIcon,
+      player_scores: playerScores,
+      total_questions: state.questions.length,
+    });
+
+    // Update accumulated scores
+    const newAccumulated = { ...state.accumulatedScores };
+    state.players.forEach(p => {
+      newAccumulated[p.id] = (newAccumulated[p.id] || 0) + p.score;
+    });
+
+    await supabase
+      .from('tv_sessions')
+      .update({ 
+        total_rounds_played: state.totalRoundsPlayed + 1,
+        accumulated_scores: newAccumulated,
+      })
+      .eq('id', state.sessionId);
+
+    setState(prev => ({
+      ...prev,
+      totalRoundsPlayed: prev.totalRoundsPlayed + 1,
+      accumulatedScores: newAccumulated,
+    }));
+  }, [state.sessionId, state.roundNumber, state.categoryName, state.categoryIcon, state.questions.length, state.players, state.accumulatedScores, state.totalRoundsPlayed]);
+
   // Leave session
   const leaveSession = useCallback(() => {
     if (channelRef.current) {
@@ -571,6 +661,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       roundNumber: 1,
       categoryName: null,
       categoryIcon: null,
+      roomName: null,
+      totalRoundsPlayed: 0,
+      accumulatedScores: {},
     });
     setIsHost(false);
     setMyPlayerId(null);
@@ -586,6 +679,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         joinSession,
         startGame,
         startNextRound,
+        updateRoomName,
+        updateCategory,
+        saveRoundHistory,
         submitAnswer,
         leaveSession,
         isHost,
