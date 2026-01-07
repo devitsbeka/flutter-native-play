@@ -34,69 +34,49 @@ const categoryExclusions: Record<string, string[]> = {
   'science': ['სპორტი', 'მუსიკა', 'ფილმები', 'სელებრითი'],
 };
 
-// Icon keyword mappings for Georgian words
+// Icon keyword mappings for Georgian words - CONTEXT-AWARE
 const iconKeywordMappings = `
 🏷️ აიკონის საკვანძო სიტყვა (icon_keyword):
 
 ყველა კითხვას უნდა ჰქონდეს ინგლისური საკვანძო სიტყვა აიკონის მინიჭებისთვის.
 
-ქართული სიტყვა → ინგლისური keyword:
-- მეფე, მეფის, გამეფდა, მეფობდა → "king"
-- დედოფალი, დედოფლის → "queen"
-- ზევსი, ზევსს, ზევსის → "zeus"
-- ჰერა, ჰერას → "hera"
-- აპოლონი → "apollo"
-- პოსეიდონი → "poseidon"
-- ათენა → "athena"
-- ომი, ბრძოლა, ომის → "battle"
-- ეკლესია, ტაძარი → "church"
-- მონასტერი → "monastery"
-- ღვინო, ვაზი, მარანი → "wine"
-- მთა, მწვერვალი → "mountain"
-- მდინარე, მდინარის → "river"
-- ქალაქი, დედაქალაქი → "city"
-- სოფელი → "village"
-- წიგნი, ლიტერატურა → "book"
-- მწერალი, პოეტი → "writer"
-- მუსიკა, სიმღერა → "music"
-- ფილმი, კინო → "movie"
-- სპორტი, ჩემპიონი → "sports"
-- ფეხბურთი → "football"
-- მეცნიერება, მეცნიერი → "science"
-- ხელოვნება, მხატვარი → "art"
-- სურათი, ნახატი → "painting"
-- თარიღი, წელი, საუკუნე → "calendar"
-- ომი, შეტაკება → "war"
-- სამეფო, იმპერია → "kingdom"
-- ჯარი, ლაშქარი → "army"
-- გმირი, გმირის → "hero"
-- ლეგენდა, მითი → "legend"
-- ცეცხლი → "fire"
-- წყალი → "water"
-- მიწა, ტერიტორია → "land"
-- ცა, ზეცა → "sky"
-- მზე → "sun"
-- მთვარე → "moon"
-- ვარსკვლავი → "star"
-- ხე, ტყე → "tree"
-- ყვავილი → "flower"
-- ცხოველი → "animal"
-- ფრინველი → "bird"
-- თევზი → "fish"
-- საჭმელი, კერძი → "food"
-- სასმელი → "drink"
-- სახლი, შენობა → "building"
-- ხიდი → "bridge"
-- გზა → "road"
-- ზღვა → "sea"
-- ტბა → "lake"
+🚨 კრიტიკულად მნიშვნელოვანი - კონტექსტის ანალიზი:
 
-თუ კითხვა არ შეესაბამება ზემოთ ჩამოთვლილ სიტყვებს, გამოიყენე ზოგადი keyword:
-- ისტორია → "history"
-- გეოგრაფია → "geography"
-- კულტურა → "culture"
-- default → "question"
+შეხედე მთელ კითხვას და მიეცი ᲨᲔᲡᲐᲑᲐᲛᲘᲡᲘ keyword კონტექსტის მიხედვით!
+
+✅ სწორი მაგალითები (კონტექსტზე დაფუძნებული):
+- "რომელ წელს მოხდა დიდგორის ბრძოლა?" → "battle" ან "two-swords" (ბრძოლის კონტექსტი)
+- "ვინ იყო საქართველოს პირველი მეფე?" → "king" ან "crown" (მეფის კონტექსტი)
+- "რა არის 25-ის 40%?" → "percent" ან "calculator" (მათემატიკის კონტექსტი)
+- "რომელ ქალაქში დაიბადა...?" → "city" ან "building" (ადგილის კონტექსტი)
+- "ზევსის მთავარი იარაღი რა იყო?" → "zeus" ან "lightning" (მითოლოგიის კონტექსტი)
+- "რომელი მთა არის ყველაზე მაღალი?" → "mountain" ან "peak" (გეოგრაფიის კონტექსტი)
+
+❌ არასწორი keywords (არ გამოიყენო!):
+- "question", "quiz", "trivia", "game" - ეს არ არის შინაარსობრივი
+- "answer", "correct", "wrong" - ტექნიკური სიტყვები
+- კითხვის სიტყვა-სიტყვით თარგმნა
+
+📚 კონტექსტების ტიპები და შესაბამისი keywords:
+
+ბრძოლა/ომი/შეტევა/გამარჯვება → battle, sword, attack, war, victory, shield, two-swords
+მეფე/ტახტი/სამეფო/გვირგვინი → king, crown, throne, scepter, royal, castle
+დედოფალი/თამარი → queen, crown, tiara, royal
+ქალაქი/დედაქალაქი/ადგილი → city, building, map, location, skyline
+მათემატიკა/გამოთვლა/რიცხვი/პროცენტი → calculator, math, percent, number, equation, formula
+თარიღი/წელი/საუკუნე/ისტორია → calendar, date, history, clock, time
+მეცნიერება/ფიზიკა/ქიმია/ბიოლოგია → science, atom, flask, microscope, lab, dna
+გეოგრაფია/მთა/მდინარე/ზღვა → mountain, river, sea, ocean, map, globe
+ეკლესია/მონასტერი/რელიგია → church, cross, monastery, cathedral
+სპორტი/ფეხბურთი/ჩემპიონი → sports, football, trophy, medal, olympic
+მუსიკა/სიმღერა/მომღერალი → music, note, microphone, guitar, piano
+ხელოვნება/მხატვარი/ნახატი → art, palette, brush, painting, gallery
+წიგნი/ლიტერატურა/მწერალი → book, writing, pen, library, author
+მითოლოგია/ზევსი/ღმერთი → zeus, lightning, trident, olympus, god, mythology
+ცხოველი/ფრინველი/თევზი → animal, bird, fish, lion, elephant
+საჭმელი/კერძი/ღვინო → food, dish, wine, cheese, fruit
 `;
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
