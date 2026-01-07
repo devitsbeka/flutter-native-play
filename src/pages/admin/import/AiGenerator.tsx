@@ -114,10 +114,12 @@ export function AiGenerator() {
       let totalDuplicates = 0;
 
       for (let i = 0; i < batches; i++) {
-        // Pass existing questions to AI so it knows what to avoid
+        // Pass full category context to AI so it generates relevant questions
         const { data, error } = await supabase.functions.invoke('generate-category-trivia', {
           body: {
             category: selectedCategoryData.name,
+            categoryId: selectedCategoryData.category_id, // e.g. "georgian_history"
+            categoryDescription: selectedCategoryData.description, // Full description for context
             difficulty,
             topic: topic || undefined,
             existingQuestions: existingTexts, // Send existing questions to AI

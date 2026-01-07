@@ -5,13 +5,50 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Category-specific topic guidance to ensure relevance
+const categoryTopics: Record<string, string[]> = {
+  'georgian_history': ['ომები', 'ბრძოლები', 'მეფეები', 'დედოფლები', 'სამეფოები', 'ხელშეკრულებები', 'თარიღები', 'ტერიტორიები', 'პოლიტიკური მოვლენები', 'რევოლუციები', 'დამოუკიდებლობა'],
+  'history': ['ისტორიული მოვლენები', 'მსოფლიო ომები', 'იმპერიები', 'ცივილიზაციები', 'რევოლუციები', 'მეფეები', 'პრეზიდენტები', 'პოლიტიკური ლიდერები'],
+  'sports': ['ფეხბურთი', 'რაგბი', 'ჭიდაობა', 'ოლიმპიადა', 'ჩემპიონატი', 'სპორტსმენები', 'მწვრთნელები', 'გუნდები', 'რეკორდები', 'ტურნირები'],
+  'pop_culture': ['ცნობილი პიროვნებები', 'სელებრითები', 'სოციალური მედია', 'ტრენდები', 'ვირუსული კონტენტი', 'ინფლუენსერები', 'მოდა'],
+  'music': ['მომღერლები', 'ბენდები', 'სიმღერები', 'ალბომები', 'კონცერტები', 'მუსიკალური ჟანრები', 'კომპოზიტორები'],
+  'movies': ['ფილმები', 'მსახიობები', 'რეჟისორები', 'ოსკარი', 'კინოსტუდიები', 'ანიმაციები', 'სერიალები'],
+  'science': ['ფიზიკა', 'ქიმია', 'ბიოლოგია', 'ასტრონომია', 'მათემატიკა', 'მეცნიერები', 'აღმოჩენები', 'გამოგონებები'],
+  'geography': ['ქვეყნები', 'დედაქალაქები', 'მთები', 'მდინარეები', 'ოკეანეები', 'კონტინენტები', 'მოსახლეობა'],
+  'art': ['მხატვრები', 'ნახატები', 'სკულპტურები', 'მუზეუმები', 'არქიტექტურა', 'ხელოვნების მიმდინარეობები'],
+  'literature': ['მწერლები', 'პოეტები', 'წიგნები', 'რომანები', 'ლექსები', 'ნობელის პრემია'],
+  'technology': ['პროგრამირება', 'კომპიუტერები', 'ინტერნეტი', 'სმარტფონები', 'სოციალური ქსელები', 'ინოვაციები'],
+  'food': ['სამზარეულო', 'რეცეპტები', 'ინგრედიენტები', 'რესტორნები', 'ეროვნული კერძები', 'დესერტები'],
+  'nature': ['ცხოველები', 'მცენარეები', 'ეკოსისტემები', 'კლიმატი', 'ბუნებრივი მოვლენები'],
+  'default': ['ძირითადი თემები', 'საინტერესო ფაქტები', 'ცნობილი მოვლენები']
+};
+
+// Category-specific exclusion keywords to avoid cross-contamination
+const categoryExclusions: Record<string, string[]> = {
+  'georgian_history': ['სპორტი', 'ფეხბურთი', 'ჩემპიონატი', 'ოლიმპიადა', 'მომღერალი', 'ფილმი', 'სერიალი', 'ანიმე'],
+  'history': ['სპორტი', 'ფეხბურთი', 'მომღერალი', 'ფილმი'],
+  'sports': ['მეფე', 'სამეფო', 'ომი', 'ბრძოლა', 'პრეზიდენტი', 'მთავრობა', 'ისტორიული'],
+  'pop_culture': ['ომი', 'ბრძოლა', 'სამეფო', 'მეფე'],
+  'music': ['სპორტი', 'ფეხბურთი', 'ომი', 'პოლიტიკა'],
+  'movies': ['სპორტი', 'პოლიტიკა', 'ომები'],
+  'science': ['სპორტი', 'მუსიკა', 'ფილმები', 'სელებრითი'],
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { category, categoryId, level = 1, count = 5, existingQuestions = [] } = await req.json();
+    const { 
+      category, 
+      categoryId, 
+      categoryDescription,
+      level = 1, 
+      count = 5, 
+      topic,
+      existingQuestions = [] 
+    } = await req.json();
 
     if (!category) {
       return new Response(
@@ -20,26 +57,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Generating ${count} Georgian trivia questions for category: ${category}, level: ${level}, excluding ${existingQuestions.length} existing questions`);
+    console.log(`Generating ${count} Georgian trivia questions for category: ${category} (${categoryId}), level: ${level}, topic: ${topic || 'none'}, excluding ${existingQuestions.length} existing questions`);
 
     const difficulty = level <= 5 ? "მარტივი" : level <= 15 ? "საშუალო" : "რთული";
     const difficultyEn = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
     
-    // Add randomization for variety
-    const randomSeed = Math.floor(Math.random() * 100000);
-    const focusAreas = [
-      'ისტორიული მოვლენები', 'ცნობილი პიროვნებები', 'კულტურა და ტრადიციები',
-      'გეოგრაფია და ბუნება', 'ხელოვნება', 'მეცნიერება და აღმოჩენები',
-      'სპორტი', 'არქიტექტურა', 'ლიტერატურა', 'მუსიკა', 'კინო და თეატრი',
-      'საინტერესო ფაქტები', 'თანამედროვე მოვლენები'
-    ];
-    const focusArea = focusAreas[Math.floor(Math.random() * focusAreas.length)];
+    // Get category-specific topics for guidance
+    const allowedTopics = categoryTopics[categoryId] || categoryTopics['default'];
+    const excludedTopics = categoryExclusions[categoryId] || [];
+    
+    // Use provided topic or pick from allowed topics
+    const focusArea = topic || allowedTopics[Math.floor(Math.random() * allowedTopics.length)];
 
     // Build exclusion list for AI (limit to 50 most recent to keep prompt size manageable)
     const exclusionList = existingQuestions.slice(0, 50);
     const exclusionSection = exclusionList.length > 0 
       ? `
-
 🚫 უკვე არსებული კითხვები - არ გაიმეორო ან მსგავსი არ შექმნა!
 ${exclusionList.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}
 
@@ -49,35 +82,64 @@ ${exclusionList.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}
 `
       : '';
 
-    const prompt = `შექმენი ${count} უნიკალური ტრივია კითხვა თემაზე: "${category}" ქართულ ენაზე.
+    // Build exclusion section for topics
+    const topicExclusionSection = excludedTopics.length > 0
+      ? `
+⛔ აკრძალული თემები "${category}" კატეგორიისთვის:
+${excludedTopics.map(t => `- ${t}`).join('\n')}
+არ შექმნა კითხვები ამ თემებზე!
+`
+      : '';
 
+    const prompt = `შექმენი ${count} უნიკალური ტრივია კითხვა ქართულ ენაზე.
+
+📌 კატეგორია: "${category}"
+${categoryDescription ? `📝 კატეგორიის აღწერა: "${categoryDescription}"` : ''}
+${topic ? `🎯 კონკრეტული თემა: "${topic}"` : `🎯 ფოკუსირება: "${focusArea}"`}
 სირთულე: ${difficulty}
 დონე: ${level}
-Random Seed: ${randomSeed}
-ფოკუსირება: ${focusArea}
+
+🚨🚨🚨 კრიტიკულად მნიშვნელოვანი - კატეგორიის რელევანტურობა:
+
+⛔ ყველა კითხვა უნდა იყოს ᲛᲮᲝᲚᲝᲓ "${category}" კატეგორიის შესახებ!
+⛔ არ შექმნა კითხვები სხვა კატეგორიებიდან!
+
+✅ დაშვებული თემები "${category}" კატეგორიისთვის:
+${allowedTopics.map(t => `- ${t}`).join('\n')}
+
+${topicExclusionSection}
+
+მაგალითი რა არის არასწორი:
+- თუ კატეგორიაა "საქართველოს ისტორია", არ უნდა იყოს კითხვები:
+  • სპორტის შესახებ (ოლიმპიადა, ჩემპიონატები, სპორტსმენები)
+  • მუსიკის შესახებ (მომღერლები, სიმღერები)
+  • კინოს შესახებ (ფილმები, მსახიობები)
+  • სხვა ქვეყნების შესახებ (თუ საქართველოს ისტორიას არ უკავშირდება)
+
+- თუ კატეგორიაა "სპორტი", არ უნდა იყოს კითხვები:
+  • ისტორიის შესახებ (ომები, მეფეები)
+  • პოლიტიკის შესახებ
+
 ${exclusionSection}
+
 🚨 კრიტიკულად მნიშვნელოვანი წესები:
 
 1. ✅ კითხვის მაქსიმალური სიგრძე: 65 სიმბოლო (არა მეტი!)
 2. ✅ პასუხის მაქსიმალური სიგრძე: 20 სიმბოლო
 3. ✅ ყველა კითხვა უნდა დამთავრდეს კითხვის ნიშნით (?)
 4. ✅ გრამატიკულად სწორი ქართული ენა
+5. ✅ მხოლოდ "${category}" თემატიკის კითხვები!
 
-🚫 აკრძალული შეცდომები (ეს კითხვები უარყოფილი იქნება):
+🚫 აკრძალული შეცდომები:
 
-5. ❌ კითხვა არ უნდა შეიცავდეს სწორი პასუხის ტექსტს!
-   ცუდი მაგალითი: "დიდგორის ბრძოლით რა დაიწყო?" (თუ პასუხია "დიდგორის ბრძოლა")
-   კარგი მაგალითი: "რომელმა ბრძოლამ დაიწყო საქართველოს ოქროს ხანა?"
-   
-6. ❌ არ გამოიყენო ფორმატი "X-ით რა მოხდა?" სადაც X არის პასუხი
-7. ❌ არ ჩასვა პასუხის სახელი კითხვაში
+6. ❌ კითხვა არ უნდა შეიცავდეს სწორი პასუხის ტექსტს!
+7. ❌ არ გამოიყენო ფორმატი "X-ით რა მოხდა?" სადაც X არის პასუხი
+8. ❌ არ ჩასვა პასუხის სახელი კითხვაში
 
 📝 დამატებითი ინსტრუქციები:
-8. კითხვები უნდა იყოს ფაქტობრივად ზუსტი და სანდო
-9. არასწორი პასუხები უნდა იყოს დამაჯერებელი, მაგრამ აშკარად არასწორი
-10. გენერირე სრულიად განსხვავებული კითხვები ყოველ ჯერზე
-11. ფოკუსირდი "${focusArea}" ასპექტებზე
-12. Random seed: ${randomSeed}
+9. კითხვები უნდა იყოს ფაქტობრივად ზუსტი და სანდო
+10. არასწორი პასუხები უნდა იყოს დამაჯერებელი, მაგრამ აშკარად არასწორი
+11. გენერირე სრულიად განსხვავებული კითხვები ყოველ ჯერზე
 
 დააბრუნე მხოლოდ JSON მასივი:
 [
@@ -103,7 +165,7 @@ ${exclusionSection}
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.95,
+        temperature: 0.9,
       }),
     });
 
@@ -137,7 +199,7 @@ ${exclusionSection}
 
     const questions = JSON.parse(jsonMatch[0]);
 
-    console.log(`Successfully generated ${questions.length} Georgian questions`);
+    console.log(`Successfully generated ${questions.length} Georgian questions for ${category}`);
 
     return new Response(
       JSON.stringify({ questions }),
