@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Sparkles } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,11 +73,24 @@ export function MyTriviaTab({ onCreateQuiz }: MyTriviaTabProps) {
             transition={{ delay: index * 0.05 }}
             className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
           >
-            {/* "My Trivia" Badge */}
+            {/* Visibility Badge */}
             <div className="absolute top-3 right-3 z-10">
-              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-medium shadow-md">
-                <Sparkles className="w-3 h-3" />
-                <span>ჩემი</span>
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
+                post.is_public !== false 
+                  ? 'bg-green-500/90 text-white' 
+                  : 'bg-muted text-muted-foreground'
+              }`}>
+                {post.is_public !== false ? (
+                  <>
+                    <Globe className="w-3 h-3" />
+                    <span>საჯარო</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-3 h-3" />
+                    <span>პირადი</span>
+                  </>
+                )}
               </div>
             </div>
 

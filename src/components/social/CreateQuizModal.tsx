@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Wand2, Zap, Brain, Trophy, Edit3, RefreshCw } from "lucide-react";
+import { X, Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Wand2, Zap, Brain, Trophy, Edit3, RefreshCw, Globe, Lock } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
   const [description, setDescription] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [selectedGradient, setSelectedGradient] = useState(COVER_GRADIENTS[0]);
+  const [isPublic, setIsPublic] = useState(true);
 
   // Reset on open
   useEffect(() => {
@@ -90,6 +91,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
     setDescription("");
     setGenerationProgress(0);
     setSelectedGradient(COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]);
+    setIsPublic(true);
   };
 
   const handleClose = () => {
@@ -177,6 +179,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
         answer_format: answerFormat,
         questions: JSON.parse(JSON.stringify(questions)),
         icon_slug: iconSlug,
+        is_public: isPublic,
       }]);
 
       if (error) throw error;
@@ -492,14 +495,37 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
                 />
               ))}
             </div>
-            
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="მოკლე აღწერა (არასავალდებულო)"
-              rows={2}
-              className="rounded-xl resize-none text-sm flex-shrink-0"
-            />
+
+            {/* Visibility Toggle + Description row */}
+            <div className="flex gap-2 items-start flex-shrink-0">
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="მოკლე აღწერა (არასავალდებულო)"
+                rows={2}
+                className="rounded-xl resize-none text-sm flex-1"
+              />
+              <button
+                onClick={() => setIsPublic(!isPublic)}
+                className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl border-2 transition-all min-w-[70px] ${
+                  isPublic 
+                    ? 'border-green-500 bg-green-500/10 text-green-600' 
+                    : 'border-muted bg-muted/50 text-muted-foreground'
+                }`}
+              >
+                {isPublic ? (
+                  <>
+                    <Globe className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">საჯარო</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-5 h-5" />
+                    <span className="text-[10px] font-medium">პირადი</span>
+                  </>
+                )}
+              </button>
+            </div>
 
             {/* Questions preview with icon picker and edit */}
             <div className="flex-1 min-h-0 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
