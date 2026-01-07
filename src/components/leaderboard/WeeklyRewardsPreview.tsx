@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
-import { Trophy, Coins, Gem, Clock, Crown, Medal, Award } from "lucide-react";
+import { Trophy, Coins, Gem, Clock } from "lucide-react";
 import { 
   WEEKLY_LEADERBOARD_REWARDS, 
   EXCLUSIVE_FRAMES,
-  LEADERBOARD_BADGES,
   getDaysRemainingInWeek 
 } from "@/config/leaderboardRewards";
 import {
@@ -32,21 +31,21 @@ export function WeeklyRewardsPreview({
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
-      case 1: return <Crown className="h-5 w-5 text-amber-500" />;
-      case 2: return <Medal className="h-5 w-5 text-slate-400" />;
-      case 3: return <Award className="h-5 w-5 text-orange-500" />;
-      default: return <span className="font-bold text-sm">{rank}</span>;
+      case 1: return <span className="text-2xl">🥇</span>;
+      case 2: return <span className="text-2xl">🥈</span>;
+      case 3: return <span className="text-2xl">🥉</span>;
+      default: return <span className="font-bold text-lg text-muted-foreground">{rank}</span>;
     }
   };
 
   const getRankStyle = (rank: number) => {
     switch (rank) {
       case 1:
-        return "bg-gradient-to-r from-yellow-100 to-amber-100 border-amber-300";
+        return "bg-gradient-to-r from-amber-50 to-yellow-100 border-amber-300 shadow-amber-100/50";
       case 2:
-        return "bg-gradient-to-r from-slate-100 to-gray-100 border-slate-300";
+        return "bg-gradient-to-r from-slate-50 to-gray-100 border-slate-300 shadow-slate-100/50";
       case 3:
-        return "bg-gradient-to-r from-orange-100 to-amber-100 border-orange-300";
+        return "bg-gradient-to-r from-orange-50 to-amber-100 border-orange-300 shadow-orange-100/50";
       default:
         return "bg-background/50 border-border/50";
     }
@@ -56,25 +55,21 @@ export function WeeklyRewardsPreview({
     return EXCLUSIVE_FRAMES.find(f => f.id === frameId);
   };
 
-  const getBadge = (badgeId: string) => {
-    return LEADERBOARD_BADGES.find(b => b.id === badgeId);
-  };
-
   return (
     <Dialog>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="ghost" size="sm" className="gap-2">
             <Trophy className="h-4 w-4 text-amber-500" />
-            <span>{t('leaderboard.weeklyRewards') || 'კვირის ჯილდოები'}</span>
+            <span>{t('leaderboard.weeklyRewards')}</span>
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            {t('leaderboard.weeklyRewards') || 'კვირის ჯილდოები'}
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <Trophy className="h-6 w-6 text-amber-500" />
+            {t('leaderboard.weeklyRewards')}
           </DialogTitle>
         </DialogHeader>
 
@@ -82,11 +77,11 @@ export function WeeklyRewardsPreview({
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20"
+          className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10"
         >
-          <Clock className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">
-            {daysRemaining} {t('leaderboard.daysLeft') || 'დღე დარჩენილია'}
+          <Clock className="h-5 w-5 text-primary" />
+          <span className="text-base font-medium">
+            {daysRemaining} {t('leaderboard.daysRemaining')}
           </span>
         </motion.div>
 
@@ -95,19 +90,18 @@ export function WeeklyRewardsPreview({
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-3 rounded-xl bg-emerald-50 border border-emerald-200"
+            className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
           >
-            <p className="text-sm text-emerald-700 font-medium">
-              🎯 {t('leaderboard.youAreRanked') || 'შენ ხარ'} #{currentRank} - {t('leaderboard.keepPlaying') || 'გააგრძელე თამაში!'}
+            <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+              🎯 {t('leaderboard.youAreRanked')} #{currentRank} - {t('leaderboard.keepPlaying')}
             </p>
           </motion.div>
         )}
 
         {/* Rewards list */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {WEEKLY_LEADERBOARD_REWARDS.map((reward, index) => {
             const frame = reward.frameId ? getFrame(reward.frameId) : null;
-            const badge = reward.badgeId ? getBadge(reward.badgeId) : null;
             const isCurrentRank = currentRank === reward.rank;
 
             return (
@@ -116,40 +110,33 @@ export function WeeklyRewardsPreview({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`p-3 rounded-xl border-2 flex items-center gap-3 relative overflow-hidden ${
+                className={`p-4 rounded-xl border-2 flex items-center gap-4 relative shadow-sm ${
                   getRankStyle(reward.rank)
-                } ${isCurrentRank ? "ring-2 ring-primary ring-offset-1" : ""}`}
+                } ${isCurrentRank ? "ring-2 ring-primary ring-offset-2" : ""}`}
               >
-                {/* Rank */}
-                <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center flex-shrink-0 shadow-sm">
+                {/* Medal icon */}
+                <div className="w-12 h-12 rounded-full bg-white/80 dark:bg-white/10 flex items-center justify-center flex-shrink-0 shadow-sm">
                   {getRankIcon(reward.rank)}
                 </div>
 
-                {/* Rewards */}
+                {/* Rewards content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {/* Coins */}
-                    <div className="flex items-center gap-1">
-                      <Coins className="h-4 w-4 text-amber-500" />
-                      <span className="font-bold text-amber-700">{reward.coins.toLocaleString()}</span>
+                  {/* Coins and Gems row */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <Coins className="h-5 w-5 text-amber-500" />
+                      <span className="font-bold text-amber-700 dark:text-amber-400">{reward.coins.toLocaleString()}</span>
                     </div>
-
-                    {/* Gems */}
-                    <div className="flex items-center gap-1">
-                      <Gem className="h-4 w-4 text-purple-500" />
-                      <span className="font-bold text-purple-700">{reward.gems}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Gem className="h-5 w-5 text-purple-500" />
+                      <span className="font-bold text-purple-700 dark:text-purple-400">{reward.gems}</span>
                     </div>
-
-                    {/* Badge */}
-                    {badge && (
-                      <span className="text-lg" title={badge.name}>{badge.icon}</span>
-                    )}
                   </div>
 
-                  {/* Exclusive frame */}
+                  {/* Exclusive frame - Only for top 3 */}
                   {frame && (
-                    <div className="mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full bg-gradient-to-r ${frame.gradient} text-white font-medium`}>
+                    <div className="mt-2">
+                      <span className={`inline-block text-xs px-3 py-1.5 rounded-full bg-gradient-to-r ${frame.gradient} text-white font-medium shadow-sm whitespace-nowrap`}>
                         + {frame.name}
                       </span>
                     </div>
@@ -161,9 +148,9 @@ export function WeeklyRewardsPreview({
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -right-1 -top-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold"
+                    className="absolute -right-2 -top-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-bold shadow-md"
                   >
-                    შენ
+                    {t('leaderboard.you')}
                   </motion.div>
                 )}
               </motion.div>
@@ -172,8 +159,8 @@ export function WeeklyRewardsPreview({
         </div>
 
         {/* Footer info */}
-        <p className="text-xs text-muted-foreground text-center">
-          {t('leaderboard.rewardsInfo') || 'ჯილდოები გაიცემა კვირის ბოლოს ავტომატურად'}
+        <p className="text-xs text-muted-foreground text-center pt-2">
+          {t('leaderboard.rewardsInfo')}
         </p>
       </DialogContent>
     </Dialog>

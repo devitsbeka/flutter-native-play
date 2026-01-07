@@ -328,6 +328,15 @@ export const ru: KaTranslations = {
     you: "Вы",
     levelsCompleted: "уровней пройдено",
     level: "уровень",
+    // Weekly rewards modal
+    weeklyRewards: "Еженедельные награды",
+    youAreRanked: "Вы на месте",
+    keepPlaying: "Продолжайте играть!",
+    rewardsInfo: "Награды распределяются автоматически в конце каждой недели",
+    daysRemaining: "дней осталось",
+    championGold: "Золотой чемпион",
+    championSilver: "Серебряный чемпион",
+    championBronze: "Бронзовый чемпион",
   },
   category: {
     leaderboard: "Рейтинг",
