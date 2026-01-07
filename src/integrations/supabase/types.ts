@@ -1020,6 +1020,48 @@ export type Database = {
           },
         ]
       }
+      quiz_collections: {
+        Row: {
+          cover_gradient: string
+          created_at: string | null
+          description: string | null
+          hashtags: string[] | null
+          id: string
+          is_public: boolean
+          likes_count: number | null
+          plays_count: number | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cover_gradient?: string
+          created_at?: string | null
+          description?: string | null
+          hashtags?: string[] | null
+          id?: string
+          is_public?: boolean
+          likes_count?: number | null
+          plays_count?: number | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cover_gradient?: string
+          created_at?: string | null
+          description?: string | null
+          hashtags?: string[] | null
+          id?: string
+          is_public?: boolean
+          likes_count?: number | null
+          plays_count?: number | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       quiz_post_likes: {
         Row: {
           created_at: string | null
@@ -2202,6 +2244,7 @@ export type Database = {
       user_quiz_posts: {
         Row: {
           answer_format: string
+          collection_id: string | null
           cover_gradient: string
           created_at: string | null
           description: string | null
@@ -2213,6 +2256,7 @@ export type Database = {
           plays_count: number | null
           question_count: number
           questions: Json
+          round_number: number | null
           subject: string
           title: string
           updated_at: string | null
@@ -2220,6 +2264,7 @@ export type Database = {
         }
         Insert: {
           answer_format: string
+          collection_id?: string | null
           cover_gradient: string
           created_at?: string | null
           description?: string | null
@@ -2231,6 +2276,7 @@ export type Database = {
           plays_count?: number | null
           question_count: number
           questions?: Json
+          round_number?: number | null
           subject: string
           title: string
           updated_at?: string | null
@@ -2238,6 +2284,7 @@ export type Database = {
         }
         Update: {
           answer_format?: string
+          collection_id?: string | null
           cover_gradient?: string
           created_at?: string | null
           description?: string | null
@@ -2249,12 +2296,21 @@ export type Database = {
           plays_count?: number | null
           question_count?: number
           questions?: Json
+          round_number?: number | null
           subject?: string
           title?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_quiz_posts_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_reports: {
         Row: {
