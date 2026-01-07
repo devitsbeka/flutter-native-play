@@ -84,10 +84,11 @@ export function DidYouKnowWidget() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
+      key={fact.id}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="bg-card rounded-2xl p-5 border border-border/60"
+      className="bg-card rounded-2xl p-5 border border-border/60 min-h-[280px]"
       style={{
         boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
       }}
