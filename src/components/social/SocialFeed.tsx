@@ -172,7 +172,7 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
       {/* Filter Bar - Single Line */}
       <div className="sticky top-0 z-30 bg-background border-b border-border/50">
         <div className="px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* Hash Icon */}
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               <Hash className="w-4 h-4 text-muted-foreground" />
