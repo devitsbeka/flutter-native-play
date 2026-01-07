@@ -374,6 +374,15 @@ export const ka = {
     you: "შენ",
     levelsCompleted: "დონე დასრულებული",
     level: "დონე",
+    // Weekly rewards modal
+    weeklyRewards: "კვირის ჯილდოები",
+    youAreRanked: "შენ ხარ",
+    keepPlaying: "გააგრძელე თამაში!",
+    rewardsInfo: "ჯილდოები გაიცემა კვირის ბოლოს ავტომატურად",
+    daysRemaining: "დღე დარჩა",
+    championGold: "ოქროს ჩემპიონი",
+    championSilver: "ვერცხლის ჩემპიონი",
+    championBronze: "ბრინჯაოს ჩემპიონი",
   },
 
   // ==========================================

@@ -321,6 +321,15 @@ export const es: KaTranslations = {
     you: "Tú",
     levelsCompleted: "niveles completados",
     level: "nivel",
+    // Weekly rewards modal
+    weeklyRewards: "Recompensas Semanales",
+    youAreRanked: "Estás en el puesto",
+    keepPlaying: "¡Sigue jugando!",
+    rewardsInfo: "Las recompensas se distribuyen automáticamente al final de cada semana",
+    daysRemaining: "días restantes",
+    championGold: "Campeón de Oro",
+    championSilver: "Campeón de Plata",
+    championBronze: "Campeón de Bronce",
   },
   category: {
     leaderboard: "Ranking",
