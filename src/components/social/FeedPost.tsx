@@ -314,13 +314,6 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
             />
           </button>
           
-          {/* Comment */}
-          <button 
-            onClick={handleComment}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <MessageCircle className="w-6 h-6 text-foreground" />
-          </button>
         </div>
         
         <div className="flex items-center gap-3">
@@ -372,7 +365,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
       {/* Play Count */}
       <div className="px-4 pb-4">
         <span className="text-muted-foreground text-xs">
-          {formatNumber(post.playsCount)} plays • {formatNumber(post.commentsCount)} comments
+          {formatNumber(post.playsCount)} plays
         </span>
       </div>
     </motion.article>
