@@ -167,16 +167,35 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
     }
   };
 
+  // Check if text contains Georgian characters
+  const isGeorgian = (text: string) => /[\u10A0-\u10FF]/.test(text);
+
   const searchIcons = async () => {
     setIsLoading(true);
-    const { data } = await supabase
-      .from('icon_library')
-      .select('id, slug, title, icon_url')
-      .or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
-      .limit(60);
-    
-    setIcons(data || []);
-    setIsLoading(false);
+    try {
+      if (isGeorgian(searchQuery)) {
+        // Use smart search for Georgian input
+        const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+          body: { query: searchQuery, limit: 60 }
+        });
+        
+        if (error) throw error;
+        setIcons(data?.icons || []);
+      } else {
+        // Standard English search
+        const { data } = await supabase
+          .from('icon_library')
+          .select('id, slug, title, icon_url')
+          .or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
+          .limit(60);
+        
+        setIcons(data || []);
+      }
+    } catch (error) {
+      console.error('Error searching icons:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSelect = (slug: string) => {

@@ -34,6 +34,9 @@ export function QuestionIconPicker({ selectedSlug, onSelect }: QuestionIconPicke
     return `${ICON_STORAGE_URL}/${icon.slug}.png`;
   };
 
+  // Check if text contains Georgian characters
+  const isGeorgian = (text: string) => /[\u10A0-\u10FF]/.test(text);
+
   // Search icons when query changes
   useEffect(() => {
     if (!open) return;
@@ -41,18 +44,29 @@ export function QuestionIconPicker({ selectedSlug, onSelect }: QuestionIconPicke
     const searchIcons = async () => {
       setIsLoading(true);
       try {
-        let query = supabase
-          .from("icon_library")
-          .select("id, slug, title, icon_url")
-          .limit(50);
+        if (searchQuery.trim() && isGeorgian(searchQuery)) {
+          // Use smart search for Georgian input
+          const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+            body: { query: searchQuery, limit: 50 }
+          });
+          
+          if (error) throw error;
+          setIcons(data?.icons || []);
+        } else {
+          // Standard English search
+          let query = supabase
+            .from("icon_library")
+            .select("id, slug, title, icon_url")
+            .limit(50);
 
-        if (searchQuery.trim()) {
-          query = query.or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`);
+          if (searchQuery.trim()) {
+            query = query.or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`);
+          }
+
+          const { data, error } = await query;
+          if (error) throw error;
+          setIcons(data || []);
         }
-
-        const { data, error } = await query;
-        if (error) throw error;
-        setIcons(data || []);
       } catch (error) {
         console.error("Error searching icons:", error);
       } finally {
