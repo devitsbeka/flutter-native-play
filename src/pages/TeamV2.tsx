@@ -140,7 +140,7 @@ function TeamContentV2() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-screen relative overflow-hidden pb-24 lg:pb-0">
+      <main className="flex-1 min-h-screen relative overflow-y-auto pb-24 lg:pb-0">
         {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
         <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
           {/* Header Row */}
@@ -258,20 +258,12 @@ function TeamContentV2() {
                 transition={{ delay: 0.1 }}
                 className="px-4 mb-3"
               >
-                <MyRoomsSection hideTV />
+                <MyRoomsSection 
+                  hideTV 
+                  onCreateRoom={() => setShowCreateModal(true)}
+                  onViewAllRooms={() => setShowAllGamesModal(true)}
+                />
               </motion.div>
-
-              {/* New Room Button */}
-              <div className="px-4 mb-4">
-                <ChunkyButton 
-                  onClick={() => setShowCreateModal(true)}
-                  className="w-full whitespace-nowrap flex-row"
-                  variant="primary"
-                >
-                  <Plus className="w-5 h-5 flex-shrink-0" />
-                  <span>ახალი ოთახი</span>
-                </ChunkyButton>
-              </div>
 
               {/* My Trivia Posts */}
               <div className="px-4">
