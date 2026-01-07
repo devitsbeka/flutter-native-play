@@ -28,15 +28,16 @@ export default function FixIcons() {
   const [isLoading, setIsLoading] = useState(true);
   const zipInputRef = useRef<HTMLInputElement>(null);
 
-  // Check broken icons count
+  // Check broken icons count from verification results table
   const checkBrokenCount = async () => {
     setIsLoading(true);
     try {
-      const { count } = await supabase
-        .from("icon_library")
+      const { count, error } = await supabase
+        .from("icon_verification_results")
         .select("*", { count: "exact", head: true })
-        .or('icon_url.is.null,icon_url.eq.');
+        .eq('is_valid', false);
       
+      if (error) throw error;
       setBrokenCount(count ?? 0);
     } catch (err) {
       console.error("Error checking broken count:", err);

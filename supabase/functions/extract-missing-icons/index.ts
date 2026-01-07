@@ -66,11 +66,11 @@ serve(async (req) => {
 
     console.log(`Found ${imageEntries.length} image files in ZIP`);
 
-    // Get all broken icons from database (icons without valid URLs)
+    // Get all broken icons from verification results table
     const { data: brokenIcons, error: fetchError } = await supabase
-      .from('icon_library')
+      .from('icon_verification_results')
       .select('slug, icon_url')
-      .or('icon_url.is.null,icon_url.eq.');
+      .eq('is_valid', false);
 
     if (fetchError) {
       console.error("Error fetching broken icons:", fetchError);
@@ -78,7 +78,7 @@ serve(async (req) => {
 
     // Create a set of broken slugs for quick lookup
     const brokenSlugs = new Set((brokenIcons || []).map(icon => icon.slug));
-    console.log(`Found ${brokenSlugs.size} broken icons in database`);
+    console.log(`Found ${brokenSlugs.size} broken icons in verification results`);
 
     // Process only the requested batch
     const batchEnd = Math.min(batchStart + batchSize, imageEntries.length);
@@ -162,7 +162,7 @@ serve(async (req) => {
 
         const newUrl = urlData.publicUrl;
 
-        // Update the database with the new URL
+        // Update the icon_library with the new URL
         const { error: updateError } = await supabase
           .from('icon_library')
           .update({ icon_url: newUrl })
@@ -173,16 +173,25 @@ serve(async (req) => {
           continue;
         }
 
+        // Mark as valid in verification results
+        await supabase
+          .from('icon_verification_results')
+          .update({ 
+            is_valid: true, 
+            icon_url: newUrl,
+            error_message: null,
+            last_checked_at: new Date().toISOString()
+          })
+          .eq('slug', targetIcon.slug);
+
         // Log to fix history
         await supabase
           .from('icon_fix_history')
           .insert({
             icon_slug: targetIcon.slug,
-            original_url: targetIcon.icon_url,
-            fixed_url: newUrl,
-            fix_method: 'zip_extraction'
-          })
-          .single();
+            old_url: targetIcon.icon_url,
+            new_url: newUrl
+          });
 
         uploadedCount++;
         fixedIcons.push(targetIcon.slug);
