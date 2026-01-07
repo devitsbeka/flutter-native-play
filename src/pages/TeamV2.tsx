@@ -261,16 +261,19 @@ function TeamContentV2() {
                 <MyRoomsSection hideTV />
               </motion.div>
 
-              {/* New Room Button */}
-              <div className="px-4 mb-4">
-                <ChunkyButton 
+              {/* New Room Button - Dotted Circle Style */}
+              <div className="px-4 mb-4 flex justify-center">
+                <motion.button
                   onClick={() => setShowCreateModal(true)}
-                  className="w-full whitespace-nowrap flex-row"
-                  variant="primary"
+                  className="flex flex-col items-center gap-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Plus className="w-5 h-5 flex-shrink-0" />
-                  <span>ახალი ოთახი</span>
-                </ChunkyButton>
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 border-2 border-dashed border-purple-400 dark:border-purple-500 flex items-center justify-center">
+                    <Plus className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">ახალი ოთახი</span>
+                </motion.button>
               </div>
 
               {/* My Trivia Posts */}

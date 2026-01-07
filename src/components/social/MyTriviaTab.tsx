@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers, Pencil } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+import { EditQuizModal } from "./EditQuizModal";
 
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
@@ -58,7 +59,7 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
         className="w-full text-left"
       >
         {/* Gradient Banner */}
-        <div className={`h-24 bg-gradient-to-br ${collection.cover_gradient} relative`}>
+        <div className={`h-32 bg-gradient-to-br ${collection.cover_gradient} relative`}>
           <div className="absolute inset-0 bg-black/20" />
           
           {/* Collection Badge */}
@@ -167,7 +168,7 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any; index: number }) {
+function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profile: any; index: number; onEdit: (post: any) => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -175,6 +176,14 @@ function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any;
       transition={{ delay: index * 0.05 }}
       className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
+      {/* Edit Button */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); onEdit(post); }}
+        className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+      >
+        <Pencil className="w-4 h-4 text-white" />
+      </button>
+
       {/* Visibility Badge */}
       <div className="absolute top-3 right-3 z-10">
         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
@@ -254,6 +263,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
+  const [editingQuiz, setEditingQuiz] = useState<any>(null);
 
   const isLoading = postsLoading || collectionsLoading;
 
@@ -322,9 +332,22 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
 
         {/* Standalone quizzes */}
         {standalonePosts.map((post, index) => (
-          <StandaloneQuizCard key={post.id} post={post} profile={profile} index={index} />
+          <StandaloneQuizCard 
+            key={post.id} 
+            post={post} 
+            profile={profile} 
+            index={index} 
+            onEdit={(post) => setEditingQuiz(post)}
+          />
         ))}
       </div>
+
+      {/* Edit Modal */}
+      <EditQuizModal 
+        quiz={editingQuiz} 
+        isOpen={!!editingQuiz} 
+        onClose={() => setEditingQuiz(null)} 
+      />
     </motion.div>
   );
 }
