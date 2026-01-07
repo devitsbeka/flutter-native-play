@@ -236,7 +236,7 @@ function TeamContentV2() {
         </div>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative z-10 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 pt-[120px] lg:pt-0">
+        <div className="relative z-10 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 pt-[180px] lg:pt-0">
           {activeTab === "my-trivia" ? (
             <>
               {/* Friends Stories Bar */}
