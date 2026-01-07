@@ -15,6 +15,7 @@ import { TimerBadge } from "@/components/game/TimerBadge";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { useAIIcon } from "@/hooks/useAIIcon";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
 
 // Bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -51,6 +52,7 @@ export function QuizGameScreenProd() {
     lastOpponentAnswer,
     playerPowerUps,
     hiddenAnswers,
+    replacedAnswer,
     playerTimerBonus,
     playerTimerFrozen,
     playerFreezeEndTime,
@@ -58,6 +60,9 @@ export function QuizGameScreenProd() {
     nextQuestion,
     usePowerUp,
   } = useGame();
+  
+  // Database power-ups for persistent inventory
+  const { powerUps: dbPowerUps, usePowerUp: consumeFromDB } = useUserPowerUps();
 
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -163,16 +168,33 @@ export function QuizGameScreenProd() {
   }, [nextQuestion]);
 
   const handleUsePowerUp = useCallback(
-    (type: UIPowerUpType) => {
-      const powerUpMap: Record<UIPowerUpType, PowerUpType> = {
+    async (type: UIPowerUpType) => {
+      // Map UI type to database type
+      const dbTypeMap: Record<UIPowerUpType, DBPowerUpType> = {
+        "5050": "5050",
+        freeze: "freeze",
+        replace: "replace",
+        hint: "time-drain",
+      };
+      const dbType = dbTypeMap[type];
+      
+      // Check database count
+      if (dbPowerUps[dbType] <= 0) return;
+      
+      // Consume from database
+      const success = await consumeFromDB(dbType);
+      if (!success) return;
+      
+      // Apply effect via context
+      const contextTypeMap: Record<UIPowerUpType, PowerUpType> = {
         "5050": "fifty-fifty",
         freeze: "freeze",
         replace: "replace",
         hint: "time-drain",
       };
-      usePowerUp(powerUpMap[type]);
+      usePowerUp(contextTypeMap[type]);
     },
-    [usePowerUp]
+    [dbPowerUps, consumeFromDB, usePowerUp]
   );
 
   // Get answer button state
@@ -180,6 +202,7 @@ export function QuizGameScreenProd() {
     (answer: string): QuizAnswerState => {
       if (!answerRevealed) {
         if (hiddenAnswers.includes(answer)) return "disabled";
+        if (replacedAnswer?.old === answer) return "disabled";
         return "default";
       }
 
@@ -190,7 +213,7 @@ export function QuizGameScreenProd() {
       if (isSelected && !isCorrect) return "wrong";
       return "default";
     },
-    [answerRevealed, hiddenAnswers, currentQuestion, lastUserAnswer]
+    [answerRevealed, hiddenAnswers, replacedAnswer, currentQuestion, lastUserAnswer]
   );
 
   // Build progress results for dots
@@ -206,26 +229,40 @@ export function QuizGameScreenProd() {
     return results;
   }, [questions.length, userAnswerHistory]);
 
-  // Power-ups for UI
+  // Power-ups for UI - use database counts for persistent inventory
   const powerUpsForUI = useMemo(() => {
-    const typeMap: Record<PowerUpType, UIPowerUpType> = {
-      "fifty-fifty": "5050",
+    const order: DBPowerUpType[] = ["5050", "freeze", "replace", "time-drain"];
+    const typeMap: Record<DBPowerUpType, UIPowerUpType> = {
+      "5050": "5050",
       freeze: "freeze",
       replace: "replace",
       "time-drain": "hint",
     };
-    return playerPowerUps.map((p) => ({
-      type: typeMap[p.type],
-      count: p.available,
-      state: p.usedThisQuestion ? ("disabled" as const) : ("default" as const),
-    }));
-  }, [playerPowerUps]);
+    const contextTypeMap: Record<DBPowerUpType, PowerUpType> = {
+      "5050": "fifty-fifty",
+      freeze: "freeze",
+      replace: "replace",
+      "time-drain": "time-drain",
+    };
+    return order.map((dbType) => {
+      const contextPowerUp = playerPowerUps.find(p => p.type === contextTypeMap[dbType]);
+      return {
+        type: typeMap[dbType],
+        count: dbPowerUps[dbType],
+        state: contextPowerUp?.usedThisQuestion ? ("disabled" as const) : ("default" as const),
+      };
+    });
+  }, [dbPowerUps, playerPowerUps]);
 
-  // Visible answers (filtered by 50/50)
+  // Visible answers (filtered by 50/50 and replace)
   const visibleAnswers = useMemo(() => {
     if (!currentQuestion) return [];
-    return currentQuestion.allAnswers.filter((a) => !hiddenAnswers.includes(a));
-  }, [currentQuestion, hiddenAnswers]);
+    return currentQuestion.allAnswers.filter((a) => {
+      if (hiddenAnswers.includes(a)) return false;
+      if (replacedAnswer?.old === a) return false;
+      return true;
+    });
+  }, [currentQuestion, hiddenAnswers, replacedAnswer]);
 
   // Get player avatar state
   const getPlayerState = useCallback(() => {
