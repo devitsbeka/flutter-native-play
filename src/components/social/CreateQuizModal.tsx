@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
+import { QuestionIconPicker } from "./QuestionIconPicker";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -484,25 +485,25 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               className="rounded-xl resize-none"
             />
 
-            {/* Questions preview */}
-            <div className="max-h-40 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
+            {/* Questions preview with icon picker */}
+            <div className="max-h-48 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
               {questions.map((q, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="p-3 bg-background rounded-xl border border-border flex gap-3 items-start"
+                  className="p-3 bg-background rounded-xl border border-border flex gap-3 items-center"
                 >
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground line-clamp-2">
+                    <div className="text-sm font-medium text-foreground line-clamp-1">
                       {q.question_text}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-green-600">✓ {q.correct_answer}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-green-600 truncate">✓ {q.correct_answer}</span>
                       {q.difficulty && (
                         <span className={`text-xs ${getDifficultyColor(q.difficulty)}`}>
                           • {getDifficultyLabel(q.difficulty)}
@@ -510,6 +511,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
                       )}
                     </div>
                   </div>
+                  <QuestionIconPicker
+                    selectedSlug={q.icon_slug || null}
+                    onSelect={(slug) => {
+                      setQuestions(prev => prev.map((question, idx) => 
+                        idx === i ? { ...question, icon_slug: slug || undefined } : question
+                      ));
+                    }}
+                  />
                 </motion.div>
               ))}
             </div>
