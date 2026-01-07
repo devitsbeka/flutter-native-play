@@ -11,11 +11,11 @@ import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 // Helper to handle both Tailwind class gradients and CSS linear-gradient strings
 function getGradientStyle(gradient: string): { style?: React.CSSProperties; className?: string } {
-  if (!gradient) return { className: 'from-primary to-primary/60' };
+  if (!gradient) return { className: 'bg-gradient-to-br from-primary to-primary/60' };
   if (gradient.startsWith('linear-gradient') || gradient.startsWith('radial-gradient')) {
     return { style: { background: gradient } };
   }
-  return { className: gradient };
+  return { className: `bg-gradient-to-br ${gradient}` };
 }
 
 interface MyTriviaTabProps {
@@ -30,9 +30,17 @@ function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
       {/* Mini gradient thumbnail */}
-      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${quiz.cover_gradient} flex items-center justify-center flex-shrink-0`}>
-        <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
-      </div>
+      {(() => {
+        const gradientProps = getGradientStyle(quiz.cover_gradient);
+        return (
+          <div 
+            className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${gradientProps.className || 'bg-gradient-to-br from-primary to-primary/60'}`}
+            style={gradientProps.style}
+          >
+            <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
+          </div>
+        );
+      })()}
       
       <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground text-sm truncate">{quiz.title}</p>
@@ -73,7 +81,7 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
           const gradientProps = getGradientStyle(collection.cover_gradient);
           return (
             <div 
-              className={`h-24 relative bg-gradient-to-br from-purple-500 to-indigo-600 ${gradientProps.className || ''}`}
+              className={`h-24 relative ${gradientProps.className || 'bg-gradient-to-br from-purple-500 to-indigo-600'}`}
               style={gradientProps.style}
             >
               <div className="absolute inset-0 bg-black/20 z-0" />
@@ -248,7 +256,7 @@ function StandaloneQuizCard({
         const gradientProps = getGradientStyle(post.cover_gradient);
         return (
           <div 
-            className={`h-32 relative cursor-pointer bg-gradient-to-br from-primary to-primary/60 ${gradientProps.className || ''}`}
+            className={`h-32 relative cursor-pointer ${gradientProps.className || 'bg-gradient-to-br from-primary to-primary/60'}`}
             style={gradientProps.style}
             onClick={() => onPlay?.(post)}
           >
