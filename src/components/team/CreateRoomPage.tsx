@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil, Tv } from "lucide-react";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil, Tv, Library, Sparkles } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
@@ -13,6 +13,7 @@ import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { generateRoomName } from "@/utils/roomNameGenerator";
 import { Input } from "@/components/ui/input";
 import { TVPlayModal } from "@/components/team/TVPlayModal";
+import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 
 interface Category {
   id: string;
@@ -26,11 +27,12 @@ interface CreateRoomPageProps {
 }
 
 export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useLanguage();
   const { createRoom, loading, currentRoom } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation } = useGameInvitations();
+  const { data: myTrivias, isLoading: loadingMyTrivias } = useMyQuizPosts();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -41,6 +43,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [roomName, setRoomName] = useState(() => generateRoomName());
   const [showTVModal, setShowTVModal] = useState(false);
+  const [categoryTab, setCategoryTab] = useState<"library" | "myTrivia">("library");
+  const [selectedMyTrivia, setSelectedMyTrivia] = useState<string | null>(null);
 
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
@@ -101,13 +105,26 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   };
 
   const handleCreate = async () => {
-    if (!selectedCategory || !user) return;
+    if (!user) return;
+    
+    // Check if we have a valid selection
+    if (categoryTab === "library" && !selectedCategory && !isRandom) return;
+    if (categoryTab === "myTrivia" && !selectedMyTrivia) return;
     
     setIsCreating(true);
     
     try {
-      // Create the room
-      await createRoom(selectedCategory.category_id, selectedCategory.name);
+      if (categoryTab === "myTrivia" && selectedMyTrivia) {
+        // Create room with custom trivia
+        const selectedTrivia = myTrivias?.find(t => t.id === selectedMyTrivia);
+        if (selectedTrivia) {
+          // TODO: Implement custom trivia room creation
+          await createRoom("custom", selectedTrivia.title);
+        }
+      } else if (selectedCategory) {
+        // Create the room with library category
+        await createRoom(selectedCategory.category_id, selectedCategory.name);
+      }
       
       // Note: We need to wait for room to be created before sending invitations
       // The room will be available after createRoom completes
@@ -184,95 +201,80 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
 
         {/* Category Selection */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">{t("team.category")}</h2>
+          <h2 className="text-sm font-medium text-muted-foreground mb-2">{t("team.category")}</h2>
           
-          {loadingCategories ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Category Grid - including Random as first option */}
-              <div className="grid grid-cols-2 gap-2">
-                {/* Random Category Card - always first */}
-                <motion.button
-                  onClick={selectRandomCategory}
-                  className="relative h-28 rounded-xl overflow-hidden transition-all"
-                  style={{
-                    background: "linear-gradient(135deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
-                    border: isRandom
-                      ? "3px solid hsl(var(--primary))"
-                      : "2px solid hsl(var(--border))",
-                    boxShadow: isRandom
-                      ? "0 4px 0 hsl(var(--primary) / 0.3)"
-                      : "0 2px 0 hsl(var(--border))",
-                  }}
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98, y: 1 }}
-                >
-                  {/* Dice icon centered - positioned higher */}
-                  <div className="absolute inset-0 flex items-center justify-center pb-5">
-                    <span className="text-4xl">🎲</span>
-                  </div>
-                  
-                  {/* Category Name - bottom left, no emoji */}
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <span className="text-sm font-bold text-foreground leading-tight drop-shadow-sm">
-                      {t("team.random")}
-                    </span>
-                  </div>
-                  
-                  {isRandom && (
-                    <motion.div
-                      layoutId="category-selected-page"
-                      className="absolute inset-0 rounded-xl border-3 border-primary pointer-events-none"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
-
-                {/* Regular Categories */}
-                {displayedCategories.map((category) => {
-                  const videoUrl = CATEGORY_VIDEOS[category.category_id] || "/videos/floating-blob.mp4";
-                  const isSelected = selectedCategory?.id === category.id && !isRandom;
-                  
-                  return (
+          {/* Category Tabs */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => {
+                setCategoryTab("library");
+                setSelectedMyTrivia(null);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                categoryTab === "library"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              <Library className="w-4 h-4" />
+              ბიბლიოთეკა
+            </button>
+            <button
+              onClick={() => {
+                setCategoryTab("myTrivia");
+                setSelectedCategory(null);
+                setIsRandom(false);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                categoryTab === "myTrivia"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              ჩემი ტრივია
+            </button>
+          </div>
+          
+          {categoryTab === "library" ? (
+            <>
+              {loadingCategories ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Category Grid - including Random as first option */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Random Category Card - always first */}
                     <motion.button
-                      key={category.id}
-                      onClick={() => handleCategorySelect(category)}
+                      onClick={selectRandomCategory}
                       className="relative h-28 rounded-xl overflow-hidden transition-all"
                       style={{
-                        border: isSelected
+                        background: "linear-gradient(135deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
+                        border: isRandom
                           ? "3px solid hsl(var(--primary))"
                           : "2px solid hsl(var(--border))",
-                        boxShadow: isSelected
+                        boxShadow: isRandom
                           ? "0 4px 0 hsl(var(--primary) / 0.3)"
                           : "0 2px 0 hsl(var(--border))",
                       }}
                       whileHover={{ scale: 1.02, y: -1 }}
                       whileTap={{ scale: 0.98, y: 1 }}
                     >
-                      {/* Video Background */}
-                      <div className="absolute inset-0">
-                        <PingPongVideo
-                          src={videoUrl}
-                          className="w-full h-full object-cover scale-125"
-                        />
+                      {/* Dice icon centered - positioned higher */}
+                      <div className="absolute inset-0 flex items-center justify-center pb-5">
+                        <span className="text-4xl">🎲</span>
                       </div>
                       
-                      {/* Subtle Netflix-style gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/25 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-transparent to-transparent" />
-                      
-                      {/* Category Name - bottom left, Netflix style */}
+                      {/* Category Name - bottom left, no emoji */}
                       <div className="absolute bottom-3 left-3 right-3">
-                        <span className="text-sm font-bold text-foreground leading-tight line-clamp-2 drop-shadow-sm">
-                          {category.name}
+                        <span className="text-sm font-bold text-foreground leading-tight drop-shadow-sm">
+                          {t("team.random")}
                         </span>
                       </div>
                       
-                      {isSelected && (
+                      {isRandom && (
                         <motion.div
                           layoutId="category-selected-page"
                           className="absolute inset-0 rounded-xl border-3 border-primary pointer-events-none"
@@ -281,23 +283,136 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                         />
                       )}
                     </motion.button>
-                  );
-                })}
-              </div>
 
-              {/* Show More Button */}
-              {categories.length > 5 && (
-                <motion.button
-                  onClick={() => setShowAllCategories(!showAllCategories)}
-                  className="w-full p-3 rounded-xl bg-muted/50 border-2 border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <span className="text-sm font-medium">
-                    {showAllCategories ? t("team.showLess") : t("team.showMore")}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
-                </motion.button>
+                    {/* Regular Categories */}
+                    {displayedCategories.map((category) => {
+                      const videoUrl = CATEGORY_VIDEOS[category.category_id] || "/videos/floating-blob.mp4";
+                      const isSelected = selectedCategory?.id === category.id && !isRandom;
+                      
+                      return (
+                        <motion.button
+                          key={category.id}
+                          onClick={() => handleCategorySelect(category)}
+                          className="relative h-28 rounded-xl overflow-hidden transition-all"
+                          style={{
+                            border: isSelected
+                              ? "3px solid hsl(var(--primary))"
+                              : "2px solid hsl(var(--border))",
+                            boxShadow: isSelected
+                              ? "0 4px 0 hsl(var(--primary) / 0.3)"
+                              : "0 2px 0 hsl(var(--border))",
+                          }}
+                          whileHover={{ scale: 1.02, y: -1 }}
+                          whileTap={{ scale: 0.98, y: 1 }}
+                        >
+                          {/* Video Background */}
+                          <div className="absolute inset-0">
+                            <PingPongVideo
+                              src={videoUrl}
+                              className="w-full h-full object-cover scale-125"
+                            />
+                          </div>
+                          
+                          {/* Subtle Netflix-style gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/25 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/50 via-transparent to-transparent" />
+                          
+                          {/* Category Name - bottom left, Netflix style */}
+                          <div className="absolute bottom-3 left-3 right-3">
+                            <span className="text-sm font-bold text-foreground leading-tight line-clamp-2 drop-shadow-sm">
+                              {category.name}
+                            </span>
+                          </div>
+                          
+                          {isSelected && (
+                            <motion.div
+                              layoutId="category-selected-page"
+                              className="absolute inset-0 rounded-xl border-3 border-primary pointer-events-none"
+                              initial={false}
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            />
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Show More Button */}
+                  {categories.length > 5 && (
+                    <motion.button
+                      onClick={() => setShowAllCategories(!showAllCategories)}
+                      className="w-full p-3 rounded-xl bg-muted/50 border-2 border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <span className="text-sm font-medium">
+                        {showAllCategories ? t("team.showLess") : t("team.showMore")}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
+                    </motion.button>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            /* My Trivia Tab Content */
+            <div>
+              {loadingMyTrivias ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : myTrivias && myTrivias.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {myTrivias.map((trivia) => {
+                    const isSelected = selectedMyTrivia === trivia.id;
+                    
+                    return (
+                      <motion.button
+                        key={trivia.id}
+                        onClick={() => setSelectedMyTrivia(trivia.id)}
+                        className="relative h-28 rounded-xl overflow-hidden transition-all"
+                        style={{
+                          background: trivia.cover_gradient,
+                          border: isSelected
+                            ? "3px solid hsl(var(--primary))"
+                            : "2px solid hsl(var(--border))",
+                          boxShadow: isSelected
+                            ? "0 4px 0 hsl(var(--primary) / 0.3)"
+                            : "0 2px 0 hsl(var(--border))",
+                        }}
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98, y: 1 }}
+                      >
+                        <div className="absolute inset-0 bg-black/30" />
+                        
+                        {/* Content */}
+                        <div className="absolute inset-0 flex flex-col justify-end p-3">
+                          <span className="text-sm font-bold text-white leading-tight line-clamp-2 drop-shadow-lg">
+                            {trivia.title}
+                          </span>
+                          <span className="text-xs text-white/80 mt-1">
+                            {trivia.question_count} კითხვა
+                          </span>
+                        </div>
+                        
+                        {isSelected && (
+                          <motion.div
+                            layoutId="trivia-selected"
+                            className="absolute inset-0 rounded-xl border-3 border-primary pointer-events-none"
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Gamepad2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="text-muted-foreground text-sm">ჯერ არ გაქვს შექმნილი ტრივია</p>
+                  <p className="text-muted-foreground/70 text-xs mt-1">შექმენი ტრივია სოციალური ფიდიდან</p>
+                </div>
               )}
             </div>
           )}
@@ -380,7 +495,12 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
       <div className="px-4 py-6 flex justify-center">
         <Hex3DCreateButton 
           onClick={handleCreate}
-          disabled={!selectedCategory || loading || isCreating}
+          disabled={
+            loading || 
+            isCreating || 
+            (categoryTab === "library" && !selectedCategory && !isRandom) ||
+            (categoryTab === "myTrivia" && !selectedMyTrivia)
+          }
           isLoading={loading || isCreating}
         />
       </div>
