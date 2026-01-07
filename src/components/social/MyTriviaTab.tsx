@@ -67,7 +67,7 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
+      className="w-full min-w-0 bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
     >
       {/* Collection Header - Clickable */}
       <button
@@ -203,7 +203,7 @@ function StandaloneQuizCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="relative w-full bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
+      className="relative w-full min-w-0 bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
       {/* Top Right Badges */}
       <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
@@ -375,13 +375,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onEditQuiz, onPl
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="py-4 space-y-4"
+      className="py-4 space-y-4 w-full max-w-full overflow-hidden"
     >
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">შენი კონტენტი ({totalCount})</h3>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-hidden">
         {/* Collections first */}
         {myCollections?.map((collection) => (
           <CollectionCard key={collection.id} collection={collection} profile={profile} />
