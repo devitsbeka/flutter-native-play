@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown, BarChart3, ArrowRightLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,6 +21,8 @@ import { BrokenIconsModal } from '@/components/admin/BrokenIconsModal';
 import { IconAssignmentHistory } from '@/components/admin/IconAssignmentHistory';
 import { IconUploadPanel } from '@/components/admin/IconUploadPanel';
 import { IconSuggestionsPanel } from '@/components/admin/IconSuggestionsPanel';
+import { BulkIconReassignment } from '@/components/admin/BulkIconReassignment';
+import { IconUsageStats } from '@/components/admin/IconUsageStats';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminIconAssignment';
@@ -583,6 +585,14 @@ export default function IconAssignment() {
             <Image className="h-4 w-4" />
             კითხვები
           </TabsTrigger>
+          <TabsTrigger value="stats" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            სტატისტიკა
+          </TabsTrigger>
+          <TabsTrigger value="reassign" className="gap-2">
+            <ArrowRightLeft className="h-4 w-4" />
+            შეცვლა
+          </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2">
             <Upload className="h-4 w-4" />
             ატვირთვა
@@ -1047,6 +1057,26 @@ export default function IconAssignment() {
           // Reload icons after successful upload
           toast.success('აიკონები განახლდა');
         }} />
+      </TabsContent>
+
+      {/* Stats Tab Content */}
+      <TabsContent value="stats" className="flex-1 mt-0 overflow-auto p-4">
+        <IconUsageStats 
+          brokenIconsCount={verificationStats.broken}
+          totalIcons={icons.length}
+          onRefresh={refetch}
+        />
+      </TabsContent>
+
+      {/* Bulk Reassign Tab Content */}
+      <TabsContent value="reassign" className="flex-1 mt-0 overflow-auto p-4">
+        <div className="max-w-4xl mx-auto">
+          <BulkIconReassignment 
+            icons={icons}
+            brokenIconSlugs={brokenIconSlugs}
+            onComplete={refetch}
+          />
+        </div>
       </TabsContent>
 
       {/* History Tab Content */}
