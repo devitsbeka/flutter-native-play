@@ -216,13 +216,13 @@ export function IconUploadPanel({ onSuccess }: IconUploadPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Drop Zone */}
+      {/* Drop Zone - Compact */}
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          "border-2 border-dashed rounded-xl p-8 text-center transition-colors mb-4",
+          "border-2 border-dashed rounded-xl p-4 text-center transition-colors mb-4",
           dragActive 
             ? "border-primary bg-primary/5" 
             : "border-border hover:border-muted-foreground"
@@ -237,13 +237,13 @@ export function IconUploadPanel({ onSuccess }: IconUploadPanelProps) {
           id="icon-upload"
         />
         <label htmlFor="icon-upload" className="cursor-pointer">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <Upload className="w-8 h-8 text-muted-foreground" />
+          <div className="flex items-center justify-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+              <Upload className="w-5 h-5 text-muted-foreground" />
             </div>
-            <div>
-              <p className="font-medium">აიკონების ატვირთვა</p>
-              <p className="text-sm text-muted-foreground">
+            <div className="text-left">
+              <p className="font-medium text-sm">აიკონების ატვირთვა</p>
+              <p className="text-xs text-muted-foreground">
                 გადმოათრიეთ ან დააჭირეთ ასარჩევად
               </p>
             </div>
