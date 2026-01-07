@@ -1,10 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Play, User, Star, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
+import { Trophy, Play, User, Star, TrendingUp, TrendingDown, Sparkles, Gift } from "lucide-react";
 import { useCategoryLeaderboard } from "@/hooks/useCategoryLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { WeeklyRewardsPreview } from "@/components/leaderboard/WeeklyRewardsPreview";
+import { getDaysRemainingInWeek } from "@/config/leaderboardRewards";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -125,13 +127,30 @@ export function CategoryLeaderboard({
               {t('leaderboard.playToAppear')}
             </p>
           </motion.div>
-        )}
+      )}
       </div>
 
-      {/* Leaderboard Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <Trophy className="h-5 w-5 text-amber-400" />
-        <h3 className={`text-lg font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>{t('leaderboard.title')}</h3>
+      {/* Leaderboard Header with Rewards Button */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-amber-400" />
+          <h3 className={`text-lg font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>{t('leaderboard.title')}</h3>
+        </div>
+        
+        <WeeklyRewardsPreview 
+          currentRank={userRank?.rank}
+          lightMode={lightMode}
+          trigger={
+            <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 ${
+              lightMode 
+                ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
+                : "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
+            }`}>
+              <Gift className="h-3.5 w-3.5" />
+              <span>{getDaysRemainingInWeek()}დ</span>
+            </button>
+          }
+        />
       </div>
 
       {/* Leaderboard List */}
@@ -262,17 +281,17 @@ export function CategoryLeaderboard({
                       </p>
                     </div>
 
-                    {/* Stars */}
+                    {/* Stars - with proper contrast for all ranks */}
                     <motion.div 
                       className="text-right flex items-center gap-1"
                       animate={hasRankChange ? { scale: [1, 1.15, 1] } : {}}
                       transition={{ duration: 0.3, delay: 0.1 }}
                     >
-                      <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                      <Star className={`h-4 w-4 ${
+                        entry.rank <= 3 ? "text-amber-600 fill-amber-600" : "text-amber-400 fill-amber-400"
+                      }`} />
                       <p className={`font-bold ${
-                        entry.rank === 1 ? "text-amber-700" : 
-                        entry.rank === 2 ? "text-slate-600" :
-                        entry.rank === 3 ? "text-orange-700" :
+                        entry.rank <= 3 ? "text-slate-800" :
                         lightMode ? "text-slate-700" : "text-white"
                       }`}>
                         {entry.total_stars}
