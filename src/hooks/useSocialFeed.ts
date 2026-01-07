@@ -194,7 +194,27 @@ export function useMyQuizPosts() {
         console.error("Error fetching my quiz posts:", error);
         throw error;
       }
-      return data || [];
+
+      if (!data || data.length === 0) return [];
+
+      // Fetch saves count for user's posts
+      const postIds = data.map(p => p.id);
+      const { data: savesData } = await supabase
+        .from("quiz_post_saves")
+        .select("post_id")
+        .in("post_id", postIds);
+
+      // Count saves per post
+      const savesMap = (savesData || []).reduce((acc, save) => {
+        acc[save.post_id] = (acc[save.post_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Merge saves count with posts
+      return data.map(post => ({
+        ...post,
+        saves_count: savesMap[post.id] || 0
+      }));
     },
     enabled: !!user?.id,
   });

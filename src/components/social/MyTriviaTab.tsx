@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers, Bookmark, Edit3 } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -12,6 +12,8 @@ import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
+  onEditQuiz?: (quiz: any) => void;
+  onPlayQuiz?: (quiz: any) => void;
 }
 
 // Compact quiz card for inside collections
@@ -163,7 +165,19 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any; index: number }) {
+function StandaloneQuizCard({ 
+  post, 
+  profile, 
+  index,
+  onEdit,
+  onPlay 
+}: { 
+  post: any; 
+  profile: any; 
+  index: number;
+  onEdit?: (post: any) => void;
+  onPlay?: (post: any) => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -171,8 +185,20 @@ function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any;
       transition={{ delay: index * 0.05 }}
       className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
-      {/* Visibility Badge */}
-      <div className="absolute top-3 right-3 z-10">
+      {/* Top Right Badges */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        {/* Edit Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.(post);
+          }}
+          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+        >
+          <Edit3 className="w-4 h-4 text-white" />
+        </button>
+        
+        {/* Visibility Badge */}
         <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
           post.is_public !== false 
             ? 'bg-green-500/90 text-white' 
@@ -193,7 +219,11 @@ function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any;
       </div>
 
       {/* Gradient Thumbnail */}
-      <div className={`h-32 bg-gradient-to-br ${post.cover_gradient} relative`}>
+      <div 
+        className="h-32 relative cursor-pointer"
+        style={{ background: post.cover_gradient }}
+        onClick={() => onPlay?.(post)}
+      >
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute inset-0 flex items-center justify-center">
           <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
@@ -231,12 +261,12 @@ function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any;
               <span>{post.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Play className="w-4 h-4" />
-              <span>{post.plays_count || 0}</span>
+              <Bookmark className="w-4 h-4" />
+              <span>{post.saves_count || 0}</span>
             </div>
           </div>
           
-          <ChunkyButton size="sm" variant="secondary" className="text-xs">
+          <ChunkyButton size="sm" variant="secondary" className="text-xs" onClick={() => onPlay?.(post)}>
             <Play className="w-3.5 h-3.5" />
             <span>თამაში</span>
           </ChunkyButton>
@@ -246,7 +276,7 @@ function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any;
   );
 }
 
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onEditQuiz, onPlayQuiz }: MyTriviaTabProps) {
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
@@ -318,7 +348,14 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
 
         {/* Standalone quizzes */}
         {standalonePosts.map((post, index) => (
-          <StandaloneQuizCard key={post.id} post={post} profile={profile} index={index} />
+          <StandaloneQuizCard 
+            key={post.id} 
+            post={post} 
+            profile={profile} 
+            index={index}
+            onEdit={onEditQuiz}
+            onPlay={onPlayQuiz}
+          />
         ))}
       </div>
     </motion.div>

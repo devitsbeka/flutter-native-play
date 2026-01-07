@@ -35,6 +35,7 @@ import { LiveBadge } from "@/components/social/LiveBadge";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
+import { EditQuizModal } from "@/components/social/EditQuizModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { SamplePost } from "@/data/samplePosts";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -80,6 +81,34 @@ function TeamContent() {
   const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
+  const [editingQuiz, setEditingQuiz] = useState<any | null>(null);
+
+  // Convert quiz post to SamplePost format for playing
+  const convertToSamplePost = (quiz: any): SamplePost => ({
+    id: quiz.id,
+    username: "user",
+    displayName: "User",
+    avatarUrl: "",
+    verified: false,
+    createdAt: quiz.created_at,
+    title: quiz.title,
+    description: quiz.description || "",
+    subject: quiz.subject,
+    hashtags: quiz.hashtags || [],
+    coverGradient: quiz.cover_gradient,
+    questionCount: quiz.question_count,
+    answerFormat: quiz.answer_format,
+    likesCount: quiz.likes_count || 0,
+    playsCount: quiz.plays_count || 0,
+    commentsCount: 0,
+    questions: (quiz.questions || []).map((q: any) => ({
+      question: q.question_text || q.question,
+      correct_answer: q.correct_answer,
+      incorrect_answers: q.incorrect_answers || [],
+      icon_slug: q.icon_slug,
+    })),
+    isUserPost: true,
+  });
 
   // Show latest pending invitation
   useEffect(() => {
@@ -313,7 +342,11 @@ function TeamContent() {
 
             {/* My Trivia Posts */}
             <div className="px-4">
-              <MyTriviaTab onCreateQuiz={() => setShowCreateQuizModal(true)} />
+              <MyTriviaTab 
+                onCreateQuiz={() => setShowCreateQuizModal(true)} 
+                onEditQuiz={(quiz) => setEditingQuiz(quiz)}
+                onPlayQuiz={(quiz) => setPlayingQuiz(convertToSamplePost(quiz))}
+              />
             </div>
           </>
         ) : (
@@ -374,6 +407,12 @@ function TeamContent() {
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
         onQuizCreated={() => setActiveTab("my-trivia")}
+      />
+      <EditQuizModal
+        open={!!editingQuiz}
+        onOpenChange={(open) => !open && setEditingQuiz(null)}
+        quiz={editingQuiz}
+        onQuizUpdated={() => setEditingQuiz(null)}
       />
       <QuizPlayModal
         open={!!playingQuiz}
