@@ -38,6 +38,7 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
+import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
 
@@ -100,8 +101,10 @@ export default function CategoryQuizPage() {
   const [timerBonus, setTimerBonus] = useState(0);
   const [timerFrozen, setTimerFrozen] = useState(false);
   const [freezeEndTime, setFreezeEndTime] = useState<number | null>(null);
+  const [freezeTimeRemaining, setFreezeTimeRemaining] = useState(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [activePowerUpEffect, setActivePowerUpEffect] = useState<PowerUpType | null>(null);
+  const [activeScreenEffect, setActiveScreenEffect] = useState<PowerUpType | null>(null);
   
   const hasFetched = useRef(false);
   const hasSaved = useRef(false);
@@ -366,10 +369,14 @@ export default function CategoryQuizPage() {
     const timer = setInterval(() => {
       // Check if timer is frozen
       if (timerFrozen && freezeEndTime) {
-        if (Date.now() >= freezeEndTime) {
+        const remaining = Math.max(0, Math.ceil((freezeEndTime - Date.now()) / 1000));
+        setFreezeTimeRemaining(remaining);
+        if (remaining <= 0) {
           // Freeze expired
           setTimerFrozen(false);
           setFreezeEndTime(null);
+          setFreezeTimeRemaining(0);
+          setActiveScreenEffect(null);
         }
         return; // Don't decrement while frozen
       }
@@ -598,6 +605,13 @@ export default function CategoryQuizPage() {
 
     // Show power-up effect animation
     setActivePowerUpEffect(type);
+    
+    // Show screen effect for visual feedback
+    setActiveScreenEffect(type);
+    // Clear screen effect after animation (except freeze which persists)
+    if (type !== "freeze") {
+      setTimeout(() => setActiveScreenEffect(null), 1500);
+    }
 
     // Apply power-up effect
     switch (type) {
@@ -627,6 +641,7 @@ export default function CategoryQuizPage() {
           setUsedPowerUpsThisQuestion(new Set());
           setTimerFrozen(false);
           setFreezeEndTime(null);
+          setActiveScreenEffect(null);
         }
         break;
       }
@@ -1001,11 +1016,12 @@ export default function CategoryQuizPage() {
         <QuizQuestionCard
           questionText={currentQuestion?.question || ""}
           progressPercent={(timeRemaining / (15 + timerBonus)) * 100}
-          state="default"
+          state={timerFrozen ? "frozen" : "default"}
           difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           timerSeconds={timeRemaining}
           timerMaxSeconds={15 + timerBonus}
+          freezeTimeLeft={freezeTimeRemaining}
         />
       </div>
 
@@ -1117,6 +1133,16 @@ export default function CategoryQuizPage() {
         activeEffect={activePowerUpEffect}
         onComplete={() => setActivePowerUpEffect(null)}
       />
+
+      {/* Persistent freeze indicator */}
+      <ActivePowerUpIndicator
+        type="freeze"
+        isVisible={timerFrozen}
+        remainingTime={freezeTimeRemaining}
+      />
+
+      {/* Screen-wide power-up effects */}
+      <PowerUpScreenEffect type={activeScreenEffect} isActive={activeScreenEffect !== null || timerFrozen} />
     </div>
   );
 }

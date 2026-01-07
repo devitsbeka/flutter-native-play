@@ -16,6 +16,7 @@ import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-butt
 import { useAIIcon } from "@/hooks/useAIIcon";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
+import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 
 // Bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -426,6 +427,16 @@ export function QuizGameScreenProd() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Persistent freeze indicator */}
+      <ActivePowerUpIndicator
+        type="freeze"
+        isVisible={playerTimerFrozen}
+        remainingTime={freezeTimeLeft}
+      />
+
+      {/* Screen-wide freeze effect */}
+      <PowerUpScreenEffect type="freeze" isActive={playerTimerFrozen} />
     </div>
   );
 }
