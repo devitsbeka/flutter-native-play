@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCategories } from './useCategories';
+import { isLatinScript, buildSearchTerms } from '@/utils/transliteration';
 
 export interface QuestionForAssignment {
   id: string;
@@ -70,7 +71,27 @@ export function useAdminIconAssignment() {
       .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
 
     if (search) {
-      query = query.ilike('question_text', `%${search}%`);
+      const searchTerms = buildSearchTerms(search);
+      
+      if (isLatinScript(search)) {
+        // For Latin input: search icon_slug + transliterated/semantic Georgian terms
+        const orConditions: string[] = [];
+        
+        // Search by icon_slug (English keywords)
+        orConditions.push(`icon_slug.ilike.%${search}%`);
+        
+        // Search question_text with all Georgian equivalents
+        for (const term of searchTerms) {
+          if (term !== search.toLowerCase()) {
+            orConditions.push(`question_text.ilike.%${term}%`);
+          }
+        }
+        
+        query = query.or(orConditions.join(','));
+      } else {
+        // Georgian input - search directly in question_text
+        query = query.ilike('question_text', `%${search}%`);
+      }
     }
 
     if (catFilter) {
