@@ -7,6 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserCategoryRanks } from "@/hooks/useUserCategoryRanks";
+import { useNewLevels } from "@/hooks/useNewLevels";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { IconTabBar } from "@/components/shared/IconTabBar";
 import { SectionHeader } from "@/components/discover/SectionHeader";
@@ -46,6 +47,7 @@ export default function Discover() {
   const { progress } = useCategoryProgress();
   const { favorites, toggleFavorite } = useFavorites();
   const { ranks: leaderboardRanks } = useUserCategoryRanks();
+  const { newLevelCategories } = useNewLevels();
 
   // Transform progress to simple number map
   const progressMap = useMemo(() => {
@@ -90,11 +92,39 @@ export default function Discover() {
     [categories]
   );
 
-  // Get favorite categories - match by uuid
-  const favoriteCategories = useMemo(
-    () => categories.filter((cat) => favorites.has(cat.uuid || cat.id)),
-    [categories, favorites]
-  );
+  // Get favorite categories - match by uuid, sorted by priority
+  const favoriteCategories = useMemo(() => {
+    const favs = categories.filter((cat) => favorites.has(cat.uuid || cat.id));
+    
+    // Sort: 1) New levels first, 2) In-progress, 3) Not started, 4) Completed last
+    return favs.sort((a, b) => {
+      const aProgress = progressMap[a.id] || 0;
+      const bProgress = progressMap[b.id] || 0;
+      const aTotalLevels = (a as any).totalLevels || (a as any).total_levels || 20;
+      const bTotalLevels = (b as any).totalLevels || (b as any).total_levels || 20;
+      
+      const aHasNew = newLevelCategories.has(a.uuid || a.id);
+      const bHasNew = newLevelCategories.has(b.uuid || b.id);
+      const aCompleted = aProgress >= aTotalLevels;
+      const bCompleted = bProgress >= bTotalLevels;
+      
+      // Priority 1: Categories with NEW levels first
+      if (aHasNew && !bHasNew) return -1;
+      if (!aHasNew && bHasNew) return 1;
+      
+      // Priority 2: Completed categories go last
+      if (aCompleted && !bCompleted) return 1;
+      if (!aCompleted && bCompleted) return -1;
+      
+      // Priority 3: In-progress before not-started
+      const aInProgress = aProgress > 0 && !aCompleted;
+      const bInProgress = bProgress > 0 && !bCompleted;
+      if (aInProgress && !bInProgress) return -1;
+      if (!aInProgress && bInProgress) return 1;
+      
+      return 0;
+    });
+  }, [categories, favorites, progressMap, newLevelCategories]);
 
   // Get popular categories (first 6 from mixed types)
   const popularCategories = useMemo(
