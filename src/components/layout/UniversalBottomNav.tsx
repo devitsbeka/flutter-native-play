@@ -88,7 +88,13 @@ export function UniversalBottomNav({
           {/* Explore */}
           <div className="flex-1 flex justify-center">
             <NavButton
-              onClick={isGuest ? handleLockedNavClick : () => navigate("/discover")}
+              onClick={isGuest ? handleLockedNavClick : () => {
+                if (isActive("/discover")) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  navigate("/discover");
+                }
+              }}
               isActive={isActive("/discover")}
               icon={Compass}
               hasNewContent={!isGuest && indicators.explore}
@@ -99,7 +105,13 @@ export function UniversalBottomNav({
           {/* Shop */}
           <div className="flex-1 flex justify-center pr-4">
             <NavButton
-              onClick={isGuest ? handleLockedNavClick : () => navigate("/power-ups")}
+              onClick={isGuest ? handleLockedNavClick : () => {
+                if (isActive("/power-ups")) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  navigate("/power-ups");
+                }
+              }}
               isActive={isActive("/power-ups")}
               icon={Store}
               hasNewContent={!isGuest && indicators.shop}
@@ -130,7 +142,13 @@ export function UniversalBottomNav({
           {/* Rank */}
           <div className="flex-1 flex justify-center pl-4">
             <NavButton
-              onClick={isGuest ? handleLockedNavClick : () => navigate("/leaderboards")}
+              onClick={isGuest ? handleLockedNavClick : () => {
+                if (isActive("/leaderboards")) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  navigate("/leaderboards");
+                }
+              }}
               isActive={isActive("/leaderboards")}
               icon={Trophy}
               hasNewContent={!isGuest && indicators.rank}
@@ -141,7 +159,13 @@ export function UniversalBottomNav({
           {/* Team */}
           <div className="flex-1 flex justify-center">
             <NavButton
-              onClick={isGuest ? handleLockedNavClick : (onTeamClick || (() => navigate("/team")))}
+              onClick={isGuest ? handleLockedNavClick : () => {
+                if (isActive("/team")) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  (onTeamClick || (() => navigate("/team")))();
+                }
+              }}
               isActive={isActive("/team")}
               icon={Headphones}
               badgeCount={isGuest ? 0 : pendingChallenges.length}
