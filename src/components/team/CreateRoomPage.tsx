@@ -4,6 +4,7 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil, Tv, Library, Sparkles } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -428,45 +429,53 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
               </h2>
             </div>
             
-            <div className="flex flex-wrap gap-2">
-              {acceptedFriends.map((friend) => {
-                const isSelected = selectedFriends.has(friend.friendId);
-                return (
-                  <motion.button
-                    key={friend.id}
-                    onClick={() => toggleFriendSelection(friend.friendId)}
-                    className="relative"
-                    whileHover={{ scale: 1.08 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div 
-                      className="relative rounded-full p-0.5 transition-all"
-                      style={{
-                        background: isSelected 
-                          ? "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)"
-                          : "transparent",
-                      }}
-                    >
-                      <SmartAvatar
-                        avatarUrl={friend.avatarUrl}
-                        animatedAvatarUrl={friend.animatedAvatarUrl}
-                        fallback={friend.nickname?.slice(0, 2)}
-                        size="md"
-                        className={isSelected ? "ring-0" : "ring-2 ring-border/30"}
-                      />
-                    </div>
-                    {friend.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
-                    )}
-                    {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                      </div>
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
+            <TooltipProvider delayDuration={0}>
+              <div className="flex flex-wrap gap-2">
+                {acceptedFriends.map((friend) => {
+                  const isSelected = selectedFriends.has(friend.friendId);
+                  return (
+                    <Tooltip key={friend.id}>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          onClick={() => toggleFriendSelection(friend.friendId)}
+                          className="relative"
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <div 
+                            className="relative rounded-full p-0.5 transition-all"
+                            style={{
+                              background: isSelected 
+                                ? "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)"
+                                : "transparent",
+                            }}
+                          >
+                            <SmartAvatar
+                              avatarUrl={friend.avatarUrl}
+                              animatedAvatarUrl={friend.animatedAvatarUrl}
+                              fallback={friend.nickname?.slice(0, 2)}
+                              size="md"
+                              className={isSelected ? "ring-0" : "ring-2 ring-border/30"}
+                            />
+                          </div>
+                          {friend.isOnline && (
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                          )}
+                          {isSelected && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                            </div>
+                          )}
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {friend.nickname}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </div>
         )}
 
