@@ -141,10 +141,10 @@ function TeamContentV2() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-h-screen relative overflow-hidden pb-24 lg:pb-0">
-        {/* Mobile Header */}
-        <header className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80">
+        {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
+        <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
+          {/* Header Row */}
           <div className="flex items-center justify-between px-4 h-14 safe-top">
-            {/* Left Side: MyTrivia LIVE */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -156,7 +156,6 @@ function TeamContentV2() {
               <LiveBadge />
             </motion.div>
 
-            {/* Right Side: Notifications + Messages */}
             <div className="flex items-center gap-2">
               <motion.button
                 initial={{ opacity: 0, x: 10 }}
@@ -188,16 +187,13 @@ function TeamContentV2() {
               </motion.button>
             </div>
           </div>
-        </header>
 
-        {/* Sticky Section: Tabs + Create Buttons */}
-        <div className="sticky top-14 lg:top-0 z-10 backdrop-blur-md bg-background/80 border-b border-border/50">
-          {/* Tabs */}
-          <div className="px-4 py-3">
+          {/* Tabs Row */}
+          <div className="px-4 py-2">
             <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
               <button
                 onClick={() => setActiveTab("for-me")}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
                   activeTab === "for-me"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
                     : "text-muted-foreground hover:text-foreground/80"
@@ -207,7 +203,7 @@ function TeamContentV2() {
               </button>
               <button
                 onClick={() => setActiveTab("my-trivia")}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
                   activeTab === "my-trivia"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
                     : "text-muted-foreground hover:text-foreground/80"
@@ -218,19 +214,19 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Create Buttons - Only show on My Trivia tab */}
+          {/* Create Buttons Row - Equal width */}
           {activeTab === "my-trivia" && (
-            <div className="px-4 pb-3 flex gap-2">
+            <div className="px-4 pb-3 flex gap-3">
               <button
                 onClick={() => setShowCreateQuizModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white text-sm font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
               >
                 <Plus className="w-4 h-4" />
                 შექმენი ტრივია
               </button>
               <button
                 onClick={() => setShowCreateCollectionModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
               >
                 <Layers className="w-4 h-4" />
                 კოლექცია
