@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { useNewLevels } from "@/hooks/useNewLevels";
 
 interface Category {
   id: string;
@@ -36,6 +37,7 @@ export function CategoryCarousel({
   getBadge,
 }: CategoryCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { hasNewLevels } = useNewLevels();
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -95,6 +97,7 @@ export function CategoryCarousel({
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
                 videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
+                hasNewLevels={hasNewLevels(category.uuid || category.id)}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

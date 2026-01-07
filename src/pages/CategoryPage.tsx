@@ -5,6 +5,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNewLevels } from "@/hooks/useNewLevels";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
@@ -50,6 +51,7 @@ export default function CategoryPage() {
   const { t } = useLanguage();
   const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
+  const { clearNewLevelBadge } = useNewLevels();
 
   const [activeTab, setActiveTab] = useState<TabType>("leaderboard");
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
@@ -84,6 +86,13 @@ export default function CategoryPage() {
       }
     }
   }, [categoryId]);
+
+  // Clear the "NEW!" badge when user views the category
+  useEffect(() => {
+    if (user && category?.uuid && category?.totalLevels) {
+      clearNewLevelBadge(category.uuid, category.totalLevels);
+    }
+  }, [user, category?.uuid, category?.totalLevels, clearNewLevelBadge]);
 
   const handleUnlockComplete = useCallback(() => {
     setShowUnlockAnimation(false);

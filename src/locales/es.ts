@@ -329,6 +329,9 @@ export const es: KaTranslations = {
     loginToSaveProgress: "¡Inicia sesión para guardar tu progreso!",
     resultsWillSave: "Tus resultados se guardarán después de iniciar sesión.",
     notFound: "Categoría no encontrada",
+    allCompleted: "¡Bien hecho! 🔥",
+    newLevelsSoon: "¡Se añadirán nuevos niveles pronto y te avisaremos!",
+    newLevels: "¡NUEVO!",
   },
   notifications: {
     title: "Notificaciones",
