@@ -140,9 +140,9 @@ function TeamContentV2() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-screen relative pb-24 lg:pb-0">
-        {/* Mobile Fixed Section: Header + Tabs + Create Buttons */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
+      <main className="flex-1 min-h-screen relative overflow-hidden pb-24 lg:pb-0">
+        {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
+        <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
           {/* Header Row */}
           <div className="flex items-center justify-between px-4 h-14 safe-top">
             <motion.div
@@ -236,7 +236,7 @@ function TeamContentV2() {
         </div>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative z-10 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 pt-[180px] lg:pt-0">
+        <div className="relative z-10 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
           {activeTab === "my-trivia" ? (
             <>
               {/* Friends Stories Bar */}
@@ -258,12 +258,20 @@ function TeamContentV2() {
                 transition={{ delay: 0.1 }}
                 className="px-4 mb-3"
               >
-                <MyRoomsSection 
-                  hideTV 
-                  onCreateRoom={() => setShowCreateModal(true)}
-                  onViewAllRooms={() => setShowAllGamesModal(true)}
-                />
+                <MyRoomsSection hideTV />
               </motion.div>
+
+              {/* New Room Button */}
+              <div className="px-4 mb-4">
+                <ChunkyButton 
+                  onClick={() => setShowCreateModal(true)}
+                  className="w-full whitespace-nowrap flex-row"
+                  variant="primary"
+                >
+                  <Plus className="w-5 h-5 flex-shrink-0" />
+                  <span>ახალი ოთახი</span>
+                </ChunkyButton>
+              </div>
 
               {/* My Trivia Posts */}
               <div className="px-4">

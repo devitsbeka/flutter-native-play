@@ -19,10 +19,9 @@ function ShimmerSkeleton({ className }: { className?: string }) {
 interface FriendsStoriesBarProps {
   onAddFriendClick: () => void;
   onFriendClick: (friend: Friend) => void;
-  onViewAllFriends?: () => void;
 }
 
-export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onViewAllFriends }: FriendsStoriesBarProps) {
+export function FriendsStoriesBar({ onAddFriendClick, onFriendClick }: FriendsStoriesBarProps) {
   const { friends, loading } = useFriends();
   const { t } = useLanguage();
 
@@ -34,38 +33,19 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onViewAllFr
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-800 tracking-wide">მეგობრები</span>
-          <button className="text-sm font-medium text-purple-600">ყველა</button>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
-              <ShimmerSkeleton className="w-16 h-16 rounded-full" />
-              <ShimmerSkeleton className="w-12 h-3 rounded" />
-            </div>
-          ))}
-        </div>
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
+            <ShimmerSkeleton className="w-16 h-16 rounded-full" />
+            <ShimmerSkeleton className="w-12 h-3 rounded" />
+          </div>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-800 tracking-wide">მეგობრები</span>
-        <button 
-          onClick={onViewAllFriends}
-          className="text-sm font-medium text-purple-600 hover:text-purple-700"
-        >
-          ყველა
-        </button>
-      </div>
-      
-      {/* Friends List */}
-      <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+    <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
       <div className="flex gap-4 pt-2 pb-3 pr-4">
         {/* Add Friend Button */}
         <motion.button
@@ -120,7 +100,6 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onViewAllFr
             ))}
           </>
         )}
-      </div>
       </div>
     </div>
   );

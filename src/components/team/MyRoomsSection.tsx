@@ -11,11 +11,9 @@ import { Capacitor } from "@capacitor/core";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
-  onCreateRoom?: () => void;
-  onViewAllRooms?: () => void;
 }
 
-export function MyRoomsSection({ hideTV = false, onCreateRoom, onViewAllRooms }: MyRoomsSectionProps) {
+export function MyRoomsSection({ hideTV = false }: MyRoomsSectionProps) {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
@@ -76,7 +74,6 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onViewAllRooms }:
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
-          <button className="text-sm font-medium text-purple-600">ყველა</button>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2].map((i) => (
@@ -93,21 +90,14 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onViewAllRooms }:
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
         
-        {/* TV Button or "ყველა" link */}
-        {!hideTV ? (
+        {/* TV Button - hidden when hideTV prop is true */}
+        {!hideTV && (
           <button
             onClick={() => setShowTVModal(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
           >
             <TVIcon className="w-4 h-4" />
             <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
-          </button>
-        ) : (
-          <button 
-            onClick={onViewAllRooms}
-            className="text-sm font-medium text-purple-600 hover:text-purple-700"
-          >
-            ყველა
           </button>
         )}
       </div>
@@ -116,32 +106,29 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onViewAllRooms }:
       <TVMirrorModal open={showTVModal} onOpenChange={setShowTVModal} />
 
       {/* Rooms List */}
-      <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
-        <div className="flex gap-3 pr-4">
-          {/* Add New Room Button - dotted style */}
-          <motion.button
-            onClick={onCreateRoom}
-            className="flex-shrink-0 w-64 h-44 rounded-2xl border-2 border-dashed border-purple-400 bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center gap-3 hover:border-purple-500 hover:bg-purple-100 transition-all"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-              <Plus className="w-6 h-6 text-purple-600" />
-            </div>
-            <span className="text-sm font-medium text-purple-600">ახალი ოთახი</span>
-          </motion.button>
-
-          {/* Room cards */}
-          {rooms.map((room, index) => (
-            <RoomCard
-              key={room.id}
-              room={room}
-              index={index}
-              onJoin={() => handleJoin(room)}
-            />
-          ))}
+      {rooms.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
+        >
+          <Gamepad2 className="w-12 h-12 text-slate-400 mb-3" />
+          <p className="text-slate-500 text-sm">{t('team.noActiveRooms')}</p>
+        </motion.div>
+      ) : (
+        <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
+          <div className="flex gap-3 pr-4">
+            {rooms.map((room, index) => (
+              <RoomCard
+                key={room.id}
+                room={room}
+                index={index}
+                onJoin={() => handleJoin(room)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

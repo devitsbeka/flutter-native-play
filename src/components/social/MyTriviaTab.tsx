@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers, Bookmark, Edit3, MessageCircle } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -9,33 +9,17 @@ import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
-// Helper to handle both Tailwind class gradients and CSS linear-gradient strings
-function getGradientStyle(gradient: string): { style?: React.CSSProperties; className?: string } {
-  if (!gradient) return { className: 'bg-gradient-to-br from-primary to-primary/60' };
-  if (gradient.startsWith('linear-gradient') || gradient.startsWith('radial-gradient')) {
-    return { style: { background: gradient } };
-  }
-  return { className: `bg-gradient-to-br ${gradient}` };
-}
-
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
-  onEditQuiz?: (quiz: any) => void;
-  onPlayQuiz?: (quiz: any) => void;
 }
 
 // Compact quiz card for inside collections
 function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
-  const gradientProps = getGradientStyle(quiz.cover_gradient);
-  
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
       {/* Mini gradient thumbnail */}
-      <div 
-        className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${gradientProps.className || ''}`}
-        style={gradientProps.style}
-      >
+      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${quiz.cover_gradient} flex items-center justify-center flex-shrink-0`}>
         <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
       </div>
       
@@ -61,13 +45,12 @@ function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
 function CollectionCard({ collection, profile }: { collection: any; profile: any }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
-  const gradientProps = getGradientStyle(collection.cover_gradient);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full min-w-0 bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
+      className="bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
     >
       {/* Collection Header - Clickable */}
       <button
@@ -75,20 +58,17 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
         className="w-full text-left"
       >
         {/* Gradient Banner */}
-        <div 
-          className={`h-24 relative overflow-hidden ${gradientProps.className || ''}`}
-          style={gradientProps.style}
-        >
+        <div className={`h-24 bg-gradient-to-br ${collection.cover_gradient} relative`}>
           <div className="absolute inset-0 bg-black/20" />
           
           {/* Collection Badge */}
-          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
             <Layers className="w-3.5 h-3.5" />
             <span>კოლექცია</span>
           </div>
 
           {/* Visibility Badge */}
-          <div className="absolute top-3 right-3 z-20">
+          <div className="absolute top-3 right-3">
             <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
               collection.is_public 
                 ? 'bg-green-500/90 text-white' 
@@ -109,8 +89,8 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
           </div>
 
           {/* Title */}
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-10 px-20">
-            <h4 className="text-lg font-bold text-white text-center drop-shadow-lg line-clamp-2">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg">
               {collection.title}
             </h4>
           </div>
@@ -183,55 +163,21 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ 
-  post, 
-  profile, 
-  index,
-  onEdit,
-  onPlay 
-}: { 
-  post: any; 
-  profile: any; 
-  index: number;
-  onEdit?: (post: any) => void;
-  onPlay?: (post: any) => void;
-}) {
-  const gradientProps = getGradientStyle(post.cover_gradient);
-
+function StandaloneQuizCard({ post, profile, index }: { post: any; profile: any; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="relative w-full min-w-0 bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
+      className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
-      {/* Top Right Badges */}
-      <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
-        {/* Edit Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onEdit?.(post);
-          }}
-          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
-        >
-          <Edit3 className="w-4 h-4 text-white" />
-        </button>
-        
-        {/* Visibility Badge - Clickable to open edit */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onEdit?.(post);
-          }}
-          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md hover:opacity-90 transition-opacity ${
-            post.is_public !== false 
-              ? 'bg-green-500/90 text-white' 
-              : 'bg-muted text-muted-foreground'
-          }`}
-        >
+      {/* Visibility Badge */}
+      <div className="absolute top-3 right-3 z-10">
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
+          post.is_public !== false 
+            ? 'bg-green-500/90 text-white' 
+            : 'bg-muted text-muted-foreground'
+        }`}>
           {post.is_public !== false ? (
             <>
               <Globe className="w-3 h-3" />
@@ -243,22 +189,18 @@ function StandaloneQuizCard({
               <span>პირადი</span>
             </>
           )}
-        </button>
+        </div>
       </div>
 
       {/* Gradient Thumbnail */}
-      <div 
-        className={`h-32 relative cursor-pointer overflow-hidden ${gradientProps.className || ''}`}
-        style={gradientProps.style}
-        onClick={() => onPlay?.(post)}
-      >
+      <div className={`h-32 bg-gradient-to-br ${post.cover_gradient} relative`}>
         <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 flex items-center justify-center z-10 px-12">
-          <h4 className="text-xl font-bold text-white text-center drop-shadow-lg line-clamp-2">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
             {post.title}
           </h4>
         </div>
-        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white z-10">
+        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
           {post.question_count} კითხვა
         </div>
       </div>
@@ -283,31 +225,18 @@ function StandaloneQuizCard({
 
         {/* Stats Row */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Heart className="w-4 h-4" />
               <span>{post.likes_count || 0}</span>
             </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MessageCircle className="w-4 h-4" />
-              <span>{post.comments_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Bookmark className="w-4 h-4" />
-              <span>{post.saves_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Play className="w-4 h-4" />
               <span>{post.plays_count || 0}</span>
             </div>
           </div>
           
-          <ChunkyButton 
-            size="sm" 
-            variant="secondary" 
-            className="text-xs" 
-            onClick={() => onPlay?.(post)}
-          >
+          <ChunkyButton size="sm" variant="secondary" className="text-xs">
             <Play className="w-3.5 h-3.5" />
             <span>თამაში</span>
           </ChunkyButton>
@@ -317,7 +246,7 @@ function StandaloneQuizCard({
   );
 }
 
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onEditQuiz, onPlayQuiz }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabProps) {
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
@@ -375,13 +304,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onEditQuiz, onPl
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="py-4 space-y-4 w-full max-w-full overflow-hidden"
+      className="py-4 space-y-4"
     >
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">შენი კონტენტი ({totalCount})</h3>
       </div>
 
-      <div className="space-y-4 overflow-hidden">
+      <div className="space-y-4">
         {/* Collections first */}
         {myCollections?.map((collection) => (
           <CollectionCard key={collection.id} collection={collection} profile={profile} />
@@ -389,14 +318,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onEditQuiz, onPl
 
         {/* Standalone quizzes */}
         {standalonePosts.map((post, index) => (
-          <StandaloneQuizCard 
-            key={post.id} 
-            post={post} 
-            profile={profile} 
-            index={index}
-            onEdit={onEditQuiz}
-            onPlay={onPlayQuiz}
-          />
+          <StandaloneQuizCard key={post.id} post={post} profile={profile} index={index} />
         ))}
       </div>
     </motion.div>
