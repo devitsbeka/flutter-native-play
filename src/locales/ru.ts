@@ -336,6 +336,9 @@ export const ru: KaTranslations = {
     loginToSaveProgress: "Войдите для сохранения прогресса!",
     resultsWillSave: "Результаты сохранятся после входа.",
     notFound: "Категория не найдена",
+    allCompleted: "Молодец! 🔥",
+    newLevelsSoon: "Новые уровни скоро появятся и мы вас уведомим!",
+    newLevels: "НОВОЕ!",
   },
   notifications: {
     title: "Уведомления",

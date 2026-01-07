@@ -388,6 +388,9 @@ export const en: KaTranslations = {
     loginToSaveProgress: "Sign in to save your progress!",
     resultsWillSave: "Your results will be saved after signing in.",
     notFound: "Category not found",
+    allCompleted: "Well done! 🔥",
+    newLevelsSoon: "New levels will be added soon and we'll notify you!",
+    newLevels: "NEW!",
   },
 
   // ==========================================

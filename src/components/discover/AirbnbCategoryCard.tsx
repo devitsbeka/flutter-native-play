@@ -20,6 +20,7 @@ interface AirbnbCategoryCardProps {
   isFavorite?: boolean;
   leaderboardRank?: number | null;
   videoUrl?: string;
+  hasNewLevels?: boolean;
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
   variant?: "compact" | "full";
@@ -61,6 +62,7 @@ export function AirbnbCategoryCard({
   isFavorite = false,
   leaderboardRank,
   videoUrl,
+  hasNewLevels = false,
   onFavoriteClick,
   onClick,
   variant = "compact",
@@ -227,8 +229,25 @@ export function AirbnbCategoryCard({
               />
             </button>
 
-            {/* Badge - only show if no leaderboard rank - Chunky style */}
-            {badge && !leaderboardRank && (
+            {/* NEW! Badge for new levels - takes priority */}
+            {hasNewLevels && !leaderboardRank && (
+              <motion.div 
+                className="absolute top-3 left-3 px-3 py-2 rounded-full flex items-center justify-center border-2 border-purple-300"
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
+                  boxShadow: '0 4px 0 0 rgba(139,92,246,0.3), inset 0 2px 0 rgba(255,255,255,0.3), 0 0 12px rgba(139,92,246,0.4)',
+                }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <span className="text-xs font-bold text-white leading-none">
+                  ახალი!
+                </span>
+              </motion.div>
+            )}
+
+            {/* Badge - only show if no leaderboard rank and no new levels badge */}
+            {badge && !leaderboardRank && !hasNewLevels && (
               <div 
                 className="absolute top-3 left-3 px-3 py-2 rounded-full bg-white flex items-center justify-center border-2 border-white/80"
                 style={{

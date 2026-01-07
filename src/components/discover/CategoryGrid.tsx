@@ -1,5 +1,6 @@
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { useNewLevels } from "@/hooks/useNewLevels";
 
 interface Category {
   id: string;
@@ -33,6 +34,8 @@ export function CategoryGrid({
   onFavoriteToggle,
   getBadge,
 }: CategoryGridProps) {
+  const { hasNewLevels } = useNewLevels();
+  
   if (categories.length === 0) return null;
 
   return (
@@ -65,6 +68,7 @@ export function CategoryGrid({
             isFavorite={favorites.has(favoriteId)}
             leaderboardRank={leaderboardRanks[category.id]}
             videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
+            hasNewLevels={hasNewLevels(category.uuid || category.id)}
             onFavoriteClick={(e) => {
               e.stopPropagation();
               onFavoriteToggle(favoriteId);
