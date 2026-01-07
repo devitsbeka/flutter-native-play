@@ -48,6 +48,7 @@ export function DynamicIcon({
   const [imageError, setImageError] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
   const [asyncIconUrl, setAsyncIconUrl] = React.useState<string | null>(null);
+  const [isResolvingIcon, setIsResolvingIcon] = React.useState(false);
   const maxRetries = 2;
   
   const { findIcon, getIconBySlug, fetchIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
@@ -57,7 +58,7 @@ export function DynamicIcon({
     return categoryId ? hashString(categoryId) : 0;
   }, [categoryId]);
 
-  // Resolve icon URL using the icon library
+  // Resolve icon URL using the icon library - but DON'T use random fallback if we have a slug
   const iconUrl = React.useMemo(() => {
     if (!isLoaded) return null;
 
@@ -80,6 +81,9 @@ export function DynamicIcon({
       if (match && shouldRetryUrl(match.iconUrl)) {
         return match.iconUrl;
       }
+      
+      // If we have a slug but no match yet, DON'T use random fallback - wait for async lookup
+      return null;
     } else if (categoryId) {
       // No slug provided - try findIcon with empty keywords to trigger category fallback
       const match = findIcon([], categoryId);
@@ -88,33 +92,41 @@ export function DynamicIcon({
       }
     }
 
-    // Priority 2: Try category-based lookup
-    if (categoryId) {
+    // Priority 2: Try category-based lookup (only when no slug provided)
+    if (categoryId && !slug) {
       const categoryUrl = getIconForCategory(categoryId);
       if (categoryUrl && shouldRetryUrl(categoryUrl)) {
         return categoryUrl;
       }
     }
     
-    // Priority 3: Random icon from category as final fallback (with stable seed)
-    const fallbackUrl = getRandomIconForCategory(categoryId || 'general', stableSeed);
-    if (fallbackUrl && shouldRetryUrl(fallbackUrl)) {
-      return fallbackUrl;
+    // Priority 3: Random icon from category as final fallback (only when no slug provided)
+    if (!slug) {
+      const fallbackUrl = getRandomIconForCategory(categoryId || 'general', stableSeed);
+      if (fallbackUrl && shouldRetryUrl(fallbackUrl)) {
+        return fallbackUrl;
+      }
     }
 
     return null;
   }, [slug, categoryId, isLoaded, stableSeed, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
 
-  // Reset error when URL changes
+  // Reset error when URL changes or slug changes
   React.useEffect(() => {
     setImageError(false);
     setRetryCount(0);
     setAsyncIconUrl(null);
-  }, [iconUrl]);
+    // If we have a slug but no immediate match, we're resolving
+    if (slug && isLoaded && !iconUrl) {
+      setIsResolvingIcon(true);
+    } else {
+      setIsResolvingIcon(false);
+    }
+  }, [iconUrl, slug, isLoaded]);
 
   // Async fallback: if iconUrl doesn't match the requested slug, try direct DB lookup
   React.useEffect(() => {
-    if (slug && isLoaded && !asyncIconUrl) {
+    if (slug && isLoaded) {
       const slugs = slug.includes(',') ? slug.split(',').map(s => s.trim()) : [slug];
       const firstSlug = slugs[0];
       
@@ -122,15 +134,19 @@ export function DynamicIcon({
       const isUsingFallback = iconUrl && !iconUrl.includes(firstSlug);
       
       if (!iconUrl || isUsingFallback) {
+        setIsResolvingIcon(true);
         fetchIconBySlug(firstSlug).then(url => {
           if (url) {
             console.log(`[DynamicIcon] Found icon via async DB lookup: ${firstSlug}`);
             setAsyncIconUrl(url);
           }
+          setIsResolvingIcon(false);
+        }).catch(() => {
+          setIsResolvingIcon(false);
         });
       }
     }
-  }, [iconUrl, slug, isLoaded, asyncIconUrl, fetchIconBySlug]);
+  }, [iconUrl, slug, isLoaded, fetchIconBySlug]);
 
   const handleImageError = React.useCallback(() => {
     if (retryCount < maxRetries) {
@@ -145,8 +161,11 @@ export function DynamicIcon({
     }
   }, [iconUrl, retryCount]);
 
-  // Show skeleton while loading
-  if (!isLoaded) {
+  // Show skeleton while loading icons library or resolving specific icon
+  if (!isLoaded || (isResolvingIcon && !asyncIconUrl)) {
+    if (hideIfEmpty) {
+      return null;
+    }
     return (
       <div 
         className={cn("animate-pulse rounded-xl bg-white/20", className)}
@@ -155,8 +174,8 @@ export function DynamicIcon({
     );
   }
 
-  // Use async URL if available
-  const finalIconUrl = iconUrl || asyncIconUrl;
+  // Use async URL if available, otherwise use the resolved iconUrl
+  const finalIconUrl = asyncIconUrl || iconUrl;
 
   // Show fallback icon if no URL or image error
   if (!finalIconUrl || imageError) {
