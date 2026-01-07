@@ -27,20 +27,17 @@ interface MyTriviaTabProps {
 
 // Compact quiz card for inside collections
 function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
+  const gradientProps = getGradientStyle(quiz.cover_gradient);
+  
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
       {/* Mini gradient thumbnail */}
-      {(() => {
-        const gradientProps = getGradientStyle(quiz.cover_gradient);
-        return (
-          <div 
-            className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${gradientProps.className || 'bg-gradient-to-br from-primary to-primary/60'}`}
-            style={gradientProps.style}
-          >
-            <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
-          </div>
-        );
-      })()}
+      <div 
+        className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${gradientProps.className || ''}`}
+        style={gradientProps.style}
+      >
+        <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
+      </div>
       
       <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground text-sm truncate">{quiz.title}</p>
@@ -64,12 +61,13 @@ function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
 function CollectionCard({ collection, profile }: { collection: any; profile: any }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
+  const gradientProps = getGradientStyle(collection.cover_gradient);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-full bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
+      className="w-full bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
     >
       {/* Collection Header - Clickable */}
       <button
@@ -77,51 +75,46 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
         className="w-full text-left"
       >
         {/* Gradient Banner */}
-        {(() => {
-          const gradientProps = getGradientStyle(collection.cover_gradient);
-          return (
-            <div 
-              className={`h-24 relative overflow-hidden ${gradientProps.className || 'bg-gradient-to-br from-purple-500 to-indigo-600'}`}
-              style={gradientProps.style}
-            >
-              <div className="absolute inset-0 bg-black/20 z-0" />
-              
-              {/* Collection Badge */}
-              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
-                <Layers className="w-3.5 h-3.5" />
-                <span>კოლექცია</span>
-              </div>
+        <div 
+          className={`h-24 relative overflow-hidden ${gradientProps.className || ''}`}
+          style={gradientProps.style}
+        >
+          <div className="absolute inset-0 bg-black/20" />
+          
+          {/* Collection Badge */}
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+            <Layers className="w-3.5 h-3.5" />
+            <span>კოლექცია</span>
+          </div>
 
-              {/* Visibility Badge */}
-              <div className="absolute top-3 right-3 z-10">
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
-                  collection.is_public 
-                    ? 'bg-green-500/90 text-white' 
-                    : 'bg-muted text-muted-foreground'
-                }`}>
-                  {collection.is_public ? (
-                    <>
-                      <Globe className="w-3 h-3" />
-                      <span>საჯარო</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-3 h-3" />
-                      <span>პირადი</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Title */}
-              <div className="absolute inset-0 flex items-center justify-center z-10 px-16">
-                <h4 className="text-lg font-bold text-white text-center drop-shadow-lg line-clamp-2">
-                  {collection.title}
-                </h4>
-              </div>
+          {/* Visibility Badge */}
+          <div className="absolute top-3 right-3 z-20">
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
+              collection.is_public 
+                ? 'bg-green-500/90 text-white' 
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              {collection.is_public ? (
+                <>
+                  <Globe className="w-3 h-3" />
+                  <span>საჯარო</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3 h-3" />
+                  <span>პირადი</span>
+                </>
+              )}
             </div>
-          );
-        })()}
+          </div>
+
+          {/* Title */}
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center z-10 px-20">
+            <h4 className="text-lg font-bold text-white text-center drop-shadow-lg line-clamp-2">
+              {collection.title}
+            </h4>
+          </div>
+        </div>
 
         {/* Info Row */}
         <div className="p-4 flex items-center justify-between">
@@ -203,12 +196,14 @@ function StandaloneQuizCard({
   onEdit?: (post: any) => void;
   onPlay?: (post: any) => void;
 }) {
+  const gradientProps = getGradientStyle(post.cover_gradient);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="relative w-full max-w-full bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
+      className="relative w-full bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
       {/* Top Right Badges */}
       <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
@@ -252,26 +247,21 @@ function StandaloneQuizCard({
       </div>
 
       {/* Gradient Thumbnail */}
-      {(() => {
-        const gradientProps = getGradientStyle(post.cover_gradient);
-        return (
-          <div 
-            className={`h-32 relative cursor-pointer ${gradientProps.className || 'bg-gradient-to-br from-primary to-primary/60'}`}
-            style={gradientProps.style}
-            onClick={() => onPlay?.(post)}
-          >
-            <div className="absolute inset-0 bg-black/20 z-0" />
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
-                {post.title}
-              </h4>
-            </div>
-            <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white z-10">
-              {post.question_count} კითხვა
-            </div>
-          </div>
-        );
-      })()}
+      <div 
+        className={`h-32 relative cursor-pointer overflow-hidden ${gradientProps.className || ''}`}
+        style={gradientProps.style}
+        onClick={() => onPlay?.(post)}
+      >
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 flex items-center justify-center z-10 px-12">
+          <h4 className="text-xl font-bold text-white text-center drop-shadow-lg line-clamp-2">
+            {post.title}
+          </h4>
+        </div>
+        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white z-10">
+          {post.question_count} კითხვა
+        </div>
+      </div>
 
       {/* Author Info & Stats */}
       <div className="p-4">
