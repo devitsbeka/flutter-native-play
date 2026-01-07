@@ -9,6 +9,7 @@ import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
+  onCreateCollection?: () => void;
 }
 
 export function MyTriviaTab({ onCreateQuiz }: MyTriviaTabProps) {

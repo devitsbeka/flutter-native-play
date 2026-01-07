@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Bell, MessageCircle } from "lucide-react";
+import { Users, Plus, Bell, MessageCircle, Layers } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -27,6 +27,7 @@ import { LiveBadge } from "@/components/social/LiveBadge";
 import { SocialFeed } from "@/components/social/SocialFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
+import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TabsContent } from "@/components/ui/tabs";
@@ -59,6 +60,7 @@ function TeamContentV2() {
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
+  const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
 
   const { unreadCount } = useNotifications();
@@ -188,30 +190,53 @@ function TeamContentV2() {
           </div>
         </header>
 
-        {/* Tabs below header */}
-        <div className="sticky top-14 lg:top-0 z-10 backdrop-blur-md bg-background/80 px-4 py-3">
-          <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
-            <button
-              onClick={() => setActiveTab("for-me")}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                activeTab === "for-me"
-                  ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                  : "text-muted-foreground hover:text-foreground/80"
-              }`}
-            >
-              შენთვის
-            </button>
-            <button
-              onClick={() => setActiveTab("my-trivia")}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                activeTab === "my-trivia"
-                  ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                  : "text-muted-foreground hover:text-foreground/80"
-              }`}
-            >
-              ჩემი ტრივია
-            </button>
+        {/* Sticky Section: Tabs + Create Buttons */}
+        <div className="sticky top-14 lg:top-0 z-10 backdrop-blur-md bg-background/80 border-b border-border/50">
+          {/* Tabs */}
+          <div className="px-4 py-3">
+            <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
+              <button
+                onClick={() => setActiveTab("for-me")}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "for-me"
+                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                შენთვის
+              </button>
+              <button
+                onClick={() => setActiveTab("my-trivia")}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "my-trivia"
+                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                ჩემი ტრივია
+              </button>
+            </div>
           </div>
+
+          {/* Create Buttons - Only show on My Trivia tab */}
+          {activeTab === "my-trivia" && (
+            <div className="px-4 pb-3 flex gap-2">
+              <button
+                onClick={() => setShowCreateQuizModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white text-sm font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                შექმენი ტრივია
+              </button>
+              <button
+                onClick={() => setShowCreateCollectionModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+              >
+                <Layers className="w-4 h-4" />
+                კოლექცია
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
@@ -254,7 +279,10 @@ function TeamContentV2() {
 
               {/* My Trivia Posts */}
               <div className="px-4">
-                <MyTriviaTab onCreateQuiz={() => setShowCreateQuizModal(true)} />
+                <MyTriviaTab 
+                  onCreateQuiz={() => setShowCreateQuizModal(true)} 
+                  onCreateCollection={() => setShowCreateCollectionModal(true)}
+                />
               </div>
             </>
           ) : (
@@ -313,6 +341,11 @@ function TeamContentV2() {
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
         onQuizCreated={() => setActiveTab("my-trivia")}
+      />
+      <CreateCollectionModal
+        open={showCreateCollectionModal}
+        onOpenChange={setShowCreateCollectionModal}
+        onCollectionCreated={() => setActiveTab("my-trivia")}
       />
       <QuizPlayModal
         open={!!playingQuiz}
