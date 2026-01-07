@@ -13,7 +13,7 @@ import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreen
 import { GameResultsScreenV2 } from "@/components/team/GameResultsScreenV2";
 import { FriendsStoriesBar } from "@/components/team/FriendsStoriesBar";
 import { MyRoomsSection } from "@/components/team/MyRoomsSection";
-import { AddFriendModal } from "@/components/team/AddFriendModal";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -269,7 +269,7 @@ function TeamContentV2() {
         isOpen={showJoinModal} 
         onClose={() => setShowJoinModal(false)} 
       />
-      <AddFriendModal
+      <InviteFriendsModal
         isOpen={showAddFriendModal}
         onClose={() => setShowAddFriendModal(false)}
       />
