@@ -246,7 +246,7 @@ export default function CategoryQuizPage() {
           query = query.not('id', 'in', `(${askedIds.join(',')})`);
         }
         
-        const { data: dbQuestions, error: dbError } = await query.limit(30);
+        const { data: dbQuestions, error: dbError } = await query.limit(100);
 
         if (dbError) {
           console.error("Questions fetch error:", dbError);
@@ -266,7 +266,7 @@ export default function CategoryQuizPage() {
               .eq('category_id', categoryData.id)
               .gte('level_number', minLevel)
               .lte('level_number', maxLevel)
-              .limit(15);
+              .limit(50);
             
             if (retryQuestions && retryQuestions.length > 0) {
               processAndSetQuestions(retryQuestions, categoryData);
@@ -282,7 +282,7 @@ export default function CategoryQuizPage() {
             .eq('category_id', categoryData.id)
             .gte('level_number', 1)
             .lte('level_number', 20)
-            .limit(30);
+            .limit(100);
           
           if (fallbackQuestions && fallbackQuestions.length > 0) {
             processAndSetQuestions(fallbackQuestions, categoryData);
