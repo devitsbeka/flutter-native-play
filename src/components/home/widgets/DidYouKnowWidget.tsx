@@ -58,8 +58,8 @@ export function DidYouKnowWidget() {
   const { user } = useAuth();
   const { fact, loading, voting, voteResult, hasVoted, countdown, vote } = useDidYouKnow();
 
-  // Fixed height container to prevent layout shifts
-  const WIDGET_HEIGHT = 280;
+  // Remove fixed height - let content flow naturally
+  const LOADING_HEIGHT = 200;
 
   if (loading) {
     return (
@@ -67,7 +67,7 @@ export function DidYouKnowWidget() {
         className="bg-card rounded-2xl p-5 border border-border/60"
         style={{
           boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-          height: WIDGET_HEIGHT,
+          minHeight: LOADING_HEIGHT,
         }}
       >
         <div className="animate-pulse space-y-3">
@@ -91,7 +91,6 @@ export function DidYouKnowWidget() {
       className="bg-card rounded-2xl p-5 border border-border/60"
       style={{
         boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-        height: WIDGET_HEIGHT,
       }}
     >
       {/* Header */}
