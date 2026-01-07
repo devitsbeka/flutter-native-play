@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff } from "lucide-react";
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
 interface FeedPostProps {
   post: SamplePost;
@@ -99,29 +100,49 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="bg-card border-b border-border"
+      className={`bg-card border-b border-border ${post.isUserPost ? 'ring-2 ring-primary/30' : ''}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
-          {/* Avatar with gradient ring */}
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600">
-              <div className="w-full h-full rounded-full overflow-hidden bg-background p-[2px]">
-                <img 
-                  src={post.avatarUrl} 
-                  alt={post.displayName}
-                  className="w-full h-full rounded-full object-cover"
-                />
+          {/* Avatar with gradient ring or AvatarWithFrame for user posts */}
+          {post.isUserPost && post.avatarUrl ? (
+            <AvatarWithFrame
+              imageUrl={post.avatarUrl}
+              size="sm"
+              showVipBadge={false}
+            />
+          ) : (
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600">
+                <div className="w-full h-full rounded-full overflow-hidden bg-background p-[2px]">
+                  {post.avatarUrl ? (
+                    <img 
+                      src={post.avatarUrl} 
+                      alt={post.displayName}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-muted-foreground text-sm font-medium">
+                      {post.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
           
           <div className="flex flex-col">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span className="font-semibold text-foreground text-sm">{post.username}</span>
               {post.verified && (
                 <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
+              )}
+              {post.isUserPost && (
+                <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-medium">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  ჩემი
+                </span>
               )}
             </div>
             <span className="text-xs text-muted-foreground">{timeAgo}</span>

@@ -9,15 +9,40 @@ export function useSocialFeed() {
   const queryClient = useQueryClient();
 
   const { data: dbPosts = [], isLoading } = useQuery({
-    queryKey: ["quiz-posts"],
+    queryKey: ["quiz-posts-with-profiles"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all posts
+      const { data: posts, error: postsError } = await supabase
         .from("user_quiz_posts")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (postsError) throw postsError;
+      if (!posts || posts.length === 0) return [];
+
+      // Get unique user IDs
+      const userIds = [...new Set(posts.map(p => p.user_id))];
+
+      // Fetch profiles for those users
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, nickname, avatar_url")
+        .in("user_id", userIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
+
+      // Create a map of user_id to profile
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.user_id, p])
+      );
+
+      // Merge posts with profiles
+      return posts.map(post => ({
+        ...post,
+        profile: profileMap.get(post.user_id) || null
+      }));
     },
   });
 
@@ -85,13 +110,15 @@ export function useSocialFeed() {
   // Convert db posts to SamplePost format and merge with sample posts
   const convertedDbPosts: SamplePost[] = dbPosts.map((post) => {
     const questions = (post.questions as Json[]) || [];
+    const profileData = post.profile;
+    
     return {
       id: post.id,
-      username: "user",
-      displayName: "User",
-      avatarUrl: "",
+      username: profileData?.nickname || "user",
+      displayName: profileData?.nickname || "User",
+      avatarUrl: profileData?.avatar_url || "",
       verified: false,
-      createdAt: post.created_at,
+      createdAt: post.created_at || new Date().toISOString(),
       title: post.title,
       description: post.description || "",
       subject: post.subject,
@@ -107,6 +134,7 @@ export function useSocialFeed() {
         correct_answer: q.correct_answer,
         incorrect_answers: q.incorrect_answers || [],
       })),
+      isUserPost: user?.id === post.user_id,
     };
   });
 
