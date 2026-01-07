@@ -136,9 +136,17 @@ const TOPIC_TO_ICONS: Record<string, string[]> = {
   theater: ['mask', 'stage', 'drama'],
 };
 
-// Georgian to English keyword mapping
+// Georgian to English keyword mapping - includes EXACT icon slug names
 const GEORGIAN_KEYWORDS: Record<string, string> = {
-  'ეგვიპტე': 'egypt', 'ფარაონ': 'pharaoh', 'პირამიდა': 'pyramid',
+  // Exact icon slug matches (highest priority)
+  'პირამიდ': 'pyramid', 'კოლიზეუმ': 'colosseum', 'სფინქს': 'sphinx',
+  'პანთეონ': 'pantheon', 'აკროპოლ': 'acropolis', 'პართენონ': 'parthenon',
+  'ნეფერტიტი': 'nefertiti', 'გილიოტინ': 'guillotine', 'კრემლ': 'kremlin',
+  'მაჩუ': 'machu-picchu', 'პაგოდ': 'pagoda', 'ტაჯ': 'taj-mahal',
+  'სტოუნჰენჯ': 'stonehenge', 'ბიგბენ': 'big-ben', 'ეიფელ': 'eiffel-tower',
+  'კოლოს': 'colossus', 'მოაი': 'moai', 'ზიგურატ': 'ziggurat',
+  // General topic keywords  
+  'ეგვიპტე': 'egypt', 'ფარაონ': 'pharaoh',
   'რომ': 'rome', 'იმპერატორ': 'emperor', 'კეისარ': 'caesar',
   'საბერძნეთ': 'greece', 'ათენ': 'athens', 'სპარტ': 'sparta',
   'ჩინეთ': 'china', 'კედელ': 'wall',
@@ -191,7 +199,21 @@ function matchIconForQuestion(
   // 1. Extract keywords from question (no AI)
   const keywords = extractKeywords(questionText);
   
-  // 2. Check topic mappings (FAST, RELIABLE)
+  // 2. FIRST: Check EXACT slug match (HIGHEST PRIORITY!)
+  // This ensures "pyramid" question gets "pyramid" icon, not "pharaoh-death-mask"
+  for (const keyword of keywords) {
+    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (iconSlugs.has(normalizedKw)) {
+      return { slug: normalizedKw, method: 'exact-slug' };
+    }
+    // Also try without hyphens
+    const noHyphenKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (noHyphenKw !== normalizedKw && iconSlugs.has(noHyphenKw)) {
+      return { slug: noHyphenKw, method: 'exact-slug' };
+    }
+  }
+  
+  // 3. SECOND: Check topic mappings (for related concepts)
   for (const keyword of keywords) {
     const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
     const topicIcons = TOPIC_TO_ICONS[normalizedKw];
@@ -200,14 +222,6 @@ function matchIconForQuestion(
       if (validIcon) {
         return { slug: validIcon, method: 'topic-mapping' };
       }
-    }
-  }
-  
-  // 3. Check exact slug match
-  for (const keyword of keywords) {
-    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (iconSlugs.has(normalizedKw)) {
-      return { slug: normalizedKw, method: 'exact-slug' };
     }
   }
   
@@ -270,7 +284,21 @@ function calculateIconScore(
 ): number {
   let score = 0;
   
-  // Check title words (highest weight - very specific match)
+  // HIGHEST PRIORITY: Exact slug match (25 points!)
+  // If keyword exactly matches icon slug, it's the perfect match
+  for (const keyword of keywords) {
+    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (icon.slug === normalizedKw) {
+      score += 25; // Exact match is highest priority
+    }
+    // Also check without hyphens
+    const noHyphenKw = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (icon.slug === noHyphenKw) {
+      score += 25;
+    }
+  }
+  
+  // Check title words (high weight - very specific match)
   const titleWords = icon.title.toLowerCase().split(/[\s-]+/);
   for (const word of titleWords) {
     if (word.length >= 4 && lowerText.includes(word)) {
