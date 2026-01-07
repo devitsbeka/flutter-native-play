@@ -177,34 +177,34 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-        {/* Room Name Input */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+        {/* Room Name Input - Compact */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-2">{t("team.roomName")}</h2>
+          <h2 className="text-xs font-medium text-muted-foreground mb-1">{t("team.roomName")}</h2>
           <div className="relative">
             <Input
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
               placeholder={t("team.enterRoomName")}
-              className="pr-10 bg-muted/50 border-border/50 text-foreground"
+              className="h-9 pr-9 bg-muted/50 border-border/50 text-foreground text-sm"
               maxLength={30}
             />
             <button
               onClick={() => setRoomName(generateRoomName())}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-muted transition-colors"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted transition-colors"
               title={t("team.randomName")}
             >
-              <Shuffle className="w-4 h-4 text-muted-foreground" />
+              <Shuffle className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           </div>
         </div>
 
         {/* Category Selection */}
         <div>
-          <h2 className="text-sm font-medium text-muted-foreground mb-2">{t("team.category")}</h2>
+          <h2 className="text-xs font-medium text-muted-foreground mb-1">{t("team.category")}</h2>
           
           {/* Category Tabs */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-3">
             <button
               onClick={() => {
                 setCategoryTab("library");
@@ -249,7 +249,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                     {/* Random Category Card - always first */}
                     <motion.button
                       onClick={selectRandomCategory}
-                      className="relative h-28 rounded-xl overflow-hidden transition-all"
+                      className="relative h-24 rounded-xl overflow-hidden transition-all"
                       style={{
                         background: "linear-gradient(135deg, #E9D5FF 0%, #C4B5FD 50%, #A78BFA 100%)",
                         border: isRandom
@@ -293,7 +293,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                         <motion.button
                           key={category.id}
                           onClick={() => handleCategorySelect(category)}
-                          className="relative h-28 rounded-xl overflow-hidden transition-all"
+                          className="relative h-24 rounded-xl overflow-hidden transition-all"
                           style={{
                             border: isSelected
                               ? "3px solid hsl(var(--primary))"
@@ -337,18 +337,18 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                     })}
                   </div>
 
-                  {/* Show More Button */}
+                  {/* Show More Button - Compact */}
                   {categories.length > 5 && (
                     <motion.button
                       onClick={() => setShowAllCategories(!showAllCategories)}
-                      className="w-full p-3 rounded-xl bg-muted/50 border-2 border-dashed border-border flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      className="w-full py-2 rounded-lg bg-muted/30 border border-dashed border-border/50 flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
                     >
-                      <span className="text-sm font-medium">
+                      <span className="text-xs font-medium">
                         {showAllCategories ? t("team.showLess") : t("team.showMore")}
                       </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAllCategories ? "rotate-180" : ""}`} />
                     </motion.button>
                   )}
                 </div>
@@ -370,7 +370,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                       <motion.button
                         key={trivia.id}
                         onClick={() => setSelectedMyTrivia(trivia.id)}
-                        className="relative h-28 rounded-xl overflow-hidden transition-all"
+                        className="relative h-24 rounded-xl overflow-hidden transition-all"
                         style={{
                           background: trivia.cover_gradient,
                           border: isSelected
@@ -418,65 +418,54 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           )}
         </div>
 
-        {/* Friend Invitation Section */}
+        {/* Friend Invitation Section - Avatar Circles */}
         {acceptedFriends.length > 0 && (
           <div>
-          <div className="flex items-center gap-2 mb-3">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-medium text-muted-foreground">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+              <h2 className="text-xs font-medium text-muted-foreground">
                 {t("team.inviteFriends").replace("{count}", String(selectedFriends.size))}
               </h2>
             </div>
             
-            <div className="space-y-2">
-              {acceptedFriends.map((friend) => (
-                <motion.button
-                  key={friend.id}
-                  onClick={() => toggleFriendSelection(friend.friendId)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl transition-all"
-                  style={{
-                    background: selectedFriends.has(friend.friendId)
-                      ? "linear-gradient(180deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.15) 100%)"
-                      : "hsl(var(--muted))",
-                    border: selectedFriends.has(friend.friendId)
-                      ? "2px solid hsl(var(--primary))"
-                      : "2px solid transparent",
-                  }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <div className="relative">
-                    <SmartAvatar
-                      avatarUrl={friend.avatarUrl}
-                      animatedAvatarUrl={friend.animatedAvatarUrl}
-                      fallback={friend.nickname?.slice(0, 2)}
-                      size="md"
-                    />
-                    {friend.isOnline && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-foreground">{friend.nickname}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {friend.isOnline ? t("team.online") : t("team.offline")}
-                    </p>
-                  </div>
-                  
-                  <div 
-                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                      selectedFriends.has(friend.friendId)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted-foreground/20"
-                    }`}
+            <div className="flex flex-wrap gap-2">
+              {acceptedFriends.map((friend) => {
+                const isSelected = selectedFriends.has(friend.friendId);
+                return (
+                  <motion.button
+                    key={friend.id}
+                    onClick={() => toggleFriendSelection(friend.friendId)}
+                    className="relative"
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {selectedFriends.has(friend.friendId) && (
-                      <Check className="w-4 h-4" />
+                    <div 
+                      className="relative rounded-full p-0.5 transition-all"
+                      style={{
+                        background: isSelected 
+                          ? "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)"
+                          : "transparent",
+                      }}
+                    >
+                      <SmartAvatar
+                        avatarUrl={friend.avatarUrl}
+                        animatedAvatarUrl={friend.animatedAvatarUrl}
+                        fallback={friend.nickname?.slice(0, 2)}
+                        size="md"
+                        className={isSelected ? "ring-0" : "ring-2 ring-border/30"}
+                      />
+                    </div>
+                    {friend.isOnline && (
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
                     )}
-                  </div>
-                </motion.button>
-              ))}
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         )}
