@@ -69,43 +69,51 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
         className="w-full text-left"
       >
         {/* Gradient Banner */}
-        <div className={`h-24 bg-gradient-to-br ${collection.cover_gradient} relative`}>
-          <div className="absolute inset-0 bg-black/20" />
-          
-          {/* Collection Badge */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
-            <Layers className="w-3.5 h-3.5" />
-            <span>კოლექცია</span>
-          </div>
+        {(() => {
+          const gradientProps = getGradientStyle(collection.cover_gradient);
+          return (
+            <div 
+              className={`h-24 relative bg-gradient-to-br from-purple-500 to-indigo-600 ${gradientProps.className || ''}`}
+              style={gradientProps.style}
+            >
+              <div className="absolute inset-0 bg-black/20 z-0" />
+              
+              {/* Collection Badge */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+                <Layers className="w-3.5 h-3.5" />
+                <span>კოლექცია</span>
+              </div>
 
-          {/* Visibility Badge */}
-          <div className="absolute top-3 right-3">
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
-              collection.is_public 
-                ? 'bg-green-500/90 text-white' 
-                : 'bg-muted text-muted-foreground'
-            }`}>
-              {collection.is_public ? (
-                <>
-                  <Globe className="w-3 h-3" />
-                  <span>საჯარო</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3 h-3" />
-                  <span>პირადი</span>
-                </>
-              )}
+              {/* Visibility Badge */}
+              <div className="absolute top-3 right-3 z-10">
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
+                  collection.is_public 
+                    ? 'bg-green-500/90 text-white' 
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {collection.is_public ? (
+                    <>
+                      <Globe className="w-3 h-3" />
+                      <span>საჯარო</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3 h-3" />
+                      <span>პირადი</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg">
+                  {collection.title}
+                </h4>
+              </div>
             </div>
-          </div>
-
-          {/* Title */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg">
-              {collection.title}
-            </h4>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Info Row */}
         <div className="p-4 flex items-center justify-between">
@@ -244,13 +252,13 @@ function StandaloneQuizCard({
             style={gradientProps.style}
             onClick={() => onPlay?.(post)}
           >
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/20 z-0" />
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
                 {post.title}
               </h4>
             </div>
-            <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+            <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white z-10">
               {post.question_count} კითხვა
             </div>
           </div>
