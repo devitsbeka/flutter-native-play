@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Wand2, Zap, Brain, Trophy, Edit3, RefreshCw, Globe, Lock } from "lucide-react";
+import { X, Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock } from "lucide-react";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -239,8 +240,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             className="space-y-5"
           >
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-4">
-                <Wand2 className="w-8 h-8 text-primary" />
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+                <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-1">შექმენი Trivia ✨</h3>
               <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
@@ -300,9 +301,6 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             className="space-y-5"
           >
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 mb-4">
-                <Brain className="w-8 h-8 text-blue-500" />
-              </div>
               <h3 className="text-xl font-bold text-foreground mb-1">რამდენი კითხვა? 🤔</h3>
               <p className="text-sm text-muted-foreground">აირჩიე სიმაღლე</p>
             </div>
@@ -353,9 +351,6 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             className="space-y-5"
           >
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 mb-4">
-                <Zap className="w-8 h-8 text-orange-500" />
-              </div>
               <h3 className="text-xl font-bold text-foreground mb-1">ფორმატი ⚡</h3>
               <p className="text-sm text-muted-foreground">როგორი კითხვები გინდა?</p>
             </div>
@@ -457,14 +452,6 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             className="space-y-3 flex flex-col max-h-[calc(100vh-120px)]"
           >
             <div className="text-center flex-shrink-0">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.2 }}
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 mb-2"
-              >
-                <Trophy className="w-7 h-7 text-green-500" />
-              </motion.div>
               <h3 className="text-lg font-bold text-foreground">მზადაა! 🎉</h3>
               <p className="text-xs text-muted-foreground">{questions.length} კითხვა შეიქმნა</p>
             </div>
