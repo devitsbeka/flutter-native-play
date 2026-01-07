@@ -315,6 +315,7 @@ function TeamContent() {
               <FriendsStoriesBar
                 onAddFriendClick={() => setShowAddFriendModal(true)}
                 onFriendClick={handleQuickPlay}
+                onViewAllFriends={() => setShowAddFriendModal(true)}
               />
             </motion.div>
 
@@ -325,20 +326,12 @@ function TeamContent() {
               transition={{ delay: 0.1 }}
               className="px-4 mb-3"
             >
-              <MyRoomsSection hideTV />
+              <MyRoomsSection 
+                hideTV 
+                onCreateRoom={() => setShowCreateModal(true)}
+                onViewAllRooms={() => setShowAllGamesModal(true)}
+              />
             </motion.div>
-
-            {/* New Room Button */}
-            <div className="px-4 mb-4">
-              <ChunkyButton 
-                onClick={() => setShowCreateModal(true)}
-                className="w-full gap-2"
-                variant="secondary"
-              >
-                <Plus className="w-5 h-5" />
-                + ახალი ოთახი
-              </ChunkyButton>
-            </div>
 
             {/* My Trivia Posts */}
             <div className="px-4">
