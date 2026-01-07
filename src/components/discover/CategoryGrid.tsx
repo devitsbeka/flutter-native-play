@@ -44,6 +44,9 @@ export function CategoryGrid({
         // Use uuid for favorites if available, fallback to id
         const favoriteId = category.uuid || category.id;
         
+        // Get the category's actual total levels from database
+        const categoryTotalLevels = (category as any).totalLevels || (category as any).total_levels || 20;
+        
         return (
           <AirbnbCategoryCard
             key={category.id}
@@ -56,7 +59,7 @@ export function CategoryGrid({
             description={category.description}
             categoryType={category.type}
             progress={progress[category.id] || 0}
-            totalLevels={20}
+            totalLevels={categoryTotalLevels}
             badge={getBadge?.(category, index)}
             imageUrl={category.image_url}
             isFavorite={favorites.has(favoriteId)}
