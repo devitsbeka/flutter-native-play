@@ -90,7 +90,11 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
 
           {/* Title */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg">
+            <h4 className={`${
+              collection.title.length > 60 ? 'text-xs' :
+              collection.title.length > 45 ? 'text-sm' :
+              collection.title.length > 30 ? 'text-base' : 'text-lg'
+            } font-bold text-white text-center px-4 drop-shadow-lg line-clamp-2`}>
               {collection.title}
             </h4>
           </div>
