@@ -42,10 +42,20 @@ function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
   );
 }
 
+// Helper to get gradient style (handles both CSS strings and Tailwind classes)
+function getGradientProps(gradient: string) {
+  if (gradient?.includes('gradient') || gradient?.includes('#') || gradient?.includes('rgb')) {
+    return { style: { background: gradient }, className: '' };
+  }
+  return { style: undefined, className: `bg-gradient-to-br ${gradient}` };
+}
+
 // Expandable collection card
-function CollectionCard({ collection, profile }: { collection: any; profile: any }) {
+function CollectionCard({ collection, profile, onEdit }: { collection: any; profile: any; onEdit: (item: any) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
+
+  const gradientProps = getGradientProps(collection.cover_gradient);
 
   return (
     <motion.div
@@ -59,11 +69,22 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
         className="w-full text-left"
       >
         {/* Gradient Banner */}
-        <div className={`h-32 bg-gradient-to-br ${collection.cover_gradient} relative`}>
+        <div 
+          className={`h-32 relative ${gradientProps.className}`}
+          style={gradientProps.style}
+        >
           <div className="absolute inset-0 bg-black/20" />
           
+          {/* Edit Button */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(collection); }}
+            className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+          >
+            <Pencil className="w-4 h-4 text-white" />
+          </button>
+          
           {/* Collection Badge */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+          <div className="absolute top-3 left-14 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
             <Layers className="w-3.5 h-3.5" />
             <span>კოლექცია</span>
           </div>
@@ -169,6 +190,8 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
 
 // Standalone quiz card (not in a collection)
 function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profile: any; index: number; onEdit: (post: any) => void }) {
+  const gradientProps = getGradientProps(post.cover_gradient);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -206,7 +229,10 @@ function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profi
       </div>
 
       {/* Gradient Thumbnail */}
-      <div className={`h-32 bg-gradient-to-br ${post.cover_gradient} relative`}>
+      <div 
+        className={`h-32 relative ${gradientProps.className}`}
+        style={gradientProps.style}
+      >
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute inset-0 flex items-center justify-center">
           <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
@@ -327,7 +353,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
       <div className="space-y-4">
         {/* Collections first */}
         {myCollections?.map((collection) => (
-          <CollectionCard key={collection.id} collection={collection} profile={profile} />
+          <CollectionCard key={collection.id} collection={collection} profile={profile} onEdit={(item) => setEditingQuiz(item)} />
         ))}
 
         {/* Standalone quizzes */}

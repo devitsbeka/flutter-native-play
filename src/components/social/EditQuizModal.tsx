@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Globe, Lock, Trash2, Check } from "lucide-react";
+import { X, Loader2, Globe, Lock, Trash2, Check, Image } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { QuestionIconPicker } from "./QuestionIconPicker";
 
 interface EditQuizModalProps {
   quiz: any | null;
@@ -38,12 +39,18 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [iconSlug, setIconSlug] = useState<string | null>(null);
+
+  // Determine if this is a collection or a quiz
+  const isCollection = quiz?.hasOwnProperty('quiz_collections') || (quiz && !quiz.hasOwnProperty('questions'));
+  const tableName = isCollection ? "quiz_collections" : "user_quiz_posts";
 
   useEffect(() => {
     if (quiz) {
       setTitle(quiz.title || "");
       setSelectedGradient(quiz.cover_gradient || COVER_GRADIENTS[0]);
       setIsPublic(quiz.is_public !== false);
+      setIconSlug(quiz.icon_slug || null);
       setShowDeleteConfirm(false);
     }
   }, [quiz]);
@@ -53,13 +60,20 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     
     setIsSaving(true);
     try {
+      const updateData: any = {
+        title,
+        cover_gradient: selectedGradient,
+        is_public: isPublic,
+      };
+
+      // Only add icon_slug for quiz posts, not collections
+      if (!isCollection) {
+        updateData.icon_slug = iconSlug;
+      }
+
       const { error } = await supabase
-        .from("user_quiz_posts")
-        .update({
-          title,
-          cover_gradient: selectedGradient,
-          is_public: isPublic,
-        })
+        .from(tableName)
+        .update(updateData)
         .eq("id", quiz.id);
 
       if (error) throw error;
@@ -70,9 +84,10 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       onClose();
     } catch (error) {
-      console.error("Error updating quiz:", error);
+      console.error("Error updating:", error);
       toast({
         title: "შეცდომა",
         description: "ცვლილებების შენახვა ვერ მოხერხდა",
@@ -89,7 +104,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     setIsDeleting(true);
     try {
       const { error } = await supabase
-        .from("user_quiz_posts")
+        .from(tableName)
         .delete()
         .eq("id", quiz.id);
 
@@ -97,13 +112,14 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
 
       toast({
         title: "წაიშალა",
-        description: "Trivia წარმატებით წაიშალა",
+        description: isCollection ? "კოლექცია წარმატებით წაიშალა" : "Trivia წარმატებით წაიშალა",
       });
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       onClose();
     } catch (error) {
-      console.error("Error deleting quiz:", error);
+      console.error("Error deleting:", error);
       toast({
         title: "შეცდომა",
         description: "წაშლა ვერ მოხერხდა",
@@ -177,6 +193,18 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
               ))}
             </div>
           </div>
+
+          {/* Icon Picker - only for quizzes, not collections */}
+          {!isCollection && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">აიქონი</label>
+              <QuestionIconPicker
+                selectedSlug={iconSlug}
+                onSelect={setIconSlug}
+                questionText={title}
+              />
+            </div>
+          )}
 
           {/* Visibility Toggle */}
           <div className="space-y-2">
@@ -266,7 +294,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                   className="w-full flex items-center justify-center gap-2 py-2 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Trivia-ს წაშლა</span>
+                  <span className="text-sm font-medium">{isCollection ? "კოლექციის წაშლა" : "Trivia-ს წაშლა"}</span>
                 </motion.button>
               )}
             </AnimatePresence>
