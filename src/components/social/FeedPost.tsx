@@ -355,21 +355,26 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
           </div>
         </div>
         
-        {/* Play Button - Always visible in center */}
-        <button 
-          onClick={() => onPlay?.(post)}
-          className="absolute inset-0 flex items-center justify-center z-20"
-        >
-          <div className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-xl backdrop-blur-sm hover:scale-105 transition-transform">
-            <Play className="w-8 h-8 text-slate-800 ml-1 fill-slate-800" />
-          </div>
-        </button>
       </div>
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between px-4 py-3">
+        {/* Left side: Likes count + Comments */}
         <div className="flex items-center gap-4">
-          {/* Like */}
+          <span className="font-semibold text-foreground text-sm">
+            {formatNumber(likesCount)} likes
+          </span>
+          <button 
+            onClick={handleComment}
+            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {/* Right side: Heart + Save + Play button */}
+        <div className="flex items-center gap-3">
+          {/* Heart */}
           <button 
             onClick={handleLike}
             className="hover:opacity-70 transition-opacity active:scale-90"
@@ -381,48 +386,33 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
             />
           </button>
           
+          {/* Save */}
+          <button 
+            onClick={handleSave}
+            className="hover:opacity-70 transition-opacity"
+          >
+            <Bookmark 
+              className={`w-6 h-6 transition-colors ${
+                saved ? 'text-foreground fill-foreground' : 'text-foreground'
+              }`} 
+            />
+          </button>
+          
+          {/* Play button */}
+          <button 
+            onClick={() => onPlay?.(post)}
+            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            ითამაშე
+          </button>
         </div>
-        
-        {/* Save */}
-        <button 
-          onClick={handleSave}
-          className="hover:opacity-70 transition-opacity"
-        >
-          <Bookmark 
-            className={`w-6 h-6 transition-colors ${
-              saved ? 'text-foreground fill-foreground' : 'text-foreground'
-            }`} 
-          />
-        </button>
-      </div>
-
-      {/* Likes Count */}
-      <div className="px-4 pb-1">
-        <span className="font-semibold text-foreground text-sm">
-          {formatNumber(likesCount)} likes
-        </span>
-      </div>
-
-      {/* Description */}
-      <div className="px-4 pb-2">
-        <p className="text-foreground text-sm">
-          <span className="font-semibold">{post.username}</span>{' '}
-          {post.description}
-        </p>
       </div>
 
       {/* Hashtags */}
-      <div className="px-4 pb-3">
+      <div className="px-4 pb-4">
         <p className="text-primary text-sm">
           {post.hashtags.map(tag => `#${tag}`).join(' ')}
         </p>
-      </div>
-
-      {/* Play Count */}
-      <div className="px-4 pb-4">
-        <span className="text-muted-foreground text-xs">
-          {formatNumber(post.playsCount)} plays
-        </span>
       </div>
     </motion.article>
   );
