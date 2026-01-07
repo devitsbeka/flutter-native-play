@@ -172,31 +172,8 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
       {/* Filter Bar - Single Line */}
       <div className="sticky top-0 z-30 bg-background border-b border-border/50">
         <div className="px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Hash Icon */}
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <Hash className="w-4 h-4 text-muted-foreground" />
-            </div>
-            
-            {/* Hashtag Chips */}
-            {allHashtags.slice(0, 5).map(tag => (
-              <button
-                key={tag}
-                onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
-                className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                  selectedHashtag === tag
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/80 text-foreground hover:bg-muted"
-                }`}
-              >
-                #{tag}
-              </button>
-            ))}
-            
-            {/* Divider */}
-            <div className="flex-shrink-0 w-px h-6 bg-border mx-1" />
-            
-            {/* Saved Filter */}
+          <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Saved Filter - Always visible first */}
             <button
               onClick={() => setShowSavedOnly(!showSavedOnly)}
               className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
@@ -229,6 +206,29 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
               {popularityFilter === "high" && "მაღალი"}
               <ChevronDown className="w-3 h-3 opacity-60" />
             </button>
+            
+            {/* Divider */}
+            <div className="flex-shrink-0 w-px h-6 bg-border mx-1" />
+            
+            {/* Hash Icon */}
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              <Hash className="w-4 h-4 text-muted-foreground" />
+            </div>
+            
+            {/* Hashtag Chips */}
+            {allHashtags.slice(0, 5).map(tag => (
+              <button
+                key={tag}
+                onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
+                className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                  selectedHashtag === tag
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/80 text-foreground hover:bg-muted"
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
             
             {/* Clear Filters */}
             {hasActiveFilters && (
