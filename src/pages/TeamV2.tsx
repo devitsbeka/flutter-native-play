@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Bell, MessageCircle, Clock, ArrowLeft } from "lucide-react";
+import { Users, Plus, Bell, MessageCircle } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -29,7 +29,7 @@ import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { SamplePost } from "@/data/samplePosts";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
 
@@ -57,7 +57,7 @@ function TeamContentV2() {
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState("for-me");
+  const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
 
@@ -139,35 +139,13 @@ function TeamContentV2() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-h-screen relative overflow-hidden pb-24 lg:pb-0">
-        {/* Mobile Header - hide on tablet/desktop */}
+        {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80">
           <div className="flex items-center justify-between px-4 h-14 safe-top">
-            {/* Left Side: Back + History */}
-            <div className="flex items-center gap-2">
-              <motion.button
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={() => navigate(-1)}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </motion.button>
-              
-              <motion.button
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 }}
-                onClick={() => setShowAllGamesModal(true)}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-              >
-                <Clock className="w-5 h-5" />
-              </motion.button>
-            </div>
-
-            {/* Center: MyTrivia LIVE */}
+            {/* Left Side: MyTrivia LIVE */}
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
               className="flex items-center"
             >
               <span className="text-lg font-bold text-foreground tracking-tight">
@@ -210,77 +188,78 @@ function TeamContentV2() {
           </div>
         </header>
 
+        {/* Tabs below header */}
+        <div className="sticky top-14 lg:top-0 z-10 backdrop-blur-md bg-background/80 px-4 py-3">
+          <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
+            <button
+              onClick={() => setActiveTab("for-me")}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                activeTab === "for-me"
+                  ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              შენთვის
+            </button>
+            <button
+              onClick={() => setActiveTab("my-trivia")}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                activeTab === "my-trivia"
+                  ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              ჩემი ტრივია
+            </button>
+          </div>
+        </div>
+
         {/* Content - Centered on tablet/desktop like Instagram */}
         <div className="relative z-10 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
-          {/* Friends Stories Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="px-4 py-3"
-          >
-            <FriendsStoriesBar
-              onAddFriendClick={() => setShowAddFriendModal(true)}
-              onFriendClick={() => {}}
-            />
-          </motion.div>
+          {activeTab === "my-trivia" ? (
+            <>
+              {/* Friends Stories Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="px-4 py-3"
+              >
+                <FriendsStoriesBar
+                  onAddFriendClick={() => setShowAddFriendModal(true)}
+                  onFriendClick={() => {}}
+                />
+              </motion.div>
 
-          {/* My Rooms Section - Compact */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="px-4 mb-3"
-          >
-            <MyRoomsSection hideTV />
-          </motion.div>
+              {/* My Rooms Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="px-4 mb-3"
+              >
+                <MyRoomsSection hideTV />
+              </motion.div>
 
-          {/* New Room Button */}
-          <div className="px-4 mb-4">
-            <ChunkyButton 
-              onClick={() => setShowCreateModal(true)}
-              className="w-full whitespace-nowrap flex-row"
-              variant="primary"
-            >
-              <Plus className="w-5 h-5 flex-shrink-0" />
-              <span>ახალი ოთახი</span>
-            </ChunkyButton>
-          </div>
-
-          {/* Tabs: For Me / My Trivia */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <div className="px-4 mb-4">
-              <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
-                <button
-                  onClick={() => setActiveTab("for-me")}
-                  className={`flex-1 py-3.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                    activeTab === "for-me"
-                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                      : "text-muted-foreground hover:text-foreground/80"
-                  }`}
+              {/* New Room Button */}
+              <div className="px-4 mb-4">
+                <ChunkyButton 
+                  onClick={() => setShowCreateModal(true)}
+                  className="w-full whitespace-nowrap flex-row"
+                  variant="primary"
                 >
-                  შენთვის
-                </button>
-                <button
-                  onClick={() => setActiveTab("my-trivia")}
-                  className={`flex-1 py-3.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                    activeTab === "my-trivia"
-                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                      : "text-muted-foreground hover:text-foreground/80"
-                  }`}
-                >
-                  ჩემი ტრივია
-                </button>
+                  <Plus className="w-5 h-5 flex-shrink-0" />
+                  <span>ახალი ოთახი</span>
+                </ChunkyButton>
               </div>
-            </div>
 
-            <TabsContent value="for-me" className="mt-0">
-              <SocialFeed onPlayQuiz={(post) => setPlayingQuiz(post)} />
-            </TabsContent>
-
-            <TabsContent value="my-trivia" className="mt-0 px-4">
-              <MyTriviaTab onCreateQuiz={() => setShowCreateQuizModal(true)} />
-            </TabsContent>
-          </Tabs>
+              {/* My Trivia Posts */}
+              <div className="px-4">
+                <MyTriviaTab onCreateQuiz={() => setShowCreateQuizModal(true)} />
+              </div>
+            </>
+          ) : (
+            <SocialFeed onPlayQuiz={(post) => setPlayingQuiz(post)} />
+          )}
         </div>
 
         {/* Bottom Navigation - Mobile only (hidden on tablet/desktop) */}
