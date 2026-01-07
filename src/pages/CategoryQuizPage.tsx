@@ -98,6 +98,8 @@ export default function CategoryQuizPage() {
   const [hiddenAnswers, setHiddenAnswers] = useState<string[]>([]);
   const [usedPowerUpsThisQuestion, setUsedPowerUpsThisQuestion] = useState<Set<PowerUpType>>(new Set());
   const [timerBonus, setTimerBonus] = useState(0);
+  const [timerFrozen, setTimerFrozen] = useState(false);
+  const [freezeEndTime, setFreezeEndTime] = useState<number | null>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [activePowerUpEffect, setActivePowerUpEffect] = useState<PowerUpType | null>(null);
   
@@ -131,6 +133,8 @@ export default function CategoryQuizPage() {
       setHiddenAnswers([]);
       setUsedPowerUpsThisQuestion(new Set());
       setTimerBonus(0);
+      setTimerFrozen(false);
+      setFreezeEndTime(null);
       setOpponentScore(0);
       setPlayerScore(0);
     }
@@ -355,11 +359,21 @@ export default function CategoryQuizPage() {
     fetchQuestions();
   }, [categoryId, category, levelId]);
 
-  // Timer
+  // Timer - pauses when frozen
   useEffect(() => {
     if (loading || isAnswered || showResults || questions.length === 0) return;
 
     const timer = setInterval(() => {
+      // Check if timer is frozen
+      if (timerFrozen && freezeEndTime) {
+        if (Date.now() >= freezeEndTime) {
+          // Freeze expired
+          setTimerFrozen(false);
+          setFreezeEndTime(null);
+        }
+        return; // Don't decrement while frozen
+      }
+      
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           handleTimeUp();
@@ -370,7 +384,7 @@ export default function CategoryQuizPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length]);
+  }, [loading, isAnswered, showResults, currentQuestionIndex, questions.length, timerFrozen, freezeEndTime]);
 
   // Save results when quiz ends
   useEffect(() => {
@@ -548,6 +562,8 @@ export default function CategoryQuizPage() {
       // Reset power-up states for new question
       setHiddenAnswers([]);
       setUsedPowerUpsThisQuestion(new Set());
+      setTimerFrozen(false);
+      setFreezeEndTime(null);
     } else {
       setShowResults(true);
     }
@@ -595,8 +611,9 @@ export default function CategoryQuizPage() {
         break;
       }
       case "freeze": {
-        // Freeze opponent (in this simple version, just reduce their score chance)
-        // Effect is visual - opponent won't gain score this round
+        // Freeze timer for 10 seconds
+        setTimerFrozen(true);
+        setFreezeEndTime(Date.now() + 10000);
         break;
       }
       case "replace": {
