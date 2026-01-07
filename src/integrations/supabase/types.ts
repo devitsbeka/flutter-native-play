@@ -830,8 +830,11 @@ export type Database = {
           incorrect_answers: Json
           is_active: boolean | null
           language: string
+          last_quality_check: string | null
           level_number: number | null
           original_question_text: string | null
+          quality_issues: Json | null
+          quality_status: string | null
           question_text: string
           shorten_status: string | null
           updated_at: string | null
@@ -847,8 +850,11 @@ export type Database = {
           incorrect_answers?: Json
           is_active?: boolean | null
           language?: string
+          last_quality_check?: string | null
           level_number?: number | null
           original_question_text?: string | null
+          quality_issues?: Json | null
+          quality_status?: string | null
           question_text: string
           shorten_status?: string | null
           updated_at?: string | null
@@ -864,8 +870,11 @@ export type Database = {
           incorrect_answers?: Json
           is_active?: boolean | null
           language?: string
+          last_quality_check?: string | null
           level_number?: number | null
           original_question_text?: string | null
+          quality_issues?: Json | null
+          quality_status?: string | null
           question_text?: string
           shorten_status?: string | null
           updated_at?: string | null

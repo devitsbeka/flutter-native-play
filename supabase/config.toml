@@ -96,3 +96,6 @@ verify_jwt = false
 
 [functions.sync-icon-library]
 verify_jwt = false
+
+[functions.scan-question-quality]
+verify_jwt = false
