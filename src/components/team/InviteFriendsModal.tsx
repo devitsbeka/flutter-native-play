@@ -1,22 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, 
   UserPlus, 
   Import, 
   Share2,
-  MessageCircle,
   Mail,
-  Phone
+  Phone,
+  Search,
+  Loader2,
+  Check
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useFriends } from "@/hooks/useFriends";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface InviteFriendsModalProps {
   isOpen: boolean;
   onClose: () => void;
   inviteLink?: string;
+}
+
+interface SearchResult {
+  user_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  country_code: string | null;
 }
 
 // Custom 3D chunky icons for sharing platforms
@@ -96,13 +106,66 @@ const shareOptions = [
   { id: "email", label: "Email", icon: EmailIcon, action: "email" },
 ];
 
+function getCountryFlag(countryCode: string): string {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
 export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriendsModalProps) {
   const [isSharing, setIsSharing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  
+  const { searchUsers, sendFriendRequest, friends } = useFriends();
+  const friendIds = new Set(friends.map(f => f.friendId));
   
   const appLink = inviteLink || `${window.location.origin}/team`;
   const shareMessage = "მოგიწვიე MyTrivia-ში თამაშზე! 🎮🧠 შემოგვიერთდი და გავერთოთ ერთად!";
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedLink = encodeURIComponent(appLink);
+
+  // Debounced search
+  const performSearch = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const results = await searchUsers(query);
+      setSearchResults(results.filter(r => !friendIds.has(r.user_id)));
+    } finally {
+      setSearching(false);
+    }
+  }, [searchUsers, friendIds]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, performSearch]);
+
+  const handleSendRequest = async (userId: string) => {
+    const success = await sendFriendRequest(userId);
+    if (success) {
+      setSentRequests(prev => new Set([...prev, userId]));
+    }
+  };
+
+  const handleClose = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSentRequests(new Set());
+    onClose();
+  };
   
   const handleShare = (platform: string) => {
     setIsSharing(true);
@@ -154,75 +217,178 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm mx-auto rounded-3xl border-none bg-background p-0 overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-sm mx-auto rounded-3xl border-none bg-background p-0 overflow-hidden max-h-[90vh]">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-6"
+          className="p-6 overflow-y-auto"
         >
           {/* Header */}
-          <DialogHeader className="text-center mb-6">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-              <UserPlus className="w-8 h-8 text-primary" />
+          <DialogHeader className="text-center mb-4">
+            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+              <UserPlus className="w-7 h-7 text-primary" />
             </div>
-            <DialogTitle className="text-xl font-bold">
+            <DialogTitle className="text-lg font-bold">
               მეგობრების მოწვევა
             </DialogTitle>
           </DialogHeader>
           
+          {/* Search Section */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="მომხმარებლის ძებნა..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 bg-muted/50 border-border/50 text-sm"
+              />
+              {searching && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+              )}
+            </div>
+            
+            {/* Search Results */}
+            <AnimatePresence mode="popLayout">
+              {searchQuery.length >= 2 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 max-h-[180px] overflow-y-auto space-y-1.5"
+                >
+                  {searchResults.length === 0 && !searching ? (
+                    <p className="text-center py-4 text-muted-foreground text-sm">
+                      მომხმარებელი ვერ მოიძებნა
+                    </p>
+                  ) : (
+                    searchResults.map((result) => (
+                      <motion.div
+                        key={result.user_id}
+                        layout
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex items-center gap-2 p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                      >
+                        <Avatar className="w-9 h-9 border border-border/30">
+                          <AvatarImage src={result.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
+                            {result.nickname.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground truncate">{result.nickname}</p>
+                          {result.country_code && (
+                            <p className="text-xs text-muted-foreground">
+                              {getCountryFlag(result.country_code)}
+                            </p>
+                          )}
+                        </div>
+
+                        <motion.button
+                          onClick={() => handleSendRequest(result.user_id)}
+                          disabled={sentRequests.has(result.user_id)}
+                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            sentRequests.has(result.user_id)
+                              ? "bg-green-500/20 text-green-600"
+                              : "bg-primary text-primary-foreground hover:opacity-90"
+                          }`}
+                          whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
+                          whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
+                        >
+                          {sentRequests.has(result.user_id) ? (
+                            <>
+                              <Check className="w-3 h-3" />
+                              გაგზავნილი
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-3 h-3" />
+                              დამატება
+                            </>
+                          )}
+                        </motion.button>
+                      </motion.div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+              {searchQuery.length > 0 && searchQuery.length < 2 && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-center py-2 text-muted-foreground text-xs"
+                >
+                  მინიმუმ 2 სიმბოლო
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground font-medium">ან მოწვევა</span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+          
           {/* Import & Connect Section */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-2 mb-4">
             <motion.button
               onClick={handleImportContacts}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-colors"
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
               <ContactsIcon />
               <div className="text-left">
-                <p className="font-semibold text-foreground">კონტაქტების იმპორტი</p>
+                <p className="font-semibold text-sm text-foreground">კონტაქტების იმპორტი</p>
                 <p className="text-xs text-muted-foreground">მოიწვიე მეგობრები ტელეფონიდან</p>
               </div>
             </motion.button>
             
             <motion.button
               onClick={handleConnectFacebook}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-colors"
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
               <FacebookIcon />
               <div className="text-left">
-                <p className="font-semibold text-foreground">Facebook მეგობრები</p>
+                <p className="font-semibold text-sm text-foreground">Facebook მეგობრები</p>
                 <p className="text-xs text-muted-foreground">იპოვე მეგობრები Facebook-ზე</p>
               </div>
             </motion.button>
           </div>
           
           {/* Divider */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground font-medium">ან გააზიარე</span>
             <div className="flex-1 h-px bg-border" />
           </div>
           
           {/* Share Options Grid */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-3">
             {shareOptions.map((option, index) => (
               <motion.button
                 key={option.id}
                 onClick={() => handleShare(option.action)}
-                className="flex flex-col items-center gap-2"
+                className="flex flex-col items-center gap-1.5"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.03 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.95, y: 0 }}
                 disabled={isSharing}
               >
                 <option.icon />
-                <span className="text-xs font-medium text-muted-foreground">{option.label}</span>
+                <span className="text-[10px] font-medium text-muted-foreground">{option.label}</span>
               </motion.button>
             ))}
           </div>
@@ -233,7 +399,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
               navigator.clipboard.writeText(appLink);
               toast.success("ლინკი დაკოპირდა!");
             }}
-            className="w-full mt-6 py-3 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-4 py-2.5 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
