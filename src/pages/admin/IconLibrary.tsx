@@ -1,14 +1,15 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw, Download, Cloud } from "lucide-react";
+import { Upload, Database, CheckCircle, AlertCircle, Loader2, RefreshCw, Download, Cloud, FileArchive, Wrench } from "lucide-react";
 import { refreshDbIconsCache } from "@/hooks/useIconLibrary";
+import { Input } from "@/components/ui/input";
 
 interface ImportStatus {
-  phase: "idle" | "extracting" | "importing" | "done" | "error";
+  phase: "idle" | "extracting" | "importing" | "fixing" | "done" | "error";
   message: string;
   progress: number;
   details?: string;
@@ -27,9 +28,13 @@ export default function IconLibraryAdmin() {
     progress: 0,
   });
   const [iconCount, setIconCount] = useState<number | null>(null);
+  const [brokenCount, setBrokenCount] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
+  const [isFixing, setIsFixing] = useState(false);
+  const zipInputRef = useRef<HTMLInputElement>(null);
 
   // Check how many icons are already imported
   const checkIconCount = async () => {
@@ -39,6 +44,16 @@ export default function IconLibraryAdmin() {
     
     if (!error && count !== null) {
       setIconCount(count);
+    }
+
+    // Also check broken icons count
+    const { count: broken } = await supabase
+      .from("icon_library")
+      .select("*", { count: "exact", head: true })
+      .or('icon_url.is.null,icon_url.eq.');
+    
+    if (broken !== null) {
+      setBrokenCount(broken);
     }
   };
 
@@ -214,6 +229,139 @@ export default function IconLibraryAdmin() {
     }
   };
 
+  // Handle ZIP file selection
+  const handleZipFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.name.endsWith('.zip')) {
+      setSelectedZipFile(file);
+    } else if (file) {
+      toast.error("Please select a ZIP file");
+    }
+  };
+
+  // Fix missing icons from uploaded ZIP
+  const fixMissingIconsFromZip = async () => {
+    if (!selectedZipFile) {
+      toast.error("Please select a ZIP file first");
+      return;
+    }
+
+    setIsFixing(true);
+    setStatus({
+      phase: "fixing",
+      message: "Uploading ZIP file...",
+      progress: 5,
+    });
+
+    try {
+      // First, upload the ZIP to storage
+      const zipFileName = `missing-icons-${Date.now()}.zip`;
+      const { error: uploadError } = await supabase.storage
+        .from('icons')
+        .upload(zipFileName, selectedZipFile, {
+          contentType: 'application/zip',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw new Error(`Failed to upload ZIP: ${uploadError.message}`);
+      }
+
+      // Get the public URL for the uploaded ZIP
+      const { data: urlData } = supabase.storage
+        .from('icons')
+        .getPublicUrl(zipFileName);
+
+      const zipUrl = urlData.publicUrl;
+      console.log("ZIP uploaded to:", zipUrl);
+
+      setStatus({
+        phase: "fixing",
+        message: "Starting extraction...",
+        progress: 10,
+      });
+
+      // Process in batches
+      let batchStart = 0;
+      const batchSize = 50;
+      let hasMore = true;
+      let totalUploaded = 0;
+      let totalMatched = 0;
+      let totalSkipped = 0;
+      let totalFiles = 0;
+
+      while (hasMore) {
+        const progressPercent = totalFiles > 0 
+          ? Math.min(95, 10 + (batchStart / totalFiles) * 85)
+          : 15;
+
+        setStatus({
+          phase: "fixing",
+          message: `Processing batch ${Math.floor(batchStart / batchSize) + 1}...`,
+          progress: progressPercent,
+          details: `Fixed: ${totalUploaded} | Matched: ${totalMatched} | Skipped: ${totalSkipped}`,
+        });
+
+        const { data: result, error } = await supabase.functions.invoke("extract-missing-icons", {
+          body: { zipUrl, batchStart, batchSize },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        totalUploaded += result.uploadedCount || 0;
+        totalMatched += result.matchedCount || 0;
+        totalSkipped += result.skippedCount || 0;
+        totalFiles = result.totalFiles || totalFiles;
+        hasMore = result.hasMore || false;
+        batchStart = result.nextBatchStart || 0;
+
+        // Log some fixed icons
+        if (result.fixedIcons && result.fixedIcons.length > 0) {
+          console.log("Fixed icons in this batch:", result.fixedIcons.slice(0, 5));
+        }
+
+        // Small delay between batches
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      setStatus({
+        phase: "done",
+        message: `Successfully fixed ${totalUploaded} icons!`,
+        progress: 100,
+        details: `Total files: ${totalFiles} | Matched: ${totalMatched} | Skipped: ${totalSkipped}`,
+      });
+
+      toast.success(`Fixed ${totalUploaded} missing icons from ZIP!`);
+      
+      // Refresh counts
+      await checkIconCount();
+      refreshIconLibrary();
+      
+      // Clear the file selection
+      setSelectedZipFile(null);
+      if (zipInputRef.current) {
+        zipInputRef.current.value = '';
+      }
+
+      // Clean up the uploaded ZIP
+      await supabase.storage.from('icons').remove([zipFileName]);
+
+    } catch (error: any) {
+      console.error("Fix missing icons error:", error);
+      setStatus({
+        phase: "error",
+        message: "Failed to fix missing icons",
+        progress: 0,
+        details: error.message,
+      });
+      toast.error("Failed to fix missing icons: " + error.message);
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
   // Check icon count on mount
   useEffect(() => {
     checkIconCount();
@@ -241,6 +389,7 @@ export default function IconLibraryAdmin() {
             {status.phase === "idle" && <Database className="w-5 h-5" />}
             {status.phase === "extracting" && <Loader2 className="w-5 h-5 animate-spin" />}
             {status.phase === "importing" && <Loader2 className="w-5 h-5 animate-spin" />}
+            {status.phase === "fixing" && <Loader2 className="w-5 h-5 animate-spin" />}
             {status.phase === "done" && <CheckCircle className="w-5 h-5 text-green-500" />}
             {status.phase === "error" && <AlertCircle className="w-5 h-5 text-red-500" />}
             Status
@@ -256,16 +405,64 @@ export default function IconLibraryAdmin() {
               )}
             </div>
           )}
-          {iconCount !== null && (
-            <p className="mt-4 text-sm">
-              <strong>Icons in database:</strong> {iconCount.toLocaleString()}
-            </p>
-          )}
+          <div className="mt-4 space-y-1 text-sm">
+            {iconCount !== null && (
+              <p><strong>Icons in database:</strong> {iconCount.toLocaleString()}</p>
+            )}
+            {brokenCount !== null && brokenCount > 0 && (
+              <p className="text-destructive"><strong>Broken icons:</strong> {brokenCount.toLocaleString()}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Action Cards */}
       <div className="grid gap-4">
+        {/* Fix Missing Icons from ZIP - Primary action when there are broken icons */}
+        {brokenCount !== null && brokenCount > 0 && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-destructive" />
+                Fix Missing Icons from ZIP
+              </CardTitle>
+              <CardDescription>
+                Upload a ZIP containing replacement icons. Files will be matched to the {brokenCount.toLocaleString()} broken icon slugs and uploaded to storage.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Input
+                  ref={zipInputRef}
+                  type="file"
+                  accept=".zip"
+                  onChange={handleZipFileSelect}
+                  className="flex-1"
+                  disabled={isFixing}
+                />
+                {selectedZipFile && (
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {(selectedZipFile.size / 1024 / 1024).toFixed(1)} MB
+                  </span>
+                )}
+              </div>
+              <Button
+                onClick={fixMissingIconsFromZip}
+                disabled={!selectedZipFile || isFixing}
+                variant="destructive"
+                className="w-full"
+              >
+                {isFixing ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FileArchive className="w-4 h-4 mr-2" />
+                )}
+                {isFixing ? "Extracting & Fixing..." : `Extract & Fix ${brokenCount.toLocaleString()} Icons`}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Sync to Storage - Primary action */}
         <Card className="border-primary/50">
           <CardHeader>
@@ -327,7 +524,7 @@ export default function IconLibraryAdmin() {
           <CardContent>
             <Button
               onClick={importMetadata}
-              disabled={status.phase === "importing" || status.phase === "extracting"}
+              disabled={status.phase === "importing" || status.phase === "extracting" || status.phase === "fixing"}
             >
               <Upload className="w-4 h-4 mr-2" />
               Import 9,000 Icons Metadata
@@ -347,7 +544,7 @@ export default function IconLibraryAdmin() {
             <Button
               onClick={extractIcons}
               variant="outline"
-              disabled={status.phase === "importing" || status.phase === "extracting"}
+              disabled={status.phase === "importing" || status.phase === "extracting" || status.phase === "fixing"}
             >
               <Database className="w-4 h-4 mr-2" />
               Extract Icons to Storage
