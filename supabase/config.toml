@@ -108,3 +108,6 @@ verify_jwt = false
 
 [functions.generate-custom-quiz]
 verify_jwt = false
+
+[functions.smart-icon-search]
+verify_jwt = false
