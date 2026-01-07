@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   Wand2,
   Bell,
-  Workflow
+  Workflow,
+  FileArchive
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,11 @@ const navItems = [
     to: '/admin/missing-icons', 
     icon: AlertTriangle, 
     label: 'გამოტოვებული' 
+  },
+  { 
+    to: '/admin/fix-icons', 
+    icon: FileArchive, 
+    label: 'გამოსწორება' 
   },
   { 
     to: '/admin/users', 
