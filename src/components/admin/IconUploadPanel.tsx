@@ -138,13 +138,7 @@ export function IconUploadPanel({ onSuccess }: IconUploadPanelProps) {
           .eq('slug', icon.slug)
           .single();
 
-        if (existing) {
-          updateIcon(i, { status: 'error', error: 'Slug უკვე არსებობს' });
-          errorCount++;
-          continue;
-        }
-
-        // Upload to storage
+        // Upload to storage (always upsert)
         const fileName = `${icon.slug}.png`;
         const { error: uploadError } = await supabase.storage
           .from('icon-library')
@@ -160,19 +154,35 @@ export function IconUploadPanel({ onSuccess }: IconUploadPanelProps) {
           .from('icon-library')
           .getPublicUrl(fileName);
 
-        // Insert to database
-        const { error: dbError } = await supabase
-          .from('icon_library')
-          .insert({
-            slug: icon.slug,
-            title: icon.title,
-            category: icon.category,
-            tags: icon.tags,
-            file_name: fileName,
-            icon_url: urlData.publicUrl,
-          });
+        if (existing) {
+          // Update existing record
+          const { error: dbError } = await supabase
+            .from('icon_library')
+            .update({
+              title: icon.title,
+              category: icon.category,
+              tags: icon.tags,
+              file_name: fileName,
+              icon_url: urlData.publicUrl,
+            })
+            .eq('slug', icon.slug);
 
-        if (dbError) throw dbError;
+          if (dbError) throw dbError;
+        } else {
+          // Insert new record
+          const { error: dbError } = await supabase
+            .from('icon_library')
+            .insert({
+              slug: icon.slug,
+              title: icon.title,
+              category: icon.category,
+              tags: icon.tags,
+              file_name: fileName,
+              icon_url: urlData.publicUrl,
+            });
+
+          if (dbError) throw dbError;
+        }
 
         updateIcon(i, { status: 'success' });
         successCount++;
@@ -189,7 +199,7 @@ export function IconUploadPanel({ onSuccess }: IconUploadPanelProps) {
     setUploading(false);
 
     if (successCount > 0) {
-      toast.success(`${successCount} აიკონი აიტვირთა`);
+      toast.success(`${successCount} აიკონი აიტვირთა/განახლდა`);
       onSuccess?.();
     }
     if (errorCount > 0) {
