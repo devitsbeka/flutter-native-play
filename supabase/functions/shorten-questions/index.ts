@@ -6,12 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const MAX_LENGTH = 67;
+const MAX_LENGTH = 65;
 const BATCH_SIZE = 10;
 
 interface Question {
   id: string;
   question_text: string;
+  correct_answer: string;
+  incorrect_answers: string[];
   category_id: string;
 }
 
@@ -19,9 +21,32 @@ interface ShortenResult {
   id: string;
   original: string;
   shortened: string | null;
-  status: 'shortened' | 'unshortenable' | 'failed';
+  status: 'shortened' | 'unshortenable' | 'failed' | 'answer_in_question';
   originalLength: number;
   newLength: number | null;
+  qualityIssue?: string;
+}
+
+// Check if answer text appears in question
+function hasAnswerInQuestion(questionText: string, correctAnswer: string, incorrectAnswers: string[]): boolean {
+  const normalizedQuestion = questionText.toLowerCase().replace(/[?!.,]/g, '').trim();
+  const normalizedCorrect = correctAnswer.toLowerCase().replace(/[?!.,]/g, '').trim();
+  
+  // Check if correct answer (or significant part) appears in question
+  if (normalizedCorrect.length >= 4 && normalizedQuestion.includes(normalizedCorrect)) {
+    return true;
+  }
+  
+  // Check for partial match (first 2 words if answer is multi-word)
+  const answerWords = normalizedCorrect.split(/\s+/);
+  if (answerWords.length >= 2) {
+    const partialAnswer = answerWords.slice(0, 2).join(' ');
+    if (partialAnswer.length >= 6 && normalizedQuestion.includes(partialAnswer)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 serve(async (req) => {
@@ -45,7 +70,7 @@ serve(async (req) => {
     // Build query for questions that need shortening
     let query = supabase
       .from("questions")
-      .select("id, question_text, category_id")
+      .select("id, question_text, correct_answer, incorrect_answers, category_id")
       .eq("is_active", true)
       .is("shorten_status", null);
 
@@ -98,19 +123,54 @@ serve(async (req) => {
     // Process questions one by one to avoid overwhelming the AI
     for (const question of questionsToProcess) {
       try {
-        const prompt = `შენ ხარ ქართული ქვიზის კითხვების შემოკლების ექსპერტი. შენი ამოცანაა კითხვის შემოკლება ${MAX_LENGTH} სიმბოლომდე, მნიშვნელობის შენარჩუნებით.
+        // First check for answer-in-question issue
+        const incorrectAnswers = Array.isArray(question.incorrect_answers) 
+          ? question.incorrect_answers as string[]
+          : [];
+        
+        if (hasAnswerInQuestion(question.question_text, question.correct_answer, incorrectAnswers)) {
+          // Mark as needs review due to answer in question
+          await supabase
+            .from("questions")
+            .update({ 
+              shorten_status: "needs_rewrite",
+              quality_status: "needs_rewrite",
+              quality_issues: JSON.stringify(["answer_in_question"]),
+              last_quality_check: new Date().toISOString(),
+              original_question_text: question.question_text
+            })
+            .eq("id", question.id);
+
+          results.push({
+            id: question.id,
+            original: question.question_text,
+            shortened: null,
+            status: 'answer_in_question',
+            originalLength: question.question_text.length,
+            newLength: null,
+            qualityIssue: 'პასუხი შეიცავს კითხვის ტექსტს'
+          });
+          unshortenable++;
+          continue;
+        }
+
+        const prompt = `შენ ხარ ქართული ქვიზის კითხვების შემოკლების და გასწორების ექსპერტი.
+
+ამოცანა: შეამოკლე კითხვა ${MAX_LENGTH} სიმბოლომდე და გაასწორე გრამატიკული შეცდომები.
 
 წესები:
-1. შეინარჩუნე ზუსტად იგივე მნიშვნელობა და სწორი პასუხი
-2. გამოიყენე ბუნებრივი ქართული გრამატიკა
-3. წაშალე ზედმეტი სიტყვები: "რომელი", "რა ერქვა", "რომელმა" და ა.შ.
-4. იყავი ლაკონური მაგრამ გასაგები
+1. შეინარჩუნე ზუსტად იგივე მნიშვნელობა
+2. გამოიყენე სწორი ქართული გრამატიკა
+3. წაშალე ზედმეტი სიტყვები
+4. კითხვა უნდა დამთავრდეს კითხვის ნიშნით (?)
+5. იყავი ლაკონური მაგრამ გასაგები
 
-თუ კითხვის შემოკლება ${MAX_LENGTH} სიმბოლომდე შეუძლებელია მნიშვნელობის დაკარგვის გარეშე, უპასუხე მხოლოდ: CANNOT_SHORTEN
+სწორი პასუხი (რეფერენსისთვის): "${question.correct_answer}"
+
+თუ კითხვის შემოკლება ${MAX_LENGTH} სიმბოლომდე შეუძლებელია, უპასუხე: CANNOT_SHORTEN
 
 კითხვა: "${question.question_text}"
-მიმდინარე სიგრძე: ${question.question_text.length} სიმბოლო
-სამიზნე: ${MAX_LENGTH} სიმბოლომდე
+სიგრძე: ${question.question_text.length} → ${MAX_LENGTH}
 
 შემოკლებული კითხვა:`;
 

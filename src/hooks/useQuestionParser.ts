@@ -14,9 +14,33 @@ export interface ParsedQuestion {
 
 // Character limits for UI display
 export const CHAR_LIMITS = {
-  question: { max: 70, warn: 60 },
-  answer: { max: 60, warn: 50 },
+  question: { max: 65, warn: 55 },
+  answer: { max: 20, warn: 15 },
 };
+
+// Check if answer text appears in question
+function hasAnswerInQuestion(questionText: string, correctAnswer: string): boolean {
+  if (!questionText || !correctAnswer) return false;
+  
+  const normalizedQuestion = questionText.toLowerCase().replace(/[?!.,]/g, '').trim();
+  const normalizedCorrect = correctAnswer.toLowerCase().replace(/[?!.,]/g, '').trim();
+  
+  // Check if correct answer (or significant part) appears in question
+  if (normalizedCorrect.length >= 4 && normalizedQuestion.includes(normalizedCorrect)) {
+    return true;
+  }
+  
+  // Check for partial match (first 2 words if answer is multi-word)
+  const answerWords = normalizedCorrect.split(/\s+/);
+  if (answerWords.length >= 2) {
+    const partialAnswer = answerWords.slice(0, 2).join(' ');
+    if (partialAnswer.length >= 6 && normalizedQuestion.includes(partialAnswer)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 export function validateQuestion(q: Partial<ParsedQuestion>): { isValid: boolean; warnings: string[] } {
   const warnings: string[] = [];
@@ -30,6 +54,11 @@ export function validateQuestion(q: Partial<ParsedQuestion>): { isValid: boolean
     } else if (q.question_text.length > CHAR_LIMITS.question.warn) {
       warnings.push(`კითხვა გრძელია (${q.question_text.length}/${CHAR_LIMITS.question.max})`);
     }
+    
+    // Check if question ends with question mark
+    if (!q.question_text.trim().endsWith('?')) {
+      warnings.push('კითხვა უნდა დამთავრდეს კითხვის ნიშნით (?)');
+    }
   } else {
     warnings.push('კითხვა ცარიელია');
     isValid = false;
@@ -42,6 +71,12 @@ export function validateQuestion(q: Partial<ParsedQuestion>): { isValid: boolean
       isValid = false;
     } else if (q.correct_answer.length > CHAR_LIMITS.answer.warn) {
       warnings.push(`სწორი პასუხი გრძელია (${q.correct_answer.length}/${CHAR_LIMITS.answer.max})`);
+    }
+    
+    // Check if answer appears in question (critical issue)
+    if (q.question_text && hasAnswerInQuestion(q.question_text, q.correct_answer)) {
+      warnings.push('⚠️ კრიტიკული: პასუხი შეიცავს კითხვის ტექსტს!');
+      isValid = false;
     }
   } else {
     warnings.push('სწორი პასუხი ცარიელია');
