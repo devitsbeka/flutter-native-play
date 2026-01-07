@@ -250,6 +250,62 @@ export type Database = {
           },
         ]
       }
+      category_weekly_rewards: {
+        Row: {
+          badge_rewarded: string | null
+          category_id: string
+          claimed_at: string | null
+          coins_rewarded: number
+          created_at: string
+          final_rank: number
+          frame_rewarded: string | null
+          gems_rewarded: number
+          id: string
+          total_stars: number
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          badge_rewarded?: string | null
+          category_id: string
+          claimed_at?: string | null
+          coins_rewarded?: number
+          created_at?: string
+          final_rank: number
+          frame_rewarded?: string | null
+          gems_rewarded?: number
+          id?: string
+          total_stars?: number
+          user_id: string
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          badge_rewarded?: string | null
+          category_id?: string
+          claimed_at?: string | null
+          coins_rewarded?: number
+          created_at?: string
+          final_rank?: number
+          frame_rewarded?: string | null
+          gems_rewarded?: number
+          id?: string
+          total_stars?: number
+          user_id?: string
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_weekly_rewards_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -617,6 +673,78 @@ export type Database = {
           is_valid?: boolean
           last_checked_at?: string | null
           slug?: string
+        }
+        Relationships: []
+      }
+      leaderboard_badges: {
+        Row: {
+          badge_id: string
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          name: string
+          rank_requirement: number
+        }
+        Insert: {
+          badge_id: string
+          color: string
+          created_at?: string
+          description?: string | null
+          icon: string
+          id?: string
+          name: string
+          rank_requirement: number
+        }
+        Update: {
+          badge_id?: string
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          rank_requirement?: number
+        }
+        Relationships: []
+      }
+      leaderboard_exclusive_frames: {
+        Row: {
+          animation_class: string | null
+          border_style: string
+          created_at: string
+          description: string | null
+          frame_id: string
+          gradient: string
+          id: string
+          name: string
+          rank_requirement: number
+          rarity: string
+        }
+        Insert: {
+          animation_class?: string | null
+          border_style: string
+          created_at?: string
+          description?: string | null
+          frame_id: string
+          gradient: string
+          id?: string
+          name: string
+          rank_requirement: number
+          rarity?: string
+        }
+        Update: {
+          animation_class?: string | null
+          border_style?: string
+          created_at?: string
+          description?: string | null
+          frame_id?: string
+          gradient?: string
+          id?: string
+          name?: string
+          rank_requirement?: number
+          rarity?: string
         }
         Relationships: []
       }
@@ -1735,6 +1863,105 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_leaderboard_badges: {
+        Row: {
+          badge_id: string
+          category_id: string
+          category_name: string | null
+          created_at: string
+          earned_at: string
+          id: string
+          times_earned: number
+          user_id: string
+          week_earned: string
+        }
+        Insert: {
+          badge_id: string
+          category_id: string
+          category_name?: string | null
+          created_at?: string
+          earned_at?: string
+          id?: string
+          times_earned?: number
+          user_id: string
+          week_earned: string
+        }
+        Update: {
+          badge_id?: string
+          category_id?: string
+          category_name?: string | null
+          created_at?: string
+          earned_at?: string
+          id?: string
+          times_earned?: number
+          user_id?: string
+          week_earned?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_leaderboard_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard_badges"
+            referencedColumns: ["badge_id"]
+          },
+          {
+            foreignKeyName: "user_leaderboard_badges_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_leaderboard_frames: {
+        Row: {
+          category_id: string
+          created_at: string
+          earned_at: string
+          frame_id: string
+          id: string
+          is_equipped: boolean | null
+          user_id: string
+          week_earned: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          earned_at?: string
+          frame_id: string
+          id?: string
+          is_equipped?: boolean | null
+          user_id: string
+          week_earned: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          earned_at?: string
+          frame_id?: string
+          id?: string
+          is_equipped?: boolean | null
+          user_id?: string
+          week_earned?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_leaderboard_frames_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_leaderboard_frames_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard_exclusive_frames"
+            referencedColumns: ["frame_id"]
           },
         ]
       }
