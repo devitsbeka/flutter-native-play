@@ -339,13 +339,13 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
           </div>
         </div>
         
-        {/* Play Button Overlay */}
+        {/* Play Button - Always visible in center */}
         <button 
           onClick={() => onPlay?.(post)}
-          className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity z-20"
+          className="absolute inset-0 flex items-center justify-center z-20"
         >
-          <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
-            <Play className="w-8 h-8 text-slate-800 ml-1" />
+          <div className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center shadow-xl backdrop-blur-sm hover:scale-105 transition-transform">
+            <Play className="w-8 h-8 text-slate-800 ml-1 fill-slate-800" />
           </div>
         </button>
       </div>
@@ -367,28 +367,17 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
           
         </div>
         
-        <div className="flex items-center gap-3">
-          {/* Play Button */}
-          <button 
-            onClick={() => onPlay?.(post)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            <Play className="w-4 h-4" />
-            Play
-          </button>
-          
-          {/* Save */}
-          <button 
-            onClick={handleSave}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <Bookmark 
-              className={`w-6 h-6 transition-colors ${
-                saved ? 'text-foreground fill-foreground' : 'text-foreground'
-              }`} 
-            />
-          </button>
-        </div>
+        {/* Save */}
+        <button 
+          onClick={handleSave}
+          className="hover:opacity-70 transition-opacity"
+        >
+          <Bookmark 
+            className={`w-6 h-6 transition-colors ${
+              saved ? 'text-foreground fill-foreground' : 'text-foreground'
+            }`} 
+          />
+        </button>
       </div>
 
       {/* Likes Count */}
