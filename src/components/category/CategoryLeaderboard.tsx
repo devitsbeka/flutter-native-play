@@ -95,12 +95,10 @@ export function CategoryLeaderboard({
             className="mt-4 p-4"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {userRank.rank <= 3 && (
-                  <span className="text-2xl">
-                    {userRank.rank === 1 ? '🥇' : userRank.rank === 2 ? '🥈' : '🥉'}
-                  </span>
-                )}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                  {getRankIcon(userRank.rank)}
+                </div>
                 <div>
                   <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.yourRank')}</p>
                   <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
