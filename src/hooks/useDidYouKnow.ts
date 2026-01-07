@@ -22,7 +22,7 @@ interface VoteResult {
 const generateFakeVotes = (factId: string) => {
   const seed = factId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const total = 4000 + (seed * 137) % 11000;
-  const knewPercentage = 35 + (seed * 17) % 30; // 35% - 65% range
+  const knewPercentage = 35 + (seed * 17) % 30;
   return {
     total: Math.floor(total),
     knewPercentage,
@@ -30,92 +30,114 @@ const generateFakeVotes = (factId: string) => {
   };
 };
 
+// Shuffle array using Fisher-Yates
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 export function useDidYouKnow() {
   const { user } = useAuth();
-  const [fact, setFact] = useState<TriviaPact | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [allFacts, setAllFacts] = useState<TriviaPact[]>([]);
+  const [votedFactIds, setVotedFactIds] = useState<Set<string>>(new Set());
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [voteResult, setVoteResult] = useState<VoteResult | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const hasInitialized = useRef(false);
 
-  const fetchRandomFact = useCallback(async () => {
-    setLoading(true);
-    // Clear any existing timers
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    setCountdown(0);
-    
-    try {
-      // First get all active facts
-      const { data: facts, error: factsError } = await supabase
-        .from("trivia_facts")
-        .select("*")
-        .eq("is_active", true);
+  // Get current fact
+  const fact = allFacts.length > 0 ? allFacts[currentIndex] : null;
 
-      if (factsError) throw factsError;
+  // Load all facts once on mount
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
 
-      if (!facts || facts.length === 0) {
-        setFact(null);
-        setLoading(false);
-        return;
-      }
+    const loadAllFacts = async () => {
+      try {
+        const { data: facts, error } = await supabase
+          .from("trivia_facts")
+          .select("*")
+          .eq("is_active", true)
+          .limit(50);
 
-      // If user is logged in, check which facts they've already voted on
-      let availableFacts = facts;
-      if (user) {
-        const { data: votes } = await supabase
-          .from("user_fact_votes")
-          .select("fact_id, vote_type")
-          .eq("user_id", user.id);
+        if (error) throw error;
 
-        const votedFactIds = new Set(votes?.map((v) => v.fact_id) || []);
-        
-        // Filter to unvoted facts
-        availableFacts = facts.filter((f) => !votedFactIds.has(f.id));
-        
-        // If all facts have been voted on, pick a random one and show results
-        if (availableFacts.length === 0) {
-          const randomFact = facts[Math.floor(Math.random() * facts.length)];
-          const userVote = votes?.find((v) => v.fact_id === randomFact.id);
-          setFact(randomFact);
-          
-          const fakeVotes = generateFakeVotes(randomFact.id);
-          setVoteResult({
-            totalVotes: fakeVotes.total,
-            knewPercentage: fakeVotes.knewPercentage,
-            didntKnowPercentage: fakeVotes.didntKnowPercentage,
-            userVote: (userVote?.vote_type as "knew" | "didnt_know") || "knew",
-          });
-          setHasVoted(true);
-          setLoading(false);
-          
-          // Start auto-advance countdown
-          startAutoAdvance();
-          return;
+        if (facts && facts.length > 0) {
+          // Shuffle facts for variety
+          setAllFacts(shuffleArray(facts));
         }
-      }
 
-      // Pick a random fact from available ones
-      const randomFact = availableFacts[Math.floor(Math.random() * availableFacts.length)];
-      setFact(randomFact);
-      setHasVoted(false);
-      setVoteResult(null);
-    } catch (error) {
-      console.error("Error fetching fact:", error);
-    } finally {
-      setLoading(false);
-    }
+        // Load user votes if logged in
+        if (user) {
+          const { data: votes } = await supabase
+            .from("user_fact_votes")
+            .select("fact_id, vote_type")
+            .eq("user_id", user.id);
+
+          if (votes) {
+            setVotedFactIds(new Set(votes.map(v => v.fact_id)));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading facts:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadAllFacts();
   }, [user]);
 
+  // Check if current fact was already voted on
+  useEffect(() => {
+    if (!fact) return;
+    
+    if (votedFactIds.has(fact.id)) {
+      // Already voted - show results immediately
+      const fakeVotes = generateFakeVotes(fact.id);
+      setVoteResult({
+        totalVotes: fakeVotes.total,
+        knewPercentage: fakeVotes.knewPercentage,
+        didntKnowPercentage: fakeVotes.didntKnowPercentage,
+        userVote: "knew", // Default, doesn't matter much visually
+      });
+      setHasVoted(true);
+      startAutoAdvance();
+    } else {
+      setHasVoted(false);
+      setVoteResult(null);
+    }
+  }, [currentIndex, fact?.id, votedFactIds]);
+
+  const clearTimers = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+  }, []);
+
+  const goToNextFact = useCallback(() => {
+    clearTimers();
+    setCountdown(0);
+    setHasVoted(false);
+    setVoteResult(null);
+    setCurrentIndex(prev => (prev + 1) % allFacts.length);
+  }, [allFacts.length, clearTimers]);
+
   const startAutoAdvance = useCallback(() => {
-    // Start countdown from 5
+    clearTimers();
     setCountdown(5);
     
     countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           if (countdownRef.current) clearInterval(countdownRef.current);
           return 0;
@@ -124,60 +146,40 @@ export function useDidYouKnow() {
       });
     }, 1000);
 
-    // Auto-advance after 5 seconds
     timerRef.current = setTimeout(() => {
-      setHasVoted(false);
-      setVoteResult(null);
-      fetchRandomFact();
+      goToNextFact();
     }, 5000);
-  }, []);
+  }, [clearTimers, goToNextFact]);
 
+  // Cleanup on unmount
   useEffect(() => {
-    fetchRandomFact();
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, [fetchRandomFact]);
+    return () => clearTimers();
+  }, [clearTimers]);
 
   const vote = async (voteType: "knew" | "didnt_know") => {
     if (!fact || !user || voting || hasVoted) return;
 
     setVoting(true);
     try {
-      // Record the vote
-      const { error: voteError } = await supabase
+      // Record the vote (fire and forget for snappy UX)
+      supabase
         .from("user_fact_votes")
         .insert({
           user_id: user.id,
           fact_id: fact.id,
           vote_type: voteType,
+        })
+        .then(({ error }) => {
+          if (error && error.code !== '23505') {
+            console.error("Error recording vote:", error);
+          }
         });
 
-      // Handle duplicate vote error gracefully
-      if (voteError) {
-        if (voteError.code === '23505') {
-          // Already voted - refresh to show results
-          await fetchRandomFact();
-          return;
-        }
-        throw voteError;
-      }
+      // Update local voted set
+      setVotedFactIds(prev => new Set([...prev, fact.id]));
 
-      // Update the vote count
-      const updateField = voteType === "knew" ? "votes_knew" : "votes_didnt_know";
-      const { error: updateError } = await supabase
-        .from("trivia_facts")
-        .update({ [updateField]: fact[updateField] + 1 })
-        .eq("id", fact.id);
-
-      if (updateError) {
-        console.error("Error updating vote count:", updateError);
-      }
-
-      // Generate fake vote results
+      // Generate and show results immediately
       const fakeVotes = generateFakeVotes(fact.id);
-
       setVoteResult({
         totalVotes: fakeVotes.total,
         knewPercentage: fakeVotes.knewPercentage,
@@ -186,7 +188,6 @@ export function useDidYouKnow() {
       });
       setHasVoted(true);
       
-      // Start auto-advance countdown
       startAutoAdvance();
     } catch (error) {
       console.error("Error voting:", error);
@@ -197,12 +198,12 @@ export function useDidYouKnow() {
 
   return {
     fact,
-    loading,
+    loading: initialLoading,
     voting,
     voteResult,
     hasVoted,
     countdown,
     vote,
-    refresh: fetchRandomFact,
+    refresh: goToNextFact,
   };
 }
