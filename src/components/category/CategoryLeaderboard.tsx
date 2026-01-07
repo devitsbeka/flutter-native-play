@@ -43,35 +43,27 @@ export function CategoryLeaderboard({
     // Base styles for top 3
     const baseStyles = {
       1: {
-        // GOLD - warm golden gradient
+        // GOLD - warm golden gradient with 10% opacity border
         background: "linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%)",
-        border: "3px solid #F59E0B",
+        border: "3px solid rgba(245, 158, 11, 0.1)",
         boxShadow: "0 2px 8px rgba(245, 158, 11, 0.4)",
       },
       2: {
-        // SILVER - cool gray gradient
+        // SILVER - cool gray gradient with 10% opacity border
         background: "linear-gradient(135deg, #F1F5F9 0%, #CBD5E1 100%)",
-        border: "2px solid #94A3B8",
+        border: "2px solid rgba(148, 163, 184, 0.1)",
         boxShadow: "0 2px 8px rgba(148, 163, 184, 0.4)",
       },
       3: {
-        // BRONZE - warm copper/bronze gradient
+        // BRONZE - warm copper/bronze gradient with 10% opacity border
         background: "linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%)",
-        border: "2px solid #EA580C",
+        border: "2px solid rgba(234, 88, 12, 0.1)",
         boxShadow: "0 2px 8px rgba(234, 88, 12, 0.3)",
       },
     };
 
     if (rank >= 1 && rank <= 3) {
-      const style = baseStyles[rank as 1 | 2 | 3];
-      // Add current user ring if needed
-      if (isCurrentUser) {
-        return {
-          ...style,
-          boxShadow: `${style.boxShadow}, 0 0 0 3px rgba(139, 92, 246, 0.4)`,
-        };
-      }
-      return style;
+      return baseStyles[rank as 1 | 2 | 3];
     }
 
     return lightMode
@@ -98,19 +90,11 @@ export function CategoryLeaderboard({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mt-4 p-4 rounded-2xl border ${
-              lightMode 
-                ? "bg-primary/10 border-primary/30" 
-                : "bg-primary/10 border-primary/20"
-            }`}
+            className="mt-4 p-4"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  lightMode ? "bg-primary/20" : "bg-primary/20"
-                }`}>
-                  <Trophy className="h-5 w-5 text-primary" />
-                </div>
+                <Trophy className="h-5 w-5 text-primary" />
                 <div>
                   <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.yourRank')}</p>
                   <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
@@ -274,7 +258,7 @@ export function CategoryLeaderboard({
                         {isCurrentUser && ` (${t('leaderboard.you')})`}
                       </p>
                       <p className={`text-xs ${lightMode ? "text-slate-500" : "text-white/50"}`}>
-                        {entry.levels_completed} {t('leaderboard.levelsCompleted')}
+                        {t('leaderboard.level')} {entry.levels_completed}
                       </p>
                     </div>
 
