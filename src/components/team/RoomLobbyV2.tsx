@@ -515,16 +515,14 @@ export function RoomLobbyV2() {
                 {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
               </ChunkyButton>
               
-              <ChunkyButton
-                variant="secondary"
-                size="lg"
-                className="w-full"
+              <button
                 onClick={handleStartTVMode}
                 disabled={loading}
-                icon={<Tv className="w-5 h-5" />}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                TV-სთან დაკავშირება
-              </ChunkyButton>
+                <Tv className="w-5 h-5" />
+                <span className="text-lg font-medium">TV-სთან დაკავშირება</span>
+              </button>
             </div>
           )}
           
