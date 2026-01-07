@@ -204,16 +204,29 @@ export function useMyQuizPosts() {
         .select("post_id")
         .in("post_id", postIds);
 
+      // Fetch comments count for user's posts
+      const { data: commentsData } = await supabase
+        .from("quiz_post_comments")
+        .select("post_id")
+        .in("post_id", postIds);
+
       // Count saves per post
       const savesMap = (savesData || []).reduce((acc, save) => {
         acc[save.post_id] = (acc[save.post_id] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
 
-      // Merge saves count with posts
+      // Count comments per post
+      const commentsMap = (commentsData || []).reduce((acc, comment) => {
+        acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Merge saves and comments count with posts
       return data.map(post => ({
         ...post,
-        saves_count: savesMap[post.id] || 0
+        saves_count: savesMap[post.id] || 0,
+        comments_count: commentsMap[post.id] || 0
       }));
     },
     enabled: !!user?.id,
