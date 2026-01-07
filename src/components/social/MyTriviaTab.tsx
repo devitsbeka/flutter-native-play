@@ -69,7 +69,7 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
+      className="w-full max-w-full bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
     >
       {/* Collection Header - Clickable */}
       <button
@@ -81,7 +81,7 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
           const gradientProps = getGradientStyle(collection.cover_gradient);
           return (
             <div 
-              className={`h-24 relative ${gradientProps.className || 'bg-gradient-to-br from-purple-500 to-indigo-600'}`}
+              className={`h-24 relative overflow-hidden ${gradientProps.className || 'bg-gradient-to-br from-purple-500 to-indigo-600'}`}
               style={gradientProps.style}
             >
               <div className="absolute inset-0 bg-black/20 z-0" />
@@ -114,8 +114,8 @@ function CollectionCard({ collection, profile }: { collection: any; profile: any
               </div>
 
               {/* Title */}
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg">
+              <div className="absolute inset-0 flex items-center justify-center z-10 px-16">
+                <h4 className="text-lg font-bold text-white text-center drop-shadow-lg line-clamp-2">
                   {collection.title}
                 </h4>
               </div>
