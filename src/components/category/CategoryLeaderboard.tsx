@@ -96,7 +96,11 @@ export function CategoryLeaderboard({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Trophy className="h-5 w-5 text-primary" />
+                {userRank.rank <= 3 && (
+                  <span className="text-2xl">
+                    {userRank.rank === 1 ? '🥇' : userRank.rank === 2 ? '🥈' : '🥉'}
+                  </span>
+                )}
                 <div>
                   <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.yourRank')}</p>
                   <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
