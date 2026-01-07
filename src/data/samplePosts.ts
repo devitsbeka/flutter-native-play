@@ -21,6 +21,7 @@ export interface SamplePost {
     question: string;
     correct_answer: string;
     incorrect_answers: string[];
+    icon_slug?: string;
   }[];
   isUserPost?: boolean;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Sparkles, Share2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+
+const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
 // Subject/keyword to cover image mapping for user-generated posts
 const subjectCoverImages: Record<string, string> = {
@@ -98,6 +100,26 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
   
   // Get cover image - use existing or generate from subject/tags
   const coverImage = post.coverImage || getCoverImageForPost(post.subject, post.hashtags);
+
+  // Extract up to 3 random unique icons from questions
+  const questionIcons = useMemo(() => {
+    const icons = post.questions
+      .map(q => q.icon_slug)
+      .filter((slug): slug is string => !!slug);
+    
+    // Get unique icons
+    const uniqueIcons = [...new Set(icons)];
+    
+    // Shuffle using post id as seed for consistency
+    const seed = post.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const shuffled = [...uniqueIcons].sort((a, b) => {
+      const hashA = (seed * a.charCodeAt(0)) % 1000;
+      const hashB = (seed * b.charCodeAt(0)) % 1000;
+      return hashA - hashB;
+    });
+    
+    return shuffled.slice(0, 3);
+  }, [post.questions, post.id]);
 
   const handleLike = () => {
     if (liked) {
@@ -285,6 +307,27 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
             {post.title}
           </h3>
           
+          {/* Question Icons */}
+          {questionIcons.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-3">
+              {questionIcons.map((slug) => (
+                <div 
+                  key={slug} 
+                  className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm p-1.5 shadow-lg"
+                >
+                  <img 
+                    src={`${ICON_STORAGE_URL}/${slug}.png`}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Quiz Stats */}
           <div className="flex items-center gap-4 text-white/90 text-sm">
             <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
