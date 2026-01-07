@@ -133,7 +133,7 @@ export function DidYouKnowWidget() {
               onClick={() => vote("knew")}
               disabled={voting || !user}
               whileTap={{ y: 2 }}
-              className="flex-1 py-3 px-4 rounded-xl font-bold text-sm
+              className="flex-1 py-3 px-4 rounded-xl font-bold text-sm whitespace-nowrap
                 bg-card text-foreground border-2 border-border
                 transition-all duration-150
                 disabled:opacity-40 disabled:cursor-not-allowed
@@ -150,7 +150,7 @@ export function DidYouKnowWidget() {
               onClick={() => vote("didnt_know")}
               disabled={voting || !user}
               whileTap={{ y: 2 }}
-              className="flex-1 py-3 px-4 rounded-xl font-bold text-sm
+              className="flex-1 py-3 px-4 rounded-xl font-bold text-sm whitespace-nowrap
                 bg-card text-foreground border-2 border-border
                 transition-all duration-150
                 disabled:opacity-40 disabled:cursor-not-allowed
