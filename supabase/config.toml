@@ -105,3 +105,6 @@ verify_jwt = false
 
 [functions.extract-missing-icons]
 verify_jwt = false
+
+[functions.generate-custom-quiz]
+verify_jwt = false
