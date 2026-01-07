@@ -33,7 +33,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const { createRoom, loading, currentRoom } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation } = useGameInvitations();
-  const { data: myTrivias, isLoading: loadingMyTrivias } = useMyQuizPosts();
+  const { data: myTrivias = [], isLoading: loadingMyTrivias } = useMyQuizPosts();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -362,7 +362,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : myTrivias && myTrivias.length > 0 ? (
+              ) : myTrivias.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2">
                   {myTrivias.map((trivia) => {
                     const isSelected = selectedMyTrivia === trivia.id;
