@@ -249,23 +249,23 @@ function TeamContentV2() {
           {/* Tabs: For Me / My Trivia */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             <div className="px-4 mb-4">
-              <div className="flex gap-2 p-1 bg-muted/50 rounded-2xl">
+              <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
                 <button
                   onClick={() => setActiveTab("for-me")}
-                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  className={`flex-1 py-3.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
                     activeTab === "for-me"
-                      ? "bg-background text-foreground shadow-[0_4px_0_0_hsl(var(--border)),inset_0_1px_0_0_rgba(255,255,255,0.1)] translate-y-0"
-                      : "bg-muted text-muted-foreground shadow-[0_4px_0_0_hsl(var(--border)/0.5)] hover:translate-y-[-1px] active:translate-y-[2px] active:shadow-none"
+                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                      : "text-muted-foreground hover:text-foreground/80"
                   }`}
                 >
                   შენთვის
                 </button>
                 <button
                   onClick={() => setActiveTab("my-trivia")}
-                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  className={`flex-1 py-3.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
                     activeTab === "my-trivia"
-                      ? "bg-background text-foreground shadow-[0_4px_0_0_hsl(var(--border)),inset_0_1px_0_0_rgba(255,255,255,0.1)] translate-y-0"
-                      : "bg-muted text-muted-foreground shadow-[0_4px_0_0_hsl(var(--border)/0.5)] hover:translate-y-[-1px] active:translate-y-[2px] active:shadow-none"
+                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                      : "text-muted-foreground hover:text-foreground/80"
                   }`}
                 >
                   ჩემი ტრივია

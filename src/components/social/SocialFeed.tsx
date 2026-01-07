@@ -42,10 +42,10 @@ function ShopAdCard({ index }: { index: number }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border-y border-border my-2"
+      className="bg-card my-6"
     >
       {/* Ad Label */}
-      <div className="px-4 pt-3 pb-2 flex items-center gap-2">
+      <div className="px-4 pt-4 pb-3 flex items-center gap-2">
         <Badge variant="outline" className="text-xs font-medium bg-muted/50">
           <Sparkles className="w-3 h-3 mr-1" />
           სპონსორი
@@ -55,22 +55,22 @@ function ShopAdCard({ index }: { index: number }) {
       {/* Ad Content */}
       <div 
         onClick={() => navigate("/shop")}
-        className="cursor-pointer px-4 pb-4"
+        className="cursor-pointer px-4 pb-6"
       >
         {/* Gradient Banner */}
-        <div className="relative aspect-[16/9] rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 flex items-center justify-center overflow-hidden">
+        <div className="relative rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 flex items-center justify-center overflow-hidden py-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.3),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(236,72,153,0.2),transparent_50%)]" />
           
-          <div className="relative z-10 text-center px-6 py-8">
-            <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-primary" />
-            <h3 className="text-xl font-bold text-foreground mb-2">
+          <div className="relative z-10 text-center px-6">
+            <ShoppingBag className="w-14 h-14 mx-auto mb-4 text-primary" />
+            <h3 className="text-xl font-bold text-foreground mb-3">
               {variant.title}
             </h3>
-            <p className="text-muted-foreground text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-5 max-w-xs mx-auto">
               {variant.description}
             </p>
-            <button className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
+            <button className="px-8 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg">
               {variant.cta}
             </button>
           </div>
@@ -82,34 +82,10 @@ function ShopAdCard({ index }: { index: number }) {
 
 export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
   const { posts, isLoading, userSaves } = useSocialFeed();
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [popularityFilter, setPopularityFilter] = useState<PopularityFilter>("all");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const lastScrollY = useRef(0);
-
-  // Track scroll to show/hide filters
-  useEffect(() => {
-    const handleScroll = () => {
-      const container = scrollContainerRef.current?.closest('[data-scroll-container]') || window;
-      const currentScrollY = container === window 
-        ? window.scrollY 
-        : (container as HTMLElement).scrollTop;
-      
-      // Show filters when scrolling down past 100px
-      if (currentScrollY > 100 && !showFilters) {
-        setShowFilters(true);
-      } else if (currentScrollY <= 50 && showFilters) {
-        setShowFilters(false);
-      }
-      
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, true);
-    return () => window.removeEventListener('scroll', handleScroll, true);
-  }, [showFilters]);
 
   // Extract all unique hashtags from posts
   const allHashtags = useMemo(() => {
@@ -193,16 +169,9 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
 
   return (
     <div ref={scrollContainerRef}>
-      {/* Sticky Filter Bar */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border"
-          >
-            <div className="px-4 py-3 space-y-3">
+      {/* Filter Bar - Always Visible */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="px-4 py-3 space-y-3">
               {/* Filter Row 1: Hashtags */}
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                 <Hash className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -271,9 +240,7 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
                 )}
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
 
       {/* Feed Content */}
       <motion.div
