@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ParsedQuestion, CHAR_LIMITS } from '@/hooks/useQuestionParser';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X, Tag, ImagePlus } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X, Tag, ImagePlus, Search, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GameStyleQuestionPreview } from '@/components/admin/GameStyleQuestionPreview';
 import { IconPickerModal } from '@/components/admin/IconPickerModal';
@@ -57,13 +57,51 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
   const [editForm, setEditForm] = useState<Partial<ParsedQuestion>>({});
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
+  
+  // Filter state
+  const [searchFilter, setSearchFilter] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
+  const [keywordFilter, setKeywordFilter] = useState<string | null>(null);
+
+  // Get unique keywords
+  const uniqueKeywords = useMemo(() => 
+    [...new Set(questions.map(q => q.icon_keyword).filter(Boolean))] as string[]
+  , [questions]);
+
+  // Filter questions
+  const filteredQuestions = useMemo(() => {
+    return questions.filter((q, idx) => {
+      if (searchFilter && !q.question_text.toLowerCase().includes(searchFilter.toLowerCase())) return false;
+      if (difficultyFilter && q.difficulty !== difficultyFilter) return false;
+      if (keywordFilter && q.icon_keyword !== keywordFilter) return false;
+      return true;
+    });
+  }, [questions, searchFilter, difficultyFilter, keywordFilter]);
+
+  // Create index mapping for filtered questions
+  const filteredWithIndex = useMemo(() => 
+    questions.map((q, idx) => ({ ...q, originalIndex: idx }))
+      .filter(q => {
+        if (searchFilter && !q.question_text.toLowerCase().includes(searchFilter.toLowerCase())) return false;
+        if (difficultyFilter && q.difficulty !== difficultyFilter) return false;
+        if (keywordFilter && q.icon_keyword !== keywordFilter) return false;
+        return true;
+      })
+  , [questions, searchFilter, difficultyFilter, keywordFilter]);
+
+  const clearFilters = () => {
+    setSearchFilter('');
+    setDifficultyFilter(null);
+    setKeywordFilter(null);
+  };
+
+  const hasActiveFilters = searchFilter || difficultyFilter || keywordFilter;
 
   if (questions.length === 0) return null;
 
   const validQuestions = questions.filter(q => q.isValid);
   const selectedCount = questions.filter(q => q.selected && q.isValid).length;
   const allValidSelected = validQuestions.length > 0 && validQuestions.every(q => q.selected);
-
   const startEdit = (idx: number) => {
     const q = questions[idx];
     setEditForm({
@@ -123,7 +161,48 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Questions List - 3 columns */}
         <div className="lg:col-span-3">
-          <ScrollArea className="h-[550px] rounded-md border">
+          {/* Filter controls */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            <div className="relative flex-1 min-w-[150px]">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="ძიება..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
+            <Select value={difficultyFilter || ''} onValueChange={(v) => setDifficultyFilter(v || null)}>
+              <SelectTrigger className="w-[120px] h-9">
+                <SelectValue placeholder="სირთულე" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="easy">მარტივი</SelectItem>
+                <SelectItem value="medium">საშუალო</SelectItem>
+                <SelectItem value="hard">რთული</SelectItem>
+              </SelectContent>
+            </Select>
+            {uniqueKeywords.length > 0 && (
+              <Select value={keywordFilter || ''} onValueChange={(v) => setKeywordFilter(v || null)}>
+                <SelectTrigger className="w-[130px] h-9">
+                  <SelectValue placeholder="Keyword" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueKeywords.map(kw => (
+                    <SelectItem key={kw} value={kw}>{kw}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+                <X className="w-4 h-4 mr-1" />
+                გასუფთავება
+              </Button>
+            )}
+          </div>
+
+          <ScrollArea className="h-[500px] rounded-md border">
             <div className="p-3 space-y-2">
               {/* Select All Header */}
               {showSelection && validQuestions.length > 0 && (
@@ -134,11 +213,23 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
                   />
                   <span className="text-sm text-muted-foreground">
                     ყველას მონიშვნა ({selectedCount}/{validQuestions.length} არჩეულია)
+                    {hasActiveFilters && <span className="ml-2 text-primary">• {filteredWithIndex.length} ფილტრირებული</span>}
                   </span>
                 </div>
               )}
 
-              {questions.map((q, idx) => {
+              {filteredWithIndex.length === 0 && hasActiveFilters ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <Filter className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>კითხვა ვერ მოიძებნა</p>
+                  <Button variant="link" onClick={clearFilters} className="mt-1">
+                    ფილტრების გასუფთავება
+                  </Button>
+                </div>
+              ) : null}
+
+              {filteredWithIndex.map((q) => {
+                const idx = q.originalIndex;
                 const isExpanded = expandedIndex === idx;
                 const isEditing = editingIndex === idx;
 
