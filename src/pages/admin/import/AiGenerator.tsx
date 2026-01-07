@@ -136,6 +136,7 @@ export function AiGenerator() {
               incorrect_answers: q.incorrect_answers || [],
               difficulty: q.difficulty || difficulty,
               level_number: q.level_number || 1,
+              icon_keyword: q.icon_keyword || null, // Store icon keyword from AI
             };
 
             const questionText = normalizedQ.question_text;
@@ -221,6 +222,7 @@ export function AiGenerator() {
         incorrect_answers: q.incorrect_answers,
         difficulty: q.difficulty,
         level_number: q.level_number,
+        icon_slug: (q as any).icon_keyword || null, // Map icon_keyword to icon_slug
         is_active: true,
       }));
 

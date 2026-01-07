@@ -8,6 +8,7 @@ export interface ParsedQuestion {
   incorrect_answers: string[];
   difficulty: 'easy' | 'medium' | 'hard';
   level_number: number;
+  icon_keyword?: string | null;
   isValid: boolean;
   warnings: string[];
 }
