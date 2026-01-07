@@ -92,7 +92,22 @@ export function QuizGameScreenProd() {
     setTimeRemaining(timePerQuestion + playerTimerBonus);
     setSelectedAnswer(null);
     setAnswerRevealed(false);
+    setFreezeTimeLeft(0);
   }, [currentQuestionIndex, timePerQuestion, playerTimerBonus]);
+
+  // Reset all local state when phase transitions to "playing" (fresh game start)
+  useEffect(() => {
+    if (phase === "playing" && currentQuestionIndex === 0) {
+      // Small delay to ensure all context state is propagated
+      const timeout = setTimeout(() => {
+        setTimeRemaining(timePerQuestion + playerTimerBonus);
+        setSelectedAnswer(null);
+        setAnswerRevealed(false);
+        setFreezeTimeLeft(0);
+      }, 50);
+      return () => clearTimeout(timeout);
+    }
+  }, [phase, currentQuestionIndex, timePerQuestion, playerTimerBonus]);
 
   // Sync with phase changes
   useEffect(() => {
