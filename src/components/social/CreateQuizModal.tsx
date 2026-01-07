@@ -451,42 +451,42 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="space-y-4"
+            className="space-y-3 flex flex-col max-h-[calc(100vh-120px)]"
           >
-            <div className="text-center">
+            <div className="text-center flex-shrink-0">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2 }}
-                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 mb-3"
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-500/5 mb-2"
               >
-                <Trophy className="w-8 h-8 text-green-500" />
+                <Trophy className="w-7 h-7 text-green-500" />
               </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-1">მზადაა! 🎉</h3>
-              <p className="text-sm text-muted-foreground">{questions.length} კითხვა შეიქმნა</p>
+              <h3 className="text-lg font-bold text-foreground">მზადაა! 🎉</h3>
+              <p className="text-xs text-muted-foreground">{questions.length} კითხვა შეიქმნა</p>
             </div>
 
             {/* Preview card */}
             <div 
-              className="p-4 rounded-2xl text-white"
+              className="p-3 rounded-2xl text-white flex-shrink-0"
               style={{ background: selectedGradient }}
             >
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Trivia-ს სახელი"
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 text-lg font-bold h-12 rounded-xl"
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 text-base font-bold h-10 rounded-xl"
               />
             </div>
 
             {/* Gradient picker */}
-            <div className="flex justify-center gap-2 flex-wrap">
+            <div className="flex justify-center gap-1.5 flex-wrap flex-shrink-0">
               {COVER_GRADIENTS.map((gradient, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedGradient(gradient)}
-                  className={`w-8 h-8 rounded-lg transition-all ${
-                    selectedGradient === gradient ? "ring-2 ring-primary ring-offset-2" : ""
+                  className={`w-7 h-7 rounded-lg transition-all ${
+                    selectedGradient === gradient ? "ring-2 ring-primary ring-offset-1" : ""
                   }`}
                   style={{ background: gradient }}
                 />
@@ -498,27 +498,27 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               onChange={(e) => setDescription(e.target.value)}
               placeholder="მოკლე აღწერა (არასავალდებულო)"
               rows={2}
-              className="rounded-xl resize-none"
+              className="rounded-xl resize-none text-sm flex-shrink-0"
             />
 
             {/* Questions preview with icon picker and edit */}
-            <div className="max-h-64 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
               {questions.map((q, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="p-3 bg-background rounded-xl border border-border flex gap-3 items-start"
+                  className="p-2.5 bg-background rounded-xl border border-border flex gap-2 items-start"
                 >
-                  <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground">
+                    <div className="text-sm font-medium text-foreground line-clamp-2">
                       {q.question_text}
                     </div>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <span className="text-xs text-green-600">✓ {q.correct_answer}</span>
                       {q.difficulty && (
                         <span className={`text-xs ${getDifficultyColor(q.difficulty)}`}>
@@ -530,7 +530,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 flex-shrink-0"
+                    className="h-7 w-7 p-0 flex-shrink-0"
                     onClick={() => {
                       const newQuestion = prompt("კითხვა:", q.question_text);
                       if (newQuestion !== null) {
@@ -543,7 +543,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
                       }
                     }}
                   >
-                    <Edit3 className="w-4 h-4" />
+                    <Edit3 className="w-3.5 h-3.5" />
                   </Button>
                   <QuestionIconPicker
                     selectedSlug={q.icon_slug || null}
@@ -557,14 +557,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               ))}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-shrink-0 pt-1">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setStep(3);
                   setQuestions([]);
                 }} 
-                className="flex-1 h-12 rounded-xl"
+                className="flex-1 h-11 rounded-xl"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 თავიდან
