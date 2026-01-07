@@ -1,6 +1,12 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
+import {
+  getGlobalAskedQuestionIds,
+  markQuestionsAsAskedGlobally,
+  shouldResetGlobalPool,
+  clearGlobalAskedQuestions,
+} from "@/services/questionTracker";
 
 const STORAGE_KEY = 'app-language';
 const DEFAULT_LANGUAGE = 'ka';
@@ -29,24 +35,12 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Hash a question for tracking
-function hashQuestion(question: string): string {
-  let hash = 0;
-  for (let i = 0; i < question.length; i++) {
-    const char = question.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-}
-
 export function useTrivia() {
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preparationProgress, setPreparationProgress] = useState(0);
   const [imagesReady, setImagesReady] = useState(false);
-  const [askedQuestionHashes, setAskedQuestionHashes] = useState<Set<string>>(new Set());
   const [noQuestionsInLanguage, setNoQuestionsInLanguage] = useState(false);
 
   // Get current language from localStorage
@@ -109,26 +103,51 @@ export function useTrivia() {
         }
       } else if (mixFromCategories) {
         // VS Mode: Pick one question from each of 6 random categories
+        // Use persistent tracking to avoid repetition
+        const globalAskedIds = getGlobalAskedQuestionIds();
+        
         const { data: categories } = await supabase
           .from('categories')
           .select('id, name, icon, category_id, icon_slug')
           .eq('is_active', true);
         
         if (categories && categories.length > 0) {
+          // Get total question count to check if pool needs reset
+          const { count: totalCount } = await supabase
+            .from('questions')
+            .select('id', { count: 'exact', head: true })
+            .eq('in_production', true)
+            .eq('language', language);
+          
+          // Reset if we've used 80% of available questions
+          if (totalCount && shouldResetGlobalPool(totalCount)) {
+            clearGlobalAskedQuestions();
+          }
+          
           // Shuffle and pick 6 random categories
           const randomCategories = shuffleArray(categories).slice(0, amount);
           
           setPreparationProgress(20);
           
-          // Fetch one random question from each category - increased limit to ensure we get valid ones
+          // Get fresh list after potential reset
+          const currentAskedIds = getGlobalAskedQuestionIds();
+          
+          // Fetch questions from each category with database-level exclusion
           const questionPromises = randomCategories.map(async (cat) => {
-            const { data } = await supabase
+            // Build query with exclusion at database level
+            let query = supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
               .eq('in_production', true)
               .eq('category_id', cat.id)
-              .eq('language', language)
-              .limit(50);
+              .eq('language', language);
+            
+            // Exclude already asked questions at database level
+            if (currentAskedIds.length > 0) {
+              query = query.not('id', 'in', `(${currentAskedIds.join(',')})`);
+            }
+            
+            const { data } = await query.limit(100);
             
             if (data && data.length > 0) {
               // Filter by length first, then pick random
@@ -191,7 +210,6 @@ export function useTrivia() {
       setPreparationProgress(30);
 
       let formattedQuestions: TriviaQuestion[] = [];
-      const allHashes = new Set([...askedQuestionHashes, ...excludeHashes]);
 
       if (!dbError && dbQuestions && dbQuestions.length > 0) {
         console.log(`Found ${dbQuestions.length} questions${category ? ` for ${category}` : ' from all categories'}`);
@@ -202,7 +220,6 @@ export function useTrivia() {
               ? q.incorrect_answers 
               : JSON.parse(q.incorrect_answers || '[]');
             const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
-            const questionHash = hashQuestion(q.question_text);
 
             return {
               id: q.id,
@@ -216,17 +233,15 @@ export function useTrivia() {
               correctAnswer: q.correct_answer,
               incorrectAnswers,
               allAnswers,
-              hash: questionHash,
             };
           })
           // Filter out questions/answers that are too long for viewport
-          .filter((q: TriviaQuestion & { hash: string }) => {
+          .filter((q: TriviaQuestion) => {
             if (q.question.length > QUESTION_MAX_LENGTH) return false;
             if (q.correctAnswer.length > ANSWER_MAX_LENGTH) return false;
             if (q.incorrectAnswers.some(a => a.length > ANSWER_MAX_LENGTH)) return false;
             return true;
           })
-          .filter((q: TriviaQuestion & { hash: string }) => !allHashes.has(q.hash))
           .slice(0, amount);
 
         setPreparationProgress(80);
@@ -242,9 +257,9 @@ export function useTrivia() {
         }
       }
 
-      // Track these questions as asked
-      const newHashes = formattedQuestions.map((q: any) => q.hash);
-      setAskedQuestionHashes(prev => new Set([...prev, ...newHashes]));
+      // Track these questions as asked using persistent storage
+      const questionIds = formattedQuestions.map((q: TriviaQuestion) => q.id);
+      markQuestionsAsAskedGlobally(questionIds);
 
       setPreparationProgress(100);
       setQuestions(formattedQuestions);
@@ -259,10 +274,10 @@ export function useTrivia() {
     } finally {
       setLoading(false);
     }
-  }, [askedQuestionHashes, getCurrentLanguage]);
+  }, [getCurrentLanguage]);
 
   const resetAskedQuestions = useCallback(() => {
-    setAskedQuestionHashes(new Set());
+    clearGlobalAskedQuestions();
   }, []);
 
   return {
