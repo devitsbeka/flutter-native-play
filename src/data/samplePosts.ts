@@ -22,6 +22,7 @@ export interface SamplePost {
     correct_answer: string;
     incorrect_answers: string[];
   }[];
+  isUserPost?: boolean;
 }
 
 // 3D cartoon style avatar URLs using DiceBear Adventurer style
