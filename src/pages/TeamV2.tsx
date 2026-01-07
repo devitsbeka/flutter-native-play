@@ -211,7 +211,7 @@ function TeamContentV2() {
         </header>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative z-10 flex flex-col lg:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
+        <div className="relative z-10 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
           {/* Friends Stories Bar */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
