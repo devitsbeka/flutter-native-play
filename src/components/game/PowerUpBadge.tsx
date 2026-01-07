@@ -32,10 +32,10 @@ const powerUpAssets: Record<PowerUpType | "add-power", string> = {
 
 const sizeConfig = {
   xs: 48,
-  sm: 72,
-  md: 84,
-  lg: 108,
-  avatar: 72,
+  sm: 64,
+  md: 72,
+  lg: 96,
+  avatar: 64,
 };
 
 export function PowerUpBadge({
