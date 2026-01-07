@@ -102,6 +102,7 @@ export type Database = {
           is_active: boolean | null
           is_language_specific: boolean | null
           language: string | null
+          levels_updated_at: string | null
           name: string
           sort_order: number | null
           total_levels: number
@@ -120,6 +121,7 @@ export type Database = {
           is_active?: boolean | null
           is_language_specific?: boolean | null
           language?: string | null
+          levels_updated_at?: string | null
           name: string
           sort_order?: number | null
           total_levels?: number
@@ -138,6 +140,7 @@ export type Database = {
           is_active?: boolean | null
           is_language_specific?: boolean | null
           language?: string | null
+          levels_updated_at?: string | null
           name?: string
           sort_order?: number | null
           total_levels?: number
@@ -1455,6 +1458,44 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      user_category_last_seen: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          id: string
+          last_notified_at: string | null
+          last_seen_total_levels: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          id?: string
+          last_notified_at?: string | null
+          last_seen_total_levels?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          last_notified_at?: string | null
+          last_seen_total_levels?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_category_last_seen_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_category_progress: {
         Row: {

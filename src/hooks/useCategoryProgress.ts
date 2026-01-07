@@ -401,6 +401,18 @@ export function useCategoryProgress() {
         });
       }
 
+      // Update user_category_last_seen to track when user last saw levels in this category
+      await supabase.from("user_category_last_seen").upsert(
+        {
+          user_id: user.id,
+          category_id: categoryId,
+          last_seen_total_levels: categoryTotalLevels,
+        },
+        {
+          onConflict: "user_id,category_id",
+        }
+      );
+
       // Refetch progress to update UI
       await fetchProgress();
 

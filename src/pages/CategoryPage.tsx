@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Lock, Play, LogIn, Trophy, Map } from "lucide-react";
+import { ArrowLeft, Star, Lock, Play, LogIn, Trophy, Map, Clock } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -141,14 +141,21 @@ export default function CategoryPage() {
     navigate(`/play/${categoryId}/${level}`);
   };
 
-  const levels = Array.from({ length: category.totalLevels }, (_, i) => {
+  // Always show 100 levels, with different states based on available questions
+  const TOTAL_DISPLAY_LEVELS = 100;
+  const availableLevels = category.totalLevels; // From database (based on actual questions)
+  const hasCompletedAllAvailable = currentLevel > availableLevels;
+  
+  const levels = Array.from({ length: TOTAL_DISPLAY_LEVELS }, (_, i) => {
     const level = i + 1;
-    const completed = isLevelCompleted(categoryId || "", level);
-    const isUnlocked = level <= currentLevel;
-    const isCurrent = level === currentLevel;
+    const hasEnoughQuestions = level <= availableLevels;
+    const completed = hasEnoughQuestions && isLevelCompleted(categoryId || "", level);
+    const isUnlocked = hasEnoughQuestions && level <= currentLevel;
+    const isCurrent = hasEnoughQuestions && level === currentLevel;
+    const isComingSoon = !hasEnoughQuestions; // Not enough questions for this level yet
     const stars = getLevelStars(categoryId || "", level);
     
-    return { level, isCompleted: completed, isUnlocked, isCurrent, stars };
+    return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars };
   });
 
   return (
@@ -265,6 +272,28 @@ export default function CategoryPage() {
                   </h2>
                 </div>
 
+                {/* All levels completed message */}
+                {hasCompletedAllAvailable && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl p-4 mb-6 border border-primary/20"
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(280 60% 50% / 0.1))',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">🎉</span>
+                      <div>
+                        <h3 className="font-bold text-slate-800">{t('category.allCompleted') || 'გილოცავ!'}</h3>
+                        <p className="text-sm text-slate-600">
+                          {t('category.newLevelsSoon') || 'ყველა დონე გაიარე! მალე ახალი დონეები დაემატება...'}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {loading ? (
                   <div className="grid grid-cols-4 gap-3">
                     {Array.from({ length: 12 }).map((_, i) => (
@@ -273,7 +302,7 @@ export default function CategoryPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-4 gap-3">
-                    {levels.map(({ level, isCompleted, isUnlocked, isCurrent, stars }) => {
+                    {levels.map(({ level, isCompleted, isUnlocked, isCurrent, isComingSoon, stars }) => {
                       const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
                       
                       // Star-based gradients for completed levels
@@ -287,7 +316,8 @@ export default function CategoryPage() {
                       };
                       
                       const getLevelBackground = () => {
-                        if (!isUnlocked) return undefined;
+                        if (isComingSoon) return "linear-gradient(135deg, #F8FAFC, #F1F5F9)"; // Very light gray for coming soon
+                        if (!isUnlocked) return "linear-gradient(135deg, #E2E8F0, #CBD5E1)"; // Slate for locked
                         if (isCompleted && stars > 0) return getCompletedGradient(stars);
                         // Neutral white/gray for unlocked levels without stars (current level)
                         return "linear-gradient(135deg, #FFFFFF, #F1F5F9)";
@@ -296,10 +326,10 @@ export default function CategoryPage() {
                       return (
                         <motion.button
                           key={level}
-                          onClick={() => handleLevelClick(level, isUnlocked)}
-                          disabled={!isUnlocked}
-                          whileHover={isUnlocked ? { scale: 1.05 } : undefined}
-                          whileTap={isUnlocked ? { scale: 0.95 } : undefined}
+                          onClick={() => !isComingSoon && handleLevelClick(level, isUnlocked)}
+                          disabled={!isUnlocked || isComingSoon}
+                          whileHover={isUnlocked && !isComingSoon ? { scale: 1.05 } : undefined}
+                          whileTap={isUnlocked && !isComingSoon ? { scale: 0.95 } : undefined}
                           initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
                           animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
                           transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
@@ -308,18 +338,26 @@ export default function CategoryPage() {
                               ? "ring-4 ring-primary ring-offset-2 ring-offset-background"
                               : ""
                           } ${
-                            !isUnlocked
-                              ? "bg-slate-200/80 opacity-60 cursor-not-allowed"
-                              : ""
+                            isComingSoon
+                              ? "opacity-40 cursor-not-allowed border-2 border-dashed border-slate-300"
+                              : !isUnlocked
+                                ? "opacity-60 cursor-not-allowed"
+                                : ""
                           }`}
                           style={{
-                            boxShadow: isUnlocked 
+                            boxShadow: isUnlocked && !isComingSoon
                               ? "0 4px 0 0 hsl(0 0% 0% / 0.15), 0 6px 12px -4px hsl(0 0% 0% / 0.2)"
                               : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
                             background: getLevelBackground(),
                           }}
                         >
-                          {!isUnlocked ? (
+                          {isComingSoon ? (
+                            // Coming soon state - clock icon with faded level number
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Clock className="h-4 w-4 text-slate-400" />
+                              <span className="text-xs text-slate-400 font-medium">{level}</span>
+                            </div>
+                          ) : !isUnlocked ? (
                             <Lock className="h-5 w-5 text-slate-400" />
                           ) : (
                             <>
@@ -345,7 +383,7 @@ export default function CategoryPage() {
                             </>
                           )}
 
-                          {isCurrent && isUnlocked && (
+                          {isCurrent && isUnlocked && !isComingSoon && (
                             <motion.div
                               animate={{ scale: [1, 1.2, 1] }}
                               transition={{ duration: 2, repeat: Infinity }}
