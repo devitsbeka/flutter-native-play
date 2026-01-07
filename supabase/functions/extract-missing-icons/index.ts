@@ -15,8 +15,9 @@ function normalizeToSlug(filename: string): string {
   // Replace underscores with dashes
   slug = slug.replace(/_/g, '-');
   
-  // Remove version suffixes like -v2, -final, -copy, etc.
-  slug = slug.replace(/[-_](v\d+|final|copy|new|old|fixed|updated|\d+)$/i, '');
+  // Remove only non-numeric version suffixes like -v2, -final, -copy, etc.
+  // KEEP numeric suffixes like -1, -2 as they are part of the slug!
+  slug = slug.replace(/[-_](v\d+|final|copy|new|old|fixed|updated)$/i, '');
   
   // Lowercase and trim
   slug = slug.toLowerCase().trim();
