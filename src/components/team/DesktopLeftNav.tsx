@@ -9,13 +9,13 @@ import {
   Bell, 
   PlusSquare, 
   BarChart3, 
-  Settings,
   Menu
 } from "lucide-react";
 import { Avatar } from "@/components/shared/Avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DesktopLeftNavProps {
   onNotificationsClick: () => void;
@@ -47,129 +47,134 @@ export function DesktopLeftNav({
     return location.pathname.startsWith(path);
   };
 
+  // Shared NavButton component for consistency
+  const NavButton = ({ 
+    icon: Icon, 
+    label, 
+    onClick, 
+    active = false, 
+    badge = 0,
+    children 
+  }: { 
+    icon?: React.ElementType; 
+    label: string; 
+    onClick: () => void; 
+    active?: boolean; 
+    badge?: number;
+    children?: React.ReactNode;
+  }) => (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <motion.button
+            onClick={onClick}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`
+              w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors
+              ${active 
+                ? "bg-muted/60 text-foreground font-semibold" 
+                : "text-foreground/80 hover:bg-muted/40"
+              }
+            `}
+          >
+            <div className="relative flex-shrink-0">
+              {children || (Icon && <Icon className={`w-6 h-6 ${active ? "stroke-[2.5px]" : ""}`} />)}
+              {badge > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
+            </div>
+            {/* Label - hidden on tablet, visible on desktop */}
+            <span className="text-[15px] hidden xl:inline">{label}</span>
+          </motion.button>
+        </TooltipTrigger>
+        {/* Tooltip only shows on tablet (lg) where label is hidden */}
+        <TooltipContent side="right" className="xl:hidden">
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
   return (
-    <nav className="hidden xl:flex flex-col w-[220px] min-w-[220px] h-screen sticky top-0 border-r border-border/40 bg-background pt-6 pb-4">
+    <nav className="hidden lg:flex flex-col w-[72px] xl:w-[220px] min-w-[72px] xl:min-w-[220px] h-screen sticky top-0 border-r border-border/40 bg-background pt-6 pb-4 transition-all duration-200">
       {/* Logo */}
-      <div className="px-6 mb-8">
+      <div className="px-3 xl:px-6 mb-8 flex justify-center xl:justify-start">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-xl font-display font-bold text-foreground"
         >
-          MyTrivia
+          {/* Icon on tablet, full text on desktop */}
+          <span className="xl:hidden text-2xl">🎯</span>
+          <span className="hidden xl:inline">MyTrivia</span>
         </motion.div>
       </div>
 
       {/* Main Navigation */}
-      <div className="flex-1 px-3 space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
-          
-          return (
-            <motion.button
-              key={item.id}
-              onClick={() => navigate(item.path)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`
-                w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors
-                ${active 
-                  ? "bg-muted/60 text-foreground font-semibold" 
-                  : "text-foreground/80 hover:bg-muted/40"
-                }
-              `}
-            >
-              <Icon className={`w-6 h-6 ${active ? "stroke-[2.5px]" : ""}`} />
-              <span className="text-[15px]">{item.label}</span>
-            </motion.button>
-          );
-        })}
+      <div className="flex-1 px-2 xl:px-3 space-y-1">
+        {navItems.map((item) => (
+          <NavButton
+            key={item.id}
+            icon={item.icon}
+            label={item.label}
+            onClick={() => navigate(item.path)}
+            active={isActive(item.path)}
+          />
+        ))}
 
         {/* Messages with badge */}
-        <motion.button
+        <NavButton
+          icon={MessageCircle}
+          label="შეტყობინებები"
           onClick={onMessagesClick}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors text-foreground/80 hover:bg-muted/40"
-        >
-          <div className="relative">
-            <MessageCircle className="w-6 h-6" />
-            {unreadMessagesCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[15px]">შეტყობინებები</span>
-        </motion.button>
+          badge={unreadMessagesCount}
+        />
 
         {/* Notifications with badge */}
-        <motion.button
+        <NavButton
+          icon={Bell}
+          label="ნოტიფიკაციები"
           onClick={onNotificationsClick}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors text-foreground/80 hover:bg-muted/40"
-        >
-          <div className="relative">
-            <Bell className="w-6 h-6" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[15px]">ნოტიფიკაციები</span>
-        </motion.button>
+          badge={unreadCount}
+        />
 
         {/* Create */}
-        <motion.button
+        <NavButton
+          icon={PlusSquare}
+          label="შექმნა"
           onClick={onCreateClick}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors text-foreground/80 hover:bg-muted/40"
-        >
-          <PlusSquare className="w-6 h-6" />
-          <span className="text-[15px]">შექმნა</span>
-        </motion.button>
+        />
 
         {/* Dashboard */}
-        <motion.button
+        <NavButton
+          icon={BarChart3}
+          label="დეშბორდი"
           onClick={() => navigate("/profile")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors text-foreground/80 hover:bg-muted/40"
-        >
-          <BarChart3 className="w-6 h-6" />
-          <span className="text-[15px]">დეშბორდი</span>
-        </motion.button>
+        />
 
         {/* Profile */}
-        <motion.button
+        <NavButton
+          label="პროფილი"
           onClick={() => navigate("/profile")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors text-foreground/80 hover:bg-muted/40"
         >
           <Avatar
             imageUrl={profile?.avatar_url || undefined}
             emoji={profile?.nickname?.charAt(0) || "👤"}
             size="sm"
           />
-          <span className="text-[15px]">პროფილი</span>
-        </motion.button>
+        </NavButton>
       </div>
 
       {/* Bottom Section */}
-      <div className="px-3 space-y-1 mt-auto">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-4 px-3 py-3 rounded-xl transition-colors text-foreground/80 hover:bg-muted/40"
-        >
-          <Menu className="w-6 h-6" />
-          <span className="text-[15px]">მეტი</span>
-        </motion.button>
+      <div className="px-2 xl:px-3 space-y-1 mt-auto">
+        <NavButton
+          icon={Menu}
+          label="მეტი"
+          onClick={() => {}}
+        />
       </div>
     </nav>
   );

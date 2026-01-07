@@ -138,9 +138,9 @@ function TeamContentV2() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-screen relative overflow-hidden pb-24 xl:pb-0">
-        {/* Mobile Header - hide on desktop */}
-        <header className="xl:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80">
+      <main className="flex-1 min-h-screen relative overflow-hidden pb-24 lg:pb-0">
+        {/* Mobile Header - hide on tablet/desktop */}
+        <header className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80">
           <div className="flex items-center justify-between px-4 h-14 safe-top">
             {/* Left Side: Back + History */}
             <div className="flex items-center gap-2">
@@ -210,8 +210,8 @@ function TeamContentV2() {
           </div>
         </header>
 
-        {/* Content - Centered on desktop like Instagram */}
-        <div className="relative z-10 flex flex-col xl:max-w-[630px] xl:mx-auto xl:border-x xl:border-border/40">
+        {/* Content - Centered on tablet/desktop like Instagram */}
+        <div className="relative z-10 flex flex-col lg:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
           {/* Friends Stories Bar */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -269,9 +269,9 @@ function TeamContentV2() {
           </Tabs>
         </div>
 
-        {/* Bottom Navigation - Mobile only */}
+        {/* Bottom Navigation - Mobile only (hidden on tablet/desktop) */}
         {!showCreateModal && (
-          <div className="xl:hidden">
+          <div className="lg:hidden">
             <UniversalBottomNav 
               onTeamPlayClick={() => {
                 playSound("button-click");
