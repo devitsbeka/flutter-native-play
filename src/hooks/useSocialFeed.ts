@@ -162,7 +162,7 @@ export function useMyQuizPosts() {
   return useQuery({
     queryKey: ["my-quiz-posts", user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user?.id) return [];
 
       const { data, error } = await supabase
         .from("user_quiz_posts")
@@ -170,9 +170,12 @@ export function useMyQuizPosts() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching my quiz posts:", error);
+        throw error;
+      }
       return data || [];
     },
-    enabled: !!user,
+    enabled: !!user?.id,
   });
 }
