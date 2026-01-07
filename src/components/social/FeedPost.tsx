@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Sparkles } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Sparkles, Share2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,6 +13,73 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+
+// Subject/keyword to cover image mapping for user-generated posts
+const subjectCoverImages: Record<string, string> = {
+  // Music related
+  "მუსიკა": "https://images.pexels.com/photos/1389429/pexels-photo-1389429.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "მომღერლები": "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "music": "https://images.pexels.com/photos/1389429/pexels-photo-1389429.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "singers": "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Sports
+  "სპორტი": "https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "ფეხბურთი": "https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "football": "https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Movies/TV
+  "ფილმები": "https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "სერიალები": "https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "movies": "https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // History
+  "ისტორია": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "history": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Geography
+  "გეოგრაფია": "https://images.pexels.com/photos/335393/pexels-photo-335393.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "geography": "https://images.pexels.com/photos/335393/pexels-photo-335393.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Science
+  "მეცნიერება": "https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "science": "https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Gaming
+  "თამაშები": "https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "gaming": "https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Food
+  "საჭმელი": "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "food": "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Animals
+  "ცხოველები": "https://images.pexels.com/photos/247502/pexels-photo-247502.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "animals": "https://images.pexels.com/photos/247502/pexels-photo-247502.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Space
+  "კოსმოსი": "https://images.pexels.com/photos/586030/pexels-photo-586030.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "space": "https://images.pexels.com/photos/586030/pexels-photo-586030.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Art
+  "ხელოვნება": "https://images.pexels.com/photos/1839919/pexels-photo-1839919.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "art": "https://images.pexels.com/photos/1839919/pexels-photo-1839919.jpeg?auto=compress&cs=tinysrgb&w=800",
+  // Literature
+  "ლიტერატურა": "https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "books": "https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&w=800",
+};
+
+// Get cover image based on subject or hashtags
+function getCoverImageForPost(subject: string, hashtags: string[]): string | undefined {
+  // Check subject first
+  const subjectLower = subject.toLowerCase();
+  for (const [key, url] of Object.entries(subjectCoverImages)) {
+    if (subjectLower.includes(key.toLowerCase())) {
+      return url;
+    }
+  }
+  
+  // Check hashtags
+  for (const tag of hashtags) {
+    const tagLower = tag.toLowerCase();
+    for (const [key, url] of Object.entries(subjectCoverImages)) {
+      if (tagLower.includes(key.toLowerCase()) || key.toLowerCase().includes(tagLower)) {
+        return url;
+      }
+    }
+  }
+  
+  return undefined;
+}
 
 interface FeedPostProps {
   post: SamplePost;
@@ -28,6 +95,9 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
   
   const dateLocale = language === 'ka' ? ka : enUS;
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: false, locale: dateLocale });
+  
+  // Get cover image - use existing or generate from subject/tags
+  const coverImage = post.coverImage || getCoverImageForPost(post.subject, post.hashtags);
 
   const handleLike = () => {
     if (liked) {
@@ -161,7 +231,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
               Report
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleShare} className="gap-2">
-              <Send className="w-4 h-4" />
+              <Share2 className="w-4 h-4" />
               Share
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleCopyLink} className="gap-2">
@@ -182,10 +252,10 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
         style={{ background: post.coverGradient }}
       >
         {/* Background image with overlay */}
-        {post.coverImage && (
+        {coverImage && (
           <div className="absolute inset-0">
             <img 
-              src={post.coverImage} 
+              src={coverImage} 
               alt=""
               className="w-full h-full object-cover"
             />
@@ -250,14 +320,6 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
             className="hover:opacity-70 transition-opacity"
           >
             <MessageCircle className="w-6 h-6 text-foreground" />
-          </button>
-          
-          {/* Share */}
-          <button 
-            onClick={handleShare}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <Send className="w-6 h-6 text-foreground" />
           </button>
         </div>
         
