@@ -169,39 +169,39 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
 
   return (
     <div ref={scrollContainerRef}>
-      {/* Filter Bar - Clean & Spacious */}
+      {/* Filter Bar - Single Line */}
       <div className="sticky top-0 z-30 bg-background border-b border-border/50">
-        {/* Hashtags Row */}
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {/* Hash Icon */}
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               <Hash className="w-4 h-4 text-muted-foreground" />
             </div>
-            {allHashtags.slice(0, 8).map(tag => (
+            
+            {/* Hashtag Chips */}
+            {allHashtags.slice(0, 5).map(tag => (
               <button
                 key={tag}
                 onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                   selectedHashtag === tag
-                    ? "bg-primary text-primary-foreground shadow-sm"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted/80 text-foreground hover:bg-muted"
                 }`}
               >
                 #{tag}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Filter Actions Row */}
-        <div className="px-4 pb-4">
-          <div className="flex items-center gap-3">
+            
+            {/* Divider */}
+            <div className="flex-shrink-0 w-px h-6 bg-border mx-1" />
+            
             {/* Saved Filter */}
             <button
               onClick={() => setShowSavedOnly(!showSavedOnly)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 showSavedOnly
-                  ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 ring-1 ring-amber-300 dark:ring-amber-500/40"
+                  ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400"
                   : "bg-muted/80 text-foreground hover:bg-muted"
               }`}
             >
@@ -216,9 +216,9 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
                 const currentIndex = next.indexOf(popularityFilter);
                 setPopularityFilter(next[(currentIndex + 1) % next.length]);
               }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 popularityFilter !== "all"
-                  ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                  ? "bg-primary/10 text-primary"
                   : "bg-muted/80 text-foreground hover:bg-muted"
               }`}
             >
@@ -227,23 +227,18 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
               {popularityFilter === "low" && "დაბალი"}
               {popularityFilter === "medium" && "საშუალო"}
               {popularityFilter === "high" && "მაღალი"}
-              <ChevronDown className="w-4 h-4 opacity-60" />
+              <ChevronDown className="w-3 h-3 opacity-60" />
             </button>
             
             {/* Clear Filters */}
-            <AnimatePresence>
-              {hasActiveFilters && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  onClick={clearFilters}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-full text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </motion.button>
-              )}
-            </AnimatePresence>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex-shrink-0 p-2 rounded-full text-destructive hover:bg-destructive/10 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
