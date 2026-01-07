@@ -371,7 +371,7 @@ export default function Index() {
         }}
       />
       {/* Main layout wrapper - flex for desktop sidebars */}
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full relative">
         {/* Left Sidebar - tablet/desktop */}
         <DesktopLeftSidebar />
 
@@ -383,80 +383,76 @@ export default function Index() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
-        {/* ===== TOP BAR ===== */}
-        <header className="relative z-20 px-4 pt-4 safe-top">
-          <div className="flex items-center justify-between">
-            {/* Burger menu chip - same style as currency */}
-            <motion.button
-            className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
-              style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-                border: "2px solid #E8E0F5",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsSideMenuOpen(true)}
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>{t('nav.menu')}</span>
-            </motion.button>
-            
-            {/* Notification icons chip */}
-            <motion.div 
-              className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
-              style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-                border: "2px solid #E8E0F5",
-              }}
-            >
-              {/* Ad-Free button */}
+          {/* ===== TOP BAR ===== */}
+          <header className="relative z-20 px-4 pt-4 safe-top">
+            <div className="flex items-center justify-between">
+              {/* Burger menu chip - same style as currency */}
               <motion.button
-                className="relative p-1"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsAdFreeModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
+                style={{
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                  boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
+                  border: "2px solid #E8E0F5",
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSideMenuOpen(true)}
               >
-                <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
+                <Menu className="w-5 h-5 text-gray-600" />
+                <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>{t('nav.menu')}</span>
               </motion.button>
               
-              {/* Bell icon with unread badge */}
-              <motion.button
-                className="relative p-1"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate('/notifications')}
+              {/* Notification icons chip */}
+              <motion.div 
+                className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
+                style={{
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                  boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
+                  border: "2px solid #E8E0F5",
+                }}
               >
-                <Bell className="w-5 h-5 text-gray-600" />
-                {unreadCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-                      boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
-                    }}
-                  >
-                    <span className="text-[9px] font-bold text-white">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  </motion.div>
-                )}
-              </motion.button>
-            </motion.div>
-            
-          </div>
-        </header>
+                {/* Ad-Free button */}
+                <motion.button
+                  className="relative p-1"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsAdFreeModalOpen(true)}
+                >
+                  <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
+                </motion.button>
+                
+                {/* Bell icon with unread badge */}
+                <motion.button
+                  className="relative p-1"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate('/notifications')}
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                        boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                      }}
+                    >
+                      <span className="text-[9px] font-bold text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    </motion.div>
+                  )}
+                </motion.button>
+              </motion.div>
+            </div>
+          </header>
 
-
-
-        {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 10 }}>
-          <motion.div 
-            className="flex flex-col items-center w-full max-w-[360px] px-4"
+          {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 10 }}>
+            <motion.div 
+              className="flex flex-col items-center w-full max-w-[360px] px-4"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
