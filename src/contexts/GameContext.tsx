@@ -244,11 +244,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           break;
         }
         case "replace": {
-          const wrongAnswers = currentQuestion.allAnswers
-            .filter(a => a !== currentQuestion.correctAnswer)
-            .filter(a => !prev.hiddenAnswers.includes(a));
-          if (wrongAnswers.length > 0) {
-            updates.replacedAnswer = { old: wrongAnswers[0], new: "---" };
+          // Skip to the next question
+          if (prev.currentQuestionIndex < prev.questions.length - 1) {
+            updates.currentQuestionIndex = prev.currentQuestionIndex + 1;
+            updates.hiddenAnswers = [];
+            updates.replacedAnswer = null;
+            // Reset power-up usage for new question
+            updates.playerPowerUps = prev.playerPowerUps.map(p => ({ ...p, usedThisQuestion: false }));
+            updates.opponentPowerUps = prev.opponentPowerUps.map(p => ({ ...p, usedThisQuestion: false }));
+            updates.activePowerUp = null;
+            updates.playerTimerBonus = 0;
+            updates.playerTimerFrozen = false;
+            updates.playerFreezeEndTime = null;
           }
           break;
         }

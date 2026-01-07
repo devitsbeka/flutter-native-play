@@ -617,12 +617,16 @@ export default function CategoryQuizPage() {
         break;
       }
       case "replace": {
-        // Replace one wrong answer (similar to 50/50 but just one)
-        const wrongAnswers = (currentQ.allAnswers || [])
-          .filter(a => a !== currentQ.correct_answer)
-          .filter(a => !hiddenAnswers.includes(a));
-        if (wrongAnswers.length > 0) {
-          setHiddenAnswers(prev => [...prev, wrongAnswers[0]]);
+        // Skip to a different question - move to next question immediately
+        if (currentQuestionIndex < questions.length - 1) {
+          setCurrentQuestionIndex((prev) => prev + 1);
+          setSelectedAnswer(null);
+          setIsAnswered(false);
+          setTimeRemaining(15 + timerBonus);
+          setHiddenAnswers([]);
+          setUsedPowerUpsThisQuestion(new Set());
+          setTimerFrozen(false);
+          setFreezeEndTime(null);
         }
         break;
       }
