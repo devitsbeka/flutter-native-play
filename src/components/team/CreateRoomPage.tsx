@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil, Tv, Library, Sparkles } from "lucide-react";
+import { Gamepad2, Loader2, ArrowLeft, Check, Users, Shuffle, ChevronDown, Play, Pencil, Tv, Library, Sparkles, UserPlus } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,8 +14,8 @@ import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { generateRoomName } from "@/utils/roomNameGenerator";
 import { Input } from "@/components/ui/input";
 import { TVPlayModal } from "@/components/team/TVPlayModal";
+import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
-
 interface Category {
   id: string;
   category_id: string;
@@ -44,6 +44,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [roomName, setRoomName] = useState(() => generateRoomName());
   const [showTVModal, setShowTVModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [categoryTab, setCategoryTab] = useState<"library" | "myTrivia">("library");
   const [selectedMyTrivia, setSelectedMyTrivia] = useState<string | null>(null);
 
@@ -420,17 +421,45 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         </div>
 
         {/* Friend Invitation Section - Avatar Circles */}
-        {acceptedFriends.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-2">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
               <Users className="w-3.5 h-3.5 text-muted-foreground" />
               <h2 className="text-xs font-medium text-muted-foreground">
                 {t("team.inviteFriends").replace("{count}", String(selectedFriends.size))}
               </h2>
             </div>
-            
+            <motion.button
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              მოწვევა
+            </motion.button>
+          </div>
+          
+          {acceptedFriends.length > 0 ? (
             <TooltipProvider delayDuration={0}>
               <div className="flex flex-wrap gap-2">
+                {/* Invite New Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      onClick={() => setShowInviteModal(true)}
+                      className="relative w-10 h-10 rounded-full bg-muted/50 border-2 border-dashed border-border/50 flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <UserPlus className="w-4 h-4 text-muted-foreground" />
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    მეგობრის მოწვევა
+                  </TooltipContent>
+                </Tooltip>
+                
                 {acceptedFriends.map((friend) => {
                   const isSelected = selectedFriends.has(friend.friendId);
                   return (
@@ -476,17 +505,21 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                 })}
               </div>
             </TooltipProvider>
-          </div>
-        )}
-
-        {/* Empty friends state */}
-        {acceptedFriends.length === 0 && (
-          <div className="text-center py-6 text-muted-foreground">
-            <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">{t("team.noFriendsYet")}</p>
-            <p className="text-xs">{t("team.addFriendsHint")}</p>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-4 text-muted-foreground">
+              <motion.button
+                onClick={() => setShowInviteModal(true)}
+                className="w-16 h-16 mx-auto mb-2 rounded-full bg-muted/50 border-2 border-dashed border-border/50 flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <UserPlus className="w-6 h-6 text-muted-foreground" />
+              </motion.button>
+              <p className="text-sm">{t("team.noFriendsYet")}</p>
+              <p className="text-xs">{t("team.addFriendsHint")}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Footer - Central 3D Purple Button (same as bottom nav but purple with check icon) */}
@@ -509,6 +542,12 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         onClose={() => setShowTVModal(false)}
         categoryId={selectedCategory?.id}
         categoryName={selectedCategory?.name}
+      />
+      
+      {/* Invite Friends Modal */}
+      <InviteFriendsModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
       />
     </motion.div>
   );
