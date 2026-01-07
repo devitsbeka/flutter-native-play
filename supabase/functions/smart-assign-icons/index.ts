@@ -10,6 +10,7 @@ interface Question {
   id: string;
   question_text: string;
   category_id: string;
+  correct_answer: string;
 }
 
 interface AIAnalysisResult {
@@ -90,6 +91,69 @@ const TOPIC_TO_ICONS: Record<string, string[]> = {
   alphabet: ['letter', 'script', 'book'],
 };
 
+// Icons that should NOT be assigned when answer contains related terms
+const ANSWER_ICON_BLOCKLIST: Record<string, string[]> = {
+  'sun': ['მზე', 'მზის', 'სინათლე', 'sunlight', 'sunshine', 'solar'],
+  'moon': ['მთვარე', 'მთვარის', 'lunar', 'moonlight'],
+  'blood': ['სისხლ', 'სისხლი', 'სისხლით', 'blood'],
+  'water': ['წყალ', 'წყალი', 'water'],
+  'fire': ['ცეცხლ', 'ცეცხლი', 'fire', 'flame'],
+  'crown': ['გვირგვინ', 'გვირგვინი', 'crown'],
+  'sword': ['ხმალ', 'ხმალი', 'sword'],
+  'cross': ['ჯვარ', 'ჯვარი', 'cross'],
+  'heart': ['გულ', 'გული', 'heart'],
+  'gold': ['ოქრო', 'ოქროს', 'gold', 'golden'],
+  'lion': ['ლომ', 'ლომი'],
+  'eagle': ['არწივ', 'არწივი'],
+  'church': ['ეკლესია', 'ეკლესიის', 'church'],
+  'wine': ['ღვინო', 'ღვინის', 'wine'],
+};
+
+// Check if an icon would reveal the answer
+function iconRevealsAnswer(slug: string, answer: string): boolean {
+  if (!answer) return false;
+  
+  const normalizedSlug = slug.toLowerCase();
+  const normalizedAnswer = answer.toLowerCase();
+  
+  // Georgian transliteration
+  const GEORGIAN_TO_ENGLISH: Record<string, string> = {
+    'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e',
+    'ვ': 'v', 'ზ': 'z', 'თ': 't', 'ი': 'i', 'კ': 'k',
+    'ლ': 'l', 'მ': 'm', 'ნ': 'n', 'ო': 'o', 'პ': 'p',
+    'ჟ': 'zh', 'რ': 'r', 'ს': 's', 'ტ': 't', 'უ': 'u',
+    'ფ': 'f', 'ქ': 'k', 'ღ': 'gh', 'ყ': 'q', 'შ': 'sh',
+    'ჩ': 'ch', 'ც': 'ts', 'ძ': 'dz', 'წ': 'ts', 'ჭ': 'ch',
+    'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
+  };
+  
+  let transliteratedAnswer = '';
+  for (const char of answer) {
+    transliteratedAnswer += GEORGIAN_TO_ENGLISH[char] || char;
+  }
+  transliteratedAnswer = transliteratedAnswer.toLowerCase();
+  
+  // Check blocklist
+  for (const [iconKey, answerVariants] of Object.entries(ANSWER_ICON_BLOCKLIST)) {
+    if (normalizedSlug.includes(iconKey)) {
+      for (const variant of answerVariants) {
+        if (normalizedAnswer.includes(variant.toLowerCase()) || 
+            transliteratedAnswer.includes(variant.toLowerCase())) {
+          console.log(`Blocked icon "${slug}" - reveals answer "${answer}"`);
+          return true;
+        }
+      }
+    }
+  }
+  
+  // Direct match check
+  if (transliteratedAnswer.includes(normalizedSlug) && normalizedSlug.length >= 4) {
+    return true;
+  }
+  
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -152,10 +216,10 @@ serve(async (req) => {
       }
     }
 
-    // Fetch questions without icons
+    // Fetch questions without icons (include correct_answer for validation)
     let questionsQuery = supabase
       .from('questions')
-      .select('id, question_text, category_id')
+      .select('id, question_text, category_id, correct_answer')
       .is('icon_slug', null)
       .eq('is_active', true)
       .range(offset, offset + batchSize - 1);
@@ -250,6 +314,10 @@ serve(async (req) => {
         const topicIcons = TOPIC_TO_ICONS[normalizedKw];
         if (topicIcons) {
           for (const slug of topicIcons) {
+            // Skip if this icon reveals the answer
+            if (iconRevealsAnswer(slug, question.correct_answer)) {
+              continue;
+            }
             if (iconSlugs.has(slug)) {
               matchedIcon = slug;
               matchMethod = 'topic-mapping';
@@ -259,8 +327,8 @@ serve(async (req) => {
           if (matchedIcon) break;
         }
 
-        // Check exact slug match
-        if (iconSlugs.has(normalizedKw)) {
+        // Check exact slug match (but validate it doesn't reveal answer)
+        if (iconSlugs.has(normalizedKw) && !iconRevealsAnswer(normalizedKw, question.correct_answer)) {
           matchedIcon = normalizedKw;
           matchMethod = 'exact-slug';
           break;

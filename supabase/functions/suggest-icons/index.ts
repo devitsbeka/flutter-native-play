@@ -243,6 +243,101 @@ const CONTEXT_PATTERNS: Record<string, { keywords: string[], icons: string[] }> 
   }
 };
 
+// Icons that should NOT be shown when the answer contains related terms
+// This prevents icons from acting as hints that reveal the answer
+const ANSWER_ICON_BLOCKLIST: Record<string, string[]> = {
+  // Nature elements
+  'sun': ['მზე', 'მზის', 'სინათლე', 'sunlight', 'sunshine', 'solar'],
+  'moon': ['მთვარე', 'მთვარის', 'lunar', 'moonlight'],
+  'star': ['ვარსკვლავ', 'ვარსკვლავი'],
+  'water': ['წყალ', 'წყალი', 'water'],
+  'fire': ['ცეცხლ', 'ცეცხლი', 'fire', 'flame'],
+  'blood': ['სისხლ', 'სისხლი', 'სისხლით', 'blood'],
+  
+  // Animals
+  'lion': ['ლომ', 'ლომი'],
+  'cat': ['კატა', 'კატის'],
+  'dog': ['ძაღლ', 'ძაღლი'],
+  'horse': ['ცხენ', 'ცხენი'],
+  'eagle': ['არწივ', 'არწივი'],
+  'snake': ['გველ', 'გველი'],
+  'fish': ['თევზ', 'თევზი'],
+  'wolf': ['მგელ', 'მგელი'],
+  'bear': ['დათვ', 'დათვი'],
+  'elephant': ['სპილო'],
+  'tiger': ['ვეფხვ', 'ვეფხვი'],
+  
+  // Objects
+  'crown': ['გვირგვინ', 'გვირგვინი', 'crown'],
+  'sword': ['ხმალ', 'ხმალი', 'sword'],
+  'cross': ['ჯვარ', 'ჯვარი', 'cross'],
+  'heart': ['გულ', 'გული', 'heart'],
+  'gold': ['ოქრო', 'ოქროს', 'gold', 'golden'],
+  'silver': ['ვერცხლ', 'ვერცხლი', 'silver'],
+  'diamond': ['ბრილიანტ', 'ალმას', 'diamond'],
+  'book': ['წიგნ', 'წიგნი', 'book'],
+  'wine': ['ღვინო', 'ღვინის', 'wine'],
+  'bread': ['პურ', 'პური', 'bread'],
+  'cheese': ['ყველ', 'ყველი', 'cheese'],
+  
+  // Buildings/Places
+  'church': ['ეკლესია', 'ეკლესიის', 'church'],
+  'castle': ['ციხე', 'ციხის', 'castle'],
+  'pyramid': ['პირამიდა', 'pyramid'],
+  'temple': ['ტაძარ', 'ტაძარი', 'temple'],
+  'mosque': ['მეჩეთ', 'მეჩეთი', 'mosque'],
+  
+  // People/Roles
+  'king': ['მეფე', 'მეფის', 'king'],
+  'queen': ['დედოფალ', 'დედოფალი', 'queen'],
+  'soldier': ['ჯარისკაც', 'soldier'],
+  'doctor': ['ექიმ', 'ექიმი', 'doctor'],
+  
+  // Geography
+  'mountain': ['მთა', 'მთის', 'mountain'],
+  'river': ['მდინარე', 'river'],
+  'sea': ['ზღვა', 'ზღვის', 'sea', 'ocean'],
+  'island': ['კუნძულ', 'კუნძული', 'island'],
+};
+
+// Check if an icon would reveal the answer
+function iconRevealsAnswer(slug: string, title: string, answer: string): boolean {
+  if (!answer) return false;
+  
+  const normalizedSlug = slug.toLowerCase();
+  const normalizedTitle = title.toLowerCase();
+  const normalizedAnswer = answer.toLowerCase();
+  const transliteratedAnswer = transliterateGeorgian(answer).toLowerCase();
+  
+  // Check blocklist
+  for (const [iconKey, answerVariants] of Object.entries(ANSWER_ICON_BLOCKLIST)) {
+    // Check if icon matches the blocklist key
+    if (normalizedSlug.includes(iconKey) || normalizedTitle.includes(iconKey)) {
+      for (const variant of answerVariants) {
+        if (normalizedAnswer.includes(variant.toLowerCase()) || 
+            transliteratedAnswer.includes(variant.toLowerCase())) {
+          console.log(`Blocked icon "${slug}" - reveals answer containing "${variant}"`);
+          return true;
+        }
+      }
+    }
+  }
+  
+  // Direct match check - if slug/title appears in answer
+  if (transliteratedAnswer.includes(normalizedSlug) && normalizedSlug.length >= 4) {
+    console.log(`Blocked icon "${slug}" - directly matches answer`);
+    return true;
+  }
+  
+  // Check if answer contains the icon title
+  if (normalizedAnswer.includes(normalizedTitle) && normalizedTitle.length >= 4) {
+    console.log(`Blocked icon "${slug}" - title appears in answer`);
+    return true;
+  }
+  
+  return false;
+}
+
 // Translate Georgian word to English meanings
 function translateGeorgianToEnglish(word: string): string[] {
   const translations: string[] = [];
@@ -441,34 +536,9 @@ serve(async (req) => {
       });
     }
 
-    // 4. Georgian words from answer - add ONLY semantic translations (not useless phonetic)
-    if (correctAnswer) {
-      const georgianFromAnswer = extractGeorgianWords(correctAnswer);
-      for (const word of georgianFromAnswer) {
-        // Add semantic translations only
-        const semanticTranslations = translateGeorgianToEnglish(word);
-        if (semanticTranslations.length > 0) {
-          for (const translation of semanticTranslations) {
-            keywordSources.push({
-              keyword: word,
-              transliterated: translation,
-              source: 'answer_georgian'
-            });
-          }
-        }
-        // Skip useless phonetic transliteration
-      }
-
-      // 5. English words from answer
-      const englishFromAnswer = extractEnglishWords(correctAnswer);
-      for (const word of englishFromAnswer) {
-        keywordSources.push({
-          keyword: word,
-          transliterated: word.toLowerCase(),
-          source: 'answer_english'
-        });
-      }
-    }
+    // REMOVED: Answer keyword extraction - we should NOT use answer to find icons
+    // as this creates hints that reveal the answer (e.g., sun icon for "sunlight" answer)
+    // The correctAnswer is only used for VALIDATION to filter OUT hint icons
 
     console.log('Extracted keywords:', keywordSources);
 
@@ -476,7 +546,8 @@ serve(async (req) => {
     const uniqueKeywords = [...new Set(keywordSources.map(k => k.transliterated))];
     
     // Detect context patterns and add their icons to keywords
-    const fullText = `${questionText} ${correctAnswer || ''}`.toLowerCase();
+    // IMPORTANT: Only use question text, NOT the answer (to avoid revealing answer)
+    const fullText = questionText.toLowerCase();
     for (const [contextName, data] of Object.entries(CONTEXT_PATTERNS)) {
       for (const keyword of data.keywords) {
         if (fullText.includes(keyword)) {
@@ -621,8 +692,13 @@ serve(async (req) => {
     // Sort by score descending
     suggestions.sort((a, b) => b.score - a.score);
 
+    // Filter out icons that would reveal the answer
+    const filteredSuggestions = correctAnswer 
+      ? suggestions.filter(s => !iconRevealsAnswer(s.slug, s.title, correctAnswer))
+      : suggestions;
+
     // Take top 10 suggestions
-    const topSuggestions = suggestions.slice(0, 10);
+    const topSuggestions = filteredSuggestions.slice(0, 10);
 
     console.log('Top suggestions:', topSuggestions.map(s => `${s.slug} (${s.score})`));
 
