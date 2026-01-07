@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { DesktopSidebars } from "@/components/home/DesktopSidebars";
+import { DesktopLeftSidebar, DesktopRightSidebarWidgets } from "@/components/home/DesktopSidebars";
 import { Bell, Menu, Check, Clock } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
@@ -370,18 +370,20 @@ export default function Index() {
           setIsDailyRewardsOpen(true);
         }}
       />
-      <div 
-        ref={containerRef}
-        className="relative h-screen w-full overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
-        
-        {/* Desktop-only sidebars */}
-        <DesktopSidebars />
+      {/* Main layout wrapper - flex for desktop sidebars */}
+      <div className="min-h-screen flex w-full">
+        {/* Left Sidebar - tablet/desktop */}
+        <DesktopLeftSidebar />
 
+        {/* Main content area */}
+        <div 
+          ref={containerRef}
+          className="flex-1 relative h-screen overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Background and vignette come from GlobalSplineBackground - no local overlay needed */}
         {/* ===== TOP BAR ===== */}
         <header className="relative z-20 px-4 pt-4 safe-top">
           <div className="flex items-center justify-between">
@@ -690,20 +692,42 @@ export default function Index() {
               )}
                 </motion.div>
           </motion.div>
-      </div>
+        </div>
+
+        {/* Universal Bottom Navigation - Mobile only (hidden on lg+) */}
+        <div className="lg:hidden">
+          <UniversalBottomNav 
+            onPlayClick={handlePlayClick}
+            playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+            maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+            canPlay={user ? canPlay : guestPlaysRemaining > 0}
+            isVip={isVip}
+            vipLoading={vipLoading}
+            onWatchAdClick={() => setShowWatchAdModal(true)}
+            isGuest={!user}
+          />
+        </div>
+        </div>
+
+        {/* Right Sidebar - desktop only */}
+        <DesktopRightSidebarWidgets />
       </div>
 
-      {/* Universal Bottom Navigation - OUTSIDE touch handler container */}
-      <UniversalBottomNav 
-        onPlayClick={handlePlayClick}
-        playsRemaining={user ? playsRemaining : guestPlaysRemaining}
-        maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
-        canPlay={user ? canPlay : guestPlaysRemaining > 0}
-        isVip={isVip}
-        vipLoading={vipLoading}
-        onWatchAdClick={() => setShowWatchAdModal(true)}
-        isGuest={!user}
-      />
+      {/* Desktop Bottom Navigation - visible on lg+ */}
+      <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-50">
+        <div className="max-w-[600px] mx-auto">
+          <UniversalBottomNav 
+            onPlayClick={handlePlayClick}
+            playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+            maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+            canPlay={user ? canPlay : guestPlaysRemaining > 0}
+            isVip={isVip}
+            vipLoading={vipLoading}
+            onWatchAdClick={() => setShowWatchAdModal(true)}
+            isGuest={!user}
+          />
+        </div>
+      </div>
     </>
   );
 }

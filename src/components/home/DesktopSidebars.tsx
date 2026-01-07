@@ -5,21 +5,46 @@ import { ShopPromoWidget } from "./widgets/ShopPromoWidget";
 
 export function DesktopSidebars() {
   return (
-    <div className="hidden xl:flex absolute inset-0 z-[5] pointer-events-none">
-      {/* Left Sidebar */}
-      <div className="w-80 flex flex-col gap-3 p-4 pt-20 pb-24 pointer-events-auto">
+    <>
+      {/* Left Sidebar - visible on lg+ */}
+      <aside className="hidden lg:flex flex-col w-[280px] xl:w-[320px] min-w-[280px] xl:min-w-[320px] h-screen sticky top-0 p-4 pt-20 pb-24 overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col gap-4">
+          <DidYouKnowWidget />
+          <TriviaPartyPromo />
+        </div>
+      </aside>
+      
+      {/* Right Sidebar - visible on xl+ (hidden on tablet, shown on desktop) */}
+      <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 p-4 pt-20 pb-24 overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col gap-4">
+          <LiveGamesWidget />
+          <ShopPromoWidget />
+        </div>
+      </aside>
+    </>
+  );
+}
+
+// Separate component for left sidebar only (tablet view)
+export function DesktopLeftSidebar() {
+  return (
+    <aside className="hidden lg:flex flex-col w-[280px] xl:w-[320px] min-w-[280px] xl:min-w-[320px] h-screen sticky top-0 p-4 pt-6 pb-24 overflow-y-auto scrollbar-hide">
+      <div className="flex flex-col gap-4">
         <DidYouKnowWidget />
         <TriviaPartyPromo />
       </div>
-      
-      {/* Center spacer */}
-      <div className="flex-1" />
-      
-      {/* Right Sidebar */}
-      <div className="w-80 flex flex-col gap-3 p-4 pt-20 pb-24 pointer-events-auto">
+    </aside>
+  );
+}
+
+// Separate component for right sidebar only (desktop view)
+export function DesktopRightSidebarWidgets() {
+  return (
+    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 p-4 pt-6 pb-24 overflow-y-auto scrollbar-hide">
+      <div className="flex flex-col gap-4">
         <LiveGamesWidget />
         <ShopPromoWidget />
       </div>
-    </div>
+    </aside>
   );
 }
