@@ -42,6 +42,7 @@ import IconLibraryAdmin from "./pages/admin/IconLibrary";
 import QuestionTools from "./pages/admin/QuestionTools";
 import IconAssignment from "./pages/admin/IconAssignment";
 import MissingIcons from "./pages/admin/MissingIcons";
+import FixIcons from "./pages/admin/FixIcons";
 import AIGenerations from "./pages/admin/AIGenerations";
 import PushNotifications from "./pages/admin/PushNotifications";
 import AdminReports from "./pages/admin/Reports";
@@ -112,6 +113,7 @@ const App = () => (
                 <Route path="tools" element={<QuestionTools />} />
                 <Route path="icon-assign" element={<IconAssignment />} />
                 <Route path="missing-icons" element={<MissingIcons />} />
+                <Route path="fix-icons" element={<FixIcons />} />
                 <Route path="ai-generations" element={<AIGenerations />} />
                 <Route path="push" element={<PushNotifications />} />
                 <Route path="reports" element={<AdminReports />} />
