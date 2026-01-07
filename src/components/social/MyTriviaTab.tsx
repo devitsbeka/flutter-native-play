@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers, Bookmark, Edit3 } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers, Bookmark, Edit3, MessageCircle } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -186,10 +186,11 @@ function StandaloneQuizCard({
       className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
       {/* Top Right Badges */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
         {/* Edit Button */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onEdit?.(post);
           }}
@@ -198,12 +199,19 @@ function StandaloneQuizCard({
           <Edit3 className="w-4 h-4 text-white" />
         </button>
         
-        {/* Visibility Badge */}
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
-          post.is_public !== false 
-            ? 'bg-green-500/90 text-white' 
-            : 'bg-muted text-muted-foreground'
-        }`}>
+        {/* Visibility Badge - Clickable to open edit */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdit?.(post);
+          }}
+          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md hover:opacity-90 transition-opacity ${
+            post.is_public !== false 
+              ? 'bg-green-500/90 text-white' 
+              : 'bg-muted text-muted-foreground'
+          }`}
+        >
           {post.is_public !== false ? (
             <>
               <Globe className="w-3 h-3" />
@@ -215,7 +223,7 @@ function StandaloneQuizCard({
               <span>პირადი</span>
             </>
           )}
-        </div>
+        </button>
       </div>
 
       {/* Gradient Thumbnail */}
@@ -255,18 +263,31 @@ function StandaloneQuizCard({
 
         {/* Stats Row */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Heart className="w-4 h-4" />
               <span>{post.likes_count || 0}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
+              <span>{post.comments_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Bookmark className="w-4 h-4" />
               <span>{post.saves_count || 0}</span>
             </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Play className="w-4 h-4" />
+              <span>{post.plays_count || 0}</span>
+            </div>
           </div>
           
-          <ChunkyButton size="sm" variant="secondary" className="text-xs" onClick={() => onPlay?.(post)}>
+          <ChunkyButton 
+            size="sm" 
+            variant="secondary" 
+            className="text-xs" 
+            onClick={() => onPlay?.(post)}
+          >
             <Play className="w-3.5 h-3.5" />
             <span>თამაში</span>
           </ChunkyButton>
