@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const isTrueFalse = answerFormat === "true_false";
     
-    const systemPrompt = `You are a trivia question generator for a Georgian quiz app. Generate fun, engaging trivia questions.
+const systemPrompt = `You are a trivia question generator for a Georgian quiz app. Generate fun, engaging trivia questions.
 
 CRITICAL CHARACTER LIMITS - STRICT:
 - Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces)
@@ -62,6 +62,19 @@ MULTIPLE CHOICE FORMAT:
 - Answers should be similar in length/format
 `}
 
+ICON KEYWORDS RULES - CRITICAL:
+- icon_keywords MUST be specific to the question topic, NOT generic
+- NEVER use generic words: country, place, thing, person, object, item, location, area, region, world, flag, nation
+- Include the actual subject/entity mentioned in the question
+- Think: "What specific visual represents THIS exact question?"
+- Examples:
+  - Question about Arabian king from literature → ["crown", "medieval", "castle"]
+  - Question about Rome/Italy → ["colosseum", "rome", "pasta"]
+  - Question about Einstein → ["physics", "science", "laboratory"]
+  - Question about football → ["football", "soccer", "stadium"]
+  - Question about music → ["guitar", "piano", "microphone"]
+- If no specific icon fits, use ["quiz", "question", "trivia"]
+
 RETURN FORMAT - JSON only:
 {
   "suggestedTitle": "catchy Georgian title for this quiz",
@@ -71,7 +84,7 @@ RETURN FORMAT - JSON only:
       "correct_answer": "სწორი (max ${ANSWER_MAX_LENGTH} chars)",
       "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
       "difficulty": "easy|medium|hard",
-      "icon_keywords": ["english", "keywords", "for_icon"]
+      "icon_keywords": ["specific", "relevant", "keywords"]
     }
   ]
 }`;
@@ -149,33 +162,86 @@ Return ONLY valid JSON.`;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Blocked generic keywords that match random icons
+    const BLOCKED_GENERIC_KEYWORDS = [
+      'country', 'place', 'thing', 'person', 'object', 'item', 
+      'location', 'area', 'region', 'world', 'global', 'international',
+      'flag', 'nation', 'land', 'territory', 'state', 'kingdom'
+    ];
+
+    // Georgian to Latin transliteration for answer matching
+    const transliterateGeorgian = (text: string): string => {
+      const map: Record<string, string> = {
+        'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e', 'ვ': 'v',
+        'ზ': 'z', 'თ': 't', 'ი': 'i', 'კ': 'k', 'ლ': 'l', 'მ': 'm',
+        'ნ': 'n', 'ო': 'o', 'პ': 'p', 'ჟ': 'zh', 'რ': 'r', 'ს': 's',
+        'ტ': 't', 'უ': 'u', 'ფ': 'f', 'ქ': 'q', 'ღ': 'gh', 'ყ': 'y',
+        'შ': 'sh', 'ჩ': 'ch', 'ც': 'ts', 'ძ': 'dz', 'წ': 'w', 'ჭ': 'ch',
+        'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
+      };
+      return text.split('').map(c => map[c] || c).join('').toLowerCase();
+    };
+
     const questionsWithIcons = await Promise.all(
       quizData.questions.map(async (q: any) => {
         let iconSlug: string | null = null;
 
+        // Get all answers for validation
+        const allAnswers = [
+          q.correct_answer,
+          ...(q.incorrect_answers || [])
+        ].map(a => transliterateGeorgian(a || ''));
+
         // Try to find icon by keywords
         if (q.icon_keywords?.length > 0) {
-          const keywords = q.icon_keywords.map((k: string) => k.toLowerCase());
+          // Filter out generic/blocked keywords
+          const keywords = q.icon_keywords
+            .map((k: string) => k.toLowerCase())
+            .filter((k: string) => !BLOCKED_GENERIC_KEYWORDS.includes(k));
           
-          // Try exact slug match first
-          const { data: exactMatch } = await supabase
-            .from('icon_library')
-            .select('slug')
-            .in('slug', keywords)
-            .limit(1);
-
-          if (exactMatch && exactMatch.length > 0) {
-            iconSlug = exactMatch[0].slug;
-          } else {
-            // Try tag search
-            const { data: tagMatch } = await supabase
+          if (keywords.length > 0) {
+            // Try exact slug match first
+            const { data: exactMatch } = await supabase
               .from('icon_library')
               .select('slug')
-              .or(keywords.map((k: string) => `tags.cs.{${k}}`).join(','))
-              .limit(1);
+              .in('slug', keywords)
+              .limit(5);
 
-            if (tagMatch && tagMatch.length > 0) {
-              iconSlug = tagMatch[0].slug;
+            if (exactMatch && exactMatch.length > 0) {
+              // Find first icon that doesn't match any answer
+              for (const match of exactMatch) {
+                const slug = match.slug.toLowerCase();
+                const matchesAnswer = allAnswers.some(answer => 
+                  slug.includes(answer) || answer.includes(slug)
+                );
+                if (!matchesAnswer) {
+                  iconSlug = match.slug;
+                  break;
+                }
+              }
+            }
+            
+            if (!iconSlug) {
+              // Try tag search
+              const { data: tagMatch } = await supabase
+                .from('icon_library')
+                .select('slug')
+                .or(keywords.map((k: string) => `tags.cs.{${k}}`).join(','))
+                .limit(5);
+
+              if (tagMatch && tagMatch.length > 0) {
+                // Find first icon that doesn't match any answer
+                for (const match of tagMatch) {
+                  const slug = match.slug.toLowerCase();
+                  const matchesAnswer = allAnswers.some(answer => 
+                    slug.includes(answer) || answer.includes(slug)
+                  );
+                  if (!matchesAnswer) {
+                    iconSlug = match.slug;
+                    break;
+                  }
+                }
+              }
             }
           }
         }
