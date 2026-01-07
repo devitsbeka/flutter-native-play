@@ -9,6 +9,15 @@ import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 
+// Helper to handle both Tailwind class gradients and CSS linear-gradient strings
+function getGradientStyle(gradient: string): { style?: React.CSSProperties; className?: string } {
+  if (!gradient) return { className: 'from-primary to-primary/60' };
+  if (gradient.startsWith('linear-gradient') || gradient.startsWith('radial-gradient')) {
+    return { style: { background: gradient } };
+  }
+  return { className: gradient };
+}
+
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
@@ -183,7 +192,7 @@ function StandaloneQuizCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
+      className="relative w-full max-w-full bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
       {/* Top Right Badges */}
       <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
@@ -227,21 +236,26 @@ function StandaloneQuizCard({
       </div>
 
       {/* Gradient Thumbnail */}
-      <div 
-        className="h-32 relative cursor-pointer"
-        style={{ background: post.cover_gradient }}
-        onClick={() => onPlay?.(post)}
-      >
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
-            {post.title}
-          </h4>
-        </div>
-        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
-          {post.question_count} კითხვა
-        </div>
-      </div>
+      {(() => {
+        const gradientProps = getGradientStyle(post.cover_gradient);
+        return (
+          <div 
+            className={`h-32 relative cursor-pointer bg-gradient-to-br from-primary to-primary/60 ${gradientProps.className || ''}`}
+            style={gradientProps.style}
+            onClick={() => onPlay?.(post)}
+          >
+            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
+                {post.title}
+              </h4>
+            </div>
+            <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+              {post.question_count} კითხვა
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Author Info & Stats */}
       <div className="p-4">
