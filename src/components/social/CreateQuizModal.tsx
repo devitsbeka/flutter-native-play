@@ -27,13 +27,25 @@ interface CreateQuizModalProps {
 }
 
 const QUESTION_COUNTS = [5, 10, 15, 20];
+// Smooth oval gradient backgrounds with blob overlays
 const COVER_GRADIENTS = [
-  "from-purple-500 to-pink-500",
-  "from-blue-500 to-cyan-500",
-  "from-orange-500 to-red-500",
-  "from-green-500 to-emerald-500",
-  "from-indigo-500 to-purple-500",
-  "from-yellow-500 to-orange-500",
+  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
+  "linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)",
+  "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
+  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
+  "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
+  "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
+  // New 10 oval/blob style backgrounds
+  "radial-gradient(ellipse 120% 80% at 20% 30%, rgba(139,92,246,0.8) 0%, transparent 50%), radial-gradient(ellipse 100% 120% at 80% 70%, rgba(236,72,153,0.7) 0%, transparent 50%), linear-gradient(135deg, #4C1D95 0%, #831843 100%)",
+  "radial-gradient(ellipse 80% 100% at 70% 20%, rgba(59,130,246,0.8) 0%, transparent 45%), radial-gradient(ellipse 100% 80% at 20% 80%, rgba(6,182,212,0.7) 0%, transparent 45%), linear-gradient(150deg, #1E3A8A 0%, #0E7490 100%)",
+  "radial-gradient(ellipse 90% 110% at 30% 60%, rgba(16,185,129,0.8) 0%, transparent 50%), radial-gradient(ellipse 120% 90% at 75% 25%, rgba(52,211,153,0.6) 0%, transparent 50%), linear-gradient(160deg, #064E3B 0%, #047857 100%)",
+  "radial-gradient(ellipse 100% 80% at 60% 30%, rgba(249,115,22,0.75) 0%, transparent 45%), radial-gradient(ellipse 80% 100% at 25% 75%, rgba(239,68,68,0.7) 0%, transparent 45%), linear-gradient(145deg, #7C2D12 0%, #991B1B 100%)",
+  "radial-gradient(ellipse 110% 90% at 40% 70%, rgba(99,102,241,0.8) 0%, transparent 50%), radial-gradient(ellipse 90% 100% at 80% 20%, rgba(168,85,247,0.7) 0%, transparent 50%), linear-gradient(155deg, #312E81 0%, #581C87 100%)",
+  "radial-gradient(ellipse 85% 115% at 25% 40%, rgba(14,165,233,0.8) 0%, transparent 50%), radial-gradient(ellipse 115% 85% at 70% 75%, rgba(34,211,238,0.7) 0%, transparent 50%), linear-gradient(140deg, #0C4A6E 0%, #155E75 100%)",
+  "radial-gradient(ellipse 100% 100% at 50% 30%, rgba(217,70,239,0.8) 0%, transparent 50%), radial-gradient(ellipse 80% 120% at 30% 80%, rgba(244,114,182,0.7) 0%, transparent 50%), linear-gradient(135deg, #701A75 0%, #9D174D 100%)",
+  "radial-gradient(ellipse 95% 85% at 65% 50%, rgba(245,158,11,0.8) 0%, transparent 45%), radial-gradient(ellipse 85% 95% at 25% 35%, rgba(234,179,8,0.7) 0%, transparent 45%), linear-gradient(150deg, #78350F 0%, #A16207 100%)",
+  "radial-gradient(ellipse 90% 100% at 35% 25%, rgba(168,162,158,0.6) 0%, transparent 50%), radial-gradient(ellipse 100% 90% at 70% 70%, rgba(120,113,108,0.5) 0%, transparent 50%), linear-gradient(145deg, #292524 0%, #44403C 100%)",
+  "radial-gradient(ellipse 105% 95% at 45% 65%, rgba(251,113,133,0.8) 0%, transparent 50%), radial-gradient(ellipse 95% 105% at 70% 25%, rgba(253,164,175,0.6) 0%, transparent 50%), linear-gradient(160deg, #881337 0%, #BE185D 100%)",
 ];
 
 const POPULAR_TOPICS = [
@@ -455,7 +467,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             </div>
 
             {/* Preview card */}
-            <div className={`p-4 rounded-2xl bg-gradient-to-br ${selectedGradient} text-white`}>
+            <div 
+              className="p-4 rounded-2xl text-white"
+              style={{ background: selectedGradient }}
+            >
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -465,14 +480,15 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             </div>
 
             {/* Gradient picker */}
-            <div className="flex justify-center gap-2">
-              {COVER_GRADIENTS.map((gradient) => (
+            <div className="flex justify-center gap-2 flex-wrap">
+              {COVER_GRADIENTS.map((gradient, index) => (
                 <button
-                  key={gradient}
+                  key={index}
                   onClick={() => setSelectedGradient(gradient)}
-                  className={`w-8 h-8 rounded-lg bg-gradient-to-br ${gradient} transition-all ${
+                  className={`w-8 h-8 rounded-lg transition-all ${
                     selectedGradient === gradient ? "ring-2 ring-primary ring-offset-2" : ""
                   }`}
+                  style={{ background: gradient }}
                 />
               ))}
             </div>
@@ -485,25 +501,25 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               className="rounded-xl resize-none"
             />
 
-            {/* Questions preview with icon picker */}
-            <div className="max-h-48 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
+            {/* Questions preview with icon picker and edit */}
+            <div className="max-h-64 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
               {questions.map((q, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="p-3 bg-background rounded-xl border border-border flex gap-3 items-center"
+                  className="p-3 bg-background rounded-xl border border-border flex gap-3 items-start"
                 >
-                  <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
+                  <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground line-clamp-1">
+                    <div className="text-sm font-medium text-foreground">
                       {q.question_text}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-green-600 truncate">✓ {q.correct_answer}</span>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="text-xs text-green-600">✓ {q.correct_answer}</span>
                       {q.difficulty && (
                         <span className={`text-xs ${getDifficultyColor(q.difficulty)}`}>
                           • {getDifficultyLabel(q.difficulty)}
@@ -511,6 +527,24 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
                       )}
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 flex-shrink-0"
+                    onClick={() => {
+                      const newQuestion = prompt("კითხვა:", q.question_text);
+                      if (newQuestion !== null) {
+                        const newAnswer = prompt("სწორი პასუხი:", q.correct_answer);
+                        if (newAnswer !== null) {
+                          setQuestions(prev => prev.map((question, idx) => 
+                            idx === i ? { ...question, question_text: newQuestion, correct_answer: newAnswer } : question
+                          ));
+                        }
+                      }
+                    }}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </Button>
                   <QuestionIconPicker
                     selectedSlug={q.icon_slug || null}
                     onSelect={(slug) => {

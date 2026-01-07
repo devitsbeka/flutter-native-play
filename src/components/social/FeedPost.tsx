@@ -307,13 +307,13 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
             {post.title}
           </h3>
           
-          {/* Question Icons */}
+        {/* Question Icons - 60% bigger */}
           {questionIcons.length > 0 && (
-            <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex items-center gap-2 mb-3">
               {questionIcons.map((slug) => (
                 <div 
                   key={slug} 
-                  className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm p-1.5 shadow-lg"
+                  className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm p-2 shadow-lg"
                 >
                   <img 
                     src={`${ICON_STORAGE_URL}/${slug}.png`}
