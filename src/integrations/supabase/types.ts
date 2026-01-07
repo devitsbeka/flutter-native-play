@@ -2208,6 +2208,7 @@ export type Database = {
           hashtags: string[] | null
           icon_slug: string | null
           id: string
+          is_public: boolean
           likes_count: number | null
           plays_count: number | null
           question_count: number
@@ -2225,6 +2226,7 @@ export type Database = {
           hashtags?: string[] | null
           icon_slug?: string | null
           id?: string
+          is_public?: boolean
           likes_count?: number | null
           plays_count?: number | null
           question_count: number
@@ -2242,6 +2244,7 @@ export type Database = {
           hashtags?: string[] | null
           icon_slug?: string | null
           id?: string
+          is_public?: boolean
           likes_count?: number | null
           plays_count?: number | null
           question_count?: number

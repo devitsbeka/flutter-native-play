@@ -24,6 +24,7 @@ export interface SamplePost {
     icon_slug?: string;
   }[];
   isUserPost?: boolean;
+  isPublic?: boolean;
 }
 
 // 3D cartoon style avatar URLs using DiceBear Adventurer style

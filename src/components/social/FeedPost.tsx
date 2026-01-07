@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Sparkles, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -231,10 +231,26 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
                 <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
               )}
               {post.isUserPost && (
-                <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-medium">
-                  <Sparkles className="w-2.5 h-2.5" />
-                  ჩემი
-                </span>
+                <button 
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                    post.isPublic !== false 
+                      ? 'bg-green-500/90 text-white' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                  title={post.isPublic !== false ? 'საჯარო' : 'პირადი'}
+                >
+                  {post.isPublic !== false ? (
+                    <>
+                      <Globe className="w-2.5 h-2.5" />
+                      საჯარო
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-2.5 h-2.5" />
+                      პირადი
+                    </>
+                  )}
+                </button>
               )}
             </div>
             <span className="text-xs text-muted-foreground">{timeAgo}</span>
