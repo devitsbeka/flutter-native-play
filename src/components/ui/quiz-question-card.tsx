@@ -19,16 +19,14 @@ interface QuizQuestionCardProps {
   freezeTimeLeft?: number;
 }
 
-// Dynamic font sizing based on question length - handles very long questions
+// Dynamic font sizing based on question length
+// Questions are now max 65 chars, so we can use larger fonts
 function getQuestionStyles(text: string) {
   const length = text.length;
-  if (length > 150) return { fontSize: "12px" };
-  if (length > 120) return { fontSize: "13px" };
-  if (length > 100) return { fontSize: "14px" };
-  if (length > 80) return { fontSize: "15px" };
-  if (length > 55) return { fontSize: "16px" };
-  if (length > 40) return { fontSize: "17px" };
-  return { fontSize: "18px" };
+  if (length > 60) return { fontSize: "18px" };
+  if (length > 50) return { fontSize: "19px" };
+  if (length > 40) return { fontSize: "20px" };
+  return { fontSize: "20px" };  // Default 20px for short questions
 }
 
 const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>(

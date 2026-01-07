@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, XCircle, Pencil, Trash2, ChevronDown, ChevronUp, Save, X, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 
 export interface SelectableParsedQuestion extends ParsedQuestion {
   selected?: boolean;
+  icon_keyword?: string | null;
 }
 
 interface QuestionPreviewListProps {
@@ -145,6 +146,12 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
                     <Badge variant="outline" className="text-xs shrink-0">
                       {q.difficulty === 'easy' ? 'მარტივი' : q.difficulty === 'hard' ? 'რთული' : 'საშუალო'}
                     </Badge>
+                    {(q as SelectableParsedQuestion).icon_keyword && (
+                      <Badge variant="secondary" className="text-xs shrink-0 gap-1">
+                        <Tag className="h-2.5 w-2.5" />
+                        {(q as SelectableParsedQuestion).icon_keyword}
+                      </Badge>
+                    )}
                     <p className="text-sm truncate flex-1">{q.question_text || <span className="text-destructive italic">კითხვა ცარიელია</span>}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">

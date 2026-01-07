@@ -34,6 +34,70 @@ const categoryExclusions: Record<string, string[]> = {
   'science': ['სპორტი', 'მუსიკა', 'ფილმები', 'სელებრითი'],
 };
 
+// Icon keyword mappings for Georgian words
+const iconKeywordMappings = `
+🏷️ აიკონის საკვანძო სიტყვა (icon_keyword):
+
+ყველა კითხვას უნდა ჰქონდეს ინგლისური საკვანძო სიტყვა აიკონის მინიჭებისთვის.
+
+ქართული სიტყვა → ინგლისური keyword:
+- მეფე, მეფის, გამეფდა, მეფობდა → "king"
+- დედოფალი, დედოფლის → "queen"
+- ზევსი, ზევსს, ზევსის → "zeus"
+- ჰერა, ჰერას → "hera"
+- აპოლონი → "apollo"
+- პოსეიდონი → "poseidon"
+- ათენა → "athena"
+- ომი, ბრძოლა, ომის → "battle"
+- ეკლესია, ტაძარი → "church"
+- მონასტერი → "monastery"
+- ღვინო, ვაზი, მარანი → "wine"
+- მთა, მწვერვალი → "mountain"
+- მდინარე, მდინარის → "river"
+- ქალაქი, დედაქალაქი → "city"
+- სოფელი → "village"
+- წიგნი, ლიტერატურა → "book"
+- მწერალი, პოეტი → "writer"
+- მუსიკა, სიმღერა → "music"
+- ფილმი, კინო → "movie"
+- სპორტი, ჩემპიონი → "sports"
+- ფეხბურთი → "football"
+- მეცნიერება, მეცნიერი → "science"
+- ხელოვნება, მხატვარი → "art"
+- სურათი, ნახატი → "painting"
+- თარიღი, წელი, საუკუნე → "calendar"
+- ომი, შეტაკება → "war"
+- სამეფო, იმპერია → "kingdom"
+- ჯარი, ლაშქარი → "army"
+- გმირი, გმირის → "hero"
+- ლეგენდა, მითი → "legend"
+- ცეცხლი → "fire"
+- წყალი → "water"
+- მიწა, ტერიტორია → "land"
+- ცა, ზეცა → "sky"
+- მზე → "sun"
+- მთვარე → "moon"
+- ვარსკვლავი → "star"
+- ხე, ტყე → "tree"
+- ყვავილი → "flower"
+- ცხოველი → "animal"
+- ფრინველი → "bird"
+- თევზი → "fish"
+- საჭმელი, კერძი → "food"
+- სასმელი → "drink"
+- სახლი, შენობა → "building"
+- ხიდი → "bridge"
+- გზა → "road"
+- ზღვა → "sea"
+- ტბა → "lake"
+
+თუ კითხვა არ შეესაბამება ზემოთ ჩამოთვლილ სიტყვებს, გამოიყენე ზოგადი keyword:
+- ისტორია → "history"
+- გეოგრაფია → "geography"
+- კულტურა → "culture"
+- default → "question"
+`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -109,18 +173,41 @@ ${allowedTopics.map(t => `- ${t}`).join('\n')}
 
 ${topicExclusionSection}
 
-მაგალითი რა არის არასწორი:
-- თუ კატეგორიაა "საქართველოს ისტორია", არ უნდა იყოს კითხვები:
-  • სპორტის შესახებ (ოლიმპიადა, ჩემპიონატები, სპორტსმენები)
-  • მუსიკის შესახებ (მომღერლები, სიმღერები)
-  • კინოს შესახებ (ფილმები, მსახიობები)
-  • სხვა ქვეყნების შესახებ (თუ საქართველოს ისტორიას არ უკავშირდება)
+🚫 კრიტიკულად მნიშვნელოვანი - არ გაიმეორო კონტექსტი:
 
-- თუ კატეგორიაა "სპორტი", არ უნდა იყოს კითხვები:
-  • ისტორიის შესახებ (ომები, მეფეები)
-  • პოლიტიკის შესახებ
+თითოეული კითხვა უნდა ეხებოდეს სრულიად განსხვავებულ ფაქტს!
+
+❌ არასწორი მაგალითი (იგივე კონტექსტი, სხვადასხვა ფორმა):
+- "ვინ იყო საქართველოს პირველი მეფე?"
+- "რომელი იყო ქართლის პირველი მეფე?"  
+- "ვინ გამეფდა საქართველოში პირველად?"
+
+✅ სწორი მაგალითი (სხვადასხვა ფაქტები):
+- "რომელ წელს დაარსდა თბილისი?"
+- "რა ეწოდება უძველეს ქართულ ანბანს?"
+- "რომელ მდინარეზე მდებარეობს მცხეთა?"
+
+არ გაიმეორო:
+- იგივე პიროვნება სხვადასხვა კუთხით
+- იგივე მოვლენა სხვადასხვა ფორმულირებით
+- იგივე თარიღი სხვადასხვა კითხვით
 
 ${exclusionSection}
+
+📏 სავალდებულო სიგრძის ლიმიტები (კრიტიკულად მნიშვნელოვანი!):
+
+კითხვა: მაქსიმუმ 65 სიმბოლო (კითხვის ნიშნის ჩათვლით)
+სწორი პასუხი: მაქსიმუმ 20 სიმბოლო  
+არასწორი პასუხები: მაქსიმუმ 20 სიმბოლო თითოეული
+
+⚠️ თუ კითხვა ან პასუხი ვერ ეტევა - შეამოკლე ან შექმენი სხვა კითხვა!
+
+კომპაქტური ფორმულირების მაგალითები:
+❌ "რომელმა ქართველმა მეფემ ააშენა გელათის მონასტერი?" (47 სიმბოლო) - ძალიან გრძელი
+✅ "ვინ ააშენა გელათის მონასტერი?" (30 სიმბოლო) - კარგია
+
+❌ "საქართველოს დედაქალაქი თბილისი" (32 სიმბოლო) - ძალიან გრძელი პასუხი
+✅ "თბილისი" (8 სიმბოლო) - კარგია
 
 🚨 კრიტიკულად მნიშვნელოვანი წესები:
 
@@ -129,17 +216,22 @@ ${exclusionSection}
 3. ✅ ყველა კითხვა უნდა დამთავრდეს კითხვის ნიშნით (?)
 4. ✅ გრამატიკულად სწორი ქართული ენა
 5. ✅ მხოლოდ "${category}" თემატიკის კითხვები!
+6. ✅ თითოეული კითხვა - ახალი, უნიკალური ფაქტი!
 
 🚫 აკრძალული შეცდომები:
 
-6. ❌ კითხვა არ უნდა შეიცავდეს სწორი პასუხის ტექსტს!
-7. ❌ არ გამოიყენო ფორმატი "X-ით რა მოხდა?" სადაც X არის პასუხი
-8. ❌ არ ჩასვა პასუხის სახელი კითხვაში
+7. ❌ კითხვა არ უნდა შეიცავდეს სწორი პასუხის ტექსტს!
+8. ❌ არ გამოიყენო ფორმატი "X-ით რა მოხდა?" სადაც X არის პასუხი
+9. ❌ არ ჩასვა პასუხის სახელი კითხვაში
+10. ❌ არ გაიმეორო იგივე კონტექსტი სხვადასხვა ფორმულირებით!
 
 📝 დამატებითი ინსტრუქციები:
-9. კითხვები უნდა იყოს ფაქტობრივად ზუსტი და სანდო
-10. არასწორი პასუხები უნდა იყოს დამაჯერებელი, მაგრამ აშკარად არასწორი
-11. გენერირე სრულიად განსხვავებული კითხვები ყოველ ჯერზე
+11. კითხვები უნდა იყოს ფაქტობრივად ზუსტი და სანდო
+12. არასწორი პასუხები უნდა იყოს დამაჯერებელი, მაგრამ აშკარად არასწორი
+13. გენერირე სრულიად განსხვავებული კითხვები ყოველ ჯერზე
+14. კითხვები უნდა იყოს საინტერესო და შემეცნებითი
+
+${iconKeywordMappings}
 
 დააბრუნე მხოლოდ JSON მასივი:
 [
@@ -147,7 +239,8 @@ ${exclusionSection}
     "question": "კითხვა ქართულად? (მაქს 65 სიმბოლო)",
     "correct_answer": "პასუხი (მაქს 20 სიმბოლო)",
     "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
-    "difficulty": "${difficultyEn}"
+    "difficulty": "${difficultyEn}",
+    "icon_keyword": "ინგლისურად keyword აიკონისთვის"
   }
 ]`;
 
@@ -197,12 +290,40 @@ ${exclusionSection}
       throw new Error("კითხვების გენერირება ვერ მოხერხდა");
     }
 
-    const questions = JSON.parse(jsonMatch[0]);
+    const rawQuestions = JSON.parse(jsonMatch[0]);
 
-    console.log(`Successfully generated ${questions.length} Georgian questions for ${category}`);
+    // Server-side validation - filter out questions that exceed limits
+    const validQuestions = rawQuestions.filter((q: any) => {
+      const questionText = q.question || '';
+      const correctAnswer = q.correct_answer || '';
+      const incorrectAnswers = q.incorrect_answers || [];
+      
+      // Check question length (max 65)
+      if (questionText.length > 65) {
+        console.log(`Filtering out question - too long (${questionText.length} chars): ${questionText.substring(0, 50)}...`);
+        return false;
+      }
+      
+      // Check correct answer length (max 20)
+      if (correctAnswer.length > 20) {
+        console.log(`Filtering out question - answer too long (${correctAnswer.length} chars): ${correctAnswer}`);
+        return false;
+      }
+      
+      // Check all incorrect answers (max 20 each)
+      const allAnswersValid = incorrectAnswers.every((a: string) => a.length <= 20);
+      if (!allAnswersValid) {
+        console.log(`Filtering out question - incorrect answer too long`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    console.log(`Successfully generated ${validQuestions.length} valid Georgian questions for ${category} (${rawQuestions.length - validQuestions.length} filtered for length)`);
 
     return new Response(
-      JSON.stringify({ questions }),
+      JSON.stringify({ questions: validQuestions }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
