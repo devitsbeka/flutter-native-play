@@ -558,14 +558,15 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </Button>
-                  <QuestionIconPicker
-                    selectedSlug={q.icon_slug || null}
-                    onSelect={(slug) => {
-                      setQuestions(prev => prev.map((question, idx) => 
-                        idx === i ? { ...question, icon_slug: slug || undefined } : question
-                      ));
-                    }}
-                  />
+                          <QuestionIconPicker
+                            selectedSlug={q.icon_slug || null}
+                            onSelect={(slug) => {
+                              setQuestions(prev => prev.map((question, idx) => 
+                                idx === i ? { ...question, icon_slug: slug || undefined } : question
+                              ));
+                            }}
+                            questionText={q.question_text}
+                          />
                 </motion.div>
               ))}
             </div>
