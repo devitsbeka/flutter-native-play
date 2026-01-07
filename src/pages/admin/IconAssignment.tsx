@@ -27,6 +27,7 @@ import { useAdminIconAssignment, QuestionForAssignment } from '@/hooks/useAdminI
 import { useIconLibrary } from '@/hooks/useIconLibrary';
 import { useIconVerification } from '@/hooks/useIconVerification';
 import { supabase } from '@/integrations/supabase/client';
+import { isLatinScript, transliterateLatin, getGeorgianEquivalents } from '@/utils/transliteration';
 
 interface IconItem {
   slug: string;
@@ -608,14 +609,27 @@ export default function IconAssignment() {
         <div className="flex min-h-0 flex-col border-r border-border/50">
           {/* Question Filters */}
           <div className="space-y-3 border-b border-border/30 p-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="კითხვის ძიება..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+            <div className="space-y-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="ძიება (ქართულად ან ინგლისურად)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              {searchTerm && isLatinScript(searchTerm) && (
+                <div className="text-xs text-muted-foreground px-1">
+                  🔍 ეძებს: <span className="font-medium">"{searchTerm}"</span>
+                  {transliterateLatin(searchTerm) !== searchTerm.toLowerCase() && (
+                    <span> → <span className="text-primary">"{transliterateLatin(searchTerm)}"</span></span>
+                  )}
+                  {getGeorgianEquivalents(searchTerm.toLowerCase()).length > 0 && (
+                    <span className="text-green-600 dark:text-green-400"> | {getGeorgianEquivalents(searchTerm.toLowerCase()).slice(0, 2).join(', ')}</span>
+                  )}
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-3">
