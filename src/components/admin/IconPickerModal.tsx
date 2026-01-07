@@ -50,7 +50,14 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, on
   const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
 
+  const handleImageError = (slug: string) => {
+    setBrokenIcons(prev => new Set([...prev, slug]));
+  };
+
+  const filterBrokenIcons = (iconList: IconItem[]) => 
+    iconList.filter(icon => !brokenIcons.has(icon.slug));
   // Load recent and suggested icons when modal opens
   useEffect(() => {
     if (open) {
@@ -131,36 +138,40 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, on
     return `${ICON_STORAGE_URL}/${slug}.png`;
   };
 
-  const IconGrid = ({ icons, title, icon: Icon }: { icons: IconItem[], title: string, icon?: React.ElementType }) => (
-    <div className="mb-4">
-      <div className="flex items-center gap-2 mb-2">
-        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+  const IconGrid = ({ icons, title, icon: Icon }: { icons: IconItem[], title: string, icon?: React.ElementType }) => {
+    const visibleIcons = filterBrokenIcons(icons);
+    if (visibleIcons.length === 0) return null;
+    
+    return (
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        </div>
+        <div className="grid grid-cols-6 gap-2">
+          {visibleIcons.map((icon) => (
+            <button
+              key={icon.id}
+              onClick={() => handleSelect(icon.slug)}
+              className={cn(
+                "aspect-square rounded-lg border border-border/50 flex items-center justify-center hover:border-primary/50 hover:bg-accent/50 transition-all hover:scale-105",
+                currentSlug === icon.slug && "ring-2 ring-primary bg-primary/10",
+                brokenIcons.has(icon.slug) && "hidden"
+              )}
+              title={icon.title}
+            >
+              <img 
+                src={getIconUrl(icon)} 
+                alt={icon.title}
+                className="w-8 h-8 object-contain"
+                onError={() => handleImageError(icon.slug)}
+              />
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-6 gap-2">
-        {icons.map((icon) => (
-          <button
-            key={icon.id}
-            onClick={() => handleSelect(icon.slug)}
-            className={cn(
-              "aspect-square rounded-lg border border-border/50 flex items-center justify-center hover:border-primary/50 hover:bg-accent/50 transition-all hover:scale-105",
-              currentSlug === icon.slug && "ring-2 ring-primary bg-primary/10"
-            )}
-            title={icon.title}
-          >
-            <img 
-              src={getIconUrl(icon)} 
-              alt={icon.title}
-              className="w-8 h-8 object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.opacity = '0.3';
-              }}
-            />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
