@@ -40,6 +40,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [isRandom, setIsRandom] = useState(true); // Default to random
   const [isCreating, setIsCreating] = useState(false);
   const [roomName, setRoomName] = useState(() => generateRoomName());
+  const [showTVModal, setShowTVModal] = useState(false);
 
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
@@ -146,7 +147,16 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         >
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
-        <h1 className="text-xl font-display text-foreground">{t("team.newRoom")}</h1>
+        <h1 className="text-xl font-display text-foreground flex-1">{t("team.newRoom")}</h1>
+        
+        {/* TV Play Button */}
+        <button
+          onClick={() => setShowTVModal(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+        >
+          <Tv className="w-5 h-5" />
+          <span className="hidden sm:inline">TV</span>
+        </button>
       </div>
 
       {/* Content */}
@@ -374,6 +384,14 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           isLoading={loading || isCreating}
         />
       </div>
+
+      {/* TV Play Modal */}
+      <TVPlayModal
+        isOpen={showTVModal}
+        onClose={() => setShowTVModal(false)}
+        categoryId={selectedCategory?.id}
+        categoryName={selectedCategory?.name}
+      />
     </motion.div>
   );
 }
