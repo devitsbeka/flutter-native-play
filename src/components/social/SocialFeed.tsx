@@ -1,15 +1,162 @@
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SamplePost } from "@/data/samplePosts";
 import { FeedPost } from "./FeedPost";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, Star, TrendingUp, Hash, ChevronDown, Sparkles, ShoppingBag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface SocialFeedProps {
   onPlayQuiz?: (post: SamplePost) => void;
 }
 
+type PopularityFilter = "all" | "low" | "medium" | "high";
+
+// Shop Ad Component - reuses feed styling
+function ShopAdCard({ index }: { index: number }) {
+  const navigate = useNavigate();
+  
+  // Rotate through different ad copy
+  const adVariants = [
+    { 
+      title: "გაიუმჯობესე გამოცდილება",
+      description: "შეიძინე პრემიუმ ფრეიმები და ბეჯები მაღაზიაში",
+      cta: "მაღაზია"
+    },
+    { 
+      title: "გახდი VIP მოთამაშე",
+      description: "განბლოკე ექსკლუზიური კონტენტი და რევარდები",
+      cta: "გაიგე მეტი"
+    },
+    { 
+      title: "აჩუქე მეგობრებს",
+      description: "გაუგზავნე გემები მეგობრებს და ითამაშეთ ერთად",
+      cta: "მაღაზია"
+    },
+  ];
+  
+  const variant = adVariants[index % adVariants.length];
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-card border-y border-border"
+    >
+      {/* Ad Label */}
+      <div className="px-4 py-2 flex items-center gap-2">
+        <Badge variant="outline" className="text-xs font-medium bg-muted/50">
+          <Sparkles className="w-3 h-3 mr-1" />
+          სპონსორი
+        </Badge>
+      </div>
+      
+      {/* Ad Content */}
+      <div 
+        onClick={() => navigate("/shop")}
+        className="cursor-pointer"
+      >
+        {/* Gradient Banner */}
+        <div className="relative aspect-[2/1] bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(139,92,246,0.3),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(236,72,153,0.2),transparent_50%)]" />
+          
+          <div className="relative z-10 text-center px-6">
+            <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-primary" />
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              {variant.title}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              {variant.description}
+            </p>
+            <button className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
+              {variant.cta}
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
-  const { posts, isLoading } = useSocialFeed();
+  const { posts, isLoading, userSaves } = useSocialFeed();
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [popularityFilter, setPopularityFilter] = useState<PopularityFilter>("all");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
+
+  // Track scroll to show/hide filters
+  useEffect(() => {
+    const handleScroll = () => {
+      const container = scrollContainerRef.current?.closest('[data-scroll-container]') || window;
+      const currentScrollY = container === window 
+        ? window.scrollY 
+        : (container as HTMLElement).scrollTop;
+      
+      // Show filters when scrolling down past 100px
+      if (currentScrollY > 100 && !showFilters) {
+        setShowFilters(true);
+      } else if (currentScrollY <= 50 && showFilters) {
+        setShowFilters(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [showFilters]);
+
+  // Extract all unique hashtags from posts
+  const allHashtags = useMemo(() => {
+    const tags = new Set<string>();
+    posts.forEach(post => {
+      post.hashtags.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags).slice(0, 20); // Limit to 20 most common
+  }, [posts]);
+
+  // Filter posts based on active filters
+  const filteredPosts = useMemo(() => {
+    let result = [...posts];
+
+    // Filter by hashtag
+    if (selectedHashtag) {
+      result = result.filter(post => 
+        post.hashtags.some(tag => tag.toLowerCase() === selectedHashtag.toLowerCase())
+      );
+    }
+
+    // Filter by saved only
+    if (showSavedOnly) {
+      result = result.filter(post => userSaves.includes(post.id));
+    }
+
+    // Filter by popularity
+    if (popularityFilter !== "all") {
+      result = result.filter(post => {
+        const plays = post.playsCount;
+        if (popularityFilter === "low") return plays < 1000;
+        if (popularityFilter === "medium") return plays >= 1000 && plays < 5000;
+        if (popularityFilter === "high") return plays >= 5000;
+        return true;
+      });
+    }
+
+    return result;
+  }, [posts, selectedHashtag, showSavedOnly, popularityFilter, userSaves]);
+
+  const hasActiveFilters = selectedHashtag || showSavedOnly || popularityFilter !== "all";
+
+  const clearFilters = () => {
+    setSelectedHashtag(null);
+    setShowSavedOnly(false);
+    setPopularityFilter("all");
+  };
 
   if (isLoading) {
     return (
@@ -19,20 +166,145 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
     );
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col"
-    >
-      {posts.map((post, index) => (
+  // Insert ads after every 5 posts
+  const renderFeedItems = () => {
+    const items: React.ReactNode[] = [];
+    let adIndex = 0;
+    
+    filteredPosts.forEach((post, index) => {
+      items.push(
         <FeedPost 
           key={post.id} 
           post={post} 
           index={index}
           onPlay={onPlayQuiz}
         />
-      ))}
-    </motion.div>
+      );
+      
+      // After every 5 posts, insert an ad
+      if ((index + 1) % 5 === 0 && index < filteredPosts.length - 1) {
+        items.push(<ShopAdCard key={`ad-${adIndex}`} index={adIndex} />);
+        adIndex++;
+      }
+    });
+    
+    return items;
+  };
+
+  return (
+    <div ref={scrollContainerRef}>
+      {/* Sticky Filter Bar */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border"
+          >
+            <div className="px-4 py-3 space-y-3">
+              {/* Filter Row 1: Hashtags */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <Hash className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                {allHashtags.slice(0, 8).map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
+                    className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                      selectedHashtag === tag
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Filter Row 2: Saved & Popularity */}
+              <div className="flex items-center gap-2">
+                {/* Saved Filter */}
+                <button
+                  onClick={() => setShowSavedOnly(!showSavedOnly)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    showSavedOnly
+                      ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <Star className={`w-3.5 h-3.5 ${showSavedOnly ? "fill-current" : ""}`} />
+                  შენახული
+                </button>
+                
+                {/* Popularity Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      const next: PopularityFilter[] = ["all", "low", "medium", "high"];
+                      const currentIndex = next.indexOf(popularityFilter);
+                      setPopularityFilter(next[(currentIndex + 1) % next.length]);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      popularityFilter !== "all"
+                        ? "bg-primary/20 text-primary border border-primary/30"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    {popularityFilter === "all" && "პოპულარობა"}
+                    {popularityFilter === "low" && "დაბალი"}
+                    {popularityFilter === "medium" && "საშუალო"}
+                    {popularityFilter === "high" && "მაღალი"}
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </div>
+                
+                {/* Clear Filters */}
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-destructive hover:bg-destructive/10 transition-all"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    გასუფთავება
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Feed Content */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col"
+      >
+        {filteredPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Hash className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground text-sm">
+              {hasActiveFilters 
+                ? "ფილტრებით პოსტები ვერ მოიძებნა"
+                : "ჯერ არ არის პოსტები"
+              }
+            </p>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-3 text-primary text-sm font-medium"
+              >
+                ფილტრების გასუფთავება
+              </button>
+            )}
+          </div>
+        ) : (
+          renderFeedItems()
+        )}
+      </motion.div>
+    </div>
   );
 }

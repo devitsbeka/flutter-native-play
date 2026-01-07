@@ -318,7 +318,7 @@ function TeamContent() {
                     : "bg-muted text-muted-foreground shadow-[0_4px_0_0_hsl(var(--border)/0.5)] hover:translate-y-[-1px] active:translate-y-[2px] active:shadow-none"
                 }`}
               >
-                For Me
+                შენთვის
               </button>
               <button
                 onClick={() => setActiveTab("my-trivia")}
@@ -328,7 +328,7 @@ function TeamContent() {
                     : "bg-muted text-muted-foreground shadow-[0_4px_0_0_hsl(var(--border)/0.5)] hover:translate-y-[-1px] active:translate-y-[2px] active:shadow-none"
                 }`}
               >
-                My Trivia
+                ჩემი ტრივია
               </button>
             </div>
           </div>
