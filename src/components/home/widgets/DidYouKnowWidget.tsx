@@ -58,12 +58,16 @@ export function DidYouKnowWidget() {
   const { user } = useAuth();
   const { fact, loading, voting, voteResult, hasVoted, countdown, vote } = useDidYouKnow();
 
+  // Fixed height container to prevent layout shifts
+  const WIDGET_HEIGHT = 280;
+
   if (loading) {
     return (
       <div 
         className="bg-card rounded-2xl p-5 border border-border/60"
         style={{
           boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
+          height: WIDGET_HEIGHT,
         }}
       >
         <div className="animate-pulse space-y-3">
@@ -83,14 +87,11 @@ export function DidYouKnowWidget() {
   const icon = ImageIcons[fact.image_type] || ImageIcons.whale;
 
   return (
-    <motion.div
-      key={fact.id}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="bg-card rounded-2xl p-5 border border-border/60 min-h-[280px]"
+    <div
+      className="bg-card rounded-2xl p-5 border border-border/60"
       style={{
         boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
+        height: WIDGET_HEIGHT,
       }}
     >
       {/* Header */}
@@ -221,6 +222,6 @@ export function DidYouKnowWidget() {
           შედით ანგარიშზე ხმის მისაცემად
         </p>
       )}
-    </motion.div>
+    </div>
   );
 }

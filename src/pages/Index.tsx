@@ -370,86 +370,88 @@ export default function Index() {
           setIsDailyRewardsOpen(true);
         }}
       />
-      {/* Main layout wrapper - flex for desktop sidebars */}
-      <div className="min-h-screen flex w-full relative">
-        {/* Left Sidebar - tablet/desktop */}
-        <DesktopLeftSidebar />
-
-        {/* Main content area */}
-        <div 
-          ref={containerRef}
-          className="flex-1 relative h-screen overflow-hidden"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* ===== TOP BAR ===== */}
-          <header className="relative z-20 px-4 pt-4 safe-top">
-            <div className="flex items-center justify-between">
-              {/* Burger menu chip - same style as currency */}
+      {/* Main layout wrapper */}
+      <div className="min-h-screen flex flex-col w-full relative">
+        {/* ===== TOP BAR - Full width above sidebars ===== */}
+        <header className="relative z-20 px-4 pt-4 safe-top">
+          <div className="flex items-center justify-between">
+            {/* Burger menu chip - same style as currency */}
+            <motion.button
+              className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
+              style={{
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
+                border: "2px solid #E8E0F5",
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsSideMenuOpen(true)}
+            >
+              <Menu className="w-5 h-5 text-gray-600" />
+              <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>{t('nav.menu')}</span>
+            </motion.button>
+            
+            {/* Notification icons chip */}
+            <motion.div 
+              className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
+              style={{
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
+                border: "2px solid #E8E0F5",
+              }}
+            >
+              {/* Ad-Free button */}
               <motion.button
-                className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
-                style={{
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                  boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-                  border: "2px solid #E8E0F5",
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSideMenuOpen(true)}
+                className="relative p-1"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsAdFreeModalOpen(true)}
               >
-                <Menu className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>{t('nav.menu')}</span>
+                <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
               </motion.button>
               
-              {/* Notification icons chip */}
-              <motion.div 
-                className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
-                style={{
-                  background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                  boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-                  border: "2px solid #E8E0F5",
-                }}
+              {/* Bell icon with unread badge */}
+              <motion.button
+                className="relative p-1"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => navigate('/notifications')}
               >
-                {/* Ad-Free button */}
-                <motion.button
-                  className="relative p-1"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsAdFreeModalOpen(true)}
-                >
-                  <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
-                </motion.button>
-                
-                {/* Bell icon with unread badge */}
-                <motion.button
-                  className="relative p-1"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate('/notifications')}
-                >
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadCount > 0 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-                        boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
-                      }}
-                    >
-                      <span className="text-[9px] font-bold text-white">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    </motion.div>
-                  )}
-                </motion.button>
-              </motion.div>
-            </div>
-          </header>
+                <Bell className="w-5 h-5 text-gray-600" />
+                {unreadCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                      boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.button>
+            </motion.div>
+          </div>
+        </header>
 
-          {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
+        {/* Content area with sidebars */}
+        <div className="flex-1 flex relative">
+          {/* Left Sidebar - tablet/desktop */}
+          <DesktopLeftSidebar />
+
+          {/* Main content area */}
+          <div 
+            ref={containerRef}
+            className="flex-1 relative h-[calc(100vh-60px)] overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 10 }}>
             <motion.div 
               className="flex flex-col items-center w-full max-w-[360px] px-4"
@@ -690,23 +692,24 @@ export default function Index() {
           </motion.div>
         </div>
 
-        {/* Universal Bottom Navigation - Mobile only (hidden on lg+) */}
-        <div className="lg:hidden">
-          <UniversalBottomNav 
-            onPlayClick={handlePlayClick}
-            playsRemaining={user ? playsRemaining : guestPlaysRemaining}
-            maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
-            canPlay={user ? canPlay : guestPlaysRemaining > 0}
-            isVip={isVip}
-            vipLoading={vipLoading}
-            onWatchAdClick={() => setShowWatchAdModal(true)}
-            isGuest={!user}
-          />
-        </div>
-        </div>
+          {/* Universal Bottom Navigation - Mobile only (hidden on lg+) */}
+          <div className="lg:hidden">
+            <UniversalBottomNav 
+              onPlayClick={handlePlayClick}
+              playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+              maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+              canPlay={user ? canPlay : guestPlaysRemaining > 0}
+              isVip={isVip}
+              vipLoading={vipLoading}
+              onWatchAdClick={() => setShowWatchAdModal(true)}
+              isGuest={!user}
+            />
+          </div>
+          </div>
 
-        {/* Right Sidebar - desktop only */}
-        <DesktopRightSidebarWidgets />
+          {/* Right Sidebar - desktop only */}
+          <DesktopRightSidebarWidgets />
+        </div>
       </div>
 
       {/* Desktop Bottom Navigation - visible on lg+ */}

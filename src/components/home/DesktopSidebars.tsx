@@ -28,7 +28,7 @@ export function DesktopSidebars() {
 // Separate component for left sidebar only (tablet view)
 export function DesktopLeftSidebar() {
   return (
-    <aside className="hidden lg:flex flex-col w-[280px] xl:w-[320px] min-w-[280px] xl:min-w-[320px] h-screen sticky top-0 p-4 pt-20 pb-24 overflow-y-auto scrollbar-hide">
+    <aside className="hidden lg:flex flex-col w-[280px] xl:w-[320px] min-w-[280px] xl:min-w-[320px] h-[calc(100vh-60px)] sticky top-0 p-4 pb-24 overflow-y-auto scrollbar-hide">
       <div className="flex flex-col gap-4">
         <DidYouKnowWidget />
         <TriviaPartyPromo />
@@ -40,7 +40,7 @@ export function DesktopLeftSidebar() {
 // Separate component for right sidebar only (desktop view)
 export function DesktopRightSidebarWidgets() {
   return (
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 p-4 pt-20 pb-24 overflow-y-auto scrollbar-hide">
+    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-[calc(100vh-60px)] sticky top-0 p-4 pb-24 overflow-y-auto scrollbar-hide">
       <div className="flex flex-col gap-4">
         <LiveGamesWidget />
         <ShopPromoWidget />
