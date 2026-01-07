@@ -102,3 +102,6 @@ verify_jwt = false
 
 [functions.notify-new-levels]
 verify_jwt = false
+
+[functions.extract-missing-icons]
+verify_jwt = false
