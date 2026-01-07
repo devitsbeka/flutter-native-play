@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Clock, Sparkles } from 'lucide-react';
+import { Search, X, Clock, Sparkles, Lightbulb } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { CONTEXT_KEYWORD_MAP } from '@/components/admin/KeywordSuggestions';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
@@ -21,6 +22,8 @@ interface IconPickerModalProps {
   onClose: () => void;
   currentSlug?: string | null;
   currentKeyword?: string | null;
+  questionText?: string;      // For context analysis
+  correctAnswer?: string;     // For context analysis
   onSelect: (slug: string) => void;
 }
 
@@ -44,11 +47,12 @@ function addRecentIcon(slug: string) {
   localStorage.setItem(RECENT_ICONS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_ICONS)));
 }
 
-export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, onSelect }: IconPickerModalProps) {
+export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, questionText, correctAnswer, onSelect }: IconPickerModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
+  const [contextIcons, setContextIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
 
@@ -58,17 +62,21 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, on
 
   const filterBrokenIcons = (iconList: IconItem[]) => 
     iconList.filter(icon => !brokenIcons.has(icon.slug));
-  // Load recent and suggested icons when modal opens
+
+  // Load recent, suggested, and context-based icons when modal opens
   useEffect(() => {
     if (open) {
       loadRecentIcons();
       if (currentKeyword) {
         loadSuggestedIcons(currentKeyword);
       }
+      if (questionText) {
+        loadContextIcons(questionText, correctAnswer);
+      }
       setSearchQuery('');
       setIcons([]);
     }
-  }, [open, currentKeyword]);
+  }, [open, currentKeyword, questionText, correctAnswer]);
 
   // Search icons when query changes
   useEffect(() => {
@@ -108,6 +116,38 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, on
     
     if (data) {
       setSuggestedIcons(data);
+    }
+  };
+
+  // Load context-based icons by analyzing question text
+  const loadContextIcons = async (question: string, answer?: string) => {
+    const text = `${question} ${answer || ''}`.toLowerCase();
+    const keywordSet = new Set<string>();
+    
+    // Find matching keywords from context map
+    for (const [pattern, iconKeywords] of Object.entries(CONTEXT_KEYWORD_MAP)) {
+      if (text.includes(pattern)) {
+        iconKeywords.slice(0, 3).forEach(kw => keywordSet.add(kw));
+      }
+    }
+    
+    const keywords = [...keywordSet].slice(0, 8);
+    if (keywords.length === 0) {
+      setContextIcons([]);
+      return;
+    }
+    
+    // Build OR query for all keywords
+    const orConditions = keywords.map(kw => `slug.ilike.%${kw}%`).join(',');
+    
+    const { data } = await supabase
+      .from('icon_library')
+      .select('id, slug, title, icon_url')
+      .or(orConditions)
+      .limit(20);
+    
+    if (data) {
+      setContextIcons(data);
     }
   };
 
@@ -249,6 +289,11 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, on
               {/* Non-search state */}
               {!searchQuery && (
                 <>
+                  {/* Context-based icons (from question analysis) */}
+                  {contextIcons.length > 0 && (
+                    <IconGrid icons={contextIcons} title="კონტექსტის მიხედვით" icon={Lightbulb} />
+                  )}
+
                   {/* Suggested icons based on keyword */}
                   {suggestedIcons.length > 0 && (
                     <IconGrid icons={suggestedIcons} title="შეთავაზებული" icon={Sparkles} />
@@ -260,7 +305,7 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, on
                   )}
 
                   {/* Empty state */}
-                  {suggestedIcons.length === 0 && recentIcons.length === 0 && (
+                  {contextIcons.length === 0 && suggestedIcons.length === 0 && recentIcons.length === 0 && (
                     <div className="text-center py-8">
                       <Search className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
                       <p className="text-sm text-muted-foreground">

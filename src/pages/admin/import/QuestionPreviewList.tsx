@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { GameStyleQuestionPreview } from '@/components/admin/GameStyleQuestionPreview';
 import { IconPickerModal } from '@/components/admin/IconPickerModal';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { KeywordSuggestions } from '@/components/admin/KeywordSuggestions';
 
 export interface SelectableParsedQuestion extends ParsedQuestion {
   selected?: boolean;
@@ -147,6 +148,12 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
   const selectedQuestion = expandedIndex !== null ? questions[expandedIndex] : null;
   const editingQuestion = editingIndex !== null ? questions[editingIndex] : null;
 
+  const updateKeyword = (idx: number, keyword: string) => {
+    if (onUpdate) {
+      onUpdate(idx, { icon_keyword: keyword || null });
+    }
+  };
+
   return (
     <>
       {/* Icon Picker Modal */}
@@ -155,6 +162,8 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
         onClose={() => setIconPickerOpen(false)}
         currentSlug={iconPickerIndex !== null ? questions[iconPickerIndex]?.icon_keyword : null}
         currentKeyword={iconPickerIndex !== null ? questions[iconPickerIndex]?.icon_keyword : null}
+        questionText={iconPickerIndex !== null ? questions[iconPickerIndex]?.question_text : undefined}
+        correctAnswer={iconPickerIndex !== null ? questions[iconPickerIndex]?.correct_answer : undefined}
         onSelect={handleIconSelect}
       />
 
@@ -301,12 +310,19 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
                         {q.difficulty === 'easy' ? 'მარტივი' : q.difficulty === 'hard' ? 'რთული' : 'საშუალო'}
                       </Badge>
 
-                      {/* Keyword badge */}
-                      {q.icon_keyword && (
+                      {/* Keyword badge or suggestions */}
+                      {q.icon_keyword ? (
                         <Badge variant="secondary" className="text-[10px] shrink-0 gap-0.5 max-w-[80px]">
                           <Tag className="h-2 w-2" />
                           <span className="truncate">{q.icon_keyword}</span>
                         </Badge>
+                      ) : (
+                        <KeywordSuggestions
+                          question={q.question_text}
+                          answer={q.correct_answer}
+                          onSelect={(kw) => updateKeyword(idx, kw)}
+                          className="shrink-0"
+                        />
                       )}
 
                       {/* Question text - truncated */}

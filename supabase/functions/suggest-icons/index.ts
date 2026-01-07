@@ -182,6 +182,67 @@ const GEORGIAN_TO_ENGLISH_MEANING: Record<string, string[]> = {
   'თანამგზავრ': ['satellite', 'moon'],
 };
 
+// Context patterns for deeper semantic analysis
+// When these Georgian patterns appear, suggest related icon keywords
+const CONTEXT_PATTERNS: Record<string, { keywords: string[], icons: string[] }> = {
+  'battle': {
+    keywords: ['ბრძოლ', 'შეტევ', 'თავდასხმ', 'ლაშქრობ', 'შეტაკებ'],
+    icons: ['attack', 'two-swords', 'sword', 'shield', 'helmet', 'war', 'battle']
+  },
+  'king_royal': {
+    keywords: ['მეფ', 'გამეფ', 'ტახტ', 'სამეფო', 'გვირგვინ'],
+    icons: ['king', 'crown', 'throne', 'scepter', 'royal', 'castle']
+  },
+  'queen': {
+    keywords: ['დედოფ', 'თამარ'],
+    icons: ['queen', 'crown', 'tiara', 'royal']
+  },
+  'city_place': {
+    keywords: ['ქალაქ', 'დედაქალაქ', 'სოფელ', 'რეგიონ', 'ტერიტორი'],
+    icons: ['city', 'building', 'map', 'pin', 'location', 'skyline']
+  },
+  'math_calculation': {
+    keywords: ['გამოთვ', 'რიცხვ', 'ჯამ', 'სხვაობ', 'ნამრავლ', 'განტოლება', 'პროცენტ', 'ფორმულ'],
+    icons: ['calculator', 'math', 'equation', 'pi', 'formula', 'percent', 'number']
+  },
+  'science': {
+    keywords: ['მეცნიერ', 'ფიზიკ', 'ქიმი', 'ბიოლოგ', 'ატომ', 'მოლეკულ'],
+    icons: ['science', 'atom', 'flask', 'microscope', 'lab', 'dna']
+  },
+  'history_time': {
+    keywords: ['საუკუნ', 'თარიღ', 'წელ', 'ეპოქ', 'ისტორ'],
+    icons: ['calendar', 'history', 'clock', 'time', 'scroll', 'ancient']
+  },
+  'religion_church': {
+    keywords: ['ეკლესი', 'მონასტ', 'ტაძარ', 'რელიგი', 'ქრისტ'],
+    icons: ['church', 'cross', 'monastery', 'cathedral', 'religion']
+  },
+  'geography': {
+    keywords: ['მთ', 'მდინარ', 'ზღვ', 'ტბ', 'კუნძულ', 'კონტინენტ'],
+    icons: ['mountain', 'river', 'sea', 'ocean', 'lake', 'island', 'map']
+  },
+  'sports': {
+    keywords: ['სპორტ', 'ფეხბურთ', 'კალათბურთ', 'ჩემპიონ', 'ოლიმპ', 'მედალ'],
+    icons: ['sports', 'football', 'basketball', 'trophy', 'medal', 'olympic']
+  },
+  'music': {
+    keywords: ['მუსიკ', 'სიმღერ', 'მომღერ', 'კომპოზიტორ', 'კონცერტ'],
+    icons: ['music', 'note', 'microphone', 'guitar', 'piano']
+  },
+  'art': {
+    keywords: ['ხელოვნებ', 'მხატვარ', 'ნახატ', 'სურათ', 'სკულპტურ'],
+    icons: ['art', 'palette', 'brush', 'painting', 'sculpture', 'gallery']
+  },
+  'literature': {
+    keywords: ['წიგნ', 'ლიტერატურ', 'მწერ', 'პოეტ', 'პოეზი'],
+    icons: ['book', 'writing', 'pen', 'quill', 'library', 'author']
+  },
+  'mythology': {
+    keywords: ['ზევს', 'ჰერ', 'პოსეიდონ', 'ათენ', 'აპოლონ', 'მითოლოგ', 'ღმერთ'],
+    icons: ['zeus', 'lightning', 'trident', 'olympus', 'god', 'mythology']
+  }
+};
+
 // Translate Georgian word to English meanings
 function translateGeorgianToEnglish(word: string): string[] {
   const translations: string[] = [];
@@ -413,6 +474,24 @@ serve(async (req) => {
 
     // Get unique transliterated keywords
     const uniqueKeywords = [...new Set(keywordSources.map(k => k.transliterated))];
+    
+    // Detect context patterns and add their icons to keywords
+    const fullText = `${questionText} ${correctAnswer || ''}`.toLowerCase();
+    for (const [contextName, data] of Object.entries(CONTEXT_PATTERNS)) {
+      for (const keyword of data.keywords) {
+        if (fullText.includes(keyword)) {
+          // Add context icons as keywords for matching
+          for (const icon of data.icons) {
+            if (!uniqueKeywords.includes(icon)) {
+              uniqueKeywords.push(icon);
+            }
+          }
+          break; // Found this context, move to next
+        }
+      }
+    }
+    
+    console.log('Keywords including context:', uniqueKeywords);
     
     // Fetch icons in batches to overcome 1000 row limit
     const allIcons: { slug: string; title: string; tags: string[]; icon_url: string | null }[] = [];
