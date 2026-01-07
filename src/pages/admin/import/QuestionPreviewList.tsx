@@ -13,7 +13,7 @@ import { GameStyleQuestionPreview } from '@/components/admin/GameStyleQuestionPr
 import { IconPickerModal } from '@/components/admin/IconPickerModal';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { KeywordSuggestions } from '@/components/admin/KeywordSuggestions';
-
+import { validateIconKeyword } from '@/utils/iconAnswerValidation';
 export interface SelectableParsedQuestion extends ParsedQuestion {
   selected?: boolean;
   icon_keyword?: string | null;
@@ -312,10 +312,19 @@ export function QuestionPreviewList({ questions, onUpdate, onRemove, onSelection
 
                       {/* Keyword badge or suggestions */}
                       {q.icon_keyword ? (
-                        <Badge variant="secondary" className="text-[10px] shrink-0 gap-0.5 max-w-[80px]">
-                          <Tag className="h-2 w-2" />
-                          <span className="truncate">{q.icon_keyword}</span>
-                        </Badge>
+                        <>
+                          <Badge variant="secondary" className="text-[10px] shrink-0 gap-0.5 max-w-[80px]">
+                            <Tag className="h-2 w-2" />
+                            <span className="truncate">{q.icon_keyword}</span>
+                          </Badge>
+                          {/* Warning if icon might reveal answer */}
+                          {!validateIconKeyword(q.icon_keyword, q.correct_answer).isValid && (
+                            <Badge variant="destructive" className="text-[10px] shrink-0 gap-0.5">
+                              <AlertTriangle className="h-2 w-2" />
+                              მინიშნება!
+                            </Badge>
+                          )}
+                        </>
                       ) : (
                         <KeywordSuggestions
                           question={q.question_text}

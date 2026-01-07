@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Clock, Sparkles, Lightbulb } from 'lucide-react';
+import { Search, X, Clock, Sparkles, Lightbulb, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { CONTEXT_KEYWORD_MAP } from '@/components/admin/KeywordSuggestions';
+import { validateIconKeyword } from '@/utils/iconAnswerValidation';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
@@ -119,9 +120,11 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
     }
   };
 
-  // Load context-based icons by analyzing question text
+  // Load context-based icons by analyzing question text ONLY (not answer!)
   const loadContextIcons = async (question: string, answer?: string) => {
-    const text = `${question} ${answer || ''}`.toLowerCase();
+    // CRITICAL: Only analyze the question, NOT the answer!
+    // Using the answer would suggest icons that reveal the correct answer
+    const text = question.toLowerCase();
     const keywordSet = new Set<string>();
     
     // Find matching keywords from context map
@@ -131,7 +134,16 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
       }
     }
     
-    const keywords = [...keywordSet].slice(0, 8);
+    // Filter out keywords that would reveal the answer
+    let keywords = [...keywordSet];
+    if (answer) {
+      keywords = keywords.filter(kw => {
+        const validation = validateIconKeyword(kw, answer);
+        return validation.isValid;
+      });
+    }
+    
+    keywords = keywords.slice(0, 8);
     if (keywords.length === 0) {
       setContextIcons([]);
       return;
@@ -147,7 +159,11 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
       .limit(20);
     
     if (data) {
-      setContextIcons(data);
+      // Filter results to exclude icons that reveal the answer
+      const safeIcons = answer 
+        ? data.filter(icon => validateIconKeyword(icon.slug, answer).isValid)
+        : data;
+      setContextIcons(safeIcons);
     }
   };
 
@@ -189,25 +205,47 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
         </div>
         <div className="grid grid-cols-6 gap-2">
-          {visibleIcons.map((icon) => (
-            <button
-              key={icon.id}
-              onClick={() => handleSelect(icon.slug)}
-              className={cn(
-                "aspect-square rounded-lg border border-border/50 flex items-center justify-center hover:border-primary/50 hover:bg-accent/50 transition-all hover:scale-105",
-                currentSlug === icon.slug && "ring-2 ring-primary bg-primary/10",
-                brokenIcons.has(icon.slug) && "hidden"
-              )}
-              title={icon.title}
-            >
-              <img 
-                src={getIconUrl(icon)} 
-                alt={icon.title}
-                className="w-8 h-8 object-contain"
-                onError={() => handleImageError(icon.slug)}
-              />
-            </button>
-          ))}
+          {visibleIcons.map((icon) => {
+            // Check if this icon would reveal the answer
+            const validation = correctAnswer 
+              ? validateIconKeyword(icon.slug, correctAnswer)
+              : { isValid: true, severity: 'ok' as const };
+            const isBlocked = !validation.isValid && validation.severity === 'error';
+            const isWarning = !validation.isValid && validation.severity === 'warning';
+            
+            return (
+              <button
+                key={icon.id}
+                onClick={() => !isBlocked && handleSelect(icon.slug)}
+                disabled={isBlocked}
+                className={cn(
+                  "aspect-square rounded-lg border border-border/50 flex items-center justify-center transition-all relative",
+                  currentSlug === icon.slug && "ring-2 ring-primary bg-primary/10",
+                  brokenIcons.has(icon.slug) && "hidden",
+                  isBlocked && "opacity-40 cursor-not-allowed border-destructive/50 bg-destructive/10",
+                  isWarning && "border-yellow-500/50 bg-yellow-500/10",
+                  !isBlocked && "hover:border-primary/50 hover:bg-accent/50 hover:scale-105"
+                )}
+                title={isBlocked ? validation.warning : isWarning ? validation.warning : icon.title}
+              >
+                <img 
+                  src={getIconUrl(icon)} 
+                  alt={icon.title}
+                  className="w-8 h-8 object-contain"
+                  onError={() => handleImageError(icon.slug)}
+                />
+                {/* Warning badge for icons that might reveal answer */}
+                {(isBlocked || isWarning) && (
+                  <div className={cn(
+                    "absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center",
+                    isBlocked ? "bg-destructive" : "bg-yellow-500"
+                  )}>
+                    <AlertTriangle className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
