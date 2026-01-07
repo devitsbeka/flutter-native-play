@@ -74,6 +74,8 @@ export function CategoryCarousel({
         {categories.map((category, index) => {
           // Use uuid for favorites if available, fallback to id
           const favoriteId = category.uuid || category.id;
+          // Get the category's actual total levels from database
+          const categoryTotalLevels = (category as any).totalLevels || (category as any).total_levels || 20;
           
           return (
             <div key={category.id} className="flex-shrink-0 snap-center" style={{ width: 'calc(80vw - 24px)', maxWidth: '320px' }}>
@@ -87,7 +89,7 @@ export function CategoryCarousel({
                 description={category.description}
                 categoryType={category.type}
                 progress={progress[category.id] || 0}
-                totalLevels={20}
+                totalLevels={categoryTotalLevels}
                 badge={getBadge?.(category, index)}
                 imageUrl={category.image_url}
                 isFavorite={favorites.has(favoriteId)}

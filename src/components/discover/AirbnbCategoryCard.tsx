@@ -344,7 +344,7 @@ export function AirbnbCategoryCard({
                         textShadow: '0 1px 0 rgba(255,255,255,0.8)',
                       }}
                     >
-                      {progress}/{totalLevels}
+                      {isCompleted ? '✓' : `${Math.min(progress, totalLevels)}/${totalLevels}`}
                     </span>
                   </div>
                 </div>
