@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play, Tv } from "lucide-react";
+import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play, Tv, AlertTriangle } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -17,6 +17,16 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { TVConnectModal } from "./TVConnectModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
@@ -44,6 +54,7 @@ export function RoomLobbyV2() {
   const [isStartingTV, setIsStartingTV] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
   const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
@@ -151,12 +162,14 @@ export function RoomLobbyV2() {
     navigate("/team");
   };
 
-  const handleDeleteRoom = async () => {
-    const confirmed = window.confirm(t("team.deleteRoomConfirm"));
-    if (confirmed) {
-      await deleteRoom();
-      navigate("/team");
-    }
+  const handleDeleteRoom = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteRoom = async () => {
+    await deleteRoom();
+    setShowDeleteConfirm(false);
+    navigate("/team");
   };
 
   const handleStartGame = async () => {
@@ -593,6 +606,34 @@ export function RoomLobbyV2() {
         open={showTVModal}
         onOpenChange={setShowTVModal}
       />
+
+      {/* Delete Room Confirmation Modal */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-foreground font-display text-xl">
+              ოთახის წაშლა
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              დარწმუნებული ხარ, რომ გინდა ამ ოთახის წაშლა? ეს მოქმედება შეუქცევადია.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3 sm:justify-center mt-2">
+            <AlertDialogCancel className="flex-1 bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 rounded-xl">
+              გაუქმება
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteRoom}
+              className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
+            >
+              წაშლა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
