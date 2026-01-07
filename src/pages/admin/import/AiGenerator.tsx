@@ -253,6 +253,18 @@ export function AiGenerator() {
     );
   };
 
+  const handleUpdate = (index: number, updates: Partial<SelectableParsedQuestion>) => {
+    setParsedQuestions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], ...updates };
+      return updated;
+    });
+  };
+
+  const handleRemove = (index: number) => {
+    setParsedQuestions(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -380,6 +392,8 @@ export function AiGenerator() {
               showSelection={true}
               onSelectionChange={handleSelectionChange}
               onSelectAll={handleSelectAll}
+              onUpdate={handleUpdate}
+              onRemove={handleRemove}
             />
           </CardContent>
         </Card>
