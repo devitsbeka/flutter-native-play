@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { SamplePost } from "@/data/samplePosts";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface Question {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  icon_slug?: string;
 }
 
 interface QuizPlayModalProps {
@@ -241,6 +243,20 @@ export function QuizPlayModal({ open, onOpenChange, post }: QuizPlayModalProps) 
                   exit={{ opacity: 0, x: -20 }}
                   className="flex-1 flex flex-col"
                 >
+                  {/* Question Icon */}
+                  {currentQuestion?.icon_slug && (
+                    <div className="flex justify-center mb-4">
+                      <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm p-2 shadow-lg">
+                        <DynamicIcon 
+                          slug={currentQuestion.icon_slug}
+                          size={64}
+                          className="drop-shadow-lg"
+                          hideIfEmpty={true}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Question Card */}
                   <QuizQuestionCard
                     questionText={currentQuestion?.question || ""}

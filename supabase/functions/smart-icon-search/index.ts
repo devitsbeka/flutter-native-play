@@ -17,6 +17,33 @@ const GEORGIAN_TO_LATIN: Record<string, string> = {
   'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
 };
 
+// Common Georgian grammatical suffixes to strip
+const GEORGIAN_SUFFIXES = ['ი', 'მა', 'ს', 'ით', 'ად', 'ში', 'ზე', 'თან', 'დან', 'ისა', 'ებ'];
+
+// Strip Georgian grammatical suffixes
+function stripGeorgianSuffixes(word: string): string {
+  for (const suffix of GEORGIAN_SUFFIXES) {
+    if (word.endsWith(suffix) && word.length > suffix.length + 2) {
+      return word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
+
+// Generate phonetic variants (k->c, etc.)
+function getPhoneticVariants(transliterated: string): string[] {
+  const variants = [transliterated];
+  // k -> c variant (კ/ქ can sound like "c" in English words like Oscar)
+  if (transliterated.includes('k')) {
+    variants.push(transliterated.replace(/k/g, 'c'));
+  }
+  // Also try c -> k for the reverse
+  if (transliterated.includes('c')) {
+    variants.push(transliterated.replace(/c/g, 'k'));
+  }
+  return [...new Set(variants)];
+}
+
 // Georgian semantic translations - words to English meanings
 const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
   // Birth/Origin
@@ -217,8 +244,13 @@ function levenshteinDistance(a: string, b: string): number {
 
 // Check if two strings are similar (fuzzy match)
 function isSimilar(a: string, b: string, threshold = 2): boolean {
-  if (a.length < 4 || b.length < 4) return a === b;
-  return levenshteinDistance(a.toLowerCase(), b.toLowerCase()) <= threshold;
+  const aLower = a.toLowerCase();
+  const bLower = b.toLowerCase();
+  // For short strings (3+ chars), allow matching
+  if (a.length < 3 || b.length < 3) return aLower === bLower;
+  // Dynamic threshold based on string length
+  const dynamicThreshold = Math.min(threshold, Math.floor(Math.min(a.length, b.length) / 3));
+  return levenshteinDistance(aLower, bLower) <= Math.max(1, dynamicThreshold);
 }
 
 serve(async (req) => {
@@ -249,11 +281,19 @@ serve(async (req) => {
     if (isGeorgian(query)) {
       const georgianWords = extractGeorgianWords(query);
       
-      // 1. Transliterate each Georgian word to Latin
+      // 1. Transliterate each Georgian word to Latin (with suffix stripping)
       for (const word of georgianWords) {
-        const transliterated = transliterateGeorgian(word);
+        // Try both with and without suffix stripping
+        const strippedWord = stripGeorgianSuffixes(word);
+        const transliterated = transliterateGeorgian(strippedWord);
+        const transliteratedFull = transliterateGeorgian(word);
+        
         if (transliterated.length >= 2) {
-          searchTerms.add(transliterated);
+          // Add all phonetic variants (k->c, etc.)
+          getPhoneticVariants(transliterated).forEach(v => searchTerms.add(v));
+        }
+        if (transliteratedFull.length >= 2 && transliteratedFull !== transliterated) {
+          getPhoneticVariants(transliteratedFull).forEach(v => searchTerms.add(v));
         }
       }
       
