@@ -179,16 +179,6 @@ export function QuizPlayModal({ open, onOpenChange, post }: QuizPlayModalProps) 
             </button>
           </div>
 
-          {/* Score display */}
-          {!gameComplete && (
-            <div className="relative z-10 flex justify-center mb-4">
-              <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-white font-bold text-lg">{score}</span>
-                <span className="text-white/70 text-sm"> ქულა</span>
-              </div>
-            </div>
-          )}
-
           {/* Content */}
           <div className="relative z-10 flex flex-col h-[calc(100vh-160px)] px-4">
             <AnimatePresence mode="wait">
