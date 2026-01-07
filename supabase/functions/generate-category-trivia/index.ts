@@ -40,42 +40,41 @@ const iconKeywordMappings = `
 
 ყველა კითხვას უნდა ჰქონდეს ინგლისური საკვანძო სიტყვა აიკონის მინიჭებისთვის.
 
-🚨 კრიტიკულად მნიშვნელოვანი - კონტექსტის ანალიზი:
+🚨🚨🚨 უმთავრესი წესი - აიკონმა არ უნდა გამოამჟღავნოს პასუხი!
 
-შეხედე მთელ კითხვას და მიეცი ᲨᲔᲡᲐᲑᲐᲛᲘᲡᲘ keyword კონტექსტის მიხედვით!
+❌ აკრძალულია: აიკონის keyword რომელიც ემთხვევა ან მინიშნებას იძლევა სწორ პასუხზე!
 
-✅ სწორი მაგალითები (კონტექსტზე დაფუძნებული):
-- "რომელ წელს მოხდა დიდგორის ბრძოლა?" → "battle" ან "two-swords" (ბრძოლის კონტექსტი)
-- "ვინ იყო საქართველოს პირველი მეფე?" → "king" ან "crown" (მეფის კონტექსტი)
-- "რა არის 25-ის 40%?" → "percent" ან "calculator" (მათემატიკის კონტექსტი)
-- "რომელ ქალაქში დაიბადა...?" → "city" ან "building" (ადგილის კონტექსტი)
-- "ზევსის მთავარი იარაღი რა იყო?" → "zeus" ან "lightning" (მითოლოგიის კონტექსტი)
-- "რომელი მთა არის ყველაზე მაღალი?" → "mountain" ან "peak" (გეოგრაფიის კონტექსტი)
+მაგალითები:
+- კითხვა: "რომელ ცხოველს შეუძლია ფერის შეცვლა?"
+- სწორი პასუხი: "ქამელეონი"
+- ❌ არასწორი keyword: "chameleon" (ემთხვევა პასუხს!)
+- ✅ სწორი keyword: "animal" ან "color" ან "nature"
 
-❌ არასწორი keywords (არ გამოიყენო!):
-- "question", "quiz", "trivia", "game" - ეს არ არის შინაარსობრივი
-- "answer", "correct", "wrong" - ტექნიკური სიტყვები
-- კითხვის სიტყვა-სიტყვით თარგმნა
+- კითხვა: "რომელია საქართველოს ყველაზე გრძელი მდინარე?"
+- სწორი პასუხი: "მტკვარი"  
+- ❌ არასწორი keyword: "river" ან "mtkvari"
+- ✅ სწორი keyword: "map" ან "geography" ან "water"
+
+- კითხვა: "რომელ ცხოველს ეწოდება ტყის მეფე?"
+- სწორი პასუხი: "ლომი"
+- ❌ არასწორი keyword: "lion" (ემთხვევა პასუხს!)
+- ✅ სწორი keyword: "animal" ან "forest" ან "crown"
+
+აიკონი უნდა იყოს კითხვის ᲙᲝᲜᲢᲔᲥᲡᲢᲘᲡ შესახებ, არა პასუხის!
 
 📚 კონტექსტების ტიპები და შესაბამისი keywords:
 
 ბრძოლა/ომი/შეტევა/გამარჯვება → battle, sword, attack, war, victory, shield, two-swords
 მეფე/ტახტი/სამეფო/გვირგვინი → king, crown, throne, scepter, royal, castle
-დედოფალი/თამარი → queen, crown, tiara, royal
 ქალაქი/დედაქალაქი/ადგილი → city, building, map, location, skyline
-მათემატიკა/გამოთვლა/რიცხვი/პროცენტი → calculator, math, percent, number, equation, formula
-თარიღი/წელი/საუკუნე/ისტორია → calendar, date, history, clock, time
-მეცნიერება/ფიზიკა/ქიმია/ბიოლოგია → science, atom, flask, microscope, lab, dna
-გეოგრაფია/მთა/მდინარე/ზღვა → mountain, river, sea, ocean, map, globe
-ეკლესია/მონასტერი/რელიგია → church, cross, monastery, cathedral
-სპორტი/ფეხბურთი/ჩემპიონი → sports, football, trophy, medal, olympic
-მუსიკა/სიმღერა/მომღერალი → music, note, microphone, guitar, piano
-ხელოვნება/მხატვარი/ნახატი → art, palette, brush, painting, gallery
-წიგნი/ლიტერატურა/მწერალი → book, writing, pen, library, author
-მითოლოგია/ზევსი/ღმერთი → zeus, lightning, trident, olympus, god, mythology
-ცხოველი/ფრინველი/თევზი → animal, bird, fish, lion, elephant
-საჭმელი/კერძი/ღვინო → food, dish, wine, cheese, fruit
+მათემატიკა/გამოთვლა/რიცხვი → calculator, math, percent, number, equation
+თარიღი/წელი/საუკუნე → calendar, date, history, clock, time
+მეცნიერება/ფიზიკა/ქიმია → science, atom, flask, microscope, lab
+გეოგრაფია/მთა/მდინარე → mountain, geography, map, globe, terrain
+ცხოველების შესახებ → animal, nature, paw, wildlife (არა კონკრეტული ცხოველი!)
+ფრინველების შესახებ → bird, wing, feather, nature (არა კონკრეტული ფრინველი!)
 `;
+
 
 
 Deno.serve(async (req) => {
