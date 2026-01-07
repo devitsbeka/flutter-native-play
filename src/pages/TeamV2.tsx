@@ -140,7 +140,7 @@ function TeamContentV2() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-screen relative overflow-y-auto pb-24 lg:pb-0">
+      <main className="flex-1 min-h-screen relative pb-24 lg:pb-0">
         {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
         <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
           {/* Header Row */}
