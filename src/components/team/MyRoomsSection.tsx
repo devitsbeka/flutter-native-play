@@ -154,12 +154,8 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
   
-  // Generate a consistent random cover image based on room code
-  const getCoverImage = (code: string) => {
-    const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const imageId = (hash % 1000) + 100; // Generate a number between 100-1099
-    return `https://picsum.photos/seed/${code}/400/200`;
-  };
+  // Use stored cover image or fallback to random placeholder
+  const coverImage = room.cover_image || `https://picsum.photos/seed/${room.room_code}/400/200`;
 
   return (
     <motion.div
@@ -178,13 +174,13 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
       <div className="relative bg-gradient-to-br from-primary/20 to-primary/30 px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden">
         {/* Cover image with radial fade */}
         <div 
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-40"
           style={{
-            backgroundImage: `url(${getCoverImage(room.room_code)})`,
+            backgroundImage: `url(${coverImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            maskImage: 'radial-gradient(ellipse 120% 100% at 50% 0%, black 0%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 120% 100% at 50% 0%, black 0%, transparent 70%)',
+            maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
           }}
         />
         
