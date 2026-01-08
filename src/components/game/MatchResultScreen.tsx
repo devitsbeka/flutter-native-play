@@ -107,41 +107,43 @@ const PlayerCard = ({
   coinChange?: number;
 }) => (
   <motion.div 
-    className="flex flex-col items-center overflow-visible"
+    className="flex flex-col items-center"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    {/* Coin change badge on top */}
-    {coinChange !== undefined && coinChange !== 0 && (
-      <motion.div
-        initial={{ opacity: 0, scale: 0, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ delay: 0.5, type: "spring" }}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-2 ${
-          coinChange > 0 
-            ? "bg-emerald-500" 
-            : "bg-red-500"
-        }`}
-        style={{ 
-          boxShadow: coinChange > 0 
-            ? "0 3px 0 rgba(5,150,105,0.5)" 
-            : "0 3px 0 rgba(180,0,0,0.5)" 
-        }}
-      >
-        <img src={coinIcon} alt="" className="w-4 h-4" />
-        <span className="font-bold text-white text-sm">
-          {coinChange > 0 ? `+${coinChange}` : coinChange}
-        </span>
-      </motion.div>
-    )}
+    {/* Coin change badge container - fixed height for alignment */}
+    <div className="h-8 flex items-center justify-center mb-2">
+      {coinChange !== undefined && coinChange !== 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, type: "spring" }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
+            coinChange > 0 
+              ? "bg-emerald-500" 
+              : "bg-red-500"
+          }`}
+          style={{ 
+            boxShadow: coinChange > 0 
+              ? "0 3px 0 rgba(5,150,105,0.5)" 
+              : "0 3px 0 rgba(180,0,0,0.5)" 
+          }}
+        >
+          <img src={coinIcon} alt="" className="w-4 h-4" />
+          <span className="font-bold text-white text-sm">
+            {coinChange > 0 ? `+${coinChange}` : coinChange}
+          </span>
+        </motion.div>
+      )}
+    </div>
 
-    {/* Avatar wrapper with overflow visible for crown */}
-    <div className="relative overflow-visible w-[88px]">
-      {/* Crown for winner - centered on avatar */}
+    {/* Avatar section - fixed height container */}
+    <div className="relative h-[110px] flex flex-col items-center justify-end">
+      {/* Crown for winner */}
       {isWinner && (
         <motion.div
-          initial={{ scale: 0, y: 10 }}
+          initial={{ scale: 0 }}
           animate={{ 
             scale: 1, 
             y: [0, -4, 0]
@@ -150,17 +152,14 @@ const PlayerCard = ({
             scale: { delay: 0.6, type: "spring", stiffness: 400 },
             y: { delay: 0.8, duration: 1.5, repeat: Infinity, ease: "easeInOut" }
           }}
-          className="absolute -top-6 left-1/2 z-10"
-          style={{ 
-            filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))",
-            transform: "translateX(calc(-50% - 10px))"
-          }}
+          className="absolute -top-2 left-1/2 -translate-x-1/2 z-10"
+          style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.4))" }}
         >
           <Crown className="w-8 h-8 text-yellow-400 fill-yellow-400" />
         </motion.div>
       )}
       
-      {/* Avatar with border - fixed dimensions */}
+      {/* Avatar with border */}
       <div 
         className="rounded-2xl p-1 w-[88px] h-[88px] flex items-center justify-center"
         style={{
@@ -184,29 +183,30 @@ const PlayerCard = ({
       </div>
     </div>
 
-    {/* Winner badge - in normal flow, centered naturally */}
-    {isWinner && (
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.7, type: "spring" }}
-        className="-mt-3 z-10"
-      >
-        <div 
-          className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-          style={{
-            background: "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
-            color: "#78350F",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-          }}
+    {/* Winner badge container - fixed height for alignment */}
+    <div className="h-6 flex items-start justify-center -mt-3 z-10">
+      {isWinner && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.7, type: "spring" }}
         >
-          {winnerLabel}
-        </div>
-      </motion.div>
-    )}
+          <div 
+            className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+            style={{
+              background: "linear-gradient(135deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
+              color: "#78350F",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            }}
+          >
+            {winnerLabel}
+          </div>
+        </motion.div>
+      )}
+    </div>
     
-    {/* Name - centered below avatar section */}
-    <p className="mt-5 font-semibold text-white truncate max-w-[120px] text-center" style={{ fontSize: "22px" }}>
+    {/* Name */}
+    <p className="mt-4 font-semibold text-white truncate max-w-[120px] text-center text-xl">
       {name}
     </p>
     
@@ -215,7 +215,7 @@ const PlayerCard = ({
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ delay: 0.5, type: "spring" }}
-      className="flex flex-col items-center mt-2"
+      className="flex flex-col items-center mt-1"
     >
       <span className="text-3xl font-black" style={{ color: "#F5A623" }}>
         {score}
