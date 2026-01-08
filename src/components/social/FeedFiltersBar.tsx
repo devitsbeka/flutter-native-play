@@ -32,7 +32,7 @@ const filterOptions: { value: SortFilter; label: string }[] = [
   { value: "collections", label: "კოლექციები" },
   { value: "most_liked", label: "მოწონებული" },
   { value: "most_saved", label: "შენახული" },
-  { value: "most_played", label: "ნანახი" },
+  { value: "most_played", label: "ნათამაშები" },
 ];
 
 export function FeedFiltersBar({

@@ -1254,6 +1254,38 @@ export type Database = {
           },
         ]
       }
+      quiz_post_plays: {
+        Row: {
+          id: string
+          played_at: string
+          post_id: string
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          played_at?: string
+          post_id: string
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          played_at?: string
+          post_id?: string
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_post_plays_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "user_quiz_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_post_saves: {
         Row: {
           created_at: string | null
