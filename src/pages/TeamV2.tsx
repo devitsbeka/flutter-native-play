@@ -215,7 +215,33 @@ function TeamContentV2() {
             </motion.div>
           </div>
 
-          {/* Row 3: My Rooms (შენი ოთახები) */}
+          {/* Row 3: Tabs */}
+          <div className="lg:hidden px-4 pb-3">
+            <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
+              <button
+                onClick={() => setActiveTab("for-me")}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "for-me"
+                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                შენთვის
+              </button>
+              <button
+                onClick={() => setActiveTab("my-trivia")}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "my-trivia"
+                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                ჩემი ტრივია
+              </button>
+            </div>
+          </div>
+
+          {/* Row 4: My Rooms (შენი ოთახები) */}
           <div className="lg:hidden">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -231,7 +257,7 @@ function TeamContentV2() {
             </motion.div>
           </div>
 
-          {/* Row 4: Create Trivia Button (+ შექმენი ტრივია) */}
+          {/* Row 5: Create Trivia Button (+ შექმენი ტრივია) */}
           <div className="lg:hidden px-4 pb-3">
             <ChunkyButton 
               onClick={() => setShowCreateTypeModal(true)}
@@ -244,35 +270,8 @@ function TeamContentV2() {
             </ChunkyButton>
           </div>
 
-          {/* Row 5+6: Sticky Tabs + Filter Bar */}
+          {/* Row 6: Sticky Filter Bar */}
           <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
-            {/* Tabs */}
-            <div className="px-4 py-3">
-              <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
-                <button
-                  onClick={() => setActiveTab("for-me")}
-                  className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                    activeTab === "for-me"
-                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                      : "text-muted-foreground hover:text-foreground/80"
-                  }`}
-                >
-                  შენთვის
-                </button>
-                <button
-                  onClick={() => setActiveTab("my-trivia")}
-                  className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                    activeTab === "my-trivia"
-                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                      : "text-muted-foreground hover:text-foreground/80"
-                  }`}
-                >
-                  ჩემი ტრივია
-                </button>
-              </div>
-            </div>
-            
-            {/* Filter Bar */}
             <FeedFiltersBar
               sortFilter={sortFilter}
               onSortFilterChange={setSortFilter}
