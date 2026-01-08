@@ -13,19 +13,30 @@ export function useSocialFeed() {
   const pendingLikes = useRef<Set<string>>(new Set());
   const pendingSaves = useRef<Set<string>>(new Set());
 
-  // Set up real-time subscription for likes/saves updates
+  // Set up real-time subscription for new/deleted posts only
+  // Don't listen to UPDATE events to avoid double-refresh when likes/saves are updated
   useEffect(() => {
     const channel = supabase
       .channel('quiz-posts-realtime')
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
           table: 'user_quiz_posts'
         },
         () => {
-          // Refresh posts when any post is updated (like/save counts)
+          queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'user_quiz_posts'
+        },
+        () => {
           queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
         }
       )

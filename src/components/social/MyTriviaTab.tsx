@@ -428,9 +428,35 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       )
     : myCollections;
 
-  // Apply sortFilter (type filter) - "trivias" shows only standalone, "collections" shows only collections
-  const standalonePosts = sortFilter === "collections" ? [] : searchFilteredPosts;
-  const filteredCollections = sortFilter === "trivias" ? [] : searchFilteredCollections;
+  // Apply type filter first - "trivias" shows only standalone, "collections" shows only collections
+  let standalonePosts = sortFilter === "collections" ? [] : [...searchFilteredPosts];
+  let filteredCollections = sortFilter === "trivias" ? [] : [...(searchFilteredCollections || [])];
+  
+  // Apply sorting based on sortFilter
+  const getEngagementScore = (item: any) => 
+    (item.likes_count || 0) + (item.saves_count || 0) + (item.plays_count || 0);
+
+  switch (sortFilter) {
+    case "most_liked":
+      standalonePosts = standalonePosts.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+      filteredCollections = filteredCollections.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+      break;
+    case "most_saved":
+      standalonePosts = standalonePosts.sort((a, b) => (b.saves_count || 0) - (a.saves_count || 0));
+      filteredCollections = filteredCollections.sort((a, b) => (b.saves_count || 0) - (a.saves_count || 0));
+      break;
+    case "most_played":
+      standalonePosts = standalonePosts.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
+      filteredCollections = filteredCollections.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
+      break;
+    case "popular":
+      standalonePosts = standalonePosts.sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
+      filteredCollections = filteredCollections.sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
+      break;
+    default:
+      // "all", "trivias", "collections" - keep default order (by date, newest first)
+      break;
+  }
   
   const hasContent = (filteredCollections && filteredCollections.length > 0) || standalonePosts.length > 0;
 
