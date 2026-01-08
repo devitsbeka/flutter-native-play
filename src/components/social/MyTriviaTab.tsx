@@ -16,6 +16,7 @@ import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
+  searchQuery?: string;
 }
 
 // Compact quiz card for inside collections
@@ -348,7 +349,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profi
   );
 }
 
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = "" }: MyTriviaTabProps) {
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
@@ -362,8 +363,27 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
   const isLoading = postsLoading || collectionsLoading;
 
   // Filter standalone posts (not in any collection)
-  const standalonePosts = myPosts?.filter(post => !post.collection_id) || [];
-  const hasContent = (myCollections && myCollections.length > 0) || standalonePosts.length > 0;
+  const allStandalonePosts = myPosts?.filter(post => !post.collection_id) || [];
+  
+  // Apply search filter
+  const searchLower = searchQuery.toLowerCase().trim();
+  const standalonePosts = searchLower 
+    ? allStandalonePosts.filter(post => 
+        post.title?.toLowerCase().includes(searchLower) ||
+        post.subject?.toLowerCase().includes(searchLower) ||
+        post.hashtags?.some((h: string) => h.toLowerCase().includes(searchLower))
+      )
+    : allStandalonePosts;
+  
+  const filteredCollections = searchLower 
+    ? myCollections?.filter(col => 
+        col.title?.toLowerCase().includes(searchLower) ||
+        col.description?.toLowerCase().includes(searchLower) ||
+        col.hashtags?.some((h: string) => h.toLowerCase().includes(searchLower))
+      )
+    : myCollections;
+  
+  const hasContent = (filteredCollections && filteredCollections.length > 0) || standalonePosts.length > 0;
 
   if (isLoading) {
     return (
@@ -406,7 +426,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
     );
   }
 
-  const totalCount = (myCollections?.length || 0) + standalonePosts.length;
+  const totalCount = (filteredCollections?.length || 0) + standalonePosts.length;
 
   return (
     <motion.div
@@ -420,7 +440,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
 
       <div className="space-y-4">
         {/* Collections first */}
-        {myCollections?.map((collection) => (
+        {filteredCollections?.map((collection) => (
           <CollectionCard 
             key={collection.id} 
             collection={collection} 

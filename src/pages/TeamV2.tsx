@@ -219,17 +219,9 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Filter & Search Bar - Sticky with header */}
-          <FeedFiltersBar
-            sortFilter={sortFilter}
-            onSortFilterChange={setSortFilter}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-          />
-
-          {/* Create Buttons Row - Equal width */}
+          {/* Create Buttons Row - Equal width (moved above filters) */}
           {activeTab === "my-trivia" && (
-            <div className="px-4 pb-3 flex gap-3">
+            <div className="px-4 pb-2 flex gap-3">
               <button
                 onClick={() => setShowCreateQuizModal(true)}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
@@ -246,6 +238,14 @@ function TeamContentV2() {
               </button>
             </div>
           )}
+
+          {/* Filter & Search Bar - Sticky with header */}
+          <FeedFiltersBar
+            sortFilter={sortFilter}
+            onSortFilterChange={setSortFilter}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+          />
 
         </div>
 
@@ -280,11 +280,11 @@ function TeamContentV2() {
                 />
               </motion.div>
 
-              {/* My Trivia Posts */}
               <div className="px-4">
                 <MyTriviaTab 
                   onCreateQuiz={() => setShowCreateQuizModal(true)} 
                   onCreateCollection={() => setShowCreateCollectionModal(true)}
+                  searchQuery={searchQuery}
                 />
               </div>
             </>

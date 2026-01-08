@@ -81,12 +81,12 @@ export function FeedFiltersBar({
             <motion.div
               key="search-input"
               initial={{ width: 40, opacity: 0 }}
-              animate={{ width: "auto", opacity: 1 }}
+              animate={{ width: "100%", opacity: 1 }}
               exit={{ width: 40, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center gap-2 flex-1"
+              className="flex items-center gap-2 flex-1 min-w-0"
             >
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-muted">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-muted min-w-0">
                 <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <input
                   type="text"
@@ -94,7 +94,7 @@ export function FeedFiltersBar({
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   placeholder="ძიება..."
                   autoFocus
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0"
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0 w-full"
                 />
                 {searchQuery && (
                   <button 
