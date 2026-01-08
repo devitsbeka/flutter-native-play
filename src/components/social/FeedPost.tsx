@@ -350,19 +350,8 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side: Stats text only */}
-        <div className="flex items-center gap-4">
-          <span className="font-semibold text-foreground text-sm">
-            {formatNumber(likesCount)} likes
-          </span>
-          <span className="font-semibold text-foreground text-sm">
-            {formatNumber(savesCount)} saves
-          </span>
-        </div>
-        
-        {/* Right side: Heart + Save + Play button */}
+        {/* Left side: Heart + Bookmark icons */}
         <div className="flex items-center gap-3">
-          {/* Purple Heart Icon */}
           <button 
             onClick={handleLike}
             className="hover:scale-110 transition-transform active:scale-90"
@@ -370,11 +359,10 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
             <img 
               src={purpleHeartIcon} 
               alt="Like" 
-              className={`w-7 h-7 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
+              className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
           </button>
           
-          {/* 3D Bookmark Icon */}
           <button 
             onClick={handleSave}
             className="hover:scale-110 transition-transform active:scale-90"
@@ -382,11 +370,20 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
             <img 
               src={bookmarkIcon} 
               alt="Save" 
-              className={`w-7 h-7 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
+              className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
           </button>
+        </div>
+        
+        {/* Right side: Stats + Play button */}
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-foreground text-sm">
+            {formatNumber(likesCount)} likes
+          </span>
+          <span className="font-semibold text-foreground text-sm">
+            {formatNumber(savesCount)} saves
+          </span>
           
-          {/* Play button */}
           <button 
             onClick={() => onPlay?.(post)}
             className="px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
