@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X, ImageIcon } from "lucide-react";
+import { Search, X, ImageIcon, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -22,9 +23,11 @@ interface QuestionIconPickerProps {
   selectedSlug: string | null;
   onSelect: (slug: string | null) => void;
   questionText?: string;
+  correctAnswer?: string;
+  incorrectAnswers?: string[];
 }
 
-export function QuestionIconPicker({ selectedSlug, onSelect, questionText }: QuestionIconPickerProps) {
+export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers }: QuestionIconPickerProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [icons, setIcons] = useState<IconItem[]>([]);
@@ -39,6 +42,13 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText }: Que
 
   // Check if text contains Georgian characters
   const isGeorgian = (text: string) => /[\u10A0-\u10FF]/.test(text);
+
+  // Check if an icon is safe (doesn't reveal the answer)
+  const isIconSafe = (iconSlug: string): boolean => {
+    if (!correctAnswer) return true;
+    const validation = validateIconKeyword(iconSlug, correctAnswer, incorrectAnswers);
+    return validation.isValid;
+  };
 
   // Load selected icon data when popover opens
   useEffect(() => {
@@ -70,11 +80,17 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText }: Que
     const loadSuggestions = async () => {
       try {
         const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-          body: { query: questionText, limit: 8 }
+          body: { 
+            query: questionText, 
+            limit: 12,
+            correctAnswer: correctAnswer 
+          }
         });
         
         if (!error && data?.icons) {
-          setSuggestedIcons(data.icons);
+          // Filter out icons that reveal the answer
+          const safeIcons = data.icons.filter((icon: IconItem) => isIconSafe(icon.slug));
+          setSuggestedIcons(safeIcons.slice(0, 8));
         }
       } catch (err) {
         console.error("Error loading suggestions:", err);
@@ -82,7 +98,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText }: Que
     };
 
     loadSuggestions();
-  }, [open, questionText]);
+  }, [open, questionText, correctAnswer]);
 
   // Search icons when query changes
   useEffect(() => {
@@ -134,22 +150,36 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText }: Que
     setOpen(false);
   };
 
+  // Check if currently selected icon is unsafe
+  const selectedIconUnsafe = selectedSlug && !isIconSafe(selectedSlug);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="w-12 h-12 rounded-xl border border-border bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0"
+          className={`w-12 h-12 rounded-xl border flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
+            selectedIconUnsafe 
+              ? "border-destructive bg-destructive/10" 
+              : "border-border bg-muted/50"
+          }`}
         >
           {selectedSlug ? (
-            <img
-              src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
-              alt=""
-              className="w-8 h-8 object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            <>
+              <img
+                src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
+                alt=""
+                className="w-8 h-8 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              {selectedIconUnsafe && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
+            </>
           ) : (
             <ImageIcon className="w-6 h-6 text-muted-foreground" />
           )}
@@ -225,27 +255,38 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText }: Que
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-2 p-1">
-                  {icons.map((icon) => (
-                    <button
-                      key={icon.id}
-                      onClick={() => handleSelect(icon.slug)}
-                      className={`flex flex-col items-center p-1.5 rounded-xl border transition-all hover:scale-105 ${
-                        selectedSlug === icon.slug
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-muted/30 hover:border-primary/50"
-                      }`}
-                      title={icon.title}
-                    >
-                      <img
-                        src={getIconUrl(icon)}
-                        alt={icon.title}
-                        className="w-12 h-12 object-contain"
-                      />
-                      <span className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
-                        {icon.title}
-                      </span>
-                    </button>
-                  ))}
+                  {icons.map((icon) => {
+                    const isSafe = isIconSafe(icon.slug);
+                    return (
+                      <button
+                        key={icon.id}
+                        onClick={() => isSafe && handleSelect(icon.slug)}
+                        disabled={!isSafe}
+                        className={`flex flex-col items-center p-1.5 rounded-xl border transition-all relative ${
+                          !isSafe
+                            ? "border-destructive/50 bg-destructive/5 opacity-50 cursor-not-allowed"
+                            : selectedSlug === icon.slug
+                              ? "border-primary bg-primary/10"
+                              : "border-border bg-muted/30 hover:border-primary/50 hover:scale-105"
+                        }`}
+                        title={isSafe ? icon.title : `${icon.title} - მინიშნება პასუხზე!`}
+                      >
+                        <img
+                          src={getIconUrl(icon)}
+                          alt={icon.title}
+                          className="w-12 h-12 object-contain"
+                        />
+                        <span className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
+                          {icon.title}
+                        </span>
+                        {!isSafe && (
+                          <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center">
+                            <X className="w-2 h-2 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
