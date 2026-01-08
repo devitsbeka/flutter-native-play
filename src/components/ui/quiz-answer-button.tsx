@@ -142,11 +142,15 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           {/* Text */}
           <span
             className={cn(
-              "flex-1 px-3 leading-tight",
+              "flex-1 px-3 leading-tight break-words",
               state === "next" ? "text-center" : "text-left",
-              text.length > 30 ? "text-base" : "text-lg"
+              text.length > 20 ? "text-sm" : text.length > 14 ? "text-base" : "text-lg"
             )}
-            style={{ color: styles.textColor }}
+            style={{ 
+              color: styles.textColor,
+              wordBreak: 'break-word',
+              hyphens: 'auto',
+            }}
           >
             {isLoading ? (
               <div className="flex items-center gap-2">

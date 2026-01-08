@@ -176,8 +176,8 @@ ${exclusionSection}
 📏 სავალდებულო სიგრძის ლიმიტები (კრიტიკულად მნიშვნელოვანი!):
 
 კითხვა: მაქსიმუმ 65 სიმბოლო (კითხვის ნიშნის ჩათვლით)
-სწორი პასუხი: მაქსიმუმ 20 სიმბოლო  
-არასწორი პასუხები: მაქსიმუმ 20 სიმბოლო თითოეული
+სწორი პასუხი: მაქსიმუმ 16 სიმბოლო  
+არასწორი პასუხები: მაქსიმუმ 16 სიმბოლო თითოეული
 
 ⚠️ თუ კითხვა ან პასუხი ვერ ეტევა - შეამოკლე ან შექმენი სხვა კითხვა!
 
@@ -216,7 +216,7 @@ ${iconKeywordMappings}
 [
   {
     "question": "კითხვა ქართულად? (მაქს 65 სიმბოლო)",
-    "correct_answer": "პასუხი (მაქს 20 სიმბოლო)",
+    "correct_answer": "პასუხი (მაქს 16 სიმბოლო)",
     "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
     "difficulty": "${difficultyEn}",
     "icon_keyword": "ინგლისურად keyword აიკონისთვის"
@@ -271,31 +271,30 @@ ${iconKeywordMappings}
 
     const rawQuestions = JSON.parse(jsonMatch[0]);
 
-    // Server-side validation - filter out questions that exceed limits
-    const validQuestions = rawQuestions.filter((q: any) => {
-      const questionText = q.question || '';
-      const correctAnswer = q.correct_answer || '';
-      const incorrectAnswers = q.incorrect_answers || [];
+    // Server-side validation and truncation
+    const ANSWER_MAX_LENGTH = 16;
+    const QUESTION_MAX_LENGTH = 65;
+    
+    const validQuestions = rawQuestions.map((q: any) => {
+      // Truncate to ensure answers fit in UI
+      const correctAnswer = (q.correct_answer || '').slice(0, ANSWER_MAX_LENGTH);
+      const incorrectAnswers = (q.incorrect_answers || []).map((a: string) => 
+        (a || '').slice(0, ANSWER_MAX_LENGTH)
+      );
+      const questionText = (q.question || '').slice(0, QUESTION_MAX_LENGTH);
       
-      // Check question length (max 65)
-      if (questionText.length > 65) {
-        console.log(`Filtering out question - too long (${questionText.length} chars): ${questionText.substring(0, 50)}...`);
+      return {
+        ...q,
+        question: questionText,
+        correct_answer: correctAnswer,
+        incorrect_answers: incorrectAnswers,
+      };
+    }).filter((q: any) => {
+      // Also filter out any that are still problematic
+      if (!q.question || !q.correct_answer || q.incorrect_answers.length !== 3) {
+        console.log(`Filtering out malformed question`);
         return false;
       }
-      
-      // Check correct answer length (max 20)
-      if (correctAnswer.length > 20) {
-        console.log(`Filtering out question - answer too long (${correctAnswer.length} chars): ${correctAnswer}`);
-        return false;
-      }
-      
-      // Check all incorrect answers (max 20 each)
-      const allAnswersValid = incorrectAnswers.every((a: string) => a.length <= 20);
-      if (!allAnswersValid) {
-        console.log(`Filtering out question - incorrect answer too long`);
-        return false;
-      }
-      
       return true;
     });
 
