@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Globe, 
   Database, 
-  Users, 
   ShoppingCart, 
   Crown, 
   TrendingUp,
@@ -14,7 +13,6 @@ import {
   Eye,
   Activity
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface LanguageBucket {
   language: string;
@@ -82,26 +80,37 @@ export function PalantirAnalyticsWidget() {
   };
 
   const fetchLanguageBuckets = async () => {
-    const { data } = await supabase
-      .from('questions')
-      .select('language, in_production');
+    // Use count queries to avoid 1000 row limit
+    const languages = ['ka', 'en', 'ru', 'de', 'fr'];
+    const buckets: LanguageBucket[] = [];
 
-    if (data) {
-      const buckets: Record<string, LanguageBucket> = {};
-      data.forEach((q) => {
-        const lang = q.language || 'unknown';
-        if (!buckets[lang]) {
-          buckets[lang] = { language: lang, inProd: 0, inLib: 0, total: 0 };
-        }
-        if (q.in_production) {
-          buckets[lang].inProd++;
-        } else {
-          buckets[lang].inLib++;
-        }
-        buckets[lang].total++;
-      });
-      setLanguageBuckets(Object.values(buckets).sort((a, b) => b.total - a.total));
+    for (const lang of languages) {
+      const { count: inProdCount } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('language', lang)
+        .eq('in_production', true);
+
+      const { count: inLibCount } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('language', lang)
+        .eq('in_production', false);
+
+      const inProd = inProdCount || 0;
+      const inLib = inLibCount || 0;
+
+      if (inProd > 0 || inLib > 0) {
+        buckets.push({
+          language: lang,
+          inProd,
+          inLib,
+          total: inProd + inLib,
+        });
+      }
     }
+
+    setLanguageBuckets(buckets.sort((a, b) => b.total - a.total));
   };
 
   const fetchRegionalActivity = async () => {
@@ -233,9 +242,13 @@ export function PalantirAnalyticsWidget() {
       setPurchases(purchasesWithNames);
       setTotalPurchases(count || 0);
 
-      // Count by tier
+      // Count by tier - get all for accurate count
+      const { data: allVip } = await supabase
+        .from('vip_subscriptions')
+        .select('vip_tier');
+
       const tierCounts: Record<string, number> = {};
-      data.forEach(p => {
+      allVip?.forEach(p => {
         tierCounts[p.vip_tier] = (tierCounts[p.vip_tier] || 0) + 1;
       });
       setPurchasesByTier(tierCounts);
@@ -392,10 +405,10 @@ export function PalantirAnalyticsWidget() {
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700">
+      <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-center h-40">
-            <div className="animate-pulse text-slate-400">Loading analytics...</div>
+            <div className="animate-pulse text-muted-foreground">Loading analytics...</div>
           </div>
         </CardContent>
       </Card>
@@ -403,221 +416,237 @@ export function PalantirAnalyticsWidget() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 overflow-hidden">
-      <CardHeader className="pb-2 border-b border-slate-700/50">
-        <CardTitle className="flex items-center gap-2 text-white">
-          <Activity className="h-5 w-5 text-cyan-400" />
-          <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Analytics Dashboard
-          </span>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          Analytics Dashboard
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Language Buckets */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center gap-2 mb-3">
-              <Database className="h-4 w-4 text-violet-400" />
-              <h3 className="text-sm font-semibold text-white">Language Buckets</h3>
-            </div>
-            <div className="space-y-3">
-              {languageBuckets.map((bucket) => (
-                <div key={bucket.language} className="text-xs font-mono">
-                  <div className="flex items-center gap-2 text-slate-300 mb-1">
-                    <span>{getLanguageFlag(bucket.language)}</span>
-                    <span className="uppercase font-bold text-cyan-400">[{bucket.language}]</span>
+          <Card className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Database className="h-4 w-4 text-violet-500" />
+                <h3 className="text-sm font-semibold">Language Buckets</h3>
+              </div>
+              <div className="space-y-3">
+                {languageBuckets.map((bucket) => (
+                  <div key={bucket.language} className="text-xs font-mono">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span>{getLanguageFlag(bucket.language)}</span>
+                      <span className="uppercase font-bold text-primary">[{bucket.language}]</span>
+                    </div>
+                    <div className="pl-6 space-y-0.5 text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground/50">├─</span>
+                        <span>In Prod:</span>
+                        <span className="text-emerald-500 font-bold">{bucket.inProd.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground/50">├─</span>
+                        <span>In Lib:</span>
+                        <span className="text-amber-500 font-bold">{bucket.inLib.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground/50">└─</span>
+                        <span>Total:</span>
+                        <span className="font-bold">{bucket.total.toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="pl-6 space-y-0.5 text-slate-400">
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-600">├─</span>
-                      <span>In Prod:</span>
-                      <span className="text-emerald-400 font-bold">{bucket.inProd.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-600">├─</span>
-                      <span>In Lib:</span>
-                      <span className="text-amber-400 font-bold">{bucket.inLib.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-600">└─</span>
-                      <span>Total:</span>
-                      <span className="text-white font-bold">{bucket.total.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Regional Activity */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center gap-2 mb-3">
-              <Globe className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-sm font-semibold text-white">Regional Activity</h3>
-            </div>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-3">
-                {regionalActivity.map((region) => (
-                  <div key={region.region} className="text-xs font-mono">
-                    <div className="flex items-center gap-2 text-slate-300 mb-1">
-                      <span>{getRegionFlag(region.region)}</span>
-                      <span className="uppercase font-bold text-emerald-400">{region.region}</span>
-                      {region.onlineNow > 0 && (
-                        <span className="flex items-center gap-1 text-emerald-400">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          {region.onlineNow}
-                        </span>
-                      )}
-                    </div>
-                    <div className="pl-6 space-y-0.5 text-slate-400">
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-600">├─</span>
-                        <span>Online:</span>
-                        <span className="text-emerald-400 font-bold">{region.onlineNow}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-600">├─</span>
-                        <span>24h:</span>
-                        <span className="text-cyan-400 font-bold">{region.played24h}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-600">├─</span>
-                        <span>7d:</span>
-                        <span className="text-blue-400 font-bold">{region.played7d}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-600">└─</span>
-                        <span>Users:</span>
-                        <span className="text-white font-bold">{region.totalUsers}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          <Card className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Globe className="h-4 w-4 text-emerald-500" />
+                <h3 className="text-sm font-semibold">Regional Activity</h3>
               </div>
-            </ScrollArea>
-          </div>
-
-          {/* Shop Analytics */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center gap-2 mb-3">
-              <ShoppingCart className="h-4 w-4 text-amber-400" />
-              <h3 className="text-sm font-semibold text-white">Shop Analytics</h3>
-            </div>
-            <div className="space-y-3 text-xs font-mono">
-              <div className="flex items-center justify-between text-slate-300">
-                <span>Total Purchases:</span>
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  {totalPurchases}
-                </Badge>
-              </div>
-              
-              <div className="border-t border-slate-700/50 pt-2">
-                <div className="text-slate-400 mb-1">By Tier:</div>
-                {Object.entries(purchasesByTier).map(([tier, count]) => (
-                  <div key={tier} className="flex items-center gap-1 pl-2 text-slate-400">
-                    <span className="text-slate-600">├─</span>
-                    <Crown className="h-3 w-3 text-amber-400" />
-                    <span>{tier}:</span>
-                    <span className="text-amber-400 font-bold">{count}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t border-slate-700/50 pt-2">
-                <div className="text-slate-400 mb-1">Recent:</div>
-                <ScrollArea className="h-[80px]">
-                  {purchases.slice(0, 5).map((p) => (
-                    <div key={p.id} className="flex items-center gap-2 text-slate-400 py-0.5">
-                      <span className="text-slate-600">•</span>
-                      <span className="text-cyan-400 truncate max-w-[80px]">{p.nickname}</span>
-                      <span>-</span>
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-slate-600">
-                        {p.tier}
-                      </Badge>
-                      <span className="text-slate-500 text-[10px]">{formatTimeAgo(p.created_at)}</span>
+              <ScrollArea className="h-[200px]">
+                <div className="space-y-3">
+                  {regionalActivity.map((region) => (
+                    <div key={region.region} className="text-xs font-mono">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span>{getRegionFlag(region.region)}</span>
+                        <span className="uppercase font-bold text-emerald-500">{region.region}</span>
+                        {region.onlineNow > 0 && (
+                          <span className="flex items-center gap-1 text-emerald-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {region.onlineNow}
+                          </span>
+                        )}
+                      </div>
+                      <div className="pl-6 space-y-0.5 text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground/50">├─</span>
+                          <span>Online:</span>
+                          <span className="text-emerald-500 font-bold">{region.onlineNow}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground/50">├─</span>
+                          <span>24h:</span>
+                          <span className="text-cyan-500 font-bold">{region.played24h}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground/50">├─</span>
+                          <span>7d:</span>
+                          <span className="text-blue-500 font-bold">{region.played7d}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-muted-foreground/50">└─</span>
+                          <span>Users:</span>
+                          <span className="font-bold">{region.totalUsers}</span>
+                        </div>
+                      </div>
                     </div>
                   ))}
-                </ScrollArea>
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+
+          {/* Shop Analytics */}
+          <Card className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <ShoppingCart className="h-4 w-4 text-amber-500" />
+                <h3 className="text-sm font-semibold">Shop Analytics</h3>
               </div>
-            </div>
-          </div>
+              <div className="space-y-3 text-xs font-mono">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total Purchases:</span>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    {totalPurchases}
+                  </Badge>
+                </div>
+                
+                <div className="border-t pt-2">
+                  <div className="text-muted-foreground mb-1">By Tier:</div>
+                  {Object.entries(purchasesByTier).map(([tier, count]) => (
+                    <div key={tier} className="flex items-center gap-1 pl-2 text-muted-foreground">
+                      <span className="text-muted-foreground/50">├─</span>
+                      <Crown className="h-3 w-3 text-amber-500" />
+                      <span>{tier}:</span>
+                      <span className="text-amber-500 font-bold">{count}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t pt-2">
+                  <div className="text-muted-foreground mb-1">Recent:</div>
+                  <ScrollArea className="h-[80px]">
+                    {purchases.slice(0, 5).map((p) => (
+                      <div key={p.id} className="flex items-center gap-2 text-muted-foreground py-0.5">
+                        <span className="text-muted-foreground/50">•</span>
+                        <span className="text-primary truncate max-w-[80px]">{p.nickname}</span>
+                        <span>-</span>
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                          {p.tier}
+                        </Badge>
+                        <span className="text-muted-foreground/70 text-[10px]">{formatTimeAgo(p.created_at)}</span>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           {/* Top Customers */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center gap-2 mb-3">
-              <Crown className="h-4 w-4 text-amber-400" />
-              <h3 className="text-sm font-semibold text-white">Top Customers</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-              <div>
-                <div className="text-slate-400 mb-2 flex items-center gap-1">
-                  <span className="text-amber-400">💰</span> Highest Paying
-                </div>
-                {topPayingCustomers.map((c, i) => (
-                  <div key={i} className="flex items-center gap-1 text-slate-400 py-0.5">
-                    <span className="text-slate-600">{i + 1}.</span>
-                    <span className="text-cyan-400">{c.nickname}</span>
-                    <span className="text-slate-500">({c.region})</span>
-                  </div>
-                ))}
+          <Card className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <h3 className="text-sm font-semibold">Top Customers</h3>
               </div>
-              <div>
-                <div className="text-slate-400 mb-2 flex items-center gap-1">
-                  <Eye className="h-3 w-3 text-violet-400" /> Most Ads
-                </div>
-                {topAdsWatchers.map((c, i) => (
-                  <div key={i} className="flex items-center gap-1 text-slate-400 py-0.5">
-                    <span className="text-slate-600">{i + 1}.</span>
-                    <span className="text-cyan-400">{c.nickname}</span>
-                    <span className="text-violet-400">({c.value})</span>
+              <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                <div>
+                  <div className="text-muted-foreground mb-2 flex items-center gap-1">
+                    <span className="text-amber-500">💰</span> Highest Paying
                   </div>
-                ))}
+                  {topPayingCustomers.length === 0 ? (
+                    <div className="text-muted-foreground/50">No data</div>
+                  ) : (
+                    topPayingCustomers.map((c, i) => (
+                      <div key={i} className="flex items-center gap-1 text-muted-foreground py-0.5">
+                        <span className="text-muted-foreground/50">{i + 1}.</span>
+                        <span className="text-primary">{c.nickname}</span>
+                        <span className="text-muted-foreground/50">({c.region})</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div>
+                  <div className="text-muted-foreground mb-2 flex items-center gap-1">
+                    <Eye className="h-3 w-3 text-violet-500" /> Most Ads
+                  </div>
+                  {topAdsWatchers.length === 0 ? (
+                    <div className="text-muted-foreground/50">No data</div>
+                  ) : (
+                    topAdsWatchers.map((c, i) => (
+                      <div key={i} className="flex items-center gap-1 text-muted-foreground py-0.5">
+                        <span className="text-muted-foreground/50">{i + 1}.</span>
+                        <span className="text-primary">{c.nickname}</span>
+                        <span className="text-violet-500">({c.value})</span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Average Metrics */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="h-4 w-4 text-cyan-400" />
-              <h3 className="text-sm font-semibold text-white">Averages Per User By Region</h3>
-            </div>
-            <div className="space-y-2 text-xs font-mono">
-              {regionalMetrics.slice(0, 5).map((m) => (
-                <div key={m.region} className="flex items-center justify-between text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <span>{getRegionFlag(m.region)}</span>
-                    <span className="uppercase text-slate-300">{m.region}</span>
-                    <span className="text-slate-500">({m.totalUsers} users)</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3 text-violet-400" />
-                      <span className="text-violet-400">{m.avgAdsPerUser.toFixed(1)}</span>
+          <Card className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp className="h-4 w-4 text-cyan-500" />
+                <h3 className="text-sm font-semibold">Averages Per User By Region</h3>
+              </div>
+              <div className="space-y-2 text-xs font-mono">
+                {regionalMetrics.slice(0, 5).map((m) => (
+                  <div key={m.region} className="flex items-center justify-between text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>{getRegionFlag(m.region)}</span>
+                      <span className="uppercase">{m.region}</span>
+                      <span className="text-muted-foreground/50">({m.totalUsers} users)</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Activity className="h-3 w-3 text-emerald-400" />
-                      <span className="text-emerald-400">{m.avgGamesPerUser.toFixed(1)}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-3 w-3 text-violet-500" />
+                        <span className="text-violet-500">{m.avgAdsPerUser.toFixed(1)}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Activity className="h-3 w-3 text-emerald-500" />
+                        <span className="text-emerald-500">{m.avgGamesPerUser.toFixed(1)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div className="pt-2 border-t border-slate-700/50 flex items-center gap-4 text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" /> Ads/User
-                </div>
-                <div className="flex items-center gap-1">
-                  <Activity className="h-3 w-3" /> Games/User
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> Time/User (coming)
+                ))}
+                <div className="pt-2 border-t flex items-center gap-4 text-muted-foreground/50">
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-3 w-3" /> Ads/User
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Activity className="h-3 w-3" /> Games/User
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> Time/User (coming)
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </CardContent>
     </Card>
