@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2 } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2, Save, ChevronDown, ChevronUp } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { QuestionIconPicker } from "./QuestionIconPicker";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 
@@ -42,10 +43,17 @@ interface GeneratedData {
   rounds: GeneratedRound[];
 }
 
+interface Draft {
+  id: string;
+  title: string;
+  updated_at: string;
+}
+
 interface CreateCollectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCollectionCreated?: () => void;
+  draftId?: string | null;
 }
 
 const COVER_GRADIENTS = [
@@ -59,7 +67,7 @@ const COVER_GRADIENTS = [
   "from-teal-400 to-cyan-500",
 ];
 
-export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated }: CreateCollectionModalProps) {
+export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId }: CreateCollectionModalProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -75,10 +83,77 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0, status: "" });
   const [isPosting, setIsPosting] = useState(false);
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
   
   // Generated data for Step 3
   const [generatedData, setGeneratedData] = useState<GeneratedData | null>(null);
-  const [editingQuestion, setEditingQuestion] = useState<{ roundIdx: number; questionIdx: number } | null>(null);
+  const [expandedQuestion, setExpandedQuestion] = useState<{ roundIdx: number; questionIdx: number } | null>(null);
+  
+  // Drafts list
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [showDrafts, setShowDrafts] = useState(false);
+
+  // Load drafts on mount
+  useEffect(() => {
+    if (open && user) {
+      loadDrafts();
+    }
+  }, [open, user]);
+
+  // Load specific draft if draftId provided
+  useEffect(() => {
+    if (draftId && open) {
+      loadDraft(draftId);
+    }
+  }, [draftId, open]);
+
+  const loadDrafts = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("collection_drafts")
+      .select("id, title, updated_at")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(5);
+    
+    if (data) {
+      setDrafts(data);
+    }
+  };
+
+  const loadDraft = async (id: string) => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("collection_drafts")
+      .select("*")
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .single();
+    
+    if (error || !data) {
+      toast.error("დრაფტის ჩატვირთვა ვერ მოხერხდა");
+      return;
+    }
+    
+    setCurrentDraftId(id);
+    setTitle(data.title || "");
+    setDescription(data.description || "");
+    setIsPublic(data.is_public ?? true);
+    
+    if (data.rounds_config) {
+      setRounds(data.rounds_config as unknown as CollectionRound[]);
+    }
+    
+    if (data.generated_data) {
+      setGeneratedData(data.generated_data as unknown as GeneratedData);
+      setStep(3);
+    }
+    
+    toast.success("დრაფტი ჩაიტვირთა");
+  };
 
   const resetForm = () => {
     setStep(1);
@@ -90,8 +165,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
     setGenerationProgress({ current: 0, total: 0, status: "" });
     setIsPosting(false);
     setGeneratedData(null);
-    setEditingQuestion(null);
+    setExpandedQuestion(null);
     setIsGeneratingCover(false);
+    setCurrentDraftId(null);
+    setShowDrafts(false);
   };
 
   const handleClose = () => {
@@ -173,7 +250,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
         }
       } catch (coverError) {
         console.error("Cover generation failed:", coverError);
-        // Continue without cover image
       }
 
       // Set generated data and move to Step 3
@@ -241,6 +317,90 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
     setGeneratedData({ ...generatedData, rounds: newRounds });
   };
 
+  const updateIncorrectAnswer = (roundIdx: number, questionIdx: number, answerIdx: number, value: string) => {
+    if (!generatedData) return;
+    
+    const newRounds = [...generatedData.rounds];
+    const newIncorrectAnswers = [...newRounds[roundIdx].questions[questionIdx].incorrect_answers];
+    newIncorrectAnswers[answerIdx] = value;
+    
+    newRounds[roundIdx] = {
+      ...newRounds[roundIdx],
+      questions: newRounds[roundIdx].questions.map((q, idx) => 
+        idx === questionIdx ? { ...q, incorrect_answers: newIncorrectAnswers } : q
+      ),
+    };
+    
+    setGeneratedData({ ...generatedData, rounds: newRounds });
+  };
+
+  const handleSaveDraft = async () => {
+    if (!user || !generatedData) return;
+    
+    setIsSavingDraft(true);
+    try {
+      const draftData = {
+        user_id: user.id,
+        title: title || null,
+        description: description || null,
+        cover_image: generatedData.coverImage,
+        cover_gradient: coverGradient,
+        is_public: isPublic,
+        rounds_config: rounds as unknown as any,
+        generated_data: generatedData as unknown as any,
+      };
+
+      if (currentDraftId) {
+        // Update existing draft
+        const { error } = await supabase
+          .from("collection_drafts")
+          .update(draftData)
+          .eq("id", currentDraftId);
+        
+        if (error) throw error;
+        toast.success("დრაფტი განახლდა!");
+      } else {
+        // Create new draft
+        const { data, error } = await supabase
+          .from("collection_drafts")
+          .insert([draftData])
+          .select("id")
+          .single();
+        
+        if (error) throw error;
+        setCurrentDraftId(data.id);
+        toast.success("დრაფტი შეინახა!");
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
+      loadDrafts();
+    } catch (error: any) {
+      console.error("Error saving draft:", error);
+      toast.error("დრაფტის შენახვა ვერ მოხერხდა");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const deleteDraft = async (id: string) => {
+    const { error } = await supabase
+      .from("collection_drafts")
+      .delete()
+      .eq("id", id);
+    
+    if (error) {
+      toast.error("დრაფტის წაშლა ვერ მოხერხდა");
+      return;
+    }
+    
+    if (currentDraftId === id) {
+      setCurrentDraftId(null);
+    }
+    
+    loadDrafts();
+    toast.success("დრაფტი წაიშალა");
+  };
+
   const handlePublish = async () => {
     if (!user || !generatedData) return;
 
@@ -286,10 +446,19 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
         if (postError) throw postError;
       }
 
+      // Delete draft if exists
+      if (currentDraftId) {
+        await supabase
+          .from("collection_drafts")
+          .delete()
+          .eq("id", currentDraftId);
+      }
+
       toast.success("კოლექცია წარმატებით გამოქვეყნდა!");
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
       onCollectionCreated?.();
       handleClose();
     } catch (error: any) {
@@ -312,6 +481,52 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
         <h3 className="text-xl font-bold text-foreground">შექმენი კოლექცია</h3>
         <p className="text-sm text-muted-foreground mt-1">რამდენიმე რაუნდი ერთად</p>
       </div>
+
+      {/* Drafts Section */}
+      {drafts.length > 0 && (
+        <div className="bg-muted/50 rounded-xl p-3">
+          <button
+            onClick={() => setShowDrafts(!showDrafts)}
+            className="flex items-center justify-between w-full text-sm font-medium text-foreground"
+          >
+            <span>შენახული დრაფტები ({drafts.length})</span>
+            {showDrafts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          
+          <AnimatePresence>
+            {showDrafts && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 space-y-2">
+                  {drafts.map((draft) => (
+                    <div key={draft.id} className="flex items-center justify-between bg-background rounded-lg p-2">
+                      <button
+                        onClick={() => loadDraft(draft.id)}
+                        className="flex-1 text-left"
+                      >
+                        <p className="text-sm font-medium truncate">{draft.title || "უსათაურო დრაფტი"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(draft.updated_at).toLocaleDateString("ka-GE")}
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => deleteDraft(draft.id)}
+                        className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Collection Title */}
       <div>
@@ -471,6 +686,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
     if (!generatedData) return null;
 
     const remainingCoverTries = 3 - generatedData.coverGenerationCount;
+    const isExpanded = (rIdx: number, qIdx: number) => 
+      expandedQuestion?.roundIdx === rIdx && expandedQuestion?.questionIdx === qIdx;
 
     return (
       <motion.div
@@ -537,7 +754,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
           />
         </div>
 
-        {/* Questions Preview */}
+        {/* Questions Preview with Full Editing */}
         <div className="space-y-4">
           <label className="text-sm font-medium text-foreground block">კითხვები</label>
           
@@ -551,9 +768,15 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
               {round.questions.map((question, questionIdx) => (
                 <div 
                   key={questionIdx}
-                  className="bg-background rounded-lg p-3 space-y-2"
+                  className="bg-background rounded-lg overflow-hidden"
                 >
-                  <div className="flex items-start gap-2">
+                  {/* Question Header - Always visible */}
+                  <button
+                    onClick={() => setExpandedQuestion(
+                      isExpanded(roundIdx, questionIdx) ? null : { roundIdx, questionIdx }
+                    )}
+                    className="w-full p-3 flex items-start gap-2 text-left hover:bg-muted/50 transition-colors"
+                  >
                     {/* Icon */}
                     <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                       {question.icon_slug ? (
@@ -563,48 +786,91 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
                       )}
                     </div>
                     
-                    {/* Question Text */}
+                    {/* Question Preview */}
                     <div className="flex-1 min-w-0">
-                      {editingQuestion?.roundIdx === roundIdx && editingQuestion?.questionIdx === questionIdx ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={question.question_text}
-                            onChange={(e) => updateGeneratedQuestion(roundIdx, questionIdx, { question_text: e.target.value })}
-                            className="text-sm"
-                            placeholder="კითხვა"
-                          />
-                          <Input
-                            value={question.correct_answer}
-                            onChange={(e) => updateGeneratedQuestion(roundIdx, questionIdx, { correct_answer: e.target.value })}
-                            className="text-sm text-green-600"
-                            placeholder="სწორი პასუხი"
-                          />
+                      <p className="text-sm text-foreground line-clamp-2">{question.question_text}</p>
+                      <p className="text-xs text-green-600 mt-1">✓ {question.correct_answer}</p>
+                    </div>
+                    
+                    {/* Expand Icon */}
+                    <div className="p-1">
+                      {isExpanded(roundIdx, questionIdx) ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Edit2 className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
+                  
+                  {/* Expanded Edit Form */}
+                  <AnimatePresence>
+                    {isExpanded(roundIdx, questionIdx) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+                          {/* Icon Picker */}
+                          <div>
+                            <label className="text-xs text-muted-foreground mb-1.5 block">აიქონი</label>
+                            <QuestionIconPicker
+                              selectedSlug={question.icon_slug || ""}
+                              onSelect={(slug) => updateGeneratedQuestion(roundIdx, questionIdx, { icon_slug: slug })}
+                              questionText={question.question_text}
+                            />
+                          </div>
+                          
+                          {/* Question Text */}
+                          <div>
+                            <label className="text-xs text-muted-foreground mb-1.5 block">კითხვა</label>
+                            <Textarea
+                              value={question.question_text}
+                              onChange={(e) => updateGeneratedQuestion(roundIdx, questionIdx, { question_text: e.target.value })}
+                              className="text-sm rounded-lg resize-none"
+                              rows={2}
+                            />
+                          </div>
+                          
+                          {/* Correct Answer */}
+                          <div>
+                            <label className="text-xs text-green-600 mb-1.5 block">სწორი პასუხი</label>
+                            <Input
+                              value={question.correct_answer}
+                              onChange={(e) => updateGeneratedQuestion(roundIdx, questionIdx, { correct_answer: e.target.value })}
+                              className="text-sm rounded-lg border-green-500/30 focus:border-green-500"
+                            />
+                          </div>
+                          
+                          {/* Incorrect Answers */}
+                          <div>
+                            <label className="text-xs text-destructive mb-1.5 block">არასწორი პასუხები</label>
+                            <div className="space-y-2">
+                              {question.incorrect_answers.map((answer, answerIdx) => (
+                                <Input
+                                  key={answerIdx}
+                                  value={answer}
+                                  onChange={(e) => updateIncorrectAnswer(roundIdx, questionIdx, answerIdx, e.target.value)}
+                                  className="text-sm rounded-lg"
+                                  placeholder={`პასუხი ${answerIdx + 1}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Done Button */}
                           <button
-                            onClick={() => setEditingQuestion(null)}
-                            className="text-xs text-primary font-medium flex items-center gap-1"
+                            onClick={() => setExpandedQuestion(null)}
+                            className="w-full py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium flex items-center justify-center gap-1"
                           >
-                            <Check className="w-3 h-3" />
+                            <Check className="w-4 h-4" />
                             დასრულება
                           </button>
                         </div>
-                      ) : (
-                        <>
-                          <p className="text-sm text-foreground line-clamp-2">{question.question_text}</p>
-                          <p className="text-xs text-green-600 mt-1">✓ {question.correct_answer}</p>
-                        </>
-                      )}
-                    </div>
-                    
-                    {/* Edit Button */}
-                    {!(editingQuestion?.roundIdx === roundIdx && editingQuestion?.questionIdx === questionIdx) && (
-                      <button
-                        onClick={() => setEditingQuestion({ roundIdx, questionIdx })}
-                        className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
+                      </motion.div>
                     )}
-                  </div>
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
@@ -627,24 +893,46 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
           </button>
         </div>
 
-        {/* Publish Button */}
-        <button
-          onClick={handlePublish}
-          disabled={isPosting}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-        >
-          {isPosting ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              იქვეყნება...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5" />
-              გამოქვეყნება
-            </>
-          )}
-        </button>
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          {/* Save as Draft Button */}
+          <button
+            onClick={handleSaveDraft}
+            disabled={isSavingDraft}
+            className="w-full py-3 rounded-xl bg-muted text-foreground font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-muted/80 transition-colors"
+          >
+            {isSavingDraft ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                ინახება...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                დრაფტად შენახვა
+              </>
+            )}
+          </button>
+
+          {/* Publish Button */}
+          <button
+            onClick={handlePublish}
+            disabled={isPosting}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          >
+            {isPosting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                იქვეყნება...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5" />
+                გამოქვეყნება
+              </>
+            )}
+          </button>
+        </div>
       </motion.div>
     );
   };

@@ -333,6 +333,48 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_drafts: {
+        Row: {
+          cover_gradient: string | null
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          generated_data: Json | null
+          id: string
+          is_public: boolean | null
+          rounds_config: Json
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_gradient?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          generated_data?: Json | null
+          id?: string
+          is_public?: boolean | null
+          rounds_config?: Json
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_gradient?: string | null
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          generated_data?: Json | null
+          id?: string
+          is_public?: boolean | null
+          rounds_config?: Json
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cover_image_generations: {
         Row: {
           created_at: string | null
