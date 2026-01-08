@@ -17,10 +17,11 @@ interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
   searchQuery?: string;
+  onPlay?: (post: any, collectionPosts?: any[]) => void;
 }
 
 // Compact quiz card for inside collections
-function CollectionQuizCard({ quiz, profile, onEdit }: { quiz: any; profile: any; onEdit: (quiz: any) => void }) {
+function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; profile: any; onEdit: (quiz: any) => void; onPlay?: (quiz: any) => void }) {
   // Get icon from quiz's icon_slug or first question's icon
   const iconSlug = quiz.icon_slug || (Array.isArray(quiz.questions) ? quiz.questions[0]?.icon_slug : null);
   
@@ -64,7 +65,16 @@ function CollectionQuizCard({ quiz, profile, onEdit }: { quiz: any; profile: any
           <Heart className="w-3 h-3" />
           <span>{quiz.likes_count || 0}</span>
         </div>
-        <ChunkyButton size="sm" variant="secondary" className="text-xs px-2 py-1 h-7">
+        <div className="flex items-center gap-1 text-xs">
+          <Play className="w-3 h-3" />
+          <span>{quiz.plays_count || 0}</span>
+        </div>
+        <ChunkyButton 
+          size="sm" 
+          variant="secondary" 
+          className="text-xs px-2 py-1 h-7"
+          onClick={() => onPlay?.(quiz)}
+        >
           <Play className="w-3 h-3" />
         </ChunkyButton>
       </div>
@@ -81,7 +91,7 @@ function getGradientProps(gradient: string) {
 }
 
 // Expandable collection card
-function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void }) {
+function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound, onPlay }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void; onPlay?: (quiz: any, allQuizzes?: any[]) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
@@ -175,10 +185,15 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            {/* Round count badge */}
-            <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-semibold">
-              რაუნდები
+          <div className="flex items-center gap-3">
+            {/* Stats */}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Heart className="w-3.5 h-3.5" />
+              <span>{collection.likes_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Play className="w-3.5 h-3.5" />
+              <span>{collection.plays_count || 0}</span>
             </div>
             
             {/* Expand/Collapse icon */}
@@ -215,6 +230,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
                     quiz={quiz} 
                     profile={profile}
                     onEdit={onEditRound}
+                    onPlay={(q) => onPlay?.(q, quizzes)}
                   />
                 ))
               ) : (
@@ -246,7 +262,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profile: any; index: number; onEdit: (post: any) => void }) {
+function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void }) {
   const gradientProps = getGradientProps(post.cover_gradient);
 
   return (
@@ -339,7 +355,12 @@ function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profi
             </div>
           </div>
           
-          <ChunkyButton size="sm" variant="secondary" className="text-xs">
+          <ChunkyButton 
+            size="sm" 
+            variant="secondary" 
+            className="text-xs"
+            onClick={() => onPlay?.(post)}
+          >
             <Play className="w-3.5 h-3.5" />
             <span>თამაში</span>
           </ChunkyButton>
@@ -349,7 +370,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profi
   );
 }
 
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = "" }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = "", onPlay }: MyTriviaTabProps) {
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
@@ -450,6 +471,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
             onAddRound={(collectionId, roundNumber) => 
               setAddingToCollection({ collectionId, roundNumber })
             }
+            onPlay={onPlay}
           />
         ))}
 
@@ -461,6 +483,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
             profile={profile} 
             index={index} 
             onEdit={(post) => setEditingQuiz(post)}
+            onPlay={onPlay}
           />
         ))}
       </div>
