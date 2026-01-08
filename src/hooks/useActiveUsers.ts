@@ -11,6 +11,7 @@ export interface ActiveUser {
   avatar_url: string | null;
   country_code: string | null;
   region: string | null;
+  isGuest: boolean;
 }
 
 export const useActiveUsers = () => {
@@ -51,16 +52,22 @@ export const useActiveUsers = () => {
 
       const usersWithProfiles: ActiveUser[] = presenceData.map(presence => {
         const profile = profilesMap.get(presence.user_id);
+        const isGuest = !profile;
+        // Generate short unique ID from user_id for guests
+        const guestId = presence.user_id.slice(0, 6).toUpperCase();
+        
         return {
           id: presence.id,
           user_id: presence.user_id,
           status: presence.status as 'online' | 'away' | 'offline',
           current_page: presence.current_page,
           last_seen: presence.last_seen,
-          nickname: profile?.nickname || 'უცნობი',
+          nickname: profile?.nickname || `სტუმარი #${guestId}`,
           avatar_url: profile?.avatar_url || null,
-          country_code: profile?.country_code || null,
-          region: profile?.region || null,
+          // Use presence country_code for guests, or profile data for registered users
+          country_code: profile?.country_code || (presence as any).country_code || null,
+          region: profile?.region || (presence as any).region || null,
+          isGuest,
         };
       });
 

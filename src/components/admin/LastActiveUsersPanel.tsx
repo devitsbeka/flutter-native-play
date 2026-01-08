@@ -173,6 +173,12 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
                         alt={user.nickname}
                         className="w-10 h-10 rounded-full object-cover"
                       />
+                    ) : user.isGuest ? (
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                      </div>
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
                         {user.nickname?.[0]?.toUpperCase() || '?'}
@@ -197,17 +203,21 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
                     </p>
                   </div>
 
-                  {/* Flag on right */}
-                  {(user.country_code || user.region) && (
-                    <img
-                      src={`https://flagcdn.com/24x18/${(user.country_code || user.region || 'ge').toLowerCase()}.png`}
-                      alt={user.country_code || user.region || ''}
-                      className="w-6 h-[18px] rounded-[3px] object-cover flex-shrink-0"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://flagcdn.com/24x18/ge.png';
-                      }}
-                    />
-                  )}
+                  {/* Flag on right - always show, use globe for unknown */}
+                  <div className="flex-shrink-0">
+                    {(user.country_code || user.region) ? (
+                      <img
+                        src={`https://flagcdn.com/24x18/${(user.country_code || user.region).toLowerCase()}.png`}
+                        alt={user.country_code || user.region || ''}
+                        className="w-6 h-[18px] rounded-[3px] object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span className="text-base">🌍</span>
+                    )}
+                  </div>
                 </div>
               );
             })
