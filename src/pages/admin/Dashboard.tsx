@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { NavLink } from 'react-router-dom';
 import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
+import { PalantirAnalyticsWidget } from '@/components/admin/PalantirAnalyticsWidget';
 
 export default function AdminDashboard() {
   const { categories } = useAdminCategories();
@@ -270,6 +271,9 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Palantir Analytics Widget */}
+        <PalantirAnalyticsWidget />
         </div>
       </ScrollArea>
     </>
