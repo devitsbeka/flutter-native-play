@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, ImageIcon, RefreshCw } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverGradient, setCoverGradient] = useState(COVER_GRADIENTS[0]);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [isGeneratingCover, setIsGeneratingCover] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [rounds, setRounds] = useState<CollectionRound[]>([
     { subject: "", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }
@@ -57,6 +59,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
     setTitle("");
     setDescription("");
     setCoverGradient(COVER_GRADIENTS[0]);
+    setCoverImage(null);
+    setIsGeneratingCover(false);
     setIsPublic(true);
     setRounds([{ subject: "", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }]);
     setIsGenerating(false);
@@ -89,6 +93,41 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
 
   const canProceed = rounds.every(r => r.subject.trim().length > 0);
 
+  const generateCoverImage = async () => {
+    if (!user || isGeneratingCover) return;
+
+    const subjects = rounds.map(r => r.subject).filter(Boolean).join(", ");
+    if (!subjects) {
+      toast.error("გთხოვთ შეიყვანოთ თემა");
+      return;
+    }
+
+    setIsGeneratingCover(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-cover-image", {
+        body: {
+          title: title || `კოლექცია: ${subjects}`,
+          subject: subjects,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.imageUrl) {
+        setCoverImage(data.imageUrl);
+        toast.success("გარეკანი წარმატებით შეიქმნა!");
+      } else {
+        throw new Error("სურათი ვერ მოიძებნა");
+      }
+    } catch (error: any) {
+      console.error("Error generating cover:", error);
+      toast.error(error.message || "გარეკანის გენერაცია ვერ მოხერხდა");
+    } finally {
+      setIsGeneratingCover(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!user) return;
 
@@ -105,6 +144,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
           title: title || `კოლექცია: ${rounds.map(r => r.subject).join(", ")}`,
           description,
           cover_gradient: coverGradient,
+          cover_image: coverImage,
           is_public: isPublic,
         })
         .select()
@@ -140,6 +180,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
             question_count: quizData.questions.length,
             answer_format: round.answerFormat,
             cover_gradient: coverGradient,
+            cover_image: coverImage,
             is_public: isPublic,
             collection_id: collection.id,
             round_number: i + 1,
@@ -174,6 +215,64 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
         <img src={iconCollections} alt="" className="w-14 h-14 mx-auto mb-4" />
         <h3 className="text-xl font-bold text-foreground">შექმენი კოლექცია</h3>
         <p className="text-sm text-muted-foreground mt-1">რამდენიმე რაუნდი ერთად</p>
+      </div>
+
+      {/* Cover Image Preview */}
+      <div>
+        <label className="text-sm font-medium text-foreground mb-2 block">გარეკანი</label>
+        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-muted border border-border">
+          {coverImage ? (
+            <img 
+              src={coverImage} 
+              alt="Cover" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${coverGradient} flex items-center justify-center`}>
+              <div className="text-center text-white/80">
+                <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-60" />
+                <p className="text-sm font-medium">AI გარეკანი</p>
+              </div>
+            </div>
+          )}
+          
+          {/* Preview overlay with title */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
+            <p className="text-white font-bold text-lg truncate">
+              {title || rounds.map(r => r.subject).filter(Boolean).join(", ") || "კოლექციის სახელი"}
+            </p>
+            <p className="text-white/70 text-sm">
+              {rounds.length} რაუნდი • {rounds.reduce((acc, r) => acc + r.questionCount, 0)} კითხვა
+            </p>
+          </div>
+
+          {/* Generate button overlay */}
+          <button
+            onClick={generateCoverImage}
+            disabled={isGeneratingCover || !rounds.some(r => r.subject.trim())}
+            className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-background/90 backdrop-blur-sm rounded-lg text-sm font-medium hover:bg-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingCover ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                იქმნება...
+              </>
+            ) : coverImage ? (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                ახალი
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                გენერაცია
+              </>
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          შეიყვანეთ თემა და დააჭირეთ "გენერაცია" AI გარეკანისთვის
+        </p>
       </div>
 
       {/* Collection Title */}
@@ -327,8 +426,15 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col items-center justify-center py-12"
     >
-      <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${coverGradient} flex items-center justify-center mb-6`}>
-        <Loader2 className="w-10 h-10 text-white animate-spin" />
+      <div className="w-32 h-20 rounded-2xl overflow-hidden mb-6 relative">
+        {coverImage ? (
+          <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${coverGradient}`} />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <Loader2 className="w-8 h-8 text-white animate-spin" />
+        </div>
       </div>
       
       <h3 className="text-xl font-bold text-foreground mb-2">იქმნება კოლექცია...</h3>
@@ -338,7 +444,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
       
       <div className="w-full max-w-xs bg-muted rounded-full h-2 overflow-hidden">
         <motion.div
-          className={`h-full bg-gradient-to-r ${coverGradient}`}
+          className="h-full bg-gradient-to-r from-purple-500 to-indigo-600"
           initial={{ width: 0 }}
           animate={{ width: `${(generationProgress.current / generationProgress.total) * 100}%` }}
           transition={{ duration: 0.5 }}

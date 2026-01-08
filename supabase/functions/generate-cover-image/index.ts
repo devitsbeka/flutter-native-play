@@ -43,7 +43,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Check generation limit for this round (max 3)
+    // Check generation limit (max 3 per round or session)
     let previousGenerations: any[] = [];
     if (roundId) {
       const { data: existingGenerations } = await supabaseAdmin
