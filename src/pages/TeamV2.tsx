@@ -287,6 +287,7 @@ function TeamContentV2() {
                 onCreateQuiz={() => setShowCreateQuizModal(true)} 
                 onCreateCollection={() => setShowCreateCollectionModal(true)}
                 searchQuery={searchQuery}
+                sortFilter={sortFilter}
                 onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               />
             </div>

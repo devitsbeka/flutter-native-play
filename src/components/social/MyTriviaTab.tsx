@@ -31,10 +31,13 @@ function formatGeorgianTimeAgo(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
+import { SortFilter } from "./FeedFiltersBar";
+
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
   searchQuery?: string;
+  sortFilter?: SortFilter;
   onPlay?: (post: any, collectionPosts?: any[]) => void;
 }
 
@@ -388,7 +391,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: an
   );
 }
 
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = "", onPlay }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = "", sortFilter = "all", onPlay }: MyTriviaTabProps) {
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
@@ -406,7 +409,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
   
   // Apply search filter
   const searchLower = searchQuery.toLowerCase().trim();
-  const standalonePosts = searchLower 
+  const searchFilteredPosts = searchLower 
     ? allStandalonePosts.filter(post => 
         post.title?.toLowerCase().includes(searchLower) ||
         post.subject?.toLowerCase().includes(searchLower) ||
@@ -414,13 +417,17 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
       )
     : allStandalonePosts;
   
-  const filteredCollections = searchLower 
+  const searchFilteredCollections = searchLower 
     ? myCollections?.filter(col => 
         col.title?.toLowerCase().includes(searchLower) ||
         col.description?.toLowerCase().includes(searchLower) ||
         col.hashtags?.some((h: string) => h.toLowerCase().includes(searchLower))
       )
     : myCollections;
+
+  // Apply sortFilter (type filter) - "trivias" shows only standalone, "collections" shows only collections
+  const standalonePosts = sortFilter === "collections" ? [] : searchFilteredPosts;
+  const filteredCollections = sortFilter === "trivias" ? [] : searchFilteredCollections;
   
   const hasContent = (filteredCollections && filteredCollections.length > 0) || standalonePosts.length > 0;
 
