@@ -38,11 +38,19 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch game sessions count
-      const { count: sessionsCount } = await supabase
-        .from('game_sessions')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today);
+      // Fetch games played today - count from user_level_progress (solo) and room_games (multiplayer)
+      const [levelProgress, roomGames] = await Promise.all([
+        supabase
+          .from('user_level_progress')
+          .select('*', { count: 'exact', head: true })
+          .gte('completed_at', today),
+        supabase
+          .from('room_games')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', today),
+      ]);
+      
+      const totalGamesToday = (levelProgress.count || 0) + (roomGames.count || 0);
       
       // Fetch total questions count
       const { count: totalQ } = await supabase
@@ -63,7 +71,7 @@ export default function AdminDashboard() {
       
       const totalAdsWatched = adsData?.reduce((sum, d) => sum + (d.plays_from_ads || 0), 0) || 0;
       
-      setTotalGameSessions(sessionsCount || 0);
+      setTotalGameSessions(totalGamesToday);
       setTotalQuestions(totalQ || 0);
       setActiveQuestions(activeQ || 0);
       setAdsWatched(totalAdsWatched);
