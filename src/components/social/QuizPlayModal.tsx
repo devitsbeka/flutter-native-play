@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, Share2, ChevronRight, Coins, Star, Heart, MessageCircle, Bookmark } from "lucide-react";
+import { X, RotateCcw, Share2, ChevronRight, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -318,8 +318,8 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex-1 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-20 h-20 mb-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <img src={trophyWinIcon} alt="Trophy" className="w-12 h-12 object-contain" />
+                  <div className="w-[104px] h-[104px] mb-8 flex items-center justify-center">
+                    <img src={trophyWinIcon} alt="Trophy" className="w-16 h-16 object-contain" />
                   </div>
                   
                   <h3 className="text-2xl font-bold text-white mb-2">
@@ -360,22 +360,48 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                     )}
                   </div>
                   
-                  <p className="text-white/80 text-lg mb-6">
-                    გაგრძელება შემდეგ რაუნდზე?
-                  </p>
-                  
-                  <div className="flex flex-col gap-3 w-full max-w-sm">
+                  <div className="flex flex-col gap-4 w-full max-w-sm items-center">
                     <ChunkyButton onClick={startNextRound} className="w-full">
                       <ChevronRight className="w-4 h-4 mr-2" />
                       გაგრძელება ({currentRoundIndex + 2}/{totalRounds})
                     </ChunkyButton>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleFinishCollection} 
-                      className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
-                    >
-                      დასრულება
-                    </Button>
+                    
+                    <div className="flex items-center justify-center gap-6 mt-2">
+                      <button 
+                        onClick={() => post?.id && toggleLike(post.id)}
+                        className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                      >
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                          userLikes.includes(post?.id || '') ? 'bg-red-500/30' : 'bg-white/20'
+                        }`}>
+                          <Heart className={`w-6 h-6 transition-colors ${
+                            userLikes.includes(post?.id || '') ? 'text-red-400 fill-red-400' : 'text-white'
+                          }`} />
+                        </div>
+                        <span className="text-white/70 text-xs">{post?.likesCount || 0}</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => post?.id && toggleSave(post.id)}
+                        className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                      >
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                          userSaves.includes(post?.id || '') ? 'bg-amber-500/30' : 'bg-white/20'
+                        }`}>
+                          <Bookmark className={`w-6 h-6 transition-colors ${
+                            userSaves.includes(post?.id || '') ? 'text-amber-400 fill-amber-400' : 'text-white'
+                          }`} />
+                        </div>
+                        <span className="text-white/70 text-xs">{post?.savesCount || 0}</span>
+                      </button>
+                      
+                      <div className="flex flex-col items-center gap-1.5">
+                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-white/70 text-xs">{post?.playsCount || 0}</span>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               ) : gameComplete || allRoundsComplete ? (
@@ -457,15 +483,6 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                       <span className="text-white/70 text-xs">მოწონება</span>
                     </button>
                     
-                    <button 
-                      onClick={() => toast.info("კომენტარები მალე!")}
-                      className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                        <MessageCircle className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="text-white/70 text-xs">კომენტარი</span>
-                    </button>
                     
                     <button 
                       onClick={() => post?.id && toggleSave(post.id)}

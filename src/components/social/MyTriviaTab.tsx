@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, MessageCircle } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -82,6 +82,10 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
         <div className="flex items-center gap-1 text-xs">
           <Heart className="w-3 h-3" />
           <span>{quiz.likes_count || 0}</span>
+        </div>
+        <div className="flex items-center gap-1 text-xs">
+          <Bookmark className="w-3 h-3" />
+          <span>{quiz.saves_count || 0}</span>
         </div>
         <div className="flex items-center gap-1 text-xs">
           <Play className="w-3 h-3" />
@@ -204,8 +208,8 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
               <span>{collection.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span>{collection.comments_count || 0}</span>
+              <Bookmark className="w-3.5 h-3.5" />
+              <span>{collection.saves_count || 0}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Play className="w-3.5 h-3.5" />
@@ -360,8 +364,8 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: an
               <span>{post.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MessageCircle className="w-4 h-4" />
-              <span>{post.comments_count || 0}</span>
+              <Bookmark className="w-4 h-4" />
+              <span>{post.saves_count || 0}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Play className="w-4 h-4" />
