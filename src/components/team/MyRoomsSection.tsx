@@ -173,7 +173,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
     >
       {/* Full card with light purple background */}
       <div className="relative bg-gradient-to-br from-primary/20 to-primary/30 px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden">
-        {/* Cover image with radial fade */}
+        {/* Cover image with radial fade - flip based on index for variety */}
         <div 
           className="absolute inset-0 opacity-40"
           style={{
@@ -182,6 +182,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
             backgroundPosition: 'center',
             maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
             WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+            transform: `scaleX(${index % 2 === 0 ? 1 : -1}) scaleY(${index % 4 < 2 ? 1 : -1})`,
           }}
         />
         
