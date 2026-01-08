@@ -91,8 +91,8 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
           <p className="text-muted-foreground text-sm">{t('team.noActiveRooms')}</p>
         </motion.div>
       ) : (
-        <div className="overflow-x-auto px-4 pb-4 scrollbar-hide snap-x snap-mandatory -mr-4">
-          <div className="flex gap-3 pr-4">
+        <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
+          <div className="flex gap-3 px-4">
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}
