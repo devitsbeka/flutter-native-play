@@ -589,7 +589,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="კოლექციის სახელი (არასავალდებულო)"
-          className="rounded-xl"
+          className="rounded-xl text-sm"
         />
       </div>
 
