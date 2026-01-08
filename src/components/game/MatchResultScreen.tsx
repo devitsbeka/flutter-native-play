@@ -17,37 +17,42 @@ import { useGameStake } from "@/hooks/useGameStake";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import trophyWinIcon from "@/assets/icons/trophy-win.png";
 
-// Floating trophy animation component
-const FloatingTrophy = () => (
+// Import video animations
+import wonVideo from "@/assets/animations/won.mp4";
+import lostVideo from "@/assets/animations/lost.mp4";
+
+// Animated video icon component
+const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => (
   <motion.div
     initial={{ scale: 0, y: 50, opacity: 0 }}
     animate={{ 
       scale: 1, 
-      y: [0, -15, 0], 
+      y: 0, 
       opacity: 1,
     }}
     transition={{ 
       scale: { type: "spring", stiffness: 200, damping: 15 },
-      y: { 
-        duration: 2, 
-        repeat: Infinity, 
-        ease: "easeInOut" 
-      },
       opacity: { duration: 0.3 }
     }}
     className="relative"
   >
-    {/* Golden glow effect */}
+    {/* Glow effect */}
     <div 
       className="absolute inset-0 blur-xl rounded-full"
       style={{
-        background: "radial-gradient(circle, rgba(250, 204, 21, 0.6) 0%, transparent 70%)",
+        background: "radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%)",
         transform: "scale(1.5)",
       }}
     />
-    <img src={trophyWinIcon} alt="Victory" className="w-24 h-24 object-contain relative drop-shadow-lg" />
+    <video 
+      src={videoSrc}
+      autoPlay
+      loop
+      muted
+      playsInline
+      className="w-40 h-40 object-contain relative drop-shadow-lg"
+    />
   </motion.div>
 );
 
@@ -325,7 +330,7 @@ export function MatchResultScreen() {
   const getResultConfig = () => {
     if (isWin) {
       return {
-        icon: <FloatingTrophy />,
+        icon: <AnimatedResultIcon videoSrc={wonVideo} />,
         text: t("game.victory"),
       };
     }
@@ -336,7 +341,7 @@ export function MatchResultScreen() {
       };
     }
     return {
-      icon: <span className="text-5xl">😔</span>,
+      icon: <AnimatedResultIcon videoSrc={lostVideo} />,
       text: t("game.lose"),
     };
   };

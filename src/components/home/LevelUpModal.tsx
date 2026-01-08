@@ -6,6 +6,7 @@ import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { useLanguage } from "@/contexts/LanguageContext";
+import upgradeVideo from "@/assets/animations/upgrade.mp4";
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -35,60 +36,56 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
       hideCloseButton
       disableBackdropClick
     >
-      {/* Level Badge Animation */}
+      {/* Animated Video Icon */}
       <motion.div
         className="relative mx-auto mb-4"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", delay: 0.3, stiffness: 200 }}
       >
-        {/* Glow ring */}
+        {/* Glow effect */}
         <motion.div
           className="absolute inset-0 rounded-full opacity-40 blur-xl"
           style={{
-            background: "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
+            background: "radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%)",
+            transform: "scale(1.3)",
           }}
           animate={{ scale: [1, 1.3, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
         
-        {/* Level badge - 3D chunky style */}
-        <div 
-          className="relative w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full"
-          style={{
-            background: "linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%)",
-            boxShadow: "0 6px 0 #F59E0B, inset 0 2px 8px rgba(255,255,255,0.8)",
-            border: "4px solid #FBBF24",
-          }}
-        >
-          <motion.span
-            className="text-5xl font-display font-bold text-amber-600"
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
-          >
-            {newLevel}
-          </motion.span>
-          <span className="text-sm font-bold text-amber-700">{t("modals.levelLabel")}</span>
-        </div>
+        {/* Video animation */}
+        <video 
+          src={upgradeVideo}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-36 h-36 object-contain relative drop-shadow-lg"
+        />
+      </motion.div>
 
-        {/* Stars around badge */}
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ delay: 0.6 + i * 0.1, type: "spring" }}
-            style={{
-              left: `${50 + Math.cos((i * 2 * Math.PI) / 3 - Math.PI / 2) * 55}%`,
-              top: `${50 + Math.sin((i * 2 * Math.PI) / 3 - Math.PI / 2) * 55}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            <Star className="w-6 h-6 text-amber-500 fill-amber-400 drop-shadow-lg" />
-          </motion.div>
-        ))}
+      {/* Level Badge */}
+      <motion.div
+        initial={{ scale: 0, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
+        className="relative w-24 h-24 mx-auto flex flex-col items-center justify-center rounded-full mb-4"
+        style={{
+          background: "linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%)",
+          boxShadow: "0 6px 0 #F59E0B, inset 0 2px 8px rgba(255,255,255,0.8)",
+          border: "4px solid #FBBF24",
+        }}
+      >
+        <motion.span
+          className="text-4xl font-display font-bold text-amber-600"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", delay: 0.7, stiffness: 200 }}
+        >
+          {newLevel}
+        </motion.span>
+        <span className="text-xs font-bold text-amber-700">{t("modals.levelLabel")}</span>
       </motion.div>
 
       {/* Previous level info */}
