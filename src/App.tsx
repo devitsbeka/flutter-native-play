@@ -51,6 +51,7 @@ import AdminFlow from "./pages/admin/Flow";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
+import ModalsShowcase from "./pages/ModalsShowcase";
 import Notifications from "./pages/Notifications";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PrivacyPolicyEN from "./pages/PrivacyPolicyEN";
@@ -122,6 +123,7 @@ const App = () => (
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="/all-buttons" element={<AllButtons />} />
+              <Route path="/modals" element={<ModalsShowcase />} />
               <Route path="*" element={<NotFound />} />
                 </Routes>
                 </TooltipProvider>
