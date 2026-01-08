@@ -209,37 +209,6 @@ export function CoverImagePicker({
         />
       </div>
 
-      {/* Gradient picker */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">
-          {currentImage ? "ალტერნატიული ფონი" : "ფონის გრადიენტი"}
-        </label>
-        <div className="grid grid-cols-5 gap-2">
-          {COVER_GRADIENTS.map((gradient, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                onGradientChange(gradient);
-                if (currentImage) {
-                  onImageChange(null); // Clear image to show gradient
-                }
-              }}
-              className={`aspect-square rounded-xl transition-all ${
-                currentGradient === gradient && !currentImage
-                  ? "ring-2 ring-primary ring-offset-2 scale-105"
-                  : "hover:scale-105"
-              }`}
-              style={{ background: gradient }}
-            >
-              {currentGradient === gradient && !currentImage && (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Check className="w-4 h-4 text-white drop-shadow" />
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
