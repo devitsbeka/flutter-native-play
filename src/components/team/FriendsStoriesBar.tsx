@@ -157,7 +157,7 @@ function FriendStoryAvatar({ friend, index, onClick, onProfileClick }: FriendSto
         
         {/* Online indicator dot */}
         <div 
-          className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white z-20 ${
+          className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${
             friend.isOnline 
               ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
               : "bg-slate-400"
