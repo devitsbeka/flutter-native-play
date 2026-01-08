@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ActiveUser } from '@/hooks/useActiveUsers';
 import { countryCoordinates } from '@/lib/countryCoordinates';
@@ -21,6 +21,7 @@ function latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector
 
 export function AdminGlobe({ users }: AdminGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
   const sceneRef = useRef<{
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
@@ -31,6 +32,14 @@ export function AdminGlobe({ users }: AdminGlobeProps) {
 
   useEffect(() => {
     if (!containerRef.current) return;
+    
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => setIsReady(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current || !isReady) return;
 
     const container = containerRef.current;
     const width = container.clientWidth;
@@ -225,7 +234,7 @@ export function AdminGlobe({ users }: AdminGlobeProps) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [users]);
+  }, [users, isReady]);
 
   return (
     <div ref={containerRef} className="absolute inset-0" />
