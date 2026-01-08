@@ -65,6 +65,13 @@ export const REWARDS = {
   MULTIPLAYER_3RD_COINS: 0,
   MULTIPLAYER_PARTICIPATION_COINS: 0,
 
+  // ===== FEED TRIVIA REWARDS (casual play from social feed) =====
+  FEED_TRIVIA_XP_PER_CORRECT: 5,       // XP per correct answer
+  FEED_TRIVIA_PERFECT_XP_BONUS: 10,    // Bonus XP for perfect round
+  FEED_TRIVIA_COINS_PER_CORRECT: 2,    // Coins per correct answer
+  FEED_TRIVIA_PERFECT_COINS_BONUS: 10, // Bonus coins for perfect round
+  FEED_COLLECTION_COMPLETE_COINS: 15,  // Bonus for completing entire collection
+
   // ===== DEPRECATED - Kept for backwards compatibility =====
   // These are no longer used in the stake system
   GAME_WIN_BASE_COINS: 0,
