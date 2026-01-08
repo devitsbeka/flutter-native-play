@@ -131,14 +131,13 @@ export function PalantirAnalyticsWidget() {
       const inProd = inProdCount || 0;
       const inLib = inLibCount || 0;
 
-      if (inProd > 0 || inLib > 0) {
-        buckets.push({
-          language: lang,
-          inProd,
-          inLib,
-          total: inProd + inLib,
-        });
-      }
+      // Always add all languages, even with 0 questions
+      buckets.push({
+        language: lang,
+        inProd,
+        inLib,
+        total: inProd + inLib,
+      });
     }
 
     setLanguageBuckets(buckets.sort((a, b) => b.total - a.total));
@@ -177,6 +176,19 @@ export function PalantirAnalyticsWidget() {
       });
 
       const regionStats: Record<string, RegionalActivity> = {};
+      
+      // Initialize all predefined regions
+      const predefinedRegions = ['ge', 'us', 'ru', 'de', 'uk'];
+      predefinedRegions.forEach(region => {
+        regionStats[region] = {
+          region,
+          onlineNow: 0,
+          played24h: 0,
+          played7d: 0,
+          played30d: 0,
+          totalUsers: 0,
+        };
+      });
 
       profiles.forEach(p => {
         const region = p.region || 'unknown';
@@ -437,9 +449,9 @@ export function PalantirAnalyticsWidget() {
               <div>
                 <h3 className="font-semibold text-sm">ენები</h3>
                 <p className="text-2xl font-bold tracking-tight text-primary">
-                  {languageBuckets.reduce((sum, b) => sum + b.inProd, 0).toLocaleString()}
+                  {languageBuckets.length}
                 </p>
-                <p className="text-[10px] text-muted-foreground">პროდში</p>
+                <p className="text-[10px] text-muted-foreground">ენა სისტემაში</p>
               </div>
               <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
                 <img src={WIDGET_ICONS.languages} alt="" className="w-5 h-5 object-contain" />
@@ -464,9 +476,9 @@ export function PalantirAnalyticsWidget() {
               <div>
                 <h3 className="font-semibold text-sm">აქტივობა</h3>
                 <p className="text-2xl font-bold tracking-tight text-primary">
-                  {regionalActivity.reduce((sum, r) => sum + r.totalUsers, 0).toLocaleString()}
+                  {regionalActivity.filter(r => r.region !== 'unknown').length}
                 </p>
-                <p className="text-[10px] text-muted-foreground">სულ მომხმ.</p>
+                <p className="text-[10px] text-muted-foreground">რეგიონი</p>
               </div>
               <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
                 <img src={WIDGET_ICONS.regional} alt="" className="w-5 h-5 object-contain" />
