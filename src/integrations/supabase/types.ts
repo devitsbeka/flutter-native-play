@@ -1111,6 +1111,7 @@ export type Database = {
           is_public: boolean
           likes_count: number | null
           plays_count: number | null
+          saves_count: number | null
           title: string
           updated_at: string | null
           user_id: string
@@ -1125,6 +1126,7 @@ export type Database = {
           is_public?: boolean
           likes_count?: number | null
           plays_count?: number | null
+          saves_count?: number | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -1139,6 +1141,7 @@ export type Database = {
           is_public?: boolean
           likes_count?: number | null
           plays_count?: number | null
+          saves_count?: number | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -2376,6 +2379,7 @@ export type Database = {
           question_count: number
           questions: Json
           round_number: number | null
+          saves_count: number | null
           subject: string
           title: string
           updated_at: string | null
@@ -2397,6 +2401,7 @@ export type Database = {
           question_count: number
           questions?: Json
           round_number?: number | null
+          saves_count?: number | null
           subject: string
           title: string
           updated_at?: string | null
@@ -2418,6 +2423,7 @@ export type Database = {
           question_count?: number
           questions?: Json
           round_number?: number | null
+          saves_count?: number | null
           subject?: string
           title?: string
           updated_at?: string | null
