@@ -321,16 +321,33 @@ function TeamContent() {
       <div className="relative z-10 flex flex-col overflow-x-hidden">
         {activeTab === "my-trivia" ? (
           <>
-            {/* Friends Stories Bar */}
+            {/* Friends Stories Bar (no title) */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="px-4 py-3"
+              className="px-4 pt-3 pb-1"
             >
               <FriendsStoriesBar
                 onAddFriendClick={() => setShowAddFriendModal(true)}
                 onFriendClick={handleQuickPlay}
               />
+            </motion.div>
+
+            {/* Big Create Trivia Button - 3D mint style */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="px-4 py-3"
+            >
+              <ChunkyButton 
+                onClick={() => setShowCreateQuizModal(true)}
+                className="w-full gap-2 text-base py-4"
+                variant="mint"
+              >
+                <Plus className="w-5 h-5" />
+                შექმენი ტრივია
+              </ChunkyButton>
             </motion.div>
 
             {/* My Rooms Section */}
@@ -343,19 +360,7 @@ function TeamContent() {
               <MyRoomsSection hideTV />
             </motion.div>
 
-            {/* New Room Button */}
-            <div className="px-4 mb-4">
-              <ChunkyButton 
-                onClick={() => setShowCreateModal(true)}
-                className="w-full gap-2"
-                variant="secondary"
-              >
-                <Plus className="w-5 h-5" />
-                + ახალი ოთახი
-              </ChunkyButton>
-            </div>
-
-            {/* My Trivia Posts */}
+            {/* My Content (Trivia Posts) */}
             <div className="px-4">
               <MyTriviaTab onCreateQuiz={() => setShowCreateQuizModal(true)} />
             </div>
