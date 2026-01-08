@@ -191,7 +191,7 @@ export function useSocialFeed() {
       answerFormat: post.answer_format as "4_answers" | "true_false",
       likesCount: post.likes_count || 0,
       playsCount: post.plays_count || 0,
-      savesCount: 0,
+      savesCount: post.saves_count || 0,
       commentsCount: 0,
       questions: questions.map((q: any) => ({
         question: q.question_text || q.question,
