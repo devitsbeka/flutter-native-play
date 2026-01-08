@@ -99,13 +99,13 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           ) : (
             <div className="flex-1 overflow-y-auto">
               {/* Profile Header */}
-              <div className="p-6 flex flex-col items-center">
+          <div className="p-4 flex flex-col items-center">
               <SmartAvatar
                 avatarUrl={data.profile.avatar_url}
                 animatedAvatarUrl={data.profile.animated_avatar_url}
                 fallback={data.profile.nickname}
                 size="2xl"
-                className="w-[150px] h-[150px] [&>span]:bg-transparent"
+                className="w-[124px] h-[124px] [&>span]:bg-transparent [&>span]:w-full [&>span]:h-full"
                 showSparkle={false}
                 autoPlay={true}
               />
