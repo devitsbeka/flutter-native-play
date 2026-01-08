@@ -67,19 +67,19 @@ const FloatingConfetti = () => {
     
     const frame = () => {
       myConfetti({
-        particleCount: 2,
+        particleCount: 8,
         angle: 90,
         spread: 180,
         origin: { x: Math.random(), y: -0.1 },
         colors: colors,
         gravity: 0.3,
         drift: Math.random() * 0.4 - 0.2,
-        scalar: 0.8,
+        scalar: 0.9,
         ticks: 400,
       });
     };
 
-    const interval = setInterval(frame, 100);
+    const interval = setInterval(frame, 30);
     
     return () => {
       clearInterval(interval);
@@ -99,7 +99,7 @@ const FloatingConfetti = () => {
 const PlayerCard = ({ 
   avatarUrl, 
   name,
-  score,
+  coinBalance,
   level,
   isWinner,
   winnerLabel,
@@ -107,7 +107,7 @@ const PlayerCard = ({
 }: { 
   avatarUrl?: string | null; 
   name: string;
-  score: number;
+  coinBalance: number;
   level: number;
   isWinner: boolean;
   winnerLabel: string;
@@ -119,31 +119,8 @@ const PlayerCard = ({
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
-    {/* Coin change badge container - fixed height for alignment */}
-    <div className="h-8 flex items-center justify-center mb-2">
-      {coinChange !== undefined && coinChange !== 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, type: "spring" }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
-            coinChange > 0 
-              ? "bg-emerald-500" 
-              : "bg-red-500"
-          }`}
-          style={{ 
-            boxShadow: coinChange > 0 
-              ? "0 3px 0 rgba(5,150,105,0.5)" 
-              : "0 3px 0 rgba(180,0,0,0.5)" 
-          }}
-        >
-          <img src={coinIcon} alt="" className="w-4 h-4" />
-          <span className="font-bold text-white text-sm">
-            {coinChange > 0 ? `+${coinChange}` : coinChange}
-          </span>
-        </motion.div>
-      )}
-    </div>
+    {/* Spacer for alignment - same height as coin badge would take */}
+    <div className="h-8 mb-2" />
 
     {/* Avatar section - fixed height container */}
     <div className="relative h-[110px] flex flex-col items-center justify-end">
@@ -217,20 +194,49 @@ const PlayerCard = ({
       {name}
     </p>
     
-    {/* Score with Level below */}
+    {/* Coin Balance */}
     <motion.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ delay: 0.5, type: "spring" }}
       className="flex flex-col items-center mt-1"
     >
-      <span className="text-3xl font-black" style={{ color: "#F5A623" }}>
-        {score}
-      </span>
+      <div className="flex items-center gap-1.5">
+        <img src={coinIcon} alt="" className="w-6 h-6" />
+        <span className="text-3xl font-black" style={{ color: "#F5A623" }}>
+          {coinBalance.toLocaleString()}
+        </span>
+      </div>
       <span className="text-white/70 text-xs font-medium">
         (Lvl.{level})
       </span>
     </motion.div>
+
+    {/* Coin change badge - moved below */}
+    <div className="h-8 flex items-center justify-center mt-2">
+      {coinChange !== undefined && coinChange !== 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, type: "spring" }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
+            coinChange > 0 
+              ? "bg-emerald-500" 
+              : "bg-red-500"
+          }`}
+          style={{ 
+            boxShadow: coinChange > 0 
+              ? "0 3px 0 rgba(5,150,105,0.5)" 
+              : "0 3px 0 rgba(180,0,0,0.5)" 
+          }}
+        >
+          <img src={coinIcon} alt="" className="w-4 h-4" />
+          <span className="font-bold text-white text-sm">
+            {coinChange > 0 ? `+${coinChange}` : coinChange}
+          </span>
+        </motion.div>
+      )}
+    </div>
   </motion.div>
 );
 
@@ -484,7 +490,7 @@ export function MatchResultScreen() {
             <PlayerCard 
               avatarUrl={profile?.avatar_url} 
               name={profile?.nickname || t("game.you")}
-              score={userScore}
+              coinBalance={profile?.coins || 0}
               level={userLevel}
               isWinner={isWin}
               winnerLabel={t("game.winner")}
@@ -495,7 +501,7 @@ export function MatchResultScreen() {
             <PlayerCard 
               avatarUrl={opponent?.avatarUrl} 
               name={opponent?.name || t("game.opponent")}
-              score={opponentScore}
+              coinBalance={Math.floor(Math.random() * 5000) + 500}
               level={opponentLevel}
               isWinner={!isWin && !isDraw}
               winnerLabel={t("game.winner")}
