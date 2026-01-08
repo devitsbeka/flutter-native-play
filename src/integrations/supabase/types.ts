@@ -439,6 +439,45 @@ export type Database = {
           },
         ]
       }
+      game_plays: {
+        Row: {
+          category_id: string | null
+          game_type: string
+          id: string
+          level_number: number | null
+          played_at: string
+          room_id: string | null
+          score: number | null
+          stars_earned: number | null
+          total_questions: number | null
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          game_type?: string
+          id?: string
+          level_number?: number | null
+          played_at?: string
+          room_id?: string | null
+          score?: number | null
+          stars_earned?: number | null
+          total_questions?: number | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          game_type?: string
+          id?: string
+          level_number?: number | null
+          played_at?: string
+          room_id?: string | null
+          score?: number | null
+          stars_earned?: number | null
+          total_questions?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_rooms: {
         Row: {
           category_id: string | null
