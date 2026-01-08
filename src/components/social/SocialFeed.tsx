@@ -1,17 +1,19 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { SamplePost } from "@/data/samplePosts";
 import { FeedPost } from "./FeedPost";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
-import { Loader2, X, Star, TrendingUp, Hash, ChevronDown, Sparkles, ShoppingBag } from "lucide-react";
+import { Loader2, Hash, Sparkles, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { PopularityFilter } from "./FilterBar";
 
 interface SocialFeedProps {
   onPlayQuiz?: (post: SamplePost) => void;
+  selectedHashtag?: string | null;
+  showSavedOnly?: boolean;
+  popularityFilter?: PopularityFilter;
 }
-
-type PopularityFilter = "all" | "low" | "medium" | "high";
 
 // Shop Ad Component - reuses feed styling
 function ShopAdCard({ index }: { index: number }) {
@@ -80,21 +82,13 @@ function ShopAdCard({ index }: { index: number }) {
   );
 }
 
-export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
+export function SocialFeed({ 
+  onPlayQuiz, 
+  selectedHashtag = null, 
+  showSavedOnly = false, 
+  popularityFilter = "all" 
+}: SocialFeedProps) {
   const { posts, isLoading, userSaves } = useSocialFeed();
-  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [popularityFilter, setPopularityFilter] = useState<PopularityFilter>("all");
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Extract all unique hashtags from posts
-  const allHashtags = useMemo(() => {
-    const tags = new Set<string>();
-    posts.forEach(post => {
-      post.hashtags.forEach(tag => tags.add(tag));
-    });
-    return Array.from(tags).slice(0, 20); // Limit to 20 most common
-  }, [posts]);
 
   // Filter posts based on active filters
   const filteredPosts = useMemo(() => {
@@ -127,12 +121,6 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
   }, [posts, selectedHashtag, showSavedOnly, popularityFilter, userSaves]);
 
   const hasActiveFilters = selectedHashtag || showSavedOnly || popularityFilter !== "all";
-
-  const clearFilters = () => {
-    setSelectedHashtag(null);
-    setShowSavedOnly(false);
-    setPopularityFilter("all");
-  };
 
   if (isLoading) {
     return (
@@ -168,81 +156,7 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
   };
 
   return (
-    <div ref={scrollContainerRef}>
-      {/* Filter Bar - Single Line */}
-      <div className="sticky top-[112px] lg:top-0 z-10 bg-background border-b border-border/50">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Saved Filter - Always visible first */}
-            <button
-              onClick={() => setShowSavedOnly(!showSavedOnly)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                showSavedOnly
-                  ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400"
-                  : "bg-muted/80 text-foreground hover:bg-muted"
-              }`}
-            >
-              <Star className={`w-4 h-4 ${showSavedOnly ? "fill-current" : ""}`} />
-              შენახული
-            </button>
-            
-            {/* Popularity Filter */}
-            <button
-              onClick={() => {
-                const next: PopularityFilter[] = ["all", "low", "medium", "high"];
-                const currentIndex = next.indexOf(popularityFilter);
-                setPopularityFilter(next[(currentIndex + 1) % next.length]);
-              }}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                popularityFilter !== "all"
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted/80 text-foreground hover:bg-muted"
-              }`}
-            >
-              <TrendingUp className="w-4 h-4" />
-              {popularityFilter === "all" && "პოპულარობა"}
-              {popularityFilter === "low" && "დაბალი"}
-              {popularityFilter === "medium" && "საშუალო"}
-              {popularityFilter === "high" && "მაღალი"}
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </button>
-            
-            {/* Divider */}
-            <div className="flex-shrink-0 w-px h-6 bg-border mx-1" />
-            
-            {/* Hash Icon */}
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <Hash className="w-4 h-4 text-muted-foreground" />
-            </div>
-            
-            {/* Hashtag Chips */}
-            {allHashtags.slice(0, 5).map(tag => (
-              <button
-                key={tag}
-                onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
-                className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                  selectedHashtag === tag
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/80 text-foreground hover:bg-muted"
-                }`}
-              >
-                #{tag}
-              </button>
-            ))}
-            
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex-shrink-0 p-2 rounded-full text-destructive hover:bg-destructive/10 transition-all"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <div>
       {/* Feed Content */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -260,14 +174,6 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
                 : "ჯერ არ არის პოსტები"
               }
             </p>
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="mt-3 text-primary text-sm font-medium"
-              >
-                ფილტრების გასუფთავება
-              </button>
-            )}
           </div>
         ) : (
           renderFeedItems()
@@ -275,4 +181,17 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
       </motion.div>
     </div>
   );
+}
+
+// Export hook for getting hashtags (used by parent component)
+export function useHashtags() {
+  const { posts } = useSocialFeed();
+  
+  return useMemo(() => {
+    const tags = new Set<string>();
+    posts.forEach(post => {
+      post.hashtags.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags).slice(0, 20);
+  }, [posts]);
 }

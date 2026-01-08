@@ -32,12 +32,13 @@ import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { PendingChallenge } from "@/hooks/usePendingChallenges";
 import { Category } from "@/data/categories";
 import { LiveBadge } from "@/components/social/LiveBadge";
-import { SocialFeed } from "@/components/social/SocialFeed";
+import { SocialFeed, useHashtags } from "@/components/social/SocialFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { SamplePost } from "@/data/samplePosts";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { StickyHeaderContainer } from "@/components/layout/StickyHeaderContainer";
+import { FilterBar, PopularityFilter } from "@/components/social/FilterBar";
 
 function TeamContent() {
   const navigate = useNavigate();
@@ -80,6 +81,22 @@ function TeamContent() {
   const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
+
+  // Filter state (lifted from SocialFeed)
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [popularityFilter, setPopularityFilter] = useState<PopularityFilter>("all");
+  
+  // Get hashtags for the filter bar
+  const allHashtags = useHashtags();
+  
+  const hasActiveFilters = !!selectedHashtag || showSavedOnly || popularityFilter !== "all";
+  
+  const clearFilters = () => {
+    setSelectedHashtag(null);
+    setShowSavedOnly(false);
+    setPopularityFilter("all");
+  };
 
   // Show latest pending invitation
   useEffect(() => {
@@ -198,8 +215,9 @@ function TeamContent() {
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-24">
-      {/* New Header */}
-      <header className="sticky top-0 z-20 backdrop-blur-md bg-background/80">
+      {/* Unified Sticky Header Container */}
+      <StickyHeaderContainer>
+        {/* Header */}
         <div className="flex items-center justify-between px-4 h-14 safe-top">
           {/* Left Side: MyTrivia LIVE */}
           <motion.div
@@ -245,33 +263,48 @@ function TeamContent() {
             </motion.button>
           </div>
         </div>
-      </header>
 
-      {/* Tabs below header */}
-      <div className="sticky top-14 z-10 backdrop-blur-md bg-background/80 px-4 py-3">
-        <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
-          <button
-            onClick={() => setActiveTab("for-me")}
-            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-              activeTab === "for-me"
-                ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                : "text-muted-foreground hover:text-foreground/80"
-            }`}
-          >
-            შენთვის
-          </button>
-          <button
-            onClick={() => setActiveTab("my-trivia")}
-            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-              activeTab === "my-trivia"
-                ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                : "text-muted-foreground hover:text-foreground/80"
-            }`}
-          >
-            ჩემი ტრივია
-          </button>
+        {/* Tabs */}
+        <div className="px-4 py-3">
+          <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
+            <button
+              onClick={() => setActiveTab("for-me")}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                activeTab === "for-me"
+                  ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              შენთვის
+            </button>
+            <button
+              onClick={() => setActiveTab("my-trivia")}
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                activeTab === "my-trivia"
+                  ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                  : "text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              ჩემი ტრივია
+            </button>
+          </div>
         </div>
-      </div>
+
+        {/* Filter Bar - Only show on "For You" tab */}
+        {activeTab === "for-me" && (
+          <FilterBar
+            selectedHashtag={selectedHashtag}
+            onSelectHashtag={setSelectedHashtag}
+            showSavedOnly={showSavedOnly}
+            onToggleSaved={() => setShowSavedOnly(prev => !prev)}
+            popularityFilter={popularityFilter}
+            onPopularityChange={setPopularityFilter}
+            hashtags={allHashtags}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+          />
+        )}
+      </StickyHeaderContainer>
 
       {/* Content */}
       <div className="relative z-10 flex flex-col">
@@ -317,7 +350,12 @@ function TeamContent() {
             </div>
           </>
         ) : (
-          <SocialFeed onPlayQuiz={(post) => setPlayingQuiz(post)} />
+          <SocialFeed 
+            onPlayQuiz={(post) => setPlayingQuiz(post)}
+            selectedHashtag={selectedHashtag}
+            showSavedOnly={showSavedOnly}
+            popularityFilter={popularityFilter}
+          />
         )}
       </div>
 
