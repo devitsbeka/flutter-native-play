@@ -143,6 +143,7 @@ export function useSocialFeed() {
       subject: post.subject,
       hashtags: post.hashtags || [],
       coverGradient,
+      coverImage: post.cover_image || undefined,
       questionCount: post.question_count,
       answerFormat: post.answer_format as "4_answers" | "true_false",
       likesCount: post.likes_count || 0,
