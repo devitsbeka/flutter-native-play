@@ -1001,40 +1001,91 @@ export default function IconAssignment() {
                 {filteredIcons.map((icon) => {
                   const hasSelection = selectedQuestion || selectedQuestionIds.size > 0;
                   return (
-                    <button
-                      key={icon.slug}
-                      onClick={() => handleAssignIcon(icon.slug)}
-                      disabled={!hasSelection || bulkAssigning}
-                      className={cn(
-                        "group relative flex flex-col items-center gap-1 rounded-lg p-2 transition-all",
-                        "hover:bg-accent/80 hover:shadow-sm",
-                        (!hasSelection || bulkAssigning) && "opacity-50 cursor-not-allowed",
-                        selectedQuestion?.icon_slug === icon.slug && selectedQuestionIds.size === 0 && "ring-2 ring-primary bg-primary/10"
-                      )}
-                    >
-                      <div className="relative h-12 w-12">
-                        <img 
-                          src={icon.url} 
-                          alt={icon.title}
-                          className="h-full w-full object-contain"
-                          loading="lazy"
-                          onError={() => handleIconError(icon.slug)}
-                        />
-                        {recentlyFixedSlugs.has(icon.slug) && (
-                          <div className="absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-                            <Check className="h-3 w-3 text-white" />
-                          </div>
+                    <div key={icon.slug} className="relative group">
+                      <button
+                        onClick={() => handleAssignIcon(icon.slug)}
+                        disabled={!hasSelection || bulkAssigning}
+                        className={cn(
+                          "w-full flex flex-col items-center gap-1 rounded-lg p-2 transition-all",
+                          "hover:bg-accent/80 hover:shadow-sm",
+                          (!hasSelection || bulkAssigning) && "opacity-50 cursor-not-allowed",
+                          selectedQuestion?.icon_slug === icon.slug && selectedQuestionIds.size === 0 && "ring-2 ring-primary bg-primary/10"
                         )}
-                        {selectedQuestion?.icon_slug === icon.slug && selectedQuestionIds.size === 0 && (
-                          <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
-                            <Check className="h-3 w-3 text-primary-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-muted-foreground truncate max-w-full">
-                        {icon.slug}
-                      </span>
-                    </button>
+                      >
+                        <div className="relative h-12 w-12">
+                          <img 
+                            src={icon.url} 
+                            alt={icon.title}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                            onError={() => handleIconError(icon.slug)}
+                          />
+                          {recentlyFixedSlugs.has(icon.slug) && (
+                            <div className="absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+                              <Check className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                          {selectedQuestion?.icon_slug === icon.slug && selectedQuestionIds.size === 0 && (
+                            <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                              <Check className="h-3 w-3 text-primary-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground truncate max-w-full">
+                          {icon.slug}
+                        </span>
+                      </button>
+                      
+                      {/* Replace button on hover */}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id={`replace-${icon.slug}`}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          try {
+                            toast.info(`იცვლება: ${icon.slug}...`);
+                            
+                            // Delete and re-upload
+                            await supabase.storage.from('icon-library').remove([`${icon.slug}.png`]);
+                            
+                            const { error: uploadError } = await supabase.storage
+                              .from('icon-library')
+                              .upload(`${icon.slug}.png`, file, {
+                                contentType: 'image/png',
+                                upsert: true,
+                              });
+                            
+                            if (uploadError) throw uploadError;
+                            
+                            // Update URL with cache buster
+                            const newUrl = `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${icon.slug}.png?v=${Date.now()}`;
+                            await supabase.from('icon_library').update({ icon_url: newUrl }).eq('slug', icon.slug);
+                            
+                            // Update local state
+                            setIcons(prev => prev.map(i => i.slug === icon.slug ? { ...i, url: newUrl } : i));
+                            
+                            toast.success(`აიკონი "${icon.slug}" განახლდა!`);
+                          } catch (error) {
+                            console.error('Replace error:', error);
+                            toast.error('შეცდომა ჩანაცვლებისას');
+                          }
+                          
+                          // Reset input
+                          e.target.value = '';
+                        }}
+                      />
+                      <label
+                        htmlFor={`replace-${icon.slug}`}
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer bg-background/90 rounded p-1 hover:bg-accent shadow-sm"
+                        title="აიკონის ჩანაცვლება"
+                      >
+                        <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                      </label>
+                    </div>
                   );
                 })}
               </div>
