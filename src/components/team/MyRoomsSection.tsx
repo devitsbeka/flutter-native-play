@@ -88,34 +88,6 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
 
   return (
     <div className="space-y-3">
-      {/* Header with optional TV button */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
-        
-        <div className="flex items-center gap-2">
-          {/* ყველა button */}
-          {onShowAllRooms && (
-            <button
-              onClick={onShowAllRooms}
-              className="text-sm font-medium text-purple-600 hover:text-purple-700"
-            >
-              ყველა
-            </button>
-          )}
-          
-          {/* TV Button - hidden when hideTV prop is true */}
-          {!hideTV && (
-            <button
-              onClick={() => setShowTVModal(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
-            >
-              <TVIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
-            </button>
-          )}
-        </div>
-      </div>
-      
       {/* TV Mirror Modal */}
       <TVMirrorModal open={showTVModal} onOpenChange={setShowTVModal} />
 
@@ -140,6 +112,21 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
                 onJoin={() => handleJoin(room)}
               />
             ))}
+            {/* View All Card */}
+            {onShowAllRooms && (
+              <motion.button
+                onClick={onShowAllRooms}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: rooms.length * 0.05 }}
+                className="flex-shrink-0 w-44 h-36 p-3 rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <span className="text-sm font-medium text-muted-foreground">ყველას ნახვა</span>
+              </motion.button>
+            )}
           </div>
         </div>
       )}
