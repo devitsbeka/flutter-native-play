@@ -380,9 +380,9 @@ export function MatchResultScreen() {
       
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
-        style={{ 
-          background: "#929DE7",
-        }}
+  style={{
+    background: "#858EE7",
+  }}
       >
 
         {/* Header */}
