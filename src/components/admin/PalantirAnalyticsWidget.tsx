@@ -119,11 +119,13 @@ export function PalantirAnalyticsWidget() {
       .from('profiles')
       .select('user_id, region');
 
-    // Get online users
+    // Get online users - only count those seen in last 2 minutes (heartbeat is 30s)
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     const { data: onlineData } = await supabase
       .from('user_presence')
-      .select('user_id, status')
-      .in('status', ['online', 'away']);
+      .select('user_id, status, last_seen')
+      .eq('status', 'online')
+      .gte('last_seen', twoMinutesAgo);
 
     // Get game sessions for different time periods
     const now = new Date();
