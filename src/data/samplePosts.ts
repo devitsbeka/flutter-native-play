@@ -15,6 +15,7 @@ export interface SamplePost {
   questionCount: number;
   answerFormat: '4_answers' | 'true_false';
   likesCount: number;
+  savesCount?: number;
   playsCount: number;
   commentsCount: number;
   questions: {

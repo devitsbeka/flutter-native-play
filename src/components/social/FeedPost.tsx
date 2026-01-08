@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Play, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2 } from "lucide-react";
+import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2 } from "lucide-react";
+import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
+import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -93,6 +95,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likesCount);
+  const [savesCount, setSavesCount] = useState(post.savesCount || 0);
   const { language } = useLanguage();
   
   const dateLocale = language === 'ka' ? ka : enUS;
@@ -133,12 +136,14 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
   };
 
   const handleSave = () => {
-    setSaved(!saved);
-    if (!saved) {
-      toast.success("Saved to collection 📌");
-    } else {
+    if (saved) {
+      setSavesCount(prev => prev - 1);
       toast("Removed from saved");
+    } else {
+      setSavesCount(prev => prev + 1);
+      toast.success("Saved to collection 📌");
     }
+    setSaved(!saved);
   };
 
   const handleComment = () => {
@@ -286,7 +291,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
 
       {/* Quiz Card/Banner */}
       <div 
-        className="relative aspect-[4/3] overflow-hidden isolate"
+        className="relative aspect-[4/4] overflow-hidden isolate"
       >
         {/* Background - gradient or image */}
         {coverImage ? (
@@ -359,42 +364,39 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side: Likes count + Comments */}
+        {/* Left side: Stats text only */}
         <div className="flex items-center gap-4">
           <span className="font-semibold text-foreground text-sm">
             {formatNumber(likesCount)} likes
           </span>
-          <button 
-            onClick={handleComment}
-            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <MessageCircle className="w-5 h-5" />
-          </button>
+          <span className="font-semibold text-foreground text-sm">
+            {formatNumber(savesCount)} saves
+          </span>
         </div>
         
         {/* Right side: Heart + Save + Play button */}
         <div className="flex items-center gap-3">
-          {/* Heart */}
+          {/* Purple Heart Icon */}
           <button 
             onClick={handleLike}
-            className="hover:opacity-70 transition-opacity active:scale-90"
+            className="hover:scale-110 transition-transform active:scale-90"
           >
-            <Heart 
-              className={`w-6 h-6 transition-colors ${
-                liked ? 'text-red-500 fill-red-500' : 'text-foreground'
-              }`} 
+            <img 
+              src={purpleHeartIcon} 
+              alt="Like" 
+              className={`w-7 h-7 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
           </button>
           
-          {/* Save */}
+          {/* 3D Bookmark Icon */}
           <button 
             onClick={handleSave}
-            className="hover:opacity-70 transition-opacity"
+            className="hover:scale-110 transition-transform active:scale-90"
           >
-            <Bookmark 
-              className={`w-6 h-6 transition-colors ${
-                saved ? 'text-foreground fill-foreground' : 'text-foreground'
-              }`} 
+            <img 
+              src={bookmarkIcon} 
+              alt="Save" 
+              className={`w-7 h-7 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
           </button>
           
