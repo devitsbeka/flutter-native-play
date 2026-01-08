@@ -48,22 +48,8 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
   }
 
   return (
-    <div className="space-y-2">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-800 tracking-wide">მეგობრები</span>
-        {onShowAllFriends && (
-          <button
-            onClick={onShowAllFriends}
-            className="text-sm font-medium text-purple-600 hover:text-purple-700"
-          >
-            ყველა
-          </button>
-        )}
-      </div>
-      
-      <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
-        <div className="flex gap-4 pt-2 pb-3 pr-4">
+    <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
+      <div className="flex gap-4 pt-2 pb-3 pr-4">
         {/* Add Friend Button */}
         <motion.button
           onClick={onAddFriendClick}
@@ -118,7 +104,6 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
             ))}
           </>
         )}
-        </div>
       </div>
     </div>
   );
