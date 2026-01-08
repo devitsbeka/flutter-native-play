@@ -149,9 +149,8 @@ function TeamContentV2() {
 
       {/* Main Content Area */}
       <main className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background">
-        {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
+        {/* Row 1: Mobile Sticky Header */}
         <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
-          {/* Header Row */}
           <div className="flex items-center justify-between px-4 h-14 safe-top">
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -195,9 +194,57 @@ function TeamContentV2() {
               </motion.button>
             </div>
           </div>
+        </div>
 
-          {/* Tabs Row */}
-          <div className="px-4 py-2">
+        {/* Content - Centered on tablet/desktop like Instagram */}
+        <div className="relative flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 bg-background">
+          
+          {/* Row 2: Friends Bar (მეგობრები) */}
+          <div className="lg:hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="px-4 py-3"
+            >
+              <FriendsStoriesBar
+                onAddFriendClick={() => setShowAddFriendModal(true)}
+                onFriendClick={() => {}}
+                onShowAllFriends={() => setShowAllFriendsModal(true)}
+              />
+            </motion.div>
+          </div>
+
+          {/* Row 3: My Rooms (შენი ოთახები) */}
+          <div className="lg:hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="px-4 mb-3"
+            >
+              <MyRoomsSection 
+                hideTV 
+                onCreateRoom={() => setShowCreateModal(true)}
+                onShowAllRooms={() => setShowAllGamesModal(true)}
+              />
+            </motion.div>
+          </div>
+
+          {/* Row 4: Create Trivia Button (+ შექმენი ტრივია) */}
+          <div className="lg:hidden px-4 pb-3">
+            <ChunkyButton 
+              onClick={() => setShowCreateTypeModal(true)}
+              className="w-full gap-2"
+              variant="primary"
+              size="lg"
+            >
+              <Plus className="w-5 h-5" />
+              შექმენი ტრივია
+            </ChunkyButton>
+          </div>
+
+          {/* Row 5: Tabs (შენთვის / ჩემი ტრივია) */}
+          <div className="lg:hidden px-4 pb-3">
             <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
               <button
                 onClick={() => setActiveTab("for-me")}
@@ -222,81 +269,26 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Create Button - Single CTA */}
-          {activeTab === "my-trivia" && (
-            <div className="px-4 pb-2">
-              <ChunkyButton 
-                onClick={() => setShowCreateTypeModal(true)}
-                className="w-full gap-2"
-                variant="primary"
-                size="lg"
-              >
-                <Plus className="w-5 h-5" />
-                შექმენი ტრივია
-              </ChunkyButton>
-            </div>
-          )}
-
-          {/* Filter & Search Bar - Only show on "For You" tab in sticky header */}
-          {activeTab === "for-me" && (
+          {/* Row 6: Filter/Search Bar - Sticky on scroll */}
+          <div className="lg:hidden sticky top-14 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50">
             <FeedFiltersBar
               sortFilter={sortFilter}
               onSortFilterChange={setSortFilter}
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}
             />
-          )}
+          </div>
 
-        </div>
-
-        {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 bg-background">
+          {/* Row 7: Content (შენი კონტენტი) */}
           {activeTab === "my-trivia" ? (
-            <>
-              {/* Friends Stories Bar */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="px-4 py-3"
-              >
-                <FriendsStoriesBar
-                  onAddFriendClick={() => setShowAddFriendModal(true)}
-                  onFriendClick={() => {}}
-                  onShowAllFriends={() => setShowAllFriendsModal(true)}
-                />
-              </motion.div>
-
-              {/* My Rooms Section */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="px-4 mb-3"
-              >
-                <MyRoomsSection 
-                  hideTV 
-                  onCreateRoom={() => setShowCreateModal(true)}
-                  onShowAllRooms={() => setShowAllGamesModal(true)}
-                />
-              </motion.div>
-
-              {/* Filter & Search Bar - Below rooms for my-trivia tab */}
-              <FeedFiltersBar
-                sortFilter={sortFilter}
-                onSortFilterChange={setSortFilter}
+            <div className="px-4">
+              <MyTriviaTab 
+                onCreateQuiz={() => setShowCreateQuizModal(true)} 
+                onCreateCollection={() => setShowCreateCollectionModal(true)}
                 searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
+                onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               />
-
-              <div className="px-4">
-                <MyTriviaTab 
-                  onCreateQuiz={() => setShowCreateQuizModal(true)} 
-                  onCreateCollection={() => setShowCreateCollectionModal(true)}
-                  searchQuery={searchQuery}
-                  onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
-                />
-              </div>
-            </>
+            </div>
           ) : (
             <SocialFeed 
               onPlayQuiz={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
