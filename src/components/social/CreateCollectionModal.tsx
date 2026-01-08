@@ -171,9 +171,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
       className="space-y-6"
     >
       <div className="text-center mb-6">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-          <img src={iconCollections} alt="" className="w-10 h-10" />
-        </div>
+        <img src={iconCollections} alt="" className="w-14 h-14 mx-auto mb-4" />
         <h3 className="text-xl font-bold text-foreground">შექმენი კოლექცია</h3>
         <p className="text-sm text-muted-foreground mt-1">რამდენიმე რაუნდი ერთად</p>
       </div>
@@ -201,21 +199,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
         />
       </div>
 
-      {/* Cover Gradient */}
-      <div>
-        <label className="text-sm font-medium text-foreground mb-2 block">ფერი</label>
-        <div className="flex gap-2 flex-wrap">
-          {COVER_GRADIENTS.map((gradient) => (
-            <button
-              key={gradient}
-              onClick={() => setCoverGradient(gradient)}
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} transition-all ${
-                coverGradient === gradient ? "ring-2 ring-primary ring-offset-2" : ""
-              }`}
-            />
-          ))}
-        </div>
-      </div>
 
       {/* Visibility Toggle */}
       <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
