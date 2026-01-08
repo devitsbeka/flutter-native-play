@@ -236,14 +236,12 @@ export function QuizPlayModal({ open, onOpenChange, post }: QuizPlayModalProps) 
                   {/* Question Icon */}
                   {currentQuestion?.icon_slug && (
                     <div className="flex justify-center mb-4">
-                      <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm p-2 shadow-lg">
-                        <DynamicIcon 
-                          slug={currentQuestion.icon_slug}
-                          size={64}
-                          className="drop-shadow-lg"
-                          hideIfEmpty={true}
-                        />
-                      </div>
+                      <DynamicIcon 
+                        slug={currentQuestion.icon_slug}
+                        size={84}
+                        className="drop-shadow-lg"
+                        hideIfEmpty={true}
+                      />
                     </div>
                   )}
 
