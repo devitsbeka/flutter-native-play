@@ -1023,6 +1023,7 @@ export type Database = {
       quiz_collections: {
         Row: {
           cover_gradient: string
+          cover_image: string | null
           created_at: string | null
           description: string | null
           hashtags: string[] | null
@@ -1036,6 +1037,7 @@ export type Database = {
         }
         Insert: {
           cover_gradient?: string
+          cover_image?: string | null
           created_at?: string | null
           description?: string | null
           hashtags?: string[] | null
@@ -1049,6 +1051,7 @@ export type Database = {
         }
         Update: {
           cover_gradient?: string
+          cover_image?: string | null
           created_at?: string | null
           description?: string | null
           hashtags?: string[] | null
@@ -2278,6 +2281,7 @@ export type Database = {
           answer_format: string
           collection_id: string | null
           cover_gradient: string
+          cover_image: string | null
           created_at: string | null
           description: string | null
           hashtags: string[] | null
@@ -2298,6 +2302,7 @@ export type Database = {
           answer_format: string
           collection_id?: string | null
           cover_gradient: string
+          cover_image?: string | null
           created_at?: string | null
           description?: string | null
           hashtags?: string[] | null
@@ -2318,6 +2323,7 @@ export type Database = {
           answer_format?: string
           collection_id?: string | null
           cover_gradient?: string
+          cover_image?: string | null
           created_at?: string | null
           description?: string | null
           hashtags?: string[] | null
