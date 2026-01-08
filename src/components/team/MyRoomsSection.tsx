@@ -13,9 +13,10 @@ interface MyRoomsSectionProps {
   hideTV?: boolean;
   onCreateRoom?: () => void;
   onShowAllRooms?: () => void;
+  vertical?: boolean;
 }
 
-export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }: MyRoomsSectionProps) {
+export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms, vertical = false }: MyRoomsSectionProps) {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
@@ -90,6 +91,18 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
           <Gamepad2 className="w-12 h-12 text-muted-foreground mb-3" />
           <p className="text-muted-foreground text-sm">{t('team.noActiveRooms')}</p>
         </motion.div>
+      ) : vertical ? (
+        <div className="flex flex-col gap-3 px-4 pb-4">
+          {rooms.map((room, index) => (
+            <RoomCard
+              key={room.id}
+              room={room}
+              index={index}
+              onJoin={() => handleJoin(room)}
+              fullWidth
+            />
+          ))}
+        </div>
       ) : (
         <div className="overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth">
           <div className="flex gap-3 px-4">
@@ -130,9 +143,10 @@ interface RoomCardProps {
   room: MyRoom;
   index: number;
   onJoin: () => void;
+  fullWidth?: boolean;
 }
 
-function RoomCard({ room, index, onJoin }: RoomCardProps) {
+function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   const { t } = useLanguage();
   
   // Display name: room_name or fallback to generated name
@@ -142,11 +156,11 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, x: fullWidth ? 0 : 20, y: fullWidth ? 10 : 0 }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{ delay: index * 0.05 }}
       onClick={onJoin}
-      className={`flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+      className={`${fullWidth ? "w-full" : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start"} rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
