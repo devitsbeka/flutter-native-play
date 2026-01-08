@@ -247,8 +247,6 @@ export function QuizPlayModal({ open, onOpenChange, post }: QuizPlayModalProps) 
                   {/* Question Card */}
                   <QuizQuestionCard
                     questionText={currentQuestion?.question || ""}
-                    questionNumber={currentIndex + 1}
-                    totalQuestions={questions.length}
                     timerSeconds={timeLeft}
                     timerMaxSeconds={15}
                     progressPercent={((currentIndex) / questions.length) * 100}
