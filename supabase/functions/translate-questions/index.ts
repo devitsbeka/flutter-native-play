@@ -29,7 +29,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 const QUESTION_MAX_LENGTH = 65;
-const ANSWER_MAX_LENGTH = 16;
+const ANSWER_MAX_LENGTH = 20;
 
 interface Question {
   questionText: string;

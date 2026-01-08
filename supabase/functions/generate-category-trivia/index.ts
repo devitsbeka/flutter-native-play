@@ -272,7 +272,7 @@ ${iconKeywordMappings}
     const rawQuestions = JSON.parse(jsonMatch[0]);
 
     // Server-side validation and truncation
-    const ANSWER_MAX_LENGTH = 16;
+    const ANSWER_MAX_LENGTH = 20;
     const QUESTION_MAX_LENGTH = 65;
     
     const validQuestions = rawQuestions.map((q: any) => {
