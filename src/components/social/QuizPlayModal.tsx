@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Share2, ChevronRight, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
+import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
+import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -366,41 +368,46 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                       გაგრძელება ({currentRoundIndex + 2}/{totalRounds})
                     </ChunkyButton>
                     
-                    <div className="flex items-center justify-center gap-6 mt-2">
+                    <div className="flex items-center justify-center gap-8 mt-2">
                       <button 
                         onClick={() => post?.id && toggleLike(post.id)}
-                        className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                        className="flex flex-col items-center gap-2 transition-transform active:scale-95 hover:scale-110"
                       >
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                          userLikes.includes(post?.id || '') ? 'bg-red-500/30' : 'bg-white/20'
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+                          userLikes.includes(post?.id || '') 
+                            ? 'bg-pink-500/30 shadow-[0_0_20px_rgba(236,72,153,0.5)]' 
+                            : 'bg-white/15 hover:bg-white/25 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'
                         }`}>
-                          <Heart className={`w-6 h-6 transition-colors ${
-                            userLikes.includes(post?.id || '') ? 'text-red-400 fill-red-400' : 'text-white'
-                          }`} />
+                          <img 
+                            src={purpleHeartIcon} 
+                            alt="Like" 
+                            className={`w-8 h-8 object-contain transition-all ${
+                              userLikes.includes(post?.id || '') ? 'opacity-100 scale-110' : 'opacity-70'
+                            }`}
+                          />
                         </div>
-                        <span className="text-white/70 text-xs">{post?.likesCount || 0}</span>
+                        <span className="text-white/80 text-xs font-medium">მოწონება</span>
                       </button>
                       
                       <button 
                         onClick={() => post?.id && toggleSave(post.id)}
-                        className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                        className="flex flex-col items-center gap-2 transition-transform active:scale-95 hover:scale-110"
                       >
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                          userSaves.includes(post?.id || '') ? 'bg-amber-500/30' : 'bg-white/20'
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
+                          userSaves.includes(post?.id || '') 
+                            ? 'bg-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.5)]' 
+                            : 'bg-white/15 hover:bg-white/25 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'
                         }`}>
-                          <Bookmark className={`w-6 h-6 transition-colors ${
-                            userSaves.includes(post?.id || '') ? 'text-amber-400 fill-amber-400' : 'text-white'
-                          }`} />
+                          <img 
+                            src={bookmarkIcon} 
+                            alt="Save" 
+                            className={`w-8 h-8 object-contain transition-all ${
+                              userSaves.includes(post?.id || '') ? 'opacity-100 scale-110' : 'opacity-70'
+                            }`}
+                          />
                         </div>
-                        <span className="text-white/70 text-xs">{post?.savesCount || 0}</span>
+                        <span className="text-white/80 text-xs font-medium">შენახვა</span>
                       </button>
-                      
-                      <div className="flex flex-col items-center gap-1.5">
-                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                          <Play className="w-6 h-6 text-white" />
-                        </div>
-                        <span className="text-white/70 text-xs">{post?.playsCount || 0}</span>
-                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -468,50 +475,53 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   </p>
                   
                   {/* Social Actions */}
-                  <div className="flex items-center justify-center gap-8 mb-10">
+                  <div className="flex items-center justify-center gap-10 mb-10">
                     <button 
                       onClick={() => post?.id && toggleLike(post.id)}
-                      className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                      className="flex flex-col items-center gap-2 transition-transform active:scale-95 hover:scale-110"
                     >
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                        userLikes.includes(post?.id || '') ? 'bg-red-500/30' : 'bg-white/20'
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
+                        userLikes.includes(post?.id || '') 
+                          ? 'bg-pink-500/30 shadow-[0_0_25px_rgba(236,72,153,0.6)]' 
+                          : 'bg-white/15 hover:bg-white/25 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]'
                       }`}>
-                        <Heart className={`w-6 h-6 transition-colors ${
-                          userLikes.includes(post?.id || '') ? 'text-red-400 fill-red-400' : 'text-white'
-                        }`} />
+                        <img 
+                          src={purpleHeartIcon} 
+                          alt="Like" 
+                          className={`w-9 h-9 object-contain transition-all ${
+                            userLikes.includes(post?.id || '') ? 'opacity-100 scale-110' : 'opacity-70'
+                          }`}
+                        />
                       </div>
-                      <span className="text-white/70 text-xs">მოწონება</span>
+                      <span className="text-white/80 text-sm font-medium">მოწონება</span>
                     </button>
-                    
                     
                     <button 
                       onClick={() => post?.id && toggleSave(post.id)}
-                      className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                      className="flex flex-col items-center gap-2 transition-transform active:scale-95 hover:scale-110"
                     >
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                        userSaves.includes(post?.id || '') ? 'bg-amber-500/30' : 'bg-white/20'
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
+                        userSaves.includes(post?.id || '') 
+                          ? 'bg-amber-500/30 shadow-[0_0_25px_rgba(245,158,11,0.6)]' 
+                          : 'bg-white/15 hover:bg-white/25 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]'
                       }`}>
-                        <Bookmark className={`w-6 h-6 transition-colors ${
-                          userSaves.includes(post?.id || '') ? 'text-amber-400 fill-amber-400' : 'text-white'
-                        }`} />
+                        <img 
+                          src={bookmarkIcon} 
+                          alt="Save" 
+                          className={`w-9 h-9 object-contain transition-all ${
+                            userSaves.includes(post?.id || '') ? 'opacity-100 scale-110' : 'opacity-70'
+                          }`}
+                        />
                       </div>
-                      <span className="text-white/70 text-xs">შენახვა</span>
+                      <span className="text-white/80 text-sm font-medium">შენახვა</span>
                     </button>
                   </div>
                   
-                  <div className="flex gap-4 w-full max-w-sm">
-                    <ChunkyButton 
-                      onClick={resetGame} 
-                      variant="secondary"
-                      className="flex-1"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      თავიდან
-                    </ChunkyButton>
+                  <div className="w-full max-w-sm">
                     <ChunkyButton 
                       onClick={handleShare} 
                       variant="primary"
-                      className="flex-1"
+                      className="w-full"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       გაზიარება
