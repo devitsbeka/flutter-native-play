@@ -17,6 +17,7 @@ interface SocialFeedProps {
   popularityFilter?: PopularityFilter;
   sortFilter?: SortFilter;
   searchQuery?: string;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
 // Shop Ad Component - reuses feed styling
@@ -92,9 +93,10 @@ export function SocialFeed({
   showSavedOnly = false, 
   popularityFilter = "all",
   sortFilter = "all",
-  searchQuery = ""
+  searchQuery = "",
+  onHashtagClick
 }: SocialFeedProps) {
-  const { posts, feedItems, isLoading, userSaves, userLikes } = useSocialFeed();
+  const { posts, feedItems, isLoading, userSaves, userLikes, toggleLike, toggleSave } = useSocialFeed();
 
   // Filter feed items based on active filters
   const filteredFeedItems = useMemo(() => {
@@ -208,6 +210,11 @@ export function SocialFeed({
             posts={item.posts}
             index={index}
             onPlay={onPlayQuiz}
+            userLikes={userLikes}
+            userSaves={userSaves}
+            onToggleLike={toggleLike}
+            onToggleSave={toggleSave}
+            onHashtagClick={onHashtagClick}
           />
         );
       } else {
@@ -217,6 +224,11 @@ export function SocialFeed({
             post={item.post} 
             index={index}
             onPlay={onPlayQuiz}
+            userLikes={userLikes}
+            userSaves={userSaves}
+            onToggleLike={toggleLike}
+            onToggleSave={toggleSave}
+            onHashtagClick={onHashtagClick}
           />
         );
       }

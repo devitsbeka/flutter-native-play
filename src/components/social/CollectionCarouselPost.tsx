@@ -23,18 +23,25 @@ interface CollectionCarouselPostProps {
   collectionTitle?: string;
   index: number;
   onPlay?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
+  userLikes?: string[];
+  userSaves?: string[];
+  onToggleLike?: (postId: string) => void;
+  onToggleSave?: (postId: string) => void;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
-export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }: CollectionCarouselPostProps) {
+export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick }: CollectionCarouselPostProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
   
   const currentPost = posts[currentIndex];
   const dateLocale = language === 'ka' ? ka : enUS;
   const timeAgo = formatDistanceToNow(new Date(currentPost.createdAt), { addSuffix: false, locale: dateLocale });
+  
+  // Check if any post in collection is liked/saved
+  const liked = posts.some(p => userLikes?.includes(p.id));
+  const saved = posts.some(p => userSaves?.includes(p.id));
   
   // Calculate total likes/saves across all posts in collection
   const totalLikes = posts.reduce((sum, p) => sum + p.likesCount, 0);
@@ -52,25 +59,15 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }
   };
 
   const handleLike = () => {
-    if (liked) {
-      setLikesCount(prev => prev - 1);
-      toast("Removed from likes");
-    } else {
-      setLikesCount(prev => prev + 1);
-      toast.success("Added to likes ❤️");
-    }
-    setLiked(!liked);
+    // Like/unlike the first post of the collection
+    onToggleLike?.(posts[0].id);
+    setLikesCount(prev => liked ? prev - 1 : prev + 1);
   };
 
   const handleSave = () => {
-    if (saved) {
-      setSavesCount(prev => prev - 1);
-      toast("Removed from saved");
-    } else {
-      setSavesCount(prev => prev + 1);
-      toast.success("Saved to collection 📌");
-    }
-    setSaved(!saved);
+    // Save/unsave the first post of the collection
+    onToggleSave?.(posts[0].id);
+    setSavesCount(prev => saved ? prev - 1 : prev + 1);
   };
 
   const handleShare = async () => {
@@ -359,10 +356,16 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }
       </div>
 
       {/* Hashtags */}
-      <div className="px-4 pb-4">
-        <p className="text-primary text-sm">
-          {currentPost.hashtags.map(tag => `#${tag}`).join(' ')}
-        </p>
+      <div className="px-4 pb-4 flex flex-wrap gap-1.5">
+        {currentPost.hashtags.map(tag => (
+          <button
+            key={tag}
+            onClick={() => onHashtagClick?.(tag)}
+            className="text-primary text-sm hover:underline hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            #{tag}
+          </button>
+        ))}
       </div>
     </motion.article>
   );

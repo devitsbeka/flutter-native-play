@@ -69,6 +69,7 @@ function TeamContentV2() {
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
@@ -301,6 +302,8 @@ function TeamContentV2() {
               onPlayQuiz={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               sortFilter={sortFilter}
               searchQuery={searchQuery}
+              selectedHashtag={selectedHashtag}
+              onHashtagClick={setSelectedHashtag}
             />
           )}
         </div>
