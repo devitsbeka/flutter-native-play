@@ -170,7 +170,7 @@ export function SocialFeed({ onPlayQuiz }: SocialFeedProps) {
   return (
     <div ref={scrollContainerRef}>
       {/* Filter Bar - Single Line */}
-      <div className="sticky top-0 z-30 bg-background border-b border-border/50">
+      <div className="sticky top-[112px] lg:top-0 z-10 bg-background border-b border-border/50">
         <div className="px-4 py-3">
           <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {/* Saved Filter - Always visible first */}
