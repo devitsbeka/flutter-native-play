@@ -209,9 +209,9 @@ export function AdminMap({ users }: AdminMapProps) {
       styleRef.current = style;
     }
 
-    // Create map - MAX zoomed out
+    // Create map - MAX zoomed out, centered on developed world (Europe/Atlantic)
     const map = L.map(mapRef.current, {
-      center: [25, 40],
+      center: [35, 15],
       zoom: 2,
       minZoom: 2,
       maxZoom: 8,
@@ -264,17 +264,19 @@ export function AdminMap({ users }: AdminMapProps) {
 
     // Group users by country
     const countryGroups = new Map<string, { 
-      count: number; 
+      totalCount: number;
+      onlineCount: number;
       hasOnline: boolean; 
       users: { name: string; isOnline: boolean; avatar?: string }[] 
     }>();
     
     users.forEach(user => {
       const code = user.country_code?.toLowerCase() || user.region?.toLowerCase() || 'ge';
-      const existing = countryGroups.get(code) || { count: 0, hasOnline: false, users: [] };
+      const existing = countryGroups.get(code) || { totalCount: 0, onlineCount: 0, hasOnline: false, users: [] };
       const isOnline = user.status === 'online' && user.last_seen >= twoMinutesAgo;
       countryGroups.set(code, {
-        count: existing.count + 1,
+        totalCount: existing.totalCount + 1,
+        onlineCount: existing.onlineCount + (isOnline ? 1 : 0),
         hasOnline: existing.hasOnline || isOnline,
         users: [...existing.users, { 
           name: user.nickname, 
@@ -289,8 +291,11 @@ export function AdminMap({ users }: AdminMapProps) {
       const coords = countryCoordinates[code] || countryCoordinates.ge;
       const isOnline = data.hasOnline;
       
-      // Size based on count
-      const size = Math.min(48, 32 + data.count * 4);
+      // Show online count if online, otherwise total count
+      const displayCount = isOnline ? data.onlineCount : data.totalCount;
+      
+      // Size based on display count
+      const size = Math.min(48, 32 + displayCount * 4);
       const fontSize = size > 36 ? 16 : 14;
       
       const icon = L.divIcon({
@@ -299,7 +304,7 @@ export function AdminMap({ users }: AdminMapProps) {
           <div class="user-marker ${isOnline ? 'online' : 'offline'}" 
                style="width: ${size}px; height: ${size}px; font-size: ${fontSize}px; position: relative;">
             ${isOnline ? '<div class="pulse"></div>' : ''}
-            ${data.count}
+            ${displayCount}
           </div>
         `,
         iconSize: [size, size],
@@ -319,6 +324,7 @@ export function AdminMap({ users }: AdminMapProps) {
       `).join('');
 
       // Popup content
+      const onlineText = data.onlineCount > 0 ? `<strong style="color: #10b981">${data.onlineCount} ონლაინ</strong> • ` : '';
       const popupContent = `
         <div class="popup-content">
           <div class="popup-header">
@@ -327,11 +333,11 @@ export function AdminMap({ users }: AdminMapProps) {
             <span class="popup-country">${coords.name}</span>
           </div>
           <div class="popup-count">
-            <strong>${data.count}</strong> მომხმარებელი
+            ${onlineText}${data.totalCount} მომხმარებელი
           </div>
           <div class="popup-users">
             ${userChipsHtml}
-            ${data.count > 8 ? `<div class="popup-user-chip">+${data.count - 8} სხვა</div>` : ''}
+            ${data.totalCount > 8 ? `<div class="popup-user-chip">+${data.totalCount - 8} სხვა</div>` : ''}
           </div>
         </div>
       `;
