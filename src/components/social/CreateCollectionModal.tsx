@@ -489,29 +489,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <p className="text-sm text-muted-foreground mt-1">რამდენიმე რაუნდი ერთად</p>
       </div>
 
-      {/* Collection Title */}
-      <div>
-        <label className="text-sm font-medium text-foreground mb-2 block">სახელი</label>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="კოლექციის სახელი (არასავალდებულო)"
-          className="rounded-xl"
-        />
-      </div>
-
-      {/* Description */}
-      <div>
-        <label className="text-sm font-medium text-foreground mb-2 block">აღწერა</label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="მოკლე აღწერა (არასავალდებულო)"
-          className="rounded-xl resize-none"
-          rows={2}
-        />
-      </div>
-
       {/* Rounds */}
       <div>
         <div className="flex items-center justify-between mb-3">
@@ -603,6 +580,29 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* Collection Title */}
+      <div>
+        <label className="text-sm font-medium text-foreground mb-2 block">სახელი</label>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="კოლექციის სახელი (არასავალდებულო)"
+          className="rounded-xl"
+        />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="text-sm font-medium text-foreground mb-2 block">აღწერა</label>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="მოკლე აღწერა (არასავალდებულო)"
+          className="rounded-xl resize-none"
+          rows={2}
+        />
       </div>
 
       {/* Action Buttons */}
