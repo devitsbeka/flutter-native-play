@@ -7,12 +7,15 @@ import { Loader2, Hash, Sparkles, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { PopularityFilter } from "./FilterBar";
+import { SortFilter } from "./FeedFiltersBar";
 
 interface SocialFeedProps {
   onPlayQuiz?: (post: SamplePost) => void;
   selectedHashtag?: string | null;
   showSavedOnly?: boolean;
   popularityFilter?: PopularityFilter;
+  sortFilter?: SortFilter;
+  searchQuery?: string;
 }
 
 // Shop Ad Component - reuses feed styling
@@ -86,13 +89,27 @@ export function SocialFeed({
   onPlayQuiz, 
   selectedHashtag = null, 
   showSavedOnly = false, 
-  popularityFilter = "all" 
+  popularityFilter = "all",
+  sortFilter = "all",
+  searchQuery = ""
 }: SocialFeedProps) {
-  const { posts, isLoading, userSaves } = useSocialFeed();
+  const { posts, isLoading, userSaves, userLikes } = useSocialFeed();
 
-  // Filter posts based on active filters
+  // Filter and sort posts based on active filters
   const filteredPosts = useMemo(() => {
     let result = [...posts];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(post => 
+        post.title.toLowerCase().includes(query) ||
+        post.displayName.toLowerCase().includes(query) ||
+        post.username.toLowerCase().includes(query) ||
+        post.hashtags.some(tag => tag.toLowerCase().includes(query)) ||
+        post.subject.toLowerCase().includes(query)
+      );
+    }
 
     // Filter by hashtag
     if (selectedHashtag) {
@@ -117,8 +134,36 @@ export function SocialFeed({
       });
     }
 
+    // Sort/filter by sortFilter
+    switch (sortFilter) {
+      case "popular":
+        result.sort((a, b) => (b.likesCount + b.playsCount) - (a.likesCount + a.playsCount));
+        break;
+      case "most_liked":
+        result.sort((a, b) => b.likesCount - a.likesCount);
+        break;
+      case "most_saved":
+        // Posts that are saved by more users first (approximate by checking if in userSaves)
+        result.sort((a, b) => {
+          const aSaved = userSaves.includes(a.id) ? 1 : 0;
+          const bSaved = userSaves.includes(b.id) ? 1 : 0;
+          return bSaved - aSaved || b.likesCount - a.likesCount;
+        });
+        break;
+      case "most_played":
+        result.sort((a, b) => b.playsCount - a.playsCount);
+        break;
+      case "trivias":
+        // Show only non-collection posts (standalone quizzes)
+        result = result.filter(post => post.questionCount > 0);
+        break;
+      case "collections":
+        // For now, collections would be identified differently - showing all as placeholder
+        break;
+    }
+
     return result;
-  }, [posts, selectedHashtag, showSavedOnly, popularityFilter, userSaves]);
+  }, [posts, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves, userLikes]);
 
   const hasActiveFilters = selectedHashtag || showSavedOnly || popularityFilter !== "all";
 
