@@ -100,17 +100,15 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
             <div className="flex-1 overflow-y-auto">
               {/* Profile Header */}
               <div className="p-6 flex flex-col items-center">
-                <div className="relative">
-                  <SmartAvatar
-                    avatarUrl={data.profile.avatar_url}
-                    animatedAvatarUrl={data.profile.animated_avatar_url}
-                    fallback={data.profile.nickname}
-                    size="2xl"
-                    className="shadow-xl w-24 h-24"
-                    showSparkle={false}
-                    autoPlay={true}
-                  />
-                </div>
+              <SmartAvatar
+                avatarUrl={data.profile.avatar_url}
+                animatedAvatarUrl={data.profile.animated_avatar_url}
+                fallback={data.profile.nickname}
+                size="2xl"
+                className="w-[115px] h-[115px] [&>span]:bg-transparent"
+                showSparkle={false}
+                autoPlay={true}
+              />
 
                 <h3 className="mt-4 text-xl font-bold text-foreground flex items-center gap-2">
                   {data.profile.country_code && (
@@ -183,7 +181,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     )}
                     {data.friendshipStatus === 'accepted' && (
                       <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
-                        <img src={iconChatBubble} alt="" className="w-4 h-4 mr-1" />
+                        <img src={iconChatBubble} alt="" className="w-5 h-5 mr-1" />
                         შეტყობინება
                       </ChunkyButton>
                     )}
@@ -215,7 +213,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 <TabsContent value="trophies">
                   {data.achievements.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      <Trophy className="w-12 h-12 mx-auto mb-2 opacity-30" />
                       <p>ჯერ არ აქვს ჯილდოები</p>
                     </div>
                   ) : (
