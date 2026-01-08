@@ -101,14 +101,12 @@ export function CollectionPreviewModal({
                   <X className="w-5 h-5" />
                 </button>
 
-                {/* Collection badge */}
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-purple-600/90 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
-                  <Layers className="w-4 h-4" />
-                  <span>კოლექცია</span>
-                </div>
-
-                {/* Visibility badge */}
-                <div className="absolute top-4 left-[120px]">
+                {/* Collection badge with visibility */}
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 bg-purple-600/90 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+                    <Layers className="w-4 h-4" />
+                    <span>კოლექცია</span>
+                  </div>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${
                     firstPost.isPublic !== false 
                       ? 'bg-green-500/90 text-white' 
