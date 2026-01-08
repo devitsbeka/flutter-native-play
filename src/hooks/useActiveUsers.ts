@@ -12,6 +12,7 @@ export interface ActiveUser {
   country_code: string | null;
   region: string | null;
   isGuest: boolean;
+  isVip: boolean;
 }
 
 export const useActiveUsers = () => {
@@ -38,7 +39,7 @@ export const useActiveUsers = () => {
       }
 
       // Fetch profiles for these users
-      const userIds = presenceData.map(p => p.user_id);
+      const userIds = presenceData.map(p => p.user_id).filter(id => !id.startsWith('guest_'));
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, nickname, avatar_url, country_code, region')
@@ -46,13 +47,22 @@ export const useActiveUsers = () => {
 
       if (profilesError) throw profilesError;
 
+      // Fetch VIP subscriptions
+      const { data: vipData } = await supabase
+        .from('vip_subscriptions')
+        .select('user_id, expires_at')
+        .in('user_id', userIds)
+        .gte('expires_at', new Date().toISOString());
+
       const profilesMap = new Map(
         (profilesData || []).map(p => [p.user_id, p])
       );
+      
+      const vipUserIds = new Set((vipData || []).map(v => v.user_id));
 
       const usersWithProfiles: ActiveUser[] = presenceData.map(presence => {
         const profile = profilesMap.get(presence.user_id);
-        const isGuest = !profile && presence.user_id.startsWith('guest_');
+        const isGuest = presence.user_id.startsWith('guest_');
         // Generate short unique ID from user_id for guests
         const guestId = presence.user_id.slice(-6).toUpperCase();
         
@@ -68,6 +78,7 @@ export const useActiveUsers = () => {
           country_code: profile?.country_code || presence.country_code || null,
           region: profile?.region || null,
           isGuest,
+          isVip: vipUserIds.has(presence.user_id),
         };
       });
 
