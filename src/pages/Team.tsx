@@ -293,6 +293,16 @@ function TeamContent() {
           </div>
         </div>
 
+        {/* Friends Stories Bar - Show on "my-trivia" tab */}
+        {activeTab === "my-trivia" && (
+          <div className="px-4 pt-1 pb-2">
+            <FriendsStoriesBar
+              onAddFriendClick={() => setShowAddFriendModal(true)}
+              onFriendClick={handleQuickPlay}
+            />
+          </div>
+        )}
+
         {/* Hashtag Filter Bar - Only show on "For You" tab */}
         {activeTab === "for-me" && (
           <>
@@ -321,17 +331,6 @@ function TeamContent() {
       <div className="relative z-10 flex flex-col overflow-x-hidden">
         {activeTab === "my-trivia" ? (
           <>
-            {/* 1) Friends Stories Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-4 pt-3 pb-1"
-            >
-              <FriendsStoriesBar
-                onAddFriendClick={() => setShowAddFriendModal(true)}
-                onFriendClick={handleQuickPlay}
-              />
-            </motion.div>
 
             {/* 2) CTAs - Two buttons side by side */}
             <motion.div
