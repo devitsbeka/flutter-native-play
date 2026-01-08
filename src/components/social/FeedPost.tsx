@@ -89,11 +89,16 @@ interface FeedPostProps {
   post: SamplePost;
   index: number;
   onPlay?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
+  userLikes?: string[];
+  userSaves?: string[];
+  onToggleLike?: (postId: string) => void;
+  onToggleSave?: (postId: string) => void;
+  onHashtagClick?: (hashtag: string) => void;
 }
 
-export function FeedPost({ post, index, onPlay }: FeedPostProps) {
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
+export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick }: FeedPostProps) {
+  const liked = userLikes?.includes(post.id) || false;
+  const saved = userSaves?.includes(post.id) || false;
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [savesCount, setSavesCount] = useState(post.savesCount || 0);
   const { language } = useLanguage();
@@ -125,25 +130,13 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
   }, [post.questions, post.id]);
 
   const handleLike = () => {
-    if (liked) {
-      setLikesCount(prev => prev - 1);
-      toast("Removed from likes");
-    } else {
-      setLikesCount(prev => prev + 1);
-      toast.success("Added to likes ❤️");
-    }
-    setLiked(!liked);
+    onToggleLike?.(post.id);
+    setLikesCount(prev => liked ? prev - 1 : prev + 1);
   };
 
   const handleSave = () => {
-    if (saved) {
-      setSavesCount(prev => prev - 1);
-      toast("Removed from saved");
-    } else {
-      setSavesCount(prev => prev + 1);
-      toast.success("Saved to collection 📌");
-    }
-    setSaved(!saved);
+    onToggleSave?.(post.id);
+    setSavesCount(prev => saved ? prev - 1 : prev + 1);
   };
 
   const handleComment = () => {
@@ -404,10 +397,16 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
       </div>
 
       {/* Hashtags */}
-      <div className="px-4 pb-4">
-        <p className="text-primary text-sm">
-          {post.hashtags.map(tag => `#${tag}`).join(' ')}
-        </p>
+      <div className="px-4 pb-4 flex flex-wrap gap-1.5">
+        {post.hashtags.map(tag => (
+          <button
+            key={tag}
+            onClick={() => onHashtagClick?.(tag)}
+            className="text-primary text-sm hover:underline hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            #{tag}
+          </button>
+        ))}
       </div>
     </motion.article>
   );
