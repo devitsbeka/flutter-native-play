@@ -49,7 +49,7 @@ import { useAdminQuestions, AdminQuestion } from '@/hooks/useAdminQuestions';
 import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { cn } from '@/lib/utils';
-import { QUESTION_MAX_LENGTH } from '@/utils/questionValidation';
+import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from '@/utils/questionValidation';
 
 const DIFFICULTIES = [
   { value: 'easy', label: 'ადვილი', color: 'bg-emerald-500' },
@@ -431,23 +431,58 @@ export default function AdminQuestions() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">კითხვა</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium">კითხვა</Label>
+                    <span className={cn(
+                      "text-xs font-medium",
+                      formData.question_text.length > QUESTION_MAX_LENGTH 
+                        ? "text-rose-500" 
+                        : formData.question_text.length > QUESTION_MAX_LENGTH * 0.8
+                          ? "text-amber-500"
+                          : "text-muted-foreground"
+                    )}>
+                      {formData.question_text.length}/{QUESTION_MAX_LENGTH}
+                    </span>
+                  </div>
                   <Textarea
                     value={formData.question_text}
                     onChange={(e) => setFormData({ ...formData, question_text: e.target.value })}
                     placeholder="შეიყვანეთ კითხვა..."
                     rows={3}
-                    className="resize-none"
+                    className={cn(
+                      "resize-none",
+                      formData.question_text.length > QUESTION_MAX_LENGTH && "border-rose-500 focus-visible:ring-rose-500"
+                    )}
                   />
+                  {formData.question_text.length > QUESTION_MAX_LENGTH && (
+                    <p className="text-xs text-rose-500">
+                      ⚠️ კითხვა ძალიან გრძელია! შეამოკლეთ {formData.question_text.length - QUESTION_MAX_LENGTH} სიმბოლოთი
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-emerald-600">სწორი პასუხი</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-emerald-600">სწორი პასუხი</Label>
+                    <span className={cn(
+                      "text-xs font-medium",
+                      formData.correct_answer.length > ANSWER_MAX_LENGTH 
+                        ? "text-rose-500" 
+                        : formData.correct_answer.length > ANSWER_MAX_LENGTH * 0.8
+                          ? "text-amber-500"
+                          : "text-muted-foreground"
+                    )}>
+                      {formData.correct_answer.length}/{ANSWER_MAX_LENGTH}
+                    </span>
+                  </div>
                   <Input
                     value={formData.correct_answer}
                     onChange={(e) => setFormData({ ...formData, correct_answer: e.target.value })}
                     placeholder="სწორი პასუხი"
-                    className="h-9 border-emerald-200 focus-visible:ring-emerald-500"
+                    className={cn(
+                      "h-9 border-emerald-200 focus-visible:ring-emerald-500",
+                      formData.correct_answer.length > ANSWER_MAX_LENGTH && "border-rose-500 focus-visible:ring-rose-500"
+                    )}
                   />
                 </div>
 
@@ -455,17 +490,31 @@ export default function AdminQuestions() {
                   <Label className="text-xs font-medium">არასწორი პასუხები</Label>
                   <div className="space-y-2">
                     {formData.incorrect_answers.map((ans, i) => (
-                      <Input
-                        key={i}
-                        value={ans}
-                        onChange={(e) => {
-                          const newAnswers = [...formData.incorrect_answers];
-                          newAnswers[i] = e.target.value;
-                          setFormData({ ...formData, incorrect_answers: newAnswers });
-                        }}
-                        placeholder={`პასუხი ${i + 1}`}
-                        className="h-9"
-                      />
+                      <div key={i} className="relative">
+                        <Input
+                          value={ans}
+                          onChange={(e) => {
+                            const newAnswers = [...formData.incorrect_answers];
+                            newAnswers[i] = e.target.value;
+                            setFormData({ ...formData, incorrect_answers: newAnswers });
+                          }}
+                          placeholder={`პასუხი ${i + 1}`}
+                          className={cn(
+                            "h-9 pr-14",
+                            ans.length > ANSWER_MAX_LENGTH && "border-rose-500 focus-visible:ring-rose-500"
+                          )}
+                        />
+                        <span className={cn(
+                          "absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium",
+                          ans.length > ANSWER_MAX_LENGTH 
+                            ? "text-rose-500" 
+                            : ans.length > ANSWER_MAX_LENGTH * 0.8
+                              ? "text-amber-500"
+                              : "text-muted-foreground"
+                        )}>
+                          {ans.length}/{ANSWER_MAX_LENGTH}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -536,13 +585,29 @@ export default function AdminQuestions() {
           </div>
 
           <DialogFooter className="px-6 py-4 border-t">
+            {/* Show validation warning */}
+            {(formData.question_text.length > QUESTION_MAX_LENGTH || 
+              formData.correct_answer.length > ANSWER_MAX_LENGTH ||
+              formData.incorrect_answers.some(a => a.length > ANSWER_MAX_LENGTH)) && (
+              <p className="text-xs text-rose-500 mr-auto">
+                ⚠️ შეასწორეთ სიგრძის პრობლემები შენახვამდე
+              </p>
+            )}
             <Button variant="outline" size="sm" onClick={() => setIsAddDialogOpen(false)}>
               გაუქმება
             </Button>
             <Button 
               size="sm"
               onClick={handleSave} 
-              disabled={saving || !formData.category_id || !formData.question_text || !formData.correct_answer}
+              disabled={
+                saving || 
+                !formData.category_id || 
+                !formData.question_text || 
+                !formData.correct_answer ||
+                formData.question_text.length > QUESTION_MAX_LENGTH ||
+                formData.correct_answer.length > ANSWER_MAX_LENGTH ||
+                formData.incorrect_answers.some(a => a.length > ANSWER_MAX_LENGTH)
+              }
             >
               {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
               {editingQuestion ? 'შენახვა' : 'დამატება'}
