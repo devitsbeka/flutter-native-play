@@ -11,6 +11,7 @@ import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
 
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
@@ -79,7 +80,7 @@ function getGradientProps(gradient: string) {
 }
 
 // Expandable collection card
-function CollectionCard({ collection, profile, onEditCollection, onEditRound }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void }) {
+function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
@@ -220,6 +221,21 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound }: 
                   ამ კოლექციაში ჯერ არ არის ქვიზები
                 </p>
               )}
+              
+              {/* Add More Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const nextRoundNumber = (quizzes?.length || 0) + 1;
+                  onAddRound(collection.id, nextRoundNumber);
+                }}
+                className="w-full py-3 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                           bg-muted/30 hover:bg-muted/50 transition-colors 
+                           flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">კიდევ დამატება</span>
+              </button>
             </div>
           </motion.div>
         )}
@@ -338,6 +354,10 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
   const { profile } = useAuth();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
+  const [addingToCollection, setAddingToCollection] = useState<{
+    collectionId: string;
+    roundNumber: number;
+  } | null>(null);
 
   const isLoading = postsLoading || collectionsLoading;
 
@@ -407,6 +427,9 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
             profile={profile} 
             onEditCollection={(item) => setEditingQuiz(item)}
             onEditRound={(quiz) => setEditingRound(quiz)}
+            onAddRound={(collectionId, roundNumber) => 
+              setAddingToCollection({ collectionId, roundNumber })
+            }
           />
         ))}
 
@@ -434,6 +457,15 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
         round={editingRound}
         isOpen={!!editingRound}
         onClose={() => setEditingRound(null)}
+      />
+
+      {/* Add Round to Collection Modal */}
+      <AddRoundToCollectionModal
+        open={!!addingToCollection}
+        onOpenChange={(open) => !open && setAddingToCollection(null)}
+        collectionId={addingToCollection?.collectionId || ""}
+        roundNumber={addingToCollection?.roundNumber || 1}
+        onRoundCreated={() => setAddingToCollection(null)}
       />
     </motion.div>
   );
