@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2 } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -10,6 +10,7 @@ import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
+import { useDrafts } from "@/hooks/useDrafts";
 
 // Georgian time format helper
 function formatGeorgianTimeAgo(date: Date): string {
@@ -36,6 +37,7 @@ import { SortFilter } from "./FeedFiltersBar";
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
   onCreateCollection?: () => void;
+  onContinueDraft?: (draftId: string) => void;
   searchQuery?: string;
   sortFilter?: SortFilter;
   onPlay?: (post: any, collectionPosts?: any[]) => void;
@@ -391,9 +393,10 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: an
   );
 }
 
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = "", sortFilter = "all", onPlay }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay }: MyTriviaTabProps) {
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
+  const { drafts, isLoading: draftsLoading, deleteDraft } = useDrafts();
   const { profile } = useAuth();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
@@ -402,7 +405,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
     roundNumber: number;
   } | null>(null);
 
-  const isLoading = postsLoading || collectionsLoading;
+  const isLoading = postsLoading || collectionsLoading || draftsLoading;
 
   // Filter standalone posts (not in any collection)
   const allStandalonePosts = myPosts?.filter(post => !post.collection_id) || [];
@@ -480,6 +483,58 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
       animate={{ opacity: 1 }}
       className="py-4 space-y-4"
     >
+      {/* Drafts Section */}
+      {drafts && drafts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-semibold text-foreground">დრაფტები ({drafts.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            {drafts.map((draft) => (
+              <div 
+                key={draft.id}
+                className="min-w-[180px] max-w-[180px] bg-card rounded-xl border-2 border-dashed border-primary/30 p-3 space-y-2 flex-shrink-0"
+              >
+                {/* Draft cover preview or placeholder */}
+                <div className="aspect-video rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                  {draft.cover_image ? (
+                    <img src={draft.cover_image} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <FileEdit className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                
+                {/* Title */}
+                <div>
+                  <p className="font-medium text-sm truncate text-foreground">
+                    {draft.title || "უსათაურო დრაფტი"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatGeorgianTimeAgo(new Date(draft.updated_at))}
+                  </p>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <ChunkyButton 
+                    size="sm" 
+                    onClick={() => onContinueDraft?.(draft.id)}
+                    className="flex-1 text-xs"
+                  >
+                    გაგრძელება
+                  </ChunkyButton>
+                  <button 
+                    onClick={() => deleteDraft(draft.id)}
+                    className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Content Section Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">შენი კონტენტი ({totalCount})</h3>
       </div>

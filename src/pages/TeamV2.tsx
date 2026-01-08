@@ -70,6 +70,7 @@ function TeamContentV2() {
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
@@ -286,6 +287,10 @@ function TeamContentV2() {
               <MyTriviaTab 
                 onCreateQuiz={() => setShowCreateQuizModal(true)} 
                 onCreateCollection={() => setShowCreateCollectionModal(true)}
+                onContinueDraft={(draftId) => {
+                  setEditingDraftId(draftId);
+                  setShowCreateCollectionModal(true);
+                }}
                 searchQuery={searchQuery}
                 sortFilter={sortFilter}
                 onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
@@ -363,8 +368,12 @@ function TeamContentV2() {
       />
       <CreateCollectionModal
         open={showCreateCollectionModal}
-        onOpenChange={setShowCreateCollectionModal}
+        onOpenChange={(open) => {
+          setShowCreateCollectionModal(open);
+          if (!open) setEditingDraftId(null);
+        }}
         onCollectionCreated={() => setActiveTab("my-trivia")}
+        draftId={editingDraftId}
       />
       <QuizPlayModal
         open={!!playingQuiz}

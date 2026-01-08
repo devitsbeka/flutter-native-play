@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2, Save, ChevronUp } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -41,12 +41,6 @@ interface GeneratedData {
   coverImage: string | null;
   coverGenerationCount: number;
   rounds: GeneratedRound[];
-}
-
-interface Draft {
-  id: string;
-  title: string;
-  updated_at: string;
 }
 
 interface CreateCollectionModalProps {
@@ -90,38 +84,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [generatedData, setGeneratedData] = useState<GeneratedData | null>(null);
   const [expandedQuestion, setExpandedQuestion] = useState<{ roundIdx: number; questionIdx: number } | null>(null);
   
-  // Drafts list
-  const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [showDrafts, setShowDrafts] = useState(false);
-
-  // Load drafts on mount
-  useEffect(() => {
-    if (open && user) {
-      loadDrafts();
-    }
-  }, [open, user]);
-
   // Load specific draft if draftId provided
   useEffect(() => {
     if (draftId && open) {
       loadDraft(draftId);
     }
   }, [draftId, open]);
-
-  const loadDrafts = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from("collection_drafts")
-      .select("id, title, updated_at")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false })
-      .limit(5);
-    
-    if (data) {
-      setDrafts(data);
-    }
-  };
 
   const loadDraft = async (id: string) => {
     if (!user) return;
@@ -168,7 +136,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     setExpandedQuestion(null);
     setIsGeneratingCover(false);
     setCurrentDraftId(null);
-    setShowDrafts(false);
   };
 
   const handleClose = () => {
@@ -335,7 +302,14 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   };
 
   const handleSaveDraft = async () => {
-    if (!user || !generatedData) return;
+    if (!user) return;
+    
+    // At least need some rounds configured to save
+    const hasContent = rounds.some(r => r.subject.trim().length > 0);
+    if (!hasContent) {
+      toast.error("შეიყვანეთ მინიმუმ ერთი თემა");
+      return;
+    }
     
     setIsSavingDraft(true);
     try {
@@ -343,7 +317,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         user_id: user.id,
         title: title || null,
         description: description || null,
-        cover_image: generatedData.coverImage,
+        cover_image: generatedData?.coverImage || null,
         cover_gradient: coverGradient,
         is_public: isPublic,
         rounds_config: rounds as unknown as any,
@@ -373,7 +347,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       }
       
       queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
-      loadDrafts();
     } catch (error: any) {
       console.error("Error saving draft:", error);
       toast.error("დრაფტის შენახვა ვერ მოხერხდა");
@@ -397,7 +370,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       setCurrentDraftId(null);
     }
     
-    loadDrafts();
+    queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
     toast.success("დრაფტი წაიშალა");
   };
 
@@ -481,52 +454,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <h3 className="text-xl font-bold text-foreground">შექმენი კოლექცია</h3>
         <p className="text-sm text-muted-foreground mt-1">რამდენიმე რაუნდი ერთად</p>
       </div>
-
-      {/* Drafts Section */}
-      {drafts.length > 0 && (
-        <div className="bg-muted/50 rounded-xl p-3">
-          <button
-            onClick={() => setShowDrafts(!showDrafts)}
-            className="flex items-center justify-between w-full text-sm font-medium text-foreground"
-          >
-            <span>შენახული დრაფტები ({drafts.length})</span>
-            {showDrafts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-          
-          <AnimatePresence>
-            {showDrafts && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-2 space-y-2">
-                  {drafts.map((draft) => (
-                    <div key={draft.id} className="flex items-center justify-between bg-background rounded-lg p-2">
-                      <button
-                        onClick={() => loadDraft(draft.id)}
-                        className="flex-1 text-left"
-                      >
-                        <p className="text-sm font-medium truncate">{draft.title || "უსათაურო დრაფტი"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(draft.updated_at).toLocaleDateString("ka-GE")}
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => deleteDraft(draft.id)}
-                        className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
 
       {/* Collection Title */}
       <div>
@@ -644,15 +571,37 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         </div>
       </div>
 
-      {/* Generate Button */}
-      <button
-        onClick={handleGenerate}
-        disabled={!canProceed || isGenerating}
-        className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-      >
-        <Sparkles className="w-5 h-5" />
-        შექმნა
-      </button>
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        {/* Save as Draft Button */}
+        <button
+          onClick={handleSaveDraft}
+          disabled={isSavingDraft || !canProceed}
+          className="w-full py-3 rounded-xl bg-muted text-foreground font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-muted/80 transition-colors"
+        >
+          {isSavingDraft ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              ინახება...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              დრაფტად შენახვა
+            </>
+          )}
+        </button>
+
+        {/* Generate Button */}
+        <button
+          onClick={handleGenerate}
+          disabled={!canProceed || isGenerating}
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+        >
+          <Sparkles className="w-5 h-5" />
+          შექმნა
+        </button>
+      </div>
     </motion.div>
   );
 
