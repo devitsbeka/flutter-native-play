@@ -167,8 +167,8 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
         boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Top colored section */}
-      <div className="relative bg-gradient-to-br from-primary/90 to-primary px-3 pt-3 pb-8">
+      {/* Top colored section - light purple gradient with dark purple text */}
+      <div className="relative bg-gradient-to-br from-primary/15 to-primary/25 px-3 pt-3 pb-8">
         {/* Status badge */}
         <div className="flex items-center justify-between mb-2">
           {isPlaying ? (
@@ -177,23 +177,23 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
               LIVE
             </span>
           ) : isCompleted ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted/20 text-primary-foreground/80 text-[10px] font-bold">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
               დასრულდა
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-primary-foreground text-[10px] font-bold">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/30 text-primary text-[10px] font-bold">
               მოლოდინი
             </span>
           )}
           
           {/* Room code */}
-          <span className="text-[10px] font-mono text-primary-foreground/70">
+          <span className="text-[10px] font-mono text-primary/60">
             #{room.room_code.slice(-4)}
           </span>
         </div>
         
         {/* Room name */}
-        <h3 className="font-bold text-primary-foreground text-base leading-tight truncate">
+        <h3 className="font-bold text-primary text-base leading-tight truncate">
           {displayName}
         </h3>
       </div>
