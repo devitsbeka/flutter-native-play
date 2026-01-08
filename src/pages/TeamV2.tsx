@@ -278,14 +278,12 @@ function TeamContentV2() {
               </motion.div>
 
               {/* Filter & Search Bar - Below rooms for my-trivia tab */}
-              <div className="px-4 pb-2">
-                <FeedFiltersBar
-                  sortFilter={sortFilter}
-                  onSortFilterChange={setSortFilter}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                />
-              </div>
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+              />
 
               <div className="px-4">
                 <MyTriviaTab 
