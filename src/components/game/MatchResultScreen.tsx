@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
@@ -13,6 +13,7 @@ import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from "lucid
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { useGameStake } from "@/hooks/useGameStake";
+import { usePingPongVideo } from "@/hooks/usePingPongVideo";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
@@ -22,44 +23,15 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import wonVideo from "@/assets/animations/won.mp4";
 import lostVideo from "@/assets/animations/lost.mp4";
 
-// Animated video icon component with ping-pong effect
+// Animated video icon component with ping-pong effect using canvas
 const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isReversing, setIsReversing] = useState(false);
-
-  const handleTimeUpdate = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (!isReversing && video.currentTime >= video.duration - 0.05) {
-      // Start reversing
-      setIsReversing(true);
-    } else if (isReversing && video.currentTime <= 0.05) {
-      // Start playing forward again
-      setIsReversing(false);
-    }
-  }, [isReversing]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const step = () => {
-      if (isReversing) {
-        video.currentTime = Math.max(0, video.currentTime - 0.033);
-      }
-      if (isReversing) {
-        requestAnimationFrame(step);
-      }
-    };
-
-    if (isReversing) {
-      video.pause();
-      requestAnimationFrame(step);
-    } else {
-      video.play();
-    }
-  }, [isReversing]);
+  const { canvasRef, isReady } = usePingPongVideo({
+    videoUrl: videoSrc,
+    canvasSize: 160,
+    fps: 30,
+    autoPlay: true,
+    loop: true,
+  });
 
   return (
     <motion.div
@@ -75,14 +47,11 @@ const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
       }}
       className="relative"
     >
-      <video 
-        ref={videoRef}
-        src={videoSrc}
-        autoPlay
-        muted
-        playsInline
-        onTimeUpdate={handleTimeUpdate}
-        className="w-40 h-40 object-contain relative"
+      <canvas 
+        ref={canvasRef}
+        width={160}
+        height={160}
+        className={`w-40 h-40 object-contain relative transition-opacity duration-300 ${isReady ? 'opacity-100' : 'opacity-0'}`}
       />
     </motion.div>
   );
