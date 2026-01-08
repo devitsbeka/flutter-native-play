@@ -485,43 +485,46 @@ export function PalantirAnalyticsWidget() {
         </Card>
 
         {/* Shop Analytics */}
-        <StatWidget icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-50">
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>სულ შენაძენები</span>
-              <span className="font-semibold text-foreground">{totalPurchases}</span>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="font-semibold text-sm">მაღაზია</h3>
+                <p className="text-2xl font-bold tracking-tight text-primary">{totalPurchases}</p>
+                <p className="text-[10px] text-muted-foreground">სულ შენაძენები</p>
+              </div>
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+                <img src={WIDGET_ICONS.shop} alt="" className="w-5 h-5 object-contain" />
+              </div>
             </div>
-            
-            <div className="pt-1 border-t">
-              <div className="text-muted-foreground text-xs mb-1">ტიერის მიხედვით</div>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-3">
               {Object.entries(purchasesByTier).map(([tier, count]) => (
-                <div key={tier} className="flex items-center justify-between text-muted-foreground py-0.5">
-                  <span className="flex items-center gap-1">
-                    <span>👑</span>
-                    <span>{tier}</span>
-                  </span>
-                  <span className="font-medium text-foreground">{count}</span>
+                <div key={tier} className="flex-shrink-0 bg-muted/50 rounded-lg px-3 py-2 min-w-[70px] text-center">
+                  <span className="text-lg">👑</span>
+                  <p className="text-xs font-medium text-muted-foreground mt-0.5">{tier}</p>
+                  <p className="text-sm font-semibold text-foreground">{count}</p>
                 </div>
               ))}
             </div>
-
-            <div className="pt-1 border-t">
-              <div className="text-muted-foreground text-xs mb-1">ბოლო შენაძენები</div>
-              {purchases.slice(0, 3).map((p) => (
-                <div key={p.id} className="flex items-center gap-2 py-0.5">
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
-                      {p.nickname[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-foreground truncate flex-1 text-sm">{p.nickname}</span>
-                  <span className="text-muted-foreground text-xs">{formatTimeAgo(p.created_at)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </StatWidget>
+            {purchases.length > 0 && (
+              <div className="pt-2 border-t">
+                <p className="text-[10px] text-muted-foreground mb-1.5">ბოლო შენაძენები</p>
+                {purchases.slice(0, 2).map((p) => (
+                  <div key={p.id} className="flex items-center gap-2 py-1">
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage src={p.avatar_url || undefined} />
+                      <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                        {p.nickname[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-foreground truncate flex-1 text-sm">{p.nickname}</span>
+                    <span className="text-muted-foreground text-xs">{formatTimeAgo(p.created_at)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Row - 2 widgets */}
