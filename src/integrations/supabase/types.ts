@@ -2295,6 +2295,7 @@ export type Database = {
       }
       user_presence: {
         Row: {
+          country_code: string | null
           current_page: string | null
           id: string
           last_seen: string | null
@@ -2302,6 +2303,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          country_code?: string | null
           current_page?: string | null
           id?: string
           last_seen?: string | null
@@ -2309,6 +2311,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          country_code?: string | null
           current_page?: string | null
           id?: string
           last_seen?: string | null
