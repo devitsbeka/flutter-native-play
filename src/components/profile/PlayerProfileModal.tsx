@@ -1,5 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UserPlus, Swords, MessageCircle, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play } from "lucide-react";
+import iconTrophy from "@/assets/icon-trophy.png";
+import iconTrivia from "@/assets/icon-trivia.png";
+import iconCollections from "@/assets/icon-collections.png";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -106,7 +109,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     animatedAvatarUrl={data.profile.animated_avatar_url}
                     fallback={data.profile.nickname}
                     size="2xl"
-                    className="ring-4 ring-primary/30 shadow-xl w-24 h-24"
+                    className="shadow-xl w-24 h-24"
                     showSparkle={false}
                     autoPlay={true}
                   />
@@ -121,15 +124,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   {data.profile.nickname}
                 </h3>
                 
-                <div className="flex items-center gap-2 mt-1">
-                  <Trophy className="w-4 h-4 text-amber-500" />
+                <div className="mt-1">
                   <span className="text-sm text-muted-foreground">
                     {data.stats.totalPoints.toLocaleString()} ქულა
                   </span>
                 </div>
 
                 {/* Stats Row */}
-                <div className="flex items-center gap-6 mt-4 p-3 rounded-xl bg-card/50">
+                <div className="flex items-center gap-4 mt-4 p-3 rounded-xl bg-card/50">
                   <div className="flex flex-col items-center">
                     <div className="flex items-center gap-1">
                       <Gamepad2 className="w-4 h-4 text-primary" />
@@ -201,9 +203,18 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
               {/* Tabs */}
               <Tabs defaultValue="trophies" className="px-4 pb-6">
                 <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="trophies">🏆 ჯილდოები</TabsTrigger>
-                  <TabsTrigger value="trivias">📝 ტრივია</TabsTrigger>
-                  <TabsTrigger value="collections">📚 კოლექციები</TabsTrigger>
+                  <TabsTrigger value="trophies" className="flex items-center gap-1.5">
+                    <img src={iconTrophy} alt="" className="w-4 h-4" />
+                    ჯილდოები
+                  </TabsTrigger>
+                  <TabsTrigger value="trivias" className="flex items-center gap-1.5">
+                    <img src={iconTrivia} alt="" className="w-4 h-4" />
+                    ტრივია
+                  </TabsTrigger>
+                  <TabsTrigger value="collections" className="flex items-center gap-1.5">
+                    <img src={iconCollections} alt="" className="w-4 h-4" />
+                    კოლექციები
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="trophies">
