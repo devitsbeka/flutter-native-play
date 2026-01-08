@@ -132,19 +132,6 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
       ) : (
         <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
           <div className="flex gap-3 pr-4">
-            {/* Add Room Button - First in the list */}
-            {onCreateRoom && (
-              <motion.button
-                onClick={onCreateRoom}
-                className="flex-shrink-0 w-16 h-36 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 border-2 border-dashed border-purple-400 dark:border-purple-500 flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </motion.button>
-            )}
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}
