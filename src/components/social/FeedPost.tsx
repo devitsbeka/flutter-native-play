@@ -88,7 +88,7 @@ function getCoverImageForPost(subject: string, hashtags: string[]): string | und
 interface FeedPostProps {
   post: SamplePost;
   index: number;
-  onPlay?: (post: SamplePost) => void;
+  onPlay?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
 }
 
 export function FeedPost({ post, index, onPlay }: FeedPostProps) {
@@ -235,28 +235,21 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
               {post.verified && (
                 <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
               )}
-              {post.isUserPost && (
-                <button 
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
-                    post.isPublic !== false 
-                      ? 'bg-green-500/90 text-white' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                  title={post.isPublic !== false ? 'საჯარო' : 'პირადი'}
-                >
-                  {post.isPublic !== false ? (
-                    <>
-                      <Globe className="w-2.5 h-2.5" />
-                      საჯარო
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-2.5 h-2.5" />
-                      პირადი
-                    </>
-                  )}
-                </button>
-              )}
+              {/* Public/Private icon badge - shown for ALL posts */}
+              <span 
+                className={`flex items-center justify-center w-5 h-5 rounded-full ${
+                  post.isPublic !== false 
+                    ? 'bg-green-500/90 text-white' 
+                    : 'bg-muted text-muted-foreground'
+                }`}
+                title={post.isPublic !== false ? 'საჯარო' : 'პირადი'}
+              >
+                {post.isPublic !== false ? (
+                  <Globe className="w-3 h-3" />
+                ) : (
+                  <Lock className="w-3 h-3" />
+                )}
+              </span>
             </div>
             <span className="text-xs text-muted-foreground">{timeAgo}</span>
           </div>

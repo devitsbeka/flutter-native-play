@@ -63,7 +63,7 @@ function TeamContentV2() {
   const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
-  const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
+  const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -295,7 +295,7 @@ function TeamContentV2() {
             </>
           ) : (
             <SocialFeed 
-              onPlayQuiz={(post) => setPlayingQuiz(post)}
+              onPlayQuiz={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               sortFilter={sortFilter}
               searchQuery={searchQuery}
             />
@@ -362,7 +362,8 @@ function TeamContentV2() {
       <QuizPlayModal
         open={!!playingQuiz}
         onOpenChange={(open) => !open && setPlayingQuiz(null)}
-        post={playingQuiz}
+        post={playingQuiz?.post || null}
+        collectionPosts={playingQuiz?.collectionPosts}
       />
       <AllFriendsModal
         isOpen={showAllFriendsModal}

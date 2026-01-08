@@ -81,7 +81,7 @@ function TeamContent() {
   const [currentInvitation, setCurrentInvitation] = useState<typeof pendingInvitations[0] | null>(null);
   const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
-  const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
+  const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
 
   // Filter state (lifted from SocialFeed)
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
@@ -368,7 +368,7 @@ function TeamContent() {
           </>
         ) : (
           <SocialFeed 
-            onPlayQuiz={(post) => setPlayingQuiz(post)}
+            onPlayQuiz={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
             selectedHashtag={selectedHashtag}
             showSavedOnly={showSavedOnly}
             popularityFilter={popularityFilter}
@@ -435,7 +435,8 @@ function TeamContent() {
       <QuizPlayModal
         open={!!playingQuiz}
         onOpenChange={(open) => !open && setPlayingQuiz(null)}
-        post={playingQuiz}
+        post={playingQuiz?.post || null}
+        collectionPosts={playingQuiz?.collectionPosts}
       />
 
       {!showCreateModal && (
