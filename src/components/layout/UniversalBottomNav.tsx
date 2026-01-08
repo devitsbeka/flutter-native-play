@@ -161,7 +161,12 @@ export function UniversalBottomNav({
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/team")) {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  const mainEl = document.getElementById("team-main-content");
+                  if (mainEl) {
+                    mainEl.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
                 } else {
                   (onTeamClick || (() => navigate("/team")))();
                 }
