@@ -149,14 +149,15 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
 
         <div className="p-4 space-y-5">
           {/* Cover Image Picker */}
-          <CoverImagePicker
-            currentImage={coverImage}
-            currentGradient={selectedGradient}
-            onImageChange={setCoverImage}
-            onGradientChange={setSelectedGradient}
-            suggestPrompt={quiz?.subject}
-            title={title}
-          />
+            <CoverImagePicker
+              currentImage={coverImage}
+              currentGradient={selectedGradient}
+              onImageChange={setCoverImage}
+              onGradientChange={setSelectedGradient}
+              suggestPrompt={quiz?.subject}
+              title={title}
+              roundId={quiz?.id}
+            />
 
           {/* Title Input */}
           <div className="flex gap-3 items-end">
