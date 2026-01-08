@@ -293,15 +293,13 @@ function TeamContent() {
           </div>
         </div>
 
-        {/* Feed Filters Bar - Only show on "For You" tab */}
-        {activeTab === "for-me" && (
-          <FeedFiltersBar
-            sortFilter={sortFilter}
-            onSortFilterChange={setSortFilter}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-          />
-        )}
+        {/* Feed Filters Bar - Show on both tabs */}
+        <FeedFiltersBar
+          sortFilter={sortFilter}
+          onSortFilterChange={setSortFilter}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+        />
 
         {/* Hashtag Filter Bar - Only show on "For You" tab */}
         {activeTab === "for-me" && (
