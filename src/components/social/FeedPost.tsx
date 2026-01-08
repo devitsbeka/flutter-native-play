@@ -291,7 +291,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
 
       {/* Quiz Card/Banner */}
       <div 
-        className="relative aspect-[4/2.4] overflow-hidden isolate"
+        className="relative aspect-[4/2.76] overflow-hidden isolate"
       >
         {/* Background - gradient or image */}
         {coverImage ? (
@@ -322,9 +322,9 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
         )}
 
         {/* Content overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
+        <div className="absolute inset-0 flex flex-col items-center p-4 text-center z-10">
           {/* Quiz Stats - at top */}
-          <div className="flex items-center gap-4 text-white/90 text-sm mb-3 -mt-[20px]">
+          <div className="flex items-center gap-4 text-white/90 text-sm pt-2">
             <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
               {post.questionCount} კითხვა
             </span>
@@ -333,18 +333,18 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
             </span>
           </div>
 
-          {/* Quiz Title */}
-          <h3 className="text-white text-2xl font-bold drop-shadow-lg">
+          {/* Quiz Title - Fixed center position */}
+          <h3 className="text-white text-[24px] font-bold drop-shadow-lg absolute top-1/2 left-0 right-0 -translate-y-1/2 px-4">
             {post.title}
           </h3>
           
-          {/* Question Icons - moved down 45px */}
+          {/* Question Icons - at bottom */}
           {questionIcons.length > 0 && (
-            <div className="flex items-center gap-2 mt-[45px]">
+            <div className="flex items-center gap-2 mt-auto pb-2">
               {questionIcons.map((slug) => (
                 <div 
                   key={slug} 
-                  className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm p-2 shadow-lg"
+                  className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm p-1.5 shadow-lg"
                 >
                   <img 
                     src={`${ICON_STORAGE_URL}/${slug}.png`}
