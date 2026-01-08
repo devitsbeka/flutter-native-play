@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import confetti from "canvas-confetti";
 
 // Import all modals
 import { ComingSoonModal } from "@/components/game/ComingSoonModal";
@@ -12,9 +13,24 @@ import { LuckySpinModal } from "@/components/game/LuckySpinModal";
 import { VSMatchHelpModal } from "@/components/game/VSMatchHelpModal";
 import { GameModal } from "@/components/ui/game-modal";
 import { NotificationModal } from "@/components/ui/notification-modal";
+import { LevelUpModal } from "@/components/home/LevelUpModal";
+import { MissionsModal } from "@/components/home/MissionsModal";
+import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
+import { ChestRewardModal } from "@/components/home/ChestRewardModal";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+
+// Assets for preview screens
+import wonVideo from "@/assets/animations/won.mp4";
+import lostVideo from "@/assets/animations/lost.mp4";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 // Modal configurations
 const MODALS = [
+  // Full-screen views
+  { id: "win-screen", name: "Win Screen (Full)" },
+  { id: "lose-screen", name: "Lose Screen (Full)" },
+  { id: "level-up", name: "Level Up Modal" },
+  // Game modals
   { id: "coming-soon", name: "Coming Soon Modal" },
   { id: "power-up-fifty-fifty", name: "Power-Up: 50/50" },
   { id: "power-up-freeze", name: "Power-Up: Freeze" },
@@ -25,11 +41,212 @@ const MODALS = [
   { id: "lucky-spin", name: "Lucky Spin Modal" },
   { id: "vs-help", name: "VS Match Help Modal" },
   { id: "game-modal-base", name: "Game Modal (Base)" },
+  // Home modals
+  { id: "missions", name: "Missions Modal" },
+  { id: "daily-rewards", name: "Daily Rewards Modal" },
+  { id: "chest-reward", name: "Chest Reward Modal" },
+  // Notifications
   { id: "notification-success", name: "Notification: Success" },
   { id: "notification-error", name: "Notification: Error" },
   { id: "notification-info", name: "Notification: Info" },
   { id: "notification-warning", name: "Notification: Warning" },
 ] as const;
+
+// Floating confetti component for win screen
+const FloatingConfetti = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    
+    const myConfetti = confetti.create(canvasRef.current, {
+      resize: true,
+      useWorker: true,
+    });
+
+    const colors = ["#ffffff", "#f0f0f0", "#e8e8e8", "#d0d0d0"];
+    
+    const frame = () => {
+      myConfetti({
+        particleCount: 8,
+        angle: 90,
+        spread: 180,
+        origin: { x: Math.random(), y: -0.1 },
+        colors: colors,
+        gravity: 0.3,
+        drift: Math.random() * 0.4 - 0.2,
+        scalar: 0.9,
+        ticks: 400,
+      });
+    };
+
+    const interval = setInterval(frame, 30);
+    
+    return () => {
+      clearInterval(interval);
+      myConfetti.reset();
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none z-0"
+    />
+  );
+};
+
+// Preview Win Screen Component
+const PreviewWinScreen = ({ onClose }: { onClose: () => void }) => (
+  <AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: "#858EE7" }}
+    >
+      <FloatingConfetti />
+      
+      <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", delay: 0.2 }}
+        >
+          <video 
+            src={wonVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-40 h-40 object-contain"
+          />
+        </motion.div>
+        
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-4xl font-bold text-white mt-4"
+        >
+          მოგება!
+        </motion.h1>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex gap-8 mt-8"
+        >
+          <div className="text-center">
+            <p className="text-white/70 text-sm">You</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <img src={coinIcon} alt="" className="w-6 h-6" />
+              <span className="text-3xl font-black text-yellow-400">2,450</span>
+            </div>
+            <span className="text-white/70 text-xs">(Lvl.12)</span>
+            <div className="mt-2 px-3 py-1.5 rounded-full bg-emerald-500">
+              <span className="font-bold text-white text-sm">+500</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-white/70 text-sm">Opponent</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <img src={coinIcon} alt="" className="w-6 h-6" />
+              <span className="text-3xl font-black text-yellow-400">1,820</span>
+            </div>
+            <span className="text-white/70 text-xs">(Lvl.8)</span>
+            <div className="mt-2 px-3 py-1.5 rounded-full bg-red-500">
+              <span className="font-bold text-white text-sm">-500</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+      
+      <div className="px-6 pb-8 relative z-10">
+        <ChunkyButton onClick={onClose} variant="white" size="lg" className="w-full">
+          Continue
+        </ChunkyButton>
+      </div>
+    </motion.div>
+  </AnimatePresence>
+);
+
+// Preview Lose Screen Component
+const PreviewLoseScreen = ({ onClose }: { onClose: () => void }) => (
+  <AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: "#858EE7" }}
+    >
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", delay: 0.2 }}
+        >
+          <video 
+            src={lostVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-40 h-40 object-contain"
+          />
+        </motion.div>
+        
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-4xl font-bold text-white mt-4"
+        >
+          წაგება
+        </motion.h1>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex gap-8 mt-8"
+        >
+          <div className="text-center">
+            <p className="text-white/70 text-sm">You</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <img src={coinIcon} alt="" className="w-6 h-6" />
+              <span className="text-3xl font-black text-yellow-400">2,450</span>
+            </div>
+            <span className="text-white/70 text-xs">(Lvl.12)</span>
+            <div className="mt-2 px-3 py-1.5 rounded-full bg-red-500">
+              <span className="font-bold text-white text-sm">-500</span>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-white/70 text-sm">Opponent</p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <img src={coinIcon} alt="" className="w-6 h-6" />
+              <span className="text-3xl font-black text-yellow-400">3,120</span>
+            </div>
+            <span className="text-white/70 text-xs">(Lvl.15)</span>
+            <div className="mt-2 px-3 py-1.5 rounded-full bg-emerald-500">
+              <span className="font-bold text-white text-sm">+500</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+      
+      <div className="px-6 pb-8">
+        <ChunkyButton onClick={onClose} variant="white" size="lg" className="w-full">
+          Continue
+        </ChunkyButton>
+      </div>
+    </motion.div>
+  </AnimatePresence>
+);
 
 export default function ModalsShowcase() {
   const navigate = useNavigate();
@@ -59,6 +276,23 @@ export default function ModalsShowcase() {
     const id = currentModal.id;
     
     switch (id) {
+      // Full-screen views
+      case "win-screen":
+        return isModalOpen ? <PreviewWinScreen onClose={handleClose} /> : null;
+      
+      case "lose-screen":
+        return isModalOpen ? <PreviewLoseScreen onClose={handleClose} /> : null;
+      
+      case "level-up":
+        return (
+          <LevelUpModal 
+            isOpen={isModalOpen} 
+            onClose={handleClose}
+            newLevel={15}
+            previousLevel={14}
+          />
+        );
+      
       case "coming-soon":
         return (
           <ComingSoonModal 
@@ -166,6 +400,34 @@ export default function ModalsShowcase() {
           </GameModal>
         );
       
+      // Home modals
+      case "missions":
+        return (
+          <MissionsModal 
+            isOpen={isModalOpen} 
+            onClose={handleClose}
+          />
+        );
+      
+      case "daily-rewards":
+        return (
+          <DailyRewardsModal 
+            isOpen={isModalOpen} 
+            onClose={handleClose}
+            currentStreak={5}
+          />
+        );
+      
+      case "chest-reward":
+        return (
+          <ChestRewardModal 
+            isOpen={isModalOpen} 
+            onClose={handleClose}
+            onClaim={handleClose}
+          />
+        );
+      
+      // Notifications
       case "notification-success":
         return (
           <NotificationModal 
