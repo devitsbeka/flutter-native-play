@@ -138,7 +138,41 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     setCurrentDraftId(null);
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    // Auto-save draft if there's content to save
+    const hasContent = rounds.some(r => r.subject.trim().length > 0) || title.trim().length > 0 || generatedData;
+    
+    if (user && hasContent && !isPosting) {
+      try {
+        const draftData = {
+          user_id: user.id,
+          title: title || null,
+          description: description || null,
+          cover_image: generatedData?.coverImage || null,
+          cover_gradient: coverGradient,
+          is_public: isPublic,
+          rounds_config: rounds as unknown as any,
+          generated_data: generatedData as unknown as any,
+        };
+
+        if (currentDraftId) {
+          await supabase
+            .from("collection_drafts")
+            .update(draftData)
+            .eq("id", currentDraftId);
+        } else {
+          await supabase
+            .from("collection_drafts")
+            .insert([draftData]);
+        }
+        
+        queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
+        toast.success("დრაფტი ავტომატურად შეინახა");
+      } catch (error) {
+        console.error("Auto-save failed:", error);
+      }
+    }
+    
     resetForm();
     onOpenChange(false);
   };
