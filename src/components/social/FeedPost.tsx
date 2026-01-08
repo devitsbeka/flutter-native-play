@@ -352,27 +352,31 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side: Heart + Bookmark icons */}
         <div className="flex items-center gap-3">
-          <button 
+          <motion.button 
             onClick={handleLike}
-            className="hover:scale-110 transition-transform active:scale-90"
+            whileTap={{ scale: 0.9 }}
+            animate={liked ? { scale: [1, 1.3, 0.9, 1.1, 1] } : {}}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <img 
               src={purpleHeartIcon} 
               alt="Like" 
               className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
             onClick={handleSave}
-            className="hover:scale-110 transition-transform active:scale-90"
+            whileTap={{ scale: 0.9 }}
+            animate={saved ? { y: [0, -6, 0] } : {}}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <img 
               src={bookmarkIcon} 
               alt="Save" 
               className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
-          </button>
+          </motion.button>
         </div>
         
         {/* Right side: Stats + Play button */}
