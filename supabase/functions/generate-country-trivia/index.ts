@@ -36,6 +36,14 @@ serve(async (req) => {
 
     const systemPrompt = `You are a trivia question generator. Generate exactly ${count} trivia questions about ${countryName} in the category of ${categoryName || category}.
 
+CRITICAL POLITICAL GUIDELINES - MANDATORY:
+- აფხაზეთი (Abkhazia) is a REGION of Georgia, NOT a country - NEVER list it as a country
+- სამხრეთ ოსეთი (South Ossetia) is a REGION of Georgia, NOT a country - NEVER list it as a country
+- These are occupied territories of Georgia, internationally recognized as part of Georgia
+- When asking "which country" questions about locations in Abkhazia or South Ossetia, the correct answer is Georgia (საქართველო)
+- Examples of locations in Georgia: Lake Ritsa (რიწის ტბა), Sukhumi, Gagra, Tskhinvali - ALL are in GEORGIA
+- NEVER present breakaway regions or occupied territories as independent countries
+
 IMPORTANT RULES:
 1. Questions must be specifically about ${countryName}, not general knowledge
 2. Questions should be factual and verifiable
