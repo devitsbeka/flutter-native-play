@@ -96,7 +96,7 @@ export function SocialFeed({
   searchQuery = "",
   onHashtagClick
 }: SocialFeedProps) {
-  const { posts, feedItems, isLoading, userSaves, userLikes, toggleLike, toggleSave } = useSocialFeed();
+  const { posts, feedItems, isLoading, userSaves, userLikes, userPlays, toggleLike, toggleSave } = useSocialFeed();
 
   // Filter feed items based on active filters
   const filteredFeedItems = useMemo(() => {
@@ -133,6 +133,11 @@ export function SocialFeed({
       // Filter by user's saved posts ONLY (not sorting by count)
       if (sortFilter === "most_saved") {
         if (!userSaves.includes(post.id)) return false;
+      }
+
+      // Filter by user's played posts ONLY
+      if (sortFilter === "most_played") {
+        if (!userPlays.includes(post.id)) return false;
       }
 
       // Filter by popularity
@@ -173,16 +178,14 @@ export function SocialFeed({
       });
     }
 
-    // Apply sorting for popular and most_played only (most_liked and most_saved are now filters)
-    if (sortFilter === "popular" || sortFilter === "most_played") {
+    // Apply sorting for popular only (most_liked, most_saved, most_played are now filters)
+    if (sortFilter === "popular") {
       result.sort((a, b) => {
         const getScore = (item: FeedItem) => {
           if (item.type === 'standalone') {
-            if (sortFilter === "most_played") return item.post.playsCount;
             return item.post.likesCount + item.post.playsCount;
           } else {
             const total = item.posts.reduce((sum, p) => {
-              if (sortFilter === "most_played") return sum + p.playsCount;
               return sum + p.likesCount + p.playsCount;
             }, 0);
             return total;
@@ -193,7 +196,7 @@ export function SocialFeed({
     }
 
     return result;
-  }, [feedItems, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves, userLikes]);
+  }, [feedItems, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves, userLikes, userPlays]);
 
   const hasActiveFilters = selectedHashtag || showSavedOnly || popularityFilter !== "all";
 

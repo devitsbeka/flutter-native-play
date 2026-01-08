@@ -76,6 +76,21 @@ export function useSocialFeed() {
     enabled: !!user,
   });
 
+  const { data: userPlays = [] } = useQuery({
+    queryKey: ["user-quiz-plays", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("quiz_post_plays")
+        .select("post_id")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return data.map((p) => p.post_id);
+    },
+    enabled: !!user,
+  });
+
   const likeMutation = useMutation({
     mutationFn: async ({ postId, liked }: { postId: string; liked: boolean }) => {
       if (!user) throw new Error("Must be logged in");
@@ -250,6 +265,7 @@ export function useSocialFeed() {
     isLoading,
     userLikes,
     userSaves,
+    userPlays,
     toggleLike: (postId: string) => {
       const isLiked = userLikes.includes(postId);
       likeMutation.mutate({ postId, liked: isLiked });
