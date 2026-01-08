@@ -34,6 +34,7 @@ import { SamplePost } from "@/data/samplePosts";
 import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
+import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 
 function TeamContentV2() {
   const navigate = useNavigate();
@@ -64,6 +65,8 @@ function TeamContentV2() {
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
+  const [sortFilter, setSortFilter] = useState<SortFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
@@ -216,6 +219,14 @@ function TeamContentV2() {
             </div>
           </div>
 
+          {/* Filter & Search Bar - Sticky with header */}
+          <FeedFiltersBar
+            sortFilter={sortFilter}
+            onSortFilterChange={setSortFilter}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+          />
+
           {/* Create Buttons Row - Equal width */}
           {activeTab === "my-trivia" && (
             <div className="px-4 pb-3 flex gap-3">
@@ -278,7 +289,11 @@ function TeamContentV2() {
               </div>
             </>
           ) : (
-            <SocialFeed onPlayQuiz={(post) => setPlayingQuiz(post)} />
+            <SocialFeed 
+              onPlayQuiz={(post) => setPlayingQuiz(post)}
+              sortFilter={sortFilter}
+              searchQuery={searchQuery}
+            />
           )}
         </div>
 
