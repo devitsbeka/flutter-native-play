@@ -26,6 +26,9 @@ export interface SamplePost {
   }[];
   isUserPost?: boolean;
   isPublic?: boolean;
+  // For collection play - all rounds in the collection
+  collectionPosts?: SamplePost[];
+  roundNumber?: number;
 }
 
 // 3D cartoon style avatar URLs using DiceBear Adventurer style

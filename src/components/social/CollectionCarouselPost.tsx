@@ -22,7 +22,7 @@ interface CollectionCarouselPostProps {
   posts: SamplePost[];
   collectionTitle?: string;
   index: number;
-  onPlay?: (post: SamplePost) => void;
+  onPlay?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
 }
 
 export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }: CollectionCarouselPostProps) {
@@ -181,10 +181,27 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }
               {currentPost.verified && (
                 <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
               )}
-              {/* Collection badge */}
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/90 text-white">
-                <Layers className="w-2.5 h-2.5" />
-                კოლექცია
+              {/* Collection badge - icon only */}
+              <span 
+                className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-500/90 text-white"
+                title="კოლექცია"
+              >
+                <Layers className="w-3 h-3" />
+              </span>
+              {/* Public/Private badge - icon only */}
+              <span 
+                className={`flex items-center justify-center w-5 h-5 rounded-full ${
+                  currentPost.isPublic !== false 
+                    ? 'bg-green-500/90 text-white' 
+                    : 'bg-muted text-muted-foreground'
+                }`}
+                title={currentPost.isPublic !== false ? 'საჯარო' : 'პირადი'}
+              >
+                {currentPost.isPublic !== false ? (
+                  <Globe className="w-3 h-3" />
+                ) : (
+                  <Lock className="w-3 h-3" />
+                )}
               </span>
             </div>
             <span className="text-xs text-muted-foreground">{timeAgo}</span>
@@ -333,7 +350,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }
           </button>
           
           <button 
-            onClick={() => onPlay?.(currentPost)}
+            onClick={() => onPlay?.(posts[0], posts)}
             className="px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
           >
             ითამაშე

@@ -11,7 +11,7 @@ import { PopularityFilter } from "./FilterBar";
 import { SortFilter } from "./FeedFiltersBar";
 
 interface SocialFeedProps {
-  onPlayQuiz?: (post: SamplePost) => void;
+  onPlayQuiz?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
   selectedHashtag?: string | null;
   showSavedOnly?: boolean;
   popularityFilter?: PopularityFilter;
