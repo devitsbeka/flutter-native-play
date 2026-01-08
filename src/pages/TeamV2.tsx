@@ -234,13 +234,15 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Filter & Search Bar - Sticky with header */}
-          <FeedFiltersBar
-            sortFilter={sortFilter}
-            onSortFilterChange={setSortFilter}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-          />
+          {/* Filter & Search Bar - Only show on "For You" tab in sticky header */}
+          {activeTab === "for-me" && (
+            <FeedFiltersBar
+              sortFilter={sortFilter}
+              onSortFilterChange={setSortFilter}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+            />
+          )}
 
         </div>
 
@@ -274,6 +276,16 @@ function TeamContentV2() {
                   onShowAllRooms={() => setShowAllGamesModal(true)}
                 />
               </motion.div>
+
+              {/* Filter & Search Bar - Below rooms for my-trivia tab */}
+              <div className="px-4 pb-2">
+                <FeedFiltersBar
+                  sortFilter={sortFilter}
+                  onSortFilterChange={setSortFilter}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                />
+              </div>
 
               <div className="px-4">
                 <MyTriviaTab 
