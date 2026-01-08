@@ -528,6 +528,7 @@ export type Database = {
           challenged_user_id: string | null
           challenger_completed_at: string | null
           completed_at: string | null
+          cover_image: string | null
           created_at: string | null
           current_game_id: string | null
           game_mode: string | null
@@ -554,6 +555,7 @@ export type Database = {
           challenged_user_id?: string | null
           challenger_completed_at?: string | null
           completed_at?: string | null
+          cover_image?: string | null
           created_at?: string | null
           current_game_id?: string | null
           game_mode?: string | null
@@ -580,6 +582,7 @@ export type Database = {
           challenged_user_id?: string | null
           challenger_completed_at?: string | null
           completed_at?: string | null
+          cover_image?: string | null
           created_at?: string | null
           current_game_id?: string | null
           game_mode?: string | null

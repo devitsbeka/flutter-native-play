@@ -13,6 +13,7 @@ export interface MyRoom {
   is_host: boolean;
   game_type: string;
   has_unread_activity: boolean;
+  cover_image: string | null;
   participants: {
     user_id: string;
     nickname: string;
@@ -101,6 +102,7 @@ export function useMyRooms() {
           is_host: hostMap.get(room.id) || false,
           game_type: room.game_type,
           has_unread_activity: room.has_unread_activity || false,
+          cover_image: room.cover_image || null,
           participants: participants.map((p) => ({
             user_id: p.user_id,
             nickname: p.nickname,
