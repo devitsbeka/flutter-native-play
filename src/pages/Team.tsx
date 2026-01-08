@@ -358,17 +358,7 @@ function TeamContent() {
               </ChunkyButton>
             </motion.div>
 
-            {/* 3) Filters */}
-            <div className="px-4 pb-2">
-              <FeedFiltersBar
-                sortFilter={sortFilter}
-                onSortFilterChange={setSortFilter}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-              />
-            </div>
-
-            {/* 4) My Rooms Section */}
+            {/* 3) My Rooms Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -377,6 +367,16 @@ function TeamContent() {
             >
               <MyRoomsSection hideTV />
             </motion.div>
+
+            {/* 4) Filters */}
+            <div className="px-4 pb-2">
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+              />
+            </div>
 
             {/* My Content (Trivia Posts) */}
             <div className="px-4">
