@@ -35,6 +35,14 @@ serve(async (req) => {
     
 const systemPrompt = `You are a trivia question generator for a Georgian quiz app. Generate fun, engaging trivia questions.
 
+CRITICAL POLITICAL GUIDELINES - MANDATORY:
+- აფხაზეთი (Abkhazia) is a REGION of Georgia, NOT a country - NEVER list it as a country
+- სამხრეთ ოსეთი (South Ossetia) is a REGION of Georgia, NOT a country - NEVER list it as a country
+- These are occupied territories of Georgia, internationally recognized as part of Georgia
+- When asking "რომელ ქვეყანაში" (which country) questions about locations in Abkhazia or South Ossetia, the correct answer is საქართველო (Georgia)
+- Examples of locations in Georgia: რიწის ტბა, სოხუმი, გაგრა, ცხინვალი - ALL are in GEORGIA
+- NEVER present breakaway regions or occupied territories as independent countries
+
 CRITICAL CHARACTER LIMITS - STRICT:
 - Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces)
 - Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters
