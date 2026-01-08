@@ -105,7 +105,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 animatedAvatarUrl={data.profile.animated_avatar_url}
                 fallback={data.profile.nickname}
                 size="2xl"
-                className="w-[115px] h-[115px] [&>span]:bg-transparent"
+                className="w-[150px] h-[150px] [&>span]:bg-transparent"
                 showSparkle={false}
                 autoPlay={true}
               />
@@ -181,7 +181,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     )}
                     {data.friendshipStatus === 'accepted' && (
                       <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
-                        <img src={iconChatBubble} alt="" className="w-5 h-5 mr-1" />
+                        <img src={iconChatBubble} alt="" className="w-6 h-6 mr-1" />
                         შეტყობინება
                       </ChunkyButton>
                     )}
@@ -197,15 +197,15 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
               <Tabs defaultValue="trophies" className="px-4 pb-6">
                 <TabsList className="grid w-full grid-cols-3 mb-4 h-auto py-2">
                   <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
-                    <img src={iconTrophy} alt="" className="w-7 h-7" />
+                    <img src={iconTrophy} alt="" className="w-9 h-9" />
                     <span className="text-xs">ჯილდოები</span>
                   </TabsTrigger>
                   <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
-                    <img src={iconTrivia} alt="" className="w-7 h-7" />
+                    <img src={iconTrivia} alt="" className="w-9 h-9" />
                     <span className="text-xs">ტრივია</span>
                   </TabsTrigger>
                   <TabsTrigger value="collections" className="flex flex-col items-center gap-0.5">
-                    <img src={iconCollections} alt="" className="w-7 h-7" />
+                    <img src={iconCollections} alt="" className="w-9 h-9" />
                     <span className="text-xs">კოლექციები</span>
                   </TabsTrigger>
                 </TabsList>
@@ -234,7 +234,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 <TabsContent value="trivias">
                   {data.trivias.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      <Gamepad2 className="w-12 h-12 mx-auto mb-2 opacity-30" />
                       <p>ჯერ არ აქვს ტრივიები</p>
                     </div>
                   ) : (
@@ -273,7 +272,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 <TabsContent value="collections">
                   {data.collections.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      <Target className="w-12 h-12 mx-auto mb-2 opacity-30" />
                       <p>ჯერ არ აქვს კოლექციები</p>
                     </div>
                   ) : (
