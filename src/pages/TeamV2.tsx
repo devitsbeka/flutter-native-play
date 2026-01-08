@@ -142,7 +142,7 @@ function TeamContentV2() {
       {/* Main Content Area */}
       <main className="flex-1 min-h-screen relative pb-24 lg:pb-0">
         {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
-        <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 relative">
+        <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
           {/* Header Row */}
           <div className="flex items-center justify-between px-4 h-14 safe-top">
             <motion.div
@@ -234,17 +234,10 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Fade-out gradient */}
-          <div 
-            className="absolute bottom-0 left-0 right-0 h-4 -mb-4 pointer-events-none"
-            style={{
-              background: 'linear-gradient(to bottom, hsl(var(--background) / 0.8), transparent)'
-            }}
-          />
         </div>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative z-10 flex flex-col overflow-x-hidden lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
+        <div className="relative flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
           {activeTab === "my-trivia" ? (
             <>
               {/* Friends Stories Bar */}
