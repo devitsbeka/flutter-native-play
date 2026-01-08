@@ -6,23 +6,24 @@ import {
   Users,
   Activity,
   ArrowUpRight,
-  TrendingUp,
   Sparkles
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
-import { useOnlineUsers } from '@/hooks/useOnlineUsers';
+import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { NavLink } from 'react-router-dom';
 import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
 import { PalantirAnalyticsWidget } from '@/components/admin/PalantirAnalyticsWidget';
+import { AdminGlobe } from '@/components/admin/AdminGlobe';
+import { LastActiveUsersPanel } from '@/components/admin/LastActiveUsersPanel';
 
 export default function AdminDashboard() {
   const { categories } = useAdminCategories();
-  const { onlineUsers, onlineCount, awayCount } = useOnlineUsers();
+  const { activeUsers, onlineUsers, recentlyActiveUsers } = useActiveUsers();
   const [totalGameSessions, setTotalGameSessions] = useState(0);
   const [showMagicRefill, setShowMagicRefill] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
@@ -75,8 +76,8 @@ export default function AdminDashboard() {
     },
     {
       title: 'ონლაინ',
-      value: onlineCount,
-      subValue: `${awayCount} გაშვებული`,
+      value: onlineUsers.length,
+      subValue: `${recentlyActiveUsers.length} ბოლოს`,
       icon: Users,
       gradient: 'from-emerald-500 to-teal-500',
       link: '/admin/users',
@@ -157,92 +158,11 @@ export default function AdminDashboard() {
           })}
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Online Users */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <h3 className="font-semibold text-sm">ონლაინ მომხმარებლები</h3>
-                </div>
-                <span className="text-xs text-muted-foreground">{onlineCount} ონლაინ</span>
-              </div>
-              
-              {onlineUsers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                  <p className="text-xs">ამჟამად ონლაინ არავინ არ არის</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {onlineUsers.slice(0, 6).map((user) => (
-                    <div 
-                      key={user.id}
-                      className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors"
-                    >
-                      <div className="relative">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                          {user.profile?.nickname?.[0]?.toUpperCase() || '?'}
-                        </div>
-                        <div 
-                          className={cn(
-                            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card",
-                            user.status === 'online' ? 'bg-emerald-500' : 'bg-amber-500'
-                          )}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {user.profile?.nickname || 'უცნობი'}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground truncate">
-                          {user.current_page || '/'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Recent Categories */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-blue-500" />
-                  <h3 className="font-semibold text-sm">კატეგორიები</h3>
-                </div>
-                <NavLink to="/admin/categories" className="text-xs text-primary hover:underline">
-                  ყველა
-                </NavLink>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2">
-                {categories.slice(0, 6).map((cat) => (
-                  <div 
-                    key={cat.id}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 p-3 rounded-lg text-center transition-all",
-                      cat.is_active ? "bg-muted/50 hover:bg-muted" : "bg-muted/30 opacity-50"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br",
-                      cat.color
-                    )}>
-                      {cat.icon}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full">{cat.name}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Globe with Active Users Panel */}
+        <Card className="relative overflow-hidden h-[420px] bg-gradient-to-br from-slate-900 to-slate-950">
+          <AdminGlobe users={activeUsers} />
+          <LastActiveUsersPanel users={activeUsers} />
+        </Card>
 
         {/* Quick Stats Row */}
         <div className="grid grid-cols-3 gap-3">
