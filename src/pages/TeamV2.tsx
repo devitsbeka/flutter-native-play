@@ -219,9 +219,44 @@ function TeamContentV2() {
         </div>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative z-0 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 bg-background">
+        <div className="relative z-0 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 bg-background min-h-screen">
           
-          {/* Row 2: Friends Bar (მეგობრები) */}
+          {/* Desktop/Tablet Header */}
+          <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-border/40">
+            <h1 className="text-xl font-bold text-foreground">MyTrivia</h1>
+          </div>
+
+          {/* Desktop/Tablet Friends Bar */}
+          <div className="hidden lg:block px-4 py-3">
+            <FriendsStoriesBar
+              onAddFriendClick={() => setShowAddFriendModal(true)}
+              onFriendClick={() => {}}
+              onShowAllFriends={() => setShowAllFriendsModal(true)}
+            />
+          </div>
+
+          {/* Desktop/Tablet Rooms Section */}
+          <div className="hidden lg:block px-4 pb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-foreground">ოთახები</h2>
+              <ChunkyButton 
+                onClick={() => setShowCreateModal(true)}
+                variant="primary"
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                ახალი ოთახი
+              </ChunkyButton>
+            </div>
+            <MyRoomsSection 
+              hideTV 
+              onCreateRoom={() => setShowCreateModal(true)}
+              onShowAllRooms={() => setShowAllGamesModal(true)}
+              vertical
+            />
+          </div>
+          
+          {/* Row 2: Friends Bar (მეგობრები) - Mobile only */}
           <div className="lg:hidden">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
