@@ -185,7 +185,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-3" align="start" side="right">
+      <PopoverContent className="w-80 p-3 z-[100]" align="center" side="bottom" sideOffset={8} collisionPadding={16}>
         <div className="space-y-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -232,10 +232,10 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                       alt={icon.title}
                       className="w-12 h-12 object-contain"
                     />
-                    <span className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
-                      {icon.title}
-                    </span>
-                  </button>
+                        <span className="text-[10px] text-muted-foreground mt-1 px-0.5 text-center leading-tight" style={{ wordBreak: 'break-word' }}>
+                          {icon.title}
+                        </span>
+                      </button>
                 ))}
               </div>
             </div>
@@ -276,7 +276,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                           alt={icon.title}
                           className="w-12 h-12 object-contain"
                         />
-                        <span className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
+                        <span className="text-[10px] text-muted-foreground mt-1 px-0.5 text-center leading-tight" style={{ wordBreak: 'break-word' }}>
                           {icon.title}
                         </span>
                         {!isSafe && (
