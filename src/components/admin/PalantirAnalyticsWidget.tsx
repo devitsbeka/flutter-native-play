@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 
@@ -56,23 +57,11 @@ interface RegionalMetrics {
   totalUsers: number;
 }
 
-// Widget Card Component with 3D chunky style
-function WidgetCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div 
-      className={`bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-border/30 ${className}`}
-      style={{ fontFamily: "'Google Sans', sans-serif" }}
-    >
-      {children}
-    </div>
-  );
-}
-
 // Widget Header with icon badge on right (matches upper stat cards style)
 function WidgetHeader({ icon, title, iconBg = 'bg-amber-100' }: { icon: string; title: string; iconBg?: string }) {
   return (
     <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+      <h3 className="text-lg font-semibold text-foreground" style={{ fontFamily: "'Google Sans', sans-serif" }}>{title}</h3>
       <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center`}>
         <img src={icon} alt="" className="w-7 h-7 object-contain" />
       </div>
@@ -412,11 +401,13 @@ export function PalantirAnalyticsWidget() {
 
   if (loading) {
     return (
-      <WidgetCard>
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-pulse text-muted-foreground text-sm">იტვირთება...</div>
-        </div>
-      </WidgetCard>
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-pulse text-muted-foreground text-sm">იტვირთება...</div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -425,223 +416,233 @@ export function PalantirAnalyticsWidget() {
       {/* Top Row - 3 widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Language Buckets */}
-        <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.languages} title="ენების მიხედვით" iconBg="bg-amber-100" />
-          <div className="space-y-4">
-            {languageBuckets.map((bucket) => (
-              <div key={bucket.language} className="text-sm">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-lg">{getLanguageFlag(bucket.language)}</span>
-                  <span className="uppercase font-bold text-primary">[{bucket.language}]</span>
-                </div>
-                <div className="pl-8 space-y-1 text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground/40">├─</span>
-                    <span>პროდში:</span>
-                    <span className="text-emerald-500 font-semibold">{bucket.inProd.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground/40">├─</span>
-                    <span>ბიბლში:</span>
-                    <span className="text-amber-500 font-semibold">{bucket.inLib.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground/40">└─</span>
-                    <span>სულ:</span>
-                    <span className="font-bold text-foreground">{bucket.total.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </WidgetCard>
-
-        {/* Regional Activity */}
-        <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.regional} title="რეგიონული აქტივობა" iconBg="bg-emerald-100" />
-          <ScrollArea className="h-[220px]">
+        <Card>
+          <CardContent className="p-5">
+            <WidgetHeader icon={WIDGET_ICONS.languages} title="ენები" iconBg="bg-amber-100" />
             <div className="space-y-4">
-              {regionalActivity.map((region) => (
-                <div key={region.region} className="text-sm">
+              {languageBuckets.map((bucket) => (
+                <div key={bucket.language} className="text-sm">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-lg">{getRegionFlag(region.region)}</span>
-                    <span className="uppercase font-bold text-emerald-500">{region.region}</span>
-                    {region.onlineNow > 0 && (
-                      <span className="flex items-center gap-1 text-emerald-500 text-xs">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        {region.onlineNow}
-                      </span>
-                    )}
+                    <span className="text-lg">{getLanguageFlag(bucket.language)}</span>
+                    <span className="uppercase font-bold text-primary">[{bucket.language}]</span>
                   </div>
                   <div className="pl-8 space-y-1 text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground/40">├─</span>
-                      <span>ონლაინ:</span>
-                      <span className="text-emerald-500 font-semibold">{region.onlineNow}</span>
+                      <span>პროდში:</span>
+                      <span className="text-emerald-500 font-semibold">{bucket.inProd.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground/40">├─</span>
-                      <span>24სთ:</span>
-                      <span className="text-cyan-500 font-semibold">{region.played24h}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-muted-foreground/40">├─</span>
-                      <span>7დღე:</span>
-                      <span className="text-blue-500 font-semibold">{region.played7d}</span>
+                      <span>ბიბლში:</span>
+                      <span className="text-amber-500 font-semibold">{bucket.inLib.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground/40">└─</span>
-                      <span>მომხმ:</span>
-                      <span className="font-bold text-foreground">{region.totalUsers}</span>
+                      <span>სულ:</span>
+                      <span className="font-bold text-foreground">{bucket.total.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </ScrollArea>
-        </WidgetCard>
+          </CardContent>
+        </Card>
 
-        {/* Shop Analytics */}
-        <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-100" />
-          <div className="space-y-4 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">სულ შენაძენები:</span>
-              <Badge variant="secondary" className="bg-primary/10 text-primary font-semibold px-3">
-                {totalPurchases}
-              </Badge>
-            </div>
-            
-            <div className="border-t pt-3">
-              <div className="text-muted-foreground mb-2">ტიერის მიხედვით:</div>
-              {Object.entries(purchasesByTier).map(([tier, count]) => (
-                <div key={tier} className="flex items-center gap-2 pl-3 text-muted-foreground py-0.5">
-                  <span className="text-muted-foreground/40">├─</span>
-                  <span>👑</span>
-                  <span>{tier}:</span>
-                  <span className="text-amber-500 font-semibold">{count}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t pt-3">
-              <div className="text-muted-foreground mb-2">ბოლო:</div>
-              <ScrollArea className="h-[90px]">
-                {purchases.slice(0, 5).map((p) => (
-                  <div key={p.id} className="flex items-center gap-2 text-muted-foreground py-1">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={p.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                        {p.nickname[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-primary font-medium truncate max-w-[70px]">{p.nickname}</span>
-                    <span className="text-muted-foreground/50">–</span>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-                      {p.tier}
-                    </Badge>
-                    <span className="text-muted-foreground/60 text-xs">{formatTimeAgo(p.created_at)}</span>
+        {/* Regional Activity */}
+        <Card>
+          <CardContent className="p-5">
+            <WidgetHeader icon={WIDGET_ICONS.regional} title="აქტივობა" iconBg="bg-emerald-100" />
+            <ScrollArea className="h-[220px]">
+              <div className="space-y-4">
+                {regionalActivity.map((region) => (
+                  <div key={region.region} className="text-sm">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-lg">{getRegionFlag(region.region)}</span>
+                      <span className="uppercase font-bold text-emerald-500">{region.region}</span>
+                      {region.onlineNow > 0 && (
+                        <span className="flex items-center gap-1 text-emerald-500 text-xs">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          {region.onlineNow}
+                        </span>
+                      )}
+                    </div>
+                    <div className="pl-8 space-y-1 text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground/40">├─</span>
+                        <span>ონლაინ:</span>
+                        <span className="text-emerald-500 font-semibold">{region.onlineNow}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground/40">├─</span>
+                        <span>24სთ:</span>
+                        <span className="text-cyan-500 font-semibold">{region.played24h}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground/40">├─</span>
+                        <span>7დღე:</span>
+                        <span className="text-blue-500 font-semibold">{region.played7d}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-muted-foreground/40">└─</span>
+                        <span>მომხმ:</span>
+                        <span className="font-bold text-foreground">{region.totalUsers}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
-              </ScrollArea>
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Shop Analytics */}
+        <Card>
+          <CardContent className="p-5">
+            <WidgetHeader icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-100" />
+            <div className="space-y-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">სულ შენაძენები:</span>
+                <Badge variant="secondary" className="bg-primary/10 text-primary font-semibold px-3">
+                  {totalPurchases}
+                </Badge>
+              </div>
+              
+              <div className="border-t pt-3">
+                <div className="text-muted-foreground mb-2">ტიერის მიხედვით:</div>
+                {Object.entries(purchasesByTier).map(([tier, count]) => (
+                  <div key={tier} className="flex items-center gap-2 pl-3 text-muted-foreground py-0.5">
+                    <span className="text-muted-foreground/40">├─</span>
+                    <span>👑</span>
+                    <span>{tier}:</span>
+                    <span className="text-amber-500 font-semibold">{count}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-3">
+                <div className="text-muted-foreground mb-2">ბოლო:</div>
+                <ScrollArea className="h-[90px]">
+                  {purchases.slice(0, 5).map((p) => (
+                    <div key={p.id} className="flex items-center gap-2 text-muted-foreground py-1">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={p.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                          {p.nickname[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-primary font-medium truncate max-w-[70px]">{p.nickname}</span>
+                      <span className="text-muted-foreground/50">–</span>
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                        {p.tier}
+                      </Badge>
+                      <span className="text-muted-foreground/60 text-xs">{formatTimeAgo(p.created_at)}</span>
+                    </div>
+                  ))}
+                </ScrollArea>
+              </div>
             </div>
-          </div>
-        </WidgetCard>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Row - 2 widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Customers */}
-        <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.customers} title="ტოპ მომხმარებლები" iconBg="bg-amber-100" />
-          <div className="grid grid-cols-2 gap-6 text-sm">
-            <div>
-              <div className="text-muted-foreground mb-3 flex items-center gap-2 font-medium">
-                <span>💰</span> მაღალი გადამხდელი
-              </div>
-              {topPayingCustomers.length === 0 ? (
-                <div className="text-muted-foreground/50 text-sm">მონაცემები არ არის</div>
-              ) : (
-                <div className="space-y-2">
-                  {topPayingCustomers.map((c, i) => (
-                    <div key={i} className="flex items-center gap-2 text-muted-foreground">
-                      <span className="text-muted-foreground/50 w-4">{i + 1}.</span>
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={c.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                          {c.nickname[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-primary font-medium">{c.nickname}</span>
-                      <span className="text-muted-foreground/50">({c.region})</span>
-                    </div>
-                  ))}
+        <Card>
+          <CardContent className="p-5">
+            <WidgetHeader icon={WIDGET_ICONS.customers} title="ტოპ მომხმარებლები" iconBg="bg-amber-100" />
+            <div className="grid grid-cols-2 gap-6 text-sm">
+              <div>
+                <div className="text-muted-foreground mb-3 flex items-center gap-2 font-medium">
+                  <span>💰</span> მაღალი გადამხდელი
                 </div>
-              )}
-            </div>
-            <div>
-              <div className="text-muted-foreground mb-3 flex items-center gap-2 font-medium">
-                <span>📺</span> რეკლამები
+                {topPayingCustomers.length === 0 ? (
+                  <div className="text-muted-foreground/50 text-sm">მონაცემები არ არის</div>
+                ) : (
+                  <div className="space-y-2">
+                    {topPayingCustomers.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 text-muted-foreground">
+                        <span className="text-muted-foreground/50 w-4">{i + 1}.</span>
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={c.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                            {c.nickname[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-primary font-medium">{c.nickname}</span>
+                        <span className="text-muted-foreground/50">({c.region})</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              {topAdsWatchers.length === 0 ? (
-                <div className="text-muted-foreground/50 text-sm">მონაცემები არ არის</div>
-              ) : (
-                <div className="space-y-2">
-                  {topAdsWatchers.map((c, i) => (
-                    <div key={i} className="flex items-center gap-2 text-muted-foreground">
-                      <span className="text-muted-foreground/50 w-4">{i + 1}.</span>
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={c.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                          {c.nickname[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-primary font-medium">{c.nickname}</span>
-                      <span className="text-violet-500">({c.value})</span>
-                    </div>
-                  ))}
+              <div>
+                <div className="text-muted-foreground mb-3 flex items-center gap-2 font-medium">
+                  <span>📺</span> რეკლამები
                 </div>
-              )}
+                {topAdsWatchers.length === 0 ? (
+                  <div className="text-muted-foreground/50 text-sm">მონაცემები არ არის</div>
+                ) : (
+                  <div className="space-y-2">
+                    {topAdsWatchers.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 text-muted-foreground">
+                        <span className="text-muted-foreground/50 w-4">{i + 1}.</span>
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={c.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                            {c.nickname[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-primary font-medium">{c.nickname}</span>
+                        <span className="text-violet-500">({c.value})</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </WidgetCard>
+          </CardContent>
+        </Card>
 
         {/* Average Metrics */}
-        <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.metrics} title="საშუალო მეტრიკები რეგიონით" iconBg="bg-blue-100" />
-          <div className="space-y-3 text-sm">
-            {regionalMetrics.slice(0, 5).map((m) => (
-              <div key={m.region} className="flex items-center justify-between text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{getRegionFlag(m.region)}</span>
-                  <span className="uppercase font-medium text-foreground">{m.region}</span>
-                  <span className="text-muted-foreground/50">({m.totalUsers} მომხმ.)</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <span>📺</span>
-                    <span className="text-violet-500 font-semibold">{m.avgAdsPerUser.toFixed(1)}</span>
+        <Card>
+          <CardContent className="p-5">
+            <WidgetHeader icon={WIDGET_ICONS.metrics} title="რეგიონალური მაჩვენებლები" iconBg="bg-blue-100" />
+            <div className="space-y-3 text-sm">
+              {regionalMetrics.slice(0, 5).map((m) => (
+                <div key={m.region} className="flex items-center justify-between text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getRegionFlag(m.region)}</span>
+                    <span className="uppercase font-medium text-foreground">{m.region}</span>
+                    <span className="text-muted-foreground/50">({m.totalUsers} მომხმ.)</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span>🎮</span>
-                    <span className="text-emerald-500 font-semibold">{m.avgGamesPerUser.toFixed(1)}</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <span>📺</span>
+                      <span className="text-violet-500 font-semibold">{m.avgAdsPerUser.toFixed(1)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span>🎮</span>
+                      <span className="text-emerald-500 font-semibold">{m.avgGamesPerUser.toFixed(1)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            <div className="pt-3 border-t flex items-center gap-5 text-muted-foreground/60 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span>📺</span> რეკლ/მომხ
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span>🎮</span> თამაშ/მომხ
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span>⏱️</span> დრო/მომხ (მალე)
+              ))}
+              <div className="pt-3 border-t flex items-center gap-5 text-muted-foreground/60 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <span>📺</span> რეკლ/მომხ
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🎮</span> თამაშ/მომხ
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>⏱️</span> დრო/მომხ (მალე)
+                </div>
               </div>
             </div>
-          </div>
-        </WidgetCard>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
