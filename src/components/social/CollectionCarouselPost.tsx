@@ -315,17 +315,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side: Stats */}
-        <div className="flex items-center gap-4">
-          <span className="font-semibold text-foreground text-sm">
-            {formatNumber(likesCount)} likes
-          </span>
-          <span className="font-semibold text-foreground text-sm">
-            {formatNumber(savesCount)} saves
-          </span>
-        </div>
-        
-        {/* Right side: Actions */}
+        {/* Left side: Heart + Bookmark icons */}
         <div className="flex items-center gap-3">
           <button 
             onClick={handleLike}
@@ -334,7 +324,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
             <img 
               src={purpleHeartIcon} 
               alt="Like" 
-              className={`w-7 h-7 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
+              className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
           </button>
           
@@ -345,9 +335,19 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
             <img 
               src={bookmarkIcon} 
               alt="Save" 
-              className={`w-7 h-7 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
+              className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
             />
           </button>
+        </div>
+        
+        {/* Right side: Stats + Play button */}
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-foreground text-sm">
+            {formatNumber(likesCount)} likes
+          </span>
+          <span className="font-semibold text-foreground text-sm">
+            {formatNumber(savesCount)} saves
+          </span>
           
           <button 
             onClick={() => onPlay?.(posts[0], posts)}
