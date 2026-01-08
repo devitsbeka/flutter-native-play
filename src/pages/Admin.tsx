@@ -6,6 +6,8 @@ import {
   Users, 
   Menu,
   ChevronLeft,
+  ChevronDown,
+  ChevronRight,
   Upload,
   Search,
   Sparkles,
@@ -15,15 +17,22 @@ import {
   Wand2,
   Bell,
   Workflow,
-  FileArchive
+  FileArchive,
+  Flag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-import { Flag } from 'lucide-react';
+interface NavItem {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  end?: boolean;
+}
 
-const navItems = [
+const mainNavItems: NavItem[] = [
   { 
     to: '/admin', 
     icon: LayoutDashboard, 
@@ -36,14 +45,27 @@ const navItems = [
     label: 'Flow' 
   },
   { 
-    to: '/admin/content', 
-    icon: FolderOpen, 
-    label: 'კონტენტი' 
-  },
-  { 
     to: '/admin/import', 
     icon: Upload, 
     label: 'იმპორტი' 
+  },
+  { 
+    to: '/admin/users', 
+    icon: Users, 
+    label: 'მომხმარებლები' 
+  },
+  { 
+    to: '/admin/reports', 
+    icon: Flag, 
+    label: 'რეპორტები' 
+  },
+];
+
+const toolsNavItems: NavItem[] = [
+  { 
+    to: '/admin/content', 
+    icon: FolderOpen, 
+    label: 'კონტენტი' 
   },
   { 
     to: '/admin/ai-generations', 
@@ -76,16 +98,6 @@ const navItems = [
     label: 'გამოსწორება' 
   },
   { 
-    to: '/admin/users', 
-    icon: Users, 
-    label: 'მომხმარებლები' 
-  },
-  { 
-    to: '/admin/reports', 
-    icon: Flag, 
-    label: 'რეპორტები' 
-  },
-  { 
     to: '/admin/push', 
     icon: Bell, 
     label: 'Push შეტყობინებები' 
@@ -94,7 +106,32 @@ const navItems = [
 
 export default function Admin() {
   const [collapsed, setCollapsed] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const location = useLocation();
+
+  // Check if any tools subnav item is active
+  const isToolsActive = toolsNavItems.some(item => location.pathname === item.to);
+
+  const renderNavItem = (item: NavItem) => (
+    <NavLink
+      key={item.to}
+      to={item.to}
+      end={item.end}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-sm",
+          "hover:bg-accent/50",
+          isActive 
+            ? "bg-primary text-primary-foreground shadow-sm" 
+            : "text-muted-foreground hover:text-foreground",
+          collapsed && "justify-center px-2"
+        )
+      }
+    >
+      <item.icon className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
+      {!collapsed && <span className="font-medium">{item.label}</span>}
+    </NavLink>
+  );
 
   return (
     <div className="flex h-screen bg-background">
@@ -128,26 +165,52 @@ export default function Admin() {
         {/* Navigation */}
         <ScrollArea className="flex-1 py-3">
           <nav className="space-y-0.5 px-2">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-sm",
+            {/* Main nav items */}
+            {mainNavItems.map(renderNavItem)}
+
+            {/* Tools collapsible section */}
+            {collapsed ? (
+              // When collapsed, show tools as single icon that expands on hover/click
+              <div className="relative group">
+                <button
+                  onClick={() => setToolsOpen(!toolsOpen)}
+                  className={cn(
+                    "flex items-center justify-center w-full px-2 py-2 rounded-lg transition-all text-sm",
                     "hover:bg-accent/50",
-                    isActive 
+                    isToolsActive 
                       ? "bg-primary text-primary-foreground shadow-sm" 
-                      : "text-muted-foreground hover:text-foreground",
-                    collapsed && "justify-center px-2"
-                  )
-                }
-              >
-                <item.icon className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
-                {!collapsed && <span className="font-medium">{item.label}</span>}
-              </NavLink>
-            ))}
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Wrench className="h-5 w-5 shrink-0" />
+                </button>
+              </div>
+            ) : (
+              <Collapsible open={toolsOpen || isToolsActive} onOpenChange={setToolsOpen}>
+                <CollapsibleTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg transition-all text-sm",
+                      "hover:bg-accent/50",
+                      isToolsActive 
+                        ? "text-primary" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Wrench className="h-4 w-4 shrink-0" />
+                    <span className="font-medium flex-1 text-left">Tools</span>
+                    {toolsOpen || isToolsActive ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-4 mt-0.5 space-y-0.5">
+                  {toolsNavItems.map(renderNavItem)}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </nav>
         </ScrollArea>
 
