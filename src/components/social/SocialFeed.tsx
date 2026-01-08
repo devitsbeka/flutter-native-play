@@ -96,7 +96,7 @@ export function SocialFeed({
   searchQuery = "",
   onHashtagClick
 }: SocialFeedProps) {
-  const { posts, feedItems, isLoading, userSaves, userLikes, userPlays, toggleLike, toggleSave } = useSocialFeed();
+  const { posts, feedItems, isLoading, userSaves, userLikes, userPlays, toggleLike, toggleSave, isLiking, isSaving } = useSocialFeed();
 
   // Filter feed items based on active filters
   const filteredFeedItems = useMemo(() => {
@@ -226,6 +226,8 @@ export function SocialFeed({
             onToggleLike={toggleLike}
             onToggleSave={toggleSave}
             onHashtagClick={onHashtagClick}
+            isLiking={isLiking}
+            isSaving={isSaving}
           />
         );
       } else {
@@ -240,6 +242,8 @@ export function SocialFeed({
             onToggleLike={toggleLike}
             onToggleSave={toggleSave}
             onHashtagClick={onHashtagClick}
+            isLiking={isLiking}
+            isSaving={isSaving}
           />
         );
       }
