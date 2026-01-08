@@ -171,6 +171,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
               onGradientChange={setSelectedGradient}
               suggestPrompt={round.subject}
               title={title}
+              roundId={round.id}
             />
 
             {/* Title */}

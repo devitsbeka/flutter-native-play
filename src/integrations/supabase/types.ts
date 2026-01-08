@@ -333,6 +333,47 @@ export type Database = {
         }
         Relationships: []
       }
+      cover_image_generations: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          is_selected: boolean | null
+          round_id: string | null
+          subject: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          is_selected?: boolean | null
+          round_id?: string | null
+          subject?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          is_selected?: boolean | null
+          round_id?: string | null
+          subject?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cover_image_generations_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "user_quiz_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           accepted_at: string | null
