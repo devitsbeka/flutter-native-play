@@ -315,51 +315,48 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side: Heart + Bookmark icons */}
-        <div className="flex items-center gap-3">
-          <motion.button 
-            onClick={handleLike}
-            whileTap={{ scale: 0.9 }}
-            animate={liked ? { scale: [1, 1.3, 0.9, 1.1, 1] } : {}}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
-            <img 
-              src={purpleHeartIcon} 
-              alt="Like" 
-              className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
-            />
-          </motion.button>
+        {/* Left side: Heart + Bookmark icons with counts */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <motion.button 
+              onClick={handleLike}
+              whileTap={{ scale: 0.9 }}
+              animate={liked ? { scale: [1, 1.3, 0.9, 1.1, 1] } : {}}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <img 
+                src={purpleHeartIcon} 
+                alt="Like" 
+                className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
+              />
+            </motion.button>
+            <span className="text-sm text-muted-foreground">({formatNumber(likesCount)})</span>
+          </div>
           
-          <motion.button 
-            onClick={handleSave}
-            whileTap={{ scale: 0.9 }}
-            animate={saved ? { y: [0, -6, 0] } : {}}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            <img 
-              src={bookmarkIcon} 
-              alt="Save" 
-              className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
-            />
-          </motion.button>
+          <div className="flex items-center gap-1.5">
+            <motion.button 
+              onClick={handleSave}
+              whileTap={{ scale: 0.9 }}
+              animate={saved ? { y: [0, -6, 0] } : {}}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <img 
+                src={bookmarkIcon} 
+                alt="Save" 
+                className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
+              />
+            </motion.button>
+            <span className="text-sm text-muted-foreground">({formatNumber(savesCount)})</span>
+          </div>
         </div>
         
-        {/* Right side: Stats + Play button */}
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-foreground text-sm">
-            {formatNumber(likesCount)} likes
-          </span>
-          <span className="font-semibold text-foreground text-sm">
-            {formatNumber(savesCount)} saves
-          </span>
-          
-          <button 
-            onClick={() => onPlay?.(posts[0], posts)}
-            className="px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            ითამაშე
-          </button>
-        </div>
+        {/* Right side: Play button */}
+        <button 
+          onClick={() => onPlay?.(posts[0], posts)}
+          className="px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+        >
+          ითამაშე
+        </button>
       </div>
 
       {/* Hashtags */}
