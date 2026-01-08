@@ -202,21 +202,53 @@ Return ONLY valid JSON.`;
 
     console.log(`Generating ${requestCount} ${answerFormat} questions (${difficulty}) about: ${subject} (will filter to ${questionCount})`);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        response_format: { type: "json_object" },
-      })
-    });
+    // Retry logic with timeout
+    let response: Response | null = null;
+    let lastError: Error | null = null;
+    const MAX_RETRIES = 2;
+    const TIMEOUT_MS = 55000; // 55 seconds to stay under edge function limit
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+        response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash", // Using faster model
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt }
+            ],
+            response_format: { type: "json_object" },
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          break; // Success, exit retry loop
+        }
+      } catch (fetchError) {
+        lastError = fetchError instanceof Error ? fetchError : new Error(String(fetchError));
+        console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
+        
+        if (attempt < MAX_RETRIES - 1) {
+          console.log(`Retrying... (attempt ${attempt + 2}/${MAX_RETRIES})`);
+          await new Promise(r => setTimeout(r, 1000)); // Wait 1 second before retry
+        }
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error("Failed to get AI response after retries");
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
