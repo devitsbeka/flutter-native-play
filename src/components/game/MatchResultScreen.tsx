@@ -381,41 +381,9 @@ export function MatchResultScreen() {
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
         style={{ 
-          background: isLose ? "#919CEB" : "#7E7ADB",
+          background: "#929DE7",
         }}
       >
-        {/* Topographic Wave Pattern */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <svg 
-            className="absolute inset-0 w-full h-full opacity-10" 
-            viewBox="0 0 400 800" 
-            preserveAspectRatio="xMidYMid slice"
-          >
-            <defs>
-              <pattern id="waves" patternUnits="userSpaceOnUse" width="100" height="100">
-                <path 
-                  d="M0 50 Q25 30 50 50 T100 50" 
-                  fill="none" 
-                  stroke="white" 
-                  strokeWidth="1"
-                />
-                <path 
-                  d="M0 70 Q25 50 50 70 T100 70" 
-                  fill="none" 
-                  stroke="white" 
-                  strokeWidth="1"
-                />
-                <path 
-                  d="M0 30 Q25 10 50 30 T100 30" 
-                  fill="none" 
-                  stroke="white" 
-                  strokeWidth="1"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#waves)" />
-          </svg>
-        </div>
 
         {/* Header */}
         <motion.div 
