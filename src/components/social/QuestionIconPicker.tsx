@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, X, ImageIcon, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 
@@ -154,48 +150,61 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
   const selectedIconUnsafe = selectedSlug && !isIconSafe(selectedSlug);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={`w-12 h-12 rounded-xl border flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
-            selectedIconUnsafe 
-              ? "border-destructive bg-destructive/10" 
-              : "border-border bg-muted/50"
-          }`}
-        >
-          {selectedSlug ? (
-            <>
-              <img
-                src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
-                alt=""
-                className="w-8 h-8 object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              {selectedIconUnsafe && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-2.5 h-2.5 text-white" />
-                </div>
-              )}
-            </>
-          ) : (
-            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-3 z-[100]" align="center" side="bottom" sideOffset={8} collisionPadding={16}>
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ძებნა..."
-              className="pl-8 h-9 text-sm"
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`w-12 h-12 rounded-xl border flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
+          selectedIconUnsafe 
+            ? "border-destructive bg-destructive/10" 
+            : "border-border bg-muted/50"
+        }`}
+      >
+        {selectedSlug ? (
+          <>
+            <img
+              src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
+              alt=""
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
+            {selectedIconUnsafe && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-2.5 h-2.5 text-white" />
+              </div>
+            )}
+          </>
+        ) : (
+          <ImageIcon className="w-6 h-6 text-muted-foreground" />
+        )}
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md p-0 gap-0 max-h-[80vh] overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <h3 className="text-base font-semibold text-foreground">აირჩიე აიკონი</h3>
+            <button
+              onClick={() => setOpen(false)}
+              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
           </div>
+
+          <div className="p-4 space-y-3">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ძებნა..."
+                className="pl-9 h-10"
+              />
+            </div>
 
           {/* Current selected icon */}
           {selectedSlug && selectedIconData && (
@@ -291,18 +300,21 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
               )}
             </ScrollArea>
           </div>
+          </div>
 
           {selectedSlug && (
-            <button
-              onClick={handleRemove}
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-              წაშლა
-            </button>
+            <div className="px-4 pb-4">
+              <button
+                onClick={handleRemove}
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors border border-destructive/20"
+              >
+                <X className="w-3.5 h-3.5" />
+                წაშლა
+              </button>
+            </div>
           )}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
