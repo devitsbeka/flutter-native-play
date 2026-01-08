@@ -258,24 +258,24 @@ function TeamContentV2() {
           </div>
 
           {/* Row 5: CTA Buttons */}
-          <div className="lg:hidden px-4 pb-3 flex flex-col gap-2">
+          <div className="lg:hidden px-4 pb-3 flex gap-2">
             <ChunkyButton 
               onClick={() => setShowCreateModal(true)}
-              className="w-full gap-2"
+              className="flex-1 gap-1.5"
               variant="primary"
               size="lg"
             >
               <Plus className="w-5 h-5" />
-              შექმენი ოთახი
+              ოთახი
             </ChunkyButton>
             <ChunkyButton 
               onClick={() => setShowCreateTypeModal(true)}
-              className="w-full gap-2"
+              className="flex-1 gap-1.5"
               variant="secondary"
               size="lg"
             >
-              <Layers className="w-5 h-5" />
-              შექმენი ტრივია
+              <Plus className="w-5 h-5" />
+              ტრივია
             </ChunkyButton>
           </div>
 
