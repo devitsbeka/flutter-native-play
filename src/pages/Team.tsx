@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Bell, MessageCircle, Plus } from "lucide-react";
+import { Users, Bell, MessageCircle, Plus, Layers } from "lucide-react";
 import { useMultiplayer, MultiplayerProvider } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -293,27 +293,27 @@ function TeamContent() {
           </div>
         </div>
 
-        {/* Feed Filters Bar - Show on both tabs */}
-        <FeedFiltersBar
-          sortFilter={sortFilter}
-          onSortFilterChange={setSortFilter}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-        />
-
         {/* Hashtag Filter Bar - Only show on "For You" tab */}
         {activeTab === "for-me" && (
-          <FilterBar
-            selectedHashtag={selectedHashtag}
-            onSelectHashtag={setSelectedHashtag}
-            showSavedOnly={showSavedOnly}
-            onToggleSaved={() => setShowSavedOnly(prev => !prev)}
-            popularityFilter={popularityFilter}
-            onPopularityChange={setPopularityFilter}
-            hashtags={allHashtags}
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={clearFilters}
-          />
+          <>
+            <FeedFiltersBar
+              sortFilter={sortFilter}
+              onSortFilterChange={setSortFilter}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+            />
+            <FilterBar
+              selectedHashtag={selectedHashtag}
+              onSelectHashtag={setSelectedHashtag}
+              showSavedOnly={showSavedOnly}
+              onToggleSaved={() => setShowSavedOnly(prev => !prev)}
+              popularityFilter={popularityFilter}
+              onPopularityChange={setPopularityFilter}
+              hashtags={allHashtags}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={clearFilters}
+            />
+          </>
         )}
       </StickyHeaderContainer>
 
@@ -321,7 +321,7 @@ function TeamContent() {
       <div className="relative z-10 flex flex-col overflow-x-hidden">
         {activeTab === "my-trivia" ? (
           <>
-            {/* Friends Stories Bar (no title) */}
+            {/* 1) Friends Stories Bar */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -333,24 +333,42 @@ function TeamContent() {
               />
             </motion.div>
 
-            {/* Big Create Trivia Button - 3D mint style */}
+            {/* 2) CTAs - Two buttons side by side */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="px-4 py-3"
+              className="px-4 py-3 flex gap-3"
             >
               <ChunkyButton 
                 onClick={() => setShowCreateQuizModal(true)}
-                className="w-full gap-2 text-base py-4"
-                variant="mint"
+                className="flex-1 gap-2 text-sm py-3"
+                variant="danger"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 შექმენი ტრივია
+              </ChunkyButton>
+              <ChunkyButton 
+                onClick={() => setShowCreateQuizModal(true)}
+                className="flex-1 gap-2 text-sm py-3"
+                variant="secondary"
+              >
+                <Layers className="w-4 h-4" />
+                კოლექცია
               </ChunkyButton>
             </motion.div>
 
-            {/* My Rooms Section */}
+            {/* 3) Filters */}
+            <div className="px-4 pb-2">
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+              />
+            </div>
+
+            {/* 4) My Rooms Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
