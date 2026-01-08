@@ -85,6 +85,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
 
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["my-collections"] });
+      queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
       onClose();
     } catch (error) {
       console.error("Error updating:", error);

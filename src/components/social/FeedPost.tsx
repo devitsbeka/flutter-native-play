@@ -286,7 +286,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
 
       {/* Quiz Card/Banner */}
       <div 
-        className="relative aspect-[4/3] mx-4 rounded-xl overflow-hidden"
+        className="relative aspect-[4/3] rounded-xl overflow-hidden mx-4"
       >
         {/* Background - gradient or image */}
         {coverImage ? (
