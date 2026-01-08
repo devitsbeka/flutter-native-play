@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trophy, RotateCcw, Share2, ChevronRight, Coins, Star } from "lucide-react";
+import { X, RotateCcw, Share2, ChevronRight, Coins, Star, Heart, MessageCircle, Bookmark } from "lucide-react";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -13,6 +13,8 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/contexts/AuthContext";
 import { REWARDS } from "@/config/rewardConfig";
+import { useSocialFeed } from "@/hooks/useSocialFeed";
+import trophyWinIcon from "@/assets/icons/trophy-win.png";
 
 interface Question {
   question: string;
@@ -31,6 +33,7 @@ interface QuizPlayModalProps {
 export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: QuizPlayModalProps) {
   const { addCoins } = useCurrency();
   const { profile, updateProfile } = useAuth();
+  const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -315,8 +318,8 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex-1 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-20 h-20 mb-6 rounded-full bg-white/20 flex items-center justify-center">
-                    <Trophy className="w-10 h-10 text-yellow-300" />
+                  <div className="w-20 h-20 mb-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <img src={trophyWinIcon} alt="Trophy" className="w-12 h-12 object-contain" />
                   </div>
                   
                   <h3 className="text-2xl font-bold text-white mb-2">
@@ -383,26 +386,26 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex-1 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-24 h-24 mb-6 rounded-full bg-white/20 flex items-center justify-center">
-                    <Trophy className="w-12 h-12 text-yellow-300" />
+                  <div className="w-24 h-24 mb-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <img src={trophyWinIcon} alt="Trophy" className="w-14 h-14 object-contain" />
                   </div>
                   
-                  <h3 className="text-3xl font-bold text-white mb-2">
+                  <h3 className="text-3xl font-bold text-white mb-3">
                     {isCollection ? "კოლექცია დასრულდა!" : "თამაში დასრულდა!"}
                   </h3>
                   
-                  <p className="text-6xl font-bold text-white mb-2">
+                  <p className="text-6xl font-bold text-white mb-3">
                     {isCollection ? cumulativeScore : score}/{totalCollectionQuestions}
                   </p>
                   
                   {isCollection && (
-                    <p className="text-white/70 text-sm mb-2">
+                    <p className="text-white/70 text-sm mb-4">
                       {currentRoundIndex + 1} რაუნდი სრულად
                     </p>
                   )}
                   
                   {/* Total Rewards */}
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-6">
                     {totalEarnedXP > 0 && (
                       <motion.div
                         initial={{ scale: 0 }}
@@ -427,27 +430,72 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                     )}
                   </div>
                   
-                  <p className="text-white/80 text-lg mb-6">
+                  <p className="text-white/80 text-xl mb-8">
                     {(() => {
                       const finalScore = isCollection ? cumulativeScore : score;
                       const total = totalCollectionQuestions;
-                      if (finalScore === total) return "პერფექტული! 🎉";
-                      if (finalScore >= total * 0.7) return "შესანიშნავი! 👏";
-                      if (finalScore >= total * 0.5) return "კარგი შედეგი! 👍";
-                      return "სცადე ხელახლა! 💪";
+                      if (finalScore >= total * 0.5) {
+                        return <span className="flex items-center justify-center gap-2">ყოჩაღ! <span className="text-2xl">🔥</span></span>;
+                      }
+                      return <span className="flex items-center justify-center gap-2">სცადე ხელახლა! <span className="text-2xl">💪</span></span>;
                     })()}
                   </p>
                   
-                  <div className="flex gap-3 w-full max-w-sm">
-                    <Button 
-                      variant="outline" 
+                  {/* Social Actions */}
+                  <div className="flex items-center justify-center gap-8 mb-10">
+                    <button 
+                      onClick={() => post?.id && toggleLike(post.id)}
+                      className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                    >
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                        userLikes.includes(post?.id || '') ? 'bg-red-500/30' : 'bg-white/20'
+                      }`}>
+                        <Heart className={`w-6 h-6 transition-colors ${
+                          userLikes.includes(post?.id || '') ? 'text-red-400 fill-red-400' : 'text-white'
+                        }`} />
+                      </div>
+                      <span className="text-white/70 text-xs">მოწონება</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => toast.info("კომენტარები მალე!")}
+                      className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                        <MessageCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <span className="text-white/70 text-xs">კომენტარი</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => post?.id && toggleSave(post.id)}
+                      className="flex flex-col items-center gap-1.5 transition-transform active:scale-95"
+                    >
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                        userSaves.includes(post?.id || '') ? 'bg-amber-500/30' : 'bg-white/20'
+                      }`}>
+                        <Bookmark className={`w-6 h-6 transition-colors ${
+                          userSaves.includes(post?.id || '') ? 'text-amber-400 fill-amber-400' : 'text-white'
+                        }`} />
+                      </div>
+                      <span className="text-white/70 text-xs">შენახვა</span>
+                    </button>
+                  </div>
+                  
+                  <div className="flex gap-4 w-full max-w-sm">
+                    <ChunkyButton 
                       onClick={resetGame} 
-                      className="flex-1 bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      variant="secondary"
+                      className="flex-1"
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
                       თავიდან
-                    </Button>
-                    <ChunkyButton onClick={handleShare} className="flex-1">
+                    </ChunkyButton>
+                    <ChunkyButton 
+                      onClick={handleShare} 
+                      variant="primary"
+                      className="flex-1"
+                    >
                       <Share2 className="w-4 h-4 mr-2" />
                       გაზიარება
                     </ChunkyButton>
