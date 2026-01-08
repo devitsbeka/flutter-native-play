@@ -102,7 +102,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           ) : (
             <div className="flex-1 overflow-y-auto">
               {/* Profile Header */}
-              <div className="p-6 flex flex-col items-center bg-gradient-to-b from-primary/10 to-transparent">
+              <div className="p-6 flex flex-col items-center">
                 <div className="relative">
                   <SmartAvatar
                     avatarUrl={data.profile.avatar_url}
@@ -187,10 +187,16 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       </ChunkyButton>
                     )}
                     {data.friendshipStatus === 'accepted' && (
-                      <ChunkyButton disabled variant="secondary" size="sm" className="flex-1">
-                        <Check className="w-4 h-4 mr-1" />
-                        მეგობარი
-                      </ChunkyButton>
+                      <>
+                        <ChunkyButton disabled variant="secondary" size="sm" className="flex-1">
+                          <Check className="w-4 h-4 mr-1" />
+                          მეგობარი
+                        </ChunkyButton>
+                        <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
+                          <MessageCircle className="w-4 h-4 mr-1" />
+                          მესიჯი
+                        </ChunkyButton>
+                      </>
                     )}
                     <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
                       <Swords className="w-4 h-4 mr-1" />
@@ -203,17 +209,17 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
               {/* Tabs */}
               <Tabs defaultValue="trophies" className="px-4 pb-6">
                 <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="trophies" className="flex items-center gap-1.5">
-                    <img src={iconTrophy} alt="" className="w-4 h-4" />
-                    ჯილდოები
+                  <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
+                    <img src={iconTrophy} alt="" className="w-7 h-7" />
+                    <span className="text-xs">ჯილდოები</span>
                   </TabsTrigger>
-                  <TabsTrigger value="trivias" className="flex items-center gap-1.5">
-                    <img src={iconTrivia} alt="" className="w-4 h-4" />
-                    ტრივია
+                  <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
+                    <img src={iconTrivia} alt="" className="w-7 h-7" />
+                    <span className="text-xs">ტრივია</span>
                   </TabsTrigger>
-                  <TabsTrigger value="collections" className="flex items-center gap-1.5">
-                    <img src={iconCollections} alt="" className="w-4 h-4" />
-                    კოლექციები
+                  <TabsTrigger value="collections" className="flex flex-col items-center gap-0.5">
+                    <img src={iconCollections} alt="" className="w-7 h-7" />
+                    <span className="text-xs">კოლექციები</span>
                   </TabsTrigger>
                 </TabsList>
 
