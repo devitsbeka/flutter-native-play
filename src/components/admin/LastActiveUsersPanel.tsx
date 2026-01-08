@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Crown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
 import { ActiveUser } from '@/hooks/useActiveUsers';
 import { cn } from '@/lib/utils';
 import { LANGUAGES } from '@/locales';
@@ -27,9 +26,18 @@ const REGIONS = [
   }))
 ];
 
+type UserTypeFilter = 'all' | 'vip' | 'free';
+
+const FILTER_OPTIONS: { value: UserTypeFilter; label: string }[] = [
+  { value: 'all', label: 'ყველა' },
+  { value: 'vip', label: 'VIP' },
+  { value: 'free', label: 'Free' },
+];
+
 export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
   const [selectedRegion, setSelectedRegion] = useState('all');
-  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'vip' | 'free'>('all');
+  const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilter>('all');
+  const [regionOpen, setRegionOpen] = useState(false);
   
   const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
@@ -45,107 +53,99 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
     }) + ' წინ';
   };
 
-  // Filter users
+  // Filter users - now actually working!
   const filteredUsers = users.filter(user => {
+    // Region filter
     if (selectedRegion !== 'all') {
-      const userRegion = (user.country_code || user.region || 'ge').toLowerCase();
+      const userRegion = (user.country_code || user.region || '').toLowerCase();
       if (userRegion !== selectedRegion) return false;
     }
-    // VIP filter would need VIP data - for now show all
+    
+    // VIP/Free filter
+    if (userTypeFilter === 'vip' && !user.isVip) return false;
+    if (userTypeFilter === 'free' && (user.isVip || user.isGuest)) return false;
+    
     return true;
   });
 
   const onlineCount = filteredUsers.filter(u => isOnline(u)).length;
   const totalCount = filteredUsers.length;
   const selectedRegionData = REGIONS.find(r => r.code === selectedRegion) || REGIONS[0];
+
   return (
     <div className="absolute right-0 top-0 bottom-0 w-[300px] bg-card border-l border-border shadow-lg flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="p-4 border-b border-border space-y-3">
+        <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <h3 className="font-semibold">ბოლოს აქტიური</h3>
         </div>
         
-        {/* Stats with filters */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {/* Stats */}
+        <div className="flex items-center gap-2 text-sm">
           <span className="text-emerald-500 font-medium">{onlineCount} ონლაინ</span>
-          <span>•</span>
-          <span>{totalCount} სულ</span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">{totalCount} სულ</span>
         </div>
         
-        {/* Filter row */}
-        <div className="flex items-center gap-2 mt-3">
-          {/* Region dropdown - using Popover for clean styling */}
-          <Popover>
+        {/* Filters - cleaner design */}
+        <div className="flex items-center gap-2">
+          {/* Region dropdown */}
+          <Popover open={regionOpen} onOpenChange={setRegionOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 bg-background min-w-[100px] justify-between">
-                <span className="flex items-center gap-1.5">
-                  <span>{selectedRegionData?.flag}</span>
-                  <span className="truncate">{selectedRegionData?.name || 'ყველა'}</span>
-                </span>
-                <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
-              </Button>
+              <button className="h-8 px-3 text-xs flex items-center gap-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                <span className="text-sm">{selectedRegionData?.flag}</span>
+                <span className="max-w-[60px] truncate">{selectedRegionData?.name}</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </button>
             </PopoverTrigger>
             <PopoverContent 
               align="start" 
               sideOffset={4}
-              className="w-[200px] p-0 bg-popover border border-border shadow-lg z-[100]"
+              className="w-[180px] p-1 bg-popover border border-border shadow-xl z-[100]"
             >
-              <ScrollArea className="h-[280px]">
-                <div className="p-1">
-                  {REGIONS.map(region => (
-                    <button 
-                      key={region.code}
-                      onClick={() => setSelectedRegion(region.code)}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm transition-colors text-left",
-                        selectedRegion === region.code 
-                          ? "bg-accent text-accent-foreground" 
-                          : "hover:bg-muted"
-                      )}
-                    >
-                      <span className="text-sm">{region.flag}</span>
-                      <span className="flex-1">{region.name}</span>
-                      {selectedRegion === region.code && (
-                        <Check className="h-3 w-3 text-primary" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+              <ScrollArea className="h-[250px]">
+                {REGIONS.map(region => (
+                  <button 
+                    key={region.code}
+                    onClick={() => {
+                      setSelectedRegion(region.code);
+                      setRegionOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded transition-colors text-left",
+                      selectedRegion === region.code 
+                        ? "bg-primary/10 text-primary" 
+                        : "hover:bg-muted"
+                    )}
+                  >
+                    <span className="text-sm">{region.flag}</span>
+                    <span className="flex-1 truncate">{region.name}</span>
+                    {selectedRegion === region.code && (
+                      <Check className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
               </ScrollArea>
             </PopoverContent>
           </Popover>
           
-          {/* VIP/Free toggle */}
-          <div className="flex rounded-md border border-border overflow-hidden">
-            <button
-              onClick={() => setUserTypeFilter('all')}
-              className={cn(
-                "px-2 py-1 text-xs transition-colors",
-                userTypeFilter === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
-              )}
-            >
-              ყველა
-            </button>
-            <button
-              onClick={() => setUserTypeFilter('vip')}
-              className={cn(
-                "px-2 py-1 text-xs border-l border-border transition-colors",
-                userTypeFilter === 'vip' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
-              )}
-            >
-              VIP
-            </button>
-            <button
-              onClick={() => setUserTypeFilter('free')}
-              className={cn(
-                "px-2 py-1 text-xs border-l border-border transition-colors",
-                userTypeFilter === 'free' ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
-              )}
-            >
-              Free
-            </button>
+          {/* VIP/Free segmented control - cleaner */}
+          <div className="flex h-8 rounded-lg bg-muted/50 p-0.5">
+            {FILTER_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setUserTypeFilter(option.value)}
+                className={cn(
+                  "px-3 text-xs rounded-md transition-all duration-200",
+                  userTypeFilter === option.value 
+                    ? "bg-background shadow-sm text-foreground font-medium" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -194,7 +194,12 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
 
                   {/* User info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.nickname}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium truncate">{user.nickname}</p>
+                      {user.isVip && (
+                        <Crown className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                      )}
+                    </div>
                     <p className={cn(
                       "text-xs",
                       online ? 'text-emerald-500' : 'text-muted-foreground'
@@ -203,7 +208,7 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
                     </p>
                   </div>
 
-                  {/* Flag on right - always show, use globe for unknown */}
+                  {/* Flag on right */}
                   <div className="flex-shrink-0">
                     {(user.country_code || user.region) ? (
                       <img
