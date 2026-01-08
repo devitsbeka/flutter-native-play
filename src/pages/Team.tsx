@@ -293,13 +293,23 @@ function TeamContent() {
           </div>
         </div>
 
-        {/* Friends Stories Bar - Show on "my-trivia" tab */}
+        {/* Friends Stories Bar + CTA - Show on "my-trivia" tab */}
         {activeTab === "my-trivia" && (
-          <div className="px-4 pt-1 pb-2">
+          <div className="px-4 pt-1 pb-2 space-y-3">
             <FriendsStoriesBar
               onAddFriendClick={() => setShowAddFriendModal(true)}
               onFriendClick={handleQuickPlay}
             />
+            {/* Single CTA Button */}
+            <ChunkyButton 
+              onClick={() => setShowCreateQuizModal(true)}
+              className="w-full gap-2"
+              variant="primary"
+              size="lg"
+            >
+              <Plus className="w-5 h-5" />
+              შექმენი ტრივია
+            </ChunkyButton>
           </div>
         )}
 
@@ -331,25 +341,6 @@ function TeamContent() {
       <div className="relative z-10 flex flex-col overflow-x-hidden">
         {activeTab === "my-trivia" ? (
           <>
-
-            {/* 2) CTA - Create Trivia Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="px-4 py-3"
-            >
-              <ChunkyButton 
-                onClick={() => setShowCreateQuizModal(true)}
-                className="w-full gap-2"
-                variant="primary"
-                size="lg"
-              >
-                <Plus className="w-5 h-5" />
-                შექმენი ტრივია
-              </ChunkyButton>
-            </motion.div>
-
             {/* 3) My Rooms Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
