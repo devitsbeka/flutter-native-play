@@ -320,9 +320,13 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex-1 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-[104px] h-[104px] mb-8 flex items-center justify-center">
-                    <img src={trophyWinIcon} alt="Trophy" className="w-16 h-16 object-contain" />
-                  </div>
+                  <motion.div 
+                    className="mb-8"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <img src={trophyWinIcon} alt="Trophy" className="w-20 h-20 object-contain drop-shadow-2xl" />
+                  </motion.div>
                   
                   <h3 className="text-2xl font-bold text-white mb-2">
                     რაუნდი {currentRoundIndex + 1} დასრულდა!
@@ -419,9 +423,13 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex-1 flex flex-col items-center justify-center text-center"
                 >
-                  <div className="w-24 h-24 mb-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <img src={trophyWinIcon} alt="Trophy" className="w-14 h-14 object-contain" />
-                  </div>
+                  <motion.div 
+                    className="mb-8"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <img src={trophyWinIcon} alt="Trophy" className="w-24 h-24 object-contain drop-shadow-2xl" />
+                  </motion.div>
                   
                   <h3 className="text-3xl font-bold text-white mb-3">
                     {isCollection ? "კოლექცია დასრულდა!" : "თამაში დასრულდა!"}
