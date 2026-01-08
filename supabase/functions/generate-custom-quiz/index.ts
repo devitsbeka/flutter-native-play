@@ -59,6 +59,31 @@ interface GeneratedQuestion {
   icon_keywords?: string[];
 }
 
+// STRICT validation - returns true only if ALL limits are met
+function isValidQuestion(q: GeneratedQuestion): boolean {
+  if (!q.question_text || !q.correct_answer || !Array.isArray(q.incorrect_answers)) {
+    return false;
+  }
+  if (q.question_text.length > QUESTION_MAX_LENGTH) {
+    console.log(`Rejecting question (${q.question_text.length} chars > ${QUESTION_MAX_LENGTH}): ${q.question_text.substring(0, 50)}...`);
+    return false;
+  }
+  if (q.correct_answer.length > ANSWER_MAX_LENGTH) {
+    console.log(`Rejecting answer (${q.correct_answer.length} chars > ${ANSWER_MAX_LENGTH}): ${q.correct_answer}`);
+    return false;
+  }
+  if (q.incorrect_answers.length !== 3) {
+    return false;
+  }
+  for (const answer of q.incorrect_answers) {
+    if (!answer || answer.length > ANSWER_MAX_LENGTH) {
+      console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
+      return false;
+    }
+  }
+  return true;
+}
+
 function removeDuplicateQuestions(questions: GeneratedQuestion[]): GeneratedQuestion[] {
   const unique: GeneratedQuestion[] = [];
   
@@ -289,9 +314,13 @@ Return ONLY valid JSON.`;
       throw new Error("Invalid quiz format");
     }
 
-    // Remove duplicates from the generated questions
-    const uniqueQuestions = removeDuplicateQuestions(quizData.questions);
-    console.log(`Filtered ${quizData.questions.length} questions to ${uniqueQuestions.length} unique questions`);
+    // STRICT validation: Filter out questions that exceed character limits
+    const validQuestions = quizData.questions.filter(isValidQuestion);
+    console.log(`Validation: ${quizData.questions.length} generated, ${validQuestions.length} passed strict limits`);
+
+    // Remove duplicates from the valid questions
+    const uniqueQuestions = removeDuplicateQuestions(validQuestions);
+    console.log(`Duplicate removal: ${validQuestions.length} valid, ${uniqueQuestions.length} unique`);
 
     // Take only the requested number of questions
     const finalQuestions = uniqueQuestions.slice(0, questionCount);
@@ -385,17 +414,11 @@ Return ONLY valid JSON.`;
           }
         }
 
-        // Clean up and ensure limits
-        const questionText = (q.question_text || '').slice(0, QUESTION_MAX_LENGTH);
-        const correctAnswer = (q.correct_answer || '').slice(0, ANSWER_MAX_LENGTH);
-        const incorrectAnswers = (q.incorrect_answers || []).map((a: string) => 
-          (a || '').slice(0, ANSWER_MAX_LENGTH)
-        );
-
+        // Questions already passed validation, no need to truncate
         return {
-          question_text: questionText,
-          correct_answer: correctAnswer,
-          incorrect_answers: incorrectAnswers,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: q.incorrect_answers,
           difficulty: q.difficulty || 'medium',
           icon_slug: iconSlug,
         };

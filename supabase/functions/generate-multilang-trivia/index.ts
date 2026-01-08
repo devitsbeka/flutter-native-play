@@ -32,6 +32,35 @@ const LANGUAGE_NAMES: Record<string, string> = {
 const QUESTION_MAX_LENGTH = 65;
 const ANSWER_MAX_LENGTH = 20;
 
+// STRICT validation - returns true only if ALL limits are met
+function isValidQuestion(q: any): boolean {
+  const questionText = q.questionText || '';
+  const correctAnswer = q.correctAnswer || '';
+  const incorrectAnswers = q.incorrectAnswers || [];
+  
+  if (!questionText || !correctAnswer) {
+    return false;
+  }
+  if (questionText.length > QUESTION_MAX_LENGTH) {
+    console.log(`Rejecting question (${questionText.length} chars > ${QUESTION_MAX_LENGTH}): ${questionText.substring(0, 50)}...`);
+    return false;
+  }
+  if (correctAnswer.length > ANSWER_MAX_LENGTH) {
+    console.log(`Rejecting answer (${correctAnswer.length} chars > ${ANSWER_MAX_LENGTH}): ${correctAnswer}`);
+    return false;
+  }
+  if (!Array.isArray(incorrectAnswers) || incorrectAnswers.length !== 3) {
+    return false;
+  }
+  for (const answer of incorrectAnswers) {
+    if (!answer || answer.length > ANSWER_MAX_LENGTH) {
+      console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
+      return false;
+    }
+  }
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -45,10 +74,12 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Support up to 200 questions by chunking
+    // Support up to 200 questions by chunking - request extra to compensate for validation filtering
     const requestedCount = Math.min(count || 50, 200);
+    const extraForValidation = Math.ceil(requestedCount * 0.3); // Request 30% extra
+    const adjustedCount = requestedCount + extraForValidation;
     const chunkSize = 50;
-    const chunks = Math.ceil(requestedCount / chunkSize);
+    const chunks = Math.ceil(adjustedCount / chunkSize);
 
     const languageName = LANGUAGE_NAMES[language] || language;
     
@@ -62,16 +93,21 @@ serve(async (req) => {
 
     const systemPrompt = `You are a trivia question generator. Generate unique, accurate trivia questions.
 
-CRITICAL CHARACTER LIMITS - THESE ARE STRICT:
+🚨🚨🚨 STRICT CHARACTER LIMITS - QUESTIONS EXCEEDING LIMITS WILL BE REJECTED:
+
 - Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces and punctuation)
 - Each answer option: MAXIMUM ${ANSWER_MAX_LENGTH} characters
 
-If a question or answer exceeds the limit, you MUST shorten it while preserving meaning.
+⚠️ IMPORTANT: If you cannot phrase a question/answer within these limits, SKIP IT and create a different question instead. DO NOT try to shorten - create a different fact instead.
 
-Examples of proper length:
-- Question: "რომელ წელს დაარსდა NASA?" (25 chars) ✓
-- Answer: "1958" (4 chars) ✓
-- Answer: "ალბერტ აინშტაინი" would be shortened to "აინშტაინი" ✓
+✅ Examples of proper length:
+- Question: "რომელ წელს დაარსდა NASA?" (25 chars) - GOOD
+- Answer: "1958" (4 chars) - GOOD
+- Answer: "აინშტაინი" (9 chars) - GOOD
+
+❌ Examples that will be REJECTED:
+- Question over 65 chars - REJECTED
+- Answer "ალბერტ აინშტაინი" (16 chars) - may be too long in some languages - use shorter form
 
 Return a JSON object with a "questions" array. Each question should have:
 - questionText: the question (max ${QUESTION_MAX_LENGTH} chars)
@@ -85,7 +121,7 @@ Return a JSON object with a "questions" array. Each question should have:
     // Generate in chunks for large requests
     for (let chunkIndex = 0; chunkIndex < chunks; chunkIndex++) {
       const chunkCount = chunkIndex === chunks - 1 
-        ? requestedCount - (chunkIndex * chunkSize)
+        ? adjustedCount - (chunkIndex * chunkSize)
         : chunkSize;
 
       const userPrompt = `Generate ${chunkCount} unique trivia questions in ${languageName} about the category "${categoryName}".
@@ -95,13 +131,14 @@ ${topicInstruction}
 
 ${chunks > 1 ? `This is batch ${chunkIndex + 1} of ${chunks}, so ensure questions are unique and cover different aspects of the topic.` : ''}
 
-Remember:
+CRITICAL REMINDERS:
 - ALL text must be in ${languageName}
-- Questions max ${QUESTION_MAX_LENGTH} characters
-- Answers max ${ANSWER_MAX_LENGTH} characters
+- Questions MAXIMUM ${QUESTION_MAX_LENGTH} characters - questions over this limit will be REJECTED
+- Answers MAXIMUM ${ANSWER_MAX_LENGTH} characters - answers over this limit will be REJECTED
 - Include exactly 1 correct answer and 3 incorrect answers
 - Make questions diverse and interesting
 - Avoid duplicate or very similar questions
+- If you cannot fit a fact within limits, skip it and use a different fact
 
 Return ONLY valid JSON with this structure:
 {
@@ -175,20 +212,21 @@ Return ONLY valid JSON with this structure:
 
     console.log(`Generated ${allQuestions.length} total questions`);
 
+    // STRICT validation: Filter out questions that exceed character limits
+    const validQuestions = allQuestions.filter(isValidQuestion);
+    console.log(`Validation: ${allQuestions.length} generated, ${validQuestions.length} passed strict limits`);
+
+    // Take only the requested number of valid questions
+    const trimmedQuestions = validQuestions.slice(0, requestedCount);
+
     // Try to find icons for each question
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const questionsWithIcons = await Promise.all(
-      allQuestions.map(async (q: any) => {
-        // Truncate answers to ensure they fit in UI
-        q.correctAnswer = (q.correctAnswer || '').slice(0, ANSWER_MAX_LENGTH);
-        q.incorrectAnswers = (q.incorrectAnswers || []).map((a: string) => 
-          (a || '').slice(0, ANSWER_MAX_LENGTH)
-        );
-        q.questionText = (q.questionText || '').slice(0, QUESTION_MAX_LENGTH);
-        
+      trimmedQuestions.map(async (q: any) => {
+        // Questions already passed validation, no need to truncate
         if (q.iconKeywords?.length > 0) {
           const { data: icons } = await supabase
             .from('icon_library')

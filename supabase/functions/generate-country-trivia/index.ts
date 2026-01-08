@@ -5,12 +5,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Strict character limits - questions exceeding these will be REJECTED
+const QUESTION_MAX_LENGTH = 65;
+const ANSWER_MAX_LENGTH = 20;
+
 interface TriviaQuestion {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
   difficulty: "easy" | "medium" | "hard";
   category: string;
+}
+
+// Validation function - returns true only if ALL limits are met
+function isValidQuestion(q: TriviaQuestion): boolean {
+  if (!q.question || !q.correct_answer || !Array.isArray(q.incorrect_answers)) {
+    return false;
+  }
+  if (q.question.length > QUESTION_MAX_LENGTH) {
+    console.log(`Rejecting question (${q.question.length} chars > ${QUESTION_MAX_LENGTH}): ${q.question.substring(0, 50)}...`);
+    return false;
+  }
+  if (q.correct_answer.length > ANSWER_MAX_LENGTH) {
+    console.log(`Rejecting answer (${q.correct_answer.length} chars > ${ANSWER_MAX_LENGTH}): ${q.correct_answer}`);
+    return false;
+  }
+  if (q.incorrect_answers.length !== 3) {
+    return false;
+  }
+  for (const answer of q.incorrect_answers) {
+    if (!answer || answer.length > ANSWER_MAX_LENGTH) {
+      console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
+      return false;
+    }
+  }
+  return true;
 }
 
 serve(async (req) => {
@@ -34,7 +63,25 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a trivia question generator. Generate exactly ${count} trivia questions about ${countryName} in the category of ${categoryName || category}.
+    // Request extra questions to compensate for ones that will be filtered
+    const requestCount = count + 5;
+
+    const systemPrompt = `You are a trivia question generator. Generate exactly ${requestCount} trivia questions about ${countryName} in the category of ${categoryName || category}.
+
+🚨🚨🚨 STRICT CHARACTER LIMITS - CRITICAL - QUESTIONS EXCEEDING LIMITS WILL BE REJECTED:
+
+- Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces and "?")
+- Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters
+
+⚠️ IMPORTANT: If you cannot phrase a question/answer within these limits, SKIP IT and create a different question instead.
+
+✅ Examples of proper length:
+- "რომელ წელს დაარსდა NASA?" (25 chars) - GOOD
+- "თბილისი" (8 chars) - GOOD answer
+
+❌ Examples of TOO LONG (will be rejected):
+- "რომელ წელს დაარსდა ამერიკის კოსმოსური სააგენტო NASA?" (52 chars) - REJECTED
+- "საქართველოს დედაქალაქი თბილისი" (32 chars) - REJECTED answer
 
 CRITICAL POLITICAL GUIDELINES - MANDATORY:
 - აფხაზეთი (Abkhazia) is a REGION of Georgia, NOT a country - NEVER list it as a country
@@ -51,21 +98,22 @@ IMPORTANT RULES:
 4. Each question must have exactly 1 correct answer and 3 plausible but incorrect answers
 5. Incorrect answers should be believable but clearly wrong
 6. Do not repeat similar questions
+7. Keep answers SHORT and CONCISE
 
 Return ONLY a valid JSON array with this exact structure (no markdown, no explanation):
 [
   {
-    "question": "Question text here?",
-    "correct_answer": "The correct answer",
-    "incorrect_answers": ["Wrong 1", "Wrong 2", "Wrong 3"],
+    "question": "კითხვა აქ? (მაქს ${QUESTION_MAX_LENGTH} სიმბოლო)",
+    "correct_answer": "პასუხი (მაქს ${ANSWER_MAX_LENGTH})",
+    "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
     "difficulty": "easy|medium|hard",
     "category": "${category}"
   }
 ]`;
 
-    const userPrompt = `Generate ${count} trivia questions about ${countryName} (${countryCode}) in the "${categoryName || category}" category.`;
+    const userPrompt = `Generate ${requestCount} trivia questions about ${countryName} (${countryCode}) in the "${categoryName || category}" category. Remember: questions max ${QUESTION_MAX_LENGTH} chars, answers max ${ANSWER_MAX_LENGTH} chars.`;
 
-    console.log(`Generating trivia for ${countryName} - ${category}`);
+    console.log(`Generating ${requestCount} trivia questions for ${countryName} - ${category} (will filter to ${count})`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -108,7 +156,7 @@ Return ONLY a valid JSON array with this exact structure (no markdown, no explan
     }
 
     // Parse the JSON from the response
-    let questions: TriviaQuestion[];
+    let rawQuestions: TriviaQuestion[];
     try {
       // Clean the response - remove markdown code blocks if present
       let cleanedContent = content.trim();
@@ -119,9 +167,9 @@ Return ONLY a valid JSON array with this exact structure (no markdown, no explan
       // Try to extract JSON array from the response
       const jsonMatch = cleanedContent.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        questions = JSON.parse(jsonMatch[0]);
+        rawQuestions = JSON.parse(jsonMatch[0]);
       } else {
-        questions = JSON.parse(cleanedContent);
+        rawQuestions = JSON.parse(cleanedContent);
       }
     } catch (parseError) {
       console.error("Failed to parse AI response. Raw content:", content);
@@ -130,14 +178,20 @@ Return ONLY a valid JSON array with this exact structure (no markdown, no explan
     }
 
     // Validate structure
-    if (!Array.isArray(questions) || questions.length === 0) {
+    if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
       throw new Error("Invalid questions format");
     }
 
-    console.log(`Generated ${questions.length} questions for ${countryName} - ${category}`);
+    // STRICT VALIDATION: Filter out questions that exceed character limits
+    const validQuestions = rawQuestions.filter(isValidQuestion);
+    
+    // Take only the requested number of valid questions
+    const finalQuestions = validQuestions.slice(0, count);
+
+    console.log(`Generated ${rawQuestions.length} questions, ${validQuestions.length} passed validation, returning ${finalQuestions.length} for ${countryName} - ${category}`);
 
     return new Response(
-      JSON.stringify({ questions }),
+      JSON.stringify({ questions: finalQuestions }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
