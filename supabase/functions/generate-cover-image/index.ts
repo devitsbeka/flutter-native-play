@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { title, subject } = await req.json();
+    const { title, subject, roundId } = await req.json();
 
     // Get user from auth header
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -38,18 +38,52 @@ serve(async (req) => {
       );
     }
 
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Check generation limit for this round (max 3)
+    let previousGenerations: any[] = [];
+    if (roundId) {
+      const { data: existingGenerations } = await supabaseAdmin
+        .from("cover_image_generations")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("round_id", roundId)
+        .order("created_at", { ascending: false });
+
+      previousGenerations = existingGenerations || [];
+
+      if (previousGenerations.length >= 3) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Generation limit reached", 
+            previousGenerations,
+            generationCount: previousGenerations.length 
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Generate image using Lovable AI
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const prompt = `Create a vibrant, modern quiz cover image for "${title || 'Quiz'}". 
-Theme: ${subject || 'general trivia'}. 
-Style: colorful, engaging, eye-catching, suitable for a mobile trivia game app. 
-The image should be visually striking with bold colors and abstract or thematic elements.
-Do NOT include any text in the image.
-Ultra high resolution, 16:9 aspect ratio.`;
+    const prompt = `Create a vibrant, modern abstract illustration for a trivia quiz about "${title || 'Quiz'}".
+Theme: ${subject || 'general trivia'}.
+Style: colorful, abstract, geometric patterns, artistic shapes, eye-catching gradients.
+
+CRITICAL REQUIREMENTS:
+- ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO NUMBERS, NO WRITING of any kind in the image
+- Pure visual elements only - shapes, colors, patterns, silhouettes, abstract forms
+- Abstract artistic representation of the theme
+- Bold, vivid colors suitable for a mobile trivia game app
+- Clean, modern aesthetic
+- Ultra high resolution, 16:9 aspect ratio for mobile cover display`;
 
     console.log("Generating image with prompt:", prompt);
 
@@ -80,9 +114,12 @@ Ultra high resolution, 16:9 aspect ratio.`;
     }
 
     const aiData = await response.json();
+    console.log("AI response structure:", JSON.stringify(Object.keys(aiData)));
+    
     const imageData = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageData) {
+      console.error("No image in response:", JSON.stringify(aiData));
       throw new Error("No image generated");
     }
 
@@ -91,11 +128,6 @@ Ultra high resolution, 16:9 aspect ratio.`;
     const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
     const fileName = `${user.id}/${Date.now()}_ai.png`;
-
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from("quiz-covers")
@@ -113,8 +145,36 @@ Ultra high resolution, 16:9 aspect ratio.`;
       .from("quiz-covers")
       .getPublicUrl(fileName);
 
+    // Save generation to database
+    if (roundId) {
+      await supabaseAdmin
+        .from("cover_image_generations")
+        .insert({
+          user_id: user.id,
+          round_id: roundId,
+          title: title || "Quiz",
+          subject: subject || null,
+          image_url: publicUrl,
+          is_selected: false,
+        });
+
+      // Fetch updated generations
+      const { data: updatedGenerations } = await supabaseAdmin
+        .from("cover_image_generations")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("round_id", roundId)
+        .order("created_at", { ascending: false });
+
+      previousGenerations = updatedGenerations || [];
+    }
+
     return new Response(
-      JSON.stringify({ imageUrl: publicUrl }),
+      JSON.stringify({ 
+        imageUrl: publicUrl,
+        previousGenerations,
+        generationCount: previousGenerations.length
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

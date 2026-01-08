@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Upload, Sparkles, Check, Loader2, X, Image as ImageIcon } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, Sparkles, Loader2, X, Check, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,13 @@ const COVER_GRADIENTS = [
   "radial-gradient(ellipse 100% 80% at 60% 30%, rgba(249,115,22,0.75) 0%, transparent 45%), radial-gradient(ellipse 80% 100% at 25% 75%, rgba(239,68,68,0.7) 0%, transparent 45%), linear-gradient(145deg, #7C2D12 0%, #991B1B 100%)",
 ];
 
+interface Generation {
+  id: string;
+  image_url: string;
+  is_selected: boolean;
+  created_at: string;
+}
+
 interface CoverImagePickerProps {
   currentImage?: string | null;
   currentGradient: string;
@@ -24,7 +31,10 @@ interface CoverImagePickerProps {
   onGradientChange: (gradient: string) => void;
   suggestPrompt?: string;
   title?: string;
+  roundId?: string;
 }
+
+const MAX_GENERATIONS = 3;
 
 export function CoverImagePicker({
   currentImage,
@@ -32,13 +42,42 @@ export function CoverImagePicker({
   onImageChange,
   onGradientChange,
   suggestPrompt,
-  title
+  title,
+  roundId
 }: CoverImagePickerProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [previousGenerations, setPreviousGenerations] = useState<Generation[]>([]);
+  const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const generationCount = previousGenerations.length;
+  const remainingGenerations = MAX_GENERATIONS - generationCount;
+
+  // Fetch previous generations on mount
+  useEffect(() => {
+    if (roundId && user) {
+      fetchPreviousGenerations();
+    }
+  }, [roundId, user]);
+
+  const fetchPreviousGenerations = async () => {
+    if (!roundId || !user) return;
+
+    const { data } = await supabase
+      .from("cover_image_generations")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("round_id", roundId)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setPreviousGenerations(data as Generation[]);
+    }
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,6 +104,8 @@ export function CoverImagePicker({
     }
 
     setIsUploading(true);
+    setValidationWarning(null);
+    
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -78,6 +119,28 @@ export function CoverImagePicker({
       const { data: { publicUrl } } = supabase.storage
         .from("quiz-covers")
         .getPublicUrl(fileName);
+
+      // Validate the uploaded image
+      setIsValidating(true);
+      try {
+        const { data: validationResult } = await supabase.functions.invoke("validate-cover-image", {
+          body: {
+            imageUrl: publicUrl,
+            title: title || suggestPrompt || "Quiz",
+            subject: suggestPrompt || title || "trivia"
+          }
+        });
+
+        if (validationResult && !validationResult.isValid) {
+          setValidationWarning(validationResult.reason || "სურათი შეიძლება არ შეესაბამება თემატიკას");
+        } else if (validationResult?.relevanceScore < 30) {
+          setValidationWarning("სურათი შეიძლება არ შეესაბამება კვიზის თემატიკას");
+        }
+      } catch (validationError) {
+        console.log("Validation skipped:", validationError);
+      } finally {
+        setIsValidating(false);
+      }
 
       onImageChange(publicUrl);
       toast({
@@ -101,44 +164,77 @@ export function CoverImagePicker({
   const handleGenerateAI = async () => {
     if (!user) return;
 
+    if (remainingGenerations <= 0) {
+      toast({
+        title: "ლიმიტი ამოიწურა",
+        description: "თქვენ უკვე დაგენერირეთ 3 სურათი",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
+    setValidationWarning(null);
+    
     try {
       const { data, error } = await supabase.functions.invoke("generate-cover-image", {
         body: {
           title: title || suggestPrompt || "Quiz",
-          subject: suggestPrompt || title || "trivia quiz"
+          subject: suggestPrompt || title || "trivia quiz",
+          roundId: roundId
         }
       });
 
       if (error) throw error;
 
+      if (data?.previousGenerations) {
+        setPreviousGenerations(data.previousGenerations);
+      }
+
       if (data?.imageUrl) {
         onImageChange(data.imageUrl);
         toast({
           title: "სურათი შეიქმნა! ✨",
+          description: `დარჩენილია ${MAX_GENERATIONS - (data.generationCount || generationCount + 1)} გენერაცია`,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating:", error);
-      toast({
-        title: "შეცდომა",
-        description: "სურათის გენერაცია ვერ მოხერხდა",
-        variant: "destructive",
-      });
+      
+      // Check if it's a limit error
+      if (error?.message?.includes("limit")) {
+        toast({
+          title: "ლიმიტი ამოიწურა",
+          description: "თქვენ უკვე დაგენერირეთ 3 სურათი",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "შეცდომა",
+          description: "სურათის გენერაცია ვერ მოხერხდა",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
   };
 
+  const handleSelectGeneration = (imageUrl: string) => {
+    onImageChange(imageUrl);
+    setValidationWarning(null);
+  };
+
   const handleRemoveImage = () => {
     onImageChange(null);
+    setValidationWarning(null);
   };
 
   return (
     <div className="space-y-3">
       {/* Preview */}
       <div 
-        className="h-32 rounded-xl relative overflow-hidden"
+        className="aspect-[16/9] w-full rounded-xl relative overflow-hidden"
         style={{ background: currentImage ? undefined : currentGradient }}
       >
         {currentImage && (
@@ -166,13 +262,29 @@ export function CoverImagePicker({
             <X className="w-4 h-4 text-white" />
           </button>
         )}
+
+        {/* Validating indicator */}
+        {isValidating && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm">
+            <Loader2 className="w-3 h-3 animate-spin text-white" />
+            <span className="text-xs text-white">მოწმდება...</span>
+          </div>
+        )}
       </div>
+
+      {/* Validation warning */}
+      {validationWarning && (
+        <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-500/10 px-3 py-2 rounded-lg">
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>{validationWarning}</span>
+        </div>
+      )}
 
       {/* Upload/Generate buttons */}
       <div className="flex gap-2">
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
+          disabled={isUploading || isValidating}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-colors text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           {isUploading ? (
@@ -187,7 +299,7 @@ export function CoverImagePicker({
 
         <button
           onClick={handleGenerateAI}
-          disabled={isGenerating}
+          disabled={isGenerating || remainingGenerations <= 0}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           {isGenerating ? (
@@ -195,7 +307,7 @@ export function CoverImagePicker({
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              <span>გენერაცია</span>
+              <span>გენერაცია {roundId && `(${remainingGenerations})`}</span>
             </>
           )}
         </button>
@@ -209,6 +321,40 @@ export function CoverImagePicker({
         />
       </div>
 
+      {/* Previous Generations */}
+      {previousGenerations.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            თქვენი გენერაციები ({previousGenerations.length}/{MAX_GENERATIONS})
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {previousGenerations.map((gen) => (
+              <button
+                key={gen.id}
+                onClick={() => handleSelectGeneration(gen.image_url)}
+                className={`relative aspect-[16/9] rounded-lg overflow-hidden border-2 transition-all ${
+                  currentImage === gen.image_url 
+                    ? "border-primary ring-2 ring-primary/30" 
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <img 
+                  src={gen.image_url} 
+                  alt="Generated cover" 
+                  className="w-full h-full object-cover"
+                />
+                {currentImage === gen.image_url && (
+                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                      <Check className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
