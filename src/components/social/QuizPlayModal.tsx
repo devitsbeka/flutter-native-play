@@ -235,11 +235,10 @@ export function QuizPlayModal({ open, onOpenChange, post }: QuizPlayModalProps) 
                 >
                   {/* Question Icon */}
                   {currentQuestion?.icon_slug && (
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mb-4" style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.25))' }}>
                       <DynamicIcon 
                         slug={currentQuestion.icon_slug}
                         size={84}
-                        className="drop-shadow-lg"
                         hideIfEmpty={true}
                       />
                     </div>
