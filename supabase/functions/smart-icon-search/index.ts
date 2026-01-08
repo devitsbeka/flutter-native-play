@@ -260,13 +260,23 @@ serve(async (req) => {
   }
 
   try {
-    const { query, limit = 50, questionContext, answerContext } = await req.json();
+    const { query, limit = 50, questionContext, answerContext, correctAnswer } = await req.json();
     
     if (!query || query.trim().length < 2) {
       return new Response(
         JSON.stringify({ icons: [], keywords: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Prepare correct answer for filtering (transliterate if Georgian)
+    let answerTerms: string[] = [];
+    if (correctAnswer) {
+      const answerLower = correctAnswer.toLowerCase();
+      answerTerms.push(answerLower);
+      if (isGeorgian(correctAnswer)) {
+        answerTerms.push(transliterateGeorgian(correctAnswer).toLowerCase());
+      }
     }
 
     const supabase = createClient(
@@ -413,12 +423,32 @@ serve(async (req) => {
 
     // Sort by score and take top results
     scoredIcons.sort((a, b) => b.score - a.score);
-    const topIcons = scoredIcons
+    
+    // Filter out icons that would reveal the answer
+    const filteredIcons = scoredIcons.filter(icon => {
+      if (answerTerms.length === 0) return true;
+      const slug = icon.slug.toLowerCase();
+      const title = icon.title.toLowerCase();
+      
+      // Check if icon matches any answer term
+      for (const term of answerTerms) {
+        if (term.length < 3) continue;
+        if (slug.includes(term) || term.includes(slug) || 
+            title.includes(term) || term.includes(title) ||
+            isSimilar(slug, term) || isSimilar(title, term)) {
+          console.log(`Filtering out icon "${icon.slug}" - matches answer "${term}"`);
+          return false;
+        }
+      }
+      return true;
+    });
+    
+    const topIcons = filteredIcons
       .filter(icon => icon.score > 0)
       .slice(0, limit)
       .map(({ score, tags, ...icon }) => icon);
 
-    console.log(`Found ${topIcons.length} icons for query "${query}"`);
+    console.log(`Found ${topIcons.length} icons for query "${query}" (filtered ${scoredIcons.length - filteredIcons.length} answer-revealing icons)`);
 
     return new Response(
       JSON.stringify({ 

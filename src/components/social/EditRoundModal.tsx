@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Globe, Lock, Trash2, ChevronDown, ChevronRight, Pencil, Check } from "lucide-react";
+import { X, Loader2, Globe, Lock, Trash2, ChevronDown, ChevronRight, Check, AlertTriangle, ImageIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -12,6 +12,8 @@ import { QuestionIconPicker } from "./QuestionIconPicker";
 import { CoverImagePicker } from "./CoverImagePicker";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { hasAnswerInQuestion } from "@/utils/questionValidation";
+import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 
 interface Question {
   question: string;
@@ -200,10 +202,23 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                 კითხვები ({questions.length})
               </label>
               <div className="space-y-2">
-                {questions.map((q, index) => (
+                {questions.map((q, index) => {
+                  // Validation checks for each question
+                  const answerInQuestion = hasAnswerInQuestion(q.question, q.correct_answer);
+                  const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
+                  const missingIcon = !q.icon_slug;
+                  const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
+                  
+                  return (
                   <div 
                     key={index}
-                    className="border border-border rounded-xl overflow-hidden bg-muted/30"
+                    className={`border rounded-xl overflow-hidden ${
+                      hasCriticalIssue 
+                        ? "border-destructive bg-destructive/5" 
+                        : missingIcon 
+                          ? "border-yellow-500/50 bg-yellow-500/5"
+                          : "border-border bg-muted/30"
+                    }`}
                   >
                     {/* Question Header */}
                     <button
@@ -211,17 +226,32 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                       className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors"
                     >
                       {/* Question Icon */}
-                      <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        iconRevealsAnswer 
+                          ? "bg-destructive/20" 
+                          : missingIcon 
+                            ? "bg-yellow-500/20" 
+                            : "bg-background"
+                      }`}>
                         {q.icon_slug ? (
                           <DynamicIcon slug={q.icon_slug} size={28} />
                         ) : (
-                          <span className="text-muted-foreground font-medium">{index + 1}</span>
+                          <ImageIcon className="w-5 h-5 text-yellow-600" />
                         )}
                       </div>
                       
                       <p className="flex-1 text-left text-sm font-medium text-foreground line-clamp-1">
                         {q.question}
                       </p>
+
+                      {/* Validation status badge */}
+                      {hasCriticalIssue ? (
+                        <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
+                      ) : missingIcon ? (
+                        <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                      ) : (
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      )}
                       
                       {expandedQuestion === index ? (
                         <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -240,13 +270,33 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                           className="overflow-hidden"
                         >
                           <div className="p-3 pt-0 space-y-3 border-t border-border">
+                            {/* Validation Warnings */}
+                            {answerInQuestion && (
+                              <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>კითხვა შეიცავს სწორ პასუხს!</span>
+                              </div>
+                            )}
+                            {iconRevealsAnswer && (
+                              <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>აიკონი მინიშნებაა პასუხზე!</span>
+                              </div>
+                            )}
+                            {missingIcon && !hasCriticalIssue && (
+                              <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-500/10 px-3 py-2 rounded-lg">
+                                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>აიკონი არ არის არჩეული</span>
+                              </div>
+                            )}
+
                             {/* Question Text */}
                             <div className="space-y-1">
                               <label className="text-xs text-muted-foreground">კითხვა</label>
                               <Input
                                 value={q.question}
                                 onChange={(e) => updateQuestion(index, { question: e.target.value })}
-                                className="h-10 text-sm"
+                                className={`h-10 text-sm ${answerInQuestion ? "border-destructive" : ""}`}
                               />
                             </div>
 
@@ -285,11 +335,13 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
 
                             {/* Question Icon */}
                             <div className="flex items-center gap-3">
-                              <span className="text-xs text-muted-foreground">აიქონი:</span>
+                              <span className="text-xs text-muted-foreground">აიკონი:</span>
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestion(index, { icon_slug: slug || undefined })}
                                 questionText={q.question}
+                                correctAnswer={q.correct_answer}
+                                incorrectAnswers={q.incorrect_answers}
                               />
                             </div>
                           </div>
@@ -297,7 +349,8 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                       )}
                     </AnimatePresence>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
