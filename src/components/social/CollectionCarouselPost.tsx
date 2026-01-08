@@ -67,7 +67,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
   const handleSave = () => {
     // Save/unsave the first post of the collection
     onToggleSave?.(posts[0].id);
-    setSavesCount(prev => saved ? prev - 1 : prev + 1);
+    setSavesCount(prev => saved ? Math.max(0, prev - 1) : prev + 1);
   };
 
   const handleShare = async () => {

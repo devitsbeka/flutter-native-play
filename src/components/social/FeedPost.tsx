@@ -136,7 +136,7 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
 
   const handleSave = () => {
     onToggleSave?.(post.id);
-    setSavesCount(prev => saved ? prev - 1 : prev + 1);
+    setSavesCount(prev => saved ? Math.max(0, prev - 1) : prev + 1);
   };
 
   const handleComment = () => {

@@ -164,17 +164,19 @@ export function SocialFeed({
     }
 
     // Apply sorting
-    if (sortFilter === "popular" || sortFilter === "most_liked" || sortFilter === "most_played") {
+    if (sortFilter === "popular" || sortFilter === "most_liked" || sortFilter === "most_played" || sortFilter === "most_saved") {
       result.sort((a, b) => {
         const getScore = (item: FeedItem) => {
           if (item.type === 'standalone') {
             if (sortFilter === "most_liked") return item.post.likesCount;
             if (sortFilter === "most_played") return item.post.playsCount;
+            if (sortFilter === "most_saved") return userSaves.includes(item.post.id) ? 1 : 0;
             return item.post.likesCount + item.post.playsCount;
           } else {
             const total = item.posts.reduce((sum, p) => {
               if (sortFilter === "most_liked") return sum + p.likesCount;
               if (sortFilter === "most_played") return sum + p.playsCount;
+              if (sortFilter === "most_saved") return sum + (userSaves.includes(p.id) ? 1 : 0);
               return sum + p.likesCount + p.playsCount;
             }, 0);
             return total;
