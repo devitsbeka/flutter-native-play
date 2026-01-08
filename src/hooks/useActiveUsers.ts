@@ -74,8 +74,8 @@ export const useActiveUsers = () => {
           last_seen: presence.last_seen,
           nickname: profile?.nickname || (isGuest ? `სტუმარი #${guestId}` : 'უცნობი'),
           avatar_url: profile?.avatar_url || null,
-          // Use presence country_code for guests, or profile data for registered users
-          country_code: profile?.country_code || presence.country_code || null,
+          // Prioritize presence country_code (real-time IP-based) over profile data
+          country_code: presence.country_code || profile?.country_code || null,
           region: profile?.region || null,
           isGuest,
           isVip: vipUserIds.has(presence.user_id),

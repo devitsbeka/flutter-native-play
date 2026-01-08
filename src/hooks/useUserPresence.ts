@@ -14,12 +14,42 @@ const getGuestSessionId = (): string => {
   return sessionId;
 };
 
-// Try to detect country from timezone
+// Cache for country code to avoid repeated API calls
+let cachedCountryCode: string | null = null;
+let countryCodeFetched = false;
+
+// Fetch country from IP geolocation API
+const fetchCountryFromIP = async (): Promise<string | null> => {
+  if (countryCodeFetched) return cachedCountryCode;
+  
+  try {
+    // Use ipapi.co - free, no API key needed, 1000 requests/day
+    const response = await fetch('https://ipapi.co/json/', { 
+      signal: AbortSignal.timeout(3000) 
+    });
+    if (response.ok) {
+      const data = await response.json();
+      cachedCountryCode = data.country_code?.toLowerCase() || null;
+      countryCodeFetched = true;
+      return cachedCountryCode;
+    }
+  } catch (err) {
+    console.warn('IP geolocation failed, using timezone fallback');
+  }
+  
+  // Fallback to timezone detection
+  cachedCountryCode = detectCountryFromTimezone();
+  countryCodeFetched = true;
+  return cachedCountryCode;
+};
+
+// Fallback: detect country from timezone
 const detectCountryFromTimezone = (): string | null => {
   try {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const countryMap: Record<string, string> = {
       'Europe/Tbilisi': 'ge',
+      'Asia/Tbilisi': 'ge',
       'America/New_York': 'us',
       'America/Los_Angeles': 'us',
       'America/Chicago': 'us',
@@ -31,6 +61,7 @@ const detectCountryFromTimezone = (): string | null => {
       'Asia/Seoul': 'kr',
       'Asia/Shanghai': 'cn',
       'Europe/Kiev': 'ua',
+      'Europe/Kyiv': 'ua',
       'Europe/Istanbul': 'tr',
       'Asia/Dubai': 'ae',
       'Europe/Rome': 'it',
@@ -49,12 +80,10 @@ export const useUserPresence = () => {
   const { user } = useAuth();
   const location = useLocation();
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+  const countryCodeRef = useRef<string | null>(null);
 
   const updatePresence = useCallback(async (status: 'online' | 'away' | 'offline', currentPage?: string) => {
-    // For authenticated users, use their user.id
-    // For guests, use a persistent session ID
     const userId = user?.id || getGuestSessionId();
-    const countryCode = detectCountryFromTimezone();
 
     try {
       const { error } = await supabase
@@ -64,7 +93,7 @@ export const useUserPresence = () => {
           status,
           current_page: currentPage || location.pathname,
           last_seen: new Date().toISOString(),
-          country_code: countryCode,
+          ...(countryCodeRef.current && { country_code: countryCodeRef.current }),
         }, {
           onConflict: 'user_id',
         });
@@ -79,11 +108,18 @@ export const useUserPresence = () => {
 
   // Set online on mount and update page
   useEffect(() => {
-    // Track both authenticated and guest users
     const userId = user?.id || getGuestSessionId();
 
-    // Set initial online status
-    updatePresence('online', location.pathname);
+    // Fetch country code first, then start presence tracking
+    const initPresence = async () => {
+      const countryCode = await fetchCountryFromIP();
+      countryCodeRef.current = countryCode;
+      
+      // Set initial online status with country
+      updatePresence('online', location.pathname);
+    };
+
+    initPresence();
 
     // Heartbeat every 30 seconds
     heartbeatInterval.current = setInterval(() => {
@@ -101,13 +137,11 @@ export const useUserPresence = () => {
 
     // Handle before unload
     const handleBeforeUnload = () => {
-      // Use sendBeacon for reliable offline status
-      const countryCode = detectCountryFromTimezone();
       const data = JSON.stringify({
         user_id: userId,
         status: 'offline',
         last_seen: new Date().toISOString(),
-        country_code: countryCode,
+        country_code: countryCodeRef.current,
       });
       navigator.sendBeacon(
         `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_presence?user_id=eq.${userId}`,
