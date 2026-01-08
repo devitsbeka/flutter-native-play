@@ -15,13 +15,14 @@ export function AdminMap({ users }: AdminMapProps) {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Create map centered on world view
+    // Create map centered on world view - MAX zoomed out
     const map = L.map(mapRef.current, {
-      center: [30, 30],
-      zoom: 2,
+      center: [20, 40],
+      zoom: 1,
       minZoom: 1,
       maxZoom: 6,
       zoomControl: false,
+      worldCopyJump: true,
     });
 
     // Light theme tiles from CartoDB
@@ -69,18 +70,37 @@ export function AdminMap({ users }: AdminMapProps) {
       });
     });
 
-    // Add markers for each country
+    // Add markers for each country with count
     countryGroups.forEach((data, code) => {
       const coords = countryCoordinates[code] || countryCoordinates.ge;
+      const isOnline = data.hasOnline;
       
-      const marker = L.circleMarker([coords.lat, coords.lon], {
-        radius: Math.min(15, 6 + data.count * 2),
-        fillColor: data.hasOnline ? '#10b981' : '#6b7280',
-        color: '#ffffff',
-        weight: 2,
-        opacity: 0.9,
-        fillOpacity: 0.8,
-      }).addTo(map);
+      // Create custom div icon with count
+      const size = Math.min(36, 24 + data.count * 3);
+      const icon = L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div style="
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            background: ${isOnline ? '#10b981' : '#6b7280'};
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: ${size > 28 ? '14px' : '12px'};
+            font-family: system-ui;
+          ">${data.count}</div>
+        `,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+
+      const marker = L.marker([coords.lat, coords.lon], { icon }).addTo(map);
 
       // Popup with user info
       const popupContent = `
