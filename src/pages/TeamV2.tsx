@@ -61,7 +61,7 @@ function TeamContentV2() {
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState("my-trivia");
+  const [activeTab, setActiveTab] = useState("rooms");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
@@ -165,8 +165,8 @@ function TeamContentV2() {
             </motion.div>
 
             <div className="flex items-center gap-2">
-              {/* Plus button - only on შენთვის tab */}
-              {activeTab === "for-me" && (
+              {/* Plus button - only on აღმოაჩინე tab */}
+              {activeTab === "discover" && (
                 <motion.button
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -229,21 +229,31 @@ function TeamContentV2() {
 
           {/* Row 3: Tabs */}
           <div className="lg:hidden px-4 pb-3">
-            <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
+            <div className="flex gap-1 p-1.5 bg-muted rounded-2xl shadow-inner">
               <button
-                onClick={() => setActiveTab("for-me")}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "for-me"
+                onClick={() => setActiveTab("discover")}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "discover"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
               >
-                შენთვის
+                აღმოაჩინე
               </button>
               <button
-                onClick={() => setActiveTab("my-trivia")}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "my-trivia"
+                onClick={() => setActiveTab("rooms")}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "rooms"
+                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                    : "text-muted-foreground hover:text-foreground/80"
+                }`}
+              >
+                ოთახები
+              </button>
+              <button
+                onClick={() => setActiveTab("my-content")}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+                  activeTab === "my-content"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
@@ -253,8 +263,8 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Row 4: My Rooms (შენი ოთახები) - Only show on my-trivia tab */}
-          {activeTab === "my-trivia" && (
+          {/* Row 4: My Rooms (შენი ოთახები) - Only show on rooms tab */}
+          {activeTab === "rooms" && (
             <div className="lg:hidden">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -271,8 +281,8 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Row 5: CTA Buttons - Only show on my-trivia tab */}
-          {activeTab === "my-trivia" && (
+          {/* Row 5: CTA Buttons - Show on rooms tab */}
+          {activeTab === "rooms" && (
             <div className="lg:hidden px-4 pb-3 flex gap-2">
               <ChunkyButton 
                 onClick={() => setShowCreateModal(true)}
@@ -283,10 +293,16 @@ function TeamContentV2() {
                 <Plus className="w-5 h-5" />
                 ოთახი
               </ChunkyButton>
+            </div>
+          )}
+
+          {/* Row 5b: CTA Buttons - Show on my-content tab */}
+          {activeTab === "my-content" && (
+            <div className="lg:hidden px-4 pb-3 flex gap-2">
               <ChunkyButton 
                 onClick={() => setShowCreateTypeModal(true)}
                 className="flex-1 gap-1.5"
-                variant="secondary"
+                variant="primary"
                 size="lg"
               >
                 <Plus className="w-5 h-5" />
@@ -305,8 +321,8 @@ function TeamContentV2() {
             />
           </div>
 
-          {/* Row 7: Content (შენი კონტენტი) */}
-          {activeTab === "my-trivia" ? (
+          {/* Row 7: Content */}
+          {activeTab === "my-content" && (
             <div className="px-4">
               <MyTriviaTab 
                 onCreateQuiz={() => setShowCreateQuizModal(true)} 
@@ -320,7 +336,15 @@ function TeamContentV2() {
                 onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               />
             </div>
-          ) : (
+          )}
+          {activeTab === "rooms" && (
+            <div className="px-4 py-4">
+              <p className="text-muted-foreground text-sm text-center">
+                შექმენი ან შეუერთდი ოთახს მეგობრებთან სათამაშოდ
+              </p>
+            </div>
+          )}
+          {activeTab === "discover" && (
             <SocialFeed 
               onPlayQuiz={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               sortFilter={sortFilter}
@@ -387,7 +411,7 @@ function TeamContentV2() {
       <CreateQuizModal
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
-        onQuizCreated={() => setActiveTab("my-trivia")}
+        onQuizCreated={() => setActiveTab("my-content")}
         onSwitchToCollection={() => setShowCreateCollectionModal(true)}
       />
       <CreateCollectionModal
@@ -396,7 +420,7 @@ function TeamContentV2() {
           setShowCreateCollectionModal(open);
           if (!open) setEditingDraftId(null);
         }}
-        onCollectionCreated={() => setActiveTab("my-trivia")}
+        onCollectionCreated={() => setActiveTab("my-content")}
         draftId={editingDraftId}
       />
       <QuizPlayModal
