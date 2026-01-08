@@ -236,7 +236,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
       <div className="relative">
         <div 
           ref={containerRef}
-          className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-4 pb-3"
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-4 pb-3 scroll-pl-4"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
