@@ -16,6 +16,7 @@ import { MyRoomsSection } from "@/components/team/MyRoomsSection";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
+import { AllFriendsModal } from "@/components/team/AllFriendsModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -62,6 +63,7 @@ function TeamContentV2() {
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<SamplePost | null>(null);
+  const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
@@ -249,7 +251,7 @@ function TeamContentV2() {
                 <FriendsStoriesBar
                   onAddFriendClick={() => setShowAddFriendModal(true)}
                   onFriendClick={() => {}}
-                  onShowAllFriends={() => setShowAddFriendModal(true)}
+                  onShowAllFriends={() => setShowAllFriendsModal(true)}
                 />
               </motion.div>
 
@@ -341,6 +343,14 @@ function TeamContentV2() {
         open={!!playingQuiz}
         onOpenChange={(open) => !open && setPlayingQuiz(null)}
         post={playingQuiz}
+      />
+      <AllFriendsModal
+        isOpen={showAllFriendsModal}
+        onClose={() => setShowAllFriendsModal(false)}
+        onAddFriendClick={() => {
+          setShowAllFriendsModal(false);
+          setShowAddFriendModal(true);
+        }}
       />
     </div>
   );
