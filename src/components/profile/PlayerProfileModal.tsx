@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UserPlus, Swords, MessageCircle, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play } from "lucide-react";
+import { X, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play } from "lucide-react";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
+import iconChatBubble from "@/assets/chat-bubble.png";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -12,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
+import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
 
 interface PlayerProfileModalProps {
   isOpen: boolean;
@@ -35,6 +37,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const { user } = useAuth();
   const { data, loading } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const getFlagEmoji = (countryCode: string) => {
     const codePoints = countryCode
@@ -71,9 +74,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   };
 
   const handleMessage = () => {
-    // TODO: Navigate to chat
-    toast.info("ჩატის ფუნქცია მალე!");
-    onClose();
+    setChatOpen(true);
   };
 
   return (
@@ -187,7 +188,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           მეგობარი
                         </ChunkyButton>
                         <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="w-10">
-                          <MessageCircle className="w-4 h-4" />
+                          <img src={iconChatBubble} alt="" className="w-5 h-5" />
                         </ChunkyButton>
                       </>
                     )}
@@ -318,6 +319,18 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           )}
         </div>
       </SheetContent>
+
+      {/* Chat Sheet */}
+      <FriendChatSheet
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        friendId={userId}
+        friendProfile={data?.profile ? {
+          nickname: data.profile.nickname,
+          avatar_url: data.profile.avatar_url,
+          animated_avatar_url: data.profile.animated_avatar_url,
+        } : null}
+      />
     </Sheet>
   );
 }
