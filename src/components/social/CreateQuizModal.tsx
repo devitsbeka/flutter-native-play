@@ -26,7 +26,24 @@ interface CreateQuizModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onQuizCreated?: () => void;
+  onSwitchToCollection?: () => void;
 }
+
+type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
+
+const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string; description: string }[] = [
+  { value: "mixed", emoji: "🎲", label: "შერეული", description: "ადვილი → რთული" },
+  { value: "easy", emoji: "🟢", label: "ადვილი", description: "დამწყებთათვის" },
+  { value: "medium", emoji: "🟡", label: "საშუალო", description: "მცოდნეებს" },
+  { value: "hard", emoji: "🔴", label: "რთული", description: "ექსპერტებს" },
+];
+
+const TITLE_SUGGESTIONS = [
+  (subject: string) => `${subject} მასტერი 🏆`,
+  (subject: string) => `რამდენი იცი ${subject}-ზე?`,
+  (subject: string) => `${subject} ჩემპიონატი ⚡`,
+  (subject: string) => `${subject} გამოწვევა 🎯`,
+];
 
 const QUESTION_COUNTS = [5, 10, 15, 20];
 // Smooth oval gradient backgrounds with blob overlays
@@ -59,7 +76,7 @@ const POPULAR_TOPICS = [
   { emoji: "🔬", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
 ];
 
-export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQuizModalProps) {
+export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection }: CreateQuizModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -67,6 +84,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>("mixed");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
@@ -75,6 +93,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
   const [isPosting, setIsPosting] = useState(false);
   const [selectedGradient, setSelectedGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(true);
+  const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
 
   // Reset on open
   useEffect(() => {
@@ -88,13 +107,25 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
     setSubject("");
     setQuestionCount(10);
     setAnswerFormat("4_answers");
+    setDifficulty("mixed");
     setQuestions([]);
     setTitle("");
     setDescription("");
     setGenerationProgress(0);
     setSelectedGradient(COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]);
     setIsPublic(true);
+    setSuggestedTitles([]);
   };
+
+  // Generate title suggestions when subject changes
+  useEffect(() => {
+    if (subject.trim()) {
+      const suggestions = TITLE_SUGGESTIONS.map(fn => fn(subject.trim()));
+      setSuggestedTitles(suggestions);
+    } else {
+      setSuggestedTitles([]);
+    }
+  }, [subject]);
 
   const handleClose = () => {
     resetForm();
@@ -112,7 +143,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-custom-quiz", {
-        body: { subject, questionCount, answerFormat },
+        body: { subject, questionCount, answerFormat, difficulty },
       });
 
       clearInterval(progressInterval);
@@ -143,7 +174,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
       setQuestions(uniqueQuestions);
       setTitle(data?.suggestedTitle || `${subject} ტრივია`);
       
-      setTimeout(() => setStep(4), 300);
+      setTimeout(() => setStep(5), 300);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
@@ -290,6 +321,28 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               className="text-center text-lg h-14 rounded-xl"
             />
 
+            {/* Title suggestions */}
+            {subject.trim() && suggestedTitles.length > 0 && (
+              <div className="pt-2">
+                <p className="text-xs text-muted-foreground mb-2 text-center">💡 იდეები სათაურისთვის:</p>
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {suggestedTitles.slice(0, 3).map((suggestedTitle) => (
+                    <button
+                      key={suggestedTitle}
+                      onClick={() => setTitle(suggestedTitle)}
+                      className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+                        title === suggestedTitle
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-primary/10 text-primary hover:bg-primary/20"
+                      }`}
+                    >
+                      {suggestedTitle}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <ChunkyButton
               onClick={() => setStep(2)}
               disabled={!subject.trim()}
@@ -298,6 +351,20 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               შემდეგი
               <ChevronRight className="w-5 h-5 ml-2" />
             </ChunkyButton>
+
+            {/* Switch to collection prompt */}
+            <div className="flex items-center justify-center gap-2 pt-3 border-t border-border/50">
+              <span className="text-xs text-muted-foreground">გინდა რამდენიმე რაუნდი?</span>
+              <button
+                onClick={() => {
+                  handleClose();
+                  onSwitchToCollection?.();
+                }}
+                className="text-xs text-primary font-medium hover:underline"
+              >
+                შექმენი კოლექცია →
+              </button>
+            </div>
           </motion.div>
         );
 
@@ -310,8 +377,54 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             className="space-y-5"
           >
             <div className="text-center">
+              <h3 className="text-xl font-bold text-foreground mb-1">სირთულე 🎯</h3>
+              <p className="text-sm text-muted-foreground">რა სირთულის კითხვები გინდა?</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {DIFFICULTY_OPTIONS.map((option) => (
+                <motion.button
+                  key={option.value}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setDifficulty(option.value)}
+                  className={`p-4 rounded-xl border-2 transition-all text-center ${
+                    difficulty === option.value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <span className="text-2xl block mb-1">{option.emoji}</span>
+                  <span className="font-semibold text-foreground block">{option.label}</span>
+                  <span className="text-xs text-muted-foreground">{option.description}</span>
+                </motion.button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl">
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                უკან
+              </Button>
+              <ChunkyButton onClick={() => setStep(3)} className="flex-1">
+                შემდეგი
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </ChunkyButton>
+            </div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
               <h3 className="text-xl font-bold text-foreground mb-1">რამდენი კითხვა? 🤔</h3>
-              <p className="text-sm text-muted-foreground">აირჩიე სიმაღლე</p>
+              <p className="text-sm text-muted-foreground">აირჩიე რაოდენობა</p>
             </div>
 
             <div className="flex justify-center gap-3">
@@ -339,11 +452,11 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
-              <ChunkyButton onClick={() => setStep(3)} className="flex-1">
+              <ChunkyButton onClick={() => setStep(4)} className="flex-1">
                 შემდეგი
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
@@ -351,7 +464,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
           </motion.div>
         );
 
-      case 3:
+      case 4:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -411,7 +524,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(3)} className="flex-1 h-12 rounded-xl">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -452,7 +565,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
           </motion.div>
         );
 
-      case 4:
+      case 5:
         return (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -584,7 +697,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  setStep(3);
+                  setStep(4);
                   setQuestions([]);
                 }} 
                 className="flex-1 h-11 rounded-xl"
@@ -624,7 +737,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-4">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <motion.div
               key={s}
               animate={{

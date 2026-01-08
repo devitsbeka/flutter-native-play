@@ -10,10 +10,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
+
 interface CollectionRound {
   subject: string;
   questionCount: number;
   answerFormat: "4_answers" | "true_false";
+  difficulty: DifficultyLevel;
 }
 
 interface CreateCollectionModalProps {
@@ -43,7 +46,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
   const [coverGradient, setCoverGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(true);
   const [rounds, setRounds] = useState<CollectionRound[]>([
-    { subject: "", questionCount: 5, answerFormat: "4_answers" }
+    { subject: "", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }
   ]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0 });
@@ -55,7 +58,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
     setDescription("");
     setCoverGradient(COVER_GRADIENTS[0]);
     setIsPublic(true);
-    setRounds([{ subject: "", questionCount: 5, answerFormat: "4_answers" }]);
+    setRounds([{ subject: "", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }]);
     setIsGenerating(false);
     setGenerationProgress({ current: 0, total: 0 });
     setIsPosting(false);
@@ -68,7 +71,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
 
   const addRound = () => {
     if (rounds.length < 5) {
-      setRounds([...rounds, { subject: "", questionCount: 5, answerFormat: "4_answers" }]);
+      setRounds([...rounds, { subject: "", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }]);
     }
   };
 
@@ -120,6 +123,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
             subject: round.subject,
             questionCount: round.questionCount,
             answerFormat: round.answerFormat,
+            difficulty: round.difficulty,
           },
         });
 
@@ -290,6 +294,32 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated 
                   <option value="4_answers">4 პასუხი</option>
                   <option value="true_false">მართალი/მცდარი</option>
                 </select>
+              </div>
+
+              {/* Difficulty Selector */}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">სირთულე</label>
+                <div className="flex gap-1.5">
+                  {[
+                    { value: "mixed" as const, emoji: "🎲", label: "შერეული" },
+                    { value: "easy" as const, emoji: "🟢", label: "ადვილი" },
+                    { value: "medium" as const, emoji: "🟡", label: "საშუალო" },
+                    { value: "hard" as const, emoji: "🔴", label: "რთული" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateRound(index, "difficulty", opt.value)}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                        round.difficulty === opt.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background border border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="block">{opt.emoji}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           ))}

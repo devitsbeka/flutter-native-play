@@ -29,6 +29,7 @@ import { SocialFeed } from "@/components/social/SocialFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
+import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TabsContent } from "@/components/ui/tabs";
@@ -63,6 +64,7 @@ function TeamContentV2() {
   const [activeTab, setActiveTab] = useState("my-trivia");
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
+  const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
@@ -223,7 +225,7 @@ function TeamContentV2() {
           {activeTab === "my-trivia" && (
             <div className="px-4 pb-2">
               <ChunkyButton 
-                onClick={() => setShowCreateQuizModal(true)}
+                onClick={() => setShowCreateTypeModal(true)}
                 className="w-full gap-2"
                 variant="primary"
                 size="lg"
@@ -350,10 +352,17 @@ function TeamContentV2() {
         isOpen={showRoomChatsPanel}
         onClose={() => setShowRoomChatsPanel(false)}
       />
+      <CreateTriviaTypeModal
+        open={showCreateTypeModal}
+        onOpenChange={setShowCreateTypeModal}
+        onSelectSingle={() => setShowCreateQuizModal(true)}
+        onSelectCollection={() => setShowCreateCollectionModal(true)}
+      />
       <CreateQuizModal
         open={showCreateQuizModal}
         onOpenChange={setShowCreateQuizModal}
         onQuizCreated={() => setActiveTab("my-trivia")}
+        onSwitchToCollection={() => setShowCreateCollectionModal(true)}
       />
       <CreateCollectionModal
         open={showCreateCollectionModal}
