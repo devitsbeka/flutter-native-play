@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { NavLink } from 'react-router-dom';
 import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
 import { PalantirAnalyticsWidget } from '@/components/admin/PalantirAnalyticsWidget';
-import { AdminGlobe } from '@/components/admin/AdminGlobe';
+import { AdminWorldMap } from '@/components/admin/AdminWorldMap';
 import { LastActiveUsersPanel } from '@/components/admin/LastActiveUsersPanel';
 
 export default function AdminDashboard() {
@@ -159,8 +159,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* Globe with Active Users Panel */}
-        <Card className="relative overflow-hidden h-[420px] bg-gradient-to-br from-slate-900 to-slate-950">
-          <AdminGlobe users={activeUsers} />
+        <Card className="relative overflow-hidden h-[420px]">
+          <AdminWorldMap users={activeUsers} />
           <LastActiveUsersPanel users={activeUsers} />
         </Card>
 

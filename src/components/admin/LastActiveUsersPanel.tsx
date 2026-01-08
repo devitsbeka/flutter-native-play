@@ -72,11 +72,15 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-medium truncate">{user.nickname}</p>
-                      {user.country_code && (
+                      {(user.country_code || user.region) && (
                         <img
-                          src={`https://flagcdn.com/16x12/${user.country_code.toLowerCase()}.png`}
-                          alt={user.country_code}
+                          src={`https://flagcdn.com/16x12/${(user.country_code || user.region || 'ge').toLowerCase()}.png`}
+                          alt={user.country_code || user.region || ''}
                           className="w-4 h-3 rounded-[2px] object-cover"
+                          onError={(e) => {
+                            // Fallback to Georgia flag if country code is invalid
+                            (e.target as HTMLImageElement).src = 'https://flagcdn.com/16x12/ge.png';
+                          }}
                         />
                       )}
                     </div>
