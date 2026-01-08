@@ -258,7 +258,7 @@ function TeamContentV2() {
                     : "text-muted-foreground hover:text-foreground/80"
                 }`}
               >
-                ჩემი ტრივია
+                MyTrivia
               </button>
             </div>
           </div>
