@@ -2,7 +2,7 @@
 // These limits ensure questions fit within a single viewport on mobile devices
 
 export const QUESTION_MAX_LENGTH = 65; // Max length to ensure questions fit in UI without cropping
-export const ANSWER_MAX_LENGTH = 16;   // Max for Georgian language answers (stricter for UI fit)
+export const ANSWER_MAX_LENGTH = 20;   // Max for Georgian language answers
 
 export function isQuestionValid(question: string): boolean {
   return question.length <= QUESTION_MAX_LENGTH;

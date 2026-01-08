@@ -9,7 +9,7 @@ const corsHeaders = {
 
 // App-wide character limits
 const QUESTION_MAX_LENGTH = 65;
-const ANSWER_MAX_LENGTH = 16;
+const ANSWER_MAX_LENGTH = 20;
 
 // Duplicate detection helpers
 function normalizeText(text: string): string {
