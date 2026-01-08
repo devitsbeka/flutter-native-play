@@ -167,81 +167,84 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
         boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Top colored section - light purple gradient with dark purple text */}
-      <div className="relative bg-gradient-to-br from-primary/15 to-primary/25 px-4 pt-4 pb-10">
-        {/* Status badge */}
-        <div className="flex items-center justify-between mb-3">
-          {isPlaying ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              LIVE
+      {/* Full card with light purple background */}
+      <div className="relative bg-gradient-to-br from-primary/15 to-primary/25 px-2.5 pb-2.5 pt-6 rounded-2xl">
+        {/* Top section with status, room name, category */}
+        <div className="px-2 pb-4">
+          {/* Status badge row */}
+          <div className="flex items-center justify-between mb-3">
+            {isPlaying ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                LIVE
+              </span>
+            ) : isCompleted ? (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                დასრულდა
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/30 text-primary text-xs font-bold">
+                მოლოდინი
+              </span>
+            )}
+            
+            {/* Room code */}
+            <span className="text-xs font-mono text-primary/60">
+              #{room.room_code.slice(-4)}
             </span>
-          ) : isCompleted ? (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold">
-              დასრულდა
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/30 text-primary text-xs font-bold">
-              მოლოდინი
-            </span>
-          )}
-          
-          {/* Room code */}
-          <span className="text-xs font-mono text-primary/60">
-            #{room.room_code.slice(-4)}
-          </span>
-        </div>
-        
-        {/* Room name */}
-        <h3 className="font-bold text-primary text-base leading-tight truncate">
-          {displayName}
-        </h3>
-      </div>
-      
-      {/* Bottom white section */}
-      <div className="bg-card px-4 py-4 -mt-5 rounded-t-xl relative">
-        {/* Category */}
-        {room.category_name && (
-          <p className="text-sm text-muted-foreground truncate mb-3">
-            {room.category_name}
-          </p>
-        )}
-        
-        {/* Bottom row: players and avatars */}
-        <div className="flex items-center justify-between">
-          {/* Players count */}
-          <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-lg">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-bold text-foreground">{room.participants.length}</span>
           </div>
           
-          {/* Avatars */}
-          <div className="flex -space-x-3">
-            {room.participants.slice(0, 3).map((p) => (
-              <div 
-                key={p.user_id} 
-                className="w-10 h-10 rounded-full overflow-hidden border-2 border-card flex-shrink-0 bg-muted"
-              >
-                {p.avatar_url ? (
-                  <img 
-                    src={p.avatar_url} 
-                    alt={p.nickname}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-sm font-bold">
-                    {p.nickname?.charAt(0).toUpperCase() || "?"}
-                  </div>
-                )}
-              </div>
-            ))}
-            {room.participants.length > 3 && (
-              <div className="w-10 h-10 rounded-full bg-muted border-2 border-card flex items-center justify-center">
-                <span className="text-xs font-bold text-muted-foreground">
-                  +{room.participants.length - 3}
-                </span>
-              </div>
-            )}
+          {/* Room name */}
+          <h3 className="font-bold text-primary text-base leading-tight truncate mb-1">
+            {displayName}
+          </h3>
+          
+          {/* Category - now in purple section */}
+          {room.category_name && (
+            <p className="text-sm text-primary/70 truncate">
+              {room.category_name}
+            </p>
+          )}
+        </div>
+        
+        {/* Bottom white section - inset with margins */}
+        <div className="bg-card px-4 py-4 rounded-xl">
+          {/* Bottom row: players and avatars */}
+          <div className="flex items-center justify-between">
+            {/* Players count */}
+            <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-lg">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-bold text-foreground">{room.participants.length}</span>
+            </div>
+            
+            {/* Avatars */}
+            <div className="flex -space-x-3">
+              {room.participants.slice(0, 3).map((p) => (
+                <div 
+                  key={p.user_id} 
+                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-card flex-shrink-0 bg-muted"
+                >
+                  {p.avatar_url ? (
+                    <img 
+                      src={p.avatar_url} 
+                      alt={p.nickname}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-sm font-bold">
+                      {p.nickname?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {room.participants.length > 3 && (
+                <div className="w-10 h-10 rounded-full bg-muted border-2 border-card flex items-center justify-center">
+                  <span className="text-xs font-bold text-muted-foreground">
+                    +{room.participants.length - 3}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
