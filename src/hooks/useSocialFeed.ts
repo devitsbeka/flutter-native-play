@@ -89,6 +89,7 @@ export function useSocialFeed() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["user-quiz-likes"] });
+      queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
     },
   });
 
@@ -104,6 +105,8 @@ export function useSocialFeed() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-quiz-saves"] });
+      queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
     },
   });
 
