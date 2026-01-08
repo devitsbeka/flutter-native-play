@@ -62,6 +62,15 @@ function TeamContentV2() {
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [activeTab, setActiveTab] = useState("rooms");
+  
+  // Scroll to top when changing tabs to prevent layout jump
+  const handleTabChange = (tab: string) => {
+    const mainContent = document.getElementById('team-main-content');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
+    setActiveTab(tab);
+  };
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
@@ -149,7 +158,7 @@ function TeamContentV2() {
       />
 
       {/* Main Content Area */}
-      <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background">
+      <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth">
         {/* Row 1: Mobile Header - Scrolls away */}
         <div className="lg:hidden">
           <div className="flex items-center justify-between px-4 h-14 safe-top">
@@ -231,7 +240,7 @@ function TeamContentV2() {
           <div className="lg:hidden px-4 pb-3">
             <div className="flex gap-1 p-1.5 bg-muted rounded-2xl shadow-inner">
               <button
-                onClick={() => setActiveTab("discover")}
+                onClick={() => handleTabChange("discover")}
                 className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
                   activeTab === "discover"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
@@ -241,7 +250,7 @@ function TeamContentV2() {
                 აღმოაჩინე
               </button>
               <button
-                onClick={() => setActiveTab("rooms")}
+                onClick={() => handleTabChange("rooms")}
                 className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
                   activeTab === "rooms"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
@@ -251,7 +260,7 @@ function TeamContentV2() {
                 ოთახები
               </button>
               <button
-                onClick={() => setActiveTab("my-content")}
+                onClick={() => handleTabChange("my-content")}
                 className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
                   activeTab === "my-content"
                     ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
