@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
@@ -22,31 +22,71 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import wonVideo from "@/assets/animations/won.mp4";
 import lostVideo from "@/assets/animations/lost.mp4";
 
-// Animated video icon component
-const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => (
-  <motion.div
-    initial={{ scale: 0, y: 50, opacity: 0 }}
-    animate={{ 
-      scale: 1, 
-      y: 0, 
-      opacity: 1,
-    }}
-    transition={{ 
-      scale: { type: "spring", stiffness: 200, damping: 15 },
-      opacity: { duration: 0.3 }
-    }}
-    className="relative"
-  >
-    <video 
-      src={videoSrc}
-      autoPlay
-      loop
-      muted
-      playsInline
-      className="w-40 h-40 object-contain relative"
-    />
-  </motion.div>
-);
+// Animated video icon component with ping-pong effect
+const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isReversing, setIsReversing] = useState(false);
+
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!isReversing && video.currentTime >= video.duration - 0.05) {
+      // Start reversing
+      setIsReversing(true);
+    } else if (isReversing && video.currentTime <= 0.05) {
+      // Start playing forward again
+      setIsReversing(false);
+    }
+  }, [isReversing]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const step = () => {
+      if (isReversing) {
+        video.currentTime = Math.max(0, video.currentTime - 0.033);
+      }
+      if (isReversing) {
+        requestAnimationFrame(step);
+      }
+    };
+
+    if (isReversing) {
+      video.pause();
+      requestAnimationFrame(step);
+    } else {
+      video.play();
+    }
+  }, [isReversing]);
+
+  return (
+    <motion.div
+      initial={{ scale: 0, y: 50, opacity: 0 }}
+      animate={{ 
+        scale: 1, 
+        y: 0, 
+        opacity: 1,
+      }}
+      transition={{ 
+        scale: { type: "spring", stiffness: 200, damping: 15 },
+        opacity: { duration: 0.3 }
+      }}
+      className="relative"
+    >
+      <video 
+        ref={videoRef}
+        src={videoSrc}
+        autoPlay
+        muted
+        playsInline
+        onTimeUpdate={handleTimeUpdate}
+        className="w-40 h-40 object-contain relative"
+      />
+    </motion.div>
+  );
+};
 
 // Player card component for clean display
 const PlayerCard = ({ 
