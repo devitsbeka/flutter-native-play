@@ -73,7 +73,7 @@ function StatWidget({
     <Card>
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
-          <p className="text-xs font-medium text-muted-foreground">{title}</p>
+          <h3 className="font-semibold text-sm">{title}</h3>
           <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center`}>
             <img src={icon} alt="" className="w-5 h-5 object-contain" />
           </div>
