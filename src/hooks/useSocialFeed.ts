@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { samplePosts, SamplePost } from "@/data/samplePosts";
@@ -7,6 +8,33 @@ import { Json } from "@/integrations/supabase/types";
 export function useSocialFeed() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  
+  // Track pending operations to prevent double-clicks
+  const pendingLikes = useRef<Set<string>>(new Set());
+  const pendingSaves = useRef<Set<string>>(new Set());
+
+  // Set up real-time subscription for likes/saves updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('quiz-posts-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_quiz_posts'
+        },
+        () => {
+          // Refresh posts when any post is updated (like/save counts)
+          queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: dbPosts = [], isLoading } = useQuery({
     queryKey: ["quiz-posts-with-profiles"],
@@ -113,7 +141,11 @@ export function useSocialFeed() {
         }
       }
     },
-    onSuccess: () => {
+    onMutate: async ({ postId }) => {
+      pendingLikes.current.add(postId);
+    },
+    onSettled: (_, __, { postId }) => {
+      pendingLikes.current.delete(postId);
       queryClient.invalidateQueries({ queryKey: ["quiz-posts"] });
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
       queryClient.invalidateQueries({ queryKey: ["user-quiz-likes"] });
@@ -143,7 +175,11 @@ export function useSocialFeed() {
         }
       }
     },
-    onSuccess: () => {
+    onMutate: async ({ postId }) => {
+      pendingSaves.current.add(postId);
+    },
+    onSettled: (_, __, { postId }) => {
+      pendingSaves.current.delete(postId);
       queryClient.invalidateQueries({ queryKey: ["user-quiz-saves"] });
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
@@ -266,11 +302,17 @@ export function useSocialFeed() {
     userLikes,
     userSaves,
     userPlays,
+    isLiking: likeMutation.isPending,
+    isSaving: saveMutation.isPending,
     toggleLike: (postId: string) => {
+      // Prevent double-click by checking if already pending
+      if (pendingLikes.current.has(postId)) return;
       const isLiked = userLikes.includes(postId);
       likeMutation.mutate({ postId, liked: isLiked });
     },
     toggleSave: (postId: string) => {
+      // Prevent double-click by checking if already pending
+      if (pendingSaves.current.has(postId)) return;
       const isSaved = userSaves.includes(postId);
       saveMutation.mutate({ postId, saved: isSaved });
     },

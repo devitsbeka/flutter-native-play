@@ -29,9 +29,11 @@ interface CollectionCarouselPostProps {
   onToggleLike?: (postId: string) => void;
   onToggleSave?: (postId: string) => void;
   onHashtagClick?: (hashtag: string) => void;
+  isLiking?: boolean;
+  isSaving?: boolean;
 }
 
-export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick }: CollectionCarouselPostProps) {
+export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: CollectionCarouselPostProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -45,12 +47,9 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
   const liked = posts.some(p => userLikes?.includes(p.id));
   const saved = posts.some(p => userSaves?.includes(p.id));
   
-  // Calculate total likes/saves across all posts in collection
+  // Calculate total likes/saves across all posts in collection (from props, not local state)
   const totalLikes = posts.reduce((sum, p) => sum + p.likesCount, 0);
   const totalSaves = posts.reduce((sum, p) => sum + (p.savesCount || 0), 0);
-  
-  const [likesCount, setLikesCount] = useState(totalLikes);
-  const [savesCount, setSavesCount] = useState(totalSaves);
 
   const handlePrev = () => {
     setCurrentIndex(prev => Math.max(0, prev - 1));
@@ -61,15 +60,15 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
   };
 
   const handleLike = () => {
+    if (isLiking) return; // Prevent double-click
     // Like/unlike the first post of the collection
     onToggleLike?.(posts[0].id);
-    setLikesCount(prev => liked ? prev - 1 : prev + 1);
   };
 
   const handleSave = () => {
+    if (isSaving) return; // Prevent double-click
     // Save/unsave the first post of the collection
     onToggleSave?.(posts[0].id);
-    setSavesCount(prev => saved ? Math.max(0, prev - 1) : prev + 1);
   };
 
   const handleShare = async () => {
@@ -313,7 +312,6 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side: Heart + Bookmark icons with counts */}
         <div className="flex items-center gap-4">
@@ -323,6 +321,8 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
               whileTap={{ scale: 0.9 }}
               animate={liked ? { scale: [1, 1.3, 0.9, 1.1, 1] } : {}}
               transition={{ duration: 0.4, ease: "easeOut" }}
+              disabled={isLiking}
+              className={isLiking ? 'opacity-50' : ''}
             >
               <img 
                 src={purpleHeartIcon} 
@@ -330,7 +330,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
                 className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
             </motion.button>
-            <span className="text-sm text-muted-foreground">{formatNumber(likesCount)}</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(totalLikes)}</span>
           </div>
           
           <div className="flex items-center gap-1.5">
@@ -339,6 +339,8 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
               whileTap={{ scale: 0.9 }}
               animate={saved ? { y: [0, -6, 0] } : {}}
               transition={{ duration: 0.3, ease: "easeOut" }}
+              disabled={isSaving}
+              className={isSaving ? 'opacity-50' : ''}
             >
               <img 
                 src={bookmarkIcon} 
@@ -346,7 +348,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
                 className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
             </motion.button>
-            <span className="text-sm text-muted-foreground">{formatNumber(savesCount)}</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(totalSaves)}</span>
           </div>
         </div>
         

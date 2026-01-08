@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
@@ -94,13 +94,13 @@ interface FeedPostProps {
   onToggleLike?: (postId: string) => void;
   onToggleSave?: (postId: string) => void;
   onHashtagClick?: (hashtag: string) => void;
+  isLiking?: boolean;
+  isSaving?: boolean;
 }
 
-export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick }: FeedPostProps) {
+export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: FeedPostProps) {
   const liked = userLikes?.includes(post.id) || false;
   const saved = userSaves?.includes(post.id) || false;
-  const [likesCount, setLikesCount] = useState(post.likesCount);
-  const [savesCount, setSavesCount] = useState(post.savesCount || 0);
   const { language } = useLanguage();
   
   const dateLocale = language === 'ka' ? ka : enUS;
@@ -130,13 +130,13 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
   }, [post.questions, post.id]);
 
   const handleLike = () => {
+    if (isLiking) return; // Prevent double-click
     onToggleLike?.(post.id);
-    setLikesCount(prev => liked ? prev - 1 : prev + 1);
   };
 
   const handleSave = () => {
+    if (isSaving) return; // Prevent double-click
     onToggleSave?.(post.id);
-    setSavesCount(prev => saved ? Math.max(0, prev - 1) : prev + 1);
   };
 
   const handleComment = () => {
@@ -358,6 +358,8 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
               whileTap={{ scale: 0.9 }}
               animate={liked ? { scale: [1, 1.3, 0.9, 1.1, 1] } : {}}
               transition={{ duration: 0.4, ease: "easeOut" }}
+              disabled={isLiking}
+              className={isLiking ? 'opacity-50' : ''}
             >
               <img 
                 src={purpleHeartIcon} 
@@ -365,7 +367,7 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
                 className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
             </motion.button>
-            <span className="text-sm text-muted-foreground">{formatNumber(likesCount)}</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(post.likesCount)}</span>
           </div>
           
           <div className="flex items-center gap-1.5">
@@ -374,6 +376,8 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
               whileTap={{ scale: 0.9 }}
               animate={saved ? { y: [0, -6, 0] } : {}}
               transition={{ duration: 0.3, ease: "easeOut" }}
+              disabled={isSaving}
+              className={isSaving ? 'opacity-50' : ''}
             >
               <img 
                 src={bookmarkIcon} 
@@ -381,7 +385,7 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
                 className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
             </motion.button>
-            <span className="text-sm text-muted-foreground">{formatNumber(savesCount)}</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(post.savesCount || 0)}</span>
           </div>
         </div>
         
