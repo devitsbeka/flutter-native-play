@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
@@ -8,6 +8,7 @@ import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SamplePost } from "@/data/samplePosts";
 import { toast } from "sonner";
+import { TriviaPreviewModal } from "./TriviaPreviewModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,6 +100,7 @@ interface FeedPostProps {
 }
 
 export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: FeedPostProps) {
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const liked = userLikes?.includes(post.id) || false;
   const saved = userSaves?.includes(post.id) || false;
   const { language } = useLanguage();
@@ -275,9 +277,10 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
         </DropdownMenu>
       </div>
 
-      {/* Quiz Card/Banner */}
+      {/* Quiz Card/Banner - Clickable to open modal */}
       <div 
-        className="relative aspect-[4/2.76] overflow-hidden isolate"
+        onClick={() => setShowPreviewModal(true)}
+        className="relative aspect-[4/2.76] overflow-hidden isolate cursor-pointer"
       >
         {/* Background - gradient or image */}
         {coverImage ? (
@@ -411,6 +414,18 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
           </button>
         ))}
       </div>
+
+      {/* Trivia Preview Modal */}
+      <TriviaPreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        post={post}
+        onPlay={(p) => onPlay?.(p)}
+        userLikes={userLikes}
+        userSaves={userSaves}
+        onToggleLike={onToggleLike}
+        onToggleSave={onToggleSave}
+      />
     </motion.article>
   );
 }
