@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2 } from "lucide-react";
+import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { formatDistanceToNow } from "date-fns";
@@ -388,8 +388,9 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
         {/* Right side: Play button */}
         <button 
           onClick={() => onPlay?.(post)}
-          className="px-4 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition-opacity"
+          className="px-5 py-2 bg-primary text-primary-foreground rounded-full text-base font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5"
         >
+          <Play className="w-4 h-4 fill-current" />
           ითამაშე
         </button>
       </div>
