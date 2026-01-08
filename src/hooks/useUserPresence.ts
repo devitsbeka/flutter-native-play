@@ -3,22 +3,68 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+// Generate or get a persistent guest session ID
+const getGuestSessionId = (): string => {
+  const storageKey = 'guest_session_id';
+  let sessionId = localStorage.getItem(storageKey);
+  if (!sessionId) {
+    sessionId = `guest_${crypto.randomUUID()}`;
+    localStorage.setItem(storageKey, sessionId);
+  }
+  return sessionId;
+};
+
+// Try to detect country from timezone
+const detectCountryFromTimezone = (): string | null => {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const countryMap: Record<string, string> = {
+      'Europe/Tbilisi': 'ge',
+      'America/New_York': 'us',
+      'America/Los_Angeles': 'us',
+      'America/Chicago': 'us',
+      'Europe/London': 'gb',
+      'Europe/Berlin': 'de',
+      'Europe/Paris': 'fr',
+      'Europe/Moscow': 'ru',
+      'Asia/Tokyo': 'jp',
+      'Asia/Seoul': 'kr',
+      'Asia/Shanghai': 'cn',
+      'Europe/Kiev': 'ua',
+      'Europe/Istanbul': 'tr',
+      'Asia/Dubai': 'ae',
+      'Europe/Rome': 'it',
+      'Europe/Madrid': 'es',
+      'America/Sao_Paulo': 'br',
+      'Asia/Kolkata': 'in',
+      'Australia/Sydney': 'au',
+    };
+    return countryMap[timezone] || null;
+  } catch {
+    return null;
+  }
+};
+
 export const useUserPresence = () => {
   const { user } = useAuth();
   const location = useLocation();
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
 
   const updatePresence = useCallback(async (status: 'online' | 'away' | 'offline', currentPage?: string) => {
-    if (!user) return;
+    // For authenticated users, use their user.id
+    // For guests, use a persistent session ID
+    const userId = user?.id || getGuestSessionId();
+    const countryCode = detectCountryFromTimezone();
 
     try {
       const { error } = await supabase
         .from('user_presence')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           status,
           current_page: currentPage || location.pathname,
           last_seen: new Date().toISOString(),
+          country_code: countryCode,
         }, {
           onConflict: 'user_id',
         });
@@ -33,7 +79,8 @@ export const useUserPresence = () => {
 
   // Set online on mount and update page
   useEffect(() => {
-    if (!user) return;
+    // Track both authenticated and guest users
+    const userId = user?.id || getGuestSessionId();
 
     // Set initial online status
     updatePresence('online', location.pathname);
@@ -55,13 +102,15 @@ export const useUserPresence = () => {
     // Handle before unload
     const handleBeforeUnload = () => {
       // Use sendBeacon for reliable offline status
+      const countryCode = detectCountryFromTimezone();
       const data = JSON.stringify({
-        user_id: user.id,
+        user_id: userId,
         status: 'offline',
         last_seen: new Date().toISOString(),
+        country_code: countryCode,
       });
       navigator.sendBeacon(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_presence?user_id=eq.${user.id}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_presence?user_id=eq.${userId}`,
         data
       );
     };
@@ -81,10 +130,8 @@ export const useUserPresence = () => {
 
   // Update page on route change
   useEffect(() => {
-    if (user) {
-      updatePresence('online', location.pathname);
-    }
-  }, [location.pathname, user, updatePresence]);
+    updatePresence('online', location.pathname);
+  }, [location.pathname, updatePresence]);
 
   return { updatePresence };
 };

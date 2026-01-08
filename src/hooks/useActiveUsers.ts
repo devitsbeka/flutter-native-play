@@ -52,9 +52,9 @@ export const useActiveUsers = () => {
 
       const usersWithProfiles: ActiveUser[] = presenceData.map(presence => {
         const profile = profilesMap.get(presence.user_id);
-        const isGuest = !profile;
+        const isGuest = !profile && presence.user_id.startsWith('guest_');
         // Generate short unique ID from user_id for guests
-        const guestId = presence.user_id.slice(0, 6).toUpperCase();
+        const guestId = presence.user_id.slice(-6).toUpperCase();
         
         return {
           id: presence.id,
@@ -62,11 +62,11 @@ export const useActiveUsers = () => {
           status: presence.status as 'online' | 'away' | 'offline',
           current_page: presence.current_page,
           last_seen: presence.last_seen,
-          nickname: profile?.nickname || `სტუმარი #${guestId}`,
+          nickname: profile?.nickname || (isGuest ? `სტუმარი #${guestId}` : 'უცნობი'),
           avatar_url: profile?.avatar_url || null,
           // Use presence country_code for guests, or profile data for registered users
-          country_code: profile?.country_code || (presence as any).country_code || null,
-          region: profile?.region || (presence as any).region || null,
+          country_code: profile?.country_code || presence.country_code || null,
+          region: profile?.region || null,
           isGuest,
         };
       });
