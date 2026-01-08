@@ -248,7 +248,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-3 gap-3">
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-500">
+              <p className="text-2xl font-bold text-primary">
                 {categories.filter(c => c.is_active).length}
               </p>
               <p className="text-xs text-muted-foreground">აქტიური კატეგორიები</p>
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-violet-500">
+              <p className="text-2xl font-bold text-primary">
                 {activeQuestions}
               </p>
               <p className="text-xs text-muted-foreground">აქტიური კითხვები</p>
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-amber-500">
+              <p className="text-2xl font-bold text-primary">
                 {Math.round(totalQuestions / Math.max(categories.length, 1))}
               </p>
               <p className="text-xs text-muted-foreground">საშ. კითხვა/კატეგ.</p>
