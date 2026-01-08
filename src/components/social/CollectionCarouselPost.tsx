@@ -218,91 +218,78 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay }
         </DropdownMenu>
       </div>
 
-      {/* Carousel */}
-      <div 
-        ref={containerRef}
-        className="relative aspect-[4/2.76] overflow-hidden isolate"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* Slides */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0"
-          >
-            {/* Background - gradient or image */}
-            {currentPost.coverImage ? (
-              <div className="absolute inset-0">
-                <img 
-                  src={currentPost.coverImage} 
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/40" />
-              </div>
-            ) : (
-              <div 
-                className="absolute inset-0"
-                style={{ 
-                  background: currentPost.coverGradient || 'linear-gradient(135deg, hsl(270, 70%, 60%), hsl(320, 70%, 50%))' 
-                }}
-              />
-            )}
+      {/* Carousel - Horizontal scroll showing 1 full + half card */}
+      <div className="relative">
+        <div 
+          ref={containerRef}
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-4 pb-3"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {posts.map((post, i) => (
+            <div
+              key={post.id}
+              className="flex-shrink-0 snap-start rounded-2xl overflow-hidden"
+              style={{ width: 'calc(85% - 6px)' }}
+            >
+              <div className="relative aspect-[4/3]">
+                {/* Background - gradient or image */}
+                {post.coverImage ? (
+                  <div className="absolute inset-0">
+                    <img 
+                      src={post.coverImage} 
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40" />
+                  </div>
+                ) : (
+                  <div 
+                    className="absolute inset-0"
+                    style={{ 
+                      background: post.coverGradient || 'linear-gradient(135deg, hsl(270, 70%, 60%), hsl(320, 70%, 50%))' 
+                    }}
+                  />
+                )}
 
-            {/* Content overlay */}
-            <div className="absolute inset-0 flex flex-col items-center p-4 text-center z-10">
-              {/* Quiz Stats */}
-              <div className="flex items-center gap-4 text-white/90 text-sm pt-2">
-                <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                  {currentPost.questionCount} კითხვა
-                </span>
-                <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                  {currentPost.answerFormat === '4_answers' ? '4 პასუხი' : 'მართალი/მცდარი'}
-                </span>
-              </div>
+                {/* Content overlay */}
+                <div className="absolute inset-0 flex flex-col items-center p-4 text-center z-10">
+                  {/* Quiz Stats */}
+                  <div className="flex items-center gap-3 text-white/90 text-xs pt-2">
+                    <span className="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                      {post.questionCount} კითხვა
+                    </span>
+                    <span className="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                      {post.answerFormat === '4_answers' ? '4 პასუხი' : 'მართალი/მცდარი'}
+                    </span>
+                  </div>
 
-              {/* Quiz Title */}
-              <h3 className="text-white text-[24px] font-bold drop-shadow-lg absolute top-1/2 left-0 right-0 -translate-y-1/2 px-4">
-                {currentPost.title}
-              </h3>
+                  {/* Quiz Title */}
+                  <h3 className="text-white text-xl font-bold drop-shadow-lg absolute top-1/2 left-0 right-0 -translate-y-1/2 px-4">
+                    {post.title}
+                  </h3>
+
+                  {/* Card index indicator */}
+                  <div className="absolute bottom-3 right-3 bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-medium">
+                    {i + 1}/{posts.length}
+                  </div>
+                </div>
+              </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Navigation Arrows */}
-        {currentIndex > 0 && (
-          <button
-            onClick={handlePrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors z-20"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-        )}
-        {currentIndex < posts.length - 1 && (
-          <button
-            onClick={handleNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/60 transition-colors z-20"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        )}
+          ))}
+        </div>
 
         {/* Dots indicator */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+        <div className="flex justify-center gap-1.5 pt-2 pb-1">
           {posts.map((_, i) => (
-            <button
+            <div
               key={i}
-              onClick={() => setCurrentIndex(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all ${
                 i === currentIndex 
-                  ? 'bg-white w-4' 
-                  : 'bg-white/50 hover:bg-white/70'
+                  ? 'bg-primary w-4' 
+                  : 'bg-muted-foreground/30 w-1.5'
               }`}
             />
           ))}
