@@ -74,7 +74,8 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms, v
   };
 
   if (loading) {
-    return null; // Don't show skeleton loader
+    // Reserve space to prevent layout jump
+    return <div className="min-h-[200px]" />;
   }
 
   return (
