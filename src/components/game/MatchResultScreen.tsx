@@ -96,6 +96,7 @@ const PlayerCard = ({
   level,
   isWinner,
   winnerLabel,
+  coinChange,
 }: { 
   avatarUrl?: string | null; 
   name: string;
@@ -103,6 +104,7 @@ const PlayerCard = ({
   level: number;
   isWinner: boolean;
   winnerLabel: string;
+  coinChange?: number;
 }) => (
   <motion.div 
     className="flex flex-col items-center overflow-visible"
@@ -110,6 +112,30 @@ const PlayerCard = ({
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.3 }}
   >
+    {/* Coin change badge on top */}
+    {coinChange !== undefined && coinChange !== 0 && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 0.5, type: "spring" }}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-2 ${
+          coinChange > 0 
+            ? "bg-emerald-500" 
+            : "bg-red-500"
+        }`}
+        style={{ 
+          boxShadow: coinChange > 0 
+            ? "0 3px 0 rgba(5,150,105,0.5)" 
+            : "0 3px 0 rgba(180,0,0,0.5)" 
+        }}
+      >
+        <img src={coinIcon} alt="" className="w-4 h-4" />
+        <span className="font-bold text-white text-sm">
+          {coinChange > 0 ? `+${coinChange}` : coinChange}
+        </span>
+      </motion.div>
+    )}
+
     {/* Avatar wrapper with overflow visible for crown */}
     <div className="relative overflow-visible w-[88px]">
       {/* Crown for winner - centered on avatar */}
@@ -470,35 +496,6 @@ export function MatchResultScreen() {
             {resultConfig.text}
           </motion.h1>
 
-          {/* Coin Change Badge - Shows profit or loss */}
-          {coinChange !== 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring" }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full mb-8 ${
-                coinChange > 0 
-                  ? "bg-emerald-500/90" 
-                  : coinChange < 0 
-                    ? "bg-red-500/90" 
-                    : "bg-gray-500/90"
-              }`}
-              style={{ boxShadow: coinChange > 0 ? "0 4px 0 rgba(5,150,105,0.4)" : "0 4px 0 rgba(180,0,0,0.4)" }}
-            >
-              {coinChange > 0 ? (
-                <TrendingUp className="w-5 h-5 text-white" />
-              ) : coinChange < 0 ? (
-                <TrendingDown className="w-5 h-5 text-white" />
-              ) : (
-                <Minus className="w-5 h-5 text-white" />
-              )}
-              <img src={coinIcon} alt="" className="w-6 h-6" />
-              <span className="font-bold text-white text-lg">
-                {coinChange > 0 ? `+${coinChange}` : coinChange}
-              </span>
-            </motion.div>
-          )}
-
           {/* Players Side by Side */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -514,6 +511,7 @@ export function MatchResultScreen() {
               level={userLevel}
               isWinner={isWin}
               winnerLabel={t("game.winner")}
+              coinChange={isLose ? -Math.abs(netLoss) : isWin ? netWinProfit : undefined}
             />
 
             {/* Opponent */}
@@ -524,6 +522,7 @@ export function MatchResultScreen() {
               level={opponentLevel}
               isWinner={!isWin && !isDraw}
               winnerLabel={t("game.winner")}
+              coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
             />
           </motion.div>
         </div>
@@ -536,7 +535,7 @@ export function MatchResultScreen() {
           className="px-6 pb-8 relative z-10"
         >
           <ChunkyButton
-            variant="mint"
+            variant="white"
             size="lg"
             onClick={handlePlayAgain}
             className="w-full"
