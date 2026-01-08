@@ -168,26 +168,26 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
       }}
     >
       {/* Top colored section - light purple gradient with dark purple text */}
-      <div className="relative bg-gradient-to-br from-primary/15 to-primary/25 px-3 pt-3 pb-8">
+      <div className="relative bg-gradient-to-br from-primary/15 to-primary/25 px-4 pt-4 pb-10">
         {/* Status badge */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           {isPlaying ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               LIVE
             </span>
           ) : isCompleted ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold">
               დასრულდა
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/30 text-primary text-[10px] font-bold">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/30 text-primary text-xs font-bold">
               მოლოდინი
             </span>
           )}
           
           {/* Room code */}
-          <span className="text-[10px] font-mono text-primary/60">
+          <span className="text-xs font-mono text-primary/60">
             #{room.room_code.slice(-4)}
           </span>
         </div>
@@ -199,10 +199,10 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
       </div>
       
       {/* Bottom white section */}
-      <div className="bg-card px-3 py-3 -mt-4 rounded-t-xl relative">
+      <div className="bg-card px-4 py-4 -mt-5 rounded-t-xl relative">
         {/* Category */}
         {room.category_name && (
-          <p className="text-xs text-muted-foreground truncate mb-2">
+          <p className="text-sm text-muted-foreground truncate mb-3">
             {room.category_name}
           </p>
         )}
@@ -210,17 +210,17 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
         {/* Bottom row: players and avatars */}
         <div className="flex items-center justify-between">
           {/* Players count */}
-          <div className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-lg">
-            <Users className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-bold text-foreground">{room.participants.length}</span>
+          <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-lg">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-bold text-foreground">{room.participants.length}</span>
           </div>
           
           {/* Avatars */}
-          <div className="flex -space-x-2">
+          <div className="flex -space-x-3">
             {room.participants.slice(0, 3).map((p) => (
               <div 
                 key={p.user_id} 
-                className="w-7 h-7 rounded-full overflow-hidden border-2 border-card flex-shrink-0 bg-muted"
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-card flex-shrink-0 bg-muted"
               >
                 {p.avatar_url ? (
                   <img 
@@ -229,15 +229,15 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-bold">
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-sm font-bold">
                     {p.nickname?.charAt(0).toUpperCase() || "?"}
                   </div>
                 )}
               </div>
             ))}
             {room.participants.length > 3 && (
-              <div className="w-7 h-7 rounded-full bg-muted border-2 border-card flex items-center justify-center">
-                <span className="text-[10px] font-bold text-muted-foreground">
+              <div className="w-10 h-10 rounded-full bg-muted border-2 border-card flex items-center justify-center">
+                <span className="text-xs font-bold text-muted-foreground">
                   +{room.participants.length - 3}
                 </span>
               </div>
