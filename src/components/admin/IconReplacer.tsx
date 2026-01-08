@@ -59,6 +59,9 @@ export function IconReplacer({ slug, currentUrl, onReplaced }: IconReplacerProps
 
       if (dbError) throw dbError;
 
+      // Trigger cache refresh globally so all components get the new icon
+      window.dispatchEvent(new CustomEvent('icon-library-refresh'));
+
       toast.success(`აიკონი "${slug}" განახლდა!`);
       onReplaced?.(newUrl);
       setOpen(false);

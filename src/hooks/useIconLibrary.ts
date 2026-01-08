@@ -372,7 +372,20 @@ export function useIconLibrary() {
     };
     
     window.addEventListener('icon-library-refresh', handleRefresh);
-    return () => window.removeEventListener('icon-library-refresh', handleRefresh);
+    
+    // Auto-refresh when user returns to the app (handles cache after external changes)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshDbIconsCache();
+        loadDbIcons().then(setDbIcons);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    
+    return () => {
+      window.removeEventListener('icon-library-refresh', handleRefresh);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   const findIcon = useCallback((
