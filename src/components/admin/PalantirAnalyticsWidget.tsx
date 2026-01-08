@@ -400,9 +400,9 @@ export function PalantirAnalyticsWidget() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${diffDays}d ago`;
+    if (diffMins < 60) return `${diffMins} წთ წინ`;
+    if (diffHours < 24) return `${diffHours} სთ წინ`;
+    return `${diffDays} დღის წინ`;
   };
 
   if (loading) {
@@ -410,7 +410,7 @@ export function PalantirAnalyticsWidget() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-center h-40">
-            <div className="animate-pulse text-muted-foreground">Loading analytics...</div>
+            <div className="animate-pulse text-muted-foreground">იტვირთება...</div>
           </div>
         </CardContent>
       </Card>
@@ -422,7 +422,7 @@ export function PalantirAnalyticsWidget() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <TrendingUp className="h-5 w-5 text-primary" />
-          Analytics Dashboard
+          ანალიტიკა
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
@@ -432,7 +432,7 @@ export function PalantirAnalyticsWidget() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Database className="h-4 w-4 text-violet-500" />
-                <h3 className="text-sm font-semibold">Language Buckets</h3>
+                <h3 className="text-sm font-semibold">ენების მიხედვით</h3>
               </div>
               <div className="space-y-3">
                 {languageBuckets.map((bucket) => (
@@ -444,17 +444,17 @@ export function PalantirAnalyticsWidget() {
                     <div className="pl-6 space-y-0.5 text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground/50">├─</span>
-                        <span>In Prod:</span>
+                        <span>პროდში:</span>
                         <span className="text-emerald-500 font-bold">{bucket.inProd.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground/50">├─</span>
-                        <span>In Lib:</span>
+                        <span>ბიბლში:</span>
                         <span className="text-amber-500 font-bold">{bucket.inLib.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground/50">└─</span>
-                        <span>Total:</span>
+                        <span>სულ:</span>
                         <span className="font-bold">{bucket.total.toLocaleString()}</span>
                       </div>
                     </div>
@@ -469,7 +469,7 @@ export function PalantirAnalyticsWidget() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Globe className="h-4 w-4 text-emerald-500" />
-                <h3 className="text-sm font-semibold">Regional Activity</h3>
+                <h3 className="text-sm font-semibold">რეგიონული აქტივობა</h3>
               </div>
               <ScrollArea className="h-[200px]">
                 <div className="space-y-3">
@@ -488,22 +488,22 @@ export function PalantirAnalyticsWidget() {
                       <div className="pl-6 space-y-0.5 text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground/50">├─</span>
-                          <span>Online:</span>
+                          <span>ონლაინ:</span>
                           <span className="text-emerald-500 font-bold">{region.onlineNow}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground/50">├─</span>
-                          <span>24h:</span>
+                          <span>24სთ:</span>
                           <span className="text-cyan-500 font-bold">{region.played24h}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground/50">├─</span>
-                          <span>7d:</span>
+                          <span>7დღე:</span>
                           <span className="text-blue-500 font-bold">{region.played7d}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-muted-foreground/50">└─</span>
-                          <span>Users:</span>
+                          <span>მომხმ:</span>
                           <span className="font-bold">{region.totalUsers}</span>
                         </div>
                       </div>
@@ -519,18 +519,18 @@ export function PalantirAnalyticsWidget() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <ShoppingCart className="h-4 w-4 text-amber-500" />
-                <h3 className="text-sm font-semibold">Shop Analytics</h3>
+                <h3 className="text-sm font-semibold">მაღაზია</h3>
               </div>
               <div className="space-y-3 text-xs font-mono">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total Purchases:</span>
+                  <span className="text-muted-foreground">სულ შენაძენები:</span>
                   <Badge variant="secondary" className="bg-primary/10 text-primary">
                     {totalPurchases}
                   </Badge>
                 </div>
                 
                 <div className="border-t pt-2">
-                  <div className="text-muted-foreground mb-1">By Tier:</div>
+                  <div className="text-muted-foreground mb-1">ტიერის მიხედვით:</div>
                   {Object.entries(purchasesByTier).map(([tier, count]) => (
                     <div key={tier} className="flex items-center gap-1 pl-2 text-muted-foreground">
                       <span className="text-muted-foreground/50">├─</span>
@@ -542,7 +542,7 @@ export function PalantirAnalyticsWidget() {
                 </div>
 
                 <div className="border-t pt-2">
-                  <div className="text-muted-foreground mb-1">Recent:</div>
+                  <div className="text-muted-foreground mb-1">ბოლო:</div>
                   <ScrollArea className="h-[80px]">
                     {purchases.slice(0, 5).map((p) => (
                       <div key={p.id} className="flex items-center gap-2 text-muted-foreground py-0.5">
@@ -569,15 +569,15 @@ export function PalantirAnalyticsWidget() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Crown className="h-4 w-4 text-amber-500" />
-                <h3 className="text-sm font-semibold">Top Customers</h3>
+                <h3 className="text-sm font-semibold">ტოპ მომხმარებლები</h3>
               </div>
               <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                 <div>
                   <div className="text-muted-foreground mb-2 flex items-center gap-1">
-                    <span className="text-amber-500">💰</span> Highest Paying
+                    <span className="text-amber-500">💰</span> მაღალი გადამხდელი
                   </div>
                   {topPayingCustomers.length === 0 ? (
-                    <div className="text-muted-foreground/50">No data</div>
+                    <div className="text-muted-foreground/50">მონაცემები არ არის</div>
                   ) : (
                     topPayingCustomers.map((c, i) => (
                       <div key={i} className="flex items-center gap-1 text-muted-foreground py-0.5">
@@ -590,10 +590,10 @@ export function PalantirAnalyticsWidget() {
                 </div>
                 <div>
                   <div className="text-muted-foreground mb-2 flex items-center gap-1">
-                    <Eye className="h-3 w-3 text-violet-500" /> Most Ads
+                    <Eye className="h-3 w-3 text-violet-500" /> რეკლამები
                   </div>
                   {topAdsWatchers.length === 0 ? (
-                    <div className="text-muted-foreground/50">No data</div>
+                    <div className="text-muted-foreground/50">მონაცემები არ არის</div>
                   ) : (
                     topAdsWatchers.map((c, i) => (
                       <div key={i} className="flex items-center gap-1 text-muted-foreground py-0.5">
@@ -613,7 +613,7 @@ export function PalantirAnalyticsWidget() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="h-4 w-4 text-cyan-500" />
-                <h3 className="text-sm font-semibold">Averages Per User By Region</h3>
+                <h3 className="text-sm font-semibold">საშუალო მეტრიკები რეგიონით</h3>
               </div>
               <div className="space-y-2 text-xs font-mono">
                 {regionalMetrics.slice(0, 5).map((m) => (
@@ -621,7 +621,7 @@ export function PalantirAnalyticsWidget() {
                     <div className="flex items-center gap-2">
                       <span>{getRegionFlag(m.region)}</span>
                       <span className="uppercase">{m.region}</span>
-                      <span className="text-muted-foreground/50">({m.totalUsers} users)</span>
+                      <span className="text-muted-foreground/50">({m.totalUsers} მომხმ.)</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
@@ -637,13 +637,13 @@ export function PalantirAnalyticsWidget() {
                 ))}
                 <div className="pt-2 border-t flex items-center gap-4 text-muted-foreground/50">
                   <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" /> Ads/User
+                    <Eye className="h-3 w-3" /> რეკლ/მომხ
                   </div>
                   <div className="flex items-center gap-1">
-                    <Activity className="h-3 w-3" /> Games/User
+                    <Activity className="h-3 w-3" /> თამაშ/მომხ
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> Time/User (coming)
+                    <Clock className="h-3 w-3" /> დრო/მომხ (მალე)
                   </div>
                 </div>
               </div>
