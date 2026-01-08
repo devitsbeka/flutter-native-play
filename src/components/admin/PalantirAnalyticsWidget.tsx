@@ -57,15 +57,30 @@ interface RegionalMetrics {
   totalUsers: number;
 }
 
-// Widget Header with icon badge on right - harmonized style
-function WidgetHeader({ icon, title, iconBg = 'bg-primary/10' }: { icon: string; title: string; iconBg?: string }) {
+// Stat Card Widget - matches the top stats style
+function StatWidget({ 
+  icon, 
+  title, 
+  iconBg = 'bg-primary/10',
+  children 
+}: { 
+  icon: string; 
+  title: string; 
+  iconBg?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-      <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center`}>
-        <img src={icon} alt="" className="w-5 h-5 object-contain" />
-      </div>
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <p className="text-xs font-medium text-muted-foreground">{title}</p>
+          <div className={`w-10 h-10 ${iconBg} rounded-xl flex items-center justify-center`}>
+            <img src={icon} alt="" className="w-5 h-5 object-contain" />
+          </div>
+        </div>
+        {children}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -416,26 +431,25 @@ export function PalantirAnalyticsWidget() {
       {/* Top Row - 3 widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Language Buckets */}
-        <Card>
-          <CardContent className="p-4">
-            <WidgetHeader icon={WIDGET_ICONS.languages} title="ენები" iconBg="bg-amber-50" />
-            <div className="space-y-3">
-              {languageBuckets.map((bucket) => (
-                <div key={bucket.language} className="text-sm">
-                  <div className="flex items-center gap-2 mb-1">
+        <StatWidget icon={WIDGET_ICONS.languages} title="ენები" iconBg="bg-amber-50">
+          {languageBuckets.length > 0 ? (
+            <div className="space-y-2">
+              {languageBuckets.slice(0, 1).map((bucket) => (
+                <div key={bucket.language}>
+                  <div className="flex items-center gap-1.5 mb-2">
                     <span>{getLanguageFlag(bucket.language)}</span>
-                    <span className="uppercase font-medium text-foreground">[{bucket.language}]</span>
+                    <span className="uppercase font-medium text-foreground text-sm">[{bucket.language}]</span>
                   </div>
-                  <div className="pl-6 space-y-0.5 text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center justify-between text-muted-foreground">
                       <span>პროდში</span>
                       <span className="font-medium text-primary">{bucket.inProd.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between text-muted-foreground">
                       <span>ბიბლში</span>
-                      <span className="font-medium text-muted-foreground">{bucket.inLib.toLocaleString()}</span>
+                      <span className="font-medium text-foreground">{bucket.inLib.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center justify-between border-t pt-1 mt-1">
+                    <div className="flex items-center justify-between text-muted-foreground pt-1 border-t">
                       <span>სულ</span>
                       <span className="font-semibold text-foreground">{bucket.total.toLocaleString()}</span>
                     </div>
@@ -443,180 +457,164 @@ export function PalantirAnalyticsWidget() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <div className="text-muted-foreground text-xs">მონაცემები არ არის</div>
+          )}
+        </StatWidget>
 
         {/* Regional Activity */}
-        <Card>
-          <CardContent className="p-4">
-            <WidgetHeader icon={WIDGET_ICONS.regional} title="აქტივობა" iconBg="bg-emerald-50" />
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-3">
-                {regionalActivity.map((region) => (
-                  <div key={region.region} className="text-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span>{getRegionFlag(region.region)}</span>
-                      <span className="uppercase font-medium text-foreground">{region.region}</span>
-                      {region.onlineNow > 0 && (
-                        <span className="flex items-center gap-1 text-primary text-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          {region.onlineNow}
-                        </span>
-                      )}
+        <StatWidget icon={WIDGET_ICONS.regional} title="აქტივობა" iconBg="bg-emerald-50">
+          {regionalActivity.length > 0 ? (
+            <div className="space-y-2">
+              {regionalActivity.slice(0, 1).map((region) => (
+                <div key={region.region}>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span>{getRegionFlag(region.region)}</span>
+                    <span className="uppercase font-medium text-foreground text-sm">{region.region}</span>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>ონლაინ</span>
+                      <span className="font-medium text-primary">{region.onlineNow}</span>
                     </div>
-                    <div className="pl-6 space-y-0.5 text-sm text-muted-foreground">
-                      <div className="flex items-center justify-between">
-                        <span>ონლაინ</span>
-                        <span className="font-medium text-primary">{region.onlineNow}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>24სთ</span>
-                        <span className="font-medium text-muted-foreground">{region.played24h}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>7დღე</span>
-                        <span className="font-medium text-muted-foreground">{region.played7d}</span>
-                      </div>
-                      <div className="flex items-center justify-between border-t pt-1 mt-1">
-                        <span>სულ მომხმ.</span>
-                        <span className="font-semibold text-foreground">{region.totalUsers}</span>
-                      </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>24სთ</span>
+                      <span className="font-medium text-foreground">{region.played24h}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>7დღე</span>
+                      <span className="font-medium text-foreground">{region.played7d}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground pt-1 border-t">
+                      <span>სულ მომხმ.</span>
+                      <span className="font-semibold text-foreground">{region.totalUsers}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-xs">მონაცემები არ არის</div>
+          )}
+        </StatWidget>
 
         {/* Shop Analytics */}
-        <Card>
-          <CardContent className="p-4">
-            <WidgetHeader icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-50" />
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span>სულ შენაძენები</span>
-                <span className="font-semibold text-foreground">{totalPurchases}</span>
-              </div>
-              
-              <div className="border-t pt-2">
-                <div className="text-muted-foreground mb-2 text-xs">ტიერის მიხედვით</div>
-                {Object.entries(purchasesByTier).map(([tier, count]) => (
-                  <div key={tier} className="flex items-center justify-between text-muted-foreground py-0.5">
-                    <span className="flex items-center gap-1.5">
-                      <span>👑</span>
-                      <span>{tier}</span>
-                    </span>
-                    <span className="font-medium text-foreground">{count}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t pt-2">
-                <div className="text-muted-foreground mb-2 text-xs">ბოლო შენაძენები</div>
-                <ScrollArea className="h-[80px]">
-                  {purchases.slice(0, 5).map((p) => (
-                    <div key={p.id} className="flex items-center gap-2 py-1">
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage src={p.avatar_url || undefined} />
-                        <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
-                          {p.nickname[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium text-foreground truncate flex-1">{p.nickname}</span>
-                      <span className="text-muted-foreground text-xs">{formatTimeAgo(p.created_at)}</span>
-                    </div>
-                  ))}
-                </ScrollArea>
-              </div>
+        <StatWidget icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-50">
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>სულ შენაძენები</span>
+              <span className="font-semibold text-foreground">{totalPurchases}</span>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="pt-1 border-t">
+              <div className="text-muted-foreground text-xs mb-1">ტიერის მიხედვით</div>
+              {Object.entries(purchasesByTier).map(([tier, count]) => (
+                <div key={tier} className="flex items-center justify-between text-muted-foreground py-0.5">
+                  <span className="flex items-center gap-1">
+                    <span>👑</span>
+                    <span>{tier}</span>
+                  </span>
+                  <span className="font-medium text-foreground">{count}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-1 border-t">
+              <div className="text-muted-foreground text-xs mb-1">ბოლო შენაძენები</div>
+              {purchases.slice(0, 3).map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-0.5">
+                  <Avatar className="h-5 w-5">
+                    <AvatarImage src={p.avatar_url || undefined} />
+                    <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                      {p.nickname[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium text-foreground truncate flex-1 text-sm">{p.nickname}</span>
+                  <span className="text-muted-foreground text-xs">{formatTimeAgo(p.created_at)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </StatWidget>
       </div>
 
       {/* Bottom Row - 2 widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Top Customers */}
-        <Card>
-          <CardContent className="p-4">
-            <WidgetHeader icon={WIDGET_ICONS.customers} title="ტოპ მომხმარებლები" iconBg="bg-amber-50" />
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-muted-foreground mb-2 text-xs flex items-center gap-1.5">
-                  <span>💰</span> გადამხდელი
-                </div>
-                {topPayingCustomers.length === 0 ? (
-                  <div className="text-muted-foreground/50 text-xs">მონაცემები არ არის</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {topPayingCustomers.map((c, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-xs w-3">{i + 1}.</span>
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={c.avatar_url || undefined} />
-                          <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
-                            {c.nickname[0]?.toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-foreground truncate">{c.nickname}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+        <StatWidget icon={WIDGET_ICONS.customers} title="ტოპ მომხმარებლები" iconBg="bg-amber-50">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-muted-foreground mb-2 text-xs flex items-center gap-1">
+                <span>💰</span> გადამხდელი
               </div>
-              <div>
-                <div className="text-muted-foreground mb-2 text-xs flex items-center gap-1.5">
-                  <span>📺</span> რეკლამები
+              {topPayingCustomers.length === 0 ? (
+                <div className="text-muted-foreground/50 text-xs">მონაცემები არ არის</div>
+              ) : (
+                <div className="space-y-1">
+                  {topPayingCustomers.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-xs w-3">{i + 1}.</span>
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={c.avatar_url || undefined} />
+                        <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                          {c.nickname[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium text-foreground truncate">{c.nickname}</span>
+                    </div>
+                  ))}
                 </div>
-                {topAdsWatchers.length === 0 ? (
-                  <div className="text-muted-foreground/50 text-xs">მონაცემები არ არის</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {topAdsWatchers.map((c, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-xs w-3">{i + 1}.</span>
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={c.avatar_url || undefined} />
-                          <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
-                            {c.nickname[0]?.toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-foreground truncate">{c.nickname}</span>
-                        <span className="text-muted-foreground text-xs">({c.value})</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="text-muted-foreground mb-2 text-xs flex items-center gap-1">
+                <span>📺</span> რეკლამები
+              </div>
+              {topAdsWatchers.length === 0 ? (
+                <div className="text-muted-foreground/50 text-xs">მონაცემები არ არის</div>
+              ) : (
+                <div className="space-y-1">
+                  {topAdsWatchers.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-xs w-3">{i + 1}.</span>
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={c.avatar_url || undefined} />
+                        <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                          {c.nickname[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium text-foreground truncate">{c.nickname}</span>
+                      <span className="text-muted-foreground text-xs">({c.value})</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </StatWidget>
 
         {/* Average Metrics */}
-        <Card>
-          <CardContent className="p-4">
-            <WidgetHeader icon={WIDGET_ICONS.metrics} title="რეგიონალური მაჩვენებლები" iconBg="bg-blue-50" />
-            <div className="space-y-2 text-sm">
-              {regionalMetrics.slice(0, 5).map((m) => (
-                <div key={m.region} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span>{getRegionFlag(m.region)}</span>
-                    <span className="uppercase font-medium text-foreground">{m.region}</span>
-                    <span className="text-muted-foreground text-xs">({m.totalUsers})</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="text-muted-foreground">📺 <span className="font-medium text-foreground">{m.avgAdsPerUser.toFixed(1)}</span></span>
-                    <span className="text-muted-foreground">🎮 <span className="font-medium text-foreground">{m.avgGamesPerUser.toFixed(1)}</span></span>
-                  </div>
+        <StatWidget icon={WIDGET_ICONS.metrics} title="რეგიონალური მაჩვენებლები" iconBg="bg-blue-50">
+          <div className="space-y-1.5 text-sm">
+            {regionalMetrics.slice(0, 5).map((m) => (
+              <div key={m.region} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span>{getRegionFlag(m.region)}</span>
+                  <span className="uppercase font-medium text-foreground">{m.region}</span>
+                  <span className="text-muted-foreground text-xs">({m.totalUsers})</span>
                 </div>
-              ))}
-              <div className="pt-2 border-t flex items-center gap-4 text-muted-foreground text-xs">
-                <span>📺 რეკლ/მომხ</span>
-                <span>🎮 თამაშ/მომხ</span>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="text-muted-foreground">📺 <span className="font-medium text-foreground">{m.avgAdsPerUser.toFixed(1)}</span></span>
+                  <span className="text-muted-foreground">🎮 <span className="font-medium text-foreground">{m.avgGamesPerUser.toFixed(1)}</span></span>
+                </div>
               </div>
+            ))}
+            <div className="pt-2 border-t flex items-center gap-4 text-muted-foreground text-xs">
+              <span>📺 რეკლ/მომხ</span>
+              <span>🎮 თამაშ/მომხ</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </StatWidget>
       </div>
     </div>
   );
