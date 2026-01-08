@@ -507,7 +507,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, searchQuery = ""
             post={post} 
             profile={profile} 
             index={index} 
-            onEdit={(post) => setEditingQuiz(post)}
+            onEdit={(post) => setEditingRound(post)}
             onPlay={onPlay}
           />
         ))}
