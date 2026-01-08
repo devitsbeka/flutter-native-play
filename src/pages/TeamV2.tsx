@@ -241,21 +241,23 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Row 4: My Rooms (შენი ოთახები) */}
-          <div className="lg:hidden">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="px-4 mb-3"
-            >
-              <MyRoomsSection 
-                hideTV 
-                onCreateRoom={() => setShowCreateModal(true)}
-                onShowAllRooms={() => setShowAllGamesModal(true)}
-              />
-            </motion.div>
-          </div>
+          {/* Row 4: My Rooms (შენი ოთახები) - Only show on my-trivia tab */}
+          {activeTab === "my-trivia" && (
+            <div className="lg:hidden">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="mb-3"
+              >
+                <MyRoomsSection 
+                  hideTV 
+                  onCreateRoom={() => setShowCreateModal(true)}
+                  onShowAllRooms={() => setShowAllGamesModal(true)}
+                />
+              </motion.div>
+            </div>
+          )}
 
           {/* Row 5: CTA Buttons */}
           <div className="lg:hidden px-4 pb-3 flex gap-2">
