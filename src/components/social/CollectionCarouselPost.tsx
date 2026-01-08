@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+import { CollectionPreviewModal } from "./CollectionPreviewModal";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -32,6 +33,7 @@ interface CollectionCarouselPostProps {
 
 export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick }: CollectionCarouselPostProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
   
@@ -245,7 +247,8 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
           {posts.map((post, i) => (
             <div
               key={post.id}
-              className="flex-shrink-0 snap-start rounded-2xl overflow-hidden first:ml-4 last:mr-4"
+              onClick={() => setShowPreviewModal(true)}
+              className="flex-shrink-0 snap-start rounded-2xl overflow-hidden first:ml-4 last:mr-4 cursor-pointer"
               style={{ width: 'calc(85% - 6px)' }}
             >
               <div className="relative aspect-[4/3]">
@@ -367,6 +370,19 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
           </button>
         ))}
       </div>
+
+      {/* Collection Preview Modal */}
+      <CollectionPreviewModal
+        open={showPreviewModal}
+        onOpenChange={setShowPreviewModal}
+        posts={posts}
+        collectionTitle={collectionTitle || posts[0]?.title}
+        onPlay={onPlay}
+        userLikes={userLikes}
+        userSaves={userSaves}
+        onToggleLike={onToggleLike}
+        onToggleSave={onToggleSave}
+      />
     </motion.article>
   );
 }
