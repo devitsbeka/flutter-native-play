@@ -81,7 +81,7 @@ serve(async (req) => {
   }
 
   try {
-    const { subject, questionCount = 10, answerFormat = "4_answers" } = await req.json();
+    const { subject, questionCount = 10, answerFormat = "4_answers", difficulty = "mixed" } = await req.json();
 
     if (!subject) {
       return new Response(
@@ -147,7 +147,14 @@ LANGUAGE RULES:
 
 QUESTION QUALITY:
 - Make questions interesting and fun
-- Mix difficulty: 30% easy, 50% medium, 20% hard
+${difficulty === "mixed" 
+  ? "- Mix difficulty: 30% easy, 50% medium, 20% hard" 
+  : difficulty === "easy"
+    ? "- Generate ALL questions at EASY difficulty level - suitable for beginners"
+    : difficulty === "medium"
+      ? "- Generate ALL questions at MEDIUM difficulty level - requires some knowledge"
+      : "- Generate ALL questions at HARD difficulty level - for experts only"
+}
 - Avoid obscure facts nobody would know
 
 ${isTrueFalse ? `
@@ -193,7 +200,7 @@ CRITICAL REMINDERS:
 
 Return ONLY valid JSON.`;
 
-    console.log(`Generating ${requestCount} ${answerFormat} questions about: ${subject} (will filter to ${questionCount})`);
+    console.log(`Generating ${requestCount} ${answerFormat} questions (${difficulty}) about: ${subject} (will filter to ${questionCount})`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
