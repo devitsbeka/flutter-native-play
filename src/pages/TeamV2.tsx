@@ -165,6 +165,18 @@ function TeamContentV2() {
             </motion.div>
 
             <div className="flex items-center gap-2">
+              {/* Plus button - only on შენთვის tab */}
+              {activeTab === "for-me" && (
+                <motion.button
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  onClick={() => setShowCreateTypeModal(true)}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground shadow-sm"
+                >
+                  <Plus className="w-5 h-5" />
+                </motion.button>
+              )}
+
               <motion.button
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -259,27 +271,29 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Row 5: CTA Buttons */}
-          <div className="lg:hidden px-4 pb-3 flex gap-2">
-            <ChunkyButton 
-              onClick={() => setShowCreateModal(true)}
-              className="flex-1 gap-1.5"
-              variant="primary"
-              size="lg"
-            >
-              <Plus className="w-5 h-5" />
-              ოთახი
-            </ChunkyButton>
-            <ChunkyButton 
-              onClick={() => setShowCreateTypeModal(true)}
-              className="flex-1 gap-1.5"
-              variant="secondary"
-              size="lg"
-            >
-              <Plus className="w-5 h-5" />
-              ტრივია
-            </ChunkyButton>
-          </div>
+          {/* Row 5: CTA Buttons - Only show on my-trivia tab */}
+          {activeTab === "my-trivia" && (
+            <div className="lg:hidden px-4 pb-3 flex gap-2">
+              <ChunkyButton 
+                onClick={() => setShowCreateModal(true)}
+                className="flex-1 gap-1.5"
+                variant="primary"
+                size="lg"
+              >
+                <Plus className="w-5 h-5" />
+                ოთახი
+              </ChunkyButton>
+              <ChunkyButton 
+                onClick={() => setShowCreateTypeModal(true)}
+                className="flex-1 gap-1.5"
+                variant="secondary"
+                size="lg"
+              >
+                <Plus className="w-5 h-5" />
+                ტრივია
+              </ChunkyButton>
+            </div>
+          )}
 
           {/* Row 6: Sticky Filter Bar */}
           <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
