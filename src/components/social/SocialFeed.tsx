@@ -120,8 +120,18 @@ export function SocialFeed({
         }
       }
 
-      // Filter by saved only
+      // Filter by saved only (legacy prop)
       if (showSavedOnly) {
+        if (!userSaves.includes(post.id)) return false;
+      }
+
+      // Filter by user's liked posts ONLY (not sorting by count)
+      if (sortFilter === "most_liked") {
+        if (!userLikes.includes(post.id)) return false;
+      }
+
+      // Filter by user's saved posts ONLY (not sorting by count)
+      if (sortFilter === "most_saved") {
         if (!userSaves.includes(post.id)) return false;
       }
 
@@ -163,20 +173,16 @@ export function SocialFeed({
       });
     }
 
-    // Apply sorting
-    if (sortFilter === "popular" || sortFilter === "most_liked" || sortFilter === "most_played" || sortFilter === "most_saved") {
+    // Apply sorting for popular and most_played only (most_liked and most_saved are now filters)
+    if (sortFilter === "popular" || sortFilter === "most_played") {
       result.sort((a, b) => {
         const getScore = (item: FeedItem) => {
           if (item.type === 'standalone') {
-            if (sortFilter === "most_liked") return item.post.likesCount;
             if (sortFilter === "most_played") return item.post.playsCount;
-            if (sortFilter === "most_saved") return userSaves.includes(item.post.id) ? 1 : 0;
             return item.post.likesCount + item.post.playsCount;
           } else {
             const total = item.posts.reduce((sum, p) => {
-              if (sortFilter === "most_liked") return sum + p.likesCount;
               if (sortFilter === "most_played") return sum + p.playsCount;
-              if (sortFilter === "most_saved") return sum + (userSaves.includes(p.id) ? 1 : 0);
               return sum + p.likesCount + p.playsCount;
             }, 0);
             return total;
@@ -187,7 +193,7 @@ export function SocialFeed({
     }
 
     return result;
-  }, [feedItems, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves]);
+  }, [feedItems, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves, userLikes]);
 
   const hasActiveFilters = selectedHashtag || showSavedOnly || popularityFilter !== "all";
 
