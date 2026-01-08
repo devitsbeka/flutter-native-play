@@ -437,7 +437,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   </motion.div>
                   
                   <h3 className="text-3xl font-bold text-white mb-3">
-                    {isCollection ? "კოლექცია დასრულდა!" : "თამაში დასრულდა!"}
+                    თამაში დასრულდა!
                   </h3>
                   
                   <p className="text-6xl font-bold text-white mb-3">
@@ -506,7 +506,9 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                           }`}
                         />
                       </div>
-                      <span className="text-white/80 text-sm font-medium">მოწონება</span>
+                      {!userLikes.includes(post?.id || '') && (
+                        <span className="text-white/80 text-sm font-medium">მოწონება</span>
+                      )}
                     </button>
                     
                     <button 
@@ -526,7 +528,9 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                           }`}
                         />
                       </div>
-                      <span className="text-white/80 text-sm font-medium">შენახვა</span>
+                      {!userSaves.includes(post?.id || '') && (
+                        <span className="text-white/80 text-sm font-medium">შენახვა</span>
+                      )}
                     </button>
                   </div>
                   
