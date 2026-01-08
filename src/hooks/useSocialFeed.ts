@@ -120,7 +120,7 @@ export function useSocialFeed() {
   ];
 
   // Convert db posts to SamplePost format and merge with sample posts
-  const convertedDbPosts: SamplePost[] = dbPosts.map((post, index) => {
+  const convertedDbPosts: (SamplePost & { collectionId?: string | null })[] = dbPosts.map((post, index) => {
     const questions = (post.questions as Json[]) || [];
     const profileData = post.profile;
     
@@ -148,6 +148,7 @@ export function useSocialFeed() {
       answerFormat: post.answer_format as "4_answers" | "true_false",
       likesCount: post.likes_count || 0,
       playsCount: post.plays_count || 0,
+      savesCount: 0,
       commentsCount: 0,
       questions: questions.map((q: any) => ({
         question: q.question_text || q.question,
@@ -156,13 +157,68 @@ export function useSocialFeed() {
         icon_slug: q.icon_slug || null,
       })),
       isUserPost: user?.id === post.user_id,
+      collectionId: post.collection_id,
+      roundNumber: post.round_number,
     };
   });
 
-  const allPosts: SamplePost[] = [...convertedDbPosts, ...samplePosts];
+  // Group posts by collection_id
+  const collectionMap = new Map<string, (SamplePost & { collectionId?: string | null })[]>();
+  const standalonePosts: SamplePost[] = [];
+
+  convertedDbPosts.forEach(post => {
+    if (post.collectionId) {
+      const existing = collectionMap.get(post.collectionId) || [];
+      existing.push(post);
+      collectionMap.set(post.collectionId, existing);
+    } else {
+      standalonePosts.push(post);
+    }
+  });
+
+  // Sort posts within each collection by round_number
+  collectionMap.forEach((posts, collectionId) => {
+    posts.sort((a, b) => ((a as any).roundNumber || 0) - ((b as any).roundNumber || 0));
+  });
+
+  // Create feed items - collections as groups, standalone as individual
+  type FeedItem = { type: 'standalone'; post: SamplePost } | { type: 'collection'; posts: SamplePost[]; collectionId: string };
+  
+  const feedItems: FeedItem[] = [];
+  
+  // Add collections first (by earliest post date)
+  const sortedCollections = Array.from(collectionMap.entries()).sort((a, b) => {
+    const dateA = new Date(a[1][0]?.createdAt || 0).getTime();
+    const dateB = new Date(b[1][0]?.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
+
+  sortedCollections.forEach(([collectionId, posts]) => {
+    feedItems.push({ type: 'collection', posts, collectionId });
+  });
+
+  // Add standalone posts
+  standalonePosts.forEach(post => {
+    feedItems.push({ type: 'standalone', post });
+  });
+
+  // Sort all by date (use first post date for collections)
+  feedItems.sort((a, b) => {
+    const dateA = a.type === 'collection' 
+      ? new Date(a.posts[0]?.createdAt || 0).getTime()
+      : new Date(a.post.createdAt).getTime();
+    const dateB = b.type === 'collection' 
+      ? new Date(b.posts[0]?.createdAt || 0).getTime()
+      : new Date(b.post.createdAt).getTime();
+    return dateB - dateA;
+  });
+
+  // Flatten for backward compatibility - but also export feedItems
+  const allPosts: SamplePost[] = [...standalonePosts, ...samplePosts];
 
   return {
     posts: allPosts,
+    feedItems,
     isLoading,
     userLikes,
     userSaves,
@@ -176,6 +232,9 @@ export function useSocialFeed() {
     },
   };
 }
+
+// Export the FeedItem type for use in components
+export type FeedItem = { type: 'standalone'; post: SamplePost } | { type: 'collection'; posts: SamplePost[]; collectionId: string };
 
 export function useMyQuizPosts() {
   const { user } = useAuth();
