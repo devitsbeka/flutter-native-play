@@ -84,6 +84,7 @@ export const useUserPresence = () => {
 
   const updatePresence = useCallback(async (status: 'online' | 'away' | 'offline', currentPage?: string) => {
     const userId = user?.id || getGuestSessionId();
+    const countryCode = countryCodeRef.current;
 
     try {
       const { error } = await supabase
@@ -93,7 +94,7 @@ export const useUserPresence = () => {
           status,
           current_page: currentPage || location.pathname,
           last_seen: new Date().toISOString(),
-          ...(countryCodeRef.current && { country_code: countryCodeRef.current }),
+          country_code: countryCode,
         }, {
           onConflict: 'user_id',
         });
@@ -105,8 +106,6 @@ export const useUserPresence = () => {
       console.error('Presence update failed:', err);
     }
   }, [user, location.pathname]);
-
-  // Set online on mount and update page
   useEffect(() => {
     const userId = user?.id || getGuestSessionId();
 
