@@ -192,7 +192,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className={`bg-card border-b border-border ${post.isUserPost ? 'ring-2 ring-primary/30' : ''}`}
+      className={`bg-card border-b border-border isolate ${post.isUserPost ? 'ring-2 ring-primary/30' : ''}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
@@ -286,7 +286,7 @@ export function FeedPost({ post, index, onPlay }: FeedPostProps) {
 
       {/* Quiz Card/Banner */}
       <div 
-        className="relative aspect-[4/3] overflow-hidden"
+        className="relative aspect-[4/3] overflow-hidden isolate"
       >
         {/* Background - gradient or image */}
         {coverImage ? (
