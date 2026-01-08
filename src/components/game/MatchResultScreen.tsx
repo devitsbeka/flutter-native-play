@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import confetti from "canvas-confetti";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
@@ -47,6 +48,50 @@ const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
         className="w-40 h-40 object-contain relative"
       />
     </motion.div>
+  );
+};
+
+// Floating confetti component with looping effect
+const FloatingConfetti = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    
+    const myConfetti = confetti.create(canvasRef.current, {
+      resize: true,
+      useWorker: true,
+    });
+
+    const colors = ["#ffffff", "#f0f0f0", "#e8e8e8", "#d0d0d0"];
+    
+    const frame = () => {
+      myConfetti({
+        particleCount: 2,
+        angle: 90,
+        spread: 180,
+        origin: { x: Math.random(), y: -0.1 },
+        colors: colors,
+        gravity: 0.3,
+        drift: Math.random() * 0.4 - 0.2,
+        scalar: 0.8,
+        ticks: 400,
+      });
+    };
+
+    const interval = setInterval(frame, 100);
+    
+    return () => {
+      clearInterval(interval);
+      myConfetti.reset();
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none z-0"
+    />
   );
 };
 
@@ -384,33 +429,8 @@ export function MatchResultScreen() {
           background: "#858EE7",
         }}
       >
-        {/* Floating Particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {Array.from({ length: 30 }).map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                width: Math.random() * 6 + 3,
-                height: Math.random() * 6 + 3,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: 0.3,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                x: [0, Math.random() * 20 - 10, 0],
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: Math.random() * 3 + 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
+        {/* Floating Confetti Effect */}
+        <FloatingConfetti />
 
         {/* Header */}
         <motion.div 
