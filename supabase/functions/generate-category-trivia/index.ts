@@ -173,25 +173,26 @@ ${topicExclusionSection}
 
 ${exclusionSection}
 
-📏 სავალდებულო სიგრძის ლიმიტები (კრიტიკულად მნიშვნელოვანი!):
+🚨🚨🚨 სავალდებულო სიგრძის ლიმიტები - კრიტიკულად მნიშვნელოვანი!
 
 კითხვა: მაქსიმუმ 65 სიმბოლო (კითხვის ნიშნის ჩათვლით)
-სწორი პასუხი: მაქსიმუმ 16 სიმბოლო  
-არასწორი პასუხები: მაქსიმუმ 16 სიმბოლო თითოეული
+სწორი პასუხი: მაქსიმუმ 20 სიმბოლო  
+არასწორი პასუხები: მაქსიმუმ 20 სიმბოლო თითოეული
 
-⚠️ თუ კითხვა ან პასუხი ვერ ეტევა - შეამოკლე ან შექმენი სხვა კითხვა!
+⚠️ კითხვა/პასუხი რომელიც აჭარბებს ლიმიტს - უარყოფილი იქნება!
+თუ ვერ ეტევა - შექმენი სხვა კითხვა!
 
 კომპაქტური ფორმულირების მაგალითები:
-❌ "რომელმა ქართველმა მეფემ ააშენა გელათის მონასტერი?" (47 სიმბოლო) - ძალიან გრძელი
+❌ "რომელმა ქართველმა მეფემ ააშენა გელათის მონასტერი?" (47 სიმბოლო) - უარყოფილი
 ✅ "ვინ ააშენა გელათის მონასტერი?" (30 სიმბოლო) - კარგია
 
-❌ "საქართველოს დედაქალაქი თბილისი" (32 სიმბოლო) - ძალიან გრძელი პასუხი
+❌ "საქართველოს დედაქალაქი თბილისი" (32 სიმბოლო) - უარყოფილი პასუხი
 ✅ "თბილისი" (8 სიმბოლო) - კარგია
 
 🚨 კრიტიკულად მნიშვნელოვანი წესები:
 
 1. ✅ კითხვის მაქსიმალური სიგრძე: 65 სიმბოლო (არა მეტი!)
-2. ✅ პასუხის მაქსიმალური სიგრძე: 20 სიმბოლო
+2. ✅ პასუხის მაქსიმალური სიგრძე: 20 სიმბოლო (არა მეტი!)
 3. ✅ ყველა კითხვა უნდა დამთავრდეს კითხვის ნიშნით (?)
 4. ✅ გრამატიკულად სწორი ქართული ენა
 5. ✅ მხოლოდ "${category}" თემატიკის კითხვები!
@@ -216,7 +217,7 @@ ${iconKeywordMappings}
 [
   {
     "question": "კითხვა ქართულად? (მაქს 65 სიმბოლო)",
-    "correct_answer": "პასუხი (მაქს 16 სიმბოლო)",
+    "correct_answer": "პასუხი (მაქს 20 სიმბოლო)",
     "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
     "difficulty": "${difficultyEn}",
     "icon_keyword": "ინგლისურად keyword აიკონისთვის"
@@ -271,34 +272,50 @@ ${iconKeywordMappings}
 
     const rawQuestions = JSON.parse(jsonMatch[0]);
 
-    // Server-side validation and truncation
+    // Server-side STRICT validation - reject (not truncate) questions exceeding limits
     const ANSWER_MAX_LENGTH = 20;
     const QUESTION_MAX_LENGTH = 65;
     
-    const validQuestions = rawQuestions.map((q: any) => {
-      // Truncate to ensure answers fit in UI
-      const correctAnswer = (q.correct_answer || '').slice(0, ANSWER_MAX_LENGTH);
-      const incorrectAnswers = (q.incorrect_answers || []).map((a: string) => 
-        (a || '').slice(0, ANSWER_MAX_LENGTH)
-      );
-      const questionText = (q.question || '').slice(0, QUESTION_MAX_LENGTH);
+    const validQuestions = rawQuestions.filter((q: any) => {
+      const questionText = q.question || '';
+      const correctAnswer = q.correct_answer || '';
+      const incorrectAnswers = q.incorrect_answers || [];
       
-      return {
-        ...q,
-        question: questionText,
-        correct_answer: correctAnswer,
-        incorrect_answers: incorrectAnswers,
-      };
-    }).filter((q: any) => {
-      // Also filter out any that are still problematic
-      if (!q.question || !q.correct_answer || q.incorrect_answers.length !== 3) {
-        console.log(`Filtering out malformed question`);
+      // Reject if question is too long
+      if (questionText.length > QUESTION_MAX_LENGTH) {
+        console.log(`Rejecting question (${questionText.length} chars > ${QUESTION_MAX_LENGTH}): ${questionText.substring(0, 50)}...`);
         return false;
       }
+      
+      // Reject if correct answer is too long
+      if (correctAnswer.length > ANSWER_MAX_LENGTH) {
+        console.log(`Rejecting answer (${correctAnswer.length} chars > ${ANSWER_MAX_LENGTH}): ${correctAnswer}`);
+        return false;
+      }
+      
+      // Reject if any incorrect answer is too long
+      if (incorrectAnswers.length !== 3) {
+        console.log(`Rejecting question: incorrect_answers count is not 3`);
+        return false;
+      }
+      
+      for (const answer of incorrectAnswers) {
+        if (!answer || answer.length > ANSWER_MAX_LENGTH) {
+          console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
+          return false;
+        }
+      }
+      
+      // Reject if missing required fields
+      if (!questionText || !correctAnswer) {
+        console.log(`Rejecting malformed question: missing required fields`);
+        return false;
+      }
+      
       return true;
     });
 
-    console.log(`Successfully generated ${validQuestions.length} valid Georgian questions for ${category} (${rawQuestions.length - validQuestions.length} filtered for length)`);
+    console.log(`Generated ${rawQuestions.length} questions, ${validQuestions.length} passed strict validation for ${category}`);
 
     return new Response(
       JSON.stringify({ questions: validQuestions }),
