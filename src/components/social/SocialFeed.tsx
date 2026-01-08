@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { SamplePost } from "@/data/samplePosts";
 import { FeedPost } from "./FeedPost";
-import { useSocialFeed } from "@/hooks/useSocialFeed";
+import { CollectionCarouselPost } from "./CollectionCarouselPost";
+import { useSocialFeed, FeedItem } from "@/hooks/useSocialFeed";
 import { Loader2, Hash, Sparkles, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -93,77 +94,96 @@ export function SocialFeed({
   sortFilter = "all",
   searchQuery = ""
 }: SocialFeedProps) {
-  const { posts, isLoading, userSaves, userLikes } = useSocialFeed();
+  const { posts, feedItems, isLoading, userSaves, userLikes } = useSocialFeed();
 
-  // Filter and sort posts based on active filters
-  const filteredPosts = useMemo(() => {
-    let result = [...posts];
+  // Filter feed items based on active filters
+  const filteredFeedItems = useMemo(() => {
+    const filterPost = (post: SamplePost): boolean => {
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchesSearch = 
+          post.title.toLowerCase().includes(query) ||
+          post.displayName.toLowerCase().includes(query) ||
+          post.username.toLowerCase().includes(query) ||
+          post.hashtags.some(tag => tag.toLowerCase().includes(query)) ||
+          post.subject.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter(post => 
-        post.title.toLowerCase().includes(query) ||
-        post.displayName.toLowerCase().includes(query) ||
-        post.username.toLowerCase().includes(query) ||
-        post.hashtags.some(tag => tag.toLowerCase().includes(query)) ||
-        post.subject.toLowerCase().includes(query)
-      );
-    }
+      // Filter by hashtag
+      if (selectedHashtag) {
+        if (!post.hashtags.some(tag => tag.toLowerCase() === selectedHashtag.toLowerCase())) {
+          return false;
+        }
+      }
 
-    // Filter by hashtag
-    if (selectedHashtag) {
-      result = result.filter(post => 
-        post.hashtags.some(tag => tag.toLowerCase() === selectedHashtag.toLowerCase())
-      );
-    }
+      // Filter by saved only
+      if (showSavedOnly) {
+        if (!userSaves.includes(post.id)) return false;
+      }
 
-    // Filter by saved only
-    if (showSavedOnly) {
-      result = result.filter(post => userSaves.includes(post.id));
-    }
-
-    // Filter by popularity
-    if (popularityFilter !== "all") {
-      result = result.filter(post => {
+      // Filter by popularity
+      if (popularityFilter !== "all") {
         const plays = post.playsCount;
-        if (popularityFilter === "low") return plays < 1000;
-        if (popularityFilter === "medium") return plays >= 1000 && plays < 5000;
-        if (popularityFilter === "high") return plays >= 5000;
-        return true;
+        if (popularityFilter === "low" && plays >= 1000) return false;
+        if (popularityFilter === "medium" && (plays < 1000 || plays >= 5000)) return false;
+        if (popularityFilter === "high" && plays < 5000) return false;
+      }
+
+      return true;
+    };
+
+    let result: FeedItem[] = [];
+
+    // Handle sortFilter for collections vs trivias
+    if (sortFilter === "trivias") {
+      // Show only standalone posts
+      result = feedItems
+        .filter((item): item is { type: 'standalone'; post: SamplePost } => 
+          item.type === 'standalone' && filterPost(item.post)
+        );
+    } else if (sortFilter === "collections") {
+      // Show only collections
+      result = feedItems
+        .filter((item): item is { type: 'collection'; posts: SamplePost[]; collectionId: string } => 
+          item.type === 'collection' && item.posts.some(filterPost)
+        );
+    } else {
+      // Filter all items
+      result = feedItems.filter(item => {
+        if (item.type === 'standalone') {
+          return filterPost(item.post);
+        } else {
+          // For collections, keep if at least one post matches
+          return item.posts.some(filterPost);
+        }
       });
     }
 
-    // Sort/filter by sortFilter
-    switch (sortFilter) {
-      case "popular":
-        result.sort((a, b) => (b.likesCount + b.playsCount) - (a.likesCount + a.playsCount));
-        break;
-      case "most_liked":
-        result.sort((a, b) => b.likesCount - a.likesCount);
-        break;
-      case "most_saved":
-        // Posts that are saved by more users first (approximate by checking if in userSaves)
-        result.sort((a, b) => {
-          const aSaved = userSaves.includes(a.id) ? 1 : 0;
-          const bSaved = userSaves.includes(b.id) ? 1 : 0;
-          return bSaved - aSaved || b.likesCount - a.likesCount;
-        });
-        break;
-      case "most_played":
-        result.sort((a, b) => b.playsCount - a.playsCount);
-        break;
-      case "trivias":
-        // Show only non-collection posts (standalone quizzes)
-        result = result.filter(post => post.questionCount > 0);
-        break;
-      case "collections":
-        // For now, collections would be identified differently - showing all as placeholder
-        break;
+    // Apply sorting
+    if (sortFilter === "popular" || sortFilter === "most_liked" || sortFilter === "most_played") {
+      result.sort((a, b) => {
+        const getScore = (item: FeedItem) => {
+          if (item.type === 'standalone') {
+            if (sortFilter === "most_liked") return item.post.likesCount;
+            if (sortFilter === "most_played") return item.post.playsCount;
+            return item.post.likesCount + item.post.playsCount;
+          } else {
+            const total = item.posts.reduce((sum, p) => {
+              if (sortFilter === "most_liked") return sum + p.likesCount;
+              if (sortFilter === "most_played") return sum + p.playsCount;
+              return sum + p.likesCount + p.playsCount;
+            }, 0);
+            return total;
+          }
+        };
+        return getScore(b) - getScore(a);
+      });
     }
 
     return result;
-  }, [posts, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves, userLikes]);
+  }, [feedItems, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves]);
 
   const hasActiveFilters = selectedHashtag || showSavedOnly || popularityFilter !== "all";
 
@@ -175,23 +195,34 @@ export function SocialFeed({
     );
   }
 
-  // Insert ads after every 5 posts
+  // Render feed items with ads
   const renderFeedItems = () => {
     const items: React.ReactNode[] = [];
     let adIndex = 0;
     
-    filteredPosts.forEach((post, index) => {
-      items.push(
-        <FeedPost 
-          key={post.id} 
-          post={post} 
-          index={index}
-          onPlay={onPlayQuiz}
-        />
-      );
+    filteredFeedItems.forEach((item, index) => {
+      if (item.type === 'collection') {
+        items.push(
+          <CollectionCarouselPost 
+            key={`collection-${item.collectionId}`}
+            posts={item.posts}
+            index={index}
+            onPlay={onPlayQuiz}
+          />
+        );
+      } else {
+        items.push(
+          <FeedPost 
+            key={item.post.id} 
+            post={item.post} 
+            index={index}
+            onPlay={onPlayQuiz}
+          />
+        );
+      }
       
-      // After every 5 posts, insert an ad
-      if ((index + 1) % 5 === 0 && index < filteredPosts.length - 1) {
+      // After every 5 items, insert an ad
+      if ((index + 1) % 5 === 0 && index < filteredFeedItems.length - 1) {
         items.push(<ShopAdCard key={`ad-${adIndex}`} index={adIndex} />);
         adIndex++;
       }
@@ -208,7 +239,7 @@ export function SocialFeed({
         animate={{ opacity: 1 }}
         className="flex flex-col"
       >
-        {filteredPosts.length === 0 ? (
+        {filteredFeedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Hash className="w-8 h-8 text-muted-foreground" />
