@@ -142,7 +142,7 @@ function TeamContentV2() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0">
+      <main className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background">
         {/* Mobile Sticky Section: Header + Tabs + Create Buttons */}
         <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
           {/* Header Row */}
@@ -239,7 +239,7 @@ function TeamContentV2() {
         </div>
 
         {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40">
+        <div className="relative flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 bg-background">
           {activeTab === "my-trivia" ? (
             <>
               {/* Friends Stories Bar */}
