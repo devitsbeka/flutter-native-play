@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trophy, RotateCcw, Share2, ChevronRight } from "lucide-react";
+import { X, Trophy, RotateCcw, Share2, ChevronRight, Coins, Star } from "lucide-react";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
@@ -10,6 +10,9 @@ import { SamplePost } from "@/data/samplePosts";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useAuth } from "@/contexts/AuthContext";
+import { REWARDS } from "@/config/rewardConfig";
 
 interface Question {
   question: string;
@@ -26,6 +29,9 @@ interface QuizPlayModalProps {
 }
 
 export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: QuizPlayModalProps) {
+  const { addCoins } = useCurrency();
+  const { profile, updateProfile } = useAuth();
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -40,6 +46,13 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
   const [roundComplete, setRoundComplete] = useState(false);
   const [cumulativeScore, setCumulativeScore] = useState(0);
   const [allRoundsComplete, setAllRoundsComplete] = useState(false);
+  
+  // Reward tracking state
+  const [roundEarnedXP, setRoundEarnedXP] = useState(0);
+  const [roundEarnedCoins, setRoundEarnedCoins] = useState(0);
+  const [totalEarnedXP, setTotalEarnedXP] = useState(0);
+  const [totalEarnedCoins, setTotalEarnedCoins] = useState(0);
+  const rewardsAwarded = useRef(false);
 
   // Get current round's post
   const isCollection = collectionPosts && collectionPosts.length > 1;
@@ -96,15 +109,36 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
       if (currentIndex < questions.length - 1) {
         setCurrentIndex((prev) => prev + 1);
       } else {
-        // Round complete
+        // Round complete - calculate rewards
         const roundScore = score + (isCorrect ? 1 : 0);
+        const isPerfect = roundScore === questions.length;
+        
+        // Calculate round rewards
+        const xpEarned = (roundScore * REWARDS.FEED_TRIVIA_XP_PER_CORRECT) + 
+          (isPerfect ? REWARDS.FEED_TRIVIA_PERFECT_XP_BONUS : 0);
+        const coinsEarned = (roundScore * REWARDS.FEED_TRIVIA_COINS_PER_CORRECT) + 
+          (isPerfect ? REWARDS.FEED_TRIVIA_PERFECT_COINS_BONUS : 0);
+        
+        setRoundEarnedXP(xpEarned);
+        setRoundEarnedCoins(coinsEarned);
+        setTotalEarnedXP(prev => prev + xpEarned);
+        setTotalEarnedCoins(prev => prev + coinsEarned);
+        
         setCumulativeScore(prev => prev + roundScore);
         
         if (isCollection && currentRoundIndex < totalRounds - 1) {
-          // More rounds to play
+          // More rounds to play - award round rewards
+          awardRewards(xpEarned, coinsEarned);
           setRoundComplete(true);
         } else {
-          // All rounds complete
+          // All rounds complete - add collection bonus if applicable
+          const finalCoins = isCollection 
+            ? coinsEarned + REWARDS.FEED_COLLECTION_COMPLETE_COINS 
+            : coinsEarned;
+          if (isCollection) {
+            setTotalEarnedCoins(prev => prev + REWARDS.FEED_COLLECTION_COMPLETE_COINS);
+          }
+          awardRewards(xpEarned, finalCoins);
           setGameComplete(true);
           setAllRoundsComplete(true);
           confetti({
@@ -115,6 +149,23 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
         }
       }
     }, 1500);
+  };
+  
+  // Award rewards to user
+  const awardRewards = async (xp: number, coins: number) => {
+    if (rewardsAwarded.current) return;
+    
+    try {
+      if (coins > 0) {
+        await addCoins(coins);
+      }
+      if (xp > 0 && profile) {
+        const newPoints = (profile.total_points || 0) + xp;
+        await updateProfile({ total_points: newPoints } as any);
+      }
+    } catch (error) {
+      console.error("Error awarding rewards:", error);
+    }
   };
 
   const startNextRound = () => {
@@ -127,6 +178,9 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
     setGameComplete(false);
     setTimeLeft(15);
     setResults([]);
+    setRoundEarnedXP(0);
+    setRoundEarnedCoins(0);
+    rewardsAwarded.current = false;
   };
 
   const resetGame = () => {
@@ -141,6 +195,11 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
     setCurrentRoundIndex(0);
     setCumulativeScore(0);
     setAllRoundsComplete(false);
+    setRoundEarnedXP(0);
+    setRoundEarnedCoins(0);
+    setTotalEarnedXP(0);
+    setTotalEarnedCoins(0);
+    rewardsAwarded.current = false;
   };
 
   const handleClose = () => {
@@ -268,11 +327,37 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                     {score}/{questions.length}
                   </p>
                   
-                  <p className="text-white/70 text-sm mb-6">
+                  <p className="text-white/70 text-sm mb-4">
                     ჯამური: {cumulativeScore}/{collectionPosts.slice(0, currentRoundIndex + 1).reduce((sum, p) => sum + p.questions.length, 0)}
                   </p>
                   
-                  <p className="text-white/80 text-lg mb-8">
+                  {/* Round Rewards */}
+                  <div className="flex items-center gap-3 mb-6">
+                    {roundEarnedXP > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        className="flex items-center gap-1.5 bg-purple-500/30 px-3 py-1.5 rounded-full"
+                      >
+                        <Star className="w-4 h-4 text-purple-300" />
+                        <span className="text-white font-bold text-sm">+{roundEarnedXP} XP</span>
+                      </motion.div>
+                    )}
+                    {roundEarnedCoins > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.3, type: "spring" }}
+                        className="flex items-center gap-1.5 bg-yellow-500/30 px-3 py-1.5 rounded-full"
+                      >
+                        <Coins className="w-4 h-4 text-yellow-300" />
+                        <span className="text-white font-bold text-sm">+{roundEarnedCoins}</span>
+                      </motion.div>
+                    )}
+                  </div>
+                  
+                  <p className="text-white/80 text-lg mb-6">
                     გაგრძელება შემდეგ რაუნდზე?
                   </p>
                   
@@ -306,17 +391,43 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                     {isCollection ? "კოლექცია დასრულდა!" : "თამაში დასრულდა!"}
                   </h3>
                   
-                  <p className="text-6xl font-bold text-white mb-4">
+                  <p className="text-6xl font-bold text-white mb-2">
                     {isCollection ? cumulativeScore : score}/{totalCollectionQuestions}
                   </p>
                   
                   {isCollection && (
-                    <p className="text-white/70 text-sm mb-4">
+                    <p className="text-white/70 text-sm mb-2">
                       {currentRoundIndex + 1} რაუნდი სრულად
                     </p>
                   )}
                   
-                  <p className="text-white/80 text-lg mb-8">
+                  {/* Total Rewards */}
+                  <div className="flex items-center gap-3 mb-4">
+                    {totalEarnedXP > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        className="flex items-center gap-1.5 bg-purple-500/30 px-4 py-2 rounded-full"
+                      >
+                        <Star className="w-5 h-5 text-purple-300" />
+                        <span className="text-white font-bold">+{totalEarnedXP} XP</span>
+                      </motion.div>
+                    )}
+                    {totalEarnedCoins > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.3, type: "spring" }}
+                        className="flex items-center gap-1.5 bg-yellow-500/30 px-4 py-2 rounded-full"
+                      >
+                        <Coins className="w-5 h-5 text-yellow-300" />
+                        <span className="text-white font-bold">+{totalEarnedCoins}</span>
+                      </motion.div>
+                    )}
+                  </div>
+                  
+                  <p className="text-white/80 text-lg mb-6">
                     {(() => {
                       const finalScore = isCollection ? cumulativeScore : score;
                       const total = totalCollectionQuestions;
