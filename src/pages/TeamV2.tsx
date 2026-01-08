@@ -219,23 +219,18 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Create Buttons Row - Equal width (moved above filters) */}
+          {/* Create Button - Single CTA */}
           {activeTab === "my-trivia" && (
-            <div className="px-4 pb-2 flex gap-3">
-              <button
+            <div className="px-4 pb-2">
+              <ChunkyButton 
                 onClick={() => setShowCreateQuizModal(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-orange-400 to-pink-500 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                className="w-full gap-2"
+                variant="primary"
+                size="lg"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 შექმენი ტრივია
-              </button>
-              <button
-                onClick={() => setShowCreateCollectionModal(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
-              >
-                <Layers className="w-4 h-4" />
-                კოლექცია
-              </button>
+              </ChunkyButton>
             </div>
           )}
 
