@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, ChevronLeft, ChevronRight, Layers, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
@@ -375,18 +376,21 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
         ))}
       </div>
 
-      {/* Collection Preview Modal */}
-      <CollectionPreviewModal
-        open={showPreviewModal}
-        onOpenChange={setShowPreviewModal}
-        posts={posts}
-        collectionTitle={collectionTitle || posts[0]?.title}
-        onPlay={onPlay}
-        userLikes={userLikes}
-        userSaves={userSaves}
-        onToggleLike={onToggleLike}
-        onToggleSave={onToggleSave}
-      />
+      {/* Collection Preview Modal - rendered via portal to escape stacking context */}
+      {createPortal(
+        <CollectionPreviewModal
+          open={showPreviewModal}
+          onOpenChange={setShowPreviewModal}
+          posts={posts}
+          collectionTitle={collectionTitle || posts[0]?.title}
+          onPlay={onPlay}
+          userLikes={userLikes}
+          userSaves={userSaves}
+          onToggleLike={onToggleLike}
+          onToggleSave={onToggleSave}
+        />,
+        document.body
+      )}
     </motion.article>
   );
 }
