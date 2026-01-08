@@ -218,55 +218,55 @@ function TeamContent() {
 
   return (
     <div className="min-h-screen relative pb-24">
-      {/* Unified Sticky Header Container */}
-      <StickyHeaderContainer>
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 h-14 safe-top">
-          {/* Left Side: MyTrivia LIVE */}
-          <motion.div
-            initial={{ opacity: 0, x: -10 }}
+      {/* Non-sticky: Top Header */}
+      <div className="flex items-center justify-between px-4 h-14 safe-top">
+        {/* Left Side: MyTrivia LIVE */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center"
+        >
+          <span className="text-lg font-bold text-foreground tracking-tight">
+            MyTrivia
+          </span>
+          <LiveBadge />
+        </motion.div>
+
+        {/* Right Side: Notifications + Messages */}
+        <div className="flex items-center gap-2">
+          <motion.button
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center"
+            onClick={() => setShowNotificationsPanel(true)}
+            className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
           >
-            <span className="text-lg font-bold text-foreground tracking-tight">
-              MyTrivia
-            </span>
-            <LiveBadge />
-          </motion.div>
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </motion.button>
 
-          {/* Right Side: Notifications + Messages */}
-          <div className="flex items-center gap-2">
-            <motion.button
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={() => setShowNotificationsPanel(true)}
-              className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </motion.button>
-
-            <motion.button
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.05 }}
-              onClick={() => setShowRoomChatsPanel(true)}
-              className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-            >
-              <MessageCircle className="w-5 h-5" />
-              {unreadMessagesCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                  {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                </span>
-              )}
-            </motion.button>
-          </div>
+          <motion.button
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.05 }}
+            onClick={() => setShowRoomChatsPanel(true)}
+            className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
+          >
+            <MessageCircle className="w-5 h-5" />
+            {unreadMessagesCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+              </span>
+            )}
+          </motion.button>
         </div>
+      </div>
 
+      {/* Sticky: Tabs + Filter */}
+      <StickyHeaderContainer>
         {/* Tabs */}
         <div className="px-4 py-3">
           <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
@@ -293,49 +293,49 @@ function TeamContent() {
           </div>
         </div>
 
-        {/* Friends Stories Bar + CTA - Show on "my-trivia" tab */}
-        {activeTab === "my-trivia" && (
-          <div className="px-4 pt-1 pb-2 space-y-3">
-            <FriendsStoriesBar
-              onAddFriendClick={() => setShowAddFriendModal(true)}
-              onFriendClick={handleQuickPlay}
-            />
-            {/* Single CTA Button */}
-            <ChunkyButton 
-              onClick={() => setShowCreateQuizModal(true)}
-              className="w-full gap-2"
-              variant="primary"
-              size="lg"
-            >
-              <Plus className="w-5 h-5" />
-              შექმენი ტრივია
-            </ChunkyButton>
-          </div>
-        )}
+        {/* Feed filters - show on both tabs */}
+        <FeedFiltersBar
+          sortFilter={sortFilter}
+          onSortFilterChange={setSortFilter}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+        />
 
         {/* Hashtag Filter Bar - Only show on "For You" tab */}
         {activeTab === "for-me" && (
-          <>
-            <FeedFiltersBar
-              sortFilter={sortFilter}
-              onSortFilterChange={setSortFilter}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-            />
-            <FilterBar
-              selectedHashtag={selectedHashtag}
-              onSelectHashtag={setSelectedHashtag}
-              showSavedOnly={showSavedOnly}
-              onToggleSaved={() => setShowSavedOnly(prev => !prev)}
-              popularityFilter={popularityFilter}
-              onPopularityChange={setPopularityFilter}
-              hashtags={allHashtags}
-              hasActiveFilters={hasActiveFilters}
-              onClearFilters={clearFilters}
-            />
-          </>
+          <FilterBar
+            selectedHashtag={selectedHashtag}
+            onSelectHashtag={setSelectedHashtag}
+            showSavedOnly={showSavedOnly}
+            onToggleSaved={() => setShowSavedOnly(prev => !prev)}
+            popularityFilter={popularityFilter}
+            onPopularityChange={setPopularityFilter}
+            hashtags={allHashtags}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+          />
         )}
       </StickyHeaderContainer>
+
+      {/* Non-sticky: FriendsStoriesBar + CTA - Show on "my-trivia" tab */}
+      {activeTab === "my-trivia" && (
+        <div className="px-4 pt-3 pb-2 space-y-3">
+          <FriendsStoriesBar
+            onAddFriendClick={() => setShowAddFriendModal(true)}
+            onFriendClick={handleQuickPlay}
+          />
+          {/* Single CTA Button */}
+          <ChunkyButton 
+            onClick={() => setShowCreateQuizModal(true)}
+            className="w-full gap-2"
+            variant="primary"
+            size="lg"
+          >
+            <Plus className="w-5 h-5" />
+            შექმენი ტრივია
+          </ChunkyButton>
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10 flex flex-col overflow-x-hidden">
@@ -351,15 +351,6 @@ function TeamContent() {
               <MyRoomsSection hideTV />
             </motion.div>
 
-            {/* 4) Filters */}
-            <div className="px-4 pb-2">
-              <FeedFiltersBar
-                sortFilter={sortFilter}
-                onSortFilterChange={setSortFilter}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-              />
-            </div>
 
             {/* My Content (Trivia Posts) */}
             <div className="px-4">
