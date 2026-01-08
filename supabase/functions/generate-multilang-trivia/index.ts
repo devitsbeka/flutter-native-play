@@ -182,6 +182,13 @@ Return ONLY valid JSON with this structure:
 
     const questionsWithIcons = await Promise.all(
       allQuestions.map(async (q: any) => {
+        // Truncate answers to ensure they fit in UI
+        q.correctAnswer = (q.correctAnswer || '').slice(0, ANSWER_MAX_LENGTH);
+        q.incorrectAnswers = (q.incorrectAnswers || []).map((a: string) => 
+          (a || '').slice(0, ANSWER_MAX_LENGTH)
+        );
+        q.questionText = (q.questionText || '').slice(0, QUESTION_MAX_LENGTH);
+        
         if (q.iconKeywords?.length > 0) {
           const { data: icons } = await supabase
             .from('icon_library')
