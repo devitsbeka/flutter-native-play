@@ -51,6 +51,8 @@ The image should be visually striking with bold colors and abstract or thematic 
 Do NOT include any text in the image.
 Ultra high resolution, 16:9 aspect ratio.`;
 
+    console.log("Generating image with prompt:", prompt);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -58,7 +60,7 @@ Ultra high resolution, 16:9 aspect ratio.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
+        model: "google/gemini-3-pro-image-preview",
         messages: [
           {
             role: "user",
@@ -68,6 +70,8 @@ Ultra high resolution, 16:9 aspect ratio.`;
         modalities: ["image", "text"],
       }),
     });
+
+    console.log("AI response status:", response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
