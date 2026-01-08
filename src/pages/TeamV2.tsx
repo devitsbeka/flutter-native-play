@@ -248,6 +248,7 @@ function TeamContentV2() {
                 <FriendsStoriesBar
                   onAddFriendClick={() => setShowAddFriendModal(true)}
                   onFriendClick={() => {}}
+                  onShowAllFriends={() => setShowAddFriendModal(true)}
                 />
               </motion.div>
 
@@ -258,23 +259,12 @@ function TeamContentV2() {
                 transition={{ delay: 0.1 }}
                 className="px-4 mb-3"
               >
-                <MyRoomsSection hideTV />
+                <MyRoomsSection 
+                  hideTV 
+                  onCreateRoom={() => setShowCreateModal(true)}
+                  onShowAllRooms={() => setShowAllGamesModal(true)}
+                />
               </motion.div>
-
-              {/* New Room Button - Dotted Circle Style */}
-              <div className="px-4 mb-4 flex justify-center">
-                <motion.button
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex flex-col items-center gap-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 border-2 border-dashed border-purple-400 dark:border-purple-500 flex items-center justify-center">
-                    <Plus className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground">ახალი ოთახი</span>
-                </motion.button>
-              </div>
 
               {/* My Trivia Posts */}
               <div className="px-4">

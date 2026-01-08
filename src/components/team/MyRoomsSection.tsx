@@ -11,9 +11,11 @@ import { Capacitor } from "@capacitor/core";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
+  onCreateRoom?: () => void;
+  onShowAllRooms?: () => void;
 }
 
-export function MyRoomsSection({ hideTV = false }: MyRoomsSectionProps) {
+export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }: MyRoomsSectionProps) {
   const { rooms, loading } = useMyRooms();
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
@@ -90,16 +92,28 @@ export function MyRoomsSection({ hideTV = false }: MyRoomsSectionProps) {
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
         
-        {/* TV Button - hidden when hideTV prop is true */}
-        {!hideTV && (
-          <button
-            onClick={() => setShowTVModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
-          >
-            <TVIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* ყველა button */}
+          {onShowAllRooms && (
+            <button
+              onClick={onShowAllRooms}
+              className="text-sm font-medium text-purple-600 hover:text-purple-700"
+            >
+              ყველა
+            </button>
+          )}
+          
+          {/* TV Button - hidden when hideTV prop is true */}
+          {!hideTV && (
+            <button
+              onClick={() => setShowTVModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
+            >
+              <TVIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">{t('tv.playOnTV')}</span>
+            </button>
+          )}
+        </div>
       </div>
       
       {/* TV Mirror Modal */}
@@ -118,6 +132,19 @@ export function MyRoomsSection({ hideTV = false }: MyRoomsSectionProps) {
       ) : (
         <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
           <div className="flex gap-3 pr-4">
+            {/* Add Room Button - First in the list */}
+            {onCreateRoom && (
+              <motion.button
+                onClick={onCreateRoom}
+                className="flex-shrink-0 w-16 h-44 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 border-2 border-dashed border-purple-400 dark:border-purple-500 flex items-center justify-center">
+                  <Plus className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+              </motion.button>
+            )}
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}
