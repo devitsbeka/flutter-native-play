@@ -380,10 +380,37 @@ export function MatchResultScreen() {
       
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
-  style={{
-    background: "#858EE7",
-  }}
+        style={{
+          background: "#858EE7",
+        }}
       >
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-white"
+              style={{
+                width: Math.random() * 6 + 3,
+                height: Math.random() * 6 + 3,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.3,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                x: [0, Math.random() * 20 - 10, 0],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: Math.random() * 3 + 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+        </div>
 
         {/* Header */}
         <motion.div 
