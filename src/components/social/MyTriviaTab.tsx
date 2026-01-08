@@ -9,6 +9,8 @@ import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import { EditQuizModal } from "./EditQuizModal";
+import { EditRoundModal } from "./EditRoundModal";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
@@ -16,12 +18,28 @@ interface MyTriviaTabProps {
 }
 
 // Compact quiz card for inside collections
-function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
+function CollectionQuizCard({ quiz, profile, onEdit }: { quiz: any; profile: any; onEdit: (quiz: any) => void }) {
+  // Get icon from quiz's icon_slug or first question's icon
+  const iconSlug = quiz.icon_slug || (Array.isArray(quiz.questions) ? quiz.questions[0]?.icon_slug : null);
+  
+  // Helper to get gradient style
+  const gradientStyle = quiz.cover_gradient?.includes('gradient') || quiz.cover_gradient?.includes('#') || quiz.cover_gradient?.includes('rgb')
+    ? { background: quiz.cover_gradient }
+    : undefined;
+  const gradientClass = gradientStyle ? '' : `bg-gradient-to-br ${quiz.cover_gradient || 'from-purple-500 to-pink-500'}`;
+
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
-      {/* Mini gradient thumbnail */}
-      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${quiz.cover_gradient} flex items-center justify-center flex-shrink-0`}>
-        <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
+      {/* Round icon - shows icon or fallback to round number */}
+      <div 
+        className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden ${gradientClass}`}
+        style={gradientStyle}
+      >
+        {iconSlug ? (
+          <DynamicIcon slug={iconSlug} size={32} className="object-contain" />
+        ) : (
+          <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
+        )}
       </div>
       
       <div className="flex-1 min-w-0">
@@ -29,7 +47,14 @@ function CollectionQuizCard({ quiz, profile }: { quiz: any; profile: any }) {
         <p className="text-xs text-muted-foreground">{quiz.question_count} კითხვა</p>
       </div>
       
-      <div className="flex items-center gap-3 text-muted-foreground">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        {/* Edit button */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); onEdit(quiz); }}
+          className="p-2 rounded-full hover:bg-muted transition-colors"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
         <div className="flex items-center gap-1 text-xs">
           <Heart className="w-3 h-3" />
           <span>{quiz.likes_count || 0}</span>
@@ -51,7 +76,7 @@ function getGradientProps(gradient: string) {
 }
 
 // Expandable collection card
-function CollectionCard({ collection, profile, onEdit }: { collection: any; profile: any; onEdit: (item: any) => void }) {
+function CollectionCard({ collection, profile, onEditCollection, onEditRound }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
@@ -77,7 +102,7 @@ function CollectionCard({ collection, profile, onEdit }: { collection: any; prof
           
           {/* Edit Button */}
           <button 
-            onClick={(e) => { e.stopPropagation(); onEdit(collection); }}
+            onClick={(e) => { e.stopPropagation(); onEditCollection(collection); }}
             className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
           >
             <Pencil className="w-4 h-4 text-white" />
@@ -173,7 +198,12 @@ function CollectionCard({ collection, profile, onEdit }: { collection: any; prof
                 </div>
               ) : quizzes && quizzes.length > 0 ? (
                 quizzes.map((quiz) => (
-                  <CollectionQuizCard key={quiz.id} quiz={quiz} profile={profile} />
+                  <CollectionQuizCard 
+                    key={quiz.id} 
+                    quiz={quiz} 
+                    profile={profile}
+                    onEdit={onEditRound}
+                  />
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
@@ -290,6 +320,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { profile } = useAuth();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
+  const [editingRound, setEditingRound] = useState<any>(null);
 
   const isLoading = postsLoading || collectionsLoading;
 
@@ -353,7 +384,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
       <div className="space-y-4">
         {/* Collections first */}
         {myCollections?.map((collection) => (
-          <CollectionCard key={collection.id} collection={collection} profile={profile} onEdit={(item) => setEditingQuiz(item)} />
+          <CollectionCard 
+            key={collection.id} 
+            collection={collection} 
+            profile={profile} 
+            onEditCollection={(item) => setEditingQuiz(item)}
+            onEditRound={(quiz) => setEditingRound(quiz)}
+          />
         ))}
 
         {/* Standalone quizzes */}
@@ -368,11 +405,18 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection }: MyTriviaTabPro
         ))}
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit Modal for Collections and Standalone Quizzes */}
       <EditQuizModal 
         quiz={editingQuiz} 
         isOpen={!!editingQuiz} 
         onClose={() => setEditingQuiz(null)} 
+      />
+
+      {/* Edit Modal for Collection Rounds */}
+      <EditRoundModal
+        round={editingRound}
+        isOpen={!!editingRound}
+        onClose={() => setEditingRound(null)}
       />
     </motion.div>
   );

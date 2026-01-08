@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Globe, Lock, Trash2, Check, Image } from "lucide-react";
+import { X, Loader2, Globe, Lock, Trash2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuestionIconPicker } from "./QuestionIconPicker";
+import { CoverImagePicker } from "./CoverImagePicker";
 
 interface EditQuizModalProps {
   quiz: any | null;
@@ -23,10 +24,6 @@ const COVER_GRADIENTS = [
   "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
   "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
   "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
-  "radial-gradient(ellipse 120% 80% at 20% 30%, rgba(139,92,246,0.8) 0%, transparent 50%), radial-gradient(ellipse 100% 120% at 80% 70%, rgba(236,72,153,0.7) 0%, transparent 50%), linear-gradient(135deg, #4C1D95 0%, #831843 100%)",
-  "radial-gradient(ellipse 80% 100% at 70% 20%, rgba(59,130,246,0.8) 0%, transparent 45%), radial-gradient(ellipse 100% 80% at 20% 80%, rgba(6,182,212,0.7) 0%, transparent 45%), linear-gradient(150deg, #1E3A8A 0%, #0E7490 100%)",
-  "radial-gradient(ellipse 90% 110% at 30% 60%, rgba(16,185,129,0.8) 0%, transparent 50%), radial-gradient(ellipse 120% 90% at 75% 25%, rgba(52,211,153,0.6) 0%, transparent 50%), linear-gradient(160deg, #064E3B 0%, #047857 100%)",
-  "radial-gradient(ellipse 100% 80% at 60% 30%, rgba(249,115,22,0.75) 0%, transparent 45%), radial-gradient(ellipse 80% 100% at 25% 75%, rgba(239,68,68,0.7) 0%, transparent 45%), linear-gradient(145deg, #7C2D12 0%, #991B1B 100%)",
 ];
 
 export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
@@ -35,6 +32,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   
   const [title, setTitle] = useState("");
   const [selectedGradient, setSelectedGradient] = useState("");
+  const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -49,6 +47,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
     if (quiz) {
       setTitle(quiz.title || "");
       setSelectedGradient(quiz.cover_gradient || COVER_GRADIENTS[0]);
+      setCoverImage(quiz.cover_image || null);
       setIsPublic(quiz.is_public !== false);
       setIconSlug(quiz.icon_slug || null);
       setShowDeleteConfirm(false);
@@ -63,6 +62,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       const updateData: any = {
         title,
         cover_gradient: selectedGradient,
+        cover_image: coverImage,
         is_public: isPublic,
       };
 
@@ -147,64 +147,40 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
         </div>
 
         <div className="p-4 space-y-5">
-          {/* Preview */}
-          <div 
-            className="h-28 rounded-xl flex items-center justify-center relative overflow-hidden"
-            style={{ background: selectedGradient }}
-          >
-            <div className="absolute inset-0 bg-black/20" />
-            <h4 className="text-lg font-bold text-white text-center px-4 drop-shadow-lg relative z-10 line-clamp-2">
-              {title || "სათაური"}
-            </h4>
-          </div>
+          {/* Cover Image Picker */}
+          <CoverImagePicker
+            currentImage={coverImage}
+            currentGradient={selectedGradient}
+            onImageChange={setCoverImage}
+            onGradientChange={setSelectedGradient}
+            suggestPrompt={quiz?.subject}
+            title={title}
+          />
 
           {/* Title Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">სათაური</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Trivia-ს სათაური"
-              className="h-12 rounded-xl"
-            />
-          </div>
-
-          {/* Gradient Picker */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">ფონი</label>
-            <div className="grid grid-cols-5 gap-2">
-              {COVER_GRADIENTS.map((gradient, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedGradient(gradient)}
-                  className={`aspect-square rounded-xl transition-all ${
-                    selectedGradient === gradient
-                      ? "ring-2 ring-primary ring-offset-2 scale-105"
-                      : "hover:scale-105"
-                  }`}
-                  style={{ background: gradient }}
-                >
-                  {selectedGradient === gradient && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white drop-shadow" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Icon Picker - only for quizzes, not collections */}
-          {!isCollection && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">აიქონი</label>
-              <QuestionIconPicker
-                selectedSlug={iconSlug}
-                onSelect={setIconSlug}
-                questionText={title}
+          <div className="flex gap-3 items-end">
+            <div className="flex-1 space-y-2">
+              <label className="text-sm font-medium text-foreground">სათაური</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Trivia-ს სათაური"
+                className="h-12 rounded-xl"
               />
             </div>
-          )}
+            
+            {/* Icon Picker - only for quizzes, not collections */}
+            {!isCollection && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">აიქონი</label>
+                <QuestionIconPicker
+                  selectedSlug={iconSlug}
+                  onSelect={setIconSlug}
+                  questionText={title}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Visibility Toggle */}
           <div className="space-y-2">
