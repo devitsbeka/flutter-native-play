@@ -162,7 +162,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
                 {/* Action Buttons */}
                 {!data.isCurrentUser && (
-                  <div className="flex items-center gap-3 mt-4 w-full max-w-xs">
+                  <div className="flex items-center justify-center gap-3 mt-4 w-full max-w-xs">
                     {data.friendshipStatus === 'none' && (
                       <ChunkyButton
                         onClick={handleAddFriend}
@@ -182,15 +182,10 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       </ChunkyButton>
                     )}
                     {data.friendshipStatus === 'accepted' && (
-                      <>
-                        <ChunkyButton disabled variant="secondary" size="sm" className="flex-1">
-                          <Check className="w-4 h-4 mr-1" />
-                          მეგობარი
-                        </ChunkyButton>
-                        <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="w-10">
-                          <img src={iconChatBubble} alt="" className="w-5 h-5" />
-                        </ChunkyButton>
-                      </>
+                      <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
+                        <img src={iconChatBubble} alt="" className="w-4 h-4 mr-1" />
+                        შეტყობინება
+                      </ChunkyButton>
                     )}
                     <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
                       <Swords className="w-4 h-4 mr-1" />
@@ -202,7 +197,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
               {/* Tabs */}
               <Tabs defaultValue="trophies" className="px-4 pb-6">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-4 h-auto py-2">
                   <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
                     <img src={iconTrophy} alt="" className="w-7 h-7" />
                     <span className="text-xs">ჯილდოები</span>
