@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UserPlus, Swords, MessageCircle, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play } from "lucide-react";
 import iconTrophy from "@/assets/icon-trophy.png";
-import iconTrivia from "@/assets/icon-trivia.png";
+import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile as usePlayerProfileData } from "@/hooks/usePlayerProfile";
@@ -82,13 +82,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
         <div className="flex flex-col h-full bg-background">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground">პროფილი</h2>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
+            <SheetTitle className="text-lg font-semibold text-foreground">
+              პროფილი
+            </SheetTitle>
           </div>
 
           {loading ? (
@@ -113,14 +109,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     showSparkle={false}
                     autoPlay={true}
                   />
-                  {data.profile.country_code && (
-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-card border-2 border-border flex items-center justify-center text-lg">
-                      {getFlagEmoji(data.profile.country_code)}
-                    </div>
-                  )}
                 </div>
 
-                <h3 className="mt-4 text-xl font-bold text-foreground">
+                <h3 className="mt-4 text-xl font-bold text-foreground flex items-center gap-2">
+                  {data.profile.country_code && (
+                    <span>{getFlagEmoji(data.profile.country_code)}</span>
+                  )}
                   {data.profile.nickname}
                 </h3>
                 
@@ -192,9 +186,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           <Check className="w-4 h-4 mr-1" />
                           მეგობარი
                         </ChunkyButton>
-                        <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
-                          <MessageCircle className="w-4 h-4 mr-1" />
-                          მესიჯი
+                        <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="w-10">
+                          <MessageCircle className="w-4 h-4" />
                         </ChunkyButton>
                       </>
                     )}
