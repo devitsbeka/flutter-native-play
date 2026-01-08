@@ -236,7 +236,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
       <div className="relative">
         <div 
           ref={containerRef}
-          className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-4 pb-3 scroll-pl-4"
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-3 scroll-pl-4"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -245,7 +245,7 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
           {posts.map((post, i) => (
             <div
               key={post.id}
-              className="flex-shrink-0 snap-start rounded-2xl overflow-hidden"
+              className="flex-shrink-0 snap-start rounded-2xl overflow-hidden first:ml-4 last:mr-4"
               style={{ width: 'calc(85% - 6px)' }}
             >
               <div className="relative aspect-[4/3]">
