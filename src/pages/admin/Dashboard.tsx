@@ -38,40 +38,21 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       const today = new Date().toISOString().split('T')[0];
       
-      // Fetch games played today from multiple sources:
-      // 1. user_level_progress - solo category games (completed_at for new levels OR updated_at for replays)
-      // 2. room_games - multiplayer games
-      // 3. category_stats - tracks all category game answers
-      const [levelProgressNew, levelProgressUpdated, roomGames, categoryStatsUpdates] = await Promise.all([
-        // New level completions
+      // Fetch games played today from game_plays table (tracks every game)
+      const [gamePlaysToday, roomGames] = await Promise.all([
+        // Category games from game_plays
         supabase
-          .from('user_level_progress')
+          .from('game_plays')
           .select('*', { count: 'exact', head: true })
-          .gte('completed_at', today),
-        // Replayed levels (updated but not new)
-        supabase
-          .from('user_level_progress')
-          .select('*', { count: 'exact', head: true })
-          .gte('updated_at', today)
-          .lt('completed_at', today),
+          .gte('played_at', today),
         // Multiplayer games
         supabase
           .from('room_games')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', today),
-        // Category stats updates (each game updates this)
-        supabase
-          .from('category_stats')
-          .select('*', { count: 'exact', head: true })
-          .gte('updated_at', today),
       ]);
       
-      // Use the higher of level progress OR category stats (category stats catches replays)
-      const soloGames = Math.max(
-        (levelProgressNew.count || 0) + (levelProgressUpdated.count || 0),
-        categoryStatsUpdates.count || 0
-      );
-      const totalGamesToday = soloGames + (roomGames.count || 0);
+      const totalGamesToday = (gamePlaysToday.count || 0) + (roomGames.count || 0);
       
       // Fetch total questions count
       const { count: totalQ } = await supabase

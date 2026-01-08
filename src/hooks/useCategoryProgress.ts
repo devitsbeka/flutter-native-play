@@ -315,6 +315,17 @@ export function useCategoryProgress() {
     }
 
     try {
+      // Always log the game play first (for accurate "games today" tracking)
+      await supabase.from("game_plays").insert({
+        user_id: user.id,
+        category_id: categoryId,
+        level_number: levelNumber,
+        game_type: 'category',
+        score,
+        total_questions: totalQuestions,
+        stars_earned: stars,
+      });
+
       // Check if level was previously completed with a better score
       const { data: existingProgress } = await supabase
         .from("user_level_progress")
