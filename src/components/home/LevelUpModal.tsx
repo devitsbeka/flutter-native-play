@@ -48,7 +48,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
               {t("modals.levelUp")} 🎉
             </motion.h1>
 
-            {/* Animated Video Icon */}
+            {/* Animated Video Icon - No shadow/background */}
             <motion.div
               className="relative mx-auto mb-6"
               initial={{ scale: 0 }}
@@ -61,31 +61,29 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
                 loop
                 muted
                 playsInline
-                className="w-40 h-40 object-contain relative drop-shadow-lg"
+                className="w-40 h-40 object-contain"
               />
             </motion.div>
 
-            {/* Level Badge */}
+            {/* Level Badge - White elegant design */}
             <motion.div
               initial={{ scale: 0, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
-              className="relative w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full mb-4"
+              className="relative w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full mb-4 bg-white border-4 border-white/50"
               style={{
-                background: "linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%)",
-                boxShadow: "0 6px 0 #F59E0B, inset 0 2px 8px rgba(255,255,255,0.8)",
-                border: "4px solid #FBBF24",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
               }}
             >
               <motion.span
-                className="text-5xl font-display font-bold text-amber-600"
+                className="text-5xl font-display font-bold text-[#8795EB]"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", delay: 0.7, stiffness: 200 }}
               >
                 {newLevel}
               </motion.span>
-              <span className="text-sm font-bold text-amber-700">{t("modals.levelLabel")}</span>
+              <span className="text-sm font-bold text-[#8795EB]/70">{t("modals.levelLabel")}</span>
             </motion.div>
 
             {/* Previous level info */}
@@ -98,45 +96,43 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
               {t("modals.levelLabel")} {previousLevel} → {t("modals.levelLabel")} {newLevel}
             </motion.p>
 
-            {/* Rewards section - 3D chunky card */}
+            {/* Rewards section - White elegant card */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="rounded-2xl p-5 w-full max-w-xs"
+              className="rounded-2xl p-5 w-full max-w-xs bg-white/95 backdrop-blur-sm"
               style={{
-                background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                boxShadow: "0 4px 0 #F59E0B, inset 0 1px 2px rgba(255,255,255,0.8)",
-                border: "2px solid #FBBF24",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
               }}
             >
               <div className="flex items-center justify-center gap-2 mb-4">
-                <Gift className="w-5 h-5 text-amber-700" />
-                <span className="font-bold text-lg text-amber-800">{t("modals.rewards")}</span>
+                <Gift className="w-5 h-5 text-[#8795EB]" />
+                <span className="font-bold text-lg text-[#8795EB]">{t("modals.rewards")}</span>
               </div>
               <div className="flex justify-center gap-6 flex-wrap">
                 <div className="text-center">
                   <img src={coinIcon} alt="" className="w-10 h-10 mx-auto" />
-                  <p className="font-bold text-xl text-amber-800">+{levelUpCoins}</p>
-                  <p className="text-sm font-medium text-amber-700">{t("modals.coin")}</p>
+                  <p className="font-bold text-xl text-gray-800">+{levelUpCoins}</p>
+                  <p className="text-sm font-medium text-gray-500">{t("modals.coin")}</p>
                 </div>
                 {levelUpGems > 0 && (
                   <div className="text-center">
                     <img src={gemIcon} alt="" className="w-10 h-10 mx-auto" />
-                    <p className="font-bold text-xl text-amber-800">+{levelUpGems}</p>
-                    <p className="text-sm font-medium text-amber-700">{t("modals.gem")}</p>
+                    <p className="font-bold text-xl text-gray-800">+{levelUpGems}</p>
+                    <p className="text-sm font-medium text-gray-500">{t("modals.gem")}</p>
                   </div>
                 )}
                 <div className="text-center">
                   <span className="text-3xl">👑</span>
-                  <p className="font-bold text-xl text-amber-800">+{rewards.xpBonus}</p>
-                  <p className="text-sm font-medium text-amber-700">{t("modals.xpBonus")}</p>
+                  <p className="font-bold text-xl text-gray-800">+{rewards.xpBonus}</p>
+                  <p className="text-sm font-medium text-gray-500">{t("modals.xpBonus")}</p>
                 </div>
                 {rewards.powerUps > 0 && (
                   <div className="text-center">
                     <span className="text-3xl">⚡</span>
-                    <p className="font-bold text-xl text-amber-800">+{rewards.powerUps}</p>
-                    <p className="text-sm font-medium text-amber-700">{t("modals.powers")}</p>
+                    <p className="font-bold text-xl text-gray-800">+{rewards.powerUps}</p>
+                    <p className="text-sm font-medium text-gray-500">{t("modals.powers")}</p>
                   </div>
                 )}
               </div>
