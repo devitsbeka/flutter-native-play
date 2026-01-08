@@ -39,6 +39,7 @@ import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { SamplePost } from "@/data/samplePosts";
 import { StickyHeaderContainer } from "@/components/layout/StickyHeaderContainer";
 import { FilterBar, PopularityFilter } from "@/components/social/FilterBar";
+import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 
 function TeamContent() {
   const navigate = useNavigate();
@@ -86,6 +87,8 @@ function TeamContent() {
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [popularityFilter, setPopularityFilter] = useState<PopularityFilter>("all");
+  const [sortFilter, setSortFilter] = useState<SortFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Get hashtags for the filter bar
   const allHashtags = useHashtags();
@@ -290,7 +293,17 @@ function TeamContent() {
           </div>
         </div>
 
-        {/* Filter Bar - Only show on "For You" tab */}
+        {/* Feed Filters Bar - Only show on "For You" tab */}
+        {activeTab === "for-me" && (
+          <FeedFiltersBar
+            sortFilter={sortFilter}
+            onSortFilterChange={setSortFilter}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+          />
+        )}
+
+        {/* Hashtag Filter Bar - Only show on "For You" tab */}
         {activeTab === "for-me" && (
           <FilterBar
             selectedHashtag={selectedHashtag}
@@ -355,6 +368,8 @@ function TeamContent() {
             selectedHashtag={selectedHashtag}
             showSavedOnly={showSavedOnly}
             popularityFilter={popularityFilter}
+            sortFilter={sortFilter}
+            searchQuery={searchQuery}
           />
         )}
       </div>
