@@ -217,7 +217,7 @@ export function SmartAvatar({
       {onlineStatus !== undefined && onlineStatus !== null && (
         <motion.div
           className={cn(
-            "absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm",
+            "absolute bottom-0 right-0 rounded-full border-2 border-white shadow-sm z-20",
             onlineStatus ? "bg-green-400" : "bg-gray-400",
             size === "xs" || size === "sm" ? "w-3 h-3" : "w-4 h-4"
           )}
