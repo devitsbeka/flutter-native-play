@@ -37,21 +37,13 @@ const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => (
     }}
     className="relative"
   >
-    {/* Glow effect */}
-    <div 
-      className="absolute inset-0 blur-xl rounded-full"
-      style={{
-        background: "radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%)",
-        transform: "scale(1.5)",
-      }}
-    />
     <video 
       src={videoSrc}
       autoPlay
       loop
       muted
       playsInline
-      className="w-40 h-40 object-contain relative drop-shadow-lg"
+      className="w-40 h-40 object-contain relative"
     />
   </motion.div>
 );
@@ -361,7 +353,7 @@ export function MatchResultScreen() {
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
         style={{ 
-          background: "#7E7ADB",
+          background: isLose ? "#919CEB" : "#7E7ADB",
         }}
       >
         {/* Topographic Wave Pattern */}
