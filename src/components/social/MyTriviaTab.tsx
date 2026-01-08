@@ -1,17 +1,35 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronRight, Layers, Pencil } from "lucide-react";
+import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, MessageCircle } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatDistanceToNow } from "date-fns";
-import { ka } from "date-fns/locale";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
+
+// Georgian time format helper
+function formatGeorgianTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffMins < 1) return "ახლახანს";
+  if (diffMins < 60) return `${diffMins} წთ წინ`;
+  if (diffHours < 24) return `${diffHours} სთ წინ`;
+  if (diffDays === 1) return "გუშინ";
+  if (diffDays < 7) return `${diffDays} დღის წინ`;
+  
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
 
 interface MyTriviaTabProps {
   onCreateQuiz?: () => void;
@@ -136,23 +154,17 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
             <span>კოლექცია</span>
           </div>
 
-          {/* Visibility Badge */}
+          {/* Visibility Badge - Icon Only */}
           <div className="absolute top-3 right-3">
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
               collection.is_public 
                 ? 'bg-green-500/90 text-white' 
                 : 'bg-muted text-muted-foreground'
             }`}>
               {collection.is_public ? (
-                <>
-                  <Globe className="w-3 h-3" />
-                  <span>საჯარო</span>
-                </>
+                <Globe className="w-4 h-4" />
               ) : (
-                <>
-                  <Lock className="w-3 h-3" />
-                  <span>პირადი</span>
-                </>
+                <Lock className="w-4 h-4" />
               )}
             </div>
           </div>
@@ -180,28 +192,32 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
             <div>
               <p className="font-semibold text-foreground text-sm">{profile?.nickname || 'შენ'}</p>
               <p className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(collection.created_at), { addSuffix: true, locale: ka })}
+                {formatGeorgianTimeAgo(new Date(collection.created_at))}
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Stats */}
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Heart className="w-3.5 h-3.5" />
               <span>{collection.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{collection.comments_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Play className="w-3.5 h-3.5" />
               <span>{collection.plays_count || 0}</span>
             </div>
             
-            {/* Expand/Collapse icon */}
+            {/* Expand/Collapse icon - Up when open, Down when closed */}
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               {isExpanded ? (
-                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                <ChevronUp className="w-5 h-5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
               )}
             </div>
           </div>
@@ -280,23 +296,17 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: an
         <Pencil className="w-4 h-4 text-white" />
       </button>
 
-      {/* Visibility Badge */}
+      {/* Visibility Badge - Icon Only */}
       <div className="absolute top-3 right-3 z-10">
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium shadow-md ${
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
           post.is_public !== false 
             ? 'bg-green-500/90 text-white' 
             : 'bg-muted text-muted-foreground'
         }`}>
           {post.is_public !== false ? (
-            <>
-              <Globe className="w-3 h-3" />
-              <span>საჯარო</span>
-            </>
+            <Globe className="w-4 h-4" />
           ) : (
-            <>
-              <Lock className="w-3 h-3" />
-              <span>პირადი</span>
-            </>
+            <Lock className="w-4 h-4" />
           )}
         </div>
       </div>
@@ -337,17 +347,21 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: an
               {profile?.nickname || 'შენ'}
             </p>
             <p className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ka })}
+              {formatGeorgianTimeAgo(new Date(post.created_at))}
             </p>
           </div>
         </div>
 
         {/* Stats Row */}
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Heart className="w-4 h-4" />
               <span>{post.likes_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
+              <span>{post.comments_count || 0}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Play className="w-4 h-4" />
