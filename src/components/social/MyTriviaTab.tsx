@@ -30,15 +30,18 @@ function CollectionQuizCard({ quiz, profile, onEdit }: { quiz: any; profile: any
 
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
-      {/* Round icon - shows icon or fallback to round number */}
-      <div 
-        className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden ${gradientClass}`}
-        style={gradientStyle}
-      >
-        {iconSlug ? (
-          <DynamicIcon slug={iconSlug} size={32} className="object-contain" />
+      {/* Round icon - shows cover image, icon, or fallback to round number */}
+      <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+        {quiz.cover_image ? (
+          <img src={quiz.cover_image} alt="" className="w-full h-full object-cover" />
+        ) : iconSlug ? (
+          <div className={`w-full h-full flex items-center justify-center ${gradientClass}`} style={gradientStyle}>
+            <DynamicIcon slug={iconSlug} size={32} className="object-contain" />
+          </div>
         ) : (
-          <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
+          <div className={`w-full h-full flex items-center justify-center ${gradientClass}`} style={gradientStyle}>
+            <span className="text-white text-xs font-bold">R{quiz.round_number || 1}</span>
+          </div>
         )}
       </div>
       
@@ -94,11 +97,18 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound }: 
         className="w-full text-left"
       >
         {/* Gradient Banner */}
-        <div 
-          className={`h-32 relative ${gradientProps.className}`}
-          style={gradientProps.style}
-        >
-          <div className="absolute inset-0 bg-black/20" />
+        <div className="h-32 relative overflow-hidden">
+          {collection.cover_image ? (
+            <>
+              <img src={collection.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/30" />
+            </>
+          ) : (
+            <>
+              <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
+              <div className="absolute inset-0 bg-black/20" />
+            </>
+          )}
           
           {/* Edit Button */}
           <button 
@@ -258,12 +268,19 @@ function StandaloneQuizCard({ post, profile, index, onEdit }: { post: any; profi
         </div>
       </div>
 
-      {/* Gradient Thumbnail */}
-      <div 
-        className={`h-32 relative ${gradientProps.className}`}
-        style={gradientProps.style}
-      >
-        <div className="absolute inset-0 bg-black/20" />
+      {/* Cover Image or Gradient Thumbnail */}
+      <div className="h-32 relative overflow-hidden">
+        {post.cover_image ? (
+          <>
+            <img src={post.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/30" />
+          </>
+        ) : (
+          <>
+            <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
+            <div className="absolute inset-0 bg-black/20" />
+          </>
+        )}
         <div className="absolute inset-0 flex items-center justify-center">
           <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
             {post.title}
