@@ -332,28 +332,21 @@ function TeamContent() {
         {activeTab === "my-trivia" ? (
           <>
 
-            {/* 2) CTAs - Two buttons side by side */}
+            {/* 2) CTA - Create Trivia Button */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="px-4 py-3 flex gap-3"
+              className="px-4 py-3"
             >
               <ChunkyButton 
                 onClick={() => setShowCreateQuizModal(true)}
-                className="flex-1 gap-2 text-sm py-3"
-                variant="danger"
+                className="w-full gap-2"
+                variant="primary"
+                size="lg"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 შექმენი ტრივია
-              </ChunkyButton>
-              <ChunkyButton 
-                onClick={() => setShowCreateQuizModal(true)}
-                className="flex-1 gap-2 text-sm py-3"
-                variant="secondary"
-              >
-                <Layers className="w-4 h-4" />
-                კოლექცია
               </ChunkyButton>
             </motion.div>
 
