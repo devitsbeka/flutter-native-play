@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { CoverImagePicker } from "./CoverImagePicker";
-
+import { ScrollArea } from "@/components/ui/scroll-area";
 interface EditQuizModalProps {
   quiz: any | null;
   isOpen: boolean;
@@ -135,7 +135,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-bold text-foreground">რედაქტირება</h2>
@@ -147,6 +147,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
           </button>
         </div>
 
+        <ScrollArea className="max-h-[calc(90vh-80px)]">
         <div className="p-4 space-y-5">
           {/* Cover Image Picker */}
             <CoverImagePicker
@@ -278,6 +279,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
             </AnimatePresence>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
