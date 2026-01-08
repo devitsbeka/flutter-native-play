@@ -175,16 +175,22 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
       <div className="relative bg-gradient-to-br from-primary/20 to-primary/30 px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden">
         {/* Cover image with radial fade - flip based on index for variety */}
         <div 
-          className="absolute inset-0 opacity-40"
+          className="absolute inset-0 opacity-40 overflow-hidden"
           style={{
-            backgroundImage: `url(${coverImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
             maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
             WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-            transform: `scaleX(${index % 2 === 0 ? 1 : -1}) scaleY(${index % 4 < 2 ? 1 : -1})`,
           }}
-        />
+        >
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${coverImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              transform: `scaleX(${index % 2 === 0 ? 1 : -1}) scaleY(${index % 4 < 2 ? 1 : -1})`,
+            }}
+          />
+        </div>
         
         {/* Top section with status, room name, category */}
         <div className="relative z-10 px-2 pb-4">
