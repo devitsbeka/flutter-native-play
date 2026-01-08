@@ -149,8 +149,8 @@ function TeamContentV2() {
 
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background">
-        {/* Row 1: Mobile Sticky Header */}
-        <div className="lg:hidden sticky top-0 z-20 backdrop-blur-md bg-background/80 border-b border-border/50">
+        {/* Row 1: Mobile Header - Scrolls away */}
+        <div className="lg:hidden">
           <div className="flex items-center justify-between px-4 h-14 safe-top">
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -243,34 +243,35 @@ function TeamContentV2() {
             </ChunkyButton>
           </div>
 
-          {/* Row 5: Tabs (შენთვის / ჩემი ტრივია) */}
-          <div className="lg:hidden px-4 pb-3">
-            <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
-              <button
-                onClick={() => setActiveTab("for-me")}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "for-me"
-                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                შენთვის
-              </button>
-              <button
-                onClick={() => setActiveTab("my-trivia")}
-                className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "my-trivia"
-                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                ჩემი ტრივია
-              </button>
+          {/* Row 5+6: Sticky Tabs + Filter Bar */}
+          <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
+            {/* Tabs */}
+            <div className="px-4 py-3">
+              <div className="flex gap-1.5 p-1.5 bg-muted rounded-2xl shadow-inner">
+                <button
+                  onClick={() => setActiveTab("for-me")}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                    activeTab === "for-me"
+                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                      : "text-muted-foreground hover:text-foreground/80"
+                  }`}
+                >
+                  შენთვის
+                </button>
+                <button
+                  onClick={() => setActiveTab("my-trivia")}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all duration-200 ${
+                    activeTab === "my-trivia"
+                      ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
+                      : "text-muted-foreground hover:text-foreground/80"
+                  }`}
+                >
+                  ჩემი ტრივია
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Row 6: Filter/Search Bar - Sticky on scroll */}
-          <div className="lg:hidden sticky top-14 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50">
+            
+            {/* Filter Bar */}
             <FeedFiltersBar
               sortFilter={sortFilter}
               onSortFilterChange={setSortFilter}
