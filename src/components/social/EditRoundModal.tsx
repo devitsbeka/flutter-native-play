@@ -173,27 +173,15 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
               title={title}
             />
 
-            {/* Title & Icon Row */}
-            <div className="flex gap-3 items-end">
-              <div className="flex-1 space-y-2">
-                <label className="text-sm font-medium text-foreground">სათაური</label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="რაუნდის სათაური"
-                  className="h-12 rounded-xl"
-                />
-              </div>
-              
-              {/* Round Icon Picker */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">აიქონი</label>
-                <QuestionIconPicker
-                  selectedSlug={iconSlug}
-                  onSelect={setIconSlug}
-                  questionText={title}
-                />
-              </div>
+            {/* Title */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">სათაური</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="რაუნდის სათაური"
+                className="h-12 rounded-xl"
+              />
             </div>
 
             {/* Questions Section */}
