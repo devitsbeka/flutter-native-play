@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 import { QuestionIconPicker } from "./QuestionIconPicker";
+import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -124,6 +125,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
         throw new Error("კითხვები ვერ დაგენერირდა");
       }
 
+      // Client-side duplicate filtering as safety net
+      const uniqueQuestions = removeDuplicatesFromBatch(generatedQuestions as GeneratedQuestion[]);
+      const duplicatesRemoved = generatedQuestions.length - uniqueQuestions.length;
+      
+      if (duplicatesRemoved > 0) {
+        console.log(`Removed ${duplicatesRemoved} duplicate questions on client side`);
+      }
+
       // Celebrate!
       confetti({
         particleCount: 100,
@@ -131,7 +140,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
         origin: { y: 0.6 }
       });
 
-      setQuestions(generatedQuestions);
+      setQuestions(uniqueQuestions);
       setTitle(data?.suggestedTitle || `${subject} ტრივია`);
       
       setTimeout(() => setStep(4), 300);

@@ -11,6 +11,70 @@ const corsHeaders = {
 const QUESTION_MAX_LENGTH = 65;
 const ANSWER_MAX_LENGTH = 16;
 
+// Duplicate detection helpers
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[?.!,;:'"()]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function extractKeywords(text: string): Set<string> {
+  const normalized = normalizeText(text);
+  const numbers = text.match(/\d+/g) || [];
+  const words = normalized.split(' ').filter(w => w.length > 2);
+  return new Set([...numbers, ...words]);
+}
+
+function calculateSimilarity(text1: string, text2: string): number {
+  const s1 = normalizeText(text1);
+  const s2 = normalizeText(text2);
+  
+  if (s1 === s2) return 1;
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  if (s1.includes(s2) || s2.includes(s1)) {
+    const shorter = Math.min(s1.length, s2.length);
+    const longer = Math.max(s1.length, s2.length);
+    return shorter / longer;
+  }
+  
+  const keywords1 = extractKeywords(text1);
+  const keywords2 = extractKeywords(text2);
+  
+  if (keywords1.size === 0 || keywords2.size === 0) return 0;
+  
+  const intersection = [...keywords1].filter(k => keywords2.has(k));
+  const union = new Set([...keywords1, ...keywords2]);
+  
+  return intersection.length / union.size;
+}
+
+interface GeneratedQuestion {
+  question_text: string;
+  correct_answer: string;
+  incorrect_answers: string[];
+  difficulty?: string;
+  icon_keywords?: string[];
+}
+
+function removeDuplicateQuestions(questions: GeneratedQuestion[]): GeneratedQuestion[] {
+  const unique: GeneratedQuestion[] = [];
+  
+  for (const q of questions) {
+    const isDuplicate = unique.some(existing => 
+      calculateSimilarity(q.question_text, existing.question_text) > 0.55
+    );
+    
+    if (!isDuplicate) {
+      unique.push(q);
+    }
+  }
+  
+  return unique;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,16 +96,45 @@ serve(async (req) => {
     }
 
     const isTrueFalse = answerFormat === "true_false";
+    // Request extra questions to account for duplicates that will be filtered
+    const requestCount = questionCount + 5;
     
-const systemPrompt = `You are a trivia question generator for a Georgian quiz app. Generate fun, engaging trivia questions.
+const systemPrompt = `You are an expert trivia question generator for a Georgian quiz app. You create fun, accurate, and engaging trivia questions.
+
+🚨 FACTUAL ACCURACY - ABSOLUTELY CRITICAL - READ CAREFULLY:
+
+1. ONLY include facts you are 100% CERTAIN about
+2. If you have ANY doubt about a fact, DO NOT include that question
+3. Verify character names, actor names, dates, and events VERY CAREFULLY
+4. For TV shows/movies:
+   - Use EXACT official character names (e.g., "Phil Dunphy" not "Philip")
+   - Use CORRECT actor names
+   - Verify episode/season details
+   - Double-check relationship details (who is married to whom, etc.)
+5. For historical facts: Ensure dates and events are 100% accurate
+6. For sports: Verify records, scores, and statistics
+7. NEVER guess or hallucinate - only use information you are CERTAIN about
+8. When in doubt, choose a different fact you ARE certain about
+
+EXAMPLES OF COMMON ERRORS TO AVOID:
+❌ Wrong character names in TV shows (e.g., wrong names for Modern Family characters)
+❌ Incorrect release dates for movies
+❌ Wrong historical dates or events
+❌ Incorrect sports records or statistics
+❌ Mixing up actor names with character names
+
+🚫 UNIQUE QUESTIONS - NO DUPLICATES - MANDATORY:
+
+1. Each question MUST test a DIFFERENT and UNIQUE fact
+2. DO NOT ask about the same person, event, or thing twice
+3. DO NOT rephrase the same question in different words
+4. Before generating each question, mentally verify it's completely different from all previous ones
+5. Cover DIVERSE aspects of the topic (different characters, different events, different facts)
 
 CRITICAL POLITICAL GUIDELINES - MANDATORY:
 - აფხაზეთი (Abkhazia) is a REGION of Georgia, NOT a country - NEVER list it as a country
 - სამხრეთ ოსეთი (South Ossetia) is a REGION of Georgia, NOT a country - NEVER list it as a country
 - These are occupied territories of Georgia, internationally recognized as part of Georgia
-- When asking "რომელ ქვეყანაში" (which country) questions about locations in Abkhazia or South Ossetia, the correct answer is საქართველო (Georgia)
-- Examples of locations in Georgia: რიწის ტბა, სოხუმი, გაგრა, ცხინვალი - ALL are in GEORGIA
-- NEVER present breakaway regions or occupied territories as independent countries
 
 CRITICAL CHARACTER LIMITS - STRICT:
 - Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces)
@@ -55,7 +148,6 @@ LANGUAGE RULES:
 QUESTION QUALITY:
 - Make questions interesting and fun
 - Mix difficulty: 30% easy, 50% medium, 20% hard
-- Ensure factual accuracy
 - Avoid obscure facts nobody would know
 
 ${isTrueFalse ? `
@@ -70,18 +162,10 @@ MULTIPLE CHOICE FORMAT:
 - Answers should be similar in length/format
 `}
 
-ICON KEYWORDS RULES - CRITICAL:
+ICON KEYWORDS RULES:
 - icon_keywords MUST be specific to the question topic, NOT generic
-- NEVER use generic words: country, place, thing, person, object, item, location, area, region, world, flag, nation
+- NEVER use generic words: country, place, thing, person, object, item, location
 - Include the actual subject/entity mentioned in the question
-- Think: "What specific visual represents THIS exact question?"
-- Examples:
-  - Question about Arabian king from literature → ["crown", "medieval", "castle"]
-  - Question about Rome/Italy → ["colosseum", "rome", "pasta"]
-  - Question about Einstein → ["physics", "science", "laboratory"]
-  - Question about football → ["football", "soccer", "stadium"]
-  - Question about music → ["guitar", "piano", "microphone"]
-- If no specific icon fits, use ["quiz", "question", "trivia"]
 
 RETURN FORMAT - JSON only:
 {
@@ -97,18 +181,19 @@ RETURN FORMAT - JSON only:
   ]
 }`;
 
-    const userPrompt = `Generate ${questionCount} trivia questions about: "${subject}"
+    const userPrompt = `Generate ${requestCount} UNIQUE trivia questions about: "${subject}"
 
-Remember:
-- ALL text in Georgian
-- Questions max ${QUESTION_MAX_LENGTH} chars, answers max ${ANSWER_MAX_LENGTH} chars
-- ${isTrueFalse ? 'True/False format - correctAnswer is "მართალია" or "მცდარია"' : '4 answer options per question'}
-- Include icon_keywords (2-3 English words) for each question
-- Make it fun and engaging!
+CRITICAL REMINDERS:
+1. ⚠️ FACTUAL ACCURACY: Only include facts you are 100% certain about. If unsure, skip that question.
+2. ⚠️ NO DUPLICATES: Each question must cover a COMPLETELY DIFFERENT fact. No repetition!
+3. ALL text must be in Georgian
+4. Questions max ${QUESTION_MAX_LENGTH} chars, answers max ${ANSWER_MAX_LENGTH} chars
+5. ${isTrueFalse ? 'True/False format - correctAnswer is "მართალია" or "მცდარია"' : '4 unique answer options per question'}
+6. Include icon_keywords (2-3 English words) for each question
 
 Return ONLY valid JSON.`;
 
-    console.log(`Generating ${questionCount} ${answerFormat} questions about: ${subject}`);
+    console.log(`Generating ${requestCount} ${answerFormat} questions about: ${subject} (will filter to ${questionCount})`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -117,7 +202,7 @@ Return ONLY valid JSON.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -165,6 +250,13 @@ Return ONLY valid JSON.`;
       throw new Error("Invalid quiz format");
     }
 
+    // Remove duplicates from the generated questions
+    const uniqueQuestions = removeDuplicateQuestions(quizData.questions);
+    console.log(`Filtered ${quizData.questions.length} questions to ${uniqueQuestions.length} unique questions`);
+
+    // Take only the requested number of questions
+    const finalQuestions = uniqueQuestions.slice(0, questionCount);
+
     // Assign icons from icon_library
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -191,7 +283,7 @@ Return ONLY valid JSON.`;
     };
 
     const questionsWithIcons = await Promise.all(
-      quizData.questions.map(async (q: any) => {
+      finalQuestions.map(async (q: GeneratedQuestion) => {
         let iconSlug: string | null = null;
 
         // Get all answers for validation
@@ -201,7 +293,7 @@ Return ONLY valid JSON.`;
         ].map(a => transliterateGeorgian(a || ''));
 
         // Try to find icon by keywords
-        if (q.icon_keywords?.length > 0) {
+        if (q.icon_keywords?.length) {
           // Filter out generic/blocked keywords
           const keywords = q.icon_keywords
             .map((k: string) => k.toLowerCase())
@@ -271,7 +363,7 @@ Return ONLY valid JSON.`;
       })
     );
 
-    console.log(`Successfully generated ${questionsWithIcons.length} questions with icons`);
+    console.log(`Successfully generated ${questionsWithIcons.length} unique questions with icons`);
 
     return new Response(
       JSON.stringify({
