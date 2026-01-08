@@ -6,7 +6,10 @@ import {
   Users,
   Activity,
   ArrowUpRight,
-  Sparkles
+  Sparkles,
+  Play,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,6 +31,8 @@ export default function AdminDashboard() {
   const [showMagicRefill, setShowMagicRefill] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [activeQuestions, setActiveQuestions] = useState(0);
+  const [adsWatched, setAdsWatched] = useState(0);
+  const [appStoreRanking, setAppStoreRanking] = useState({ position: 0, change: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -39,7 +44,7 @@ export default function AdminDashboard() {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today);
       
-      // Fetch total questions count (bypasses 1000 row limit)
+      // Fetch total questions count
       const { count: totalQ } = await supabase
         .from('questions')
         .select('*', { count: 'exact', head: true });
@@ -50,30 +55,25 @@ export default function AdminDashboard() {
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
       
+      // Fetch ads watched today (from user_daily_plays)
+      const { data: adsData } = await supabase
+        .from('user_daily_plays')
+        .select('plays_from_ads')
+        .eq('play_date', today);
+      
+      const totalAdsWatched = adsData?.reduce((sum, d) => sum + (d.plays_from_ads || 0), 0) || 0;
+      
       setTotalGameSessions(sessionsCount || 0);
       setTotalQuestions(totalQ || 0);
       setActiveQuestions(activeQ || 0);
+      setAdsWatched(totalAdsWatched);
+      // Mock app store ranking - replace with real API if available
+      setAppStoreRanking({ position: 47, change: 3 });
     };
     fetchStats();
   }, []);
 
   const stats = [
-    {
-      title: 'კატეგორიები',
-      value: categories.length,
-      subValue: `${categories.filter(c => c.is_active).length} აქტიური`,
-      icon: FolderOpen,
-      gradient: 'from-blue-500 to-cyan-500',
-      link: '/admin/categories',
-    },
-    {
-      title: 'კითხვები',
-      value: totalQuestions,
-      subValue: `${activeQuestions} აქტიური`,
-      icon: HelpCircle,
-      gradient: 'from-violet-500 to-purple-500',
-      link: '/admin/questions',
-    },
     {
       title: 'ონლაინ',
       value: onlineUsers.length,
@@ -88,6 +88,23 @@ export default function AdminDashboard() {
       subValue: 'სესიები',
       icon: Activity,
       gradient: 'from-amber-500 to-orange-500',
+      link: null,
+    },
+    {
+      title: 'რეკლამა ნანახი',
+      value: adsWatched,
+      subValue: 'დღეს',
+      icon: Play,
+      gradient: 'from-pink-500 to-rose-500',
+      link: null,
+    },
+    {
+      title: 'App Store',
+      value: `#${appStoreRanking.position}`,
+      subValue: appStoreRanking.change > 0 ? `↑ ${appStoreRanking.change}` : appStoreRanking.change < 0 ? `↓ ${Math.abs(appStoreRanking.change)}` : 'უცვლელი',
+      subValueColor: appStoreRanking.change > 0 ? 'text-emerald-500' : appStoreRanking.change < 0 ? 'text-red-500' : undefined,
+      icon: appStoreRanking.change >= 0 ? TrendingUp : TrendingDown,
+      gradient: appStoreRanking.change >= 0 ? 'from-blue-500 to-indigo-500' : 'from-red-500 to-rose-500',
       link: null,
     },
   ];
@@ -132,7 +149,7 @@ export default function AdminDashboard() {
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground">{stat.title}</p>
                       <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
-                      <p className="text-[10px] text-muted-foreground">{stat.subValue}</p>
+                      <p className={cn("text-[10px] text-muted-foreground", (stat as any).subValueColor)}>{stat.subValue}</p>
                     </div>
                     <div className={cn(
                       "p-2 rounded-lg bg-gradient-to-br text-white",
