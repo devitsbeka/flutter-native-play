@@ -365,7 +365,7 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
                 className={`w-8 h-8 object-contain transition-all ${liked ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
             </motion.button>
-            <span className="text-sm text-muted-foreground">({formatNumber(likesCount)})</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(likesCount)}</span>
           </div>
           
           <div className="flex items-center gap-1.5">
@@ -381,7 +381,7 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
                 className={`w-8 h-8 object-contain transition-all ${saved ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
             </motion.button>
-            <span className="text-sm text-muted-foreground">({formatNumber(savesCount)})</span>
+            <span className="text-sm text-muted-foreground">{formatNumber(savesCount)}</span>
           </div>
         </div>
         
