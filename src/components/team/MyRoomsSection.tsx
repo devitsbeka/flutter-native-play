@@ -79,7 +79,7 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {[1, 2].map((i) => (
-            <div key={i} className="flex-shrink-0 w-64 h-44 animate-pulse rounded-2xl bg-slate-200" />
+            <div key={i} className="flex-shrink-0 w-44 h-36 animate-pulse rounded-2xl bg-slate-200" />
           ))}
         </div>
       </div>
@@ -136,7 +136,7 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
             {onCreateRoom && (
               <motion.button
                 onClick={onCreateRoom}
-                className="flex-shrink-0 w-16 h-44 flex items-center justify-center"
+                className="flex-shrink-0 w-16 h-36 flex items-center justify-center"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -186,7 +186,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
       onClick={onJoin}
-      className={`flex-shrink-0 w-64 p-4 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
+      className={`flex-shrink-0 w-44 h-36 p-3 rounded-2xl shadow-lg relative overflow-hidden transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity 
           ? "border-2 border-emerald-400" 
           : "border border-white/50"
@@ -220,35 +220,40 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       </div>
 
       {/* Participants */}
-      <div className="flex items-center gap-2 relative z-10">
-        <div className="flex -space-x-2.5">
-          {room.participants.slice(0, 4).map((p) => (
-            <div 
-              key={p.user_id} 
-              className="w-8 h-8 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
-            >
-              {p.avatar_url ? (
-                <img 
-                  src={p.avatar_url} 
-                  alt={p.nickname}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-                  {p.nickname?.charAt(0).toUpperCase() || "?"}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        {room.participants.length > 4 && (
-          <span className="text-xs text-slate-500">
-            +{room.participants.length - 4}
-          </span>
-        )}
-        <div className="flex items-center gap-1 ml-auto bg-white/60 px-2 py-1 rounded-full">
-          <Users className="w-3.5 h-3.5 text-slate-500" />
+      <div className="flex items-center justify-between relative z-10 mt-auto">
+        {/* Players badge - bottom left */}
+        <div className="flex items-center gap-1 bg-white/60 px-2 py-1 rounded-full">
+          <Users className="w-3 h-3 text-slate-500" />
           <span className="text-xs font-medium text-slate-600">{room.participants.length}</span>
+        </div>
+        
+        {/* Avatars - bottom right */}
+        <div className="flex items-center gap-1">
+          <div className="flex -space-x-2">
+            {room.participants.slice(0, 3).map((p) => (
+              <div 
+                key={p.user_id} 
+                className="w-6 h-6 rounded-full overflow-hidden border-2 border-white flex-shrink-0 bg-slate-200"
+              >
+                {p.avatar_url ? (
+                  <img 
+                    src={p.avatar_url} 
+                    alt={p.nickname}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-bold">
+                    {p.nickname?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {room.participants.length > 3 && (
+            <span className="text-[10px] text-slate-500">
+              +{room.participants.length - 3}
+            </span>
+          )}
         </div>
       </div>
     </motion.div>
