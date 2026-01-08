@@ -214,7 +214,7 @@ function TeamContent() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-24">
+    <div className="min-h-screen relative pb-24">
       {/* Unified Sticky Header Container */}
       <StickyHeaderContainer>
         {/* Header */}
@@ -307,7 +307,7 @@ function TeamContent() {
       </StickyHeaderContainer>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col">
+      <div className="relative z-10 flex flex-col overflow-x-hidden">
         {activeTab === "my-trivia" ? (
           <>
             {/* Friends Stories Bar */}
