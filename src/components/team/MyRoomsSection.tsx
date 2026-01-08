@@ -102,8 +102,8 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
           <p className="text-slate-500 text-sm">{t('team.noActiveRooms')}</p>
         </motion.div>
       ) : (
-        <div className="overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide">
-          <div className="flex gap-3 pr-4">
+        <div className="overflow-x-auto px-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+          <div className="flex gap-3">
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}
@@ -119,10 +119,13 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: rooms.length * 0.05 }}
-                className="flex-shrink-0 w-44 h-36 p-3 rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors"
+                className="flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors"
+                style={{
+                  boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
+                }}
               >
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <Users className="w-5 h-5 text-muted-foreground" />
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                  <Users className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <span className="text-sm font-medium text-muted-foreground">ყველას ნახვა</span>
               </motion.button>
@@ -154,7 +157,7 @@ function RoomCard({ room, index, onJoin }: RoomCardProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
       onClick={onJoin}
-      className={`flex-shrink-0 w-40 rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+      className={`flex-shrink-0 w-[70vw] max-w-[280px] snap-start rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
