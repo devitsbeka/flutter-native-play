@@ -16,6 +16,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useAuth } from "@/contexts/AuthContext";
 import { REWARDS } from "@/config/rewardConfig";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
+import { supabase } from "@/integrations/supabase/client";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 
 interface Question {
@@ -132,8 +133,8 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
         setCumulativeScore(prev => prev + roundScore);
         
         if (isCollection && currentRoundIndex < totalRounds - 1) {
-          // More rounds to play - award round rewards
-          awardRewards(xpEarned, coinsEarned);
+          // More rounds to play - award round rewards and increment plays for this round's post
+          awardRewards(xpEarned, coinsEarned, currentRoundPost?.id);
           setRoundComplete(true);
         } else {
           // All rounds complete - add collection bonus if applicable
@@ -143,7 +144,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
           if (isCollection) {
             setTotalEarnedCoins(prev => prev + REWARDS.FEED_COLLECTION_COMPLETE_COINS);
           }
-          awardRewards(xpEarned, finalCoins);
+          awardRewards(xpEarned, finalCoins, currentRoundPost?.id);
           setGameComplete(true);
           setAllRoundsComplete(true);
           confetti({
@@ -156,8 +157,8 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
     }, 1500);
   };
   
-  // Award rewards to user
-  const awardRewards = async (xp: number, coins: number) => {
+  // Award rewards to user and increment plays count
+  const awardRewards = async (xp: number, coins: number, postId?: string) => {
     if (rewardsAwarded.current) return;
     
     try {
@@ -167,6 +168,10 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
       if (xp > 0 && profile) {
         const newPoints = (profile.total_points || 0) + xp;
         await updateProfile({ total_points: newPoints } as any);
+      }
+      // Increment plays count for the quiz
+      if (postId) {
+        await supabase.rpc('increment_quiz_plays', { post_id: postId });
       }
     } catch (error) {
       console.error("Error awarding rewards:", error);
