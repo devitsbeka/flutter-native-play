@@ -612,12 +612,6 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated }: CreateQui
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md p-6 overflow-hidden">
-        <button
-          onClick={handleClose}
-          className="absolute right-4 top-4 rounded-full p-2 hover:bg-muted transition-colors z-10"
-        >
-          <X className="w-5 h-5 text-muted-foreground" />
-        </button>
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-4">
