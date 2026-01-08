@@ -131,9 +131,9 @@ export function CollectionPreviewModal({
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex-1 overflow-y-auto p-5 pt-3">
                 {/* Author */}
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-3 mb-4">
                   <AvatarWithFrame
                     imageUrl={firstPost.avatarUrl}
                     size="sm"
