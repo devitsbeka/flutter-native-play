@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // Import all modals
@@ -34,8 +34,14 @@ const MODALS = [
 export default function ModalsShowcase() {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(true);
   
   const currentModal = MODALS[currentIndex];
+
+  // Reset modal to open when navigating
+  useEffect(() => {
+    setIsModalOpen(true);
+  }, [currentIndex]);
 
   const goNext = () => {
     setCurrentIndex((prev) => (prev + 1) % MODALS.length);
@@ -45,6 +51,10 @@ export default function ModalsShowcase() {
     setCurrentIndex((prev) => (prev - 1 + MODALS.length) % MODALS.length);
   };
 
+  const handleClose = () => {
+    setIsModalOpen(false);
+  };
+
   const renderModal = () => {
     const id = currentModal.id;
     
@@ -52,8 +62,8 @@ export default function ModalsShowcase() {
       case "coming-soon":
         return (
           <ComingSoonModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
             categoryName="Sample Category"
             levelNumber={5}
           />
@@ -62,57 +72,57 @@ export default function ModalsShowcase() {
       case "power-up-fifty-fifty":
         return (
           <PowerUpDetailModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
             type="fifty-fifty"
-            onAddClick={() => {}}
+            onAddClick={handleClose}
           />
         );
       
       case "power-up-freeze":
         return (
           <PowerUpDetailModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
             type="freeze"
-            onAddClick={() => {}}
+            onAddClick={handleClose}
           />
         );
       
       case "power-up-replace":
         return (
           <PowerUpDetailModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
             type="replace"
-            onAddClick={() => {}}
+            onAddClick={handleClose}
           />
         );
       
       case "power-up-time-drain":
         return (
           <PowerUpDetailModal
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
             type="time-drain"
-            onAddClick={() => {}}
+            onAddClick={handleClose}
           />
         );
       
       case "power-up-tutorial":
         return (
           <PowerUpTutorialModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
           />
         );
       
       case "game-lose":
         return (
           <GameLoseModal 
-            isOpen={true} 
-            onClose={() => {}}
-            onPlayAgain={() => {}}
+            isOpen={isModalOpen} 
+            onClose={handleClose}
+            onPlayAgain={handleClose}
             userScore={1250}
             opponentScore={1480}
             opponentName="Player2"
@@ -124,30 +134,30 @@ export default function ModalsShowcase() {
       case "lucky-spin":
         return (
           <LuckySpinModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
           />
         );
       
       case "vs-help":
         return (
           <VSMatchHelpModal 
-            isOpen={true} 
-            onClose={() => {}} 
+            isOpen={isModalOpen} 
+            onClose={handleClose} 
           />
         );
       
       case "game-modal-base":
         return (
           <GameModal 
-            isOpen={true} 
-            onClose={() => {}}
+            isOpen={isModalOpen} 
+            onClose={handleClose}
             title="Sample Game Modal"
             subtitle="This is a base game modal"
             primaryLabel="Primary Action"
-            onPrimaryClick={() => {}}
+            onPrimaryClick={handleClose}
             secondaryLabel="Secondary"
-            onSecondaryClick={() => {}}
+            onSecondaryClick={handleClose}
           >
             <div className="text-center text-white/80 py-8">
               <p>This is the content area of the modal.</p>
@@ -159,8 +169,8 @@ export default function ModalsShowcase() {
       case "notification-success":
         return (
           <NotificationModal 
-            isOpen={true} 
-            onClose={() => {}}
+            isOpen={isModalOpen} 
+            onClose={handleClose}
             type="success"
             title="Success!"
             description="Your action was completed successfully."
@@ -170,8 +180,8 @@ export default function ModalsShowcase() {
       case "notification-error":
         return (
           <NotificationModal 
-            isOpen={true} 
-            onClose={() => {}}
+            isOpen={isModalOpen} 
+            onClose={handleClose}
             type="error"
             title="Error"
             description="Something went wrong. Please try again."
@@ -181,8 +191,8 @@ export default function ModalsShowcase() {
       case "notification-info":
         return (
           <NotificationModal 
-            isOpen={true} 
-            onClose={() => {}}
+            isOpen={isModalOpen} 
+            onClose={handleClose}
             type="info"
             title="Information"
             description="Here's some helpful information for you."
@@ -192,8 +202,8 @@ export default function ModalsShowcase() {
       case "notification-warning":
         return (
           <NotificationModal 
-            isOpen={true} 
-            onClose={() => {}}
+            isOpen={isModalOpen} 
+            onClose={handleClose}
             type="warning"
             title="Warning"
             description="Please be careful with this action."
@@ -261,8 +271,21 @@ export default function ModalsShowcase() {
       </div>
 
       {/* Modal Preview Area */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center">
         {renderModal()}
+        
+        {/* Show Modal Button when closed */}
+        {!isModalOpen && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors"
+          >
+            <Eye className="w-5 h-5" />
+            Show Modal
+          </motion.button>
+        )}
       </div>
     </div>
   );
