@@ -153,6 +153,13 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   const displayName = room.room_name || `ოთახი #${room.room_code.slice(-4)}`;
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
+  
+  // Generate a consistent random cover image based on room code
+  const getCoverImage = (code: string) => {
+    const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const imageId = (hash % 1000) + 100; // Generate a number between 100-1099
+    return `https://picsum.photos/seed/${code}/400/200`;
+  };
 
   return (
     <motion.div
@@ -168,9 +175,21 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
       }}
     >
       {/* Full card with light purple background */}
-      <div className="relative bg-gradient-to-br from-primary/15 to-primary/25 px-2.5 pb-2.5 pt-6 rounded-2xl">
+      <div className="relative bg-gradient-to-br from-primary/20 to-primary/30 px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden">
+        {/* Cover image with radial fade */}
+        <div 
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `url(${getCoverImage(room.room_code)})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            maskImage: 'radial-gradient(ellipse 120% 100% at 50% 0%, black 0%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 120% 100% at 50% 0%, black 0%, transparent 70%)',
+          }}
+        />
+        
         {/* Top section with status, room name, category */}
-        <div className="px-2 pb-4">
+        <div className="relative z-10 px-2 pb-4">
           {/* Status badge row */}
           <div className="flex items-center justify-between mb-3">
             {isPlaying ? (
@@ -179,29 +198,29 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
                 LIVE
               </span>
             ) : isCompleted ? (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/30 text-primary font-bold text-xs">
                 დასრულდა
               </span>
             ) : (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/30 text-primary text-xs font-bold">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/40 text-primary font-bold text-xs">
                 მოლოდინი
               </span>
             )}
             
             {/* Room code */}
-            <span className="text-xs font-mono text-primary/60">
+            <span className="text-xs font-mono text-primary/80">
               #{room.room_code.slice(-4)}
             </span>
           </div>
           
-          {/* Room name */}
-          <h3 className="font-bold text-primary text-base leading-tight truncate mb-1">
+          {/* Room name - darker text */}
+          <h3 className="font-bold text-primary/90 text-base leading-tight truncate mb-1">
             {displayName}
           </h3>
           
-          {/* Category - now in purple section */}
+          {/* Category - now in purple section, darker */}
           {room.category_name && (
-            <p className="text-sm text-primary/70 truncate">
+            <p className="text-sm text-primary/80 truncate font-medium">
               {room.category_name}
             </p>
           )}
