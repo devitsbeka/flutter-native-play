@@ -68,12 +68,14 @@ function WidgetCard({ children, className = '' }: { children: React.ReactNode; c
   );
 }
 
-// Widget Header with icon
-function WidgetHeader({ icon, title }: { icon: string; title: string }) {
+// Widget Header with icon badge on right (matches upper stat cards style)
+function WidgetHeader({ icon, title, iconBg = 'bg-amber-100' }: { icon: string; title: string; iconBg?: string }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <img src={icon} alt="" className="w-7 h-7 object-contain" />
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+      <div className={`w-12 h-12 ${iconBg} rounded-2xl flex items-center justify-center`}>
+        <img src={icon} alt="" className="w-7 h-7 object-contain" />
+      </div>
     </div>
   );
 }
@@ -424,7 +426,7 @@ export function PalantirAnalyticsWidget() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Language Buckets */}
         <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.languages} title="ენების მიხედვით" />
+          <WidgetHeader icon={WIDGET_ICONS.languages} title="ენების მიხედვით" iconBg="bg-amber-100" />
           <div className="space-y-4">
             {languageBuckets.map((bucket) => (
               <div key={bucket.language} className="text-sm">
@@ -456,7 +458,7 @@ export function PalantirAnalyticsWidget() {
 
         {/* Regional Activity */}
         <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.regional} title="რეგიონული აქტივობა" />
+          <WidgetHeader icon={WIDGET_ICONS.regional} title="რეგიონული აქტივობა" iconBg="bg-emerald-100" />
           <ScrollArea className="h-[220px]">
             <div className="space-y-4">
               {regionalActivity.map((region) => (
@@ -501,7 +503,7 @@ export function PalantirAnalyticsWidget() {
 
         {/* Shop Analytics */}
         <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.shop} title="მაღაზია" />
+          <WidgetHeader icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-100" />
           <div className="space-y-4 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">სულ შენაძენები:</span>
@@ -551,7 +553,7 @@ export function PalantirAnalyticsWidget() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Customers */}
         <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.customers} title="ტოპ მომხმარებლები" />
+          <WidgetHeader icon={WIDGET_ICONS.customers} title="ტოპ მომხმარებლები" iconBg="bg-amber-100" />
           <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
               <div className="text-muted-foreground mb-3 flex items-center gap-2 font-medium">
@@ -606,7 +608,7 @@ export function PalantirAnalyticsWidget() {
 
         {/* Average Metrics */}
         <WidgetCard>
-          <WidgetHeader icon={WIDGET_ICONS.metrics} title="საშუალო მეტრიკები რეგიონით" />
+          <WidgetHeader icon={WIDGET_ICONS.metrics} title="საშუალო მეტრიკები რეგიონით" iconBg="bg-blue-100" />
           <div className="space-y-3 text-sm">
             {regionalMetrics.slice(0, 5).map((m) => (
               <div key={m.region} className="flex items-center justify-between text-muted-foreground">
