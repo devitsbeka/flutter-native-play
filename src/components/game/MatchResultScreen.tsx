@@ -24,46 +24,6 @@ import lostVideo from "@/assets/animations/lost.mp4";
 
 // Animated video icon component with ping-pong effect
 const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const directionRef = useRef<'forward' | 'backward'>('forward');
-  const animationRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleEnded = () => {
-      // When forward playback ends, start going backward
-      directionRef.current = 'backward';
-      animateBackward();
-    };
-
-    const animateBackward = () => {
-      if (!video || directionRef.current !== 'backward') return;
-      
-      video.currentTime = Math.max(0, video.currentTime - 0.033);
-      
-      if (video.currentTime <= 0.05) {
-        // Reached the beginning, play forward again
-        directionRef.current = 'forward';
-        video.play();
-        return;
-      }
-      
-      animationRef.current = requestAnimationFrame(animateBackward);
-    };
-
-    video.addEventListener('ended', handleEnded);
-    video.play();
-
-    return () => {
-      video.removeEventListener('ended', handleEnded);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
-
   return (
     <motion.div
       initial={{ scale: 0, y: 50, opacity: 0 }}
@@ -79,8 +39,9 @@ const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
       className="relative"
     >
       <video 
-        ref={videoRef}
         src={videoSrc}
+        autoPlay
+        loop
         muted
         playsInline
         className="w-40 h-40 object-contain relative"
