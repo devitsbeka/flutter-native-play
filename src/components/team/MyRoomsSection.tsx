@@ -8,6 +8,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
+import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -154,8 +155,8 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
   
-  // Use stored cover image or fallback to random placeholder
-  const coverImage = room.cover_image || `https://picsum.photos/seed/${room.room_code}/400/200`;
+  // Always use the placeholder image
+  const coverImage = roomCoverPlaceholder;
 
   return (
     <motion.div
