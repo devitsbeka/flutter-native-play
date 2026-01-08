@@ -431,72 +431,58 @@ export function PalantirAnalyticsWidget() {
       {/* Top Row - 3 widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Language Buckets */}
-        <StatWidget icon={WIDGET_ICONS.languages} title="ენები" iconBg="bg-amber-50">
-          {languageBuckets.length > 0 ? (
-            <div className="space-y-2">
-              {languageBuckets.slice(0, 1).map((bucket) => (
-                <div key={bucket.language}>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <span>{getLanguageFlag(bucket.language)}</span>
-                    <span className="uppercase font-medium text-foreground text-sm">[{bucket.language}]</span>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>პროდში</span>
-                      <span className="font-medium text-primary">{bucket.inProd.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>ბიბლში</span>
-                      <span className="font-medium text-foreground">{bucket.inLib.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground pt-1 border-t">
-                      <span>სულ</span>
-                      <span className="font-semibold text-foreground">{bucket.total.toLocaleString()}</span>
-                    </div>
-                  </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="font-semibold text-sm">ენები</h3>
+                <p className="text-2xl font-bold tracking-tight text-primary">
+                  {languageBuckets.reduce((sum, b) => sum + b.inProd, 0).toLocaleString()}
+                </p>
+                <p className="text-[10px] text-muted-foreground">პროდში</p>
+              </div>
+              <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                <img src={WIDGET_ICONS.languages} alt="" className="w-5 h-5 object-contain" />
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {languageBuckets.map((bucket) => (
+                <div key={bucket.language} className="flex-shrink-0 bg-muted/50 rounded-lg px-3 py-2 min-w-[70px] text-center">
+                  <span className="text-lg">{getLanguageFlag(bucket.language)}</span>
+                  <p className="text-xs font-medium text-muted-foreground uppercase mt-0.5">{bucket.language}</p>
+                  <p className="text-sm font-semibold text-foreground">{bucket.inProd.toLocaleString()}</p>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-muted-foreground text-xs">მონაცემები არ არის</div>
-          )}
-        </StatWidget>
+          </CardContent>
+        </Card>
 
         {/* Regional Activity */}
-        <StatWidget icon={WIDGET_ICONS.regional} title="აქტივობა" iconBg="bg-emerald-50">
-          {regionalActivity.length > 0 ? (
-            <div className="space-y-2">
-              {regionalActivity.slice(0, 1).map((region) => (
-                <div key={region.region}>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <span>{getRegionFlag(region.region)}</span>
-                    <span className="uppercase font-medium text-foreground text-sm">{region.region}</span>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>ონლაინ</span>
-                      <span className="font-medium text-primary">{region.onlineNow}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>24სთ</span>
-                      <span className="font-medium text-foreground">{region.played24h}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <span>7დღე</span>
-                      <span className="font-medium text-foreground">{region.played7d}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-muted-foreground pt-1 border-t">
-                      <span>სულ მომხმ.</span>
-                      <span className="font-semibold text-foreground">{region.totalUsers}</span>
-                    </div>
-                  </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="font-semibold text-sm">აქტივობა</h3>
+                <p className="text-2xl font-bold tracking-tight text-primary">
+                  {regionalActivity.reduce((sum, r) => sum + r.totalUsers, 0).toLocaleString()}
+                </p>
+                <p className="text-[10px] text-muted-foreground">სულ მომხმ.</p>
+              </div>
+              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <img src={WIDGET_ICONS.regional} alt="" className="w-5 h-5 object-contain" />
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {regionalActivity.map((region) => (
+                <div key={region.region} className="flex-shrink-0 bg-muted/50 rounded-lg px-3 py-2 min-w-[70px] text-center">
+                  <span className="text-lg">{getRegionFlag(region.region)}</span>
+                  <p className="text-xs font-medium text-muted-foreground uppercase mt-0.5">{region.region}</p>
+                  <p className="text-sm font-semibold text-foreground">{region.totalUsers}</p>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-muted-foreground text-xs">მონაცემები არ არის</div>
-          )}
-        </StatWidget>
+          </CardContent>
+        </Card>
 
         {/* Shop Analytics */}
         <StatWidget icon={WIDGET_ICONS.shop} title="მაღაზია" iconBg="bg-slate-50">
