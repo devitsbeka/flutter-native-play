@@ -263,25 +263,7 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Row 4: My Rooms (შენი ოთახები) - Only show on rooms tab */}
-          {activeTab === "rooms" && (
-            <div className="lg:hidden">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="mb-3"
-              >
-                <MyRoomsSection 
-                  hideTV 
-                  onCreateRoom={() => setShowCreateModal(true)}
-                  onShowAllRooms={() => setShowAllGamesModal(true)}
-                />
-              </motion.div>
-            </div>
-          )}
-
-          {/* Row 5: CTA Buttons - Show on rooms tab */}
+          {/* Row 4: CTA Button - Show on rooms tab (BEFORE rooms list) */}
           {activeTab === "rooms" && (
             <div className="lg:hidden px-4 pb-3 flex gap-2">
               <ChunkyButton 
@@ -293,6 +275,24 @@ function TeamContentV2() {
                 <Plus className="w-5 h-5" />
                 ოთახი
               </ChunkyButton>
+            </div>
+          )}
+
+          {/* Row 5: My Rooms (შენი ოთახები) - Only show on rooms tab, vertical layout */}
+          {activeTab === "rooms" && (
+            <div className="lg:hidden">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <MyRoomsSection 
+                  hideTV 
+                  onCreateRoom={() => setShowCreateModal(true)}
+                  onShowAllRooms={() => setShowAllGamesModal(true)}
+                  vertical
+                />
+              </motion.div>
             </div>
           )}
 
@@ -311,15 +311,17 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Row 6: Sticky Filter Bar */}
-          <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
-            <FeedFiltersBar
-              sortFilter={sortFilter}
-              onSortFilterChange={setSortFilter}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-            />
-          </div>
+          {/* Row 6: Sticky Filter Bar - Hide on rooms tab */}
+          {activeTab !== "rooms" && (
+            <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+              />
+            </div>
+          )}
 
           {/* Row 7: Content */}
           {activeTab === "my-content" && (
@@ -335,13 +337,6 @@ function TeamContentV2() {
                 sortFilter={sortFilter}
                 onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
               />
-            </div>
-          )}
-          {activeTab === "rooms" && (
-            <div className="px-4 py-4">
-              <p className="text-muted-foreground text-sm text-center">
-                შექმენი ან შეუერთდი ოთახს მეგობრებთან სათამაშოდ
-              </p>
             </div>
           )}
           {activeTab === "discover" && (
