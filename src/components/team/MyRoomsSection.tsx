@@ -72,22 +72,11 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
   };
 
   if (loading) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-800 tracking-wide">{t('team.yourRooms')}</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="flex-shrink-0 w-44 h-36 animate-pulse rounded-2xl bg-slate-200" />
-          ))}
-        </div>
-      </div>
-    );
+    return null; // Don't show skeleton loader
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       {/* TV Mirror Modal */}
       <TVMirrorModal open={showTVModal} onOpenChange={setShowTVModal} />
 
@@ -96,14 +85,14 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms }:
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center py-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200"
+          className="mx-4 flex flex-col items-center py-8 rounded-2xl bg-card border border-border"
         >
-          <Gamepad2 className="w-12 h-12 text-slate-400 mb-3" />
-          <p className="text-slate-500 text-sm">{t('team.noActiveRooms')}</p>
+          <Gamepad2 className="w-12 h-12 text-muted-foreground mb-3" />
+          <p className="text-muted-foreground text-sm">{t('team.noActiveRooms')}</p>
         </motion.div>
       ) : (
-        <div className="overflow-x-auto px-4 pb-4 scrollbar-hide snap-x snap-mandatory">
-          <div className="flex gap-3">
+        <div className="overflow-x-auto pl-4 pb-4 scrollbar-hide snap-x snap-mandatory">
+          <div className="flex gap-3 pr-4">
             {rooms.map((room, index) => (
               <RoomCard
                 key={room.id}
