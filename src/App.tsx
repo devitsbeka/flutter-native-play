@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
+import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
@@ -64,8 +65,9 @@ const App = () => (
       <OnboardingProvider>
         <SoundProvider>
           <NotificationModalProvider>
-            <SplashScreen>
-              <TooltipProvider>
+            <PlayerProfileProvider>
+              <SplashScreen>
+                <TooltipProvider>
             {/* Offline detection banner */}
             <OfflineBanner />
             
@@ -121,9 +123,10 @@ const App = () => (
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="/all-buttons" element={<AllButtons />} />
               <Route path="*" element={<NotFound />} />
-              </Routes>
-              </TooltipProvider>
-            </SplashScreen>
+                </Routes>
+                </TooltipProvider>
+              </SplashScreen>
+            </PlayerProfileProvider>
           </NotificationModalProvider>
         </SoundProvider>
       </OnboardingProvider>

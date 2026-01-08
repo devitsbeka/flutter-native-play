@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Crown, Check, Clock } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
 interface ParticipantCardProps {
   participant: RoomParticipant;
@@ -10,6 +11,7 @@ interface ParticipantCardProps {
 
 export function ParticipantCard({ participant, isCurrentUser }: ParticipantCardProps) {
   const isReady = participant.status === "ready";
+  const { openProfile } = usePlayerProfile();
 
   // Country code to flag emoji
   const getFlagEmoji = (countryCode: string) => {
@@ -52,6 +54,7 @@ export function ParticipantCard({ participant, isCurrentUser }: ParticipantCardP
             className=""
             showSparkle={false}
             playOnHover={true}
+            onClick={() => openProfile(participant.user_id)}
           />
           
           {/* Country flag */}

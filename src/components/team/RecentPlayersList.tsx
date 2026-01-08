@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRecentPlayers } from "@/hooks/useRecentPlayers";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
 interface RecentPlayersListProps {
   onViewAll?: () => void;
@@ -9,6 +10,7 @@ interface RecentPlayersListProps {
 
 export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
   const { recentPlayers, loading } = useRecentPlayers();
+  const { openProfile } = usePlayerProfile();
 
   if (loading) {
     return (
@@ -57,6 +59,7 @@ export function RecentPlayersList({ onViewAll }: RecentPlayersListProps) {
                 className="ring-3 ring-purple-400/40 shadow-lg shadow-purple-500/25 mb-2"
                 showSparkle={true}
                 playOnHover={true}
+                onClick={() => openProfile(player.oderId)}
               />
               <p className="text-slate-800 text-xs font-bold uppercase tracking-wide text-center max-w-[70px] truncate">
                 {player.odername}

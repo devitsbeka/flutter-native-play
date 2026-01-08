@@ -3,6 +3,7 @@ import { Plus, Users } from "lucide-react";
 import { Friend, useFriends } from "@/hooks/useFriends";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
 // Shimmer skeleton component
 function ShimmerSkeleton({ className }: { className?: string }) {
@@ -25,6 +26,7 @@ interface FriendsStoriesBarProps {
 export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFriends }: FriendsStoriesBarProps) {
   const { friends, loading } = useFriends();
   const { t } = useLanguage();
+  const { openProfile } = usePlayerProfile();
 
   // Sort online friends first
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
@@ -95,6 +97,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
                 friend={friend}
                 index={index}
                 onClick={() => onFriendClick(friend)}
+                onProfileClick={openProfile}
               />
             ))
           )}
@@ -125,22 +128,23 @@ interface FriendStoryAvatarProps {
   friend: Friend;
   index: number;
   onClick: () => void;
+  onProfileClick: (userId: string) => void;
 }
 
-function FriendStoryAvatar({ friend, index, onClick }: FriendStoryAvatarProps) {
+function FriendStoryAvatar({ friend, index, onClick, onProfileClick }: FriendStoryAvatarProps) {
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ delay: index * 0.03 }}
-      onClick={onClick}
       className="flex flex-col items-center gap-2 flex-shrink-0"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
     >
       {/* Avatar with gradient ring */}
-      <div className="relative w-16 h-16">
+      <div 
+        className="relative w-16 h-16 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+        onClick={() => onProfileClick(friend.friendId)}
+      >
         {/* Gradient ring background */}
         <div 
           className="absolute inset-0 rounded-full p-[3px]"
@@ -177,9 +181,12 @@ function FriendStoryAvatar({ friend, index, onClick }: FriendStoryAvatarProps) {
       </div>
       
       {/* Name */}
-      <span className="text-xs font-medium text-slate-700 truncate max-w-[64px]">
+      <button
+        onClick={onClick}
+        className="text-xs font-medium text-slate-700 truncate max-w-[64px] hover:text-primary transition-colors"
+      >
         {friend.nickname}
-      </span>
-    </motion.button>
+      </button>
+    </motion.div>
   );
 }

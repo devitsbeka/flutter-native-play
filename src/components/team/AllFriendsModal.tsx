@@ -6,6 +6,7 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { useState } from "react";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +42,7 @@ export function AllFriendsModal({
   const { friends, pendingRequests, acceptFriendRequest, declineFriendRequest, removeFriend, loading } = useFriends();
   const { t } = useLanguage();
   const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null);
+  const { openProfile } = usePlayerProfile();
 
   // Sort online friends first
   const sortedFriends = [...friends].sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0));
@@ -201,6 +203,7 @@ export function AllFriendsModal({
                               fallback={friend.nickname}
                               size="md"
                               className="w-12 h-12"
+                              onClick={() => openProfile(friend.friendId)}
                             />
                             <div 
                               className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${

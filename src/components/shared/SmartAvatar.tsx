@@ -14,6 +14,8 @@ interface SmartAvatarProps {
   playOnHover?: boolean;
   ringColor?: string;
   onlineStatus?: boolean | null;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
 const sizeClasses = {
@@ -54,6 +56,8 @@ export function SmartAvatar({
   playOnHover = true,
   ringColor,
   onlineStatus,
+  onClick,
+  clickable = false,
 }: SmartAvatarProps) {
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -149,12 +153,21 @@ export function SmartAvatar({
   const hasAnimatedAvatar = animatedAvatarUrl && !videoError;
   const displayUrl = avatarUrl || undefined;
 
+  const isClickable = clickable || !!onClick;
+
   return (
     <div
-      className={cn("relative inline-block", className)}
+      className={cn(
+        "relative inline-block",
+        isClickable && "cursor-pointer hover:scale-105 transition-transform active:scale-95",
+        className
+      )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
+      onClick={onClick}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
     >
       <Avatar
         className={cn(
