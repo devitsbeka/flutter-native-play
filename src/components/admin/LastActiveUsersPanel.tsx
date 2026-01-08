@@ -1,29 +1,30 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ActiveUser } from '@/hooks/useActiveUsers';
 import { cn } from '@/lib/utils';
+import { LANGUAGES } from '@/locales';
 
 interface LastActiveUsersPanelProps {
   users: ActiveUser[];
 }
 
+// All 20 supported regions from LANGUAGES
 const REGIONS = [
-  { code: 'all', name: 'ყველა' },
-  { code: 'ge', name: 'საქართველო' },
-  { code: 'us', name: 'აშშ' },
-  { code: 'de', name: 'გერმანია' },
-  { code: 'ru', name: 'რუსეთი' },
-  { code: 'uk', name: 'გაერთ. სამეფო' },
+  { code: 'all', name: 'ყველა', flag: '🌍' },
+  ...LANGUAGES.map(lang => ({
+    code: lang.region,
+    name: lang.nativeName,
+    flag: lang.flag,
+  }))
 ];
 
 export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
@@ -56,8 +57,7 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
 
   const onlineCount = filteredUsers.filter(u => isOnline(u)).length;
   const totalCount = filteredUsers.length;
-  const selectedRegionName = REGIONS.find(r => r.code === selectedRegion)?.name || 'ყველა';
-
+  const selectedRegionData = REGIONS.find(r => r.code === selectedRegion) || REGIONS[0];
   return (
     <div className="absolute right-0 top-0 bottom-0 w-[300px] bg-card border-l border-border shadow-lg flex flex-col">
       {/* Header */}
@@ -76,26 +76,46 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
         
         {/* Filter row */}
         <div className="flex items-center gap-2 mt-3">
-          {/* Region dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 bg-background">
-                {selectedRegionName}
-                <ChevronDown className="h-3 w-3 opacity-50" />
+          {/* Region dropdown - using Popover for clean styling */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 bg-background min-w-[100px] justify-between">
+                <span className="flex items-center gap-1.5">
+                  <span>{selectedRegionData?.flag}</span>
+                  <span className="truncate">{selectedRegionData?.name || 'ყველა'}</span>
+                </span>
+                <ChevronDown className="h-3 w-3 opacity-50 flex-shrink-0" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-popover z-50">
-              {REGIONS.map(region => (
-                <DropdownMenuItem 
-                  key={region.code}
-                  onClick={() => setSelectedRegion(region.code)}
-                  className={cn(selectedRegion === region.code && "bg-accent")}
-                >
-                  {region.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </PopoverTrigger>
+            <PopoverContent 
+              align="start" 
+              sideOffset={4}
+              className="w-[200px] p-0 bg-popover border border-border shadow-lg z-[100]"
+            >
+              <ScrollArea className="h-[280px]">
+                <div className="p-1">
+                  {REGIONS.map(region => (
+                    <button 
+                      key={region.code}
+                      onClick={() => setSelectedRegion(region.code)}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm transition-colors text-left",
+                        selectedRegion === region.code 
+                          ? "bg-accent text-accent-foreground" 
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <span className="text-sm">{region.flag}</span>
+                      <span className="flex-1">{region.name}</span>
+                      {selectedRegion === region.code && (
+                        <Check className="h-3 w-3 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
           
           {/* VIP/Free toggle */}
           <div className="flex rounded-md border border-border overflow-hidden">
