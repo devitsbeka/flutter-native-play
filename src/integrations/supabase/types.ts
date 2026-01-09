@@ -2726,6 +2726,7 @@ export type Database = {
       friendship_status: "pending" | "accepted" | "blocked"
       game_type: "realtime" | "async"
       participant_status:
+        | "invited"
         | "joined"
         | "ready"
         | "playing"
@@ -2863,6 +2864,7 @@ export const Constants = {
       friendship_status: ["pending", "accepted", "blocked"],
       game_type: ["realtime", "async"],
       participant_status: [
+        "invited",
         "joined",
         "ready",
         "playing",

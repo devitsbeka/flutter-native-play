@@ -155,44 +155,62 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
         ) : (
           /* Multi-player list */
           <div className="space-y-2">
-            {sortedParticipants.map((p, index) => (
-              <div
-                key={p.id}
-                className={`flex items-center gap-3 p-2.5 rounded-xl ${
-                  p.user_id === currentUserId ? "bg-white/15" : "bg-white/5"
-                }`}
-              >
-                {/* Rank - fixed width */}
-                <div className="w-7 flex items-center justify-center flex-shrink-0">
-                  {getRankIcon(index + 1)}
-                </div>
-                
-                {/* Avatar */}
-                <SmartAvatar
-                  avatarUrl={p.avatar_url}
-                  fallback={p.nickname}
-                  size="md"
-                />
-                
-                {/* Name + Crown - flex grow */}
-                <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                  <p className="font-medium text-white text-sm truncate">
-                    {p.user_id === currentUserId ? "შენ" : p.nickname}
-                  </p>
-                  {showHostCrown && p.is_host && (
-                    <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+            {sortedParticipants.map((p, index) => {
+              const isInvited = (p.status as string) === 'invited';
+              return (
+                <div
+                  key={p.id}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-opacity ${
+                    isInvited 
+                      ? "bg-white/5 opacity-50" 
+                      : p.user_id === currentUserId 
+                        ? "bg-white/15" 
+                        : "bg-white/5"
+                  }`}
+                >
+                  {/* Rank - fixed width */}
+                  <div className="w-7 flex items-center justify-center flex-shrink-0">
+                    {isInvited ? (
+                      <span className="text-xs text-white/40">...</span>
+                    ) : (
+                      getRankIcon(index + 1)
+                    )}
+                  </div>
+                  
+                  {/* Avatar */}
+                  <div className={isInvited ? "grayscale" : ""}>
+                    <SmartAvatar
+                      avatarUrl={p.avatar_url}
+                      fallback={p.nickname}
+                      size="md"
+                    />
+                  </div>
+                  
+                  {/* Name + Crown - flex grow */}
+                  <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                    <p className={`font-medium text-sm truncate ${isInvited ? "text-white/50" : "text-white"}`}>
+                      {p.user_id === currentUserId ? "შენ" : p.nickname}
+                    </p>
+                    {isInvited && (
+                      <span className="text-xs text-white/40 italic">მოწვეული</span>
+                    )}
+                    {showHostCrown && p.is_host && !isInvited && (
+                      <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                    )}
+                  </div>
+                  
+                  {/* Score + Rounds - fixed width, right aligned */}
+                  {!isInvited && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className="font-bold text-white">{(p as any).total_score || 0}</span>
+                      <span className="text-xs text-white/60">
+                        ({p.total_rounds_played || 0}რ)
+                      </span>
+                    </div>
                   )}
                 </div>
-                
-                {/* Score + Rounds - fixed width, right aligned */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className="font-bold text-white">{(p as any).total_score || 0}</span>
-                  <span className="text-xs text-white/60">
-                    ({p.total_rounds_played || 0}რ)
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
