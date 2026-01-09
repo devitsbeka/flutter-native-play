@@ -295,11 +295,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         tvLog('Created new player ID and session binding', { playerId: playerId.slice(0, 8) });
       }
       
-      const isFirstPlayer = !session.host_user_id;
+      // Check if this player is the host:
+      // 1. They're the first player (no host set yet), OR
+      // 2. They're rejoining and their player ID matches the stored host_user_id
+      const isHostPlayer = !session.host_user_id || session.host_user_id === playerId;
       const isTVDisplay = nickname === 'TV_DISPLAY';
 
-      // If first player and NOT a TV display, become host
-      if (isFirstPlayer && !isTVDisplay) {
+      // If first player (no host yet) and NOT a TV display, become host
+      if (!session.host_user_id && !isTVDisplay) {
         await supabase
           .from('tv_sessions')
           .update({ 
@@ -339,11 +342,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }));
 
       setMyPlayerId(playerId);
-      setIsHost(isFirstPlayer);
+      setIsHost(isHostPlayer);
 
       // Setup subscriptions
       setupSessionSubscription(session.id);
-      setupPresenceChannel(session.id, nickname, avatarUrl || null, isFirstPlayer, false); // isTVDisplay = false
+      setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, false); // isTVDisplay = false
 
       return true;
     } catch (error) {
@@ -700,7 +703,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Start next round (host only)
   const startNextRound = useCallback(async () => {
-    if (!state.sessionId || !isHost) return;
+    tvLog('startNextRound called', { sessionId: state.sessionId, isHost, phase: state.phase });
+    
+    if (!state.sessionId) {
+      tvLog('startNextRound aborted: no sessionId');
+      return;
+    }
+    
+    if (!isHost) {
+      tvLog('startNextRound aborted: not host');
+      return;
+    }
 
     const nextIndex = state.currentQuestionIndex + 1;
     tvLog('Starting next round', { nextIndex, totalQuestions: state.questions.length });
