@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage, type KaTranslations } from '@/locales';
 import { supabase } from '@/integrations/supabase/client';
 
-const STORAGE_KEY = 'app-language';
+const STORAGE_KEY = 'preferredLanguage';
+const LEGACY_STORAGE_KEY = 'app-language'; // For migration
 
 interface LanguageContextType {
   language: string;
@@ -35,9 +36,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Track user ID for profile sync (use Supabase directly to avoid circular deps)
   const [userId, setUserId] = useState<string | null>(null);
   
-  // Initialize from localStorage or default
+  // Initialize from localStorage or default (with migration from old key)
   const [language, setLanguageState] = useState<string>(() => {
     if (typeof window !== 'undefined') {
+      // Migration: Copy old key to new key if exists
+      const oldValue = localStorage.getItem(LEGACY_STORAGE_KEY);
+      const newValue = localStorage.getItem(STORAGE_KEY);
+      if (oldValue && !newValue) {
+        localStorage.setItem(STORAGE_KEY, oldValue);
+        return oldValue;
+      }
       return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
     }
     return DEFAULT_LANGUAGE;
