@@ -13,10 +13,12 @@ import { TVSessionProvider } from '@/contexts/TVSessionContext';
 interface Player {
   id: string;
   nickname: string;
-  avatar_url?: string;
+  avatar_url: string | null;
   score: number;
-  hasAnswered?: boolean;
-  isHost?: boolean;
+  hasAnswered: boolean;
+  lastAnswerCorrect: boolean | null;
+  lastAnswer: string | null;
+  isHost: boolean;
 }
 
 interface Question {
@@ -174,9 +176,11 @@ const TVReceiverContent: React.FC = () => {
             connectedPlayers.push({
               id: presence.user_id,
               nickname: presence.nickname || 'Player',
-              avatar_url: presence.avatar_url,
+              avatar_url: presence.avatar_url || null,
               score: presence.score || 0,
-              hasAnswered: false,
+              hasAnswered: presence.hasAnswered || false,
+              lastAnswerCorrect: presence.lastAnswerCorrect ?? null,
+              lastAnswer: presence.lastAnswer ?? null,
               isHost: presence.isHost || false,
             });
           });
