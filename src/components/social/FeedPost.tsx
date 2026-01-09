@@ -191,10 +191,10 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays,
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className={`bg-card border-b border-border isolate ${post.isUserPost ? 'ring-2 ring-primary/30' : ''}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className={`bg-card border-b border-border ${post.isUserPost ? 'ring-2 ring-primary/30' : ''}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
@@ -258,7 +258,7 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays,
               <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 bg-popover z-[150]">
             <DropdownMenuItem onClick={handleReport} className="gap-2">
               <Flag className="w-4 h-4" />
               Report
