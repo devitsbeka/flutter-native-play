@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, ArrowLeft, Check, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
+import { Share2, ArrowLeft, Check, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -13,9 +13,10 @@ import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
-import { TVConnectModal } from "./TVConnectModal";
+import { TVSetupModal } from "./TVSetupModal";
 import { GradientPicker } from "./GradientPicker";
 import { getGradientById } from "@/config/roomGradients";
+import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,14 +51,14 @@ export function RoomLobbyV2() {
     loading,
   } = useMultiplayerV2();
   
-  const [copied, setCopied] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
-  const [showTVModal, setShowTVModal] = useState(false);
+  const [showTVSetupModal, setShowTVSetupModal] = useState(false);
+  const [isTVModeEnabled, setIsTVModeEnabled] = useState(false);
   const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
@@ -117,20 +118,6 @@ export function RoomLobbyV2() {
     }
   }, [currentRoom]);
 
-  const handleCopyLink = async () => {
-    if (!currentRoom) return;
-    
-    try {
-      const link = getShareLink(currentRoom.room_code);
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      toast.success(t("team.linkCopied"));
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error(t("team.copyFailed"));
-    }
-  };
-
   const handleShare = async () => {
     if (!currentRoom) return;
     
@@ -150,9 +137,35 @@ export function RoomLobbyV2() {
       }
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
-        toast.error(t("team.shareFailed"));
+        // Fallback to copy
+        try {
+          await navigator.clipboard.writeText(link);
+          toast.success(t("team.linkCopied"));
+        } catch {
+          toast.error(t("team.shareFailed"));
+        }
       }
     }
+  };
+
+  const handleTVModeToggle = (checked: boolean) => {
+    if (checked) {
+      // Show setup modal when enabling
+      setShowTVSetupModal(true);
+    } else {
+      // Disable TV mode
+      setIsTVModeEnabled(false);
+    }
+  };
+
+  const handleTVSetupComplete = () => {
+    setIsTVModeEnabled(true);
+    setShowTVSetupModal(false);
+  };
+
+  const handleTVSetupCancel = () => {
+    // Don't enable TV mode if cancelled
+    setIsTVModeEnabled(false);
   };
 
   const handleExitRoom = () => {
@@ -186,11 +199,7 @@ export function RoomLobbyV2() {
     setIsStarting(false);
   };
 
-  const handleStartTVMode = () => {
-    if (!currentRoom) return;
-    playSound("button-click");
-    setShowTVModal(true);
-  };
+  // handleStartTVMode removed - now using toggle with handleTVModeToggle
 
   const handleSaveRoomName = async () => {
     if (!currentRoom || !editedName.trim()) return;
@@ -281,11 +290,15 @@ export function RoomLobbyV2() {
               )}
             </motion.button>
 
-            {/* Participant count */}
-            <div className="flex items-center gap-1.5 px-3 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white">
-              <Users className="w-4 h-4" />
-              <span className="text-sm font-semibold">{participants.length}/{currentRoom.max_players}</span>
-            </div>
+            {/* Share button */}
+            <motion.button
+              onClick={handleShare}
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Share2 className="w-4 h-4 text-white" />
+            </motion.button>
 
             {/* Three-dot menu */}
             <DropdownMenu>
@@ -389,51 +402,29 @@ export function RoomLobbyV2() {
           </motion.div>
         </div>
 
-        {/* Copy/Share Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center gap-3 mb-6"
-        >
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleCopyLink}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-white font-medium hover:bg-white/25 transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            <span>{t("team.copyLink")}</span>
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleShare}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-white font-medium hover:bg-white/25 transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>{t("team.share")}</span>
-          </motion.button>
-        </motion.div>
-
-        {/* TV Connection Banner - Host only */}
+        {/* TV Mode Toggle - Host only */}
         {isHost && (
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={handleStartTVMode}
-            className="w-full max-w-md mx-auto p-4 rounded-2xl bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/25 flex items-center justify-center gap-3 hover:from-white/25 hover:to-white/15 transition-all mb-6"
+            className="w-full max-w-md mx-auto p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Tv className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <Tv className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-white font-semibold">TV-ზე თამაში</p>
+                  <p className="text-white/60 text-sm">წვეულების რეჟიმი</p>
+                </div>
+              </div>
+              <Switch
+                checked={isTVModeEnabled}
+                onCheckedChange={handleTVModeToggle}
+              />
             </div>
-            <div className="text-left">
-              <p className="text-white font-semibold">ტელევიზორთან დაკავშირება</p>
-              <p className="text-white/70 text-sm">წვეულების რეჟიმი დიდ ეკრანზე</p>
-            </div>
-          </motion.button>
+          </motion.div>
         )}
 
         {/* Full-Screen Chat Modal */}
@@ -561,6 +552,7 @@ export function RoomLobbyV2() {
             matches={matches}
             currentUserId={user?.id}
             showHostCrown={true}
+            maxPlayers={currentRoom.max_players || 10}
           />
         </div>
 
@@ -640,10 +632,12 @@ export function RoomLobbyV2() {
         )}
       </AnimatePresence>
 
-      {/* TV Connect Modal */}
-      <TVConnectModal
-        open={showTVModal}
-        onOpenChange={setShowTVModal}
+      {/* TV Setup Modal */}
+      <TVSetupModal
+        open={showTVSetupModal}
+        onOpenChange={setShowTVSetupModal}
+        onComplete={handleTVSetupComplete}
+        onCancel={handleTVSetupCancel}
       />
 
       {/* Delete Room Confirmation Modal */}

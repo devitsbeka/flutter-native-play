@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trophy, Crown, Swords, Target } from "lucide-react";
+import { Trophy, Crown, Swords, Target, Users } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -12,6 +12,7 @@ interface RoomScoreboardProps {
   matches: MatchHistoryEntry[];
   currentUserId?: string;
   showHostCrown?: boolean;
+  maxPlayers?: number;
 }
 
 const getRankIcon = (rank: number) => {
@@ -27,7 +28,7 @@ const getRankIcon = (rank: number) => {
   }
 };
 
-export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true }: RoomScoreboardProps) {
+export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers }: RoomScoreboardProps) {
   // Sort by total cumulative score (primary), then by total wins (secondary)
   const sortedParticipants = [...participants].sort(
     (a, b) => {
@@ -57,9 +58,17 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
       className="rounded-3xl overflow-hidden bg-card border border-border shadow-lg"
     >
       {/* Header */}
-      <div className="flex items-center justify-center gap-2 py-3 bg-primary/10 border-b border-border">
-        <Trophy className="w-5 h-5 text-primary" />
-        <span className="font-display font-bold text-foreground">ქულების ცხრილი</span>
+      <div className="flex items-center justify-between px-4 py-3 bg-primary/10 border-b border-border">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-primary" />
+          <span className="font-display font-bold text-foreground">ქულების ცხრილი</span>
+        </div>
+        {maxPlayers && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/10 text-sm font-medium text-foreground">
+            <Users className="w-3.5 h-3.5" />
+            <span>{participants.length}/{maxPlayers}</span>
+          </div>
+        )}
       </div>
 
       {/* Scoreboard Content */}
