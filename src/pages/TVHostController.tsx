@@ -411,7 +411,7 @@ const TVHostController: React.FC = () => {
         </AnimatePresence>
 
         {/* Categories grid */}
-        <div className="space-y-2">
+        <div className="space-y-2 mb-6">
           {categories.map((category, index) => (
             <motion.button
               key={category.id}
@@ -430,12 +430,39 @@ const TVHostController: React.FC = () => {
               <span className="flex-1 text-left font-medium text-white">{category.name}</span>
               {isLoadingQuestions && selectedCategory?.id === category.id ? (
                 <Loader2 className="w-5 h-5 animate-spin text-purple-300" />
+              ) : selectedCategory?.id === category.id ? (
+                <Check className="w-5 h-5 text-green-400" />
               ) : (
                 <ChevronRight className="w-5 h-5 text-purple-300" />
               )}
             </motion.button>
           ))}
         </div>
+
+        {/* Start Game Button - shows when category is selected and players joined */}
+        <AnimatePresence>
+          {selectedCategory && !isLoadingQuestions && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 to-transparent"
+            >
+              <ChunkyButton
+                variant="primary"
+                size="lg"
+                onClick={handleStartGame}
+                disabled={players.length === 0}
+                icon={<Play className="w-5 h-5" />}
+                className="w-full"
+              >
+                {players.length === 0 
+                  ? 'მოთამაშეები უნდა შემოუერთდნენ' 
+                  : `თამაშის დაწყება (${players.length} მოთამაშე)`}
+              </ChunkyButton>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
