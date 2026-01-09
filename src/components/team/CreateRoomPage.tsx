@@ -55,6 +55,7 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>(null);
+  const [isSearchingRandom, setIsSearchingRandom] = useState(false);
   
   // Track friends to invite with a ref so it's available when room is created
   const friendsToInviteRef = useRef<Set<string>>(new Set());
@@ -83,13 +84,28 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
     fetchCategories();
   }, []);
 
-  // Select random category
-  const selectRandomCategory = () => {
-    if (categories.length > 0) {
+  // Select random category with animation
+  const selectRandomCategory = async () => {
+    if (categories.length === 0) return;
+    
+    setIsSearchingRandom(true);
+    setSelectionMode("random");
+    
+    // Animate through random categories
+    const animationDuration = 1500;
+    const intervalTime = 100;
+    const iterations = animationDuration / intervalTime;
+    
+    for (let i = 0; i < iterations; i++) {
       const randomIndex = Math.floor(Math.random() * categories.length);
       setSelectedCategory(categories[randomIndex]);
-      setSelectionMode("random");
+      await new Promise(resolve => setTimeout(resolve, intervalTime));
     }
+    
+    // Final selection
+    const finalIndex = Math.floor(Math.random() * categories.length);
+    setSelectedCategory(categories[finalIndex]);
+    setIsSearchingRandom(false);
   };
 
   const handleLibraryCategorySelect = (category: { id: string; name: string; icon?: string; color: string; image_url?: string | null; total_levels: number }) => {
@@ -211,23 +227,100 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
           </div>
         </div>
 
-        {/* Invite Friends - Simple Button Only */}
+        {/* Invite Friends - Horizontal Scroll */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-1.5">მოწვევა</h2>
-          <motion.button
-            onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/50 border border-border/40 hover:bg-muted transition-colors"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <UserPlus className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-foreground">მოწვევა</span>
-            {selectedFriends.size > 0 && (
-              <span className="ml-auto px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                {selectedFriends.size}
-              </span>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები</h2>
+            {acceptedFriends.length > 5 && (
+              <button 
+                onClick={() => setShowInviteModal(true)}
+                className="text-xs text-primary font-medium hover:underline"
+              >
+                ყველა
+              </button>
             )}
-          </motion.button>
+          </div>
+          
+          {acceptedFriends.length > 0 ? (
+            <div className="flex items-center gap-2">
+              {/* Horizontal scrolling friends */}
+              <div className="flex-1 overflow-x-auto scrollbar-hide">
+                <div className="flex gap-2 pb-1">
+                  {acceptedFriends.slice(0, 10).map((friend) => {
+                    const isSelected = selectedFriends.has(friend.friendId);
+                    return (
+                      <motion.button
+                        key={friend.friendId}
+                        onClick={() => {
+                          const newSelected = new Set(selectedFriends);
+                          if (isSelected) {
+                            newSelected.delete(friend.friendId);
+                          } else {
+                            newSelected.add(friend.friendId);
+                          }
+                          setSelectedFriends(newSelected);
+                        }}
+                        className={`relative shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                          isSelected 
+                            ? "bg-primary/10 ring-2 ring-primary" 
+                            : "bg-muted/50 hover:bg-muted"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="relative">
+                          <img 
+                            src={friend.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.friendId}`} 
+                            alt={friend.nickname}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          {isSelected && (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                              <span className="text-[10px] text-primary-foreground">✓</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-foreground font-medium max-w-[48px] truncate">
+                          {friend.nickname}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                  
+                  {/* Show more button */}
+                  {acceptedFriends.length > 10 && (
+                    <motion.button
+                      onClick={() => setShowInviteModal(true)}
+                      className="shrink-0 flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors min-w-[60px]"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-sm text-primary font-bold">+{acceptedFriends.length - 10}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">მეტი</span>
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <motion.button
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/50 border border-border/40 hover:bg-muted transition-colors"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <UserPlus className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-foreground">მოიწვიე მეგობრები</span>
+            </motion.button>
+          )}
+          
+          {selectedFriends.size > 0 && (
+            <p className="text-xs text-primary mt-1.5">
+              {selectedFriends.size} მეგობარი მოწვეული
+            </p>
+          )}
         </div>
 
         {/* 3 Option Cards - Vertical List with Descriptions */}
@@ -237,28 +330,46 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
           <div className="space-y-3">
             {/* Random Option */}
             <motion.button
-              onClick={() => handleOptionClick("random")}
-              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
+              onClick={() => !isSearchingRandom && handleOptionClick("random")}
+              disabled={isSearchingRandom}
+              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all overflow-hidden ${
                 selectionMode === "random"
                   ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
                   : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
               }`}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: isSearchingRandom ? 1 : 1.01 }}
+              whileTap={{ scale: isSearchingRandom ? 1 : 0.99 }}
             >
+              {/* Searching animation overlay */}
+              {isSearchingRandom && (
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                />
+              )}
+              
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                 selectionMode === "random" 
                   ? "bg-white/20" 
                   : "bg-purple-500/10"
               }`}>
-                <Dices className={`w-6 h-6 ${selectionMode === "random" ? "text-white" : "text-purple-500"}`} />
+                <motion.div
+                  animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
+                  transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
+                >
+                  <Dices className={`w-6 h-6 ${selectionMode === "random" ? "text-white" : "text-purple-500"}`} />
+                </motion.div>
               </div>
-              <div className="flex-1 text-left">
+              <div className="flex-1 text-left relative z-10">
                 <p className={`font-semibold ${selectionMode === "random" ? "text-white" : "text-foreground"}`}>
-                  შემთხვევითი
+                  {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
                 </p>
                 <p className={`text-sm ${selectionMode === "random" ? "text-white/70" : "text-muted-foreground"}`}>
-                  რანდომ კატეგორია თამაშისთვის
+                  {isSearchingRandom 
+                    ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
+                    : "რანდომ კატეგორია თამაშისთვის"
+                  }
                 </p>
               </div>
             </motion.button>
