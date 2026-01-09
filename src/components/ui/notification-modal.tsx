@@ -17,6 +17,11 @@ interface NotificationModalProps {
     label: string;
     onClick: () => void;
   };
+  secondaryButton?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+  };
 }
 
 const typeIcons: Record<NotificationType, string> = {
@@ -43,6 +48,7 @@ export const NotificationModal = memo(function NotificationModal({
   duration = 3500,
   imageUrl,
   actionButton,
+  secondaryButton,
 }: NotificationModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -154,17 +160,36 @@ export const NotificationModal = memo(function NotificationModal({
                     </motion.p>
                   )}
 
-                  {/* Action Button */}
-                  {actionButton && (
-                    <motion.button
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.25 }}
-                      onClick={handleActionClick}
-                      className="mt-4 px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
-                    >
-                      {actionButton.label}
-                    </motion.button>
+                  {/* Action Buttons */}
+                  {(actionButton || secondaryButton) && (
+                    <div className="mt-4 flex flex-col gap-2 w-full">
+                      {actionButton && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.25 }}
+                          onClick={handleActionClick}
+                          className="w-full px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
+                        >
+                          {actionButton.label}
+                        </motion.button>
+                      )}
+                      {secondaryButton && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          onClick={() => {
+                            secondaryButton.onClick();
+                            onClose();
+                          }}
+                          disabled={secondaryButton.disabled}
+                          className="w-full px-6 py-2.5 rounded-full bg-muted text-muted-foreground font-semibold text-sm hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {secondaryButton.label}
+                        </motion.button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

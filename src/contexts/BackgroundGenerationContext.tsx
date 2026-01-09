@@ -208,6 +208,21 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
   ) => {
     if (!user) throw new Error("User not authenticated");
 
+    const MAX_GENERATIONS = 3;
+
+    // Get current generation count for this round
+    let currentCount = 0;
+    if (params.roundId) {
+      const { count } = await supabase
+        .from("cover_image_generations")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("round_id", params.roundId);
+      currentCount = count || 0;
+    }
+
+    const remainingAfterThis = MAX_GENERATIONS - currentCount - 1;
+
     const jobId = `cover_${Date.now()}`;
     const job: GenerationJob = {
       id: jobId,
@@ -215,7 +230,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
       status: "generating",
       startedAt: new Date(),
       estimatedTime: 20,
-      metadata: params,
+      metadata: { ...params, remainingTries: remainingAfterThis },
       onComplete,
     };
 
@@ -244,7 +259,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
         if (data?.imageUrl) {
           updateJob(jobId, { status: "completed", imageUrl: data.imageUrl });
 
-          // Show success notification
+          // Show success notification with Apply and Generate Again buttons
           showNotification("success", {
             title: "სურათი მზადაა! ✨",
             description: "AI-ს მიერ შექმნილი სურათი",
@@ -253,10 +268,20 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
             actionButton: {
               label: "გამოყენება",
               onClick: () => {
+                // Call onComplete to apply the image
                 onComplete?.(data.imageUrl);
+                toast.success("სურათი გამოყენებულია!");
               },
             },
-            duration: 30000,
+            secondaryButton: {
+              label: `🔄 ხელახლა (${remainingAfterThis} დარჩა ${MAX_GENERATIONS}-დან)`,
+              onClick: () => {
+                // Re-trigger generation with same params
+                startCoverGeneration(params, onComplete);
+              },
+              disabled: remainingAfterThis <= 0,
+            },
+            duration: 60000, // Keep visible longer for user decision
           });
         }
 
