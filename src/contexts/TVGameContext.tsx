@@ -53,7 +53,7 @@ interface TVGameContextType extends TVGameState {
   // TV Display actions
   createSession: () => Promise<string | null>;
   // Controller actions
-  joinSession: (code: string, nickname: string, avatarUrl?: string) => Promise<boolean>;
+  joinSession: (code: string, nickname: string, avatarUrl?: string | null) => Promise<boolean>;
   // Host actions
   startGame: (categoryId?: string) => Promise<void>;
   startPlaying: () => Promise<void>; // Trigger playing phase after countdown
@@ -61,6 +61,7 @@ interface TVGameContextType extends TVGameState {
   updateRoomName: (name: string) => Promise<void>;
   updateCategory: (categoryId: string, categoryName: string) => Promise<void>;
   saveRoundHistory: () => Promise<void>;
+  resetGame: () => Promise<void>; // Reset game for play again
   // Player actions
   submitAnswer: (answer: string) => Promise<{ correct: boolean; points: number }>;
   // Shared
@@ -243,8 +244,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  // Join session (called by controller)
-  const joinSession = useCallback(async (code: string, nickname: string, avatarUrl?: string): Promise<boolean> => {
+  // Join session (called by controller or TV display)
+  const joinSession = useCallback(async (code: string, nickname: string, avatarUrl?: string | null): Promise<boolean> => {
     try {
       // Clear any expired session bindings on join attempt
       clearExpiredBindings();
@@ -487,7 +488,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .on('presence', { event: 'leave' }, ({ key }) => {
         tvLogPlayer('leave', key);
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
           // Only track if not TV display, or track as TV_DISPLAY for awareness
           await channel.track({
@@ -500,6 +501,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isTVDisplay,
           });
           tvLog('Presence tracked', { nickname, isTV: isTVDisplay });
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          // Handle connection errors - attempt to reconnect after delay
+          tvLogError('Presence channel error, will reconnect', { status, err });
+          setTimeout(() => {
+            if (presenceChannelRef.current) {
+              supabase.removeChannel(presenceChannelRef.current);
+              presenceChannelRef.current = null;
+            }
+            // Reconnect
+            setupPresenceChannel(sessionId, nickname, avatarUrl, isHostPlayer, isTVDisplay);
+          }, 2000);
         }
       });
 
@@ -790,6 +802,56 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   }, [state.sessionId, state.roundNumber, state.categoryName, state.categoryIcon, state.questions.length, state.players, state.accumulatedScores, state.totalRoundsPlayed]);
 
+  // Reset game for "Play Again" - resets scores and state but keeps session
+  const resetGame = useCallback(async () => {
+    if (!state.sessionId) return;
+
+    tvLog('Resetting game for play again', { sessionId: state.sessionId });
+
+    try {
+      // Reset database state
+      await supabase
+        .from('tv_sessions')
+        .update({
+          status: 'lobby',
+          current_question_index: 0,
+          questions: null,
+          question_start_time: null,
+        })
+        .eq('id', state.sessionId);
+
+      // Reset local state
+      setMyScore(0);
+      setMyAnswer(null);
+
+      // Re-track presence with reset score
+      if (presenceChannelRef.current) {
+        const myPlayer = state.players.find(p => p.id === myPlayerId);
+        await presenceChannelRef.current.track({
+          nickname: myPlayer?.nickname || 'Player',
+          avatar_url: myPlayer?.avatar_url,
+          score: 0,  // Reset score
+          hasAnswered: false,
+          lastAnswerCorrect: null,
+          lastAnswer: null,
+          isHost,
+        });
+      }
+
+      setState(prev => ({
+        ...prev,
+        phase: 'lobby',
+        questions: [],
+        currentQuestionIndex: 0,
+        timeRemaining: QUESTION_TIME,
+      }));
+
+      tvLog('Game reset complete');
+    } catch (error) {
+      tvLogError('resetGame', error);
+    }
+  }, [state.sessionId, state.players, isHost, myPlayerId]);
+
   // Leave session
   const leaveSession = useCallback(() => {
     if (channelRef.current) {
@@ -839,6 +901,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         updateRoomName,
         updateCategory,
         saveRoundHistory,
+        resetGame,
         submitAnswer,
         leaveSession,
         isHost,

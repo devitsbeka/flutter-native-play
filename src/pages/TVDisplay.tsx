@@ -9,6 +9,7 @@ import { TVScoreboardScreen } from '@/components/tv/TVScoreboardScreen';
 import { TVErrorBoundary } from '@/components/tv/TVErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
+import { supabase } from '@/integrations/supabase/client';
 
 const TVDisplayContent: React.FC = () => {
   const { code } = useParams<{ code: string }>();
@@ -16,6 +17,7 @@ const TVDisplayContent: React.FC = () => {
   const { 
     phase, 
     createSession,
+    joinSession,
     startGame, 
     questions, 
     currentQuestionIndex, 
@@ -35,9 +37,49 @@ const TVDisplayContent: React.FC = () => {
 
       tvLog('TVDisplay initializing', { code });
 
-      // If code is provided in URL, this is a TV display joining
-      // If no code, create a new session (TV is the display)
-      if (!code) {
+      // If code is provided in URL, this is a TV display joining an existing session
+      if (code) {
+        try {
+          // Try to find session by 6-char code first
+          let { data: session } = await supabase
+            .from('tv_sessions')
+            .select('*')
+            .eq('pairing_code', code.toUpperCase())
+            .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal', 'results'])
+            .single();
+
+          // If not found, try 4-digit code
+          if (!session) {
+            const { data: session4 } = await supabase
+              .from('tv_sessions')
+              .select('*')
+              .eq('tv_pairing_code', code.toUpperCase())
+              .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal', 'results'])
+              .single();
+            session = session4;
+          }
+
+          if (!session) {
+            tvLogError('TVDisplay', 'Session not found for code');
+            setError('Session not found');
+            setLoading(false);
+            return;
+          }
+
+          tvLog('TVDisplay joining existing session', { sessionId: session.id, code });
+          
+          // Join using context's joinSession as TV_DISPLAY
+          const success = await joinSession(code, 'TV_DISPLAY', null);
+          if (!success) {
+            tvLogError('TVDisplay', 'Failed to join session');
+            setError('Failed to join session');
+          }
+        } catch (err) {
+          tvLogError('TVDisplay', err);
+          setError('Failed to join session');
+        }
+      } else {
+        // No code - create new session (TV is the originator)
         const newCode = await createSession();
         if (!newCode) {
           tvLogError('TVDisplay', 'Failed to create session');
@@ -51,7 +93,7 @@ const TVDisplayContent: React.FC = () => {
     };
 
     initSession();
-  }, [code, createSession]);
+  }, [code, createSession, joinSession]);
 
   if (loading) {
     return (
