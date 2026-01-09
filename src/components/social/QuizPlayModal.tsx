@@ -169,9 +169,18 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
         const newPoints = (profile.total_points || 0) + xp;
         await updateProfile({ total_points: newPoints } as any);
       }
-      // Increment plays count for the quiz
+      // Increment plays count and record play for the quiz
       if (postId) {
         await supabase.rpc('increment_quiz_plays', { post_id: postId });
+        
+        // Record that user played this quiz (for "played" indicator)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          await supabase.from('quiz_post_plays').insert({
+            user_id: user.id,
+            post_id: postId,
+          });
+        }
       }
     } catch (error) {
       console.error("Error awarding rewards:", error);
