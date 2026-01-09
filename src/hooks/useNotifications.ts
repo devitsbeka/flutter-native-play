@@ -3,10 +3,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/contexts/SoundContext';
 
+export type NotificationType =
+  | 'new_message'
+  | 'friend_request'
+  | 'friend_accepted'
+  | 'challenge'
+  | 'game_started'
+  | 'room_invite'
+  | 'game_result'
+  | 'reward'
+  | 'daily_reward'
+  | 'streak'
+  | 'level_up'
+  | 'achievement'
+  | 'trivia_liked'
+  | 'trivia_saved'
+  | 'trivia_played'
+  | 'billing'
+  | 'subscription'
+  | 'system'
+  | 'welcome';
+
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'friend_request' | 'friend_accepted' | 'challenge' | 'game_result' | 'reward' | 'achievement' | 'system' | 'game_started' | 'room_invite';
+  type: NotificationType;
   title: string;
   message: string | null;
   data: Record<string, unknown>;
