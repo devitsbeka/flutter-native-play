@@ -253,6 +253,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       const upperCode = code.toUpperCase();
       
+      // Get current auth user if any
+      const { data: { user } } = await supabase.auth.getUser();
+      const authUserId = user?.id || null;
+      
       // Try to find session by 6-char pairing_code first
       let { data: session, error } = await supabase
         .from('tv_sessions')
@@ -297,16 +301,30 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       // Check if this player is the host:
       // 1. They're the first player (no host set yet), OR
-      // 2. They're rejoining and their player ID matches the stored host_user_id
-      const isHostPlayer = !session.host_user_id || session.host_user_id === playerId;
+      // 2. Their player ID matches the stored host_user_id, OR
+      // 3. Their auth user ID matches the stored host_user_id (for authenticated hosts)
+      const isHostPlayer = !session.host_user_id || 
+                           session.host_user_id === playerId || 
+                           (authUserId && session.host_user_id === authUserId);
       const isTVDisplay = nickname === 'TV_DISPLAY';
+      
+      tvLog('Host check', { 
+        authUserId: authUserId?.slice(0, 8), 
+        playerId: playerId.slice(0, 8), 
+        storedHostId: session.host_user_id?.slice(0, 8),
+        isHostPlayer,
+        isTVDisplay
+      });
 
       // If first player (no host yet) and NOT a TV display, become host
+      // Use auth user ID if available, otherwise use player ID
       if (!session.host_user_id && !isTVDisplay) {
+        const hostIdToStore = authUserId || playerId;
+        tvLog('Setting host_user_id', { hostIdToStore: hostIdToStore.slice(0, 8) });
         await supabase
           .from('tv_sessions')
           .update({ 
-            host_user_id: playerId,
+            host_user_id: hostIdToStore,
             is_paired: true,
             status: 'paired'  // Use 'paired' for DB (constraint-compatible)
           })
