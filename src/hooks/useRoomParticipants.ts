@@ -60,6 +60,11 @@ export function useRoomParticipants(roomId: string | null) {
 
     // Initial fetch
     fetchParticipants();
+    
+    // Refetch after a short delay to catch any participants added during navigation
+    const delayedRefetch = setTimeout(() => {
+      fetchParticipants();
+    }, 500);
 
     // Subscribe to room_participants changes
     const participantsChannel = supabase
@@ -129,6 +134,7 @@ export function useRoomParticipants(roomId: string | null) {
       .subscribe();
 
     return () => {
+      clearTimeout(delayedRefetch);
       supabase.removeChannel(participantsChannel);
       supabase.removeChannel(profilesChannel);
     };
