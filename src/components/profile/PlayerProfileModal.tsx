@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play } from "lucide-react";
+import { X, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users } from "lucide-react";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
@@ -7,13 +7,15 @@ import iconChatBubble from "@/assets/chat-bubble.png";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { usePlayerProfile as usePlayerProfileData } from "@/hooks/usePlayerProfile";
+import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/hooks/usePlayerProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
+import { formatDistanceToNow } from "date-fns";
+import { ka } from "date-fns/locale";
 
 interface PlayerProfileModalProps {
   isOpen: boolean;
@@ -192,6 +194,54 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   </div>
                 )}
               </div>
+
+              {/* Recent Interactions - Only show for friends/non-current-user */}
+              {!data.isCurrentUser && data.interactions.length > 0 && (
+                <div className="px-4 pb-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    ბოლო აქტივობა
+                  </h4>
+                  <div className="space-y-2">
+                    {data.interactions.slice(0, 3).map((interaction) => (
+                      <motion.div
+                        key={interaction.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-card/50 border border-border/50"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          interaction.type === 'invitation_sent' 
+                            ? 'bg-primary/20 text-primary'
+                            : interaction.type === 'invitation_received'
+                              ? 'bg-green-500/20 text-green-500'
+                              : 'bg-amber-500/20 text-amber-500'
+                        }`}>
+                          {interaction.type === 'invitation_sent' && <Send className="w-4 h-4" />}
+                          {interaction.type === 'invitation_received' && <ArrowRight className="w-4 h-4" />}
+                          {interaction.type === 'room_together' && <Users className="w-4 h-4" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">
+                            {interaction.message}
+                          </p>
+                          {interaction.details && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {interaction.details}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(interaction.timestamp), { 
+                            addSuffix: true, 
+                            locale: ka 
+                          })}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Tabs */}
               <Tabs defaultValue="trophies" className="px-4 pb-6">
