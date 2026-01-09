@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, isQuestionComplete } from '@/utils/questionValidation';
 
 export interface AdminQuestion {
   id: string;
@@ -172,6 +173,23 @@ export const useAdminQuestions = (categoryId?: string | null) => {
   }, [categoryId]);
 
   const addQuestion = async (question: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>) => {
+    // Validate question before saving
+    if (!isQuestionComplete(question.question_text, question.correct_answer, question.incorrect_answers)) {
+      if (question.question_text.length > QUESTION_MAX_LENGTH) {
+        toast.error(`კითხვა ძალიან გრძელია (${question.question_text.length}/${QUESTION_MAX_LENGTH})`);
+      } else if (question.correct_answer.length > ANSWER_MAX_LENGTH) {
+        toast.error(`სწორი პასუხი ძალიან გრძელია (${question.correct_answer.length}/${ANSWER_MAX_LENGTH})`);
+      } else {
+        const longAnswer = question.incorrect_answers.find(a => a.length > ANSWER_MAX_LENGTH);
+        if (longAnswer) {
+          toast.error(`არასწორი პასუხი ძალიან გრძელია (${longAnswer.length}/${ANSWER_MAX_LENGTH})`);
+        } else {
+          toast.error('კითხვა/პასუხი არავალიდურია');
+        }
+      }
+      return null;
+    }
+
     try {
       const { data, error } = await supabase
         .from('questions')
