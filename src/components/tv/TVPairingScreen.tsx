@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Tv, Users, Loader2 } from 'lucide-react';
-import { useTVSession, TVPlayer } from '@/contexts/TVSessionContext';
+import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar } from '@/components/shared/Avatar';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 
@@ -10,9 +10,9 @@ interface TVPairingScreenProps {
 }
 
 export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame }) => {
-  const { pairingCode, players, isHost } = useTVSession();
+  const { code, players, isHost } = useTVGame();
 
-  const codeChars = pairingCode?.split('') || [];
+  const codeChars = code?.split('') || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex flex-col items-center justify-center p-8">
@@ -50,7 +50,7 @@ export const TVPairingScreen: React.FC<TVPairingScreenProps> = ({ onStartGame })
           ))}
         </div>
         <p className="text-muted-foreground text-center mt-4 text-sm">
-          ან გადადით: <span className="text-primary font-mono">mytrivia.io/tv/{pairingCode}</span>
+          ან გადადით: <span className="text-primary font-mono">mytrivia.io/tv/{code}</span>
         </p>
       </motion.div>
 

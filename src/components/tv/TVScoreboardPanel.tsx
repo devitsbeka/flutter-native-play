@@ -6,9 +6,11 @@ import { Avatar } from '@/components/shared/Avatar';
 interface Player {
   id: string;
   nickname: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
   score: number;
   hasAnswered?: boolean;
+  lastAnswerCorrect?: boolean | null;
+  lastAnswer?: string | null;
   isHost?: boolean;
 }
 

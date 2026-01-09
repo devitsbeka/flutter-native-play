@@ -1,23 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Star, RotateCcw, Home, Crown } from 'lucide-react';
-import { useTVSession } from '@/contexts/TVSessionContext';
+import { useTVGame, TVPlayer } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
 
 const PODIUM_HEIGHTS = [160, 200, 120]; // 2nd, 1st, 3rd place heights
 const PODIUM_COLORS = ['bg-gray-400', 'bg-yellow-500', 'bg-amber-700'];
 
-interface Player {
-  id: string;
-  nickname: string;
-  avatar_url?: string;
-  score: number;
-  isHost?: boolean;
-}
-
 interface TVScoreboardScreenProps {
-  players?: Player[];
+  players?: TVPlayer[];
   onPlayAgain?: () => void;
   onExit?: () => void;
 }
@@ -27,7 +19,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
   onPlayAgain: propPlayAgain,
   onExit: propExit,
 }) => {
-  const { players: contextPlayers, leaveSession } = useTVSession();
+  const { players: contextPlayers, leaveSession } = useTVGame();
   const [showConfetti, setShowConfetti] = useState(false);
 
   // Use props if provided, otherwise fall back to context
@@ -74,7 +66,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
     if (propExit) {
       propExit();
     } else {
-      await leaveSession();
+      leaveSession();
       window.location.href = '/team';
     }
   };
@@ -159,7 +151,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                       <Crown className="w-12 h-12 text-yellow-500 fill-yellow-500" />
                     </motion.div>
                   )}
-                  {'isHost' in player && player.isHost && (
+                  {player.isHost && (
                     <div className="absolute -bottom-1 -right-1 bg-purple-600 rounded-full p-1">
                       <span className="text-xs">👑</span>
                     </div>
@@ -228,7 +220,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                 </div>
                 <span className="text-white font-medium flex-1 text-lg">
                   {player.nickname}
-                  {'isHost' in player && player.isHost && ' 👑'}
+                  {player.isHost && ' 👑'}
                 </span>
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, Users } from 'lucide-react';
-import { useTVSession } from '@/contexts/TVSessionContext';
+import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar } from '@/components/shared/Avatar';
 
 const OPTION_COLORS = [
@@ -12,13 +12,12 @@ const OPTION_COLORS = [
 ];
 
 export const TVRevealScreen: React.FC = () => {
-  const { questions, currentQuestionIndex, players } = useTVSession();
+  const { questions, currentQuestionIndex, players } = useTVGame();
 
   const currentQuestion = questions[currentQuestionIndex];
   if (!currentQuestion) return null;
 
   const correctAnswer = currentQuestion.correct_answer;
-  const correctIndex = currentQuestion.options.findIndex(opt => opt === correctAnswer);
 
   const correctPlayers = players.filter(p => p.lastAnswerCorrect);
   const wrongPlayers = players.filter(p => p.hasAnswered && !p.lastAnswerCorrect);

@@ -19,6 +19,7 @@ export interface TVPlayer {
   score: number;
   hasAnswered: boolean;
   lastAnswerCorrect: boolean | null;
+  lastAnswer: string | null;
   isHost: boolean;
 }
 
@@ -467,6 +468,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               score: (rawPresence.score as number) || 0,
               hasAnswered: (rawPresence.hasAnswered as boolean) || false,
               lastAnswerCorrect: rawPresence.lastAnswerCorrect as boolean | null,
+              lastAnswer: rawPresence.lastAnswer as string | null,
               isHost: (rawPresence.isHost as boolean) || false,
             });
           }
@@ -628,6 +630,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           score: newScore,
           hasAnswered: true,
           lastAnswerCorrect: isCorrect,
+          lastAnswer: answer,
           isHost,
         });
       }
@@ -696,6 +699,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             score: myScore,
             hasAnswered: false,
             lastAnswerCorrect: null,
+            lastAnswer: null,
             isHost: true,
           });
         }
