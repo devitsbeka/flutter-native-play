@@ -27,7 +27,6 @@ import TeamV2 from "./pages/TeamV2";
 import RoomRedirect from "./pages/RoomRedirect";
 import TVDisplay from "./pages/TVDisplay";
 import { Navigate } from "react-router-dom";
-import TVReceiver from "./pages/TVReceiver";
 import TVHostController from "./pages/TVHostController";
 import TVLobby from "./pages/TVLobby";
 import TVJoin from "./pages/TVJoin";
@@ -94,7 +93,6 @@ const App = () => (
               <Route path="/team" element={<TeamV2 />} />
               <Route path="/room/:code" element={<RoomRedirect />} />
               <Route path="/tv" element={<TVLobby />} />
-              <Route path="/tv/old" element={<TVReceiver />} />
               <Route path="/tv/host/:sessionId" element={<TVGameProvider><TVHostController /></TVGameProvider>} />
               <Route path="/tv/:code" element={<TVDisplay />} />
               <Route path="/join" element={<TVJoin />} />
