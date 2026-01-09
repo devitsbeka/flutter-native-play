@@ -497,6 +497,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const questionCount = state.currentRoom.total_questions || 5;
     const usedIds = state.currentRoom.used_question_ids || [];
     
+    // Get user's language preference
+    const language = typeof window !== 'undefined' 
+      ? localStorage.getItem('preferredLanguage') || 'ka' 
+      : 'ka';
+    
     try {
       let selectedQuestions: any[] = [];
       let categoryUUID: string | null = null;
@@ -520,6 +525,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
           .eq("in_production", true)
+          .eq("language", language)
           .eq("category_id", categoryUUID);
         
         // Exclude already used questions
@@ -540,7 +546,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let fallbackQuery = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("in_production", true);
+          .eq("in_production", true)
+          .eq("language", language);
         
         if (usedIds.length > 0) {
           fallbackQuery = fallbackQuery.not("id", "in", `(${usedIds.join(",")})`);
@@ -745,6 +752,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     
+    // Get user's language preference
+    const language = typeof window !== 'undefined' 
+      ? localStorage.getItem('preferredLanguage') || 'ka' 
+      : 'ka';
+    
     // Get fresh room data to have latest used_question_ids
     const { data: freshRoom } = await supabase
       .from("game_rooms")
@@ -777,6 +789,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
           .eq("in_production", true)
+          .eq("language", language)
           .eq("category_id", categoryUUID);
         
         if (usedIds.length > 0) {
@@ -796,7 +809,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let fallbackQuery = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("in_production", true);
+          .eq("in_production", true)
+          .eq("language", language);
         
         if (usedIds.length > 0) {
           fallbackQuery = fallbackQuery.not("id", "in", `(${usedIds.join(",")})`);

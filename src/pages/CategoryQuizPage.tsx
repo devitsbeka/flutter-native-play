@@ -200,6 +200,9 @@ export default function CategoryQuizPage() {
       try {
         const levelNumber = parseInt(levelId || "1");
         
+        // Get user's language preference
+        const language = localStorage.getItem('preferredLanguage') || 'ka';
+        
         // First, get the category UUID and icon_slug from the category_id string
         const { data: categoryData, error: categoryError } = await supabase
           .from('categories')
@@ -233,6 +236,8 @@ export default function CategoryQuizPage() {
           .from('questions')
           .select('id', { count: 'exact', head: true })
           .eq('is_active', true)
+          .eq('in_production', true)
+          .eq('language', language)
           .eq('category_id', categoryData.id)
           .gte('level_number', minLevel)
           .lte('level_number', maxLevel);
@@ -248,6 +253,8 @@ export default function CategoryQuizPage() {
           .from('questions')
           .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
           .eq('is_active', true)
+          .eq('in_production', true)
+          .eq('language', language)
           .eq('category_id', categoryData.id)
           .gte('level_number', minLevel)
           .lte('level_number', maxLevel);
@@ -274,6 +281,8 @@ export default function CategoryQuizPage() {
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
               .eq('is_active', true)
+              .eq('in_production', true)
+              .eq('language', language)
               .eq('category_id', categoryData.id)
               .gte('level_number', minLevel)
               .lte('level_number', maxLevel)
@@ -290,6 +299,8 @@ export default function CategoryQuizPage() {
             .from('questions')
             .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
             .eq('is_active', true)
+            .eq('in_production', true)
+            .eq('language', language)
             .eq('category_id', categoryData.id)
             .gte('level_number', 1)
             .lte('level_number', 20)

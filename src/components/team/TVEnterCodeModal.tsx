@@ -62,6 +62,9 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         return;
       }
 
+      // Get user's language preference
+      const language = localStorage.getItem('preferredLanguage') || 'ka';
+
       // Fetch questions for this category
       const { data: questionsData } = await supabase
         .from('questions')
@@ -69,6 +72,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         .eq('category_id', categoryData.id)
         .eq('is_active', true)
         .eq('in_production', true)
+        .eq('language', language)
         .limit(10);
 
       const formattedQuestions = (questionsData || []).map(q => {
