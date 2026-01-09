@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { TVGameProvider, useTVGame } from '@/contexts/TVGameContext';
 import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
@@ -9,12 +9,52 @@ import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
 import { TVIdleScreen } from '@/components/tv/TVIdleScreen';
 import { Loader2 } from 'lucide-react';
 
+const CODE_REFRESH_INTERVAL = 5 * 60 * 1000; // Refresh code every 5 minutes if no players
+
 const TVLobbyContent: React.FC = () => {
-  const { phase, code, createSession, players } = useTVGame();
+  const { phase, code, createSession, players, sessionId } = useTVGame();
+  const lastRefreshRef = useRef<number>(Date.now());
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasInitializedRef = useRef(false);
+
+  // Initialize session once
+  const initSession = useCallback(async () => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+    await createSession();
+    lastRefreshRef.current = Date.now();
+  }, [createSession]);
 
   useEffect(() => {
-    createSession();
-  }, [createSession]);
+    initSession();
+  }, [initSession]);
+
+  // Auto-refresh code if no players have joined after interval
+  useEffect(() => {
+    const checkAndRefresh = async () => {
+      const now = Date.now();
+      const timeSinceLastRefresh = now - lastRefreshRef.current;
+      
+      // Only refresh if:
+      // 1. We're in pairing phase (no players yet)
+      // 2. Enough time has passed since last refresh
+      if (phase === 'pairing' && players.length === 0 && timeSinceLastRefresh >= CODE_REFRESH_INTERVAL) {
+        console.log('Auto-refreshing TV code - no players joined in', CODE_REFRESH_INTERVAL / 1000, 'seconds');
+        hasInitializedRef.current = false; // Allow re-initialization
+        await createSession();
+        lastRefreshRef.current = Date.now();
+      }
+    };
+
+    // Check every 30 seconds
+    refreshIntervalRef.current = setInterval(checkAndRefresh, 30 * 1000);
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
+  }, [phase, players.length, createSession]);
 
   // Debug logging
   useEffect(() => {
