@@ -134,14 +134,17 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
     setSelectionMode(null);
   };
 
+  // Copy to clipboard helper
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
   // Generate and share invite link
   const handleShareInviteLink = async () => {
-    // Generate a deep link for the app/room invite
     const baseUrl = window.location.origin;
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const inviteLink = `${baseUrl}/join?invite=${inviteCode}&room=${roomName}`;
     
-    // Try to use native share if available
     if (navigator.share) {
       try {
         await navigator.share({
@@ -150,17 +153,11 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
           url: inviteLink,
         });
       } catch (err) {
-        // User cancelled or share failed, fallback to clipboard
         copyToClipboard(inviteLink);
       }
     } else {
       copyToClipboard(inviteLink);
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
   };
 
   const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library") && selectedCategory !== null;
