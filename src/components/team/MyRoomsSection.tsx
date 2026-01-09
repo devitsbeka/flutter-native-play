@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, Gamepad2, Tv, Airplay, Cast } from "lucide-react";
-import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
+import { Plus, Users, Gamepad2, Tv, Airplay, Cast, UserPlus } from "lucide-react";
+import { useMyRooms, MyRoom, RoomFilter, RoomSort } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -16,10 +16,21 @@ interface MyRoomsSectionProps {
   onCreateRoom?: () => void;
   onShowAllRooms?: () => void;
   vertical?: boolean;
+  filter?: RoomFilter;
+  sort?: RoomSort;
+  searchQuery?: string;
 }
 
-export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms, vertical = false }: MyRoomsSectionProps) {
-  const { rooms, loading } = useMyRooms();
+export function MyRoomsSection({ 
+  hideTV = false, 
+  onCreateRoom, 
+  onShowAllRooms, 
+  vertical = false,
+  filter = "all",
+  sort = "recent",
+  searchQuery = ""
+}: MyRoomsSectionProps) {
+  const { rooms, loading, filter: activeFilter } = useMyRooms({ filter, sort, searchQuery });
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
   const [showTVModal, setShowTVModal] = useState(false);
@@ -92,7 +103,24 @@ export function MyRoomsSection({ hideTV = false, onCreateRoom, onShowAllRooms, v
           className="mx-4 flex flex-col items-center py-8 rounded-2xl bg-card border border-border"
         >
           <Gamepad2 className="w-12 h-12 text-muted-foreground mb-3" />
-          <p className="text-muted-foreground text-sm">{t('team.noActiveRooms')}</p>
+          <p className="text-muted-foreground text-sm text-center">
+            {activeFilter === "my_rooms" && "შენ ჯერ ოთახი არ შეგიქმნია"}
+            {activeFilter === "friends_rooms" && "მეგობრებს ოთახები არ აქვთ"}
+            {activeFilter === "active" && "აქტიური ოთახები არ არის"}
+            {activeFilter === "completed" && "დასრულებული ოთახები არ არის"}
+            {activeFilter === "all" && t('team.noActiveRooms')}
+          </p>
+          {(activeFilter === "my_rooms" || activeFilter === "all") && onCreateRoom && (
+            <ChunkyButton 
+              variant="primary" 
+              size="sm" 
+              className="mt-4"
+              onClick={onCreateRoom}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              ოთახის შექმნა
+            </ChunkyButton>
+          )}
         </motion.div>
       ) : vertical ? (
         <div className="flex flex-col gap-3 px-4 pb-4">
