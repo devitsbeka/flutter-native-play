@@ -6,6 +6,11 @@ interface NotificationOptions {
   description?: string;
   icon?: string | React.ReactNode;
   duration?: number;
+  imageUrl?: string;
+  actionButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface NotificationContextType {
@@ -22,6 +27,11 @@ interface NotificationState {
   description?: string;
   icon?: string | React.ReactNode;
   duration?: number;
+  imageUrl?: string;
+  actionButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export function NotificationModalProvider({ children }: { children: ReactNode }) {
@@ -58,6 +68,8 @@ export function NotificationModalProvider({ children }: { children: ReactNode })
         description={notification.description}
         icon={notification.icon}
         duration={notification.duration}
+        imageUrl={notification.imageUrl}
+        actionButton={notification.actionButton}
       />
     </NotificationModalContext.Provider>
   );

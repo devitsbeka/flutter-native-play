@@ -3,6 +3,7 @@ import { Upload, Sparkles, Loader2, X, Check, AlertTriangle } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
@@ -46,16 +47,17 @@ export function CoverImagePicker({
   roundId
 }: CoverImagePickerProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [previousGenerations, setPreviousGenerations] = useState<Generation[]>([]);
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { startCoverGeneration, isGenerating } = useBackgroundGeneration();
 
   const generationCount = previousGenerations.length;
   const remainingGenerations = MAX_GENERATIONS - generationCount;
+  const isCoverGenerating = isGenerating("cover");
 
   // Fetch previous generations on mount
   useEffect(() => {
@@ -173,36 +175,35 @@ export function CoverImagePicker({
       return;
     }
 
-    setIsGenerating(true);
     setValidationWarning(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke("generate-cover-image", {
-        body: {
+      // Start background generation
+      await startCoverGeneration(
+        {
           title: title || suggestPrompt || "Quiz",
           subject: suggestPrompt || title || "trivia quiz",
           roundId: roundId
+        },
+        (imageUrl) => {
+          // Called when user clicks "Use" in notification
+          onImageChange(imageUrl);
+          // Refresh generations list
+          fetchPreviousGenerations();
         }
+      );
+
+      // Show info about background generation
+      toast({
+        title: "გენერაცია დაიწყო ✨",
+        description: "შეგიძლიათ გააგრძელოთ რედაქტირება. შეტყობინება გამოჩნდება როცა მზად იქნება.",
       });
 
-      if (error) throw error;
-
-      if (data?.previousGenerations) {
-        setPreviousGenerations(data.previousGenerations);
-      }
-
-      if (data?.imageUrl) {
-        onImageChange(data.imageUrl);
-        toast({
-          title: "სურათი შეიქმნა! ✨",
-          description: `დარჩენილია ${MAX_GENERATIONS - (data.generationCount || generationCount + 1)} გენერაცია`,
-        });
-      }
-    } catch (error: any) {
-      console.error("Error generating:", error);
+    } catch (error: unknown) {
+      console.error("Error starting generation:", error);
       
-      // Check if it's a limit error
-      if (error?.message?.includes("limit")) {
+      const errorMessage = error instanceof Error ? error.message : "";
+      if (errorMessage.includes("limit")) {
         toast({
           title: "ლიმიტი ამოიწურა",
           description: "თქვენ უკვე დაგენერირეთ 3 სურათი",
@@ -215,8 +216,6 @@ export function CoverImagePicker({
           variant: "destructive",
         });
       }
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -299,11 +298,14 @@ export function CoverImagePicker({
 
         <button
           onClick={handleGenerateAI}
-          disabled={isGenerating || remainingGenerations <= 0}
+          disabled={isCoverGenerating || remainingGenerations <= 0}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {isGenerating ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+          {isCoverGenerating ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>გენერირდება...</span>
+            </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />

@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Camera, Sparkles, Check, RefreshCw, Loader2, FlipHorizontal } from "lucide-react";
+import { X, Upload, Camera, Sparkles, Check, RefreshCw, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
+import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 
 interface AvatarGeneratorModalProps {
   isOpen: boolean;
@@ -12,11 +13,11 @@ interface AvatarGeneratorModalProps {
 }
 
 export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalProps) {
-  const { user, profile, updateProfile } = useAuth();
-  const [step, setStep] = useState<"upload" | "camera" | "generating" | "preview">("upload");
+  const { user } = useAuth();
+  const { startAvatarGeneration, isGenerating } = useBackgroundGeneration();
+  const [step, setStep] = useState<"upload" | "camera">("upload");
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [generatedAvatar, setGeneratedAvatar] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -126,115 +127,30 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
   const generateAvatar = async () => {
     if (!uploadedImage || !user) return;
 
-    setIsLoading(true);
-    setStep("generating");
+    setIsStarting(true);
 
     try {
-      // First upload the image to storage to get a public URL
-      const fileName = `${user.id}/temp_${Date.now()}.jpg`;
-      
-      // Convert base64 to blob
-      const base64Data = uploadedImage.split(",")[1];
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: "image/jpeg" });
-
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, blob, { upsert: true });
-
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(fileName);
-
-      const imageUrl = urlData.publicUrl;
-      console.log("Uploaded image URL:", imageUrl);
-
-      // Call the edge function to generate avatar
-      const { data, error } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl },
+      // Start background generation - modal can be closed
+      await startAvatarGeneration(uploadedImage, () => {
+        // This will be called when generation completes and user applies
+        // Could refresh profile or trigger other updates
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || "Failed to generate avatar");
-      }
-
-      setGeneratedAvatar(data.avatarUrl);
-      setStep("preview");
-      toast.success(t("avatar.avatarSaved"));
-
-    } catch (error) {
-      console.error("Error generating avatar:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate avatar");
-      setStep("upload");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const saveAvatar = async () => {
-    if (!generatedAvatar || !user) return;
-
-    setIsLoading(true);
-
-    try {
-      // Download the generated avatar and upload to our storage
-      const response = await fetch(generatedAvatar);
-      const blob = await response.blob();
+      // Close modal immediately - generation continues in background
+      handleClose();
       
-      // Use .png to preserve transparency from background removal
-      const fileName = `${user.id}/avatar_${Date.now()}.png`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, blob, { 
-          upsert: true,
-          contentType: 'image/png'
-        });
-
-      if (uploadError) {
-        throw new Error(`Failed to save avatar: ${uploadError.message}`);
-      }
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(fileName);
-
-      // Update profile with new avatar URL
-      await updateProfile({ avatar_url: urlData.publicUrl });
-
-      toast.success(t("avatar.avatarSaved"));
-      onClose();
-      resetState();
-
     } catch (error) {
-      console.error("Error saving avatar:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to save avatar");
+      console.error("Error starting avatar generation:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to start generation");
     } finally {
-      setIsLoading(false);
+      setIsStarting(false);
     }
   };
 
   const resetState = () => {
     setStep("upload");
     setUploadedImage(null);
-    setGeneratedAvatar(null);
-    setIsLoading(false);
+    setIsStarting(false);
     stopCamera();
   };
 
@@ -244,6 +160,8 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
   };
 
   if (!isOpen) return null;
+
+  const isCurrentlyGenerating = isGenerating("avatar");
 
   return (
     <AnimatePresence>
@@ -277,6 +195,17 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
 
           {/* Content */}
           <div className="p-6">
+            {/* Show banner if generation is in progress */}
+            {isCurrentlyGenerating && (
+              <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">{t("avatar.generating")}</p>
+                  <p className="text-xs text-muted-foreground">{t("avatar.generatingBackgroundDesc")}</p>
+                </div>
+              </div>
+            )}
+
             {step === "upload" && (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground text-center">
@@ -303,13 +232,21 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                       </button>
                       <button
                         onClick={generateAvatar}
-                        disabled={isLoading}
+                        disabled={isStarting}
                         className="px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2"
                       >
-                        <Sparkles className="w-4 h-4" />
+                        {isStarting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4" />
+                        )}
                         {t("avatar.generate")}
                       </button>
                     </div>
+                    {/* Hint that modal can be closed */}
+                    <p className="text-xs text-muted-foreground text-center">
+                      {t("avatar.canCloseHint")}
+                    </p>
                   </div>
                 ) : (
                   <div className="flex gap-3 justify-center">
@@ -393,85 +330,6 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                   >
                     <Camera className="w-4 h-4" />
                     {t("avatar.capture")}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === "generating" && (
-              <div className="flex flex-col items-center gap-4 py-8">
-                <div className="relative">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
-                    <img
-                      src={uploadedImage || ""}
-                      alt="Uploaded"
-                      className="w-full h-full object-cover opacity-50"
-                    />
-                  </div>
-                  <motion.div
-                    className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-foreground">{t("avatar.generating")}</p>
-                  <p className="text-sm text-muted-foreground">{t("avatar.generatingTime")}</p>
-                </div>
-                <motion.div
-                  className="flex gap-1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-primary"
-                      animate={{ scale: [1, 1.5, 1] }}
-                      transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
-                    />
-                  ))}
-                </motion.div>
-              </div>
-            )}
-
-            {step === "preview" && generatedAvatar && (
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  {t("avatar.avatarReady")}
-                </p>
-
-                <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary shadow-lg">
-                  <img
-                    src={generatedAvatar}
-                    alt="Generated Avatar"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="flex gap-2 w-full">
-                  <button
-                    onClick={() => {
-                      setStep("upload");
-                      setGeneratedAvatar(null);
-                    }}
-                    disabled={isLoading}
-                    className="flex-1 py-3 rounded-full bg-muted text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    {t("avatar.regenerate")}
-                  </button>
-                  <button
-                    onClick={saveAvatar}
-                    disabled={isLoading}
-                    className="flex-1 py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Check className="w-4 h-4" />
-                    )}
-                    {t("avatar.useAsProfile")}
                   </button>
                 </div>
               </div>
