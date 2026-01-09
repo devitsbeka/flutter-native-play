@@ -73,6 +73,12 @@ const generateCode = () => {
   return code;
 };
 
+// Generate 4-digit code from 6-char code
+const generate4DigitCode = (code: string): string => {
+  const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return String(hash % 10000).padStart(4, '0');
+};
+
 // Shuffle array
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -151,11 +157,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const createSession = useCallback(async (): Promise<string | null> => {
     try {
       const code = generateCode();
+      const fourDigitCode = generate4DigitCode(code);
       
       const { data, error } = await supabase
         .from('tv_sessions')
         .insert({
           pairing_code: code,
+          tv_pairing_code: fourDigitCode,
           status: 'waiting',
           is_paired: false,
           current_question_index: 0,
@@ -187,13 +195,30 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Join session (called by controller)
   const joinSession = useCallback(async (code: string, nickname: string, avatarUrl?: string): Promise<boolean> => {
     try {
-      // Find session by code
-      const { data: session, error } = await supabase
+      const upperCode = code.toUpperCase();
+      
+      // Try to find session by 6-char pairing_code first
+      let { data: session, error } = await supabase
         .from('tv_sessions')
         .select('*')
-        .eq('pairing_code', code.toUpperCase())
+        .eq('pairing_code', upperCode)
         .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal'])
         .single();
+
+      // If not found, try 4-digit tv_pairing_code
+      if (error || !session) {
+        const { data: session4Digit, error: error4Digit } = await supabase
+          .from('tv_sessions')
+          .select('*')
+          .eq('tv_pairing_code', upperCode)
+          .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal'])
+          .single();
+        
+        if (!error4Digit && session4Digit) {
+          session = session4Digit;
+          error = null;
+        }
+      }
 
       if (error || !session) {
         console.error('Session not found:', error);
