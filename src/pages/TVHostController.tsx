@@ -93,6 +93,15 @@ const TVHostController: React.FC = () => {
   };
   
   const localPhase = mapContextPhaseToLocal(contextPhase);
+  
+  // Debug logging for phase issues
+  console.log('[TVHostController] Phase debug:', { 
+    contextPhase, 
+    localPhase, 
+    questionsLength: questions.length,
+    currentQuestionIndex,
+    playersCount: players.length 
+  });
 
   const joinUrl = `${window.location.origin}/join?code=${guestJoinCode || gameCode}`;
   const currentQuestion = questions[currentQuestionIndex];
@@ -734,6 +743,22 @@ const TVHostController: React.FC = () => {
             onClick={handleEndGame}
           >
             თამაშის დასრულება
+          </ChunkyButton>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle edge case: questions not loaded but we're in a playing-like state
+  if (localPhase === 'playing' && (!currentQuestion || totalQuestions === 0)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-purple-200">კითხვები იტვირთება...</p>
+          <p className="text-purple-400 text-sm mt-2">თუ ეს გაგრძელდა, დაბრუნდი უკან</p>
+          <ChunkyButton onClick={() => navigate('/team')} className="mt-4" variant="secondary">
+            უკან
           </ChunkyButton>
         </div>
       </div>
