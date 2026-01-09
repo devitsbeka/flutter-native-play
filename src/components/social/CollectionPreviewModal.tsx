@@ -62,7 +62,7 @@ export function CollectionPreviewModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
           />
 
           {/* Modal */}
@@ -70,7 +70,7 @@ export function CollectionPreviewModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-x-4 top-4 bottom-4 z-[100] flex items-center justify-center pointer-events-none"
+            className="fixed inset-x-4 top-4 bottom-4 z-[200] flex items-center justify-center pointer-events-none"
           >
             <div className="bg-card rounded-3xl overflow-hidden w-full max-w-md max-h-full flex flex-col pointer-events-auto shadow-2xl border border-border">
               {/* Header Image/Gradient */}
