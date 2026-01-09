@@ -12,6 +12,7 @@ import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
 import { Button } from '@/components/ui/button';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
+import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
 type FilterType = 'all' | 'unread' | 'friends' | 'games' | 'rewards';
 
@@ -70,11 +71,11 @@ function NotificationCard({
             "font-bold text-sm line-clamp-1",
             isUnread ? "text-foreground" : "text-muted-foreground"
           )}>
-            {notification.title}
+            {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
           </p>
           {notification.message && (
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-              {notification.message}
+              {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
             </p>
           )}
           <p className="text-xs text-muted-foreground/60 mt-2">

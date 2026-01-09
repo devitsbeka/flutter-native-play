@@ -420,6 +420,15 @@ export const en: KaTranslations = {
     noFriendActivity: "No friend activity yet",
     noGameNotifications: "No game notifications",
     whenSomethingHappens: "When something happens, you'll see it here",
+    // Notification titles
+    gameStarted: "Game Started!",
+    gameInRoom: "A game has started in your room!",
+    gameRoomInvitation: "Game Room Invitation",
+    invitedYouToPlay: "{name} invited you to play!",
+    friendRequest: "Friend Request",
+    friendAccepted: "Friend Accepted",
+    challengeReceived: "Challenge",
+    gameResult: "Game Result",
   },
 
   // ==========================================
