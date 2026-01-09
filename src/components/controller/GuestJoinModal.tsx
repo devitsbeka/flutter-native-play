@@ -22,9 +22,54 @@ export const GuestJoinModal: React.FC<GuestJoinModalProps> = ({
   const [nickname, setNickname] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [showSignupBenefits, setShowSignupBenefits] = useState(false);
+  const [nicknameError, setNicknameError] = useState<string | null>(null);
+
+  // Validate and sanitize nickname
+  const validateNickname = (value: string): boolean => {
+    const trimmed = value.trim();
+    
+    // Check length
+    if (trimmed.length < 2) {
+      setNicknameError('მინიმუმ 2 სიმბოლო');
+      return false;
+    }
+    if (trimmed.length > 20) {
+      setNicknameError('მაქსიმუმ 20 სიმბოლო');
+      return false;
+    }
+    
+    // Check for valid characters (letters, numbers, spaces, Georgian)
+    const validPattern = /^[\p{L}\p{N}\s]+$/u;
+    if (!validPattern.test(trimmed)) {
+      setNicknameError('მხოლოდ ასოები და რიცხვები');
+      return false;
+    }
+    
+    // Reserved names check
+    const reserved = ['TV_DISPLAY', 'SYSTEM', 'ADMIN', 'HOST'];
+    if (reserved.includes(trimmed.toUpperCase())) {
+      setNicknameError('ეს სახელი დაცულია');
+      return false;
+    }
+    
+    setNicknameError(null);
+    return true;
+  };
+
+  const handleNicknameChange = (value: string) => {
+    setNickname(value);
+    if (nicknameError) {
+      validateNickname(value);
+    }
+  };
 
   const handleGuestJoin = async () => {
     if (!nickname.trim() || isJoining) return;
+    
+    if (!validateNickname(nickname)) {
+      return;
+    }
+    
     setIsJoining(true);
     try {
       await onJoinAsGuest(nickname.trim());
@@ -79,13 +124,21 @@ export const GuestJoinModal: React.FC<GuestJoinModalProps> = ({
             <div className="mb-6">
               <Input
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={(e) => handleNicknameChange(e.target.value)}
                 placeholder="შენი სახელი..."
                 maxLength={20}
-                className="w-full h-14 text-lg text-center bg-white/10 border-2 border-purple-400/30 rounded-2xl text-white placeholder:text-purple-300/50 focus:border-purple-400 focus:ring-purple-400/20"
+                className={`w-full h-14 text-lg text-center bg-white/10 border-2 rounded-2xl text-white placeholder:text-purple-300/50 focus:ring-purple-400/20 ${
+                  nicknameError 
+                    ? 'border-red-400/50 focus:border-red-400' 
+                    : 'border-purple-400/30 focus:border-purple-400'
+                }`}
                 onKeyDown={(e) => e.key === 'Enter' && handleGuestJoin()}
+                onBlur={() => nickname.trim() && validateNickname(nickname)}
                 autoFocus
               />
+              {nicknameError && (
+                <p className="text-red-400 text-sm mt-2 text-center">{nicknameError}</p>
+              )}
             </div>
 
             {/* Join as Guest Button */}

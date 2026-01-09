@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TVGameProvider, useTVGame, mapDbStatusToPhase } from '@/contexts/TVGameContext';
-import { TVPairingScreen } from '@/components/tv/TVPairingScreen';
+import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
+import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
-import { TVQuestionScreen } from '@/components/tv/TVQuestionScreen';
-import { TVRevealScreen } from '@/components/tv/TVRevealScreen';
-import { TVScoreboardScreen } from '@/components/tv/TVScoreboardScreen';
+import { TVQuestionScreenV3 } from '@/components/tv/TVQuestionScreenV3';
+import { TVRevealScreenV2 } from '@/components/tv/TVRevealScreenV2';
+import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
 import { TVErrorBoundary } from '@/components/tv/TVErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
@@ -123,14 +124,8 @@ const TVDisplayContent: React.FC = () => {
     startGame();
   };
 
-  // Convert players from context format to component format
-  const formattedPlayers = players.map(p => ({
-    id: p.id,
-    nickname: p.nickname,
-    avatar_url: p.avatar_url,
-    score: p.score,
-    hasAnswered: p.hasAnswered,
-  }));
+  // Check if we should show lobby (has players or is paired)
+  const showLobby = players.length > 0;
 
   // Use the mapDbStatusToPhase utility for consistent phase mapping
   const normalizedPhase = mapDbStatusToPhase(phase);
@@ -141,26 +136,19 @@ const TVDisplayContent: React.FC = () => {
     case 'pairing':
     case 'waiting':
     case 'lobby':
-      return <TVPairingScreen onStartGame={handleStartGame} />;
+      return showLobby ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
     case 'countdown':
       return <TVCountdownScreenV2 />;
     case 'question':
     case 'playing':
-      return (
-        <TVQuestionScreen 
-          questions={questions}
-          currentQuestionIndex={currentQuestionIndex}
-          timeRemaining={timeRemaining}
-          players={formattedPlayers}
-        />
-      );
+      return <TVQuestionScreenV3 />;
     case 'reveal':
-      return <TVRevealScreen />;
+      return <TVRevealScreenV2 />;
     case 'results':
     case 'completed':
-      return <TVScoreboardScreen />;
+      return <TVResultsScreen />;
     default:
-      return <TVPairingScreen onStartGame={handleStartGame} />;
+      return showLobby ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
   }
 };
 
