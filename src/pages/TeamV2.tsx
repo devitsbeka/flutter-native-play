@@ -80,6 +80,8 @@ function TeamContentV2() {
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const [roomsSortFilter, setRoomsSortFilter] = useState<SortFilter>("all");
+  const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
 
   const { unreadCount } = useNotifications();
@@ -323,6 +325,18 @@ function TeamContentV2() {
                 <Plus className="w-5 h-5" />
                 ოთახი
               </ChunkyButton>
+            </div>
+          )}
+
+          {/* Filter Bar for Rooms tab */}
+          {activeTab === "rooms" && (
+            <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
+              <FeedFiltersBar
+                sortFilter={roomsSortFilter}
+                onSortFilterChange={setRoomsSortFilter}
+                searchQuery={roomsSearchQuery}
+                onSearchQueryChange={setRoomsSearchQuery}
+              />
             </div>
           )}
 

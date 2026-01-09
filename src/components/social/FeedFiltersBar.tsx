@@ -46,7 +46,7 @@ export function FeedFiltersBar({
   const currentLabel = filterOptions.find(opt => opt.value === sortFilter)?.label || "ყველა";
 
   return (
-    <div className="px-4 py-2">
+    <div className="px-4 pt-0 pb-2">
       <div className="flex items-center justify-between gap-3">
         {/* Filter Dropdown */}
         <DropdownMenu>
