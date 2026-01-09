@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Bell, MessageCircle, Layers } from "lucide-react";
+import { Users, Plus, Bell, MessageCircle, Layers, ScanLine } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -39,6 +39,7 @@ import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
 import { GenerationQueueDropdown } from "@/components/generation/GenerationQueueDropdown";
+import { QRScannerModal } from "@/components/team/QRScannerModal";
 
 function TeamContentV2() {
   const navigate = useNavigate();
@@ -114,6 +115,7 @@ function TeamContentV2() {
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [activeTab, setActiveTab] = useState("rooms");
   
   // Scroll to top when changing tabs to prevent layout jump
@@ -244,6 +246,16 @@ function TeamContentV2() {
 
               {/* Generation Queue Dropdown */}
               <GenerationQueueDropdown />
+
+              {/* QR Scanner */}
+              <motion.button
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => setShowQRScanner(true)}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
+              >
+                <ScanLine className="w-5 h-5" />
+              </motion.button>
 
               <motion.button
                 initial={{ opacity: 0, x: 10 }}
@@ -582,6 +594,10 @@ function TeamContentV2() {
         } : null}
         onStartChallenge={(friend, category) => handleStartChallenge(category.id, category.name)}
         isLoading={isStartingChallenge}
+      />
+      <QRScannerModal
+        open={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
       />
     </div>
   );
