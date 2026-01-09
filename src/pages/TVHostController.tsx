@@ -9,16 +9,8 @@ import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
-import { calculatePoints, getQuestionTime } from '@/utils/tvScoring';
+import { useTVGame } from '@/contexts/TVGameContext';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
-
-interface Player {
-  id: string;
-  nickname: string;
-  avatar_url?: string;
-  score: number;
-  isHost?: boolean;
-}
 
 interface Category {
   id: string;
@@ -28,13 +20,6 @@ interface Category {
   color: string;
 }
 
-interface Question {
-  id: string;
-  question_text: string;
-  options: string[];
-  correct_answer: string;
-}
-
 const OPTION_COLORS = [
   { bg: 'bg-red-500', hover: 'hover:bg-red-600', label: 'A' },
   { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', label: 'B' },
@@ -42,41 +27,71 @@ const OPTION_COLORS = [
   { bg: 'bg-green-500', hover: 'hover:bg-green-600', label: 'D' },
 ];
 
-type Phase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed';
+type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed';
 
 const TVHostController: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  // Get state from TVGameContext instead of local state
+  const {
+    phase: contextPhase,
+    players,
+    questions,
+    currentQuestionIndex,
+    timeRemaining,
+    myScore,
+    myAnswer,
+    sessionId: contextSessionId,
+    code: gameCode,
+    submitAnswer,
+    startNextRound,
+    joinSession,
+    startGame,
+    leaveSession,
+  } = useTVGame();
+
+  // UI-only local state (not game logic)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
   const [guestJoinCode, setGuestJoinCode] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [phase, setPhase] = useState<Phase>('category-select');
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [hasAnswered, setHasAnswered] = useState(false);
-  const [score, setScore] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(15);
   const [lastResult, setLastResult] = useState<boolean | null>(null);
   const [nickname, setNickname] = useState('Host');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
   
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Track if we've already joined the session via context
+  const hasJoinedRef = useRef(false);
+  
+  // Derive hasAnswered from context
+  const hasAnswered = myAnswer !== null;
+  
+  // Map context phase to local phase for rendering
+  const mapContextPhaseToLocal = (phase: string): LocalPhase => {
+    const mapping: Record<string, LocalPhase> = {
+      'idle': 'category-select',
+      'pairing': 'category-select',
+      'lobby': 'waiting',
+      'countdown': 'countdown',
+      'question': 'playing',
+      'reveal': 'reveal',
+      'results': 'completed',
+    };
+    return mapping[phase] || 'category-select';
+  };
+  
+  const localPhase = mapContextPhaseToLocal(contextPhase);
 
-  const joinUrl = `${window.location.origin}/join?code=${guestJoinCode}`;
+  const joinUrl = `${window.location.origin}/join?code=${guestJoinCode || gameCode}`;
   const currentQuestion = questions[currentQuestionIndex];
+  const totalQuestions = questions.length;
 
-  // Load session and categories
+  // Load session and categories - join via context
   useEffect(() => {
     const loadData = async () => {
       if (!sessionId || !user) {
@@ -119,19 +134,6 @@ const TVHostController: React.FC = () => {
 
       setSession(sessionData);
       setGuestJoinCode(sessionData.pairing_code || '');
-      
-      // Check if questions already loaded
-      if (sessionData.questions && Array.isArray(sessionData.questions) && sessionData.questions.length > 0) {
-        setQuestions(sessionData.questions as unknown as Question[]);
-        const status = sessionData.status;
-        if (status === 'waiting') setPhase('waiting');
-        else if (status === 'countdown') setPhase('countdown');
-        else if (status === 'playing') {
-          setPhase('playing');
-          setCurrentQuestionIndex(sessionData.current_question_index || 0);
-        }
-        else if (status === 'completed') setPhase('completed');
-      }
 
       // Load categories
       const { data: categoriesData } = await supabase
@@ -144,119 +146,43 @@ const TVHostController: React.FC = () => {
         setCategories(categoriesData);
       }
 
+      // Join session via context (handles presence channel)
+      if (!hasJoinedRef.current && sessionData.pairing_code) {
+        hasJoinedRef.current = true;
+        try {
+          await joinSession(
+            sessionData.pairing_code,
+            profile?.nickname || 'Host',
+            profile?.avatar_url
+          );
+          tvLog('Host joined session via context', { sessionId });
+        } catch (err) {
+          tvLogError('Host failed to join via context', err);
+        }
+      }
+
       setLoading(false);
-
-      // Subscribe to session updates
-      const channel = supabase
-        .channel(`host-session-${sessionId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'tv_sessions',
-            filter: `id=eq.${sessionId}`,
-          },
-          (payload) => {
-            const newData = payload.new as any;
-            setSession(newData);
-            
-            if (newData.questions && Array.isArray(newData.questions)) {
-              setQuestions(newData.questions as unknown as Question[]);
-            }
-            
-            // Update phase based on status
-            if (newData.status === 'countdown') setPhase('countdown');
-            else if (newData.status === 'playing') {
-              const newIndex = newData.current_question_index || 0;
-              if (newIndex !== currentQuestionIndex) {
-                setCurrentQuestionIndex(newIndex);
-                setTimeRemaining(15);
-                setSelectedAnswer(null);
-                setHasAnswered(false);
-                setLastResult(null);
-              }
-              setPhase('playing');
-            }
-            else if (newData.status === 'reveal') setPhase('reveal');
-            else if (newData.status === 'completed') setPhase('completed');
-          }
-        )
-        .subscribe();
-
-      channelRef.current = channel;
-
-      // Set up presence channel - host tracks their presence too!
-      const presenceChannel = supabase
-        .channel(`tv-presence-${sessionId}`, {
-          config: { presence: { key: user.id } }, // Use user.id as presence key
-        })
-        .on('presence', { event: 'sync' }, () => {
-          const presenceState = presenceChannel.presenceState();
-          const connectedPlayers: Player[] = [];
-          
-          Object.entries(presenceState).forEach(([key, presences]: [string, any]) => {
-            const presence = presences[0];
-            if (presence && key !== 'TV_DISPLAY') {
-              connectedPlayers.push({
-                id: key,
-                nickname: presence.nickname || 'Player',
-                avatar_url: presence.avatar_url,
-                score: presence.score || 0,
-                isHost: presence.isHost || false,
-              });
-            }
-          });
-          
-          setPlayers(connectedPlayers);
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            // Host tracks their own presence with hasAnswered for leaderboard
-            await presenceChannel.track({
-              nickname: profile?.nickname || 'Host',
-              avatar_url: profile?.avatar_url,
-              isHost: true,
-              score: 0,
-              hasAnswered: false,
-              lastAnswerCorrect: null,
-            });
-            console.log('Host presence tracked');
-          }
-        });
-
-      presenceChannelRef.current = presenceChannel;
     };
 
     loadData();
 
     return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-      if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
-      if (timerRef.current) clearInterval(timerRef.current);
+      // Cleanup handled by context
     };
-  }, [sessionId, user?.id]);
+  }, [sessionId, user?.id, joinSession]);
 
-  // Timer for questions
+  // Update lastResult when phase changes to reveal
   useEffect(() => {
-    if (phase === 'playing' && timeRemaining > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => Math.max(0, prev - 1));
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [phase, currentQuestionIndex]);
-
-  // Check answer result on reveal
-  useEffect(() => {
-    if (phase === 'reveal' && selectedAnswer && currentQuestion) {
-      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+    if (localPhase === 'reveal' && myAnswer && currentQuestion) {
+      const isCorrect = myAnswer === currentQuestion.correct_answer;
       setLastResult(isCorrect);
     }
-  }, [phase, selectedAnswer, currentQuestion]);
+  }, [localPhase, myAnswer, currentQuestion]);
+
+  // Reset lastResult when question changes
+  useEffect(() => {
+    setLastResult(null);
+  }, [currentQuestionIndex]);
 
   const handleSelectCategory = async (category: Category) => {
     setSelectedCategory(category);
@@ -295,8 +221,6 @@ const TVHostController: React.FC = () => {
         return;
       }
 
-      setQuestions(formattedQuestions);
-
       // Update session with questions and category info
       await supabase
         .from('tv_sessions')
@@ -308,7 +232,6 @@ const TVHostController: React.FC = () => {
         })
         .eq('id', sessionId);
 
-      setPhase('waiting');
       toast.success(`${category.name} არჩეულია!`);
     } catch (error) {
       console.error('Error loading questions:', error);
@@ -330,9 +253,7 @@ const TVHostController: React.FC = () => {
         .update({ status: 'countdown', current_question_index: 0 })
         .eq('id', sessionId);
 
-      setPhase('countdown');
       // TV display's countdown screen will trigger startPlaying when countdown ends
-      // No setTimeout fallback needed - trust the realtime subscription
     } catch (error) {
       tvLogError('handleStartGame', error);
       toast.error('Failed to start game');
@@ -340,42 +261,13 @@ const TVHostController: React.FC = () => {
   };
 
   const handleNextQuestion = async () => {
-    if (!sessionId || !session) return;
+    if (!sessionId) return;
 
-    const nextIndex = currentQuestionIndex + 1;
-
-    if (nextIndex >= questions.length) {
-      await supabase
-        .from('tv_sessions')
-        .update({ status: 'completed' })
-        .eq('id', sessionId);
-      setPhase('completed');
-    } else {
-      await supabase
-        .from('tv_sessions')
-        .update({ 
-          current_question_index: nextIndex,
-          status: 'playing',
-          question_start_time: new Date().toISOString(),
-        })
-        .eq('id', sessionId);
-      setCurrentQuestionIndex(nextIndex);
-      setTimeRemaining(15);
-      setSelectedAnswer(null);
-      setHasAnswered(false);
-      setLastResult(null);
-
-      // Reset host's hasAnswered in presence for next question
-      if (presenceChannelRef.current) {
-        await presenceChannelRef.current.track({
-          nickname,
-          avatar_url: avatarUrl,
-          isHost: true,
-          score,
-          hasAnswered: false,
-          lastAnswerCorrect: null,
-        });
-      }
+    try {
+      // Use context's startNextRound which handles question advancement
+      await startNextRound();
+    } catch (error) {
+      tvLogError('handleNextQuestion', error);
     }
   };
 
@@ -392,51 +284,21 @@ const TVHostController: React.FC = () => {
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(guestJoinCode);
+    navigator.clipboard.writeText(guestJoinCode || gameCode || '');
     setCopied(true);
     toast.success('კოდი დაკოპირდა!');
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleAnswer = async (answer: string) => {
-    if (hasAnswered || !session || !user || !currentQuestion) return;
+    if (hasAnswered || !currentQuestion) return;
     
-    setSelectedAnswer(answer);
-    setHasAnswered(true);
-
-    const isCorrect = answer === currentQuestion.correct_answer;
-    const points = calculatePoints(isCorrect, timeRemaining);
-    const newScore = score + points;
-    
-    setScore(newScore);
-
-    // Update presence to show host answered and their new score on TV leaderboard
-    if (presenceChannelRef.current) {
-      await presenceChannelRef.current.track({
-        nickname,
-        avatar_url: avatarUrl,
-        isHost: true,
-        score: newScore,
-        hasAnswered: true,
-        lastAnswerCorrect: isCorrect,
-      });
-    }
-
     try {
-      await supabase
-        .from('player_answers')
-        .insert([{
-          user_id: user.id,
-          room_id: session.room_id || session.id,
-          question_index: currentQuestionIndex,
-          answer: answer,
-          is_correct: isCorrect,
-          time_remaining: timeRemaining,
-          points_earned: points,
-          tv_session_id: session.id,
-        }]);
+      // Use context's submitAnswer which handles scoring and presence
+      const result = await submitAnswer(answer);
+      setLastResult(result.correct);
     } catch (err) {
-      console.error('Error submitting answer:', err);
+      tvLogError('handleAnswer', err);
     }
   };
 
@@ -464,10 +326,10 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  const totalQuestions = questions.length;
+  const displayCode = guestJoinCode || gameCode || '';
 
   // Category selection phase
-  if (phase === 'category-select') {
+  if (localPhase === 'category-select') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
         <motion.div
@@ -501,7 +363,7 @@ const TVHostController: React.FC = () => {
               <p className="text-sm text-purple-200 mb-1">კოდი:</p>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-mono font-bold text-white tracking-wider">
-                  {guestJoinCode}
+                  {displayCode}
                 </span>
                 <button
                   onClick={handleCopyCode}
@@ -536,7 +398,7 @@ const TVHostController: React.FC = () => {
                     transition={{ delay: index * 0.1 }}
                     className={`flex flex-col items-center gap-1 min-w-[60px] ${player.isHost ? 'ring-2 ring-yellow-500 rounded-xl p-1' : ''}`}
                   >
-                    <Avatar imageUrl={player.avatar_url} emoji={player.nickname?.[0] || '👤'} size="sm" />
+                    <Avatar imageUrl={player.avatar_url || undefined} emoji={player.nickname?.[0] || '👤'} size="sm" />
                     <span className="text-xs text-purple-200 truncate max-w-[60px]">{player.nickname}</span>
                     {player.isHost && <span className="text-xs text-yellow-500">HOST</span>}
                   </motion.div>
@@ -577,7 +439,7 @@ const TVHostController: React.FC = () => {
   }
 
   // Countdown phase
-  if (phase === 'countdown') {
+  if (localPhase === 'countdown') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <motion.div
@@ -594,7 +456,7 @@ const TVHostController: React.FC = () => {
   }
 
   // Reveal phase
-  if (phase === 'reveal') {
+  if (localPhase === 'reveal') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <AnimatePresence>
@@ -619,7 +481,7 @@ const TVHostController: React.FC = () => {
         </h2>
         <div className="flex items-center gap-2 text-yellow-500 mb-6">
           <Star className="w-5 h-5 fill-yellow-500" />
-          <span className="font-bold text-xl">{score}</span>
+          <span className="font-bold text-xl">{myScore}</span>
         </div>
         <ChunkyButton variant="primary" onClick={handleNextQuestion}>
           {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგები' : 'შემდეგი კითხვა'}
@@ -629,24 +491,32 @@ const TVHostController: React.FC = () => {
   }
 
   // Completed phase - show game over screen with leaderboard
-  if (phase === 'completed') {
+  if (localPhase === 'completed') {
+    // Map players to expected format
+    const allPlayers = players.map(p => ({
+      id: p.id,
+      nickname: p.nickname,
+      avatar_url: p.avatar_url,
+      score: p.score,
+      isHost: p.isHost,
+    }));
+
     // Ensure host is in the players list with correct score
-    const allPlayers = [...players];
     const hostPlayerIdx = allPlayers.findIndex(p => p.id === user?.id);
     if (hostPlayerIdx === -1 && user) {
       allPlayers.push({
         id: user.id,
-        nickname: 'Host',
-        score: score,
+        nickname: nickname,
+        score: myScore,
         isHost: true,
+        avatar_url: avatarUrl,
       });
     } else if (hostPlayerIdx !== -1) {
-      allPlayers[hostPlayerIdx].score = score;
+      allPlayers[hostPlayerIdx].score = myScore;
       allPlayers[hostPlayerIdx].isHost = true;
     }
 
     const handlePlayAgain = async () => {
-      // Reset game state properly instead of reloading
       try {
         // Reset session to lobby state
         await supabase
@@ -660,34 +530,16 @@ const TVHostController: React.FC = () => {
           .eq('id', sessionId);
         
         // Reset local state
-        setPhase('category-select');
-        setQuestions([]);
-        setCurrentQuestionIndex(0);
-        setScore(0);
-        setSelectedAnswer(null);
-        setHasAnswered(false);
         setLastResult(null);
-        setTimeRemaining(15);
-
-        // Reset presence score
-        if (presenceChannelRef.current) {
-          await presenceChannelRef.current.track({
-            nickname,
-            avatar_url: avatarUrl,
-            isHost: true,
-            score: 0,
-            hasAnswered: false,
-            lastAnswerCorrect: null,
-          });
-        }
+        setSelectedCategory(null);
       } catch (error) {
         console.error('Error resetting game:', error);
-        // Fallback to reload if reset fails
         window.location.reload();
       }
     };
 
     const handleExit = () => {
+      leaveSession();
       navigate('/team');
     };
 
@@ -703,7 +555,7 @@ const TVHostController: React.FC = () => {
   }
 
   // Waiting phase - show QR and start button
-  if (phase === 'waiting') {
+  if (localPhase === 'waiting') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
         <motion.div
@@ -739,7 +591,7 @@ const TVHostController: React.FC = () => {
               <p className="text-sm text-purple-200 mb-1">კოდი:</p>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-mono font-bold text-white tracking-wider">
-                  {guestJoinCode}
+                  {displayCode}
                 </span>
                 <button
                   onClick={handleCopyCode}
@@ -770,7 +622,7 @@ const TVHostController: React.FC = () => {
                   transition={{ delay: index * 0.1 }}
                   className={`flex items-center gap-2 bg-white/10 rounded-full px-3 py-2 border ${player.isHost ? 'border-yellow-500' : 'border-white/20'}`}
                 >
-                  <Avatar imageUrl={player.avatar_url} emoji={player.nickname?.[0] || '👤'} size="sm" />
+                  <Avatar imageUrl={player.avatar_url || undefined} emoji={player.nickname?.[0] || '👤'} size="sm" />
                   <span className="text-sm font-medium text-white">{player.nickname}</span>
                   {player.isHost ? (
                     <span className="text-xs bg-yellow-500/30 text-yellow-300 px-1.5 py-0.5 rounded">HOST</span>
@@ -828,7 +680,7 @@ const TVHostController: React.FC = () => {
         </div>
         <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-4 py-2">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-white font-bold">{score}</span>
+          <span className="text-white font-bold">{myScore}</span>
         </div>
       </div>
 
@@ -843,7 +695,7 @@ const TVHostController: React.FC = () => {
       <div className="flex-1 grid grid-cols-2 gap-3 mb-4">
         {currentQuestion?.options.map((option, index) => {
           const color = OPTION_COLORS[index];
-          const isSelected = selectedAnswer === option;
+          const isSelected = myAnswer === option;
 
           return (
             <motion.button
