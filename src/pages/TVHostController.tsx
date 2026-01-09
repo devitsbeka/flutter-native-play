@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Tv, Play, SkipForward, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X } from 'lucide-react';
+import { Tv, Play, SkipForward, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -750,16 +750,23 @@ const TVHostController: React.FC = () => {
   }
 
   // Handle edge case: questions not loaded but we're in a playing-like state
-  if (localPhase === 'playing' && (!currentQuestion || totalQuestions === 0)) {
+  const requiresQuestions = ['playing', 'reveal'].includes(localPhase);
+  if (requiresQuestions && (!currentQuestion || totalQuestions === 0)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
-          <p className="text-purple-200">კითხვები იტვირთება...</p>
-          <p className="text-purple-400 text-sm mt-2">თუ ეს გაგრძელდა, დაბრუნდი უკან</p>
-          <ChunkyButton onClick={() => navigate('/team')} className="mt-4" variant="secondary">
-            უკან
-          </ChunkyButton>
+          <AlertCircle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+          <h2 className="text-white text-xl font-bold mb-2">თამაში არ არის მზად</h2>
+          <p className="text-purple-300 mb-2">კითხვები ვერ ჩაიტვირთა</p>
+          <p className="text-purple-400 text-sm mb-6">გთხოვ დაიწყე ახალი თამაში</p>
+          <div className="flex gap-3 justify-center">
+            <ChunkyButton onClick={() => navigate('/team')} variant="secondary">
+              უკან
+            </ChunkyButton>
+            <ChunkyButton onClick={handleEndGame} variant="white">
+              ახალი თამაში
+            </ChunkyButton>
+          </div>
         </div>
       </div>
     );

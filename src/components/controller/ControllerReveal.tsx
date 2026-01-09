@@ -1,13 +1,44 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Check, X } from 'lucide-react';
+import { ChunkyButton } from '@/components/ui/chunky-button';
+import { Check, X, AlertCircle, Loader2 } from 'lucide-react';
 
 export const ControllerReveal: React.FC = () => {
-  const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId } = useTVGame();
+  const navigate = useNavigate();
+  const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId, leaveSession } = useTVGame();
   const currentQuestion = questions[currentQuestionIndex];
-  const isCorrect = myAnswer === currentQuestion?.correct_answer;
   const myPlayer = players.find(p => p.id === myPlayerId);
+
+  // Handle missing question gracefully
+  if (!currentQuestion || questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-white text-lg font-semibold mb-2">შედეგები იტვირთება...</p>
+          <p className="text-purple-300 text-sm mb-2">დაელოდე შემდეგ კითხვას</p>
+          <div className="bg-white/10 rounded-xl px-6 py-3 mt-4 mb-4">
+            <span className="text-purple-300">შენი ქულა: </span>
+            <span className="text-white text-2xl font-bold">{myScore}</span>
+          </div>
+          <ChunkyButton
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              leaveSession();
+              navigate('/');
+            }}
+          >
+            თამაშიდან გასვლა
+          </ChunkyButton>
+        </div>
+      </div>
+    );
+  }
+
+  const isCorrect = myAnswer === currentQuestion.correct_answer;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
@@ -17,21 +48,21 @@ export const ControllerReveal: React.FC = () => {
       </motion.div>
       
       <h2 className={`text-3xl font-bold mb-2 ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-        {isCorrect ? 'Correct!' : 'Wrong!'}
+        {isCorrect ? 'სწორია!' : 'არასწორია!'}
       </h2>
       
       {!isCorrect && currentQuestion && (
         <p className="text-purple-300 text-center mb-4">
-          Answer: {currentQuestion.correct_answer}
+          პასუხი: {currentQuestion.correct_answer}
         </p>
       )}
       
       <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
-        <span className="text-purple-300">Your Score: </span>
+        <span className="text-purple-300">შენი ქულა: </span>
         <span className="text-white text-2xl font-bold">{myScore}</span>
       </div>
       
-      <p className="text-purple-300/60">Next question coming...</p>
+      <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
     </div>
   );
 };
