@@ -11,6 +11,11 @@ interface NotificationOptions {
     label: string;
     onClick: () => void;
   };
+  secondaryButton?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+  };
 }
 
 interface NotificationContextType {
@@ -31,6 +36,11 @@ interface NotificationState {
   actionButton?: {
     label: string;
     onClick: () => void;
+  };
+  secondaryButton?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
   };
 }
 
@@ -70,6 +80,7 @@ export function NotificationModalProvider({ children }: { children: ReactNode })
         duration={notification.duration}
         imageUrl={notification.imageUrl}
         actionButton={notification.actionButton}
+        secondaryButton={notification.secondaryButton}
       />
     </NotificationModalContext.Provider>
   );
