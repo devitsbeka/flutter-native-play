@@ -279,6 +279,19 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays,
         </DropdownMenu>
       </div>
 
+      {/* Hashtags - moved above the card */}
+      <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+        {post.hashtags.map(tag => (
+          <button
+            key={tag}
+            onClick={() => onHashtagClick?.(tag)}
+            className="text-primary text-sm hover:underline hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            #{tag}
+          </button>
+        ))}
+      </div>
+
       {/* Quiz Card/Banner - Clickable to open modal */}
       <div 
         onClick={() => setShowPreviewModal(true)}
@@ -415,19 +428,6 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays,
             </>
           )}
         </button>
-      </div>
-
-      {/* Hashtags */}
-      <div className="px-4 pb-4 flex flex-wrap gap-1.5">
-        {post.hashtags.map(tag => (
-          <button
-            key={tag}
-            onClick={() => onHashtagClick?.(tag)}
-            className="text-primary text-sm hover:underline hover:opacity-80 transition-opacity cursor-pointer"
-          >
-            #{tag}
-          </button>
-        ))}
       </div>
 
       {/* Trivia Preview Modal */}
