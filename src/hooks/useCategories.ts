@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { preloadIcons } from '@/hooks/useIconLibrary';
 
-const STORAGE_KEY = 'app-language';
+const STORAGE_KEY = 'preferredLanguage';
 const DEFAULT_LANGUAGE = 'ka';
 
 export interface DatabaseCategory {
