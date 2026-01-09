@@ -301,14 +301,12 @@ const TVHostController: React.FC = () => {
   const handleStartGame = async () => {
     if (!sessionId) return;
 
-    tvLog('Host starting game', { sessionId });
+    tvLog('Host starting game', { sessionId, selectedCategory });
 
     try {
-      await supabase
-        .from('tv_sessions')
-        .update({ status: 'countdown', current_question_index: 0 })
-        .eq('id', sessionId);
-
+      // Use context's startGame which properly fetches questions and updates session
+      await startGame(selectedCategory?.id);
+      
       // TV display's countdown screen will trigger startPlaying when countdown ends
     } catch (error) {
       tvLogError('handleStartGame', error);
