@@ -223,6 +223,7 @@ export function SocialFeed({
             onPlay={onPlayQuiz}
             userLikes={userLikes}
             userSaves={userSaves}
+            userPlays={userPlays}
             onToggleLike={toggleLike}
             onToggleSave={toggleSave}
             onHashtagClick={onHashtagClick}
@@ -239,6 +240,7 @@ export function SocialFeed({
             onPlay={onPlayQuiz}
             userLikes={userLikes}
             userSaves={userSaves}
+            userPlays={userPlays}
             onToggleLike={toggleLike}
             onToggleSave={toggleSave}
             onHashtagClick={onHashtagClick}

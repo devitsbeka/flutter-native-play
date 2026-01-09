@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, Play } from "lucide-react";
+import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, Play, Check } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { formatDistanceToNow } from "date-fns";
@@ -92,6 +92,7 @@ interface FeedPostProps {
   onPlay?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
   userLikes?: string[];
   userSaves?: string[];
+  userPlays?: string[];
   onToggleLike?: (postId: string) => void;
   onToggleSave?: (postId: string) => void;
   onHashtagClick?: (hashtag: string) => void;
@@ -99,10 +100,11 @@ interface FeedPostProps {
   isSaving?: boolean;
 }
 
-export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: FeedPostProps) {
+export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: FeedPostProps) {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const liked = userLikes?.includes(post.id) || false;
   const saved = userSaves?.includes(post.id) || false;
+  const played = userPlays?.includes(post.id) || false;
   const { language } = useLanguage();
   
   const dateLocale = language === 'ka' ? ka : enUS;
@@ -392,13 +394,26 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, onToggleLi
           </div>
         </div>
         
-        {/* Right side: Play button */}
+        {/* Right side: Play button - Gradient when not played, solid when played */}
         <button 
           onClick={() => onPlay?.(post)}
-          className="px-5 py-2 bg-primary text-primary-foreground rounded-full text-base font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5"
+          className={`px-5 py-2 rounded-full text-base font-medium transition-all flex items-center gap-1.5 text-white
+            ${played 
+              ? 'bg-muted-foreground/60'
+              : 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 hover:shadow-lg hover:shadow-purple-500/30'
+            }`}
         >
-          <Play className="w-4 h-4 fill-current" />
-          ითამაშე
+          {played ? (
+            <>
+              <Check className="w-4 h-4" />
+              ითამაშე
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 fill-current" />
+              ითამაშე
+            </>
+          )}
         </button>
       </div>
 
