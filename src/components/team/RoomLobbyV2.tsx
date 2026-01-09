@@ -560,7 +560,7 @@ export function RoomLobbyV2() {
           {/* Start Game Button (Host only) */}
           {isHost ? (
             <ChunkyButton
-              variant="primary"
+              variant="white"
               size="xl"
               className="w-full max-w-md mx-auto"
               onClick={handleStartGame}
