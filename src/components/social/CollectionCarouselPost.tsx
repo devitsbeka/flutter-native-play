@@ -236,6 +236,19 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
         </DropdownMenu>
       </div>
 
+      {/* Hashtags - moved above the carousel */}
+      <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+        {currentPost.hashtags.map(tag => (
+          <button
+            key={tag}
+            onClick={() => onHashtagClick?.(tag)}
+            className="text-primary text-sm hover:underline hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            #{tag}
+          </button>
+        ))}
+      </div>
+
       {/* Carousel - Horizontal scroll showing 1 full + half card */}
       <div className="relative">
         <div 
@@ -376,19 +389,6 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
             </>
           )}
         </button>
-      </div>
-
-      {/* Hashtags */}
-      <div className="px-4 pb-4 flex flex-wrap gap-1.5">
-        {currentPost.hashtags.map(tag => (
-          <button
-            key={tag}
-            onClick={() => onHashtagClick?.(tag)}
-            className="text-primary text-sm hover:underline hover:opacity-80 transition-opacity cursor-pointer"
-          >
-            #{tag}
-          </button>
-        ))}
       </div>
 
       {/* Collection Preview Modal - rendered via portal to escape stacking context */}
