@@ -67,7 +67,8 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       const language = localStorage.getItem('preferredLanguage') || 'ka';
 
       // Get previously asked questions + all globally seen to avoid repetition
-      const trackerKey = `tv_${categoryData.id}`;
+      // STANDARDIZED: Use mode_uuid format for consistent tracker keys
+      const trackerKey = `tv_${categoryData.id}`; // Standardized UUID-based key
       const categoryAskedIds = getAskedQuestionIds(trackerKey);
       const allSeenIds = getSeenQuestionIds();
       // Combine for maximum freshness
