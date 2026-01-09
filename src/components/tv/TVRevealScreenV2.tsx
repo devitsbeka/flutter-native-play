@@ -43,23 +43,23 @@ export const TVRevealScreenV2: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden">
-      <div className="h-full flex gap-6">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 overflow-hidden">
+      <div className="h-full flex gap-4">
         {/* Main content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Question */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 mb-6 border border-white/10"
+            className="bg-white/10 backdrop-blur-xl rounded-xl p-4 mb-4 border border-white/10 flex-shrink-0"
           >
-            <h2 className="text-white text-2xl font-bold text-center">
+            <h2 className="text-white text-xl font-bold text-center">
               {currentQuestion.question_text}
             </h2>
           </motion.div>
 
-          {/* Options with reveal */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Options with reveal - Compact 2x2 grid */}
+          <div className="grid grid-cols-2 gap-3 mb-4 flex-shrink-0">
             {currentQuestion.options.map((option, index) => {
               const isCorrect = option === correctAnswer;
               
@@ -69,9 +69,9 @@ export const TVRevealScreenV2: React.FC = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
-                  className={`relative rounded-2xl p-5 flex items-center gap-4 shadow-lg overflow-hidden ${
+                  className={`relative rounded-xl p-3 flex items-center gap-3 shadow-lg overflow-hidden ${
                     isCorrect 
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 ring-4 ring-green-400/50' 
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 ring-2 ring-green-400/50' 
                       : `bg-gradient-to-r ${OPTION_COLORS[index].dimmed} opacity-60`
                   }`}
                 >
@@ -81,18 +81,18 @@ export const TVRevealScreenV2: React.FC = () => {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.5, type: 'spring' }}
-                      className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center"
+                      className="absolute top-1.5 right-1.5 w-6 h-6 bg-white rounded-full flex items-center justify-center"
                     >
-                      <Check className="w-5 h-5 text-green-600" />
+                      <Check className="w-4 h-4 text-green-600" />
                     </motion.div>
                   )}
 
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl font-bold ${
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold ${
                     isCorrect ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'
                   }`}>
                     {OPTION_COLORS[index].label}
                   </div>
-                  <p className={`text-lg font-semibold flex-1 ${isCorrect ? 'text-white' : 'text-white/60'}`}>
+                  <p className={`text-base font-semibold flex-1 ${isCorrect ? 'text-white' : 'text-white/60'}`}>
                     {option}
                   </p>
                 </motion.div>
@@ -100,24 +100,24 @@ export const TVRevealScreenV2: React.FC = () => {
             })}
           </div>
 
-          {/* Results summary */}
+          {/* Results summary - Compact */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex gap-4"
+            className="flex gap-3 flex-1 min-h-0"
           >
             {/* Correct players */}
-            <div className="flex-1 bg-green-500/20 rounded-xl p-4 border border-green-500/30">
-              <div className="flex items-center gap-2 mb-3">
-                <Check className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 font-semibold">
-                  Correct ({correctPlayers.length})
+            <div className="flex-1 bg-green-500/20 rounded-xl p-3 border border-green-500/30 flex flex-col min-h-0">
+              <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                <Check className="w-4 h-4 text-green-400" />
+                <span className="text-green-400 font-semibold text-sm">
+                  სწორი ({correctPlayers.length})
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 overflow-y-auto">
                 {correctPlayers.map(player => (
-                  <span key={player.id} className="bg-green-500/30 text-green-300 px-3 py-1 rounded-full text-sm">
+                  <span key={player.id} className="bg-green-500/30 text-green-300 px-2 py-0.5 rounded-full text-xs">
                     {player.nickname}
                   </span>
                 ))}
@@ -125,16 +125,16 @@ export const TVRevealScreenV2: React.FC = () => {
             </div>
 
             {/* Wrong players */}
-            <div className="flex-1 bg-red-500/20 rounded-xl p-4 border border-red-500/30">
-              <div className="flex items-center gap-2 mb-3">
-                <X className="w-5 h-5 text-red-400" />
-                <span className="text-red-400 font-semibold">
-                  Incorrect ({wrongPlayers.length})
+            <div className="flex-1 bg-red-500/20 rounded-xl p-3 border border-red-500/30 flex flex-col min-h-0">
+              <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                <X className="w-4 h-4 text-red-400" />
+                <span className="text-red-400 font-semibold text-sm">
+                  არასწორი ({wrongPlayers.length})
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 overflow-y-auto">
                 {wrongPlayers.map(player => (
-                  <span key={player.id} className="bg-red-500/30 text-red-300 px-3 py-1 rounded-full text-sm">
+                  <span key={player.id} className="bg-red-500/30 text-red-300 px-2 py-0.5 rounded-full text-xs">
                     {player.nickname}
                   </span>
                 ))}
@@ -147,19 +147,19 @@ export const TVRevealScreenV2: React.FC = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-6 text-center"
+              className="mt-3 text-center flex-shrink-0"
             >
-              <p className="text-purple-300">
+              <p className="text-purple-300 text-sm">
                 {currentQuestionIndex + 1 < questions.length 
-                  ? 'Next question coming...'
-                  : 'Final results coming...'}
+                  ? 'შემდეგი კითხვა იწყება...'
+                  : 'საბოლოო შედეგები...'}
               </p>
             </motion.div>
           )}
         </div>
 
-        {/* Leaderboard */}
-        <div className="w-80 flex-shrink-0">
+        {/* Leaderboard - Fixed width */}
+        <div className="w-72 flex-shrink-0 max-h-full">
           <TVLeaderboardPanel />
         </div>
       </div>
