@@ -49,6 +49,8 @@ const TVHostController: React.FC = () => {
     startNextRound,
     joinSession,
     startGame,
+    startPlaying,
+    isHost,
     leaveSession,
     resetGame,
   } = useTVGame();
@@ -68,6 +70,10 @@ const TVHostController: React.FC = () => {
   
   // Track if we've already joined the session via context
   const hasJoinedRef = useRef(false);
+  
+  // Countdown state for triggering startPlaying
+  const [countdownValue, setCountdownValue] = useState<number | null>(null);
+  const hasTriggeredPlayingRef = useRef(false);
   
   // Derive hasAnswered from context
   const hasAnswered = myAnswer !== null;
@@ -185,6 +191,45 @@ const TVHostController: React.FC = () => {
   useEffect(() => {
     setLastResult(null);
   }, [currentQuestionIndex]);
+
+  // Handle countdown phase - start timer and trigger startPlaying when host
+  useEffect(() => {
+    if (localPhase === 'countdown' && isHost) {
+      // Reset trigger flag when entering countdown
+      hasTriggeredPlayingRef.current = false;
+      setCountdownValue(3);
+      
+      const timer = setInterval(() => {
+        setCountdownValue(prev => {
+          if (prev === null || prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else if (localPhase !== 'countdown') {
+      // Reset when leaving countdown
+      setCountdownValue(null);
+      hasTriggeredPlayingRef.current = false;
+    }
+  }, [localPhase, isHost]);
+
+  // Trigger startPlaying when countdown reaches 0 and user is host
+  useEffect(() => {
+    if (countdownValue === 0 && isHost && !hasTriggeredPlayingRef.current) {
+      hasTriggeredPlayingRef.current = true;
+      tvLog('Host controller countdown ended, triggering startPlaying');
+      
+      const transitionTimer = setTimeout(() => {
+        startPlaying();
+      }, 500);
+
+      return () => clearTimeout(transitionTimer);
+    }
+  }, [countdownValue, isHost, startPlaying]);
 
   const handleSelectCategory = async (category: Category) => {
     setSelectedCategory(category);
@@ -469,16 +514,27 @@ const TVHostController: React.FC = () => {
 
   // Countdown phase
   if (localPhase === 'countdown') {
+    const displayValue = countdownValue === 0 ? 'GO!' : countdownValue || 3;
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 1 }}
-          className="text-8xl mb-4"
-        >
-          🎮
-        </motion.div>
-        <p className="text-2xl text-white font-bold">თამაში იწყება...</p>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={displayValue}
+            initial={{ scale: 2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className={`w-32 h-32 rounded-full flex items-center justify-center mb-6 ${
+              countdownValue === 0 ? 'bg-green-500' : 'bg-purple-600'
+            }`}
+          >
+            <span className="text-white text-5xl font-bold">{displayValue}</span>
+          </motion.div>
+        </AnimatePresence>
+        <p className="text-2xl text-white font-bold">
+          {countdownValue === 0 ? 'დაიწყო!' : 'მოემზადე!'}
+        </p>
         <p className="text-purple-200 mt-2">მოემზადე პასუხებისთვის!</p>
       </div>
     );
