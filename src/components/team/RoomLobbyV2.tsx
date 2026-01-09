@@ -249,9 +249,13 @@ export function RoomLobbyV2() {
   if (!currentRoom) return null;
 
   const canStartGame = participants.length >= (currentRoom.min_players || 2);
+  const roomGradient = getGradientById(currentRoom?.background_gradient);
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background">
+    <div 
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: roomGradient?.gradient || 'var(--background)' }}
+    >
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
