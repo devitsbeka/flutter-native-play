@@ -16,6 +16,11 @@ const TVLobbyContent: React.FC = () => {
     createSession();
   }, [createSession]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('TV State - Phase:', phase, 'Players:', players.length, 'Code:', code);
+  }, [phase, players, code]);
+
   if (!code) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center">
@@ -24,11 +29,14 @@ const TVLobbyContent: React.FC = () => {
     );
   }
 
+  // Show lobby as soon as we have players, regardless of phase
+  const hasPlayers = players.length > 0;
+
   switch (phase) {
     case 'pairing':
-      return <TVPairingScreenV3 />;
+      return hasPlayers ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
     case 'lobby':
-      return players.length === 0 ? <TVPairingScreenV3 /> : <TVLobbyScreenV2 />;
+      return hasPlayers ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
     case 'countdown':
       return <TVCountdownScreenV2 />;
     case 'question':
@@ -40,7 +48,7 @@ const TVLobbyContent: React.FC = () => {
     case 'idle':
       return <TVIdleScreen />;
     default:
-      return <TVPairingScreenV3 />;
+      return hasPlayers ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
   }
 };
 

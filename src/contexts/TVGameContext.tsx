@@ -183,7 +183,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Subscribe to session changes
       setupSessionSubscription(data.id);
-      setupPresenceChannel(data.id, 'TV', null, true);
+      setupPresenceChannel(data.id, 'TV_DISPLAY', null, false, true); // isTVDisplay = true
 
       return code;
     } catch (error) {
@@ -273,7 +273,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Setup subscriptions
       setupSessionSubscription(session.id);
-      setupPresenceChannel(session.id, nickname, avatarUrl || null, isFirstPlayer);
+      setupPresenceChannel(session.id, nickname, avatarUrl || null, isFirstPlayer, false); // isTVDisplay = false
 
       return true;
     } catch (error) {
@@ -358,13 +358,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Setup presence channel for players
-  const setupPresenceChannel = (sessionId: string, nickname: string, avatarUrl: string | null, isHostPlayer: boolean) => {
+  const setupPresenceChannel = (sessionId: string, nickname: string, avatarUrl: string | null, isHostPlayer: boolean, isTVDisplay: boolean = false) => {
     if (presenceChannelRef.current) {
       supabase.removeChannel(presenceChannelRef.current);
     }
 
-    const playerId = myPlayerId || crypto.randomUUID();
-    if (!myPlayerId) setMyPlayerId(playerId);
+    // Use 'TV_DISPLAY' as key for TV, otherwise generate UUID
+    const playerId = isTVDisplay ? 'TV_DISPLAY' : (myPlayerId || crypto.randomUUID());
+    if (!myPlayerId && !isTVDisplay) setMyPlayerId(playerId);
 
     const channel = supabase.channel(`tv-presence-${sessionId}`, {
       config: { presence: { key: playerId } },
@@ -378,7 +379,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         Object.entries(presenceState).forEach(([key, presences]) => {
           const rawPresence = presences[0] as Record<string, unknown> | undefined;
           
-          if (rawPresence && key !== 'TV' && 'nickname' in rawPresence) {
+          // Filter out TV_DISPLAY - it's not a player
+          if (rawPresence && key !== 'TV_DISPLAY' && 'nickname' in rawPresence) {
             players.push({
               id: key,
               nickname: (rawPresence.nickname as string) || 'Player',
@@ -395,6 +397,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         players.sort((a, b) => b.score - a.score);
 
         setState(prev => ({ ...prev, players }));
+        
+        console.log('Presence sync - players:', players.length, players.map(p => p.nickname));
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         console.log('Player joined:', key, newPresences);
@@ -404,6 +408,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          // Only track if not TV display, or track as TV_DISPLAY for awareness
           await channel.track({
             nickname,
             avatar_url: avatarUrl,
@@ -411,7 +416,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             hasAnswered: false,
             lastAnswerCorrect: null,
             isHost: isHostPlayer,
+            isTVDisplay,
           });
+          console.log('Presence tracked:', nickname, 'isTV:', isTVDisplay);
         }
       });
 
