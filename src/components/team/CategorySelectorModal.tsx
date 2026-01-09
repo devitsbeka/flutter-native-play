@@ -107,56 +107,71 @@ export function CategorySelectorModal({
                 კატეგორია ვერ მოიძებნა
               </div>
             ) : (
-              filteredCategories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleSelect(category)}
-                  className={`relative aspect-[4/3] rounded-2xl overflow-hidden transition-all ${
-                    selectedCategoryId === category.id
-                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                      : ""
-                  }`}
-                >
-                  {/* Background - always show gradient if no image_url */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: category.image_url 
-                        ? undefined 
-                        : `linear-gradient(135deg, ${category.color || 'hsl(var(--primary))'}, ${category.color || 'hsl(var(--primary))'}88)`,
-                    }}
+              filteredCategories.map((category) => {
+                // Fallback gradient colors based on index
+                const fallbackColors = [
+                  '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', 
+                  '#f97316', '#eab308', '#22c55e', '#14b8a6',
+                  '#06b6d4', '#3b82f6', '#a855f7', '#d946ef'
+                ];
+                const fallbackColor = fallbackColors[filteredCategories.indexOf(category) % fallbackColors.length];
+                const bgColor = category.color || fallbackColor;
+                
+                return (
+                  <motion.button
+                    key={category.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSelect(category)}
+                    className={`relative aspect-[4/3] rounded-2xl overflow-hidden transition-all ${
+                      selectedCategoryId === category.id
+                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        : ""
+                    }`}
                   >
-                    {category.image_url && (
-                      <>
-                        <video
-                          src={category.image_url}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      </>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{category.icon}</span>
-                      <span className="text-sm font-semibold text-white truncate drop-shadow-md">
-                        {category.name}
-                      </span>
+                    {/* Background */}
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: category.image_url 
+                          ? undefined 
+                          : `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
+                      }}
+                    >
+                      {category.image_url && (
+                        <>
+                          <video
+                            src={category.image_url}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        </>
+                      )}
+                      {/* Always add overlay for text readability */}
+                      {!category.image_url && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      )}
                     </div>
-                    <p className="text-xs text-white/70 mt-0.5 drop-shadow-sm">
-                      {category.total_levels} დონე
-                    </p>
-                  </div>
-                </motion.button>
-              ))
+
+                    {/* Content */}
+                    <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg drop-shadow-md">{category.icon}</span>
+                        <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                          {category.name}
+                        </span>
+                      </div>
+                      <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                        {category.total_levels} დონე
+                      </p>
+                    </div>
+                  </motion.button>
+                );
+              })
             )}
           </div>
         </ScrollArea>
