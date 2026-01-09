@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 const CODE_REFRESH_INTERVAL = 5 * 60 * 1000; // Refresh code every 5 minutes if no players
 
 const TVLobbyContent: React.FC = () => {
-  const { phase, code, createSession, players, sessionId } = useTVGame();
+  const { phase, code, createSession, players, sessionId, isPaired } = useTVGame();
   const lastRefreshRef = useRef<number>(Date.now());
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedRef = useRef(false);
@@ -69,14 +69,14 @@ const TVLobbyContent: React.FC = () => {
     );
   }
 
-  // Show lobby as soon as we have players, regardless of phase
-  const hasPlayers = players.length > 0;
+  // Show lobby when paired OR when we have players
+  const showLobby = isPaired || players.length > 0;
 
   switch (phase) {
     case 'pairing':
-      return hasPlayers ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
+    case 'waiting':
     case 'lobby':
-      return hasPlayers ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
+      return showLobby ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
     case 'countdown':
       return <TVCountdownScreenV2 />;
     case 'question':
@@ -88,7 +88,7 @@ const TVLobbyContent: React.FC = () => {
     case 'idle':
       return <TVIdleScreen />;
     default:
-      return hasPlayers ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
+      return showLobby ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
   }
 };
 
