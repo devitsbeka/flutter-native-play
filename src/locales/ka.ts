@@ -418,6 +418,15 @@ export const ka = {
     noFriendActivity: "მეგობრების აქტივობა ჯერ არ არის",
     noGameNotifications: "თამაშის შეტყობინებები არ არის",
     whenSomethingHappens: "როცა რამე მოხდება, აქ ნახავ",
+    // Notification titles
+    gameStarted: "თამაში დაიწყო!",
+    gameInRoom: "თამაში დაიწყო შენს ოთახში!",
+    gameRoomInvitation: "ოთახის მოწვევა",
+    invitedYouToPlay: "{name} გიწვევს თამაშში!",
+    friendRequest: "მეგობრობის მოთხოვნა",
+    friendAccepted: "მეგობარი დაემატა",
+    challengeReceived: "გამოწვევა",
+    gameResult: "თამაშის შედეგი",
   },
 
   // ==========================================

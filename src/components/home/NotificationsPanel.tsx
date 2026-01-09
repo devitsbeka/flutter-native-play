@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -100,11 +101,11 @@ function NotificationCard({
             "font-medium text-sm line-clamp-1",
             isUnread ? "text-foreground" : "text-muted-foreground"
           )}>
-            {notification.title}
+            {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
           </p>
           {notification.message && (
             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-              {notification.message}
+              {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
             </p>
           )}
           <p className="text-xs text-muted-foreground/60 mt-1">
