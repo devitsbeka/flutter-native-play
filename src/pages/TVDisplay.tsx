@@ -46,7 +46,7 @@ const TVDisplayContent: React.FC = () => {
             .from('tv_sessions')
             .select('*')
             .eq('pairing_code', code.toUpperCase())
-            .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal', 'results'])
+            .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
             .single();
 
           // If not found, try 4-digit code
@@ -55,7 +55,7 @@ const TVDisplayContent: React.FC = () => {
               .from('tv_sessions')
               .select('*')
               .eq('tv_pairing_code', code.toUpperCase())
-              .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal', 'results'])
+              .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
               .single();
             session = session4;
           }
