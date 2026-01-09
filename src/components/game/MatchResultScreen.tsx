@@ -14,6 +14,8 @@ import { Target, ArrowLeft, Crown, TrendingUp, TrendingDown, Minus } from "lucid
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { useGameStake } from "@/hooks/useGameStake";
+import { useTrivia, ExhaustionInfo } from "@/hooks/useTrivia";
+import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
@@ -247,6 +249,7 @@ export function MatchResultScreen() {
   const { updateMissionProgress } = useMissions();
   const { t } = useLanguage();
   const { awardWin, awardDraw, awardLose, netWinProfit, netLoss, stakeAmount } = useGameStake();
+  const { exhaustionInfo } = useTrivia();
   const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
@@ -508,6 +511,25 @@ export function MatchResultScreen() {
               coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
             />
           </motion.div>
+
+          {/* Exhaustion Indicator - show when nearing exhaustion */}
+          {exhaustionInfo && exhaustionInfo.percentUsed >= 70 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="mt-6"
+            >
+              <ExhaustionIndicator
+                percentUsed={exhaustionInfo.percentUsed}
+                totalAvailable={exhaustionInfo.totalAvailable}
+                totalSeen={exhaustionInfo.totalSeen}
+                wasReset={exhaustionInfo.wasReset}
+                usedFallback={exhaustionInfo.usedFallback}
+                compact
+              />
+            </motion.div>
+          )}
         </div>
 
         {/* Bottom Button */}

@@ -1,15 +1,6 @@
 import { useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
-import {
-  getGlobalAskedQuestionIds,
-  getSeenQuestionIds,
-  markQuestionsAsAskedGlobally,
-  shouldResetGlobalPool,
-  shouldResetSeenPool,
-  clearGlobalAskedQuestions,
-  clearSeenQuestions,
-} from "@/services/questionTracker";
+import { getQuestions, FormattedQuestion } from "@/services/questionService";
+import { clearGlobalAskedQuestions } from "@/services/questionTracker";
 
 const STORAGE_KEY = 'preferredLanguage';
 const DEFAULT_LANGUAGE = 'ka';
@@ -29,13 +20,12 @@ export interface TriviaQuestion {
   imageUrl?: string;
 }
 
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
+export interface ExhaustionInfo {
+  totalAvailable: number;
+  totalSeen: number;
+  wasReset: boolean;
+  usedFallback: boolean;
+  percentUsed: number;
 }
 
 export function useTrivia() {
@@ -45,14 +35,7 @@ export function useTrivia() {
   const [preparationProgress, setPreparationProgress] = useState(0);
   const [imagesReady, setImagesReady] = useState(false);
   const [noQuestionsInLanguage, setNoQuestionsInLanguage] = useState(false);
-
-  // Get current language from localStorage
-  const getCurrentLanguage = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
-    }
-    return DEFAULT_LANGUAGE;
-  }, []);
+  const [exhaustionInfo, setExhaustionInfo] = useState<ExhaustionInfo | null>(null);
 
   const fetchQuestions = useCallback(async (
     amount: number = 6,
@@ -61,219 +44,66 @@ export function useTrivia() {
     excludeHashes: string[] = [],
     mixFromCategories: boolean = true
   ) => {
-    const language = getCurrentLanguage();
-    
     setLoading(true);
     setError(null);
     setPreparationProgress(0);
     setImagesReady(false);
     setNoQuestionsInLanguage(false);
+    setExhaustionInfo(null);
 
     try {
       setPreparationProgress(10);
 
-      let dbQuestions: any[] = [];
-      let dbError: any = null;
+      // Use unified questionService for all fetching
+      const result = await getQuestions({
+        mode: 'vs',
+        categorySlug: category,
+        count: amount,
+        excludeIds: excludeHashes,
+      });
 
-      if (category) {
-        // Fetch from specific category
-        const { data: categoryData } = await supabase
-          .from('categories')
-          .select('id, name, icon, category_id, icon_slug')
-          .eq('category_id', category)
-          .maybeSingle();
+      setPreparationProgress(50);
 
-        if (categoryData) {
-          const result = await supabase
-            .from('questions')
-            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
-            .eq('is_active', true)
-            .eq('in_production', true)
-            .eq('category_id', categoryData.id)
-            .eq('language', language)
-            .gte('level_number', level)
-            .lte('level_number', level + 2)
-            .limit(amount + 5);
-          
-          dbQuestions = (result.data || []).map(q => ({
-            ...q,
-            categoryName: categoryData.name,
-            categoryIcon: categoryData.icon,
-            categoryIconSlug: categoryData.icon_slug,
-            categorySlug: categoryData.category_id,  // The actual category_id for icon lookup
-            questionIconSlug: q.icon_slug,
-          }));
-          dbError = result.error;
-        }
-      } else if (mixFromCategories) {
-        // VS Mode: Pick one question from each of 6 random categories
-        // Use persistent tracking to avoid repetition
-        const globalAskedIds = getGlobalAskedQuestionIds();
-        const seenIds = getSeenQuestionIds(); // Unified seen tracking
-        
-        const { data: categories } = await supabase
-          .from('categories')
-          .select('id, name, icon, category_id, icon_slug')
-          .eq('is_active', true);
-        
-        if (categories && categories.length > 0) {
-          // Get total question count to check if pool needs reset
-          const { count: totalCount } = await supabase
-            .from('questions')
-            .select('id', { count: 'exact', head: true })
-            .eq('in_production', true)
-            .eq('language', language);
-          
-          // Reset if we've used 80% of available questions
-          if (totalCount && shouldResetGlobalPool(totalCount)) {
-            clearGlobalAskedQuestions();
-          }
-          
-          // Also reset seen pool if exhausted
-          if (totalCount && shouldResetSeenPool(totalCount)) {
-            clearSeenQuestions();
-          }
-          
-          // Shuffle and pick 6 random categories
-          const randomCategories = shuffleArray(categories).slice(0, amount);
-          
-          setPreparationProgress(20);
-          
-          // Get fresh list after potential reset - combine global asked + all seen
-          const currentAskedIds = getGlobalAskedQuestionIds();
-          const currentSeenIds = getSeenQuestionIds();
-          // Use seen IDs for exclusion (superset of asked)
-          const excludeIds = [...new Set([...currentAskedIds, ...currentSeenIds])];
-          
-          const questionPromises = randomCategories.map(async (cat) => {
-            // Build query with exclusion at database level (excludes all seen questions)
-            let query = supabase
-              .from('questions')
-              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
-              .eq('is_active', true)
-              .eq('in_production', true)
-              .eq('category_id', cat.id)
-              .eq('language', language);
-            
-            // Exclude already seen questions at database level (prioritize fresh questions)
-            if (excludeIds.length > 0) {
-              query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-            }
-            
-            const { data } = await query.limit(100);
-            
-            if (data && data.length > 0) {
-              // Filter by length first, then pick random
-              const validQuestions = data.filter(q => {
-                if (q.question_text.length > QUESTION_MAX_LENGTH) return false;
-                if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
-                const incorrects = Array.isArray(q.incorrect_answers) 
-                  ? q.incorrect_answers as string[]
-                  : JSON.parse(String(q.incorrect_answers) || '[]');
-                if (incorrects.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
-                return true;
-              });
-              
-              if (validQuestions.length > 0) {
-                const randomQ = validQuestions[Math.floor(Math.random() * validQuestions.length)];
-                return { 
-                  ...randomQ, 
-                  categoryName: cat.name, 
-                  categoryIcon: cat.icon,
-                  categoryIconSlug: cat.icon_slug,
-                  categorySlug: cat.category_id,
-                  questionIconSlug: randomQ.icon_slug,
-                };
-              }
-            }
-            return null;
-          });
-          
-          const results = await Promise.all(questionPromises);
-          dbQuestions = results.filter(q => q !== null);
-        }
-      } else {
-        // Legacy random mix mode - fetch from ALL active categories
-        const result = await supabase
-          .from('questions')
-          .select(`
-            id, 
-            question_text, 
-            correct_answer, 
-            incorrect_answers, 
-            difficulty, 
-            level_number,
-            language,
-            categories!inner(name, icon)
-          `)
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .limit(50);
-        
-        if (result.data) {
-          dbQuestions = shuffleArray(result.data).slice(0, amount + 5).map(q => ({
-            ...q,
-            categoryName: (q.categories as any)?.name || 'ზოგადი',
-            categoryIcon: (q.categories as any)?.icon || '📚'
-          }));
-        }
-        dbError = result.error;
+      // Handle no questions case
+      if (result.questions.length === 0) {
+        console.warn(`No questions available in language: ${result.language}`);
+        setNoQuestionsInLanguage(true);
+        setLoading(false);
+        return [];
       }
 
-      setPreparationProgress(30);
-
-      let formattedQuestions: TriviaQuestion[] = [];
-
-      if (!dbError && dbQuestions && dbQuestions.length > 0) {
-        console.log(`Found ${dbQuestions.length} questions${category ? ` for ${category}` : ' from all categories'}`);
-        
-        formattedQuestions = dbQuestions
-          .map((q: any) => {
-            const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-              ? q.incorrect_answers 
-              : JSON.parse(q.incorrect_answers || '[]');
-            const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
-
-            return {
-              id: q.id,
-              category: q.categoryName,
-              categoryId: q.categorySlug || '',  // Pass the actual category_id for icon lookup
-              categoryIcon: q.categoryIcon || '📚',
-              categoryIconSlug: q.categoryIconSlug || undefined,
-              questionIconSlug: q.questionIconSlug || undefined,
-              difficulty: (q.difficulty as "easy" | "medium" | "hard") || "easy",
-              question: q.question_text,
-              correctAnswer: q.correct_answer,
-              incorrectAnswers,
-              allAnswers,
-            };
-          })
-          // Filter out questions/answers that are too long for viewport
-          .filter((q: TriviaQuestion) => {
-            if (q.question.length > QUESTION_MAX_LENGTH) return false;
-            if (q.correctAnswer.length > ANSWER_MAX_LENGTH) return false;
-            if (q.incorrectAnswers.some(a => a.length > ANSWER_MAX_LENGTH)) return false;
-            return true;
-          })
-          .slice(0, amount);
-
-        setPreparationProgress(80);
+      // Check for low question count
+      if (result.questions.length < amount) {
+        console.warn(`Not enough questions (${result.questions.length}/${amount})`);
       }
 
-      if (formattedQuestions.length < amount) {
-        console.warn(`Not enough questions (${formattedQuestions.length}/${amount}) in language: ${language}`);
-        
-        if (formattedQuestions.length === 0) {
-          setNoQuestionsInLanguage(true);
-          // Don't throw error, just return empty - UI will show friendly message
-          return [];
-        }
-      }
+      setPreparationProgress(80);
 
-      // Track these questions as asked using persistent storage
-      const questionIds = formattedQuestions.map((q: TriviaQuestion) => q.id);
-      markQuestionsAsAskedGlobally(questionIds);
+      // Map to TriviaQuestion format
+      const formattedQuestions: TriviaQuestion[] = result.questions.map((q: FormattedQuestion) => ({
+        id: q.id,
+        category: q.category || 'ზოგადი',
+        categoryId: q.categorySlug || '',
+        categoryIcon: '📚',
+        categoryIconSlug: undefined,
+        questionIconSlug: q.iconSlug || undefined,
+        difficulty: q.difficulty,
+        question: q.question,
+        correctAnswer: q.correctAnswer,
+        incorrectAnswers: q.incorrectAnswers,
+        allAnswers: q.allAnswers,
+      }));
+
+      // Store exhaustion info for UI display
+      if (result.exhaustionInfo) {
+        const percentUsed = result.exhaustionInfo.totalAvailable > 0
+          ? Math.round((result.exhaustionInfo.totalSeen / result.exhaustionInfo.totalAvailable) * 100)
+          : 100;
+        setExhaustionInfo({
+          ...result.exhaustionInfo,
+          percentUsed,
+        });
+      }
 
       setPreparationProgress(100);
       setQuestions(formattedQuestions);
@@ -288,7 +118,7 @@ export function useTrivia() {
     } finally {
       setLoading(false);
     }
-  }, [getCurrentLanguage]);
+  }, []);
 
   const resetAskedQuestions = useCallback(() => {
     clearGlobalAskedQuestions();
@@ -303,6 +133,7 @@ export function useTrivia() {
     imagesReady,
     resetAskedQuestions,
     noQuestionsInLanguage,
+    exhaustionInfo,
   };
 }
 

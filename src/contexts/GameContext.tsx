@@ -154,9 +154,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         questions = await fetchQuestions(6, undefined, 1, [], false);
       }
       
-      // If still no questions, show error but proceed to playing (empty state handled there)
+      // P2-4: Handle no questions with user-facing error
       if (!questions || questions.length === 0) {
         console.error("No questions available at all");
+        // Show toast and return to home
+        const { toast } = await import("sonner");
+        toast.error("კითხვები ვერ მოიძებნა ამ ენაზე");
+        setState(prev => ({ ...prev, phase: "home" }));
+        return;
       }
       
       // Preload icons for new questions
