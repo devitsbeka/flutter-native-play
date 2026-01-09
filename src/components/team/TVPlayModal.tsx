@@ -62,7 +62,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
           room_id: roomId || null,
           category_name: categoryName || null,
           is_paired: true,
-          status: 'lobby',
+          status: 'paired',  // Use 'paired' for DB constraint
         })
         .eq('id', session.id);
 

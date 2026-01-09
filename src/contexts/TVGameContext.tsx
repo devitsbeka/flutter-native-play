@@ -79,8 +79,9 @@ const QUESTION_TIME = getQuestionTime();
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
   const mapping: Record<string, TVPhase> = {
-    'waiting': 'lobby',
-    'lobby': 'lobby',
+    'waiting': 'pairing',
+    'paired': 'lobby',   // DB uses 'paired' for lobby state
+    'lobby': 'lobby',    // Backwards compatibility
     'countdown': 'countdown',
     'playing': 'question',
     'question': 'question',
@@ -257,7 +258,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .from('tv_sessions')
         .select('*')
         .eq('pairing_code', upperCode)
-        .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal'])
+        .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal'])
         .single();
 
       // If not found, try 4-digit tv_pairing_code
@@ -266,7 +267,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .from('tv_sessions')
           .select('*')
           .eq('tv_pairing_code', upperCode)
-          .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal'])
+          .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal'])
           .single();
         
         if (!error4Digit && session4Digit) {
@@ -304,7 +305,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .update({ 
             host_user_id: playerId,
             is_paired: true,
-            status: 'lobby'
+            status: 'paired'  // Use 'paired' for DB (constraint-compatible)
           })
           .eq('id', session.id);
       }
@@ -849,7 +850,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       await supabase
         .from('tv_sessions')
         .update({
-          status: 'lobby',
+          status: 'paired',  // Use 'paired' for DB (constraint-compatible)
           current_question_index: 0,
           questions: null,
           question_start_time: null,

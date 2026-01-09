@@ -48,7 +48,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
         .update({
           host_user_id: user.id,
           is_paired: true,
-          status: 'lobby',
+          status: 'paired',  // Use 'paired' for DB constraint
         })
         .eq('id', session.id);
 
