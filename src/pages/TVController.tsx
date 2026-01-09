@@ -110,21 +110,33 @@ const TVControllerContent: React.FC = () => {
         const maxAttempts = 3;
 
         while (attempts < maxAttempts && !sessionData) {
-          // Try to find session with any status (waiting, countdown, playing, completed)
-          const { data, error: lookupError } = await supabase
+          // Try to find session by 6-char pairing_code first
+          const { data: dataByCode, error: lookupError } = await supabase
             .from('tv_sessions')
             .select('*')
             .eq('pairing_code', upperCode)
-            .in('status', ['waiting', 'countdown', 'playing', 'completed'])
+            .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal', 'completed'])
             .maybeSingle();
 
-          if (data) {
-            sessionData = data;
+          if (dataByCode) {
+            sessionData = dataByCode;
           } else {
-            attempts++;
-            if (attempts < maxAttempts) {
-              console.log(`Session lookup attempt ${attempts} failed, retrying in 500ms...`);
-              await delay(500);
+            // If not found, try 4-digit tv_pairing_code
+            const { data: dataBy4Digit } = await supabase
+              .from('tv_sessions')
+              .select('*')
+              .eq('tv_pairing_code', upperCode)
+              .in('status', ['waiting', 'lobby', 'countdown', 'playing', 'reveal', 'completed'])
+              .maybeSingle();
+            
+            if (dataBy4Digit) {
+              sessionData = dataBy4Digit;
+            } else {
+              attempts++;
+              if (attempts < maxAttempts) {
+                console.log(`Session lookup attempt ${attempts} failed, retrying in 500ms...`);
+                await delay(500);
+              }
             }
           }
         }
@@ -146,12 +158,13 @@ const TVControllerContent: React.FC = () => {
 
         // Set phase based on status
         const status = sessionData.status;
-        if (status === 'waiting') setPhase('waiting');
+        if (status === 'waiting' || status === 'lobby') setPhase('waiting');
         else if (status === 'countdown') setPhase('countdown');
         else if (status === 'playing') {
           setPhase('playing');
           setCurrentQuestionIndex(sessionData.current_question_index || 0);
         }
+        else if (status === 'reveal') setPhase('reveal');
         else if (status === 'completed') setPhase('completed');
 
         setLoading(false);
@@ -177,7 +190,7 @@ const TVControllerContent: React.FC = () => {
               }
               
               // Update phase
-              if (newData.status === 'waiting') setPhase('waiting');
+              if (newData.status === 'waiting' || newData.status === 'lobby') setPhase('waiting');
               else if (newData.status === 'countdown') setPhase('countdown');
               else if (newData.status === 'playing') {
                 // Check if question changed

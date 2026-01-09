@@ -19,7 +19,8 @@ export const TVJoinModal: React.FC<TVJoinModalProps> = ({ open, onOpenChange }) 
   const handleJoin = () => {
     if (code.length < 4) return;
     setLoading(true);
-    navigate(`/controller/${code.toUpperCase()}`);
+    // Use /join/:code which uses TVGameContext with proper code lookup
+    navigate(`/join/${code.toUpperCase()}`);
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
