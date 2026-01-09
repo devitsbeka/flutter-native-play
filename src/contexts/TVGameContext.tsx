@@ -348,11 +348,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }));
       }
 
+      tvLog('Setting initial state from session', { 
+        status: session.status, 
+        phase: mapDbStatusToPhase(session.status),
+        questionCount: questions.length 
+      });
+      
       setState(prev => ({
         ...prev,
         code: code.toUpperCase(),
         sessionId: session.id,
-        phase: session.status as TVPhase || 'lobby',
+        phase: mapDbStatusToPhase(session.status),  // Use proper mapping!
         questions,
         currentQuestionIndex: session.current_question_index || 0,
         categoryName: session.category_name,
