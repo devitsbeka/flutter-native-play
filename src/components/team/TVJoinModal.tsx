@@ -23,6 +23,7 @@ export const TVJoinModal: React.FC<TVJoinModalProps> = ({ open, onOpenChange }) 
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Accept both 4-digit numeric and 6-char alphanumeric codes
     const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     setCode(value);
   };
