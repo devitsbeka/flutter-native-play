@@ -2,16 +2,20 @@
  * Centralized Question Tracker Service
  * Uses localStorage for persistence across sessions.
  * Prevents question repetition by tracking seen/asked question IDs.
+ * 
+ * GOLDEN RULE: Users should NEVER see repeated questions until they've
+ * exhausted ALL available questions in a category/level.
  */
 
 const STORAGE_KEY = 'question_tracker';
-const MAX_TRACKED_PER_CATEGORY = 200; // Remember last 200 questions per category
-const GLOBAL_MAX_TRACKED = 500; // Global limit across all categories
-const SEEN_MAX_TRACKED = 1000; // Track up to 1000 seen questions across all modes
-const RESET_THRESHOLD = 0.8; // Reset when 80% of available questions have been asked
+const MAX_TRACKED_PER_CATEGORY = 500; // Remember last 500 questions per category
+const GLOBAL_MAX_TRACKED = 1000; // Global limit across all categories
+const SEEN_MAX_TRACKED = 5000; // Track up to 5000 seen questions across all modes
+const RESET_THRESHOLD = 1.0; // Only reset when 100% of available questions have been asked
 
 interface TrackerData {
   categories: Record<string, string[]>; // categoryId -> questionIds
+  categoryLevels: Record<string, string[]>; // "categoryId_levelNumber" -> questionIds
   global: string[]; // All asked question IDs (for VS mode)
   seen: string[]; // All questions ever shown to user (across all modes)
   lastUpdated: number;
@@ -22,16 +26,19 @@ function getTrackerData(): TrackerData {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      // Ensure seen array exists (migration for existing users)
+      // Ensure all arrays exist (migration for existing users)
       if (!parsed.seen) {
         parsed.seen = [];
+      }
+      if (!parsed.categoryLevels) {
+        parsed.categoryLevels = {};
       }
       return parsed;
     }
   } catch (e) {
     console.warn('Failed to parse question tracker data:', e);
   }
-  return { categories: {}, global: [], seen: [], lastUpdated: Date.now() };
+  return { categories: {}, categoryLevels: {}, global: [], seen: [], lastUpdated: Date.now() };
 }
 
 function saveTrackerData(data: TrackerData): void {
@@ -74,6 +81,49 @@ export function getSeenQuestionIds(): string[] {
 export function hasQuestionBeenSeen(questionId: string): boolean {
   const data = getTrackerData();
   return data.seen.includes(questionId);
+}
+
+/**
+ * Get seen question IDs for a specific category and level
+ */
+export function getCategoryLevelSeenIds(categoryId: string, levelNumber: number): string[] {
+  const data = getTrackerData();
+  const key = `${categoryId}_${levelNumber}`;
+  return data.categoryLevels?.[key] || [];
+}
+
+/**
+ * Mark questions as seen for a specific category and level
+ * This is the most granular tracking for category quiz mode
+ */
+export function markCategoryLevelSeen(categoryId: string, levelNumber: number, questionIds: string[]): void {
+  const data = getTrackerData();
+  const key = `${categoryId}_${levelNumber}`;
+  
+  if (!data.categoryLevels) {
+    data.categoryLevels = {};
+  }
+  
+  const existing = data.categoryLevels[key] || [];
+  data.categoryLevels[key] = [...new Set([...existing, ...questionIds])];
+  
+  // Also update global seen (unified tracking)
+  const updatedSeen = [...new Set([...data.seen, ...questionIds])];
+  data.seen = updatedSeen.slice(-SEEN_MAX_TRACKED);
+  
+  saveTrackerData(data);
+}
+
+/**
+ * Clear seen questions for a specific category and level (when fully exhausted)
+ */
+export function clearCategoryLevelSeen(categoryId: string, levelNumber: number): void {
+  const data = getTrackerData();
+  const key = `${categoryId}_${levelNumber}`;
+  if (data.categoryLevels) {
+    delete data.categoryLevels[key];
+  }
+  saveTrackerData(data);
 }
 
 /**
@@ -131,6 +181,7 @@ export function markQuestionsAsAskedGlobally(questionIds: string[]): void {
 
 /**
  * Check if the question pool should be reset for a category
+ * Only returns true when ALL questions have been exhausted (100%)
  */
 export function shouldResetCategoryPool(categoryId: string, totalAvailable: number): boolean {
   const askedIds = getAskedQuestionIds(categoryId);
@@ -151,6 +202,14 @@ export function shouldResetGlobalPool(totalAvailable: number): boolean {
 export function shouldResetSeenPool(totalAvailable: number): boolean {
   const data = getTrackerData();
   return data.seen.length >= totalAvailable * RESET_THRESHOLD;
+}
+
+/**
+ * Check if a category+level combination should reset (all questions exhausted)
+ */
+export function shouldResetCategoryLevel(categoryId: string, levelNumber: number, totalAvailable: number): boolean {
+  const levelSeenIds = getCategoryLevelSeenIds(categoryId, levelNumber);
+  return levelSeenIds.length >= totalAvailable;
 }
 
 /**
@@ -195,6 +254,7 @@ export function getTrackingStats(): {
   categoriesTracked: number;
   globalTracked: number;
   seenTracked: number;
+  categoryLevelsTracked: number;
 } {
   const data = getTrackerData();
   const totalTracked = Object.values(data.categories).reduce((sum, ids) => sum + ids.length, 0);
@@ -203,5 +263,22 @@ export function getTrackingStats(): {
     categoriesTracked: Object.keys(data.categories).length,
     globalTracked: data.global.length,
     seenTracked: data.seen.length,
+    categoryLevelsTracked: Object.keys(data.categoryLevels || {}).length,
   };
+}
+
+/**
+ * Debug function to verify persistence and tracking state
+ */
+export function getTrackingDebugInfo(): string {
+  const data = getTrackerData();
+  return JSON.stringify({
+    seenCount: data.seen.length,
+    globalCount: data.global.length,
+    categoriesCount: Object.keys(data.categories).length,
+    categoryLevelsCount: Object.keys(data.categoryLevels || {}).length,
+    lastUpdated: new Date(data.lastUpdated).toISOString(),
+    sampleSeenIds: data.seen.slice(0, 5),
+    categoryLevelKeys: Object.keys(data.categoryLevels || {}).slice(0, 10),
+  }, null, 2);
 }

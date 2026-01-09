@@ -148,7 +148,19 @@ export default function CategoryQuizPage() {
   const category = getCategoryById(categoryId || "");
   
   // Session question tracking to prevent repetition (includes globally seen questions)
-  const { getAskedQuestionIds, getExcludeQuestionIds, markQuestionsAsAsked, clearAskedQuestions, shouldResetPool, shouldResetSeenPoolCheck, clearSeen } = useSessionQuestions(categoryId || "");
+  const { 
+    getAskedQuestionIds, 
+    getExcludeQuestionIds, 
+    getLevelExcludeQuestionIds,
+    markLevelQuestionsSeen,
+    isLevelExhausted,
+    clearLevelSeen,
+    markQuestionsAsAsked, 
+    clearAskedQuestions, 
+    shouldResetPool, 
+    shouldResetSeenPoolCheck, 
+    clearSeen 
+  } = useSessionQuestions(categoryId || "");
   
   // Mock opponent data
   const opponent = useMemo(() => ({
@@ -224,9 +236,6 @@ export default function CategoryQuizPage() {
         // Store the database category for icon rendering
         setDbCategory(categoryData);
 
-        // Get previously asked + globally seen question IDs to exclude (prioritize fresh questions)
-        let askedIds = getExcludeQuestionIds();
-        
         // Expand level range to get more variety (N-3 to N+5)
         const minLevel = Math.max(1, levelNumber - 3);
         const maxLevel = Math.min(20, levelNumber + 5);
@@ -242,13 +251,17 @@ export default function CategoryQuizPage() {
           .gte('level_number', minLevel)
           .lte('level_number', maxLevel);
         
-        // Reset pool if we've used most questions
-        if (totalCount && shouldResetPool(totalCount)) {
-          clearAskedQuestions();
-          askedIds = [];
+        // Get level-specific + globally seen question IDs to exclude
+        let excludeIds = getLevelExcludeQuestionIds(levelNumber);
+        
+        // Check if level is exhausted (100% of questions seen)
+        // Only then reset level tracking to allow repeats
+        if (totalCount && isLevelExhausted(levelNumber, totalCount)) {
+          clearLevelSeen(levelNumber);
+          excludeIds = []; // Allow all questions again for this level
         }
 
-        // Build query excluding asked questions with expanded level range
+        // Build query excluding seen questions with expanded level range
         let query = supabase
           .from('questions')
           .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
@@ -259,9 +272,9 @@ export default function CategoryQuizPage() {
           .gte('level_number', minLevel)
           .lte('level_number', maxLevel);
         
-        // Exclude previously asked questions if any
-        if (askedIds.length > 0) {
-          query = query.not('id', 'in', `(${askedIds.join(',')})`);
+        // Exclude previously seen questions if any
+        if (excludeIds.length > 0) {
+          query = query.not('id', 'in', `(${excludeIds.join(',')})`);
         }
         
         const { data: dbQuestions, error: dbError } = await query.limit(100);
@@ -274,9 +287,9 @@ export default function CategoryQuizPage() {
 
         // If no new questions available, try fallback strategies
         if (!dbQuestions || dbQuestions.length === 0) {
-          // First, try clearing asked questions and retry same range
-          if (askedIds.length > 0) {
-            clearAskedQuestions();
+          // First, try clearing level-specific tracking and retry same range
+          if (excludeIds.length > 0) {
+            clearLevelSeen(levelNumber);
             const { data: retryQuestions } = await supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
@@ -289,7 +302,7 @@ export default function CategoryQuizPage() {
               .limit(50);
             
             if (retryQuestions && retryQuestions.length > 0) {
-              processAndSetQuestions(retryQuestions, categoryData);
+              processAndSetQuestions(retryQuestions, categoryData, levelNumber);
               return;
             }
           }
@@ -307,7 +320,7 @@ export default function CategoryQuizPage() {
             .limit(100);
           
           if (fallbackQuestions && fallbackQuestions.length > 0) {
-            processAndSetQuestions(fallbackQuestions, categoryData);
+            processAndSetQuestions(fallbackQuestions, categoryData, levelNumber);
             return;
           }
           
@@ -315,7 +328,7 @@ export default function CategoryQuizPage() {
           return;
         }
         
-        processAndSetQuestions(dbQuestions, categoryData);
+        processAndSetQuestions(dbQuestions, categoryData, levelNumber);
       } catch (err) {
         console.error("Unexpected error:", err);
         setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");
@@ -324,7 +337,7 @@ export default function CategoryQuizPage() {
       }
     };
     
-    const processAndSetQuestions = (dbQuestions: any[], categoryData: any) => {
+    const processAndSetQuestions = (dbQuestions: any[], categoryData: any, levelNum: number) => {
       // Store the database category for icon rendering
       setDbCategory(categoryData);
       
@@ -356,8 +369,14 @@ export default function CategoryQuizPage() {
       // Shuffle and take 5 questions
       const shuffledDbQuestions = shuffleArray(processedQuestions).slice(0, 5);
       
-      // Store question IDs to mark as asked after quiz
-      setQuestionIds(shuffledDbQuestions.map(q => q.id));
+      // Store question IDs for later marking as asked
+      const ids = shuffledDbQuestions.map(q => q.id);
+      setQuestionIds(ids);
+      
+      // IMMEDIATELY mark questions as seen when shown (not after quiz)
+      // This is the GOLDEN RULE: questions are tracked the moment they're displayed
+      markLevelQuestionsSeen(levelNum, ids);
+      
       setQuestions(shuffledDbQuestions);
       setLoading(false);
       
