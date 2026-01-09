@@ -605,8 +605,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // P1-1: Get previously asked questions + all seen questions to avoid repetition
+      // STANDARDIZED: Use mode_uuid format for consistent tracker keys
       const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds } = await import('@/services/questionTracker');
-      const trackerKey = `tv_${categoryUUID}`;
+      const trackerKey = `tv_${categoryUUID}`; // Standardized UUID-based key
       const categoryAskedIds = getAskedQuestionIds(trackerKey);
       const allSeenIds = getSeenQuestionIds();
       // Combine for maximum freshness
