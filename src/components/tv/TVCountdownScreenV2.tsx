@@ -24,18 +24,35 @@ export const TVCountdownScreenV2: React.FC = () => {
   }, []);
 
   // When countdown ends and user is host, trigger startPlaying
+  // Also add a fallback: if no host triggered after 2 seconds, TV triggers it
   useEffect(() => {
-    if (count === 0 && isHost && !hasTriggeredPlaying.current) {
-      hasTriggeredPlaying.current = true;
-      tvLog('Countdown ended, host triggering startPlaying');
-      
-      // Small delay to show "GO!" before transitioning
-      const transitionTimer = setTimeout(() => {
-        startPlaying();
-        tvLogPhase('countdown', 'playing', 'countdown ended');
-      }, 500);
+    if (count === 0 && !hasTriggeredPlaying.current) {
+      if (isHost) {
+        // TV is the host, trigger immediately
+        hasTriggeredPlaying.current = true;
+        tvLog('Countdown ended, TV host triggering startPlaying');
+        
+        const transitionTimer = setTimeout(() => {
+          startPlaying();
+          tvLogPhase('countdown', 'playing', 'countdown ended');
+        }, 500);
 
-      return () => clearTimeout(transitionTimer);
+        return () => clearTimeout(transitionTimer);
+      } else {
+        // TV is not host, but add fallback in case phone host fails
+        tvLog('Countdown ended, waiting for phone host to trigger startPlaying...');
+        
+        const fallbackTimer = setTimeout(() => {
+          if (!hasTriggeredPlaying.current) {
+            hasTriggeredPlaying.current = true;
+            tvLog('Fallback: TV triggering startPlaying after phone host timeout');
+            startPlaying();
+            tvLogPhase('countdown', 'playing', 'fallback trigger');
+          }
+        }, 2000);
+
+        return () => clearTimeout(fallbackTimer);
+      }
     }
   }, [count, isHost, startPlaying]);
 
