@@ -1,14 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, X } from 'lucide-react';
+import { Check, X, Users } from 'lucide-react';
 import { useTVSession } from '@/contexts/TVSessionContext';
 import { Avatar } from '@/components/shared/Avatar';
 
 const OPTION_COLORS = [
-  { bg: 'bg-red-500/20', border: 'border-red-500', text: 'text-red-400', label: 'A' },
-  { bg: 'bg-blue-500/20', border: 'border-blue-500', text: 'text-blue-400', label: 'B' },
-  { bg: 'bg-yellow-500/20', border: 'border-yellow-500', text: 'text-yellow-400', label: 'C' },
-  { bg: 'bg-green-500/20', border: 'border-green-500', text: 'text-green-400', label: 'D' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'A', labelBg: '#A855F7', barBg: '#A855F7' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'B', labelBg: '#7C3AED', barBg: '#7C3AED' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'C', labelBg: '#6366F1', barBg: '#6366F1' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'D', labelBg: '#8B5CF6', barBg: '#8B5CF6' },
 ];
 
 export const TVRevealScreen: React.FC = () => {
@@ -42,6 +42,8 @@ export const TVRevealScreen: React.FC = () => {
           const color = OPTION_COLORS[index];
           const isCorrect = option === correctAnswer;
           const playersWhoChoseThis = players.filter(p => p.lastAnswer === option);
+          const totalAnswered = players.filter(p => p.hasAnswered).length;
+          const percentage = totalAnswered > 0 ? (playersWhoChoseThis.length / totalAnswered) * 100 : 0;
 
           return (
             <motion.div
@@ -49,40 +51,74 @@ export const TVRevealScreen: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: index * 0.1 }}
-              className={`relative rounded-2xl p-6 border-2 ${
-                isCorrect 
-                  ? 'bg-green-500/30 border-green-500' 
+              className="relative rounded-2xl p-6 overflow-hidden"
+              style={{
+                background: isCorrect 
+                  ? 'linear-gradient(180deg, rgba(34,197,94,0.3) 0%, rgba(34,197,94,0.15) 100%)'
                   : playersWhoChoseThis.length > 0
-                    ? 'bg-red-500/20 border-red-500/50'
-                    : `${color.bg} ${color.border} opacity-50`
-              }`}
+                    ? 'linear-gradient(180deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)'
+                    : color.bg,
+                border: isCorrect 
+                  ? '2px solid rgba(34,197,94,0.8)'
+                  : playersWhoChoseThis.length > 0
+                    ? '2px solid rgba(239,68,68,0.5)'
+                    : '1px solid rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+              }}
             >
+              {/* Distribution Bar Background */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${percentage}%` }}
+                transition={{ delay: 0.5, duration: 0.8, ease: 'easeOut' }}
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: isCorrect 
+                    ? 'linear-gradient(90deg, rgba(34,197,94,0.5) 0%, rgba(34,197,94,0.2) 100%)'
+                    : `linear-gradient(90deg, ${color.barBg}80 0%, ${color.barBg}20 100%)`,
+                }}
+              />
+
               {/* Correct/Wrong indicator */}
               {isCorrect && (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5, type: 'spring' }}
-                  className="absolute -top-3 -right-3 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center"
+                  className="absolute -top-3 -right-3 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center z-10"
                 >
                   <Check className="w-6 h-6 text-white" />
                 </motion.div>
               )}
 
-              <div className="flex items-center gap-4 mb-4">
-                <div className={`w-10 h-10 rounded-xl ${isCorrect ? 'bg-green-500/30' : color.bg} border ${isCorrect ? 'border-green-500' : color.border} flex items-center justify-center`}>
-                  <span className={`text-xl font-bold ${isCorrect ? 'text-green-400' : color.text}`}>
-                    {color.label}
-                  </span>
-                </div>
-                <span className="text-xl font-medium text-foreground flex-1">
+              <div className="relative z-10 flex items-center gap-4 mb-4">
+                {/* Option Label Badge */}
+                <span 
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0"
+                  style={{ background: isCorrect ? '#22C55E' : color.labelBg }}
+                >
+                  {color.label}
+                </span>
+                <span className="text-xl font-medium text-white flex-1">
                   {option}
                 </span>
+                
+                {/* Distribution Stats */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex items-center gap-2 bg-black/30 rounded-full px-3 py-1.5"
+                >
+                  <Users className="w-4 h-4 text-white/70" />
+                  <span className="text-white font-bold">{playersWhoChoseThis.length}</span>
+                  <span className="text-white/60 text-sm">({Math.round(percentage)}%)</span>
+                </motion.div>
               </div>
 
               {/* Players who chose this answer */}
               {playersWhoChoseThis.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="relative z-10 flex flex-wrap gap-2 mt-2">
                   {playersWhoChoseThis.map((player, pIndex) => (
                     <motion.div
                       key={player.id}
@@ -90,7 +126,7 @@ export const TVRevealScreen: React.FC = () => {
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.6 + pIndex * 0.1 }}
                       className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                        isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'
+                        isCorrect ? 'bg-green-500/30' : 'bg-red-500/30'
                       }`}
                     >
                       <Avatar
@@ -98,7 +134,7 @@ export const TVRevealScreen: React.FC = () => {
                         emoji={player.nickname?.[0] || '👤'}
                         size="sm"
                       />
-                      <span className="text-sm text-foreground">{player.nickname}</span>
+                      <span className="text-sm text-white">{player.nickname}</span>
                       {isCorrect ? (
                         <Check className="w-4 h-4 text-green-400" />
                       ) : (
