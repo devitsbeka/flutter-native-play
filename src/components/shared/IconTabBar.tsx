@@ -144,7 +144,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
       <div
         ref={containerRef}
         className={`relative flex items-center overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing select-none ${
-          compact ? 'gap-2 py-1' : 'gap-4 py-3'
+          compact ? 'gap-2 py-1' : 'gap-2 py-3'
         }`}
         style={{
           paddingLeft: 16,
@@ -162,47 +162,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
           const isActive = activeTab === tab.id;
           const iconSrc = iconMap[tab.id];
           
-          if (compact) {
-            // Compact mode: small icon left of label, horizontal layout
-            return (
-              <motion.button
-                key={tab.id}
-                onClick={(e) => {
-                  if (isDraggingRef.current) {
-                    e.preventDefault();
-                    return;
-                  }
-                  onTabChange(tab.id);
-                }}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full flex-shrink-0 transition-all ${
-                  isActive 
-                    ? 'bg-purple-100/80' 
-                    : 'bg-white/60 hover:bg-white/80'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <img 
-                  src={iconSrc} 
-                  alt={tab.label}
-                  className="w-5 h-5 object-contain"
-                />
-                <span 
-                  className="font-semibold leading-tight whitespace-nowrap uppercase"
-                  style={{
-                    fontFamily: "'Google Sans', sans-serif",
-                    fontSize: '12px',
-                    letterSpacing: '0',
-                    color: isActive ? "#6D28D9" : "#64748b",
-                  }}
-                >
-                  {tab.label}
-                </span>
-              </motion.button>
-            );
-          }
-          
-          // Default mode: icon above label
+          // Horizontal layout: small icon left of label
           return (
             <motion.button
               key={tab.id}
@@ -213,30 +173,24 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
                 }
                 onTabChange(tab.id);
               }}
-              className="relative flex flex-col items-center gap-1.5 px-2 py-1 flex-shrink-0"
-              whileHover={{ scale: 1.08, y: -2 }}
+              className={`relative flex items-center gap-1.5 px-3 py-2 rounded-full flex-shrink-0 transition-all ${
+                isActive 
+                  ? 'bg-purple-100/80' 
+                  : 'bg-white/60 hover:bg-white/80'
+              }`}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {/* Icon */}
-              <div className="relative w-12 h-12 flex items-center justify-center">
-                <img 
-                  src={iconSrc} 
-                  alt={tab.label}
-                  className="w-12 h-12 object-contain"
-                  style={{
-                    filter: isActive ? "drop-shadow(0 4px 8px rgba(139, 92, 246, 0.4))" : "none",
-                    transform: isActive ? "scale(1.1)" : "scale(1)",
-                    transition: "all 0.2s ease",
-                  }}
-                />
-              </div>
-              
-              {/* Label - Google Sans, uppercase */}
+              <img 
+                src={iconSrc} 
+                alt={tab.label}
+                className={`object-contain ${compact ? 'w-5 h-5' : 'w-6 h-6'}`}
+              />
               <span 
-                className="font-semibold leading-tight text-center whitespace-nowrap uppercase"
+                className="font-semibold leading-tight whitespace-nowrap uppercase"
                 style={{
                   fontFamily: "'Google Sans', sans-serif",
-                  fontSize: '14px',
+                  fontSize: compact ? '12px' : '13px',
                   letterSpacing: '0',
                   color: isActive ? "#6D28D9" : "#64748b",
                 }}
@@ -250,7 +204,7 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
       
       {/* Separator line - hide in compact mode */}
       {!compact && (
-        <div className="mx-4 mt-3 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
+        <div className="mx-4 mt-2 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
       )}
     </div>
   );
