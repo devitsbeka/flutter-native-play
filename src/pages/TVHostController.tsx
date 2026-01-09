@@ -40,7 +40,7 @@ const OPTION_COLORS = [
   { bg: 'bg-green-500', hover: 'hover:bg-green-600', label: 'D' },
 ];
 
-type Phase = 'category-select' | 'waiting' | 'countdown' | 'playing' | 'reveal' | 'completed';
+type Phase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed';
 
 const TVHostController: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -647,8 +647,46 @@ const TVHostController: React.FC = () => {
       allPlayers[hostPlayerIdx].isHost = true;
     }
 
-    const handlePlayAgain = () => {
-      window.location.reload();
+    const handlePlayAgain = async () => {
+      // Reset game state properly instead of reloading
+      try {
+        // Reset session to lobby state
+        await supabase
+          .from('tv_sessions')
+          .update({
+            status: 'lobby',
+            current_question_index: 0,
+            questions: null,
+            question_start_time: null,
+          })
+          .eq('id', sessionId);
+        
+        // Reset local state
+        setPhase('category-select');
+        setQuestions([]);
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setSelectedAnswer(null);
+        setHasAnswered(false);
+        setLastResult(null);
+        setTimeRemaining(15);
+
+        // Reset presence score
+        if (presenceChannelRef.current) {
+          await presenceChannelRef.current.track({
+            nickname,
+            avatar_url: avatarUrl,
+            isHost: true,
+            score: 0,
+            hasAnswered: false,
+            lastAnswerCorrect: null,
+          });
+        }
+      } catch (error) {
+        console.error('Error resetting game:', error);
+        // Fallback to reload if reset fails
+        window.location.reload();
+      }
     };
 
     const handleExit = () => {

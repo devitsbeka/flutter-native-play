@@ -64,6 +64,23 @@ const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = 15; // seconds per question
 
+// Map database status values to TVPhase for consistency
+export const mapDbStatusToPhase = (status: string): TVPhase => {
+  const mapping: Record<string, TVPhase> = {
+    'waiting': 'lobby',
+    'lobby': 'lobby',
+    'countdown': 'countdown',
+    'playing': 'question',
+    'question': 'question',
+    'reveal': 'reveal',
+    'results': 'results',
+    'completed': 'results',
+    'idle': 'idle',
+    'pairing': 'pairing',
+  };
+  return mapping[status] || (status as TVPhase);
+};
+
 // Helper to generate 6-char code
 const generateCode = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -344,18 +361,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               setMyAnswer(null);
             }
 
-            // Map database status to TVPhase
-            const mapStatusToPhase = (status: string): TVPhase => {
-              switch (status) {
-                case 'playing': return 'question';
-                case 'completed': return 'results';
-                default: return status as TVPhase;
-              }
-            };
-
             return {
               ...prev,
-              phase: mapStatusToPhase(newData.status),
+              phase: mapDbStatusToPhase(newData.status),
               currentQuestionIndex: newData.current_question_index,
               questions: questions.length > 0 ? questions : prev.questions,
               timeRemaining: newData.status === 'playing' ? timeRemaining : QUESTION_TIME,

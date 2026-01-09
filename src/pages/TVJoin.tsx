@@ -31,27 +31,30 @@ const TVJoinContent: React.FC = () => {
   }
 
   // Show appropriate screen based on phase
+  // Handle both TVPhase values and database status values
   switch (phase) {
     case 'pairing':
+    case 'waiting':
     case 'lobby':
       return <ControllerLobby />;
     case 'countdown':
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-purple-200 text-lg mb-4">Get ready!</p>
+            <p className="text-purple-200 text-lg mb-4">მოემზადე!</p>
             <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto" />
           </div>
         </div>
       );
     case 'question':
+    case 'playing': // Database status maps to question phase
       return <ControllerQuestion />;
     case 'reveal':
       return <ControllerReveal />;
     case 'results':
+    case 'completed': // Database status maps to results phase
       return <ControllerResults />;
     case 'idle':
-      return <ControllerLobby />;
     default:
       return <ControllerLobby />;
   }
