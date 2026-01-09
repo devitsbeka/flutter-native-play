@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
+import { getGradientById } from "@/config/roomGradients";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -158,6 +159,9 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   
   // Always use the placeholder image
   const coverImage = roomCoverPlaceholder;
+  
+  // Get gradient from room or fallback
+  const gradient = getGradientById(room.background_gradient);
 
   return (
     <motion.div
@@ -172,8 +176,11 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
         boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Full card with light purple background */}
-      <div className="relative bg-gradient-to-br from-primary/20 to-primary/30 px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden">
+      {/* Full card with dynamic gradient background */}
+      <div 
+        className="relative px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden"
+        style={{ background: gradient?.gradient || 'linear-gradient(135deg, hsl(var(--primary)/0.2), hsl(var(--primary)/0.3))' }}
+      >
         {/* Cover image with radial fade - flip based on index for variety */}
         <div 
           className="absolute inset-0 opacity-40 overflow-hidden"

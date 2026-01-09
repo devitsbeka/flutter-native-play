@@ -522,6 +522,7 @@ export type Database = {
       }
       game_rooms: {
         Row: {
+          background_gradient: string | null
           category_id: string | null
           category_name: string | null
           challenge_expires_at: string | null
@@ -549,6 +550,7 @@ export type Database = {
           used_question_ids: string[] | null
         }
         Insert: {
+          background_gradient?: string | null
           category_id?: string | null
           category_name?: string | null
           challenge_expires_at?: string | null
@@ -576,6 +578,7 @@ export type Database = {
           used_question_ids?: string[] | null
         }
         Update: {
+          background_gradient?: string | null
           category_id?: string | null
           category_name?: string | null
           challenge_expires_at?: string | null

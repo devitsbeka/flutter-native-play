@@ -679,6 +679,10 @@ export const ru: KaTranslations = {
     game: "Игра",
     add: "Добавить",
     all: "Все",
+    chooseBackground: "Выбрать фон",
+    pickRoomColors: "Выберите цвета комнаты",
+    backgroundChanged: "Фон изменён!",
+    backgroundChangeFailed: "Не удалось изменить фон",
   },
   modals: {
     notEnoughCoins: "Недостаточно монет",

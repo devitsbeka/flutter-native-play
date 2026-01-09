@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { generateRoomName } from "@/utils/roomNameGenerator";
+import { getRandomGradient } from "@/config/roomGradients";
 export type RoomStatus = "waiting" | "ready" | "playing" | "completed" | "cancelled";
 export type ParticipantStatus = "joined" | "ready" | "playing" | "finished" | "disconnected";
 
@@ -83,7 +84,7 @@ export function useGameRoom() {
         attempts++;
       }
 
-      // Create the room with a random room name
+      // Create the room with a random room name and gradient
       const roomName = generateRoomName();
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
@@ -94,6 +95,7 @@ export function useGameRoom() {
           category_name: categoryName || null,
           status: "waiting" as RoomStatus,
           room_name: roomName,
+          background_gradient: getRandomGradient(),
         })
         .select()
         .single();

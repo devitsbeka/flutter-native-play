@@ -782,6 +782,10 @@ export const ka = {
     game: "თამაში",
     add: "დამატება",
     all: "ყველა",
+    chooseBackground: "ფონის არჩევა",
+    pickRoomColors: "აირჩიე შენი ოთახის ფერები",
+    backgroundChanged: "ფონი შეიცვალა!",
+    backgroundChangeFailed: "ფონის შეცვლა ვერ მოხერხდა",
   },
 
   // ==========================================

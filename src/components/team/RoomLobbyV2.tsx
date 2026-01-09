@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play, Tv, AlertTriangle } from "lucide-react";
+import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play, Tv, AlertTriangle, Palette } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -17,6 +17,8 @@ import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { TVConnectModal } from "./TVConnectModal";
+import { GradientPicker } from "./GradientPicker";
+import { getGradientById } from "@/config/roomGradients";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +57,7 @@ export function RoomLobbyV2() {
   const [showTVModal, setShowTVModal] = useState(false);
   const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showGradientPicker, setShowGradientPicker] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
@@ -210,6 +213,22 @@ export function RoomLobbyV2() {
     }
   };
 
+  const handleChangeGradient = async (gradientId: string) => {
+    if (!currentRoom) return;
+    
+    try {
+      await supabase
+        .from("game_rooms")
+        .update({ background_gradient: gradientId })
+        .eq("id", currentRoom.id);
+      
+      toast.success(t("team.backgroundChanged"));
+    } catch (error) {
+      console.error("Error updating background:", error);
+      toast.error(t("team.backgroundChangeFailed"));
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!chatMessage.trim()) return;
     const success = await sendMessage(chatMessage);
@@ -333,14 +352,24 @@ export function RoomLobbyV2() {
                 {currentRoom.room_name || `Room #${currentRoom.room_code.slice(-4)}`}
               </h2>
               {isHost && (
-                <motion.button
-                  onClick={() => setIsEditingName(true)}
-                  className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Edit2 className="w-4 h-4 text-muted-foreground" />
-                </motion.button>
+                <>
+                  <motion.button
+                    onClick={() => setIsEditingName(true)}
+                    className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Edit2 className="w-4 h-4 text-muted-foreground" />
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setShowGradientPicker(true)}
+                    className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Palette className="w-4 h-4 text-muted-foreground" />
+                  </motion.button>
+                </>
               )}
             </div>
           )}
@@ -632,6 +661,14 @@ export function RoomLobbyV2() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Gradient Picker Modal */}
+      <GradientPicker
+        isOpen={showGradientPicker}
+        onClose={() => setShowGradientPicker(false)}
+        currentGradient={(currentRoom as any)?.background_gradient || 'lavender_mist'}
+        onSelect={handleChangeGradient}
+      />
     </div>
   );
 }

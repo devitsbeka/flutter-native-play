@@ -784,6 +784,10 @@ export const en: KaTranslations = {
     game: "Game",
     add: "Add",
     all: "All",
+    chooseBackground: "Choose Background",
+    pickRoomColors: "Pick your room colors",
+    backgroundChanged: "Background changed!",
+    backgroundChangeFailed: "Failed to change background",
   },
 
   // ==========================================

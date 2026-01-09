@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
 import { toast } from "sonner";
+import { getRandomGradient } from "@/config/roomGradients";
 
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
@@ -308,6 +309,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           category_name: categoryName,
           status: "waiting",
           is_permanent: true,
+          background_gradient: getRandomGradient(),
         })
         .select()
         .single();

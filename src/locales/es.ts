@@ -662,6 +662,10 @@ export const es: KaTranslations = {
     game: "Juego",
     add: "Agregar",
     all: "Todos",
+    chooseBackground: "Elegir fondo",
+    pickRoomColors: "Elige los colores de tu sala",
+    backgroundChanged: "¡Fondo cambiado!",
+    backgroundChangeFailed: "Error al cambiar el fondo",
   },
   modals: {
     notEnoughCoins: "Monedas insuficientes",
