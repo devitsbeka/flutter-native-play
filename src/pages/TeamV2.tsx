@@ -36,6 +36,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
+import { GenerationQueueDropdown } from "@/components/generation/GenerationQueueDropdown";
 
 function TeamContentV2() {
   const navigate = useNavigate();
@@ -185,6 +186,9 @@ function TeamContentV2() {
                   <Plus className="w-5 h-5" />
                 </motion.button>
               )}
+
+              {/* Generation Queue Dropdown */}
+              <GenerationQueueDropdown />
 
               <motion.button
                 initial={{ opacity: 0, x: 10 }}
