@@ -8,25 +8,12 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
-import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
 import { Button } from '@/components/ui/button';
+import { NotificationBadge } from '@/components/notifications/NotificationBadge';
+import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 
-type FilterType = 'all' | 'unread' | 'friends' | 'games';
-
-// Map notification types to icon slugs from our library
-const NOTIFICATION_ICON_SLUGS: Record<string, string> = {
-  friend_request: 'user-plus-02',
-  friend_accepted: 'users-check',
-  challenge: 'swords-02',
-  game_started: 'play-circle',
-  room_invite: 'users-plus',
-  game_result: 'trophy-02',
-  reward: 'gift-02',
-  achievement: 'award-03',
-  system: 'announcement-01',
-  welcome: 'party-popper',
-};
+type FilterType = 'all' | 'unread' | 'friends' | 'games' | 'rewards';
 
 function NotificationCard({
   notification,
@@ -49,8 +36,6 @@ function NotificationCard({
     locale: dateLocale 
   });
 
-  // Get icon slug based on notification type or from data
-  const iconSlug = (notification.data?.icon_slug as string) || NOTIFICATION_ICON_SLUGS[notification.type] || 'bell-01';
 
   return (
     <motion.div
@@ -76,13 +61,8 @@ function NotificationCard({
       )}
 
       <div className="flex items-start gap-3">
-        {/* Icon from library */}
-        <div className={cn(
-          "flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
-          isUnread ? "bg-primary/10" : "bg-muted"
-        )}>
-          <DynamicIcon slug={iconSlug} size={28} />
-        </div>
+        {/* Icon */}
+        <NotificationBadge type={notification.type} size="lg" />
 
         {/* Content */}
         <div className="flex-1 min-w-0 pr-8">
@@ -149,9 +129,11 @@ export default function Notifications() {
       case 'unread':
         return !n.read_at;
       case 'friends':
-        return n.type === 'friend_request' || n.type === 'friend_accepted';
+        return NOTIFICATION_FILTER_CATEGORIES.social.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.social[number]);
       case 'games':
-        return ['challenge', 'game_result', 'game_started', 'room_invite'].includes(n.type);
+        return NOTIFICATION_FILTER_CATEGORIES.games.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.games[number]);
+      case 'rewards':
+        return NOTIFICATION_FILTER_CATEGORIES.rewards.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.rewards[number]);
       default:
         return true;
     }
@@ -201,8 +183,9 @@ export default function Notifications() {
   const filters: { key: FilterType; label: string }[] = [
     { key: 'all', label: t('notifications.all') },
     { key: 'unread', label: t('notifications.unread') },
-    { key: 'friends', label: t('notifications.friends') },
+    { key: 'friends', label: t('notifications.social') || 'სოციალური' },
     { key: 'games', label: t('notifications.games') },
+    { key: 'rewards', label: t('notifications.rewards') || 'ჯილდოები' },
   ];
 
   return (

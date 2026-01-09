@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, BellOff, Check, CheckCheck, Users, Swords, Gift, Trophy, Info, Trash2, UserPlus, Gamepad2 } from 'lucide-react';
+import { X, Bell, BellOff, Check, CheckCheck, Trash2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
@@ -8,26 +8,15 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { NotificationBadge } from '@/components/notifications/NotificationBadge';
+import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type FilterType = 'all' | 'unread' | 'friends' | 'games';
-
-const NOTIFICATION_ICONS: Record<string, React.ReactNode> = {
-  friend_request: <UserPlus className="w-5 h-5 text-blue-400" />,
-  friend_accepted: <Users className="w-5 h-5 text-green-400" />,
-  challenge: <Gamepad2 className="w-5 h-5 text-orange-400" />,
-  game_invite: <Swords className="w-5 h-5 text-purple-400" />,
-  game_started: <Swords className="w-5 h-5 text-green-400" />,
-  room_invite: <Gamepad2 className="w-5 h-5 text-purple-400" />,
-  game_result: <Trophy className="w-5 h-5 text-yellow-400" />,
-  reward: <Gift className="w-5 h-5 text-pink-400" />,
-  achievement: <Trophy className="w-5 h-5 text-purple-400" />,
-  system: <Info className="w-5 h-5 text-muted-foreground" />,
-};
+type FilterType = 'all' | 'unread' | 'friends' | 'games' | 'rewards';
 
 function NotificationCard({
   notification,
@@ -102,9 +91,7 @@ function NotificationCard({
 
       <div className="flex items-start gap-3">
         {/* Icon */}
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-background/50 flex items-center justify-center">
-          {NOTIFICATION_ICONS[notification.type] || <Bell className="w-5 h-5" />}
-        </div>
+        <NotificationBadge type={notification.type} size="md" />
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -189,9 +176,11 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
       case 'unread':
         return !n.read_at;
       case 'friends':
-        return n.type === 'friend_request' || n.type === 'friend_accepted';
+        return NOTIFICATION_FILTER_CATEGORIES.social.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.social[number]);
       case 'games':
-        return ['challenge', 'game_result', 'game_started', 'room_invite'].includes(n.type);
+        return NOTIFICATION_FILTER_CATEGORIES.games.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.games[number]);
+      case 'rewards':
+        return NOTIFICATION_FILTER_CATEGORIES.rewards.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.rewards[number]);
       default:
         return true;
     }
@@ -310,10 +299,11 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   };
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'unread', label: 'Unread' },
-    { key: 'friends', label: 'Friends' },
-    { key: 'games', label: 'Games' },
+    { key: 'all', label: 'ყველა' },
+    { key: 'unread', label: 'წაუკითხავი' },
+    { key: 'friends', label: 'სოციალური' },
+    { key: 'games', label: 'თამაშები' },
+    { key: 'rewards', label: 'ჯილდოები' },
   ];
 
   return (
