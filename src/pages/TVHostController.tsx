@@ -186,36 +186,38 @@ const TVHostController: React.FC = () => {
 
       // Set up presence channel - host tracks their presence too!
       const presenceChannel = supabase
-        .channel(`tv-presence-${sessionId}`)
+        .channel(`tv-presence-${sessionId}`, {
+          config: { presence: { key: user.id } }, // Use user.id as presence key
+        })
         .on('presence', { event: 'sync' }, () => {
           const presenceState = presenceChannel.presenceState();
           const connectedPlayers: Player[] = [];
           
-          Object.values(presenceState).forEach((presences: any) => {
-            presences.forEach((presence: any) => {
+          Object.entries(presenceState).forEach(([key, presences]: [string, any]) => {
+            const presence = presences[0];
+            if (presence && key !== 'TV_DISPLAY') {
               connectedPlayers.push({
-                id: presence.user_id,
+                id: key,
                 nickname: presence.nickname || 'Player',
                 avatar_url: presence.avatar_url,
                 score: presence.score || 0,
                 isHost: presence.isHost || false,
               });
-            });
+            }
           });
           
           setPlayers(connectedPlayers);
         })
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
-            // Host tracks their own presence
+            // Host tracks their own presence with hasAnswered for leaderboard
             await presenceChannel.track({
-              user_id: user.id,
               nickname: profile?.nickname || 'Host',
               avatar_url: profile?.avatar_url,
               isHost: true,
-              isGuest: false,
               score: 0,
-              online_at: new Date().toISOString(),
+              hasAnswered: false,
+              lastAnswerCorrect: null,
             });
             console.log('Host presence tracked');
           }
@@ -363,6 +365,18 @@ const TVHostController: React.FC = () => {
       setSelectedAnswer(null);
       setHasAnswered(false);
       setLastResult(null);
+
+      // Reset host's hasAnswered in presence for next question
+      if (presenceChannelRef.current) {
+        await presenceChannelRef.current.track({
+          nickname,
+          avatar_url: avatarUrl,
+          isHost: true,
+          score,
+          hasAnswered: false,
+          lastAnswerCorrect: null,
+        });
+      }
     }
   };
 
@@ -394,8 +408,21 @@ const TVHostController: React.FC = () => {
     const isCorrect = answer === currentQuestion.correct_answer;
     const timeBonus = Math.max(0, timeRemaining);
     const points = isCorrect ? 100 + (timeBonus * 5) : 0;
+    const newScore = score + points;
     
-    setScore(prev => prev + points);
+    setScore(newScore);
+
+    // Update presence to show host answered and their new score on TV leaderboard
+    if (presenceChannelRef.current) {
+      await presenceChannelRef.current.track({
+        nickname,
+        avatar_url: avatarUrl,
+        isHost: true,
+        score: newScore,
+        hasAnswered: true,
+        lastAnswerCorrect: isCorrect,
+      });
+    }
 
     try {
       await supabase
