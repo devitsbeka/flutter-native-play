@@ -489,7 +489,11 @@ function TeamContentV2() {
       {/* Modals */}
       <AnimatePresence>
         {showCreateModal && (
-          <CreateRoomPage onClose={() => setShowCreateModal(false)} />
+          <CreateRoomPage 
+            onClose={() => setShowCreateModal(false)} 
+            onOpenCreateQuiz={() => setShowCreateQuizModal(true)}
+            onOpenCreateCollection={() => setShowCreateCollectionModal(true)}
+          />
         )}
       </AnimatePresence>
       
