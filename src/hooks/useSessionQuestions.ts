@@ -2,6 +2,9 @@
  * Hook for tracking asked questions within a category to prevent repetition.
  * Uses localStorage to persist across sessions (not just page navigations).
  * Also integrates with unified "seen" tracking across all game modes.
+ * 
+ * GOLDEN RULE: Users should NEVER see repeated questions until they've
+ * exhausted ALL available questions.
  */
 import {
   getAskedQuestionIds as getTrackerAskedIds,
@@ -12,6 +15,10 @@ import {
   markQuestionsAsSeen,
   shouldResetSeenPool,
   clearSeenQuestions,
+  getCategoryLevelSeenIds,
+  markCategoryLevelSeen,
+  clearCategoryLevelSeen,
+  shouldResetCategoryLevel,
 } from "@/services/questionTracker";
 
 export function useSessionQuestions(categoryId: string) {
@@ -30,6 +37,38 @@ export function useSessionQuestions(categoryId: string) {
     return [...new Set([...categoryAsked, ...allSeen])];
   };
 
+  /**
+   * Get exclude IDs for a specific level (most granular tracking)
+   * Combines level-specific + category + globally seen
+   */
+  const getLevelExcludeQuestionIds = (levelNumber: number): string[] => {
+    const levelSeen = getCategoryLevelSeenIds(categoryId, levelNumber);
+    const allSeen = getSeenQuestionIds();
+    // Combine and dedupe
+    return [...new Set([...levelSeen, ...allSeen])];
+  };
+
+  /**
+   * Mark questions as seen for a specific level (immediate marking)
+   */
+  const markLevelQuestionsSeen = (levelNumber: number, questionIds: string[]) => {
+    markCategoryLevelSeen(categoryId, levelNumber, questionIds);
+  };
+
+  /**
+   * Check if a level's question pool is exhausted
+   */
+  const isLevelExhausted = (levelNumber: number, totalAvailable: number): boolean => {
+    return shouldResetCategoryLevel(categoryId, levelNumber, totalAvailable);
+  };
+
+  /**
+   * Clear level tracking when pool is exhausted (allows repeats)
+   */
+  const clearLevelSeen = (levelNumber: number) => {
+    clearCategoryLevelSeen(categoryId, levelNumber);
+  };
+
   const markQuestionsAsAsked = (questionIds: string[]) => {
     // This now also marks as seen automatically
     markTrackerQuestionsAsAsked(categoryId, questionIds);
@@ -40,7 +79,7 @@ export function useSessionQuestions(categoryId: string) {
   };
 
   const shouldResetPool = (totalAvailable: number): boolean => {
-    // Reset if we've used more than 80% of available questions
+    // Reset only when 100% of available questions have been asked
     return shouldResetCategoryPool(categoryId, totalAvailable);
   };
 
@@ -58,6 +97,10 @@ export function useSessionQuestions(categoryId: string) {
   return { 
     getAskedQuestionIds, 
     getExcludeQuestionIds,
+    getLevelExcludeQuestionIds,
+    markLevelQuestionsSeen,
+    isLevelExhausted,
+    clearLevelSeen,
     markQuestionsAsAsked, 
     clearAskedQuestions, 
     shouldResetPool,
