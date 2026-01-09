@@ -327,17 +327,29 @@ const TVHostController: React.FC = () => {
 
     setPhase('countdown');
 
+    // Use a ref to track if we already triggered playing
+    // The countdown screen will handle this, but we have a fallback here
     setTimeout(async () => {
-      await supabase
+      // Check if we're still in countdown (in case countdown screen didn't trigger)
+      const { data } = await supabase
         .from('tv_sessions')
-        .update({ 
-          status: 'playing',
-          question_start_time: new Date().toISOString(),
-        })
-        .eq('id', sessionId);
+        .select('status')
+        .eq('id', sessionId)
+        .single();
+      
+      // Only trigger if still in countdown (fallback)
+      if (data?.status === 'countdown') {
+        await supabase
+          .from('tv_sessions')
+          .update({ 
+            status: 'playing',
+            question_start_time: new Date().toISOString(),
+          })
+          .eq('id', sessionId);
+      }
       setPhase('playing');
       setTimeRemaining(15);
-    }, 3000);
+    }, 3500); // Slightly longer to let countdown screen trigger first
   };
 
   const handleNextQuestion = async () => {

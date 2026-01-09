@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { tvLog, tvLogPhase } from '@/utils/tvDebug';
 
 export const TVCountdownScreenV2: React.FC = () => {
-  const { players, categoryName, categoryIcon } = useTVGame();
+  const { players, categoryName, categoryIcon, isHost, startPlaying } = useTVGame();
   const [count, setCount] = useState(3);
+  const hasTriggeredPlaying = useRef(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,6 +22,22 @@ export const TVCountdownScreenV2: React.FC = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  // When countdown ends and user is host, trigger startPlaying
+  useEffect(() => {
+    if (count === 0 && isHost && !hasTriggeredPlaying.current) {
+      hasTriggeredPlaying.current = true;
+      tvLog('Countdown ended, host triggering startPlaying');
+      
+      // Small delay to show "GO!" before transitioning
+      const transitionTimer = setTimeout(() => {
+        startPlaying();
+        tvLogPhase('countdown', 'playing', 'countdown ended');
+      }, 500);
+
+      return () => clearTimeout(transitionTimer);
+    }
+  }, [count, isHost, startPlaying]);
 
   const getCountDisplay = () => {
     if (count === 0) return 'GO!';

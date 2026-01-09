@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
+import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
 
 // Types
 export interface TVPlayer {
@@ -46,6 +47,7 @@ interface TVGameContextType extends TVGameState {
   joinSession: (code: string, nickname: string, avatarUrl?: string) => Promise<boolean>;
   // Host actions
   startGame: (categoryId?: string) => Promise<void>;
+  startPlaying: () => Promise<void>; // Trigger playing phase after countdown
   startNextRound: () => Promise<void>;
   updateRoomName: (name: string) => Promise<void>;
   updateCategory: (categoryId: string, categoryName: string) => Promise<void>;
@@ -79,6 +81,24 @@ export const mapDbStatusToPhase = (status: string): TVPhase => {
     'pairing': 'pairing',
   };
   return mapping[status] || (status as TVPhase);
+};
+
+// Get or create a consistent player ID
+// For authenticated users: use user.id
+// For guests: generate UUID once and store in localStorage
+const getOrCreatePlayerId = (userId?: string): string => {
+  if (userId) return userId;
+  
+  const STORAGE_KEY = 'tv_guest_player_id';
+  let guestId = localStorage.getItem(STORAGE_KEY);
+  
+  if (!guestId) {
+    guestId = crypto.randomUUID();
+    localStorage.setItem(STORAGE_KEY, guestId);
+    tvLog('Created new guest player ID', { id: guestId.slice(0, 8) });
+  }
+  
+  return guestId;
 };
 
 // Helper to generate 6-char code
@@ -146,16 +166,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Timer effect for question phase
   useEffect(() => {
     if (state.phase === 'question' && state.timeRemaining > 0) {
+      tvLogTimer('start', state.timeRemaining);
       timerRef.current = setInterval(() => {
         setState(prev => {
           if (prev.timeRemaining <= 1) {
+            tvLogTimer('expired');
             // Time's up - move to reveal (only host triggers this)
             if (isHost && prev.phase === 'question') {
+              tvLogPhase('question', 'reveal', 'timer expired');
               supabase
                 .from('tv_sessions')
                 .update({ status: 'reveal' })
                 .eq('id', prev.sessionId)
-                .then(() => console.log('Moved to reveal phase'));
+                .then(() => tvLog('Moved to reveal phase'));
             }
             return { ...prev, timeRemaining: 0 };
           }
@@ -355,15 +378,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
             }
 
+            // Log phase changes
+            const newPhase = mapDbStatusToPhase(newData.status);
+            if (prev.phase !== newPhase) {
+              tvLogPhase(prev.phase, newPhase, 'session subscription');
+            }
+
             // Reset answer when moving to new question
             const isNewQuestion = newData.current_question_index !== prev.currentQuestionIndex;
             if (isNewQuestion) {
+              tvLog('New question', { index: newData.current_question_index });
               setMyAnswer(null);
             }
 
             return {
               ...prev,
-              phase: mapDbStatusToPhase(newData.status),
+              phase: newPhase,
               currentQuestionIndex: newData.current_question_index,
               questions: questions.length > 0 ? questions : prev.questions,
               timeRemaining: newData.status === 'playing' ? timeRemaining : QUESTION_TIME,
@@ -386,9 +416,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       supabase.removeChannel(presenceChannelRef.current);
     }
 
-    // Use 'TV_DISPLAY' as key for TV, otherwise generate UUID
-    const playerId = isTVDisplay ? 'TV_DISPLAY' : (myPlayerId || crypto.randomUUID());
+    // Use consistent player ID
+    const playerId = isTVDisplay ? 'TV_DISPLAY' : getOrCreatePlayerId(myPlayerId || undefined);
     if (!myPlayerId && !isTVDisplay) setMyPlayerId(playerId);
+
+    tvLog('Setting up presence', { playerId: playerId.slice(0, 8), nickname, isHost: isHostPlayer, isTVDisplay });
 
     const channel = supabase.channel(`tv-presence-${sessionId}`, {
       config: { presence: { key: playerId } },
@@ -421,13 +453,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setState(prev => ({ ...prev, players }));
         
-        console.log('Presence sync - players:', players.length, players.map(p => p.nickname));
+        tvLogPresence('sync', players.length, players.map(p => p.nickname));
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('Player joined:', key, newPresences);
+        tvLogPlayer('join', key, newPresences);
       })
       .on('presence', { event: 'leave' }, ({ key }) => {
-        console.log('Player left:', key);
+        tvLogPlayer('leave', key);
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -441,7 +473,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isHost: isHostPlayer,
             isTVDisplay,
           });
-          console.log('Presence tracked:', nickname, 'isTV:', isTVDisplay);
+          tvLog('Presence tracked', { nickname, isTV: isTVDisplay });
         }
       });
 
@@ -499,7 +531,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
       });
 
-      // Start countdown
+      tvLog('Starting game', { questionCount: formattedQuestions.length, categoryId });
+
+      // Start countdown - don't use setTimeout, let countdown screen trigger startPlaying
       await supabase
         .from('tv_sessions')
         .update({
@@ -509,63 +543,93 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         })
         .eq('id', state.sessionId);
 
-      // After 3 seconds, start first question
-      setTimeout(async () => {
-        await supabase
-          .from('tv_sessions')
-          .update({
-            status: 'playing',
-            question_start_time: new Date().toISOString(),
-          })
-          .eq('id', state.sessionId);
-      }, 3000);
+      tvLogPhase('lobby', 'countdown', 'startGame');
 
     } catch (error) {
+      tvLogError('startGame', error);
       console.error('Error starting game:', error);
     }
   }, [state.sessionId, isHost]);
 
+  // Start playing phase (called after countdown ends)
+  const startPlaying = useCallback(async () => {
+    if (!state.sessionId) return;
+
+    tvLog('Starting playing phase');
+    
+    try {
+      await supabase
+        .from('tv_sessions')
+        .update({
+          status: 'playing',
+          question_start_time: new Date().toISOString(),
+        })
+        .eq('id', state.sessionId);
+
+      tvLogPhase('countdown', 'playing', 'startPlaying');
+      tvLogTimer('start', QUESTION_TIME);
+    } catch (error) {
+      tvLogError('startPlaying', error);
+    }
+  }, [state.sessionId]);
+
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {
     if (!state.sessionId || !myPlayerId || myAnswer) {
+      tvLog('Submit answer blocked', { sessionId: !!state.sessionId, playerId: !!myPlayerId, alreadyAnswered: !!myAnswer });
       return { correct: false, points: 0 };
     }
 
     const currentQuestion = state.questions[state.currentQuestionIndex];
-    if (!currentQuestion) return { correct: false, points: 0 };
+    if (!currentQuestion) {
+      tvLogError('submitAnswer', 'No current question');
+      return { correct: false, points: 0 };
+    }
 
     const isCorrect = answer === currentQuestion.correct_answer;
     const points = isCorrect ? Math.max(100, state.timeRemaining * 10) : 0;
+
+    tvLogPlayer('answer', myPlayerId, { isCorrect, points, timeRemaining: state.timeRemaining });
 
     setMyAnswer(answer);
     const newScore = myScore + points;
     setMyScore(newScore);
 
-    // Update presence with answer status
-    if (presenceChannelRef.current) {
-      await presenceChannelRef.current.track({
-        nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Player',
-        avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
-        score: newScore,
-        hasAnswered: true,
-        lastAnswerCorrect: isCorrect,
-        isHost,
+    try {
+      // Update presence first (most important for live display)
+      if (presenceChannelRef.current) {
+        await presenceChannelRef.current.track({
+          nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Player',
+          avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
+          score: newScore,
+          hasAnswered: true,
+          lastAnswerCorrect: isCorrect,
+          isHost,
+        });
+      }
+
+      // Record answer in database
+      const { error } = await supabase.from('player_answers').insert({
+        tv_session_id: state.sessionId,
+        room_id: state.sessionId, // Using session ID as room ID for simplicity
+        user_id: myPlayerId,
+        question_index: state.currentQuestionIndex,
+        answer,
+        is_correct: isCorrect,
+        points_earned: points,
+        time_remaining: state.timeRemaining,
       });
+
+      if (error) {
+        tvLogError('submitAnswer DB insert', error);
+      }
+
+      return { correct: isCorrect, points };
+    } catch (error) {
+      tvLogError('submitAnswer', error);
+      // Still return result even if DB fails - presence update is more important
+      return { correct: isCorrect, points };
     }
-
-    // Record answer in database
-    await supabase.from('player_answers').insert({
-      tv_session_id: state.sessionId,
-      room_id: state.sessionId, // Using session ID as room ID for simplicity
-      user_id: myPlayerId,
-      question_index: state.currentQuestionIndex,
-      answer,
-      is_correct: isCorrect,
-      points_earned: points,
-      time_remaining: state.timeRemaining,
-    });
-
-    return { correct: isCorrect, points };
   }, [state.sessionId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost]);
 
   // Start next round (host only)
@@ -573,39 +637,47 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!state.sessionId || !isHost) return;
 
     const nextIndex = state.currentQuestionIndex + 1;
+    tvLog('Starting next round', { nextIndex, totalQuestions: state.questions.length });
 
-    if (nextIndex >= state.questions.length) {
-      // Game over
-      await supabase
-        .from('tv_sessions')
-        .update({ status: 'results' })
-        .eq('id', state.sessionId);
-    } else {
-      // Reset all players' hasAnswered status via presence update
-      // Move to next question
-      await supabase
-        .from('tv_sessions')
-        .update({
-          status: 'playing',
-          current_question_index: nextIndex,
-          question_start_time: new Date().toISOString(),
-        })
-        .eq('id', state.sessionId);
+    try {
+      if (nextIndex >= state.questions.length) {
+        // Game over
+        tvLogPhase('question', 'results', 'all questions answered');
+        await supabase
+          .from('tv_sessions')
+          .update({ status: 'results' })
+          .eq('id', state.sessionId);
+      } else {
+        // Reset all players' hasAnswered status via presence update
+        // Move to next question
+        await supabase
+          .from('tv_sessions')
+          .update({
+            status: 'playing',
+            current_question_index: nextIndex,
+            question_start_time: new Date().toISOString(),
+          })
+          .eq('id', state.sessionId);
 
-      // Reset own answer state
-      setMyAnswer(null);
+        tvLogTimer('reset', QUESTION_TIME);
 
-      // Update presence to reset hasAnswered
-      if (presenceChannelRef.current) {
-        await presenceChannelRef.current.track({
-          nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Host',
-          avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
-          score: myScore,
-          hasAnswered: false,
-          lastAnswerCorrect: null,
-          isHost: true,
-        });
+        // Reset own answer state
+        setMyAnswer(null);
+
+        // Update presence to reset hasAnswered
+        if (presenceChannelRef.current) {
+          await presenceChannelRef.current.track({
+            nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Host',
+            avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
+            score: myScore,
+            hasAnswered: false,
+            lastAnswerCorrect: null,
+            isHost: true,
+          });
+        }
       }
+    } catch (error) {
+      tvLogError('startNextRound', error);
     }
   }, [state.sessionId, state.currentQuestionIndex, state.questions.length, state.players, isHost, myPlayerId, myScore]);
 
@@ -734,6 +806,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         createSession,
         joinSession,
         startGame,
+        startPlaying,
         startNextRound,
         updateRoomName,
         updateCategory,
