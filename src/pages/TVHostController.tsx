@@ -740,75 +740,79 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Playing phase - host can answer questions AND has control buttons
+  // Playing phase - host can answer questions with FULL question UI (like guests)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col p-4">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
+      {/* Header - Question counter, Timer, Score */}
       <div className="flex items-center justify-between mb-4">
-        <div className="bg-white/10 border border-white/20 rounded-full px-4 py-2">
-          <span className="text-purple-200 text-sm">Q </span>
-          <span className="text-white font-bold">{currentQuestionIndex + 1}</span>
-          <span className="text-purple-200 text-sm"> / {totalQuestions}</span>
+        <span className="text-purple-300 text-sm">Q{currentQuestionIndex + 1}/{totalQuestions}</span>
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${timeRemaining <= 5 ? 'bg-red-500/30' : 'bg-white/10'}`}>
+          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>{timeRemaining}წმ</span>
         </div>
-        <div className={`rounded-full px-4 py-2 ${timeRemaining <= 5 ? 'bg-red-500/30 border-red-500' : 'bg-white/10'} border border-white/20`}>
-          <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>
-            {timeRemaining}წმ
-          </span>
-        </div>
-        <div className="flex items-center gap-1 bg-white/10 border border-white/20 rounded-full px-4 py-2">
+        <div className="flex items-center gap-1">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-white font-bold">{myScore}</span>
+          <span className="text-white font-bold text-sm">{myScore} ქულა</span>
         </div>
       </div>
 
-      {/* Instructions */}
-      <div className="text-center mb-4">
-        <p className="text-purple-200">
-          {hasAnswered ? 'პასუხი გაგზავნილია!' : 'უყურე TV-ს და აირჩიე პასუხი:'}
-        </p>
+      {/* Question Card - Full question text like guest UI */}
+      <div className="bg-white/10 rounded-xl p-4 mb-4">
+        <p className="text-white font-semibold text-center">{currentQuestion?.question_text}</p>
       </div>
 
-      {/* Answer Buttons */}
-      <div className="flex-1 grid grid-cols-2 gap-3 mb-4">
-        {currentQuestion?.options.map((option, index) => {
-          const color = OPTION_COLORS[index];
-          const isSelected = myAnswer === option;
-
-          return (
-            <motion.button
-              key={index}
-              whileTap={{ scale: 0.95 }}
-              disabled={hasAnswered}
-              onClick={() => handleAnswer(option)}
-              className={`${color.bg} ${!hasAnswered && color.hover} rounded-2xl flex items-center justify-center transition-all ${
-                hasAnswered && !isSelected ? 'opacity-30' : ''
-              } ${isSelected ? 'ring-4 ring-white' : ''}`}
+      {hasAnswered ? (
+        // After answering - show confirmation and host controls
+        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col items-center justify-center">
+          <Check className="w-16 h-16 text-green-400 mb-4" />
+          <p className="text-white text-xl font-bold">პასუხი გაგზავნილია!</p>
+          <p className="text-purple-300 mb-6">უყურე TV-ს...</p>
+          
+          {/* Host control buttons - only show after answering */}
+          <div className="w-full space-y-3 mt-4">
+            <ChunkyButton
+              variant="primary"
+              className="w-full"
+              onClick={handleNextQuestion}
             >
-              <span className="text-white text-5xl font-bold">{color.label}</span>
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Host controls */}
-      <div className="space-y-2">
-        <ChunkyButton
-          variant="primary"
-          className="w-full"
-          onClick={handleNextQuestion}
-        >
-          <SkipForward className="w-5 h-5 mr-2" />
-          {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგების ჩვენება' : 'შემდეგი კითხვა'}
-        </ChunkyButton>
-        
-        <ChunkyButton
-          variant="secondary"
-          className="w-full"
-          onClick={handleEndGame}
-        >
-          თამაშის დასრულება
-        </ChunkyButton>
-      </div>
+              <SkipForward className="w-5 h-5 mr-2" />
+              {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგების ჩვენება' : 'შემდეგი კითხვა'}
+            </ChunkyButton>
+            
+            <ChunkyButton
+              variant="secondary"
+              className="w-full"
+              onClick={handleEndGame}
+            >
+              თამაშის დასრულება
+            </ChunkyButton>
+          </div>
+        </motion.div>
+      ) : (
+        // Answer options - Full text buttons like guest UI
+        <div className="flex-1 flex flex-col gap-3">
+          {currentQuestion?.options.map((option, index) => (
+            <ChunkyButton
+              key={index}
+              variant="white"
+              size="md"
+              onClick={() => handleAnswer(option)}
+              className="w-full text-left justify-start"
+            >
+              <span className="inline-flex items-center gap-3">
+                <span 
+                  className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{ 
+                    background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index] 
+                  }}
+                >
+                  {['A', 'B', 'C', 'D'][index]}
+                </span>
+                <span className="text-gray-800">{option}</span>
+              </span>
+            </ChunkyButton>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
