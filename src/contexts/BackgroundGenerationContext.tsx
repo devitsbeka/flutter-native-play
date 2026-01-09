@@ -1,0 +1,290 @@
+import { createContext, useContext, useState, useCallback, ReactNode, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useNotificationModalContext } from "@/contexts/NotificationModalContext";
+import { toast } from "sonner";
+import { t } from "@/lib/i18n";
+
+export type GenerationType = "avatar" | "cover";
+
+export interface GenerationJob {
+  id: string;
+  type: GenerationType;
+  status: "generating" | "completed" | "failed";
+  imageUrl?: string;
+  startedAt: Date;
+  estimatedTime: number; // in seconds
+  metadata?: Record<string, unknown>;
+  onComplete?: (imageUrl: string) => void;
+}
+
+interface BackgroundGenerationContextType {
+  activeJobs: GenerationJob[];
+  startAvatarGeneration: (
+    uploadedImageBase64: string, 
+    onComplete?: (avatarUrl: string) => void
+  ) => Promise<string>;
+  startCoverGeneration: (
+    params: { title: string; subject: string; roundId?: string },
+    onComplete?: (imageUrl: string) => void
+  ) => Promise<string>;
+  getJob: (id: string) => GenerationJob | undefined;
+  isGenerating: (type?: GenerationType) => boolean;
+}
+
+const BackgroundGenerationContext = createContext<BackgroundGenerationContextType | undefined>(undefined);
+
+export function BackgroundGenerationProvider({ children }: { children: ReactNode }) {
+  const [activeJobs, setActiveJobs] = useState<GenerationJob[]>([]);
+  const { user, updateProfile } = useAuth();
+  const { showNotification } = useNotificationModalContext();
+  const jobsRef = useRef<Map<string, GenerationJob>>(new Map());
+
+  const updateJob = useCallback((id: string, updates: Partial<GenerationJob>) => {
+    setActiveJobs(prev => prev.map(job => 
+      job.id === id ? { ...job, ...updates } : job
+    ));
+    const job = jobsRef.current.get(id);
+    if (job) {
+      jobsRef.current.set(id, { ...job, ...updates });
+    }
+  }, []);
+
+  const removeJob = useCallback((id: string) => {
+    setActiveJobs(prev => prev.filter(job => job.id !== id));
+    jobsRef.current.delete(id);
+  }, []);
+
+  const getJob = useCallback((id: string) => {
+    return jobsRef.current.get(id);
+  }, []);
+
+  const isGenerating = useCallback((type?: GenerationType) => {
+    if (type) {
+      return activeJobs.some(job => job.type === type && job.status === "generating");
+    }
+    return activeJobs.some(job => job.status === "generating");
+  }, [activeJobs]);
+
+  const startAvatarGeneration = useCallback(async (
+    uploadedImageBase64: string,
+    onComplete?: (avatarUrl: string) => void
+  ) => {
+    if (!user) throw new Error("User not authenticated");
+
+    const jobId = `avatar_${Date.now()}`;
+    const job: GenerationJob = {
+      id: jobId,
+      type: "avatar",
+      status: "generating",
+      startedAt: new Date(),
+      estimatedTime: 15,
+      onComplete,
+    };
+
+    jobsRef.current.set(jobId, job);
+    setActiveJobs(prev => [...prev, job]);
+
+    // Show toast with estimated time
+    toast.info(t("avatar.generatingBackground"), {
+      description: t("avatar.generatingBackgroundDesc"),
+      duration: 5000,
+    });
+
+    // Run generation in background
+    (async () => {
+      try {
+        // Upload the image to storage
+        const fileName = `${user.id}/temp_${Date.now()}.jpg`;
+        
+        const base64Data = uploadedImageBase64.split(",")[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "image/jpeg" });
+
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, blob, { upsert: true });
+
+        if (uploadError) {
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(fileName);
+
+        const imageUrl = urlData.publicUrl;
+
+        // Generate avatar via edge function
+        const { data, error } = await supabase.functions.invoke("generate-avatar", {
+          body: { imageUrl },
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data.success) throw new Error(data.error || "Failed to generate avatar");
+
+        const avatarUrl = data.avatarUrl;
+
+        updateJob(jobId, { status: "completed", imageUrl: avatarUrl });
+
+        // Show success notification with generated avatar
+        showNotification("success", {
+          title: t("avatar.avatarReady"),
+          description: t("avatar.avatarReadyDesc"),
+          icon: "✨",
+          imageUrl: avatarUrl,
+          actionButton: {
+            label: t("avatar.useAsProfile"),
+            onClick: async () => {
+              try {
+                // Download and re-upload to storage
+                const response = await fetch(avatarUrl);
+                const avatarBlob = await response.blob();
+                
+                const finalFileName = `${user.id}/avatar_${Date.now()}.png`;
+                
+                const { error: saveError } = await supabase.storage
+                  .from("avatars")
+                  .upload(finalFileName, avatarBlob, { 
+                    upsert: true,
+                    contentType: 'image/png'
+                  });
+
+                if (saveError) throw saveError;
+
+                const { data: finalUrlData } = supabase.storage
+                  .from("avatars")
+                  .getPublicUrl(finalFileName);
+
+                // Save to avatar_generations table
+                await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
+                
+                await supabase.from('avatar_generations').insert({
+                  user_id: user.id,
+                  avatar_url: finalUrlData.publicUrl,
+                  is_current: true,
+                });
+
+                await updateProfile({ avatar_url: finalUrlData.publicUrl });
+                toast.success(t("avatar.avatarSaved"));
+                
+                onComplete?.(finalUrlData.publicUrl);
+              } catch (err) {
+                console.error("Error saving avatar:", err);
+                toast.error(t("errors.generationFailed"));
+              }
+            },
+          },
+          duration: 30000, // Keep visible longer for action
+        });
+
+        // Clean up job after delay
+        setTimeout(() => removeJob(jobId), 60000);
+
+      } catch (error) {
+        console.error("Background avatar generation failed:", error);
+        updateJob(jobId, { status: "failed" });
+        toast.error(error instanceof Error ? error.message : t("errors.generationFailed"));
+        setTimeout(() => removeJob(jobId), 5000);
+      }
+    })();
+
+    return jobId;
+  }, [user, updateProfile, showNotification, updateJob, removeJob]);
+
+  const startCoverGeneration = useCallback(async (
+    params: { title: string; subject: string; roundId?: string },
+    onComplete?: (imageUrl: string) => void
+  ) => {
+    if (!user) throw new Error("User not authenticated");
+
+    const jobId = `cover_${Date.now()}`;
+    const job: GenerationJob = {
+      id: jobId,
+      type: "cover",
+      status: "generating",
+      startedAt: new Date(),
+      estimatedTime: 20,
+      metadata: params,
+      onComplete,
+    };
+
+    jobsRef.current.set(jobId, job);
+    setActiveJobs(prev => [...prev, job]);
+
+    // Show toast with estimated time
+    toast.info("სურათი გენერირდება...", {
+      description: "⏱ დაახლოებით 20-30 წამი. შეგიძლიათ გააგრძელოთ მუშაობა.",
+      duration: 5000,
+    });
+
+    // Run generation in background
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-cover-image", {
+          body: {
+            title: params.title,
+            subject: params.subject,
+            roundId: params.roundId
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.imageUrl) {
+          updateJob(jobId, { status: "completed", imageUrl: data.imageUrl });
+
+          // Show success notification
+          showNotification("success", {
+            title: "სურათი მზადაა! ✨",
+            description: "AI-ს მიერ შექმნილი სურათი",
+            icon: "🖼️",
+            imageUrl: data.imageUrl,
+            actionButton: {
+              label: "გამოყენება",
+              onClick: () => {
+                onComplete?.(data.imageUrl);
+              },
+            },
+            duration: 30000,
+          });
+        }
+
+        setTimeout(() => removeJob(jobId), 60000);
+
+      } catch (error) {
+        console.error("Background cover generation failed:", error);
+        updateJob(jobId, { status: "failed" });
+        toast.error("სურათის გენერაცია ვერ მოხერხდა");
+        setTimeout(() => removeJob(jobId), 5000);
+      }
+    })();
+
+    return jobId;
+  }, [user, showNotification, updateJob, removeJob]);
+
+  return (
+    <BackgroundGenerationContext.Provider value={{
+      activeJobs,
+      startAvatarGeneration,
+      startCoverGeneration,
+      getJob,
+      isGenerating,
+    }}>
+      {children}
+    </BackgroundGenerationContext.Provider>
+  );
+}
+
+export function useBackgroundGeneration() {
+  const context = useContext(BackgroundGenerationContext);
+  if (!context) {
+    throw new Error("useBackgroundGeneration must be used within BackgroundGenerationProvider");
+  }
+  return context;
+}

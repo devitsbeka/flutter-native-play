@@ -12,6 +12,11 @@ interface NotificationModalProps {
   description?: string;
   icon?: string | React.ReactNode;
   duration?: number;
+  imageUrl?: string;
+  actionButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 const typeIcons: Record<NotificationType, string> = {
@@ -36,18 +41,27 @@ export const NotificationModal = memo(function NotificationModal({
   description,
   icon,
   duration = 3500,
+  imageUrl,
+  actionButton,
 }: NotificationModalProps) {
   useEffect(() => {
     if (!isOpen) return;
+    // Don't auto-close if there's an action button (user needs to interact)
+    if (actionButton) return;
 
     const timer = setTimeout(() => {
       onClose();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [isOpen, duration, onClose]);
+  }, [isOpen, duration, onClose, actionButton]);
 
   const displayIcon = icon || typeIcons[type];
+
+  const handleActionClick = () => {
+    actionButton?.onClick();
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -102,6 +116,22 @@ export const NotificationModal = memo(function NotificationModal({
                     )}
                   </motion.div>
 
+                  {/* Generated Image Preview */}
+                  {imageUrl && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.15 }}
+                      className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-primary/20 shadow-lg mb-4"
+                    >
+                      <img
+                        src={imageUrl}
+                        alt="Generated"
+                        className="w-full h-full object-cover"
+                      />
+                    </motion.div>
+                  )}
+
                   {/* Title */}
                   <motion.h3
                     initial={{ opacity: 0, y: 10 }}
@@ -122,6 +152,19 @@ export const NotificationModal = memo(function NotificationModal({
                     >
                       {description}
                     </motion.p>
+                  )}
+
+                  {/* Action Button */}
+                  {actionButton && (
+                    <motion.button
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                      onClick={handleActionClick}
+                      className="mt-4 px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      {actionButton.label}
+                    </motion.button>
                   )}
                 </div>
               </div>

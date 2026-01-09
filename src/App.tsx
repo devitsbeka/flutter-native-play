@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
+import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationContext";
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -66,9 +67,10 @@ const App = () => (
       <OnboardingProvider>
         <SoundProvider>
           <NotificationModalProvider>
-            <PlayerProfileProvider>
-              <SplashScreen>
-                <TooltipProvider>
+            <BackgroundGenerationProvider>
+              <PlayerProfileProvider>
+                <SplashScreen>
+                  <TooltipProvider>
             {/* Offline detection banner */}
             <OfflineBanner />
             
@@ -125,10 +127,11 @@ const App = () => (
               <Route path="/all-buttons" element={<AllButtons />} />
               <Route path="/modals" element={<ModalsShowcase />} />
               <Route path="*" element={<NotFound />} />
-                </Routes>
-                </TooltipProvider>
-              </SplashScreen>
-            </PlayerProfileProvider>
+                  </Routes>
+                  </TooltipProvider>
+                </SplashScreen>
+              </PlayerProfileProvider>
+            </BackgroundGenerationProvider>
           </NotificationModalProvider>
         </SoundProvider>
       </OnboardingProvider>
