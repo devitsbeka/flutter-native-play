@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { ROOM_GRADIENTS } from "@/config/roomGradients";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 interface GradientPickerProps {
@@ -13,19 +12,20 @@ interface GradientPickerProps {
 }
 
 export function GradientPicker({ isOpen, onClose, currentGradient, onSelect }: GradientPickerProps) {
-  const { t } = useLanguage();
-
   const handleSelect = (gradientId: string) => {
     onSelect(gradientId);
     onClose();
   };
 
+  // Don't render anything if not open
+  if (!isOpen) return null;
+
   return (
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      title={t('team.chooseBackground')}
-      subtitle={t('team.pickRoomColors')}
+      title="ფონის არჩევა"
+      subtitle="აირჩიე შენი ოთახის ფერები"
     >
       <div className="grid grid-cols-3 gap-3 p-4">
         {ROOM_GRADIENTS.map((gradient) => (
