@@ -7,6 +7,7 @@ import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
 import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationContext";
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { TVGameProvider } from "@/contexts/TVGameContext";
 import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
 import "@/components/game/VideoPreloader";
@@ -94,7 +95,7 @@ const App = () => (
               <Route path="/room/:code" element={<RoomRedirect />} />
               <Route path="/tv" element={<TVLobby />} />
               <Route path="/tv/old" element={<TVReceiver />} />
-              <Route path="/tv/host/:sessionId" element={<TVHostController />} />
+              <Route path="/tv/host/:sessionId" element={<TVGameProvider><TVHostController /></TVGameProvider>} />
               <Route path="/tv/:code" element={<TVDisplay />} />
               <Route path="/join" element={<TVJoin />} />
               <Route path="/join/:code" element={<TVJoin />} />
