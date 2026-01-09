@@ -588,10 +588,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ? localStorage.getItem('preferredLanguage') || 'ka' 
         : 'ka';
 
-      // P1-1: Get previously asked questions to avoid repetition
-      const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions } = await import('@/services/questionTracker');
+      // P1-1: Get previously asked questions + all seen questions to avoid repetition
+      const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds, clearSeenQuestions, shouldResetSeenPool } = await import('@/services/questionTracker');
       const trackerKey = `tv_${categoryId}`;
-      let excludeIds = getAskedQuestionIds(trackerKey);
+      const categoryAskedIds = getAskedQuestionIds(trackerKey);
+      const allSeenIds = getSeenQuestionIds();
+      // Combine for maximum freshness
+      let excludeIds = [...new Set([...categoryAskedIds, ...allSeenIds])];
 
       // P0-3: Add in_production and language filters
       let questionsQuery = supabase
@@ -602,7 +605,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('language', language)
         .eq('category_id', categoryId);
 
-      // Exclude previously asked questions
+      // Exclude previously seen questions (prioritize fresh content)
       if (excludeIds.length > 0) {
         questionsQuery = questionsQuery.not('id', 'in', `(${excludeIds.join(',')})`);
       }
