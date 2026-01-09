@@ -109,6 +109,16 @@ serve(async (req) => {
 - Question over 65 chars - REJECTED
 - Answer "ალბერტ აინშტაინი" (16 chars) - may be too long in some languages - use shorter form
 
+🚫 ANSWER LENGTH PARITY - CRITICAL ANTI-CHEATING RULE:
+1. ALL 4 answers MUST be similar in character length (within 5 characters of each other)
+2. The correct answer must NOT be noticeably longer or shorter than incorrect answers
+3. If the correct answer is detailed, make ALL incorrect answers equally detailed
+4. NEVER make the correct answer stand out by length - this allows guessing
+
+EXAMPLES:
+❌ BAD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "ომი", "ბრძოლა", "კონფლიქტი"
+✓ GOOD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "მეორე მსოფლიო ომი", "კორეის ომი 1950", "ვიეტნამის ომი"
+
 Return a JSON object with a "questions" array. Each question should have:
 - questionText: the question (max ${QUESTION_MAX_LENGTH} chars)
 - correctAnswer: the correct answer (max ${ANSWER_MAX_LENGTH} chars)

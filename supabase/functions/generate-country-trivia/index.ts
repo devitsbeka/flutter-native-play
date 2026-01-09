@@ -100,6 +100,13 @@ IMPORTANT RULES:
 6. Do not repeat similar questions
 7. Keep answers SHORT and CONCISE
 
+🚫 ANSWER LENGTH PARITY - CRITICAL ANTI-CHEATING RULE:
+- ALL 4 answers MUST be similar in character length (within 5 characters of each other)
+- The correct answer must NOT be noticeably longer or shorter than incorrect answers
+- NEVER make the correct answer stand out by length - this allows guessing
+- Example BAD: Correct: "თბილისი" | Incorrect: "ა", "ბ", "გ"
+- Example GOOD: Correct: "თბილისი" | Incorrect: "ბათუმი", "ქუთაისი", "რუსთავი"
+
 Return ONLY a valid JSON array with this exact structure (no markdown, no explanation):
 [
   {
