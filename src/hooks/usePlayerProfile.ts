@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+export interface InteractionLogItem {
+  id: string;
+  type: 'invitation_sent' | 'invitation_received' | 'room_together' | 'chat';
+  message: string;
+  details?: string;
+  timestamp: string;
+  roomId?: string;
+  categoryName?: string;
+}
+
 export interface PlayerProfileData {
   profile: {
     id: string;
@@ -41,6 +51,7 @@ export interface PlayerProfileData {
     plays_count: number | null;
     likes_count: number | null;
   }>;
+  interactions: InteractionLogItem[];
   stats: {
     totalPoints: number;
     gamesPlayed: number;
@@ -125,6 +136,69 @@ export function usePlayerProfile(userId: string | null) {
           }
         }
 
+        // Fetch interaction history between current user and profile user
+        const interactions: InteractionLogItem[] = [];
+        
+        if (user && user.id !== userId) {
+          // Fetch game invitations between the two users
+          const { data: invitations } = await supabase
+            .from("game_invitations")
+            .select("id, sender_id, receiver_id, status, created_at, room:game_rooms(category_name)")
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${userId}),and(sender_id.eq.${userId},receiver_id.eq.${user.id})`)
+            .order("created_at", { ascending: false })
+            .limit(10);
+
+          if (invitations) {
+            for (const inv of invitations) {
+              const isSender = inv.sender_id === user.id;
+              const categoryName = (inv.room as any)?.category_name;
+              interactions.push({
+                id: inv.id,
+                type: isSender ? 'invitation_sent' : 'invitation_received',
+                message: isSender ? 'თამაშზე მოიწვიე' : 'თამაშზე მოგიწვია',
+                details: categoryName || undefined,
+                timestamp: inv.created_at,
+                categoryName,
+              });
+            }
+          }
+
+          // Fetch rooms where both users are participants
+          const { data: sharedRooms } = await supabase
+            .from("room_participants")
+            .select("room_id, joined_at")
+            .eq("user_id", userId);
+
+          if (sharedRooms && sharedRooms.length > 0) {
+            const roomIds = sharedRooms.map(r => r.room_id);
+            const { data: myRooms } = await supabase
+              .from("room_participants")
+              .select("room_id, joined_at, room:game_rooms(category_name, room_name)")
+              .eq("user_id", user.id)
+              .in("room_id", roomIds)
+              .order("joined_at", { ascending: false })
+              .limit(5);
+
+            if (myRooms) {
+              for (const r of myRooms) {
+                const room = r.room as any;
+                interactions.push({
+                  id: `room-${r.room_id}`,
+                  type: 'room_together',
+                  message: 'ერთად ითამაშეთ',
+                  details: room?.category_name || room?.room_name || undefined,
+                  timestamp: r.joined_at,
+                  roomId: r.room_id,
+                  categoryName: room?.category_name,
+                });
+              }
+            }
+          }
+
+          // Sort by timestamp descending
+          interactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        }
+
         const gamesPlayed = profile?.games_played || 0;
         const gamesWon = profile?.games_won || 0;
 
@@ -133,6 +207,7 @@ export function usePlayerProfile(userId: string | null) {
           achievements: achievements || [],
           trivias: trivias || [],
           collections: collections || [],
+          interactions: interactions.slice(0, 10), // Limit to 10 most recent
           stats: {
             totalPoints: profile?.total_points || 0,
             gamesPlayed,
