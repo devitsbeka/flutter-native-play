@@ -255,7 +255,7 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
         </div>
 
         {/* Invite Friends - Horizontal Scroll */}
-        <div>
+        <div className="pt-2">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები</h2>
             {acceptedFriends.length > 5 && (
