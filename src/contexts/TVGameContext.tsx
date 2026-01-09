@@ -20,7 +20,7 @@ export interface TVQuestion {
   options: string[];
 }
 
-export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'reveal' | 'results' | 'idle';
+export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle';
 
 interface TVGameState {
   code: string | null;
@@ -344,9 +344,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               setMyAnswer(null);
             }
 
+            // Map database status to TVPhase
+            const mapStatusToPhase = (status: string): TVPhase => {
+              switch (status) {
+                case 'playing': return 'question';
+                case 'completed': return 'results';
+                default: return status as TVPhase;
+              }
+            };
+
             return {
               ...prev,
-              phase: newData.status as TVPhase,
+              phase: mapStatusToPhase(newData.status),
               currentQuestionIndex: newData.current_question_index,
               questions: questions.length > 0 ? questions : prev.questions,
               timeRemaining: newData.status === 'playing' ? timeRemaining : QUESTION_TIME,

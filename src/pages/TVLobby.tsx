@@ -80,10 +80,12 @@ const TVLobbyContent: React.FC = () => {
     case 'countdown':
       return <TVCountdownScreenV2 />;
     case 'question':
+    case 'playing': // Map 'playing' status from DB to question phase
       return <TVQuestionScreenV3 />;
     case 'reveal':
       return <TVRevealScreenV2 />;
     case 'results':
+    case 'completed': // Map 'completed' status from DB to results phase
       return <TVResultsScreen />;
     case 'idle':
       return <TVIdleScreen />;
