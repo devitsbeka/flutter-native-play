@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, ChevronLeft, ChevronRight, Layers, Play } from "lucide-react";
+import { MoreHorizontal, CheckCircle, Flag, Link2, EyeOff, Globe, Lock, Share2, ChevronLeft, ChevronRight, Layers, Play, Check } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { formatDistanceToNow } from "date-fns";
@@ -27,6 +27,7 @@ interface CollectionCarouselPostProps {
   onPlay?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
   userLikes?: string[];
   userSaves?: string[];
+  userPlays?: string[];
   onToggleLike?: (postId: string) => void;
   onToggleSave?: (postId: string) => void;
   onHashtagClick?: (hashtag: string) => void;
@@ -34,7 +35,7 @@ interface CollectionCarouselPostProps {
   isSaving?: boolean;
 }
 
-export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, userLikes, userSaves, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: CollectionCarouselPostProps) {
+export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, userLikes, userSaves, userPlays, onToggleLike, onToggleSave, onHashtagClick, isLiking, isSaving }: CollectionCarouselPostProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,9 +45,10 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
   const dateLocale = language === 'ka' ? ka : enUS;
   const timeAgo = formatDistanceToNow(new Date(currentPost.createdAt), { addSuffix: false, locale: dateLocale });
   
-  // Check if any post in collection is liked/saved
+  // Check if any post in collection is liked/saved/played
   const liked = posts.some(p => userLikes?.includes(p.id));
   const saved = posts.some(p => userSaves?.includes(p.id));
+  const played = posts.some(p => userPlays?.includes(p.id));
   
   // Calculate total likes/saves across all posts in collection (from props, not local state)
   const totalLikes = posts.reduce((sum, p) => sum + p.likesCount, 0);
@@ -353,13 +355,26 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
           </div>
         </div>
         
-        {/* Right side: Play button */}
+        {/* Right side: Play button - Gradient when not played, solid when played */}
         <button 
           onClick={() => onPlay?.(posts[0], posts)}
-          className="px-5 py-2 bg-primary text-primary-foreground rounded-full text-base font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5"
+          className={`px-5 py-2 rounded-full text-base font-medium transition-all flex items-center gap-1.5 text-white
+            ${played 
+              ? 'bg-muted-foreground/60'
+              : 'bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 hover:shadow-lg hover:shadow-purple-500/30'
+            }`}
         >
-          <Play className="w-4 h-4 fill-current" />
-          ითამაშე
+          {played ? (
+            <>
+              <Check className="w-4 h-4" />
+              ითამაშე
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 fill-current" />
+              ითამაშე
+            </>
+          )}
         </button>
       </div>
 
