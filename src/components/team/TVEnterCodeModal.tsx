@@ -8,7 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds } from '@/services/questionTracker';
+import { getQuestions, resolveCategoryUuid } from '@/services/questionService';
+import { markQuestionsAsAsked } from '@/services/questionTracker';
 
 interface TVEnterCodeModalProps {
   open: boolean;
@@ -50,141 +51,52 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
         return;
       }
 
-      // First get the category UUID from the slug
-      const { data: categoryData } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('category_id', categoryId)
-        .single();
-
-      if (!categoryData) {
+      // Resolve category UUID
+      const categoryUUID = await resolveCategoryUuid(categoryId);
+      if (!categoryUUID) {
         toast.error('კატეგორია ვერ მოიძებნა');
         setIsConnecting(false);
         return;
       }
 
-      // Get user's language preference
-      const language = localStorage.getItem('preferredLanguage') || 'ka';
-
-      // Get previously asked questions + all globally seen to avoid repetition
-      // STANDARDIZED: Use mode_uuid format for consistent tracker keys
-      const trackerKey = `tv_${categoryData.id}`; // Standardized UUID-based key
-      const categoryAskedIds = getAskedQuestionIds(trackerKey);
-      const allSeenIds = getSeenQuestionIds();
-      // Combine for maximum freshness
-      let excludeIds = [...new Set([...categoryAskedIds, ...allSeenIds])];
-
-      // Fetch questions for this category, excluding already asked ones
-      let query = supabase
-        .from('questions')
-        .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-        .eq('category_id', categoryData.id)
-        .eq('is_active', true)
-        .eq('in_production', true)
-        .eq('language', language);
-
-      if (excludeIds.length > 0) {
-        query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-      }
-
-      const { data: questionsData } = await query.limit(20);
-
-      let formattedQuestions = (questionsData || []).map(q => {
-        const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-          ? q.incorrect_answers as string[] 
-          : [];
-        const allOptions = [q.correct_answer, ...incorrectAnswers].filter(Boolean);
-        const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
-        
-        return {
-          id: q.id,
-          question_text: q.question_text,
-          options: shuffledOptions,
-          correct_answer: q.correct_answer,
-          difficulty: q.difficulty || undefined,
-        };
+      // Use unified questionService for fetching
+      const result = await getQuestions({
+        mode: 'tv',
+        categoryUuid: categoryUUID,
+        count: 10,
       });
 
-      // If not enough questions, reset tracker and refetch
-      if (formattedQuestions.length < 10) {
-        clearCategoryAskedQuestions(trackerKey);
-        
-        const { data: resetQuestions } = await supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-          .eq('category_id', categoryData.id)
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .limit(20);
-
-        formattedQuestions = (resetQuestions || []).map(q => {
-          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-            ? q.incorrect_answers as string[] 
-            : [];
-          const allOptions = [q.correct_answer, ...incorrectAnswers].filter(Boolean);
-          const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
-          
-          return {
-            id: q.id,
-            question_text: q.question_text,
-            options: shuffledOptions,
-            correct_answer: q.correct_answer,
-            difficulty: q.difficulty || undefined,
-          };
-        });
-      }
-
-      // Fallback: if still not enough, fetch from any category
-      if (formattedQuestions.length < 10) {
-        const remainingNeeded = 10 - formattedQuestions.length;
-        const existingIds = formattedQuestions.map(q => q.id);
-        
-        let fallbackQuery = supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .neq('category_id', categoryData.id);
-
-        if (existingIds.length > 0) {
-          fallbackQuery = fallbackQuery.not('id', 'in', `(${existingIds.join(',')})`);
-        }
-
-        const { data: fallbackQuestions } = await fallbackQuery.limit(remainingNeeded);
-
-        if (fallbackQuestions && fallbackQuestions.length > 0) {
-          const formatted = fallbackQuestions.map(q => {
-            const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-              ? q.incorrect_answers as string[] 
-              : [];
-            const allOptions = [q.correct_answer, ...incorrectAnswers].filter(Boolean);
-            const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
-            
-            return {
-              id: q.id,
-              question_text: q.question_text,
-              options: shuffledOptions,
-              correct_answer: q.correct_answer,
-              difficulty: q.difficulty || undefined,
-            };
-          });
-          formattedQuestions.push(...formatted);
-          toast.info('ზოგიერთი კითხვა სხვა კატეგორიიდანაა');
-        }
-      }
-
-      // Shuffle and take 10
-      formattedQuestions = formattedQuestions.sort(() => Math.random() - 0.5).slice(0, 10);
-
-      if (formattedQuestions.length === 0) {
+      if (result.questions.length === 0) {
         toast.error('კითხვები ვერ მოიძებნა ამ ენაზე');
         setIsConnecting(false);
         return;
       }
 
-      // Track these questions as asked
+      // Log exhaustion info if relevant
+      if (result.exhaustionInfo) {
+        console.log('TV question exhaustion:', {
+          totalAvailable: result.exhaustionInfo.totalAvailable,
+          totalSeen: result.exhaustionInfo.totalSeen,
+          wasReset: result.exhaustionInfo.wasReset,
+          usedFallback: result.exhaustionInfo.usedFallback,
+        });
+
+        if (result.exhaustionInfo.usedFallback) {
+          toast.info('ზოგიერთი კითხვა სხვა კატეგორიიდანაა');
+        }
+      }
+
+      // Format questions for TV session
+      const formattedQuestions = result.questions.map(q => ({
+        id: q.id,
+        question_text: q.question,
+        options: q.allAnswers, // Already shuffled by questionService
+        correct_answer: q.correctAnswer,
+        difficulty: q.difficulty,
+      }));
+
+      // Track using standardized key
+      const trackerKey = `tv_${categoryUUID}`;
       markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
       // Generate a 6-character player join code

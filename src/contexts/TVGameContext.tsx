@@ -583,130 +583,58 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     try {
-      // Get language preference for P1-3
-      const language = typeof window !== 'undefined' 
-        ? localStorage.getItem('preferredLanguage') || 'ka' 
-        : 'ka';
+      // Use unified questionService
+      const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
+      const { markQuestionsAsAsked } = await import('@/services/questionTracker');
 
-      // P2-1: Convert category slug to UUID if needed
-      let categoryUUID = categoryId;
-      if (categoryId && !categoryId.includes('-')) {
-        // Looks like a slug (no dashes), convert to UUID
-        const { data: categoryData } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('category_id', categoryId)
-          .single();
-        
-        if (categoryData) {
-          categoryUUID = categoryData.id;
-          tvLog('Converted category slug to UUID', { slug: categoryId, uuid: categoryUUID });
-        }
+      // Resolve category UUID
+      const categoryUUID = await resolveCategoryUuid(categoryId);
+      if (!categoryUUID) {
+        tvLogError('startGame', 'Failed to resolve category UUID');
+        return;
       }
 
-      // P1-1: Get previously asked questions + all seen questions to avoid repetition
-      // STANDARDIZED: Use mode_uuid format for consistent tracker keys
-      const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds } = await import('@/services/questionTracker');
-      const trackerKey = `tv_${categoryUUID}`; // Standardized UUID-based key
-      const categoryAskedIds = getAskedQuestionIds(trackerKey);
-      const allSeenIds = getSeenQuestionIds();
-      // Combine for maximum freshness
-      let excludeIds = [...new Set([...categoryAskedIds, ...allSeenIds])];
+      tvLog('Using questionService for TV mode', { categoryId, categoryUUID });
 
-      // P0-3: Add in_production and language filters
-      let questionsQuery = supabase
-        .from('questions')
-        .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-        .eq('is_active', true)
-        .eq('in_production', true)
-        .eq('language', language)
-        .eq('category_id', categoryUUID);
-
-      // Exclude previously seen questions (prioritize fresh content)
-      if (excludeIds.length > 0) {
-        questionsQuery = questionsQuery.not('id', 'in', `(${excludeIds.join(',')})`);
-      }
-
-      // Fetch more than needed to allow for filtering
-      questionsQuery = questionsQuery.limit(50);
-
-      let { data: rawQuestions, error } = await questionsQuery;
-
-      if (error) throw error;
-
-      // If not enough questions, reset tracker and refetch
-      if (!rawQuestions || rawQuestions.length < 10) {
-        tvLog('Not enough fresh questions, resetting tracker', { 
-          available: rawQuestions?.length || 0, 
-          trackerKey 
-        });
-        clearCategoryAskedQuestions(trackerKey);
-        
-        // Refetch without category exclusions
-        const { data: resetQuestions, error: resetError } = await supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .eq('category_id', categoryUUID)
-          .limit(50);
-        
-        if (resetError) throw resetError;
-        rawQuestions = resetQuestions || [];
-      }
-
-      // P2-2: Cross-category fallback if still not enough questions
-      if (!rawQuestions || rawQuestions.length < 10) {
-        const existingIds = (rawQuestions || []).map(q => q.id);
-        const remainingNeeded = 10 - (rawQuestions?.length || 0);
-        
-        tvLog('Using cross-category fallback', { 
-          existingCount: rawQuestions?.length || 0, 
-          needed: remainingNeeded 
-        });
-
-        let fallbackQuery = supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .neq('category_id', categoryUUID);
-
-        if (existingIds.length > 0) {
-          fallbackQuery = fallbackQuery.not('id', 'in', `(${existingIds.join(',')})`);
-        }
-
-        const { data: fallbackQuestions } = await fallbackQuery.limit(remainingNeeded);
-
-        if (fallbackQuestions && fallbackQuestions.length > 0) {
-          rawQuestions = [...(rawQuestions || []), ...fallbackQuestions];
-          tvLog('Added fallback questions from other categories', { 
-            fallbackCount: fallbackQuestions.length,
-            totalCount: rawQuestions.length
-          });
-        }
-      }
-
-      // Format questions with shuffled options (single shuffle - P1-4)
-      const formattedQuestions = shuffleArray(rawQuestions || []).slice(0, 10).map(q => {
-        const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-          ? q.incorrect_answers 
-          : JSON.parse(q.incorrect_answers as string);
-        
-        return {
-          id: q.id,
-          question_text: q.question_text,
-          correct_answer: q.correct_answer,
-          options: shuffleArray([q.correct_answer, ...incorrectAnswers]),
-        };
+      // Fetch questions using unified service
+      const result = await getQuestions({
+        mode: 'tv',
+        categoryUuid: categoryUUID,
+        count: 10,
       });
 
-      // Track these questions as asked (P1-1)
+      if (result.questions.length === 0) {
+        tvLogError('startGame', 'No questions available');
+        return;
+      }
+
+      // Log exhaustion info
+      if (result.exhaustionInfo) {
+        tvLog('Question exhaustion info', {
+          totalAvailable: result.exhaustionInfo.totalAvailable,
+          totalSeen: result.exhaustionInfo.totalSeen,
+          wasReset: result.exhaustionInfo.wasReset,
+          usedFallback: result.exhaustionInfo.usedFallback,
+        });
+      }
+
+      // Format questions for TV format
+      const formattedQuestions = result.questions.map(q => ({
+        id: q.id,
+        question_text: q.question,
+        correct_answer: q.correctAnswer,
+        options: q.allAnswers, // Already shuffled by questionService
+      }));
+
+      // Track using standardized key
+      const trackerKey = `tv_${categoryUUID}`;
       markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
-      tvLog('Starting game', { questionCount: formattedQuestions.length, categoryId: categoryUUID, language });
+      tvLog('Starting game', { 
+        questionCount: formattedQuestions.length, 
+        categoryId: categoryUUID, 
+        language: result.language 
+      });
 
       // Get category info for session
       const { data: category } = await supabase
