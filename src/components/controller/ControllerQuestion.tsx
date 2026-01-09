@@ -1,14 +1,46 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Clock, Check } from 'lucide-react';
+import { Clock, Check, Loader2, AlertCircle } from 'lucide-react';
 
 export const ControllerQuestion: React.FC = () => {
-  const { questions, currentQuestionIndex, timeRemaining, myAnswer, myScore, submitAnswer } = useTVGame();
+  const navigate = useNavigate();
+  const { questions, currentQuestionIndex, timeRemaining, myAnswer, myScore, submitAnswer, leaveSession } = useTVGame();
   const currentQuestion = questions[currentQuestionIndex];
 
-  if (!currentQuestion) return null;
+  // Handle missing question gracefully - show loading/error state instead of blank screen
+  if (!currentQuestion || questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
+        <div className="text-center">
+          {questions.length === 0 ? (
+            <>
+              <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+              <p className="text-white text-lg font-semibold mb-2">თამაში არ არის მზად</p>
+              <p className="text-purple-300 text-sm mb-6">კითხვები ჯერ არ ჩაიტვირთა</p>
+            </>
+          ) : (
+            <>
+              <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+              <p className="text-white text-lg font-semibold mb-2">იტვირთება...</p>
+              <p className="text-purple-300 text-sm mb-6">დაელოდე შემდეგ კითხვას</p>
+            </>
+          )}
+          <ChunkyButton
+            variant="secondary"
+            onClick={() => {
+              leaveSession();
+              navigate('/');
+            }}
+          >
+            თამაშიდან გასვლა
+          </ChunkyButton>
+        </div>
+      </div>
+    );
+  }
 
   const handleAnswer = async (answer: string) => {
     if (myAnswer) return;
