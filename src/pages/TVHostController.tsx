@@ -50,6 +50,7 @@ const TVHostController: React.FC = () => {
     joinSession,
     startGame,
     leaveSession,
+    resetGame,
   } = useTVGame();
 
   // UI-only local state (not game logic)
@@ -518,18 +519,10 @@ const TVHostController: React.FC = () => {
 
     const handlePlayAgain = async () => {
       try {
-        // Reset session to lobby state
-        await supabase
-          .from('tv_sessions')
-          .update({
-            status: 'lobby',
-            current_question_index: 0,
-            questions: null,
-            question_start_time: null,
-          })
-          .eq('id', sessionId);
+        // Use context's resetGame which handles DB, presence scores, and local state
+        await resetGame();
         
-        // Reset local state
+        // Reset local UI state
         setLastResult(null);
         setSelectedCategory(null);
       } catch (error) {
