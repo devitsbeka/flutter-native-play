@@ -3,10 +3,10 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { TVGameProvider, useTVGame } from '@/contexts/TVGameContext';
 import { ControllerCodeEntry } from '@/components/controller/ControllerCodeEntry';
 import { ControllerLobby } from '@/components/controller/ControllerLobby';
+import { ControllerCountdown } from '@/components/controller/ControllerCountdown';
 import { ControllerQuestion } from '@/components/controller/ControllerQuestion';
 import { ControllerReveal } from '@/components/controller/ControllerReveal';
 import { ControllerResults } from '@/components/controller/ControllerResults';
-import { Loader2 } from 'lucide-react';
 
 const TVJoinContent: React.FC = () => {
   const { code: urlCode } = useParams<{ code: string }>();
@@ -38,14 +38,7 @@ const TVJoinContent: React.FC = () => {
     case 'lobby':
       return <ControllerLobby />;
     case 'countdown':
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-purple-200 text-lg mb-4">მოემზადე!</p>
-            <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto" />
-          </div>
-        </div>
-      );
+      return <ControllerCountdown />;
     case 'question':
     case 'playing': // Database status maps to question phase
       return <ControllerQuestion />;
