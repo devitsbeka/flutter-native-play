@@ -15,9 +15,18 @@ import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
-import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
+import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+
+interface GeneratedQuestion {
+  question_text: string;
+  correct_answer: string;
+  incorrect_answers: string[];
+  difficulty?: string;
+  icon_slug?: string;
+}
 
 interface Category {
   id: string;
@@ -33,14 +42,13 @@ type SelectionMode = "random" | "library" | "create" | null;
 
 interface CreateRoomPageProps {
   onClose: () => void;
-  onOpenCreateQuiz?: () => void;
-  onOpenCreateCollection?: () => void;
 }
 
-export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollection }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { createRoom, loading } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
@@ -160,7 +168,25 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
     }
   };
 
-  const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library") && selectedCategory !== null;
+  const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library" || selectionMode === "create") && (selectedCategory !== null || selectionMode === "create");
+
+  // State for custom trivia questions
+  const [customTriviaQuestions, setCustomTriviaQuestions] = useState<GeneratedQuestion[] | null>(null);
+  const [customTriviaTitle, setCustomTriviaTitle] = useState("");
+  const [customTriviaSubject, setCustomTriviaSubject] = useState("");
+
+  // Handle blind trivia creation - questions are hidden from creator
+  const handleBlindTriviaReady = async (questions: GeneratedQuestion[], title: string, subject: string) => {
+    setCustomTriviaQuestions(questions);
+    setCustomTriviaTitle(title);
+    setCustomTriviaSubject(subject);
+    setSelectionMode("create");
+    
+    toast({
+      title: "✨ ტრივია მზადაა!",
+      description: `${questions.length} კითხვა შეიქმნა - "${title}"`,
+    });
+  };
 
   const handleCreate = async () => {
     if (!user) return;
@@ -174,7 +200,14 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
     try {
       let room = null;
       
-      if (selectedCategory) {
+      if (selectionMode === "create" && customTriviaQuestions) {
+        // Create room with custom trivia questions
+        room = await createRoom(
+          "custom", 
+          customTriviaTitle || "Custom Trivia",
+          customTriviaQuestions
+        );
+      } else if (selectedCategory) {
         // Create the room with selected category
         room = await createRoom(selectedCategory.category_id, selectedCategory.name);
       }
@@ -524,6 +557,41 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
               </div>
             </motion.div>
           )}
+          
+          {/* Custom Trivia Preview */}
+          {selectionMode === "create" && customTriviaQuestions && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{customTriviaTitle}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {customTriviaQuestions.length} კითხვა • 🔒 პასუხები დამალულია
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setCustomTriviaQuestions(null);
+                      setCustomTriviaTitle("");
+                      setCustomTriviaSubject("");
+                      setSelectionMode(null);
+                    }} 
+                    className="p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -567,20 +635,11 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
         selectedCategoryId={selectedCategory?.id}
       />
 
-      {/* Create Trivia Type Modal */}
-      <CreateTriviaTypeModal
+      {/* Create Blind Trivia Modal - Hides answers from creator */}
+      <CreateBlindTriviaModal
         open={showCreateTriviaModal}
         onOpenChange={setShowCreateTriviaModal}
-        onSelectSingle={() => {
-          setShowCreateTriviaModal(false);
-          onClose();
-          onOpenCreateQuiz?.();
-        }}
-        onSelectCollection={() => {
-          setShowCreateTriviaModal(false);
-          onClose();
-          onOpenCreateCollection?.();
-        }}
+        onTriviaReady={handleBlindTriviaReady}
       />
 
       {/* How It Works Modal */}
