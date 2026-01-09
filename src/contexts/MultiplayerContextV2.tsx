@@ -85,7 +85,7 @@ interface MultiplayerContextType extends MultiplayerState {
   loading: boolean;
   
   // Actions
-  createRoom: (categoryId?: string, categoryName?: string) => Promise<GameRoom | null>;
+  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[]) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: () => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
@@ -291,7 +291,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   };
 
   // Create room
-  const createRoom = useCallback(async (categoryId?: string, categoryName?: string): Promise<GameRoom | null> => {
+  const createRoom = useCallback(async (categoryId?: string, categoryName?: string, customQuestions?: any[]): Promise<GameRoom | null> => {
     if (!user || !profile) {
       toast.error("ჯერ გაიარე ავტორიზაცია");
       return null;
@@ -306,11 +306,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .insert({
           host_user_id: user.id,
           room_code: roomCode,
-          category_id: categoryId,
+          category_id: categoryId === "custom" ? null : categoryId,
           category_name: categoryName,
           status: "waiting",
           is_permanent: true,
           background_gradient: getRandomGradient(),
+          total_questions: customQuestions?.length || 5,
         })
         .select()
         .single();
@@ -326,6 +327,24 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         country_code: profile.country_code,
         is_host: true,
       });
+
+      // If custom questions provided, store them immediately
+      if (customQuestions && customQuestions.length > 0) {
+        await Promise.all(customQuestions.map((q, index) => {
+          const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
+          const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+          
+          return supabase.from("room_questions").insert({
+            room_id: room.id,
+            question_index: index,
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            incorrect_answers: q.incorrect_answers,
+            difficulty: q.difficulty || "medium",
+            shuffled_answers: shuffledAnswers,
+          });
+        }));
+      }
       
       setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       setShowCreateModal(false);

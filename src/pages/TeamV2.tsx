@@ -491,8 +491,6 @@ function TeamContentV2() {
         {showCreateModal && (
           <CreateRoomPage 
             onClose={() => setShowCreateModal(false)} 
-            onOpenCreateQuiz={() => setShowCreateQuizModal(true)}
-            onOpenCreateCollection={() => setShowCreateCollectionModal(true)}
           />
         )}
       </AnimatePresence>
