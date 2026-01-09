@@ -187,8 +187,16 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                   <div className="w-8 h-8 border-2 border-gray-200 border-t-purple-500 rounded-full animate-spin" />
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <div 
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                  className="flex flex-col items-center justify-center h-full text-center"
+                >
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
                     className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
                     style={{
                       background: "#F3F4F6",
@@ -196,15 +204,34 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                     }}
                   >
                     <Send className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <p className="text-gray-600 text-sm">ჯერ შეტყობინებები არ არის</p>
-                  <p className="text-gray-400 text-xs mt-1">დაიწყე საუბარი {friend.nickname}-თან</p>
-                </div>
+                  </motion.div>
+                  <motion.p 
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-gray-600 text-sm"
+                  >
+                    ჯერ შეტყობინებები არ არის
+                  </motion.p>
+                  <motion.p 
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-gray-400 text-xs mt-1"
+                  >
+                    დაიწყე საუბარი {friend.nickname}-თან
+                  </motion.p>
+                </motion.div>
               ) : (
-                Object.entries(groupedMessages).map(([date, dateMessages]) => (
+                Object.entries(groupedMessages).map(([date, dateMessages], groupIndex) => (
                   <div key={date} className="space-y-2">
-                    {/* Date separator */}
-                    <div className="flex items-center justify-center">
+                    {/* Date separator with animation */}
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: groupIndex * 0.05 }}
+                      className="flex items-center justify-center"
+                    >
                       <span 
                         className="px-3 py-1 rounded-full text-xs"
                         style={{
@@ -214,9 +241,9 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                       >
                         {formatDate(dateMessages[0].created_at)}
                       </span>
-                    </div>
+                    </motion.div>
 
-                    {/* Messages for this date */}
+                    {/* Messages for this date with staggered animation */}
                     {dateMessages.map((message, index) => {
                       const isMe = message.sender_id === user?.id;
                       const showAvatar = !isMe && (
@@ -227,12 +254,33 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                       return (
                         <motion.div
                           key={message.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          initial={{ 
+                            opacity: 0, 
+                            y: 20, 
+                            scale: 0.9,
+                            x: isMe ? 20 : -20 
+                          }}
+                          animate={{ 
+                            opacity: 1, 
+                            y: 0, 
+                            scale: 1,
+                            x: 0 
+                          }}
+                          transition={{ 
+                            type: "spring", 
+                            damping: 20, 
+                            stiffness: 300,
+                            delay: (groupIndex * 0.05) + (index * 0.03)
+                          }}
                           className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}
                         >
                           {!isMe && (
-                            <div className="w-8">
+                            <motion.div 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", delay: (groupIndex * 0.05) + (index * 0.03) + 0.1 }}
+                              className="w-8"
+                            >
                               {showAvatar && (
                                 <Avatar className="w-8 h-8">
                                   <AvatarImage src={friend.avatarUrl || undefined} />
@@ -246,28 +294,31 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                                   </AvatarFallback>
                                 </Avatar>
                               )}
-                            </div>
+                            </motion.div>
                           )}
 
-                          <div
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
                             className="max-w-[75%] px-4 py-2 rounded-2xl"
                             style={isMe ? {
                               background: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
                               color: "white",
                               borderBottomRightRadius: "4px",
-                              boxShadow: "0 2px 0 #6D28D9",
+                              boxShadow: "0 4px 12px rgba(168, 85, 247, 0.35)",
                             } : {
-                              background: "#F3F4F6",
+                              background: "rgba(255, 255, 255, 0.95)",
+                              backdropFilter: "blur(8px)",
                               color: "#374151",
                               borderBottomLeftRadius: "4px",
-                              boxShadow: "0 2px 0 #E5E7EB",
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                              border: "1px solid rgba(229, 231, 235, 0.5)",
                             }}
                           >
                             <p className="text-sm break-words">{message.message}</p>
                             <p className={`text-xs mt-1 ${isMe ? "text-white/70" : "text-gray-400"}`}>
                               {formatTime(message.created_at)}
                             </p>
-                          </div>
+                          </motion.div>
                         </motion.div>
                       );
                     })}
