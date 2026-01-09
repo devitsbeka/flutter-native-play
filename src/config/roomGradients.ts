@@ -39,8 +39,8 @@ export const ROOM_GRADIENTS: RoomGradient[] = [
   {
     id: "forest_dawn",
     name: "Forest Dawn",
-    gradient: "linear-gradient(135deg, #134E5E 0%, #71B280 25%, #3A6073 50%, #16A085 75%, #71B280 100%)",
-    colors: ["#134E5E", "#71B280", "#3A6073", "#16A085"],
+    gradient: "linear-gradient(135deg, #56CCF2 0%, #88D8B0 25%, #B8E986 50%, #56CCF2 75%, #A8E6CF 100%)",
+    colors: ["#56CCF2", "#88D8B0", "#B8E986", "#A8E6CF"],
   },
   {
     id: "cotton_candy",
@@ -57,8 +57,8 @@ export const ROOM_GRADIENTS: RoomGradient[] = [
   {
     id: "mystic_purple",
     name: "Mystic Purple",
-    gradient: "linear-gradient(135deg, #41295a 0%, #8E44AD 25%, #9B59B6 50%, #E91E63 75%, #41295a 100%)",
-    colors: ["#41295a", "#8E44AD", "#9B59B6", "#E91E63"],
+    gradient: "linear-gradient(135deg, #C471ED 0%, #F64F59 25%, #C471ED 50%, #FFB6C1 75%, #E8D5FF 100%)",
+    colors: ["#C471ED", "#F64F59", "#FFB6C1", "#E8D5FF"],
   },
   {
     id: "coral_reef",
@@ -68,9 +68,9 @@ export const ROOM_GRADIENTS: RoomGradient[] = [
   },
   {
     id: "midnight_glow",
-    name: "Midnight Glow",
-    gradient: "linear-gradient(135deg, #0F2027 0%, #203A43 25%, #2C5364 50%, #4776E6 75%, #8E54E9 100%)",
-    colors: ["#0F2027", "#2C5364", "#4776E6", "#8E54E9"],
+    name: "Sky Dreams",
+    gradient: "linear-gradient(135deg, #89CFF0 0%, #B6A4FF 25%, #C8A2C8 50%, #87CEEB 75%, #DCD0FF 100%)",
+    colors: ["#89CFF0", "#B6A4FF", "#C8A2C8", "#87CEEB"],
   },
   {
     id: "spring_bloom",

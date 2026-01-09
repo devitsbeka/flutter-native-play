@@ -42,6 +42,7 @@ export interface GameRoom {
   current_game_id: string | null;
   created_at: string;
   used_question_ids?: string[];
+  background_gradient?: string | null;
 }
 
 export interface RoomGame {
