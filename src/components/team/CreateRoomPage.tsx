@@ -212,6 +212,104 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           </div>
         </div>
 
+        {/* Friend Invitation Section - Moved up, right after room name */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+              <h2 className="text-xs font-medium text-muted-foreground">
+                {t("team.inviteFriends").replace("{count}", String(selectedFriends.size))}
+              </h2>
+            </div>
+            <motion.button
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              მოწვევა
+            </motion.button>
+          </div>
+          
+          {acceptedFriends.length > 0 ? (
+            <TooltipProvider delayDuration={0}>
+              <div className="flex flex-wrap gap-2">
+                {/* Invite New Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      onClick={() => setShowInviteModal(true)}
+                      className="relative w-10 h-10 rounded-full bg-muted/50 border-2 border-dashed border-border/50 flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <UserPlus className="w-4 h-4 text-muted-foreground" />
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    მეგობრის მოწვევა
+                  </TooltipContent>
+                </Tooltip>
+                
+                {acceptedFriends.map((friend) => {
+                  const isSelected = selectedFriends.has(friend.friendId);
+                  return (
+                    <Tooltip key={friend.id}>
+                      <TooltipTrigger asChild>
+                        <motion.button
+                          onClick={() => toggleFriendSelection(friend.friendId)}
+                          className="relative"
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <div 
+                            className="relative rounded-full p-0.5 transition-all"
+                            style={{
+                              background: isSelected 
+                                ? "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)"
+                                : "transparent",
+                            }}
+                          >
+                            <SmartAvatar
+                              avatarUrl={friend.avatarUrl}
+                              animatedAvatarUrl={friend.animatedAvatarUrl}
+                              fallback={friend.nickname?.slice(0, 2)}
+                              size="md"
+                              className={isSelected ? "ring-0" : "ring-2 ring-border/30"}
+                            />
+                          </div>
+                          {friend.isOnline && (
+                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                          )}
+                          {isSelected && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                            </div>
+                          )}
+                        </motion.button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {friend.nickname}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
+          ) : (
+            <motion.button
+              onClick={() => setShowInviteModal(true)}
+              className="w-full py-3 rounded-xl bg-muted/30 border border-dashed border-border/50 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <UserPlus className="w-4 h-4" />
+              <span className="text-sm">{t("team.noFriendsYet")}</span>
+            </motion.button>
+          )}
+        </div>
+
         {/* Category Selection */}
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-1">{t("team.category")}</h2>
@@ -427,107 +525,6 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   <p className="text-muted-foreground/70 text-xs mt-1">შექმენი ტრივია სოციალური ფიდიდან</p>
                 </div>
               )}
-            </div>
-          )}
-        </div>
-
-        {/* Friend Invitation Section - Avatar Circles */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Users className="w-3.5 h-3.5 text-muted-foreground" />
-              <h2 className="text-xs font-medium text-muted-foreground">
-                {t("team.inviteFriends").replace("{count}", String(selectedFriends.size))}
-              </h2>
-            </div>
-            <motion.button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              მოწვევა
-            </motion.button>
-          </div>
-          
-          {acceptedFriends.length > 0 ? (
-            <TooltipProvider delayDuration={0}>
-              <div className="flex flex-wrap gap-2">
-                {/* Invite New Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <motion.button
-                      onClick={() => setShowInviteModal(true)}
-                      className="relative w-10 h-10 rounded-full bg-muted/50 border-2 border-dashed border-border/50 flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <UserPlus className="w-4 h-4 text-muted-foreground" />
-                    </motion.button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    მეგობრის მოწვევა
-                  </TooltipContent>
-                </Tooltip>
-                
-                {acceptedFriends.map((friend) => {
-                  const isSelected = selectedFriends.has(friend.friendId);
-                  return (
-                    <Tooltip key={friend.id}>
-                      <TooltipTrigger asChild>
-                        <motion.button
-                          onClick={() => toggleFriendSelection(friend.friendId)}
-                          className="relative"
-                          whileHover={{ scale: 1.08 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <div 
-                            className="relative rounded-full p-0.5 transition-all"
-                            style={{
-                              background: isSelected 
-                                ? "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)"
-                                : "transparent",
-                            }}
-                          >
-                            <SmartAvatar
-                              avatarUrl={friend.avatarUrl}
-                              animatedAvatarUrl={friend.animatedAvatarUrl}
-                              fallback={friend.nickname?.slice(0, 2)}
-                              size="md"
-                              className={isSelected ? "ring-0" : "ring-2 ring-border/30"}
-                            />
-                          </div>
-                          {friend.isOnline && (
-                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
-                          )}
-                          {isSelected && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                            </div>
-                          )}
-                        </motion.button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        {friend.nickname}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            </TooltipProvider>
-          ) : (
-            <div className="text-center py-4 text-muted-foreground">
-              <motion.button
-                onClick={() => setShowInviteModal(true)}
-                className="w-16 h-16 mx-auto mb-2 rounded-full bg-muted/50 border-2 border-dashed border-border/50 flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <UserPlus className="w-6 h-6 text-muted-foreground" />
-              </motion.button>
-              <p className="text-sm">{t("team.noFriendsYet")}</p>
-              <p className="text-xs">{t("team.addFriendsHint")}</p>
             </div>
           )}
         </div>
