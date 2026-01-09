@@ -13,7 +13,7 @@ import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
-import { TVSetupModal } from "./TVSetupModal";
+import { TVSetupInline } from "./TVSetupInline";
 import { GradientPicker } from "./GradientPicker";
 import { getGradientById } from "@/config/roomGradients";
 import { Switch } from "@/components/ui/switch";
@@ -57,7 +57,6 @@ export function RoomLobbyV2() {
   const [chatMessage, setChatMessage] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
-  const [showTVSetupModal, setShowTVSetupModal] = useState(false);
   const [isTVModeEnabled, setIsTVModeEnabled] = useState(false);
   const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -149,22 +148,10 @@ export function RoomLobbyV2() {
   };
 
   const handleTVModeToggle = (checked: boolean) => {
-    if (checked) {
-      // Show setup modal when enabling
-      setShowTVSetupModal(true);
-    } else {
-      // Disable TV mode
-      setIsTVModeEnabled(false);
-    }
+    setIsTVModeEnabled(checked);
   };
 
   const handleTVSetupComplete = () => {
-    setIsTVModeEnabled(true);
-    setShowTVSetupModal(false);
-  };
-
-  const handleTVSetupCancel = () => {
-    // Don't enable TV mode if cancelled
     setIsTVModeEnabled(false);
   };
 
@@ -426,6 +413,16 @@ export function RoomLobbyV2() {
           </motion.div>
         )}
 
+        {/* TV Setup Inline Widget */}
+        <AnimatePresence>
+          {isTVModeEnabled && (
+            <TVSetupInline
+              onComplete={handleTVSetupComplete}
+              onCancel={() => setIsTVModeEnabled(false)}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Full-Screen Chat Modal */}
         <AnimatePresence>
           {showChat && (
@@ -631,13 +628,6 @@ export function RoomLobbyV2() {
         )}
       </AnimatePresence>
 
-      {/* TV Setup Modal */}
-      <TVSetupModal
-        open={showTVSetupModal}
-        onOpenChange={setShowTVSetupModal}
-        onComplete={handleTVSetupComplete}
-        onCancel={handleTVSetupCancel}
-      />
 
       {/* Delete Room Confirmation Modal */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
