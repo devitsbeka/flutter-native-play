@@ -3,9 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
 import {
   getGlobalAskedQuestionIds,
+  getSeenQuestionIds,
   markQuestionsAsAskedGlobally,
   shouldResetGlobalPool,
+  shouldResetSeenPool,
   clearGlobalAskedQuestions,
+  clearSeenQuestions,
 } from "@/services/questionTracker";
 
 const STORAGE_KEY = 'preferredLanguage';
@@ -106,6 +109,7 @@ export function useTrivia() {
         // VS Mode: Pick one question from each of 6 random categories
         // Use persistent tracking to avoid repetition
         const globalAskedIds = getGlobalAskedQuestionIds();
+        const seenIds = getSeenQuestionIds(); // Unified seen tracking
         
         const { data: categories } = await supabase
           .from('categories')
@@ -125,17 +129,24 @@ export function useTrivia() {
             clearGlobalAskedQuestions();
           }
           
+          // Also reset seen pool if exhausted
+          if (totalCount && shouldResetSeenPool(totalCount)) {
+            clearSeenQuestions();
+          }
+          
           // Shuffle and pick 6 random categories
           const randomCategories = shuffleArray(categories).slice(0, amount);
           
           setPreparationProgress(20);
           
-          // Get fresh list after potential reset
+          // Get fresh list after potential reset - combine global asked + all seen
           const currentAskedIds = getGlobalAskedQuestionIds();
+          const currentSeenIds = getSeenQuestionIds();
+          // Use seen IDs for exclusion (superset of asked)
+          const excludeIds = [...new Set([...currentAskedIds, ...currentSeenIds])];
           
-          // Fetch questions from each category with database-level exclusion
           const questionPromises = randomCategories.map(async (cat) => {
-            // Build query with exclusion at database level
+            // Build query with exclusion at database level (excludes all seen questions)
             let query = supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
@@ -144,9 +155,9 @@ export function useTrivia() {
               .eq('category_id', cat.id)
               .eq('language', language);
             
-            // Exclude already asked questions at database level
-            if (currentAskedIds.length > 0) {
-              query = query.not('id', 'in', `(${currentAskedIds.join(',')})`);
+            // Exclude already seen questions at database level (prioritize fresh questions)
+            if (excludeIds.length > 0) {
+              query = query.not('id', 'in', `(${excludeIds.join(',')})`);
             }
             
             const { data } = await query.limit(100);

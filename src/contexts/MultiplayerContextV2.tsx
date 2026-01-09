@@ -4,6 +4,7 @@ import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
 import { toast } from "sonner";
 import { getRandomGradient } from "@/config/roomGradients";
+import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
@@ -496,6 +497,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     const usedIds = state.currentRoom.used_question_ids || [];
+    // Include globally seen questions for maximum freshness
+    const seenIds = getSeenQuestionIds();
+    const allExcludeIds = [...new Set([...usedIds, ...seenIds])];
     
     // Get user's language preference
     const language = typeof window !== 'undefined' 
@@ -529,9 +533,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .eq("language", language)
         .eq("category_id", categoryUUID);
         
-        // Exclude already used questions
-        if (usedIds.length > 0) {
-          query = query.not("id", "in", `(${usedIds.join(",")})`);
+        // Exclude already used + seen questions
+        if (allExcludeIds.length > 0) {
+          query = query.not("id", "in", `(${allExcludeIds.join(",")})`);
         }
         
         const { data: categoryQuestions } = await query;
@@ -551,8 +555,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("in_production", true)
           .eq("language", language);
         
-        if (usedIds.length > 0) {
-          fallbackQuery = fallbackQuery.not("id", "in", `(${usedIds.join(",")})`);
+        if (allExcludeIds.length > 0) {
+          fallbackQuery = fallbackQuery.not("id", "in", `(${allExcludeIds.join(",")})`);
         }
         
         const { data: allQuestions, error: allError } = await fallbackQuery;
@@ -585,6 +589,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .from("game_rooms")
         .update({ used_question_ids: newUsedIds })
         .eq("id", roomId);
+      
+      // Mark questions as seen globally (unified tracking across all modes)
+      markQuestionsAsSeen(questions.map(q => q.id));
       
       await saveQuestionsAndStartGame(roomId, questions);
       
@@ -767,6 +774,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .single();
     
     const usedIds = (freshRoom?.used_question_ids as string[]) || [];
+    // Include globally seen questions for maximum freshness
+    const seenIds = getSeenQuestionIds();
+    const allExcludeIds = [...new Set([...usedIds, ...seenIds])];
     
     try {
       let selectedQuestions: any[] = [];
@@ -795,8 +805,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("language", language)
           .eq("category_id", categoryUUID);
         
-        if (usedIds.length > 0) {
-          query = query.not("id", "in", `(${usedIds.join(",")})`);
+        // Exclude used + globally seen questions
+        if (allExcludeIds.length > 0) {
+          query = query.not("id", "in", `(${allExcludeIds.join(",")})`);
         }
         
         const { data: categoryQuestions } = await query;
@@ -816,8 +827,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("in_production", true)
           .eq("language", language);
         
-        if (usedIds.length > 0) {
-          fallbackQuery = fallbackQuery.not("id", "in", `(${usedIds.join(",")})`);
+        if (allExcludeIds.length > 0) {
+          fallbackQuery = fallbackQuery.not("id", "in", `(${allExcludeIds.join(",")})`);
         }
         
         const { data: allQuestions } = await fallbackQuery;
@@ -869,6 +880,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .from("game_rooms")
         .update({ used_question_ids: newUsedIds })
         .eq("id", roomId);
+      
+      // Mark questions as seen globally (unified tracking across all modes)
+      markQuestionsAsSeen(questions.map(q => q.id));
       
       // Reset only my score and current_question
       await supabase

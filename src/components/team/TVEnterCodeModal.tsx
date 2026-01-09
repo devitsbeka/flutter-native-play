@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions } from '@/services/questionTracker';
+import { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds } from '@/services/questionTracker';
 
 interface TVEnterCodeModalProps {
   open: boolean;
@@ -66,9 +66,12 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       // Get user's language preference
       const language = localStorage.getItem('preferredLanguage') || 'ka';
 
-      // Get previously asked questions to avoid repetition
+      // Get previously asked questions + all globally seen to avoid repetition
       const trackerKey = `tv_${categoryData.id}`;
-      let excludeIds = getAskedQuestionIds(trackerKey);
+      const categoryAskedIds = getAskedQuestionIds(trackerKey);
+      const allSeenIds = getSeenQuestionIds();
+      // Combine for maximum freshness
+      let excludeIds = [...new Set([...categoryAskedIds, ...allSeenIds])];
 
       // Fetch questions for this category, excluding already asked ones
       let query = supabase

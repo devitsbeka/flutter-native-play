@@ -147,8 +147,8 @@ export default function CategoryQuizPage() {
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null; total_levels: number } | null>(null);
   const category = getCategoryById(categoryId || "");
   
-  // Session question tracking to prevent repetition
-  const { getAskedQuestionIds, markQuestionsAsAsked, clearAskedQuestions, shouldResetPool } = useSessionQuestions(categoryId || "");
+  // Session question tracking to prevent repetition (includes globally seen questions)
+  const { getAskedQuestionIds, getExcludeQuestionIds, markQuestionsAsAsked, clearAskedQuestions, shouldResetPool, shouldResetSeenPoolCheck, clearSeen } = useSessionQuestions(categoryId || "");
   
   // Mock opponent data
   const opponent = useMemo(() => ({
@@ -224,8 +224,8 @@ export default function CategoryQuizPage() {
         // Store the database category for icon rendering
         setDbCategory(categoryData);
 
-        // Get previously asked question IDs to exclude
-        let askedIds = getAskedQuestionIds();
+        // Get previously asked + globally seen question IDs to exclude (prioritize fresh questions)
+        let askedIds = getExcludeQuestionIds();
         
         // Expand level range to get more variety (N-3 to N+5)
         const minLevel = Math.max(1, levelNumber - 3);
