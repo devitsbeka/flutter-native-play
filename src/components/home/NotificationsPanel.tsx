@@ -10,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -158,6 +159,7 @@ function NotificationCard({
 
 export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
@@ -299,11 +301,11 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   };
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'ყველა' },
-    { key: 'unread', label: 'წაუკითხავი' },
-    { key: 'friends', label: 'სოციალური' },
-    { key: 'games', label: 'თამაშები' },
-    { key: 'rewards', label: 'ჯილდოები' },
+    { key: 'all', label: t('notifications.all') },
+    { key: 'unread', label: t('notifications.unread') },
+    { key: 'friends', label: t('notifications.friends') },
+    { key: 'games', label: t('notifications.games') },
+    { key: 'rewards', label: t('menu.rewards') },
   ];
 
   return (
@@ -335,10 +337,10 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                     <Bell className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-lg">Notifications</h2>
+                    <h2 className="font-bold text-lg">{t('notifications.title')}</h2>
                     {unreadCount > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        {unreadCount} unread
+                        {unreadCount} {t('notifications.unread')}
                       </p>
                     )}
                   </div>
@@ -398,22 +400,22 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
               {loading ? (
                 <div className="flex flex-col items-center py-8">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
+                  <p className="text-sm text-muted-foreground mt-3">{t('notifications.loading')}</p>
                 </div>
               ) : filteredNotifications.length === 0 ? (
                 <div className="flex flex-col items-center py-8">
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
                     <BellOff className="w-10 h-10 text-muted-foreground" />
                   </div>
-                  <h3 className="font-bold text-lg text-foreground mb-2">No notifications</h3>
+                  <h3 className="font-bold text-lg text-foreground mb-2">{t('notifications.noNotifications')}</h3>
                   <p className="text-sm text-muted-foreground text-center max-w-[250px]">
                     {filter === 'unread'
-                      ? "You're all caught up!"
+                      ? t('notifications.allRead')
                       : filter === 'friends'
-                      ? "No friend activity yet"
+                      ? t('notifications.noFriendActivity')
                       : filter === 'games'
-                      ? "No game notifications"
-                      : "When something happens, you'll see it here"}
+                      ? t('notifications.noGameNotifications')
+                      : t('notifications.whenSomethingHappens')}
                   </p>
                 </div>
               ) : (
