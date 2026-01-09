@@ -22,21 +22,42 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
 
   // Auto-join if authenticated and code is provided
   useEffect(() => {
-    if (initialCode && user && profile) {
-      handleAuthenticatedJoin();
-    }
-  }, [initialCode, user, profile]);
+    const attemptAutoJoin = async () => {
+      if (initialCode && user && profile && !loading) {
+        setLoading(true);
+        setError(null);
+        
+        const success = await joinSession(
+          initialCode.toUpperCase(), 
+          profile.nickname, 
+          profile.avatar_url || profile.animated_avatar_url || undefined
+        );
+        
+        if (success) {
+          onJoined();
+        } else {
+          setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
+        }
+        setLoading(false);
+      }
+    };
+    
+    attemptAutoJoin();
+  }, [initialCode, user, profile?.nickname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleAuthenticatedJoin = async () => {
-    if (!code || code.length < 4 || !profile) return;
+  const handleJoin = async (codeToJoin: string, nickname: string, avatarUrl?: string) => {
+    if (!codeToJoin || codeToJoin.length < 4) {
+      setError('კოდი უნდა იყოს მინიმუმ 4 სიმბოლო');
+      return false;
+    }
     
     setLoading(true);
     setError(null);
     
     const success = await joinSession(
-      code.toUpperCase(), 
-      profile.nickname, 
-      profile.avatar_url || profile.animated_avatar_url || undefined
+      codeToJoin.toUpperCase(), 
+      nickname, 
+      avatarUrl
     );
     
     if (success) {
@@ -45,26 +66,24 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
       setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
     }
     setLoading(false);
+    return success;
   };
 
   const handleGuestJoin = async (nickname: string) => {
-    if (!code || code.length < 4) return;
-    
-    const success = await joinSession(code.toUpperCase(), nickname);
-    
+    const success = await handleJoin(code, nickname);
     if (success) {
       setShowGuestModal(false);
-      onJoined();
-    } else {
-      setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
     }
   };
 
-  const handleSubmitCode = () => {
-    if (code.length < 4) return;
+  const handleSubmitCode = async () => {
+    if (code.length < 4) {
+      setError('კოდი უნდა იყოს მინიმუმ 4 სიმბოლო');
+      return;
+    }
     
     if (user && profile) {
-      handleAuthenticatedJoin();
+      await handleJoin(code, profile.nickname, profile.avatar_url || profile.animated_avatar_url || undefined);
     } else {
       setShowGuestModal(true);
     }
