@@ -416,10 +416,12 @@ export function RoomLobbyV2() {
         {/* TV Setup Inline Widget */}
         <AnimatePresence>
           {isTVModeEnabled && (
-            <TVSetupInline
-              onComplete={handleTVSetupComplete}
-              onCancel={() => setIsTVModeEnabled(false)}
-            />
+            <div className="mb-6">
+              <TVSetupInline
+                onComplete={handleTVSetupComplete}
+                onCancel={() => setIsTVModeEnabled(false)}
+              />
+            </div>
           )}
         </AnimatePresence>
 

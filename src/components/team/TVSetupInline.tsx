@@ -154,14 +154,6 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                   'დაკავშირება'
                 )}
               </ChunkyButton>
-
-              {/* Cancel */}
-              <button
-                onClick={onCancel}
-                className="w-full mt-2 py-2 text-white/60 text-sm hover:text-white transition-colors"
-              >
-                გაუქმება
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
