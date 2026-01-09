@@ -498,6 +498,7 @@ function TeamContentV2() {
   );
 }
 
+// Main component with provider wrapper
 export default function TeamV2() {
   return (
     <MultiplayerProviderV2>
