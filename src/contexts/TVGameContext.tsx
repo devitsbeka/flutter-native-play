@@ -20,7 +20,7 @@ export interface TVQuestion {
   options: string[];
 }
 
-export type TVPhase = 'pairing' | 'lobby' | 'countdown' | 'question' | 'reveal' | 'results' | 'idle';
+export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'reveal' | 'results' | 'idle';
 
 interface TVGameState {
   code: string | null;
@@ -36,6 +36,7 @@ interface TVGameState {
   roomName: string | null;
   totalRoundsPlayed: number;
   accumulatedScores: Record<string, number>;
+  isPaired: boolean;
 }
 
 interface TVGameContextType extends TVGameState {
@@ -104,6 +105,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     roomName: null,
     totalRoundsPlayed: 0,
     accumulatedScores: {},
+    isPaired: false,
   });
 
   const [isHost, setIsHost] = useState(false);
@@ -306,6 +308,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             question_start_time: string | null;
             category_name: string | null;
             category_icon: string | null;
+            is_paired: boolean;
+            room_name: string | null;
           };
           
           // Parse questions if present
@@ -348,6 +352,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               timeRemaining: newData.status === 'playing' ? timeRemaining : QUESTION_TIME,
               categoryName: newData.category_name || prev.categoryName,
               categoryIcon: newData.category_icon || prev.categoryIcon,
+              isPaired: newData.is_paired ?? prev.isPaired,
+              roomName: newData.room_name || prev.roomName,
             };
           });
         }
@@ -696,6 +702,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       roomName: null,
       totalRoundsPlayed: 0,
       accumulatedScores: {},
+      isPaired: false,
     });
     setIsHost(false);
     setMyPlayerId(null);
