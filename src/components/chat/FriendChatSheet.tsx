@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -148,12 +149,42 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
     return format(date, "d MMM, HH:mm", { locale: ka });
   };
 
+  // Group messages by date
+  const groupedMessages = messages.reduce((groups, message) => {
+    const date = new Date(message.created_at).toDateString();
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(message);
+    return groups;
+  }, {} as Record<string, ChatMessage[]>);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "დღეს";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "გუშინ";
+    } else {
+      return format(date, "d MMMM", { locale: ka });
+    }
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 border-0">
         <div className="flex flex-col h-full bg-background">
           {/* Header */}
-          <div className="flex items-center gap-3 p-4 border-b border-border">
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            className="flex items-center gap-3 p-4 border-b border-border"
+          >
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
@@ -174,51 +205,120 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                 </SheetTitle>
               </>
             )}
-          </div>
+          </motion.div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {loading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-muted-foreground text-sm">დაიწყეთ საუბარი!</p>
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                className="flex flex-col items-center justify-center h-full"
+              >
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4"
+                >
+                  <Send className="w-8 h-8 text-muted-foreground" />
+                </motion.div>
+                <motion.p 
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-muted-foreground text-sm"
+                >
+                  დაიწყეთ საუბარი!
+                </motion.p>
+              </motion.div>
             ) : (
-              messages.map((msg) => {
-                const isMine = msg.sender_id === user?.id;
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+              Object.entries(groupedMessages).map(([date, dateMessages], groupIndex) => (
+                <div key={date} className="space-y-3">
+                  {/* Date separator */}
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: groupIndex * 0.05 }}
+                    className="flex items-center justify-center"
                   >
-                    <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                        isMine
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-muted text-foreground rounded-bl-md"
-                      }`}
-                    >
-                      <p className="text-sm break-words">{msg.message}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          isMine ? "text-primary-foreground/70" : "text-muted-foreground"
-                        }`}
+                    <span className="px-3 py-1 rounded-full text-xs bg-muted text-muted-foreground">
+                      {formatDate(dateMessages[0].created_at)}
+                    </span>
+                  </motion.div>
+
+                  {/* Messages */}
+                  {dateMessages.map((msg, index) => {
+                    const isMine = msg.sender_id === user?.id;
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ 
+                          opacity: 0, 
+                          y: 20, 
+                          scale: 0.9,
+                          x: isMine ? 20 : -20 
+                        }}
+                        animate={{ 
+                          opacity: 1, 
+                          y: 0, 
+                          scale: 1,
+                          x: 0 
+                        }}
+                        transition={{ 
+                          type: "spring", 
+                          damping: 20, 
+                          stiffness: 300,
+                          delay: (groupIndex * 0.05) + (index * 0.03)
+                        }}
+                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                       >
-                        {formatMessageTime(msg.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          className="max-w-[75%] rounded-2xl px-4 py-2"
+                          style={isMine ? {
+                            background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(271, 81%, 56%) 100%)",
+                            color: "hsl(var(--primary-foreground))",
+                            borderBottomRightRadius: "4px",
+                            boxShadow: "0 4px 12px hsla(var(--primary), 0.35)",
+                          } : {
+                            background: "hsl(var(--muted))",
+                            backdropFilter: "blur(8px)",
+                            color: "hsl(var(--foreground))",
+                            borderBottomLeftRadius: "4px",
+                            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                          }}
+                        >
+                          <p className="text-sm break-words">{msg.message}</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              isMine ? "opacity-70" : "text-muted-foreground"
+                            }`}
+                          >
+                            {formatMessageTime(msg.created_at)}
+                          </p>
+                        </motion.div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ))
             )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-border">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.1 }}
+            className="p-4 border-t border-border"
+          >
             <div className="flex gap-2">
               <Input
                 value={newMessage}
@@ -238,7 +338,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                 <Send className="w-4 h-4" />
               </ChunkyButton>
             </div>
-          </div>
+          </motion.div>
         </div>
       </SheetContent>
     </Sheet>
