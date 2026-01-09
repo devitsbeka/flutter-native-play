@@ -32,9 +32,11 @@ type SelectionMode = "random" | "library" | "create" | null;
 
 interface CreateRoomPageProps {
   onClose: () => void;
+  onOpenCreateQuiz?: () => void;
+  onOpenCreateCollection?: () => void;
 }
 
-export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollection }: CreateRoomPageProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -408,10 +410,14 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         open={showCreateTriviaModal}
         onOpenChange={setShowCreateTriviaModal}
         onSelectSingle={() => {
-          navigate("/social/create");
+          setShowCreateTriviaModal(false);
+          onClose();
+          onOpenCreateQuiz?.();
         }}
         onSelectCollection={() => {
-          navigate("/social/create-collection");
+          setShowCreateTriviaModal(false);
+          onClose();
+          onOpenCreateCollection?.();
         }}
       />
     </motion.div>

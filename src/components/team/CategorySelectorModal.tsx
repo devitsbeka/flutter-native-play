@@ -119,37 +119,39 @@ export function CategorySelectorModal({
                       : ""
                   }`}
                 >
-                  {/* Background */}
-                  {category.image_url ? (
-                    <div className="absolute inset-0">
-                      <video
-                        src={category.image_url}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    </div>
-                  ) : (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background: `linear-gradient(135deg, ${category.color}, ${category.color}88)`,
-                      }}
-                    />
-                  )}
+                  {/* Background - always show gradient if no image_url */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: category.image_url 
+                        ? undefined 
+                        : `linear-gradient(135deg, ${category.color || 'hsl(var(--primary))'}, ${category.color || 'hsl(var(--primary))'}88)`,
+                    }}
+                  >
+                    {category.image_url && (
+                      <>
+                        <video
+                          src={category.image_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      </>
+                    )}
+                  </div>
 
                   {/* Content */}
                   <div className="absolute inset-0 p-3 flex flex-col justify-end">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{category.icon}</span>
-                      <span className="text-sm font-semibold text-white truncate">
+                      <span className="text-sm font-semibold text-white truncate drop-shadow-md">
                         {category.name}
                       </span>
                     </div>
-                    <p className="text-xs text-white/70 mt-0.5">
+                    <p className="text-xs text-white/70 mt-0.5 drop-shadow-sm">
                       {category.total_levels} დონე
                     </p>
                   </div>
