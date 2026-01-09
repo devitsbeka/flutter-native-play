@@ -295,9 +295,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       
       const isFirstPlayer = !session.host_user_id;
+      const isTVDisplay = nickname === 'TV_DISPLAY';
 
-      // If first player, become host
-      if (isFirstPlayer) {
+      // If first player and NOT a TV display, become host
+      if (isFirstPlayer && !isTVDisplay) {
         await supabase
           .from('tv_sessions')
           .update({ 
