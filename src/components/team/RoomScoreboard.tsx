@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trophy, Crown, Swords, Target, Users } from "lucide-react";
+import { Crown, Swords, Target, Users } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -55,16 +55,13 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl overflow-hidden bg-card border border-border shadow-lg"
+      className="rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-primary/10 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" />
-          <span className="font-display font-bold text-foreground">ქულების ცხრილი</span>
-        </div>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <span className="font-semibold text-white text-sm">მოთამაშეები</span>
         {maxPlayers && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/10 text-sm font-medium text-foreground">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-sm font-medium text-white/80">
             <Users className="w-3.5 h-3.5" />
             <span>{participants.length}/{maxPlayers}</span>
           </div>
@@ -72,7 +69,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
       </div>
 
       {/* Scoreboard Content */}
-      <div className="p-4">
+      <div className="p-3">
         {/* VS Display for 2 players */}
         {sortedParticipants.length === 2 ? (
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -157,16 +154,16 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
           </div>
         ) : (
           /* Multi-player list */
-          <div className="space-y-2 mb-4">
+          <div className="space-y-2">
             {sortedParticipants.map((p, index) => (
               <div
                 key={p.id}
-                className={`flex items-center gap-3 p-3 rounded-xl ${
-                  p.user_id === currentUserId ? "bg-primary/10" : "bg-muted/30"
+                className={`flex items-center gap-3 p-2.5 rounded-xl ${
+                  p.user_id === currentUserId ? "bg-white/15" : "bg-white/5"
                 }`}
               >
                 {/* Rank - fixed width */}
-                <div className="w-8 flex items-center justify-center flex-shrink-0">
+                <div className="w-7 flex items-center justify-center flex-shrink-0">
                   {getRankIcon(index + 1)}
                 </div>
                 
@@ -179,19 +176,18 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                 
                 {/* Name + Crown - flex grow */}
                 <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                  <p className="font-medium text-foreground text-sm truncate">
+                  <p className="font-medium text-white text-sm truncate">
                     {p.user_id === currentUserId ? "შენ" : p.nickname}
                   </p>
                   {showHostCrown && p.is_host && (
-                    <Crown className="w-4 h-4 text-amber-500 fill-amber-400 flex-shrink-0" />
+                    <Crown className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
                   )}
                 </div>
                 
                 {/* Score + Rounds - fixed width, right aligned */}
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <Target className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-foreground">{(p as any).total_score || 0}</span>
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="font-bold text-white">{(p as any).total_score || 0}</span>
+                  <span className="text-xs text-white/60">
                     ({p.total_rounds_played || 0}რ)
                   </span>
                 </div>
@@ -202,13 +198,12 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
 
         {/* Recent Rounds */}
         {matches.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border/30">
-            <p className="text-xs text-muted-foreground mb-2 text-center">ბოლო რაუნდები</p>
-            <div className="space-y-1.5 max-h-32 overflow-y-auto">
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-xs text-white/50 mb-2">ბოლო რაუნდები</p>
+            <div className="space-y-1.5 max-h-28 overflow-y-auto">
               {matches.slice(0, 5).map((match, index) => {
                 const winner = match.player_scores?.find(p => p.user_id === match.winner_user_id);
                 const isMyWin = match.winner_user_id === currentUserId;
-                // Sequential numbering from most recent displayed matches
                 const displayedCount = Math.min(matches.length, 5);
                 const roundNumber = displayedCount - index;
                 
@@ -216,23 +211,23 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                   <div
                     key={match.id}
                     className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
-                      isMyWin ? "bg-green-500/10" : "bg-muted/30"
+                      isMyWin ? "bg-green-500/20" : "bg-white/5"
                     }`}
                   >
-                    <span className="text-muted-foreground w-8 text-center text-sm">#{roundNumber}</span>
-                    <div className="w-7 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white/50 w-6 text-center text-xs">#{roundNumber}</span>
+                    <div className="w-5 flex items-center justify-center flex-shrink-0">
                       <img 
                         src={isMyWin ? medalGold : medalSilver} 
                         alt={isMyWin ? "Win" : "Loss"} 
-                        className="w-7 h-7 object-contain" 
+                        className="w-5 h-5 object-contain" 
                       />
                     </div>
-                    <span className="flex-1 font-medium truncate text-sm">
+                    <span className="flex-1 font-medium truncate text-xs text-white/90">
                       {isMyWin 
                         ? "შენ მოიგე" 
                         : `${winner?.nickname || "?"}-მ მოიგო`}
                     </span>
-                    <span className="text-muted-foreground text-sm">{winner?.score || 0}pts</span>
+                    <span className="text-white/50 text-xs">{winner?.score || 0}pts</span>
                   </div>
                 );
               })}
