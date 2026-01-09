@@ -5,7 +5,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Trophy, RefreshCw, Loader2, Tv } from 'lucide-react';
 
 export const ControllerResults: React.FC = () => {
-  const { players, myPlayerId, myScore, isHost, startGame, phase } = useTVGame();
+  const { players, myPlayerId, myScore, isHost, resetGame } = useTVGame();
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
   const myRank = sortedPlayers.findIndex(p => p.id === myPlayerId) + 1;
 
@@ -24,7 +24,7 @@ export const ControllerResults: React.FC = () => {
       </div>
       
       {isHost ? (
-        <ChunkyButton variant="primary" size="lg" onClick={() => startGame()} icon={<RefreshCw className="w-5 h-5" />} className="w-full">
+        <ChunkyButton variant="primary" size="lg" onClick={() => resetGame()} icon={<RefreshCw className="w-5 h-5" />} className="w-full">
           ახალი თამაში
         </ChunkyButton>
       ) : (

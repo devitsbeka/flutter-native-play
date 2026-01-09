@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Clock } from 'lucide-react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVScoreboardPanel } from './TVScoreboardPanel';
+import { getQuestionTime } from '@/utils/tvScoring';
 
 const OPTION_COLORS = [
   { bg: 'bg-red-500/20', border: 'border-red-500', text: 'text-red-400', label: 'A' },
@@ -46,8 +47,9 @@ export const TVQuestionScreen: React.FC<TVQuestionScreenProps> = ({
   const answeredCount = players.filter(p => p.hasAnswered).length;
   const totalPlayers = players.length;
 
-  // Timer progress (15 seconds total)
-  const timerProgress = (timeRemaining / 15) * 100;
+  // Timer progress (use centralized question time constant)
+  const questionTime = getQuestionTime();
+  const timerProgress = (timeRemaining / questionTime) * 100;
   const timerColor = timeRemaining <= 5 ? 'stroke-red-500' : 'stroke-primary';
 
   return (

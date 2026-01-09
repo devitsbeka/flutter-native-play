@@ -486,8 +486,33 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         tvLogPlayer('join', key, newPresences);
       })
-      .on('presence', { event: 'leave' }, ({ key }) => {
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         tvLogPlayer('leave', key);
+        // Log player disconnect for debugging
+        if (leftPresences && leftPresences.length > 0) {
+          const leftPlayer = leftPresences[0] as { nickname?: string };
+          tvLog('Player disconnected', { nickname: leftPlayer.nickname || key });
+        }
+      })
+      .on('broadcast', { event: 'RESET_SCORES' }, () => {
+        tvLog('Received RESET_SCORES broadcast');
+        // Reset local score state
+        setMyScore(0);
+        setMyAnswer(null);
+        
+        // Re-track with score: 0 if we have a presence channel
+        if (presenceChannelRef.current) {
+          const myPlayer = state.players.find(p => p.id === myPlayerId);
+          presenceChannelRef.current.track({
+            nickname: myPlayer?.nickname || nickname,
+            avatar_url: myPlayer?.avatar_url || avatarUrl,
+            score: 0,
+            hasAnswered: false,
+            lastAnswerCorrect: null,
+            lastAnswer: null,
+            isHost: isHostPlayer,
+          });
+        }
       })
       .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
@@ -810,6 +835,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     tvLog('Resetting game for play again', { sessionId: state.sessionId });
 
     try {
+      // Broadcast reset to all players BEFORE database update
+      if (presenceChannelRef.current) {
+        await presenceChannelRef.current.send({
+          type: 'broadcast',
+          event: 'RESET_SCORES',
+          payload: {},
+        });
+        tvLog('Broadcasted RESET_SCORES to all players');
+      }
+
       // Reset database state
       await supabase
         .from('tv_sessions')

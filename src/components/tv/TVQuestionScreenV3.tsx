@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Clock, Users, Check, Trophy } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
+import { getQuestionTime } from '@/utils/tvScoring';
 
 const OPTION_COLORS = [
   { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'A', labelBg: '#A855F7' },
@@ -34,7 +35,8 @@ export const TVQuestionScreenV3: React.FC = () => {
     );
   }
 
-  const timerPercentage = (timeRemaining / 15) * 100;
+  const questionTime = getQuestionTime();
+  const timerPercentage = (timeRemaining / questionTime) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-6 flex">
