@@ -521,12 +521,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       // Fetch questions with proper category UUID and exclude used questions
       if (categoryUUID) {
-        let query = supabase
-          .from("questions")
-          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("in_production", true)
-          .eq("language", language)
-          .eq("category_id", categoryUUID);
+      let query = supabase
+        .from("questions")
+        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+        .eq("is_active", true)
+        .eq("in_production", true)
+        .eq("language", language)
+        .eq("category_id", categoryUUID);
         
         // Exclude already used questions
         if (usedIds.length > 0) {
@@ -546,6 +547,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let fallbackQuery = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("is_active", true)
           .eq("in_production", true)
           .eq("language", language);
         
@@ -788,6 +790,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let query = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("is_active", true)
           .eq("in_production", true)
           .eq("language", language)
           .eq("category_id", categoryUUID);
@@ -809,6 +812,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         let fallbackQuery = supabase
           .from("questions")
           .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
+          .eq("is_active", true)
           .eq("in_production", true)
           .eq("language", language);
         

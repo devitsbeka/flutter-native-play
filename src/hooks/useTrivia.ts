@@ -8,7 +8,7 @@ import {
   clearGlobalAskedQuestions,
 } from "@/services/questionTracker";
 
-const STORAGE_KEY = 'app-language';
+const STORAGE_KEY = 'preferredLanguage';
 const DEFAULT_LANGUAGE = 'ka';
 
 export interface TriviaQuestion {
@@ -84,6 +84,7 @@ export function useTrivia() {
           const result = await supabase
             .from('questions')
             .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
+            .eq('is_active', true)
             .eq('in_production', true)
             .eq('category_id', categoryData.id)
             .eq('language', language)
@@ -138,6 +139,7 @@ export function useTrivia() {
             let query = supabase
               .from('questions')
               .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, category_id, icon_slug, language')
+              .eq('is_active', true)
               .eq('in_production', true)
               .eq('category_id', cat.id)
               .eq('language', language);
@@ -193,6 +195,7 @@ export function useTrivia() {
             language,
             categories!inner(name, icon)
           `)
+          .eq('is_active', true)
           .eq('in_production', true)
           .eq('language', language)
           .limit(50);
