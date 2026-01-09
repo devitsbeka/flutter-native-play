@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Copy, Share2, Users, ArrowLeft, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2, Play, Tv, AlertTriangle, Palette } from "lucide-react";
+import { Copy, Share2, Users, ArrowLeft, Check, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -13,12 +13,16 @@ import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
-import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { TVConnectModal } from "./TVConnectModal";
 import { GradientPicker } from "./GradientPicker";
 import { getGradientById } from "@/config/roomGradients";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,11 +57,11 @@ export function RoomLobbyV2() {
   const [chatMessage, setChatMessage] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
-  const [isStartingTV, setIsStartingTV] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
   const [lastSeenMessageCount, setLastSeenMessageCount] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
@@ -188,14 +192,6 @@ export function RoomLobbyV2() {
     setShowTVModal(true);
   };
 
-  const getCategoryVideo = () => {
-    if (!currentRoom?.category_id) return null;
-    const categorySlug = currentRoom.category_id.toLowerCase().replace(/-/g, "_");
-    return CATEGORY_VIDEOS[categorySlug] || null;
-  };
-
-  const categoryVideo = getCategoryVideo();
-
   const handleSaveRoomName = async () => {
     if (!currentRoom || !editedName.trim()) return;
     
@@ -250,6 +246,7 @@ export function RoomLobbyV2() {
 
   const canStartGame = participants.length >= (currentRoom.min_players || 2);
   const roomGradient = getGradientById(currentRoom?.background_gradient);
+  const roomName = currentRoom.room_name || "თამაშის ოთახი";
 
   return (
     <div 
@@ -258,151 +255,186 @@ export function RoomLobbyV2() {
     >
       <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <motion.button
             onClick={handleExitRoom}
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-card border border-border"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+            <ArrowLeft className="w-4 h-4 text-white" />
           </motion.button>
 
           <div className="flex items-center gap-2">
             {/* Chat toggle */}
             <motion.button
               onClick={() => setShowChat(!showChat)}
-              className={`flex items-center justify-center w-10 h-10 rounded-xl relative border ${
-                showChat ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"
-              }`}
+              className="flex items-center justify-center w-10 h-10 rounded-xl relative bg-white/10 backdrop-blur-sm border border-white/20"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <MessageCircle className={`w-4 h-4 ${showChat ? "text-primary-foreground" : "text-muted-foreground"}`} />
+              <MessageCircle className="w-4 h-4 text-white" />
               {unreadMessageCount > 0 && !showChat && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                   {unreadMessageCount}
                 </span>
               )}
             </motion.button>
 
-            {/* Delete room button for host */}
-            {isHost && (
-              <motion.button
-                onClick={handleDeleteRoom}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-destructive/10 border border-destructive/20 hover:bg-destructive/20"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </motion.button>
-            )}
-
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">{participants.length}/{currentRoom.max_players}</span>
+            {/* Participant count */}
+            <div className="flex items-center gap-1.5 px-3 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white">
+              <Users className="w-4 h-4" />
+              <span className="text-sm font-semibold">{participants.length}/{currentRoom.max_players}</span>
             </div>
+
+            {/* Three-dot menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <motion.button
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <MoreVertical className="w-4 h-4 text-white" />
+                </motion.button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                <DropdownMenuItem onClick={() => setShowHowItWorks(true)} className="cursor-pointer">
+                  <Info className="w-4 h-4 mr-2" />
+                  როგორ მუშაობს
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLeaveConfirm} className="cursor-pointer">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  ოთახიდან გასვლა
+                </DropdownMenuItem>
+                {isHost && (
+                  <DropdownMenuItem 
+                    onClick={handleDeleteRoom} 
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    ოთახის წაშლა
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Category with video circle */}
-        {currentRoom.category_name && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center gap-2 mb-4"
-          >
-            <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-primary/30 bg-card relative">
-              {categoryVideo ? (
-                <PingPongVideo 
-                  src={categoryVideo} 
-                  className="w-full h-full object-cover scale-125" 
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                  <Gamepad2 className="w-8 h-8 text-primary/50" />
-                </div>
-              )}
-            </div>
-            <span className="text-lg font-bold text-primary">{currentRoom.category_name}</span>
-          </motion.div>
-        )}
-
-        {/* Room Name */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 text-center"
-        >
-          {isEditingName ? (
-            <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
-              <Input
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                className="text-center font-bold"
-                placeholder="Room name"
-                autoFocus
-              />
-              <ChunkyButton size="sm" variant="primary" onClick={handleSaveRoomName}>
-                <Check className="w-4 h-4" />
-              </ChunkyButton>
-              <ChunkyButton size="sm" variant="secondary" onClick={() => setIsEditingName(false)}>
-                <X className="w-4 h-4" />
-              </ChunkyButton>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2">
-              <h2 className="text-2xl font-bold text-foreground">
-                {currentRoom.room_name || `Room #${currentRoom.room_code.slice(-4)}`}
-              </h2>
-              {isHost && (
-                <>
-                  <motion.button
-                    onClick={() => setIsEditingName(true)}
-                    className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Edit2 className="w-4 h-4 text-muted-foreground" />
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setShowGradientPicker(true)}
-                    className="p-1.5 rounded-lg bg-muted/50 hover:bg-muted"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Palette className="w-4 h-4 text-muted-foreground" />
-                  </motion.button>
-                </>
-              )}
-            </div>
+        {/* Room Name Section */}
+        <div className="text-center mb-6 space-y-3">
+          {/* Category badge */}
+          {currentRoom.category_name && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium"
+            >
+              <span>🎮</span>
+              <span>{currentRoom.category_name}</span>
+            </motion.div>
           )}
-        </motion.div>
+
+          {/* Room Name */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            {isEditingName ? (
+              <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
+                <Input
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="text-center font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                  placeholder="Room name"
+                  autoFocus
+                />
+                <ChunkyButton size="sm" variant="primary" onClick={handleSaveRoomName}>
+                  <Check className="w-4 h-4" />
+                </ChunkyButton>
+                <ChunkyButton size="sm" variant="secondary" onClick={() => setIsEditingName(false)}>
+                  <X className="w-4 h-4" />
+                </ChunkyButton>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-white drop-shadow-lg">
+                  {roomName}
+                </h2>
+                {isHost && (
+                  <div className="flex items-center justify-center gap-2">
+                    <motion.button
+                      onClick={() => setIsEditingName(true)}
+                      className="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 text-sm font-medium transition-colors flex items-center gap-1.5"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      შეცვლა
+                    </motion.button>
+                    <motion.button
+                      onClick={() => setShowGradientPicker(true)}
+                      className="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 text-sm font-medium transition-colors flex items-center gap-1.5"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Palette className="w-3.5 h-3.5" />
+                      ფერი
+                    </motion.button>
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </div>
 
         {/* Copy/Share Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center gap-3 mb-4"
+          className="flex items-center justify-center gap-3 mb-6"
         >
-          <ChunkyButton
-            variant="secondary"
-            size="sm"
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleCopyLink}
-            icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-white font-medium hover:bg-white/25 transition-colors"
           >
-            {t("team.copyLink")}
-          </ChunkyButton>
+            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            <span>{t("team.copyLink")}</span>
+          </motion.button>
           
-          <ChunkyButton
-            variant="secondary"
-            size="sm"
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleShare}
-            icon={<Share2 className="w-4 h-4" />}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-white font-medium hover:bg-white/25 transition-colors"
           >
-            {t("team.share")}
-          </ChunkyButton>
+            <Share2 className="w-4 h-4" />
+            <span>{t("team.share")}</span>
+          </motion.button>
         </motion.div>
+
+        {/* TV Connection Banner - Host only */}
+        {isHost && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={handleStartTVMode}
+            className="w-full max-w-md mx-auto p-4 rounded-2xl bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/25 flex items-center justify-center gap-3 hover:from-white/25 hover:to-white/15 transition-all mb-6"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+              <Tv className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-semibold">ტელევიზორთან დაკავშირება</p>
+              <p className="text-white/70 text-sm">წვეულების რეჟიმი დიდ ეკრანზე</p>
+            </div>
+          </motion.button>
+        )}
 
         {/* Full-Screen Chat Modal */}
         <AnimatePresence>
@@ -428,7 +460,7 @@ export function RoomLobbyV2() {
                 {/* Header with title and close button */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
                   <h2 className="text-xl font-bold text-foreground truncate">
-                    {currentRoom.room_name || `Room #${currentRoom.room_code.slice(-4)}`}
+                    {roomName}
                   </h2>
                   <motion.button
                     onClick={() => setShowChat(false)}
@@ -533,54 +565,30 @@ export function RoomLobbyV2() {
         </div>
 
         {/* Bottom Action Area */}
-        <div className="mt-auto pt-4 pb-6 space-y-3">
-          {/* Start Game Buttons (Host only) */}
-          {isHost && (
-            <div className="space-y-2">
-              <ChunkyButton
-                variant="primary"
-                size="xl"
-                className="w-full"
-                onClick={handleStartGame}
-                disabled={!canStartGame || isStarting || loading}
-                icon={<Play className="w-5 h-5" />}
-              >
-                {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
-              </ChunkyButton>
-              
-              <button
-                onClick={handleStartTVMode}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Tv className="w-5 h-5" />
-                <span className="text-lg font-medium">TV-სთან დაკავშირება</span>
-              </button>
-            </div>
-          )}
-          
-          {/* Waiting message for non-host */}
-          {!isHost && (
+        <div className="mt-auto pt-4 pb-6">
+          {/* Start Game Button (Host only) */}
+          {isHost ? (
+            <ChunkyButton
+              variant="primary"
+              size="xl"
+              className="w-full max-w-md mx-auto"
+              onClick={handleStartGame}
+              disabled={!canStartGame || isStarting || loading}
+              icon={<Play className="w-5 h-5" />}
+            >
+              {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
+            </ChunkyButton>
+          ) : (
             <div className="text-center py-4">
               <motion.div
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="text-muted-foreground"
+                className="text-white/80 font-medium"
               >
                 {t("team.waitingForHost")}
               </motion.div>
             </div>
           )}
-
-          {/* Leave Room Button */}
-          <ChunkyButton
-            variant="secondary"
-            size="md"
-            className="w-full"
-            onClick={handleLeaveConfirm}
-          >
-            {t("team.leaveRoom")}
-          </ChunkyButton>
         </div>
       </div>
 
@@ -661,6 +669,43 @@ export function RoomLobbyV2() {
               className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
             >
               წაშლა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* How It Works Modal */}
+      <AlertDialog open={showHowItWorks} onOpenChange={setShowHowItWorks}>
+        <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground font-display text-xl">
+              <Info className="w-5 h-5 text-primary" />
+              როგორ მუშაობს
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-left text-muted-foreground">
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">1️⃣</span>
+                  <p>გააზიარეთ ლინკი მეგობრებს რომ შემოგვიერთდნენ</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">2️⃣</span>
+                  <p>მასპინძელი იწყებს თამაშს როცა ყველა მზადაა</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">3️⃣</span>
+                  <p>უპასუხეთ კითხვებს და დააგროვეთ ქულები</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">📺</span>
+                  <p>გამოიყენეთ TV რეჟიმი წვეულებისთვის - კითხვები გამოჩნდება ტელევიზორზე!</p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogAction className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+              გასაგებია
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
