@@ -331,7 +331,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
                 <div className="flex items-center gap-3">
                   {/* Category thumbnail */}
-                  <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 relative">
                     {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
                       <PingPongVideo
                         src={CATEGORY_VIDEOS[selectedCategory.category_id]}
