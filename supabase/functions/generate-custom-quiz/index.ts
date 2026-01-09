@@ -191,7 +191,17 @@ TRUE/FALSE FORMAT:
 MULTIPLE CHOICE FORMAT:
 - Provide exactly 4 options (1 correct, 3 incorrect)
 - Make incorrect answers plausible but clearly wrong
-- Answers should be similar in length/format
+
+🚫 ANSWER LENGTH PARITY - CRITICAL ANTI-CHEATING RULE:
+1. ALL 4 answers MUST be similar in character length (within 5 characters of each other)
+2. The correct answer must NOT be noticeably longer or shorter than incorrect answers
+3. If the correct answer is detailed, make ALL incorrect answers equally detailed
+4. If the answer is short, make ALL answers equally short
+5. NEVER make the correct answer stand out by length - this allows players to guess without knowing
+
+EXAMPLES:
+❌ BAD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "ომი", "ბრძოლა", "კონფლიქტი"
+✓ GOOD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "მეორე მსოფლიო ომი", "კორეის ომი 1950", "ვიეტნამის ომი"
 `}
 
 ICON KEYWORDS RULES:

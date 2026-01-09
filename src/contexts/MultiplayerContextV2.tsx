@@ -617,6 +617,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       questions,
       currentQuestionIndex: 0,
       myScore: 0,
+      lastQuestionResult: null,
+      opponentAnswers: {},
       currentGame: game ? {
         id: game.id,
         room_id: game.room_id,
@@ -864,6 +866,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         questions,
         currentQuestionIndex: 0,
         myScore: 0,
+        lastQuestionResult: null,
+        opponentAnswers: {},
         currentGame: game ? {
           id: game.id,
           room_id: game.room_id,
