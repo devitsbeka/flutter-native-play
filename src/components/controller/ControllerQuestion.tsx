@@ -12,7 +12,11 @@ export const ControllerQuestion: React.FC = () => {
 
   const handleAnswer = async (answer: string) => {
     if (myAnswer) return;
-    await submitAnswer(answer);
+    try {
+      await submitAnswer(answer);
+    } catch (err) {
+      console.error('[ControllerQuestion] Failed to submit answer:', err);
+    }
   };
 
   return (
