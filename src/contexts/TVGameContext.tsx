@@ -576,41 +576,68 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const startGame = useCallback(async (categoryId?: string) => {
     if (!state.sessionId || !isHost) return;
 
+    // P1-2: Validate category is provided
+    if (!categoryId) {
+      tvLogError('startGame', 'No category ID provided');
+      return;
+    }
+
     try {
-      // Fetch random questions
+      // Get language preference for P1-3
+      const language = typeof window !== 'undefined' 
+        ? localStorage.getItem('preferredLanguage') || 'ka' 
+        : 'ka';
+
+      // P1-1: Get previously asked questions to avoid repetition
+      const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions } = await import('@/services/questionTracker');
+      const trackerKey = `tv_${categoryId}`;
+      let excludeIds = getAskedQuestionIds(trackerKey);
+
+      // P0-3: Add in_production and language filters
       let questionsQuery = supabase
         .from('questions')
-        .select('id, question_text, correct_answer, incorrect_answers')
+        .select('id, question_text, correct_answer, incorrect_answers, difficulty')
         .eq('is_active', true)
-        .limit(10);
+        .eq('in_production', true)
+        .eq('language', language)
+        .eq('category_id', categoryId);
 
-      if (categoryId) {
-        questionsQuery = questionsQuery.eq('category_id', categoryId);
-        
-        // Also get category info
-        const { data: category } = await supabase
-          .from('categories')
-          .select('name, icon')
-          .eq('id', categoryId)
-          .single();
-
-        if (category) {
-          await supabase
-            .from('tv_sessions')
-            .update({
-              category_name: category.name,
-              category_icon: category.icon,
-            })
-            .eq('id', state.sessionId);
-        }
+      // Exclude previously asked questions
+      if (excludeIds.length > 0) {
+        questionsQuery = questionsQuery.not('id', 'in', `(${excludeIds.join(',')})`);
       }
 
-      const { data: rawQuestions, error } = await questionsQuery;
+      // Fetch more than needed to allow for filtering
+      questionsQuery = questionsQuery.limit(50);
+
+      let { data: rawQuestions, error } = await questionsQuery;
 
       if (error) throw error;
 
-      // Format questions with shuffled options
-      const formattedQuestions = shuffleArray(rawQuestions || []).slice(0, 10).map(q => {
+      // If not enough questions, reset tracker and refetch
+      if (!rawQuestions || rawQuestions.length < 10) {
+        tvLog('Not enough fresh questions, resetting tracker', { 
+          available: rawQuestions?.length || 0, 
+          trackerKey 
+        });
+        clearCategoryAskedQuestions(trackerKey);
+        
+        // Refetch without exclusions
+        const { data: resetQuestions, error: resetError } = await supabase
+          .from('questions')
+          .select('id, question_text, correct_answer, incorrect_answers, difficulty')
+          .eq('is_active', true)
+          .eq('in_production', true)
+          .eq('language', language)
+          .eq('category_id', categoryId)
+          .limit(50);
+        
+        if (resetError) throw resetError;
+        rawQuestions = resetQuestions || [];
+      }
+
+      // Format questions with shuffled options (single shuffle - P1-4)
+      const formattedQuestions = shuffleArray(rawQuestions).slice(0, 10).map(q => {
         const incorrectAnswers = Array.isArray(q.incorrect_answers) 
           ? q.incorrect_answers 
           : JSON.parse(q.incorrect_answers as string);
@@ -623,15 +650,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
       });
 
-      tvLog('Starting game', { questionCount: formattedQuestions.length, categoryId });
+      // Track these questions as asked (P1-1)
+      markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
-      // Start countdown - don't use setTimeout, let countdown screen trigger startPlaying
+      tvLog('Starting game', { questionCount: formattedQuestions.length, categoryId, language });
+
+      // Get category info for session
+      const { data: category } = await supabase
+        .from('categories')
+        .select('name, icon')
+        .eq('id', categoryId)
+        .single();
+
+      // Start countdown with questions and category info
       await supabase
         .from('tv_sessions')
         .update({
           status: 'countdown',
           questions: formattedQuestions as unknown as Json,
           current_question_index: 0,
+          category_name: category?.name || null,
+          category_icon: category?.icon || null,
         })
         .eq('id', state.sessionId);
 

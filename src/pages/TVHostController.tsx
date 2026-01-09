@@ -63,7 +63,7 @@ const TVHostController: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  // isLoadingQuestions removed - questions now fetched in startGame only
   const [lastResult, setLastResult] = useState<boolean | null>(null);
   const [nickname, setNickname] = useState('Host');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
@@ -240,49 +240,16 @@ const TVHostController: React.FC = () => {
     }
   }, [countdownValue, isHost, startPlaying]);
 
+  // P0-1, P0-2: Removed duplicate question fetching - only store category selection
+  // Questions are now fetched ONLY in startGame (TVGameContext)
   const handleSelectCategory = async (category: Category) => {
     setSelectedCategory(category);
-    setIsLoadingQuestions(true);
 
     try {
-      const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
-        .select('id, question_text, correct_answer, incorrect_answers, difficulty')
-        .eq('category_id', category.id)
-        .eq('is_active', true)
-        .eq('in_production', true)
-        .limit(10);
-
-      if (questionsError) throw questionsError;
-
-      const formattedQuestions = (questionsData || []).map(q => {
-        const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-          ? q.incorrect_answers as string[] 
-          : [];
-        const allOptions = [q.correct_answer, ...incorrectAnswers].filter(Boolean);
-        const shuffledOptions = allOptions.sort(() => Math.random() - 0.5);
-        
-        return {
-          id: q.id,
-          question_text: q.question_text,
-          options: shuffledOptions,
-          correct_answer: q.correct_answer,
-        };
-      });
-
-      if (formattedQuestions.length === 0) {
-        toast.error('ამ კატეგორიაში კითხვები ვერ მოიძებნა');
-        setIsLoadingQuestions(false);
-        setSelectedCategory(null);
-        return;
-      }
-
-      // Update session with questions and category info
+      // Only update category info in session, NOT questions (P0-2 fix)
       await supabase
         .from('tv_sessions')
         .update({
-          questions: formattedQuestions as unknown as any,
-          status: 'waiting',
           category_name: category.name,
           category_icon: category.icon,
         })
@@ -290,27 +257,32 @@ const TVHostController: React.FC = () => {
 
       toast.success(`${category.name} არჩეულია!`);
     } catch (error) {
-      console.error('Error loading questions:', error);
-      toast.error('კითხვების ჩატვირთვა ვერ მოხერხდა');
+      console.error('Error selecting category:', error);
+      toast.error('კატეგორიის არჩევა ვერ მოხერხდა');
       setSelectedCategory(null);
-    } finally {
-      setIsLoadingQuestions(false);
     }
   };
 
+  // P1-2: Validate category before starting game
   const handleStartGame = async () => {
     if (!sessionId) return;
+
+    // Validate category selection before starting
+    if (!selectedCategory?.id) {
+      toast.error('გთხოვთ აირჩიოთ კატეგორია');
+      return;
+    }
 
     tvLog('Host starting game', { sessionId, selectedCategory });
 
     try {
-      // Use context's startGame which properly fetches questions and updates session
-      await startGame(selectedCategory?.id);
+      // Use context's startGame which properly fetches questions with all filters
+      await startGame(selectedCategory.id);
       
       // TV display's countdown screen will trigger startPlaying when countdown ends
     } catch (error) {
       tvLogError('handleStartGame', error);
-      toast.error('Failed to start game');
+      toast.error('თამაშის დაწყება ვერ მოხერხდა');
     }
   };
 
@@ -471,7 +443,7 @@ const TVHostController: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
               onClick={() => handleSelectCategory(category)}
-              disabled={isLoadingQuestions}
+              disabled={false}
               className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${
                 selectedCategory?.id === category.id
                   ? 'bg-purple-500/30 border-purple-400'
@@ -480,9 +452,7 @@ const TVHostController: React.FC = () => {
             >
               <span className="text-2xl">{category.icon}</span>
               <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-              {isLoadingQuestions && selectedCategory?.id === category.id ? (
-                <Loader2 className="w-5 h-5 animate-spin text-purple-300" />
-              ) : selectedCategory?.id === category.id ? (
+              {selectedCategory?.id === category.id ? (
                 <Check className="w-5 h-5 text-green-400" />
               ) : (
                 <ChevronRight className="w-5 h-5 text-purple-300" />
@@ -493,7 +463,7 @@ const TVHostController: React.FC = () => {
 
         {/* Start Game Button - shows when category is selected and players joined */}
         <AnimatePresence>
-          {selectedCategory && !isLoadingQuestions && (
+          {selectedCategory && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
