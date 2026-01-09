@@ -86,7 +86,7 @@ export function useGameInvitations() {
           .select("id")
           .eq("room_id", roomId)
           .eq("user_id", friendId)
-          .single();
+          .maybeSingle();
         
         if (existing) {
           console.log("Participant already exists in room");
