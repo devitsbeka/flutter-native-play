@@ -2,6 +2,14 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
+import { 
+  calculatePoints, 
+  calculateTimeRemaining, 
+  getQuestionTime, 
+  getSessionBinding, 
+  setSessionBinding,
+  clearExpiredBindings 
+} from '@/utils/tvScoring';
 
 // Types
 export interface TVPlayer {
@@ -64,7 +72,7 @@ interface TVGameContextType extends TVGameState {
 
 const TVGameContext = createContext<TVGameContextType | null>(null);
 
-const QUESTION_TIME = 15; // seconds per question
+const QUESTION_TIME = getQuestionTime();
 
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
@@ -237,6 +245,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Join session (called by controller)
   const joinSession = useCallback(async (code: string, nickname: string, avatarUrl?: string): Promise<boolean> => {
     try {
+      // Clear any expired session bindings on join attempt
+      clearExpiredBindings();
+      
       const upperCode = code.toUpperCase();
       
       // Try to find session by 6-char pairing_code first
@@ -267,7 +278,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return false;
       }
 
-      const playerId = crypto.randomUUID();
+      // Check for existing session binding (join idempotency)
+      // This prevents duplicate player entries when double-clicking join
+      let playerId = getSessionBinding(session.id);
+      
+      if (playerId) {
+        tvLog('Reusing existing player ID from session binding', { playerId: playerId.slice(0, 8) });
+      } else {
+        // Generate new player ID
+        playerId = getOrCreatePlayerId();
+        // Store the binding for future rejoins
+        setSessionBinding(session.id, playerId);
+        tvLog('Created new player ID and session binding', { playerId: playerId.slice(0, 8) });
+      }
+      
       const isFirstPlayer = !session.host_user_id;
 
       // If first player, become host
@@ -587,7 +611,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     const isCorrect = answer === currentQuestion.correct_answer;
-    const points = isCorrect ? Math.max(100, state.timeRemaining * 10) : 0;
+    const points = calculatePoints(isCorrect, state.timeRemaining);
 
     tvLogPlayer('answer', myPlayerId, { isCorrect, points, timeRemaining: state.timeRemaining });
 

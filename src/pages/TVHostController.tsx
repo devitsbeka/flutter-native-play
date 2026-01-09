@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
+import { calculatePoints, getQuestionTime } from '@/utils/tvScoring';
+import { tvLog, tvLogError } from '@/utils/tvDebug';
 
 interface Player {
   id: string;
@@ -320,36 +322,21 @@ const TVHostController: React.FC = () => {
   const handleStartGame = async () => {
     if (!sessionId) return;
 
-    await supabase
-      .from('tv_sessions')
-      .update({ status: 'countdown', current_question_index: 0 })
-      .eq('id', sessionId);
+    tvLog('Host starting game', { sessionId });
 
-    setPhase('countdown');
-
-    // Use a ref to track if we already triggered playing
-    // The countdown screen will handle this, but we have a fallback here
-    setTimeout(async () => {
-      // Check if we're still in countdown (in case countdown screen didn't trigger)
-      const { data } = await supabase
+    try {
+      await supabase
         .from('tv_sessions')
-        .select('status')
-        .eq('id', sessionId)
-        .single();
-      
-      // Only trigger if still in countdown (fallback)
-      if (data?.status === 'countdown') {
-        await supabase
-          .from('tv_sessions')
-          .update({ 
-            status: 'playing',
-            question_start_time: new Date().toISOString(),
-          })
-          .eq('id', sessionId);
-      }
-      setPhase('playing');
-      setTimeRemaining(15);
-    }, 3500); // Slightly longer to let countdown screen trigger first
+        .update({ status: 'countdown', current_question_index: 0 })
+        .eq('id', sessionId);
+
+      setPhase('countdown');
+      // TV display's countdown screen will trigger startPlaying when countdown ends
+      // No setTimeout fallback needed - trust the realtime subscription
+    } catch (error) {
+      tvLogError('handleStartGame', error);
+      toast.error('Failed to start game');
+    }
   };
 
   const handleNextQuestion = async () => {
@@ -418,8 +405,7 @@ const TVHostController: React.FC = () => {
     setHasAnswered(true);
 
     const isCorrect = answer === currentQuestion.correct_answer;
-    const timeBonus = Math.max(0, timeRemaining);
-    const points = isCorrect ? 100 + (timeBonus * 5) : 0;
+    const points = calculatePoints(isCorrect, timeRemaining);
     const newScore = score + points;
     
     setScore(newScore);

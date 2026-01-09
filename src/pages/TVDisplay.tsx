@@ -1,45 +1,57 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TVSessionProvider, useTVSession } from '@/contexts/TVSessionContext';
+import { TVGameProvider, useTVGame, mapDbStatusToPhase } from '@/contexts/TVGameContext';
 import { TVPairingScreen } from '@/components/tv/TVPairingScreen';
-import { TVCountdownScreen } from '@/components/tv/TVCountdownScreen';
+import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
 import { TVQuestionScreen } from '@/components/tv/TVQuestionScreen';
 import { TVRevealScreen } from '@/components/tv/TVRevealScreen';
 import { TVScoreboardScreen } from '@/components/tv/TVScoreboardScreen';
+import { TVErrorBoundary } from '@/components/tv/TVErrorBoundary';
 import { Loader2 } from 'lucide-react';
+import { tvLog, tvLogError } from '@/utils/tvDebug';
 
 const TVDisplayContent: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { 
     phase, 
-    joinSession, 
+    createSession,
     startGame, 
     questions, 
     currentQuestionIndex, 
     players, 
-    timeRemaining 
-  } = useTVSession();
+    timeRemaining,
+    code: sessionCode,
+  } = useTVGame();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasInitialized = React.useRef(false);
 
   useEffect(() => {
     const initSession = async () => {
-      if (!code) {
-        setError('No code provided');
-        setLoading(false);
-        return;
-      }
+      // Prevent double initialization in strict mode
+      if (hasInitialized.current) return;
+      hasInitialized.current = true;
 
-      const success = await joinSession(code);
-      if (!success) {
-        setError('Session not found');
+      tvLog('TVDisplay initializing', { code });
+
+      // If code is provided in URL, this is a TV display joining
+      // If no code, create a new session (TV is the display)
+      if (!code) {
+        const newCode = await createSession();
+        if (!newCode) {
+          tvLogError('TVDisplay', 'Failed to create session');
+          setError('Failed to create session');
+        } else {
+          tvLog('TVDisplay created session', { code: newCode });
+        }
       }
+      
       setLoading(false);
     };
 
     initSession();
-  }, [code, joinSession]);
+  }, [code, createSession]);
 
   if (loading) {
     return (
@@ -78,17 +90,20 @@ const TVDisplayContent: React.FC = () => {
     hasAnswered: p.hasAnswered,
   }));
 
-  // Handle both the context phase and raw status from DB
-  const normalizedPhase = phase === 'playing' ? 'question' : phase === 'completed' ? 'scoreboard' : phase;
+  // Use the mapDbStatusToPhase utility for consistent phase mapping
+  const normalizedPhase = mapDbStatusToPhase(phase);
+
+  tvLog('TVDisplay rendering phase', { phase, normalizedPhase, playerCount: players.length });
 
   switch (normalizedPhase) {
     case 'pairing':
     case 'waiting':
-    case 'paired':
+    case 'lobby':
       return <TVPairingScreen onStartGame={handleStartGame} />;
     case 'countdown':
-      return <TVCountdownScreen />;
+      return <TVCountdownScreenV2 />;
     case 'question':
+    case 'playing':
       return (
         <TVQuestionScreen 
           questions={questions}
@@ -99,7 +114,8 @@ const TVDisplayContent: React.FC = () => {
       );
     case 'reveal':
       return <TVRevealScreen />;
-    case 'scoreboard':
+    case 'results':
+    case 'completed':
       return <TVScoreboardScreen />;
     default:
       return <TVPairingScreen onStartGame={handleStartGame} />;
@@ -108,11 +124,16 @@ const TVDisplayContent: React.FC = () => {
 
 const TVDisplay: React.FC = () => {
   return (
-    <TVSessionProvider>
-      <div className="tv-display-container overflow-hidden">
-        <TVDisplayContent />
-      </div>
-    </TVSessionProvider>
+    <TVGameProvider>
+      <TVErrorBoundary 
+        onRetry={() => window.location.reload()}
+        fallbackMessage="TV display encountered an error"
+      >
+        <div className="tv-display-container overflow-hidden">
+          <TVDisplayContent />
+        </div>
+      </TVErrorBoundary>
+    </TVGameProvider>
   );
 };
 
