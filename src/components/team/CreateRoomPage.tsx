@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, Shuffle, Tv, Library, Sparkles, UserPlus, X, Play, Dices } from "lucide-react";
+import { Loader2, ArrowLeft, Shuffle, HelpCircle, Library, Sparkles, UserPlus, X, Play, Dices } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -13,6 +13,7 @@ import { generateRoomName } from "@/utils/roomNameGenerator";
 import { Input } from "@/components/ui/input";
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
+import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -52,6 +53,7 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
   const [roomName, setRoomName] = useState(() => generateRoomName());
   const [showTVModal, setShowTVModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>(null);
@@ -194,13 +196,12 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
         </button>
         <h1 className="text-xl font-display text-foreground flex-1">{t("team.newRoom")}</h1>
         
-        {/* TV Play Button */}
+        {/* Help Button */}
         <button
-          onClick={() => setShowTVModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+          onClick={() => setShowHowItWorksModal(true)}
+          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
         >
-          <Tv className="w-5 h-5" />
-          <span className="hidden sm:inline">TV</span>
+          <HelpCircle className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
 
@@ -530,6 +531,12 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
           onClose();
           onOpenCreateCollection?.();
         }}
+      />
+
+      {/* How It Works Modal */}
+      <HowItWorksModal
+        isOpen={showHowItWorksModal}
+        onClose={() => setShowHowItWorksModal(false)}
       />
     </motion.div>
   );
