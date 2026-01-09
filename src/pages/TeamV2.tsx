@@ -37,6 +37,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
+import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
 import { GenerationQueueDropdown } from "@/components/generation/GenerationQueueDropdown";
 
 function TeamContentV2() {
@@ -131,7 +132,8 @@ function TeamContentV2() {
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
-  const [roomsSortFilter, setRoomsSortFilter] = useState<SortFilter>("all");
+  const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
+  const [roomsSort, setRoomsSort] = useState<RoomSort>("recent");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
 
@@ -382,9 +384,11 @@ function TeamContentV2() {
           {/* Filter Bar for Rooms tab */}
           {activeTab === "rooms" && (
             <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
-              <FeedFiltersBar
-                sortFilter={roomsSortFilter}
-                onSortFilterChange={setRoomsSortFilter}
+              <RoomFiltersBar
+                filter={roomsFilter}
+                onFilterChange={setRoomsFilter}
+                sort={roomsSort}
+                onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
               />
@@ -404,6 +408,9 @@ function TeamContentV2() {
                   onCreateRoom={() => setShowCreateModal(true)}
                   onShowAllRooms={() => setShowAllGamesModal(true)}
                   vertical
+                  filter={roomsFilter}
+                  sort={roomsSort}
+                  searchQuery={roomsSearchQuery}
                 />
               </motion.div>
             </div>

@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
+export type RoomSort = "recent" | "created_date";
 
 export interface MyRoom {
   id: string;
@@ -15,6 +18,8 @@ export interface MyRoom {
   has_unread_activity: boolean;
   cover_image: string | null;
   background_gradient: string | null;
+  host_user_id: string;
+  last_activity_at: string | null;
   participants: {
     user_id: string;
     nickname: string;
@@ -23,10 +28,41 @@ export interface MyRoom {
   }[];
 }
 
-export function useMyRooms() {
+interface UseMyRoomsOptions {
+  filter?: RoomFilter;
+  sort?: RoomSort;
+  searchQuery?: string;
+}
+
+export function useMyRooms(options?: UseMyRoomsOptions) {
   const { user } = useAuth();
   const [rooms, setRooms] = useState<MyRoom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [friendIds, setFriendIds] = useState<string[]>([]);
+
+  const { filter = "all", sort = "recent", searchQuery = "" } = options || {};
+
+  // Fetch friend IDs for filtering
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("friendships")
+        .select("user_id, friend_id")
+        .eq("status", "accepted")
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+
+      if (data) {
+        const ids = data.map((f) =>
+          f.user_id === user.id ? f.friend_id : f.user_id
+        );
+        setFriendIds(ids);
+      }
+    };
+
+    fetchFriends();
+  }, [user]);
 
   const fetchMyRooms = useCallback(async () => {
     if (!user) {
@@ -36,7 +72,6 @@ export function useMyRooms() {
     }
 
     try {
-      // Get rooms where user is host or participant with active statuses
       const { data: participations, error: partError } = await supabase
         .from("room_participants")
         .select("room_id, is_host")
@@ -53,20 +88,19 @@ export function useMyRooms() {
       const roomIds = participations.map((p) => p.room_id);
       const hostMap = new Map(participations.map((p) => [p.room_id, p.is_host || false]));
 
-      // Fetch ALL room details - show all rooms user is part of (permanent rooms)
-      // Only exclude cancelled rooms
+      const orderColumn = sort === "created_date" ? "created_at" : "last_activity_at";
+
       const { data: roomsData, error: roomsError } = await supabase
         .from("game_rooms")
         .select("*")
         .in("id", roomIds)
         .neq("status", "cancelled")
-        .order("last_activity_at", { ascending: false, nullsFirst: false });
+        .order(orderColumn, { ascending: false, nullsFirst: false });
 
       if (roomsError) throw roomsError;
 
-      // Fetch all participants for these rooms
-      const activeRoomIds = (roomsData || []).map(r => r.id);
-      
+      const activeRoomIds = (roomsData || []).map((r) => r.id);
+
       if (activeRoomIds.length === 0) {
         setRooms([]);
         setLoading(false);
@@ -80,7 +114,6 @@ export function useMyRooms() {
 
       if (allPartError) throw allPartError;
 
-      // Group participants by room
       const participantsByRoom = new Map<string, typeof allParticipants>();
       allParticipants?.forEach((p) => {
         const existing = participantsByRoom.get(p.room_id) || [];
@@ -88,10 +121,9 @@ export function useMyRooms() {
         participantsByRoom.set(p.room_id, existing);
       });
 
-      // Build my rooms with all data
       const myRooms: MyRoom[] = (roomsData || []).map((room: any) => {
         const participants = participantsByRoom.get(room.id) || [];
-        
+
         return {
           id: room.id,
           room_code: room.room_code,
@@ -105,6 +137,8 @@ export function useMyRooms() {
           has_unread_activity: room.has_unread_activity || false,
           cover_image: room.cover_image || null,
           background_gradient: room.background_gradient || null,
+          host_user_id: room.host_user_id,
+          last_activity_at: room.last_activity_at,
           participants: participants.map((p) => ({
             user_id: p.user_id,
             nickname: p.nickname,
@@ -120,7 +154,7 @@ export function useMyRooms() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, sort]);
 
   useEffect(() => {
     fetchMyRooms();
@@ -131,24 +165,24 @@ export function useMyRooms() {
     if (!user) return;
 
     const channel = supabase
-      .channel('my-rooms-changes')
+      .channel("my-rooms-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'game_rooms',
+          event: "*",
+          schema: "public",
+          table: "game_rooms",
         },
         () => {
           fetchMyRooms();
         }
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'room_participants',
+          event: "*",
+          schema: "public",
+          table: "room_participants",
         },
         () => {
           fetchMyRooms();
@@ -161,9 +195,48 @@ export function useMyRooms() {
     };
   }, [user, fetchMyRooms]);
 
+  // Apply client-side filtering
+  const filteredRooms = useMemo(() => {
+    let result = rooms;
+
+    // Apply filter
+    switch (filter) {
+      case "my_rooms":
+        result = result.filter((room) => room.is_host);
+        break;
+      case "friends_rooms":
+        result = result.filter(
+          (room) => !room.is_host && friendIds.includes(room.host_user_id)
+        );
+        break;
+      case "active":
+        result = result.filter(
+          (room) => room.status === "waiting" || room.status === "playing"
+        );
+        break;
+      case "completed":
+        result = result.filter((room) => room.status === "completed");
+        break;
+    }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (room) =>
+          room.room_name?.toLowerCase().includes(query) ||
+          room.category_name?.toLowerCase().includes(query) ||
+          room.room_code.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [rooms, filter, friendIds, searchQuery]);
+
   return {
-    rooms,
+    rooms: filteredRooms,
     loading,
     refreshRooms: fetchMyRooms,
+    filter,
   };
 }
