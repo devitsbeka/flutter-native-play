@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, Shuffle, HelpCircle, Library, Sparkles, UserPlus, X, Play, Dices } from "lucide-react";
+import { Loader2, ArrowLeft, Shuffle, HelpCircle, Library, Sparkles, UserPlus, X, Play, Dices, Share2, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -134,6 +134,35 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
     setSelectionMode(null);
   };
 
+  // Generate and share invite link
+  const handleShareInviteLink = async () => {
+    // Generate a deep link for the app/room invite
+    const baseUrl = window.location.origin;
+    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const inviteLink = `${baseUrl}/join?invite=${inviteCode}&room=${roomName}`;
+    
+    // Try to use native share if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "შემოგვიერთდი ტრივიაში! 🎮",
+          text: `${roomName} - მოდი ითამაშე ჩვენთან ერთად!`,
+          url: inviteLink,
+        });
+      } catch (err) {
+        // User cancelled or share failed, fallback to clipboard
+        copyToClipboard(inviteLink);
+      }
+    } else {
+      copyToClipboard(inviteLink);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You could add a toast notification here
+  };
+
   const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library") && selectedCategory !== null;
 
   const handleCreate = async () => {
@@ -246,7 +275,7 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
             <div className="flex items-center gap-2">
               {/* Horizontal scrolling friends */}
               <div className="flex-1 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-2 pb-1">
+                <div className="flex gap-3 pb-1">
                   {acceptedFriends.slice(0, 10).map((friend) => {
                     const isSelected = selectedFriends.has(friend.friendId);
                     return (
@@ -261,7 +290,7 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
                           }
                           setSelectedFriends(newSelected);
                         }}
-                        className={`relative shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                        className={`relative shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${
                           isSelected 
                             ? "bg-primary/10 ring-2 ring-primary" 
                             : "bg-muted/50 hover:bg-muted"
@@ -273,15 +302,15 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
                           <img 
                             src={friend.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.friendId}`} 
                             alt={friend.nickname}
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-[52px] h-[52px] rounded-full object-cover"
                           />
                           {isSelected && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                              <span className="text-[10px] text-primary-foreground">✓</span>
+                            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                              <span className="text-xs text-primary-foreground">✓</span>
                             </div>
                           )}
                         </div>
-                        <span className="text-[10px] text-foreground font-medium max-w-[48px] truncate">
+                        <span className="text-sm text-foreground font-medium max-w-[60px] truncate">
                           {friend.nickname}
                         </span>
                       </motion.button>
@@ -292,29 +321,53 @@ export function CreateRoomPage({ onClose, onOpenCreateQuiz, onOpenCreateCollecti
                   {acceptedFriends.length > 10 && (
                     <motion.button
                       onClick={() => setShowInviteModal(true)}
-                      className="shrink-0 flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors min-w-[60px]"
+                      className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors min-w-[68px]"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm text-primary font-bold">+{acceptedFriends.length - 10}</span>
+                      <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-base text-primary font-bold">+{acceptedFriends.length - 10}</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">მეტი</span>
+                      <span className="text-sm text-muted-foreground">მეტი</span>
                     </motion.button>
                   )}
+                  
+                  {/* Invite via link button */}
+                  <motion.button
+                    onClick={handleShareInviteLink}
+                    className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 transition-colors min-w-[68px] border border-dashed border-primary/30"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="w-[52px] h-[52px] rounded-full bg-primary/20 flex items-center justify-center">
+                      <Share2 className="w-6 h-6 text-primary" />
+                    </div>
+                    <span className="text-sm text-primary font-medium">მოწვევა</span>
+                  </motion.button>
                 </div>
               </div>
             </div>
           ) : (
-            <motion.button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/50 border border-border/40 hover:bg-muted transition-colors"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <UserPlus className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">მოიწვიე მეგობრები</span>
-            </motion.button>
+            <div className="flex gap-2">
+              <motion.button
+                onClick={() => setShowInviteModal(true)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-muted/50 border border-border/40 hover:bg-muted transition-colors"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <UserPlus className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm text-foreground">აპში მეგობრები</span>
+              </motion.button>
+              <motion.button
+                onClick={handleShareInviteLink}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 hover:from-primary/20 hover:to-accent/20 transition-colors"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Share2 className="w-5 h-5 text-primary" />
+                <span className="text-sm text-primary font-medium">გაზიარება</span>
+              </motion.button>
+            </div>
           )}
           
           {selectedFriends.size > 0 && (
