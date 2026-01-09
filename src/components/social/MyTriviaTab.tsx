@@ -32,6 +32,38 @@ function formatGeorgianTimeAgo(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
+// Convert raw database quiz to SamplePost format for QuizPlayModal
+function convertQuizToSamplePost(quiz: any, profile: any) {
+  return {
+    id: quiz.id,
+    username: profile?.nickname || "user",
+    displayName: profile?.nickname || "User",
+    avatarUrl: profile?.avatar_url || "",
+    verified: false,
+    createdAt: quiz.created_at,
+    title: quiz.title,
+    description: quiz.description || "",
+    subject: quiz.subject || "",
+    hashtags: quiz.hashtags || [],
+    coverGradient: quiz.cover_gradient || "",
+    coverImage: quiz.cover_image,
+    questionCount: quiz.question_count,
+    answerFormat: quiz.answer_format,
+    likesCount: quiz.likes_count || 0,
+    playsCount: quiz.plays_count || 0,
+    savesCount: quiz.saves_count || 0,
+    commentsCount: 0,
+    // Convert question_text to question
+    questions: (quiz.questions || []).map((q: any) => ({
+      question: q.question_text || q.question,
+      correct_answer: q.correct_answer,
+      incorrect_answers: q.incorrect_answers || [],
+      icon_slug: q.icon_slug || null,
+    })),
+    isUserPost: true,
+  };
+}
+
 import { SortFilter } from "./FeedFiltersBar";
 
 interface MyTriviaTabProps {
@@ -100,7 +132,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
           size="sm" 
           variant="secondary" 
           className="text-xs px-2 py-1 h-7"
-          onClick={() => onPlay?.(quiz)}
+          onClick={() => onPlay?.(convertQuizToSamplePost(quiz, null))}
         >
           <Play className="w-3 h-3" />
         </ChunkyButton>
@@ -255,7 +287,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
                     quiz={quiz} 
                     profile={profile}
                     onEdit={onEditRound}
-                    onPlay={(q) => onPlay?.(q, quizzes)}
+                    onPlay={(q) => onPlay?.(convertQuizToSamplePost(q, profile), quizzes?.map(qz => convertQuizToSamplePost(qz, profile)))}
                   />
                 ))
               ) : (
@@ -382,7 +414,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: an
             size="sm" 
             variant="secondary" 
             className="text-xs"
-            onClick={() => onPlay?.(post)}
+            onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
           >
             <Play className="w-3.5 h-3.5" />
             <span>თამაში</span>
