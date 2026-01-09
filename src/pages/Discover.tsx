@@ -171,9 +171,9 @@ export default function Discover() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen pb-24">
-      {/* Subtle overlay for depth - keeping purple background visible */}
-      <div className="fixed inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/10 pointer-events-none z-0" />
+    <div className="min-h-screen pb-24 bg-[#F8F6FC]">
+      {/* Subtle overlay for depth */}
+      <div className="fixed inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/20 pointer-events-none z-0" />
 
         {/* Content above mask */}
         <div className="relative z-10">
