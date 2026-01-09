@@ -71,7 +71,7 @@ const TVHostController: React.FC = () => {
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const joinUrl = `${window.location.origin}/controller/${guestJoinCode}`;
+  const joinUrl = `${window.location.origin}/join?code=${guestJoinCode}`;
   const currentQuestion = questions[currentQuestionIndex];
 
   // Load session and categories

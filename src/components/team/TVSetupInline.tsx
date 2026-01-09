@@ -42,15 +42,13 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
         return;
       }
 
-      const guestJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
+      // Don't regenerate pairing_code - use the existing one so TV and host have same QR
       const { error: updateError } = await supabase
         .from('tv_sessions')
         .update({
           host_user_id: user.id,
           is_paired: true,
-          status: 'waiting',
-          pairing_code: guestJoinCode,
+          status: 'lobby',
         })
         .eq('id', session.id);
 
