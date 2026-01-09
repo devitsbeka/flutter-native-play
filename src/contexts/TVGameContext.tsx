@@ -738,11 +738,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     try {
       if (nextIndex >= state.questions.length) {
-        // Game over
+        // Game over - use 'completed' which is a valid DB constraint value
         tvLogPhase('question', 'results', 'all questions answered');
         await supabase
           .from('tv_sessions')
-          .update({ status: 'results' })
+          .update({ status: 'completed' })
           .eq('id', state.sessionId);
       } else {
         // Reset all players' hasAnswered status via presence update
