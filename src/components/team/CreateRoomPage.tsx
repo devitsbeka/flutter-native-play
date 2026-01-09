@@ -228,54 +228,93 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           </motion.button>
         </div>
 
-        {/* 3 Option Cards */}
+        {/* 3 Option Cards - Vertical List with Descriptions */}
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("team.category")}</h2>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-3">
             {/* Random Option */}
             <motion.button
               onClick={() => handleOptionClick("random")}
-              className={`relative flex flex-col items-center justify-center p-4 rounded-2xl transition-all min-h-[90px] ${
+              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
                 selectionMode === "random"
-                  ? "bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
-                  : "bg-muted/50 border border-border/50 text-muted-foreground hover:bg-muted"
+                  ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
+                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
               }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <Dices className={`w-7 h-7 mb-2 ${selectionMode === "random" ? "text-white" : "text-muted-foreground"}`} />
-              <span className="text-xs font-semibold text-center leading-tight">შემთხვევითი</span>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                selectionMode === "random" 
+                  ? "bg-white/20" 
+                  : "bg-purple-500/10"
+              }`}>
+                <Dices className={`w-6 h-6 ${selectionMode === "random" ? "text-white" : "text-purple-500"}`} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className={`font-semibold ${selectionMode === "random" ? "text-white" : "text-foreground"}`}>
+                  შემთხვევითი
+                </p>
+                <p className={`text-sm ${selectionMode === "random" ? "text-white/70" : "text-muted-foreground"}`}>
+                  რანდომ კატეგორია თამაშისთვის
+                </p>
+              </div>
             </motion.button>
 
             {/* Library Option */}
             <motion.button
               onClick={() => handleOptionClick("library")}
-              className={`relative flex flex-col items-center justify-center p-4 rounded-2xl transition-all min-h-[90px] ${
+              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
                 selectionMode === "library"
-                  ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
-                  : "bg-muted/50 border border-border/50 text-muted-foreground hover:bg-muted"
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
+                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
               }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <Library className={`w-7 h-7 mb-2 ${selectionMode === "library" ? "text-white" : "text-muted-foreground"}`} />
-              <span className="text-xs font-semibold text-center leading-tight">ბიბლიოთეკა</span>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                selectionMode === "library" 
+                  ? "bg-white/20" 
+                  : "bg-blue-500/10"
+              }`}>
+                <Library className={`w-6 h-6 ${selectionMode === "library" ? "text-white" : "text-blue-500"}`} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className={`font-semibold ${selectionMode === "library" ? "text-white" : "text-foreground"}`}>
+                  ბიბლიოთეკა
+                </p>
+                <p className={`text-sm ${selectionMode === "library" ? "text-white/70" : "text-muted-foreground"}`}>
+                  აირჩიე კატეგორია სიიდან
+                </p>
+              </div>
             </motion.button>
 
             {/* Create Trivia Option */}
             <motion.button
               onClick={() => handleOptionClick("create")}
-              className={`relative flex flex-col items-center justify-center p-4 rounded-2xl transition-all min-h-[90px] ${
+              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
                 selectionMode === "create"
-                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25"
-                  : "bg-muted/50 border border-border/50 text-muted-foreground hover:bg-muted"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25"
+                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
               }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <Sparkles className={`w-7 h-7 mb-2 ${selectionMode === "create" ? "text-white" : "text-muted-foreground"}`} />
-              <span className="text-xs font-semibold text-center leading-tight">შექმენი ტრივია</span>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                selectionMode === "create" 
+                  ? "bg-white/20" 
+                  : "bg-emerald-500/10"
+              }`}>
+                <Sparkles className={`w-6 h-6 ${selectionMode === "create" ? "text-white" : "text-emerald-500"}`} />
+              </div>
+              <div className="flex-1 text-left">
+                <p className={`font-semibold ${selectionMode === "create" ? "text-white" : "text-foreground"}`}>
+                  შექმენი ტრივია
+                </p>
+                <p className={`text-sm ${selectionMode === "create" ? "text-white/70" : "text-muted-foreground"}`}>
+                  შექმენი შენი საკუთარი კითხვები
+                </p>
+              </div>
             </motion.button>
           </div>
         </div>
