@@ -126,8 +126,9 @@ const TVHostController: React.FC = () => {
         return;
       }
 
-      // Verify this user is the host
-      if (sessionData.host_user_id !== user?.id) {
+      // Note: Host verification is also handled by context's isHost state
+      // This is a defensive check - the context will set isHost correctly after joining
+      if (sessionData.host_user_id && sessionData.host_user_id !== user?.id) {
         setError('You are not the host of this session');
         setLoading(false);
         return;
