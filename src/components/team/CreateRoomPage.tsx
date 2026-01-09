@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -30,7 +30,7 @@ interface CreateRoomPageProps {
 export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const { user, profile } = useAuth();
   const { t } = useLanguage();
-  const { createRoom, loading, currentRoom } = useMultiplayerV2();
+  const { createRoom, loading } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
   const { data: myTrivias = [], isLoading: loadingMyTrivias } = useMyQuizPosts();
@@ -47,6 +47,9 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [categoryTab, setCategoryTab] = useState<"library" | "myTrivia">("library");
   const [selectedMyTrivia, setSelectedMyTrivia] = useState<string | null>(null);
+  
+  // Track friends to invite with a ref so it's available when room is created
+  const friendsToInviteRef = useRef<Set<string>>(new Set());
 
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
@@ -113,42 +116,34 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     if (categoryTab === "library" && !selectedCategory && !isRandom) return;
     if (categoryTab === "myTrivia" && !selectedMyTrivia) return;
     
+    // Store friends to invite before creating room
+    friendsToInviteRef.current = new Set(selectedFriends);
+    
     setIsCreating(true);
     
     try {
+      let room = null;
+      
       if (categoryTab === "myTrivia" && selectedMyTrivia) {
         // Create room with custom trivia
         const selectedTrivia = myTrivias?.find(t => t.id === selectedMyTrivia);
         if (selectedTrivia) {
           // TODO: Implement custom trivia room creation
-          await createRoom("custom", selectedTrivia.title);
+          room = await createRoom("custom", selectedTrivia.title);
         }
       } else if (selectedCategory) {
         // Create the room with library category
-        await createRoom(selectedCategory.category_id, selectedCategory.name);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name);
       }
       
-      // Note: We need to wait for room to be created before sending invitations
-      // The room will be available after createRoom completes
-      // Invitations will be sent after redirect to lobby
-    } catch (error) {
-      console.error("Error creating room:", error);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  // Send invitations and add invited participants once room is created
-  useEffect(() => {
-    const sendInvitationsAndAddParticipants = async () => {
-      if (currentRoom && selectedFriends.size > 0 && isCreating === false) {
-        for (const friendId of selectedFriends) {
-          // Find the friend to get their details
+      // Send invitations immediately after room is created
+      if (room && friendsToInviteRef.current.size > 0) {
+        for (const friendId of friendsToInviteRef.current) {
           const friend = acceptedFriends.find(f => f.friendId === friendId);
           if (friend) {
             // Add as invited participant first
             await addInvitedParticipant(
-              currentRoom.id,
+              room.id,
               friend.friendId,
               friend.nickname,
               friend.avatarUrl,
@@ -156,13 +151,16 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             );
           }
           // Then send notification
-          await sendInvitation(friendId, currentRoom.id);
+          await sendInvitation(friendId, room.id);
         }
       }
-    };
-    
-    sendInvitationsAndAddParticipants();
-  }, [currentRoom?.id]);
+    } catch (error) {
+      console.error("Error creating room:", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
 
   return (
     <motion.div
