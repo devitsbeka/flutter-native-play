@@ -588,9 +588,25 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ? localStorage.getItem('preferredLanguage') || 'ka' 
         : 'ka';
 
+      // P2-1: Convert category slug to UUID if needed
+      let categoryUUID = categoryId;
+      if (categoryId && !categoryId.includes('-')) {
+        // Looks like a slug (no dashes), convert to UUID
+        const { data: categoryData } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('category_id', categoryId)
+          .single();
+        
+        if (categoryData) {
+          categoryUUID = categoryData.id;
+          tvLog('Converted category slug to UUID', { slug: categoryId, uuid: categoryUUID });
+        }
+      }
+
       // P1-1: Get previously asked questions + all seen questions to avoid repetition
-      const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds, clearSeenQuestions, shouldResetSeenPool } = await import('@/services/questionTracker');
-      const trackerKey = `tv_${categoryId}`;
+      const { getAskedQuestionIds, markQuestionsAsAsked, clearCategoryAskedQuestions, getSeenQuestionIds } = await import('@/services/questionTracker');
+      const trackerKey = `tv_${categoryUUID}`;
       const categoryAskedIds = getAskedQuestionIds(trackerKey);
       const allSeenIds = getSeenQuestionIds();
       // Combine for maximum freshness
@@ -603,7 +619,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('is_active', true)
         .eq('in_production', true)
         .eq('language', language)
-        .eq('category_id', categoryId);
+        .eq('category_id', categoryUUID);
 
       // Exclude previously seen questions (prioritize fresh content)
       if (excludeIds.length > 0) {
@@ -625,22 +641,55 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
         clearCategoryAskedQuestions(trackerKey);
         
-        // Refetch without exclusions
+        // Refetch without category exclusions
         const { data: resetQuestions, error: resetError } = await supabase
           .from('questions')
           .select('id, question_text, correct_answer, incorrect_answers, difficulty')
           .eq('is_active', true)
           .eq('in_production', true)
           .eq('language', language)
-          .eq('category_id', categoryId)
+          .eq('category_id', categoryUUID)
           .limit(50);
         
         if (resetError) throw resetError;
         rawQuestions = resetQuestions || [];
       }
 
+      // P2-2: Cross-category fallback if still not enough questions
+      if (!rawQuestions || rawQuestions.length < 10) {
+        const existingIds = (rawQuestions || []).map(q => q.id);
+        const remainingNeeded = 10 - (rawQuestions?.length || 0);
+        
+        tvLog('Using cross-category fallback', { 
+          existingCount: rawQuestions?.length || 0, 
+          needed: remainingNeeded 
+        });
+
+        let fallbackQuery = supabase
+          .from('questions')
+          .select('id, question_text, correct_answer, incorrect_answers, difficulty')
+          .eq('is_active', true)
+          .eq('in_production', true)
+          .eq('language', language)
+          .neq('category_id', categoryUUID);
+
+        if (existingIds.length > 0) {
+          fallbackQuery = fallbackQuery.not('id', 'in', `(${existingIds.join(',')})`);
+        }
+
+        const { data: fallbackQuestions } = await fallbackQuery.limit(remainingNeeded);
+
+        if (fallbackQuestions && fallbackQuestions.length > 0) {
+          rawQuestions = [...(rawQuestions || []), ...fallbackQuestions];
+          tvLog('Added fallback questions from other categories', { 
+            fallbackCount: fallbackQuestions.length,
+            totalCount: rawQuestions.length
+          });
+        }
+      }
+
       // Format questions with shuffled options (single shuffle - P1-4)
-      const formattedQuestions = shuffleArray(rawQuestions).slice(0, 10).map(q => {
+      const formattedQuestions = shuffleArray(rawQuestions || []).slice(0, 10).map(q => {
         const incorrectAnswers = Array.isArray(q.incorrect_answers) 
           ? q.incorrect_answers 
           : JSON.parse(q.incorrect_answers as string);
@@ -656,13 +705,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Track these questions as asked (P1-1)
       markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
-      tvLog('Starting game', { questionCount: formattedQuestions.length, categoryId, language });
+      tvLog('Starting game', { questionCount: formattedQuestions.length, categoryId: categoryUUID, language });
 
       // Get category info for session
       const { data: category } = await supabase
         .from('categories')
         .select('name, icon')
-        .eq('id', categoryId)
+        .eq('id', categoryUUID)
         .single();
 
       // Start countdown with questions and category info
