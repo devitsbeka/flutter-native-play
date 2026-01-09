@@ -31,6 +31,7 @@ import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
+import { QuickPlayModal } from "@/components/team/QuickPlayModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
@@ -54,8 +55,58 @@ function TeamContentV2() {
   } = useMultiplayerV2();
   const { playSound } = useSound();
   const { 
+    sendInvitation,
+    addInvitedParticipant,
     acceptInvitation,
   } = useGameInvitations();
+  const { createRoom } = useMultiplayerV2();
+
+  // Quick play state
+  const [quickPlayFriend, setQuickPlayFriend] = useState<{
+    friendId: string;
+    nickname: string;
+    avatarUrl: string | null;
+    countryCode: string | null;
+  } | null>(null);
+  const [showQuickPlayModal, setShowQuickPlayModal] = useState(false);
+  const [isStartingChallenge, setIsStartingChallenge] = useState(false);
+
+  const handleQuickPlay = (friend: {
+    friendId: string;
+    nickname: string;
+    avatarUrl: string | null;
+    countryCode: string | null;
+  }) => {
+    setQuickPlayFriend(friend);
+    setShowQuickPlayModal(true);
+  };
+
+  const handleStartChallenge = async (categoryId: string, categoryName: string) => {
+    if (!quickPlayFriend) return;
+    
+    setIsStartingChallenge(true);
+    try {
+      const room = await createRoom(categoryId, categoryName);
+      if (room) {
+        // Add friend as invited participant
+        await addInvitedParticipant(
+          room.id,
+          quickPlayFriend.friendId,
+          quickPlayFriend.nickname,
+          quickPlayFriend.avatarUrl,
+          quickPlayFriend.countryCode
+        );
+        
+        // Send invitation notification
+        await sendInvitation(quickPlayFriend.friendId, room.id);
+        
+        setShowQuickPlayModal(false);
+        setQuickPlayFriend(null);
+      }
+    } finally {
+      setIsStartingChallenge(false);
+    }
+  };
 
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -493,6 +544,35 @@ function TeamContentV2() {
           setShowAllFriendsModal(false);
           setShowAddFriendModal(true);
         }}
+        onQuickPlay={(friend) => {
+          setShowAllFriendsModal(false);
+          handleQuickPlay({
+            friendId: friend.friendId,
+            nickname: friend.nickname,
+            avatarUrl: friend.avatarUrl,
+            countryCode: friend.countryCode,
+          });
+        }}
+      />
+      <QuickPlayModal
+        isOpen={showQuickPlayModal}
+        onClose={() => {
+          setShowQuickPlayModal(false);
+          setQuickPlayFriend(null);
+        }}
+        friend={quickPlayFriend ? {
+          id: "",
+          friendId: quickPlayFriend.friendId,
+          nickname: quickPlayFriend.nickname,
+          avatarUrl: quickPlayFriend.avatarUrl,
+          animatedAvatarUrl: null,
+          countryCode: quickPlayFriend.countryCode,
+          status: "accepted" as const,
+          isOnline: false,
+          isOutgoing: false,
+        } : null}
+        onStartChallenge={(friend, category) => handleStartChallenge(category.id, category.name)}
+        isLoading={isStartingChallenge}
       />
     </div>
   );

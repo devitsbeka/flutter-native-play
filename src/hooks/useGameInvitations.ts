@@ -76,6 +76,49 @@ export function useGameInvitations() {
     }
   }, [user]);
 
+  // Add invited participant to room_participants table
+  const addInvitedParticipant = useCallback(
+    async (roomId: string, friendId: string, nickname: string, avatarUrl: string | null, countryCode: string | null) => {
+      try {
+        // Check if participant already exists
+        const { data: existing } = await supabase
+          .from("room_participants")
+          .select("id")
+          .eq("room_id", roomId)
+          .eq("user_id", friendId)
+          .single();
+        
+        if (existing) {
+          console.log("Participant already exists in room");
+          return true;
+        }
+        
+        const { error } = await supabase
+          .from("room_participants")
+          .insert({
+            room_id: roomId,
+            user_id: friendId,
+            nickname: nickname,
+            avatar_url: avatarUrl,
+            country_code: countryCode || "GE",
+            status: "invited",
+            is_host: false,
+          });
+        
+        if (error) {
+          console.error("Error adding invited participant:", error);
+          return false;
+        }
+        
+        return true;
+      } catch (error) {
+        console.error("Error adding invited participant:", error);
+        return false;
+      }
+    },
+    []
+  );
+
   // Send a game invitation
   const sendInvitation = useCallback(
     async (receiverId: string, roomId: string): Promise<boolean> => {
@@ -167,6 +210,13 @@ export function useGameInvitations() {
           .eq("id", invitationId);
 
         if (error) throw error;
+
+        // Update participant status from 'invited' to 'joined' if they were pre-added
+        await supabase
+          .from("room_participants")
+          .update({ status: "joined" })
+          .eq("room_id", invitation.room_id)
+          .eq("user_id", user.id);
 
         // Remove from local state
         setPendingInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
@@ -282,6 +332,7 @@ export function useGameInvitations() {
     pendingInvitations,
     loading,
     sendInvitation,
+    addInvitedParticipant,
     acceptInvitation,
     declineInvitation,
     refreshInvitations: fetchInvitations,

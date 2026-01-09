@@ -32,7 +32,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const { t } = useLanguage();
   const { createRoom, loading, currentRoom } = useMultiplayerV2();
   const { friends } = useFriends();
-  const { sendInvitation } = useGameInvitations();
+  const { sendInvitation, addInvitedParticipant } = useGameInvitations();
   const { data: myTrivias = [], isLoading: loadingMyTrivias } = useMyQuizPosts();
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -138,17 +138,30 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     }
   };
 
-  // Send invitations once room is created
+  // Send invitations and add invited participants once room is created
   useEffect(() => {
-    const sendInvitations = async () => {
+    const sendInvitationsAndAddParticipants = async () => {
       if (currentRoom && selectedFriends.size > 0 && isCreating === false) {
         for (const friendId of selectedFriends) {
+          // Find the friend to get their details
+          const friend = acceptedFriends.find(f => f.friendId === friendId);
+          if (friend) {
+            // Add as invited participant first
+            await addInvitedParticipant(
+              currentRoom.id,
+              friend.friendId,
+              friend.nickname,
+              friend.avatarUrl,
+              friend.countryCode
+            );
+          }
+          // Then send notification
           await sendInvitation(friendId, currentRoom.id);
         }
       }
     };
     
-    sendInvitations();
+    sendInvitationsAndAddParticipants();
   }, [currentRoom?.id]);
 
   return (
