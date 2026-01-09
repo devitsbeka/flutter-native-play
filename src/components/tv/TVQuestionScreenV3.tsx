@@ -5,10 +5,10 @@ import { Clock, Users, Check, Trophy } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 
 const OPTION_COLORS = [
-  { bg: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', label: 'A' },
-  { bg: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', label: 'B' },
-  { bg: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', label: 'C' },
-  { bg: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)', label: 'D' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'A', labelBg: '#A855F7' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'B', labelBg: '#7C3AED' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'C', labelBg: '#6366F1' },
+  { bg: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)', label: 'D', labelBg: '#8B5CF6' },
 ];
 
 export const TVQuestionScreenV3: React.FC = () => {
@@ -111,19 +111,24 @@ export const TVQuestionScreenV3: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="relative p-6 rounded-2xl text-left"
+              className="relative p-6 rounded-2xl text-left flex items-center gap-4"
               style={{
                 background: OPTION_COLORS[index].bg,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
               }}
             >
-              {/* Option Label */}
-              <span className="absolute top-3 left-4 text-white/70 font-bold text-lg">
+              {/* Option Label Badge */}
+              <span 
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0"
+                style={{ background: OPTION_COLORS[index].labelBg }}
+              >
                 {OPTION_COLORS[index].label}
               </span>
               
               {/* Option Text */}
-              <span className="text-2xl font-bold text-white pl-8">
+              <span className="text-2xl font-bold text-white">
                 {option}
               </span>
             </motion.div>

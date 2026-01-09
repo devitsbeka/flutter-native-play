@@ -41,12 +41,22 @@ export const ControllerQuestion: React.FC = () => {
           {currentQuestion.options.map((option, index) => (
             <ChunkyButton
               key={index}
-              variant={index === 0 ? 'danger' : index === 1 ? 'primary' : index === 2 ? 'secondary' : 'success'}
+              variant="white"
               size="md"
               onClick={() => handleAnswer(option)}
               className="w-full text-left justify-start"
             >
-              {option}
+              <span className="inline-flex items-center gap-3">
+                <span 
+                  className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{ 
+                    background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index] 
+                  }}
+                >
+                  {['A', 'B', 'C', 'D'][index]}
+                </span>
+                <span className="text-gray-800">{option}</span>
+              </span>
             </ChunkyButton>
           ))}
         </div>
