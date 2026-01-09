@@ -148,6 +148,14 @@ export default function AdminQuestions() {
     await updateQuestion(question.id, { is_active: !question.is_active });
   };
 
+  // Check if a question has any validation issues (question or answers too long)
+  const hasValidationIssues = (q: AdminQuestion) => {
+    if (q.question_text.length > QUESTION_MAX_LENGTH) return true;
+    if (q.correct_answer.length > ANSWER_MAX_LENGTH) return true;
+    if (q.incorrect_answers.some(a => a.length > ANSWER_MAX_LENGTH)) return true;
+    return false;
+  };
+
   const filteredQuestions = questions.filter(q => {
     const matchesSearch = q.question_text.toLowerCase().includes(search.toLowerCase()) ||
       q.correct_answer.toLowerCase().includes(search.toLowerCase());
@@ -156,7 +164,8 @@ export default function AdminQuestions() {
     const matchesProductionStatus = filterProductionStatus === 'all' || 
       (filterProductionStatus === 'prod' && q.in_production) ||
       (filterProductionStatus === 'lib' && !q.in_production) ||
-      (filterProductionStatus === 'toolong' && q.question_text.length > QUESTION_MAX_LENGTH);
+      (filterProductionStatus === 'toolong' && q.question_text.length > QUESTION_MAX_LENGTH) ||
+      (filterProductionStatus === 'invalid' && hasValidationIssues(q));
     return matchesSearch && matchesCategory && matchesMissingIcon && matchesProductionStatus;
   });
 
@@ -164,6 +173,7 @@ export default function AdminQuestions() {
   const inProdCount = questions.filter(q => q.in_production).length;
   const inLibCount = questions.filter(q => !q.in_production).length;
   const tooLongCount = questions.filter(q => q.question_text.length > QUESTION_MAX_LENGTH).length;
+  const invalidCount = questions.filter(hasValidationIssues).length;
 
   const handleToggleProduction = async (question: AdminQuestion) => {
     // Don't allow pushing to prod if question is too long
@@ -253,6 +263,12 @@ export default function AdminQuestions() {
                 <span className="flex items-center gap-1.5">
                   <span className="text-rose-500">⚠️</span>
                   Too Long ({tooLongCount})
+                </span>
+              </SelectItem>
+              <SelectItem value="invalid">
+                <span className="flex items-center gap-1.5">
+                  <span className="text-rose-500">🚫</span>
+                  Invalid ({invalidCount})
                 </span>
               </SelectItem>
             </SelectContent>
