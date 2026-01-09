@@ -342,9 +342,8 @@ export function RoomLobbyV2() {
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium"
+              className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium"
             >
-              <span>🎮</span>
               <span>{currentRoom.category_name}</span>
             </motion.div>
           )}
