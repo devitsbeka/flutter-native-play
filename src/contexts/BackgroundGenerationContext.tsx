@@ -55,6 +55,11 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
     jobsRef.current.delete(id);
   }, []);
 
+  // Clear completed/failed jobs after a longer delay (5 minutes) so they show in dropdown
+  const scheduleJobCleanup = useCallback((jobId: string, delayMs: number = 300000) => {
+    setTimeout(() => removeJob(jobId), delayMs);
+  }, [removeJob]);
+
   const getJob = useCallback((id: string) => {
     return jobsRef.current.get(id);
   }, []);
@@ -183,19 +188,19 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
           duration: 30000, // Keep visible longer for action
         });
 
-        // Clean up job after delay
-        setTimeout(() => removeJob(jobId), 60000);
+        // Clean up job after 5 minutes so it stays in dropdown
+        scheduleJobCleanup(jobId);
 
       } catch (error) {
         console.error("Background avatar generation failed:", error);
         updateJob(jobId, { status: "failed" });
         toast.error(error instanceof Error ? error.message : t("errors.generationFailed"));
-        setTimeout(() => removeJob(jobId), 5000);
+        scheduleJobCleanup(jobId, 60000); // Failed jobs clean up after 1 minute
       }
     })();
 
     return jobId;
-  }, [user, updateProfile, showNotification, updateJob, removeJob]);
+  }, [user, updateProfile, showNotification, updateJob, scheduleJobCleanup]);
 
   const startCoverGeneration = useCallback(async (
     params: { title: string; subject: string; roundId?: string },
@@ -255,18 +260,18 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
           });
         }
 
-        setTimeout(() => removeJob(jobId), 60000);
+        scheduleJobCleanup(jobId);
 
       } catch (error) {
         console.error("Background cover generation failed:", error);
         updateJob(jobId, { status: "failed" });
         toast.error("სურათის გენერაცია ვერ მოხერხდა");
-        setTimeout(() => removeJob(jobId), 5000);
+        scheduleJobCleanup(jobId, 60000);
       }
     })();
 
     return jobId;
-  }, [user, showNotification, updateJob, removeJob]);
+  }, [user, showNotification, updateJob, scheduleJobCleanup]);
 
   return (
     <BackgroundGenerationContext.Provider value={{
