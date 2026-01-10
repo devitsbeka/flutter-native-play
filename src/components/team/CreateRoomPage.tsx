@@ -288,7 +288,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         </div>
 
         {/* Invite Friends - Horizontal Scroll */}
-        <div className="pt-2">
+        <div className="pt-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები</h2>
             {acceptedFriends.length > 5 && (
@@ -516,9 +516,9 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           </div>
         </div>
 
-        {/* Selected Category Preview */}
+        {/* Selected Category Preview - only show for library selection (not random since it shows inline) */}
         <AnimatePresence>
-          {selectedCategory && (selectionMode === "random" || selectionMode === "library") && (
+          {selectedCategory && selectionMode === "library" && (
             <motion.div
               initial={{ opacity: 0, y: 10, height: 0 }}
               animate={{ opacity: 1, y: 0, height: "auto" }}
@@ -543,9 +543,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{selectedCategory.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectionMode === "random" ? "რანდომ კატეგორია" : "არჩეული კატეგორია"}
-                    </p>
+                    <p className="text-xs text-muted-foreground">არჩეული კატეგორია</p>
                   </div>
                   <button 
                     onClick={clearSelection} 
