@@ -182,14 +182,31 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setState(prev => {
           if (prev.timeRemaining <= 1) {
             tvLogTimer('expired');
-            // Time's up - move to reveal (only host triggers this)
+            // Time's up - directly go to next question (skip reveal phase)
             if (isHost && prev.phase === 'question') {
-              tvLogPhase('question', 'reveal', 'timer expired');
-              supabase
-                .from('tv_sessions')
-                .update({ status: 'reveal' })
-                .eq('id', prev.sessionId)
-                .then(() => tvLog('Moved to reveal phase'));
+              const nextIndex = prev.currentQuestionIndex + 1;
+              tvLog('Timer expired, advancing to next question', { nextIndex, total: prev.questions.length });
+              
+              if (nextIndex >= prev.questions.length) {
+                // Game over
+                tvLogPhase('question', 'completed', 'all questions answered');
+                supabase
+                  .from('tv_sessions')
+                  .update({ status: 'completed' })
+                  .eq('id', prev.sessionId)
+                  .then(() => tvLog('Game completed'));
+              } else {
+                // Move to next question directly
+                supabase
+                  .from('tv_sessions')
+                  .update({
+                    status: 'playing',
+                    current_question_index: nextIndex,
+                    question_start_time: new Date().toISOString(),
+                  })
+                  .eq('id', prev.sessionId)
+                  .then(() => tvLog('Moved to next question', { index: nextIndex }));
+              }
             }
             return { ...prev, timeRemaining: 0 };
           }

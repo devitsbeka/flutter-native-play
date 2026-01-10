@@ -518,36 +518,7 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Reveal phase - auto-advance after 5 seconds
-  // Host controller triggers the next round
-  useEffect(() => {
-    if (localPhase === 'reveal') {
-      const timer = setTimeout(() => {
-        startNextRound();
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [localPhase, startNextRound]);
-
-  if (localPhase === 'reveal') {
-    return (
-      <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
-          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
-          <p className="text-xl text-white font-medium">
-            შემდეგი კითხვა იტვირთება...
-          </p>
-          <p className="text-purple-300 text-sm mt-2">
-            კითხვა {currentQuestionIndex + 2} / {totalQuestions}
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
+  // No reveal phase handling needed - timer directly advances to next question
 
   // Completed phase - show game over screen with leaderboard
   if (localPhase === 'completed') {
