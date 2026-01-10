@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Link, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
@@ -26,20 +25,20 @@ interface Props {
   knowledgeSources?: KnowledgeSource[];
 }
 
-const DIFFICULTIES = [
-  { id: 'mixed', label: '🎲 Mixed' },
-  { id: 'easy', label: 'Easy' },
-  { id: 'medium', label: 'Medium' },
-  { id: 'hard', label: 'Hard' },
-];
+const DIFFICULTIES = ['mixed', 'easy', 'medium', 'hard'];
+const DIFFICULTY_LABELS: Record<string, string> = {
+  mixed: '🎲 Mixed',
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+};
 
 export function GenerationPanel({ categories, languages, selectedLanguage, onQuestionsGenerated, isGenerating, setIsGenerating, knowledgeSources = [] }: Props) {
-  const [mode, setMode] = useState<'ai' | 'url'>('ai');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [difficulty, setDifficulty] = useState<string>('mixed');
+  const [difficultyIndex, setDifficultyIndex] = useState<number>(0); // 0=mixed, 1=easy, 2=medium, 3=hard
   const [count, setCount] = useState(50);
-  const [topic, setTopic] = useState('');
-  const [url, setUrl] = useState('');
+
+  const difficulty = DIFFICULTIES[difficultyIndex];
 
   const validateQuestion = (q: any): { isValid: boolean; warnings: string[] } => {
     const warnings: string[] = [];
@@ -105,7 +104,7 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
           language: selectedLanguage,
           difficulty: difficulty === 'mixed' ? null : difficulty,
           count,
-          topic: topic || null,
+          topic: null,
           knowledgeSources: knowledgeContext,
         },
       });
@@ -139,225 +138,120 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
     }
   };
 
-  const handleParseUrl = async () => {
-    if (!url) {
-      toast.error('Please enter a URL');
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('parse-quiz-url', {
-        body: { url },
-      });
-
-      if (error) throw error;
-
-      const questions: GeneratedQuestion[] = (data.questions || []).map((q: any, i: number) => {
-        const validation = validateQuestion(q);
-        return {
-          id: `parsed-${Date.now()}-${i}`,
-          questionText: q.question_text || q.questionText,
-          correctAnswer: q.correct_answer || q.correctAnswer,
-          incorrectAnswers: q.incorrect_answers || q.incorrectAnswers || [],
-          categoryId: selectedCategory || categories[0]?.id || '',
-          categoryName: categories.find(c => c.id === selectedCategory)?.name || 'Unknown',
-          difficulty: q.difficulty || 'medium',
-          language: q.language || 'en',
-          iconSlug: q.icon_slug,
-          status: 'pending' as const,
-          ...validation,
-        };
-      });
-
-      onQuestionsGenerated(questions);
-      toast.success(`Parsed ${questions.length} questions from URL`);
-    } catch (err) {
-      console.error('Parse error:', err);
-      toast.error('Failed to parse URL');
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setCount(Math.min(300, Math.max(0, value)));
   };
 
   return (
     <div className="p-4 space-y-4">
-      <Tabs value={mode} onValueChange={(v) => setMode(v as 'ai' | 'url')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="ai" className="gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" />
-            AI Generate
-          </TabsTrigger>
-          <TabsTrigger value="url" className="gap-1.5">
-            <Link className="h-3.5 w-3.5" />
-            URL Parse
-          </TabsTrigger>
-        </TabsList>
+      {/* Selected Language Display */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/30">
+        <span className="text-xl">
+          {languages.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+        </span>
+        <span className="text-sm font-medium">
+          Generating in {languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage.toUpperCase()}
+        </span>
+      </div>
 
-        <TabsContent value="ai" className="space-y-4 mt-4">
-          {/* Selected Language Display */}
-          <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/30">
-            <span className="text-xl">
-              {languages.find(l => l.code === selectedLanguage)?.flag || '🌐'}
-            </span>
-            <span className="text-sm font-medium">
-              Generating in {languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage.toUpperCase()}
-            </span>
+      {/* Category */}
+      <div className="space-y-2">
+        <Label className="text-xs text-muted-foreground">Category</Label>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Select category..." />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Difficulty - Slider with 4 points */}
+      <div className="space-y-3">
+        <Label className="text-xs text-muted-foreground">Difficulty</Label>
+        <div className="px-1">
+          <Slider
+            value={[difficultyIndex]}
+            onValueChange={([v]) => setDifficultyIndex(v)}
+            min={0}
+            max={3}
+            step={1}
+            className="py-2"
+          />
+          <div className="flex justify-between mt-1">
+            {DIFFICULTIES.map((diff, idx) => (
+              <span
+                key={diff}
+                onClick={() => setDifficultyIndex(idx)}
+                className={cn(
+                  "text-xs cursor-pointer transition-colors",
+                  difficultyIndex === idx
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {DIFFICULTY_LABELS[diff]}
+              </span>
+            ))}
           </div>
+        </div>
+      </div>
 
-          {/* Category */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Category</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select category..." />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Questions Count - Number Input */}
+      <div className="space-y-2">
+        <Label className="text-xs text-muted-foreground">
+          Number of Questions
+        </Label>
+        <Input
+          type="number"
+          value={count}
+          onChange={handleCountChange}
+          min={0}
+          max={300}
+          className="h-9"
+        />
+        <p className="text-xs text-muted-foreground">
+          Recommended: 50-100 for best quality. Max 300.
+        </p>
+      </div>
 
-          {/* Difficulty - Inline Buttons */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Difficulty</Label>
-            <div className="flex gap-2">
-              {DIFFICULTIES.map((diff) => (
-                <button
-                  key={diff.id}
-                  onClick={() => setDifficulty(diff.id)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-                    difficulty === diff.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted hover:bg-muted/80"
-                  )}
-                >
-                  {diff.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Topic */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Topic (optional)</Label>
-            <Input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Ancient Rome, Space..."
-              className="h-9"
-            />
-          </div>
-
-          {/* Count */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">
-              Questions: {count}
-            </Label>
-            <Slider
-              value={[count]}
-              onValueChange={([v]) => setCount(v)}
-              min={10}
-              max={200}
-              step={10}
-              className="py-2"
-            />
-            <p className="text-xs text-muted-foreground">
-              Recommended: 50-100 for best quality. Max 200.
-            </p>
-          </div>
-
-          {/* Generate Button */}
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || !selectedCategory}
-            className="w-full gap-2"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Generate {count} Questions
-              </>
-            )}
-          </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            Max {QUESTION_MAX_LENGTH} chars for questions, {ANSWER_MAX_LENGTH} for answers
+      {/* Knowledge Sources - Before Generate Button */}
+      {knowledgeSources.length > 0 && (
+        <div className="px-2 py-1.5 bg-primary/10 rounded-md border border-primary/20">
+          <p className="text-xs text-primary font-medium text-center">
+            📚 Using {knowledgeSources.length} knowledge source{knowledgeSources.length !== 1 ? 's' : ''}
           </p>
-          
-          {knowledgeSources.length > 0 && (
-            <div className="mt-2 px-2 py-1.5 bg-primary/10 rounded-md border border-primary/20">
-              <p className="text-xs text-primary font-medium text-center">
-                📚 Using {knowledgeSources.length} knowledge source{knowledgeSources.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          )}
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="url" className="space-y-4 mt-4">
-          {/* Category for parsed questions */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Assign to Category</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select category..." />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Generate Button */}
+      <Button
+        onClick={handleGenerate}
+        disabled={isGenerating || !selectedCategory}
+        className="w-full gap-2"
+      >
+        {isGenerating ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          <>
+            <Sparkles className="h-4 w-4" />
+            Generate {count} Questions
+          </>
+        )}
+      </Button>
 
-          {/* URL Input */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Quiz URL</Label>
-            <Input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/quiz..."
-              className="h-9"
-            />
-          </div>
-
-          {/* Parse Button */}
-          <Button
-            onClick={handleParseUrl}
-            disabled={isGenerating || !url}
-            className="w-full gap-2"
-            variant="secondary"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Parsing...
-              </>
-            ) : (
-              <>
-                <Link className="h-4 w-4" />
-                Parse URL
-              </>
-            )}
-          </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            Supports most quiz websites with structured content
-          </p>
-        </TabsContent>
-      </Tabs>
+      <p className="text-xs text-muted-foreground text-center">
+        Max {QUESTION_MAX_LENGTH} chars for questions, {ANSWER_MAX_LENGTH} for answers
+      </p>
     </div>
   );
 }
