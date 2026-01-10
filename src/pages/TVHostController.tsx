@@ -518,42 +518,24 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Reveal phase - auto advance after delay (no manual button)
-  // The TV display handles advancing, host just sees feedback
+  // Reveal phase - skip detailed feedback, just show simple transition
+  // The TV display handles the reveal and auto-advances
   if (localPhase === 'reveal') {
     return (
       <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
-        <AnimatePresence>
-          {lastResult !== null && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className={`w-32 h-32 rounded-full flex items-center justify-center mb-6 ${
-                lastResult ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            >
-              {lastResult ? (
-                <Check className="w-16 h-16 text-white" />
-              ) : (
-                <X className="w-16 h-16 text-white" />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          {lastResult ? 'სწორია! 🎉' : 'არასწორია! 😔'}
-        </h2>
-        <div className="flex items-center gap-2 text-yellow-500 mb-4">
-          <Star className="w-5 h-5 fill-yellow-500" />
-          <span className="font-bold text-xl">{myScore}</span>
-        </div>
-        <motion.p
-          className="text-purple-300 text-sm"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
         >
-          შემდეგი კითხვა მალე...
-        </motion.p>
+          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-xl text-white font-medium">
+            შემდეგი კითხვა იტვირთება...
+          </p>
+          <p className="text-purple-300 text-sm mt-2">
+            კითხვა {currentQuestionIndex + 2} / {totalQuestions}
+          </p>
+        </motion.div>
       </div>
     );
   }
