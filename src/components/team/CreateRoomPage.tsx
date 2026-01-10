@@ -307,16 +307,33 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-            {/* Icon from 9k library */}
-            <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
+            {/* Icon from 9k library - clickable in edit mode to remove */}
+            <button
+              onClick={() => {
+                if (isEditingName && roomIcon) {
+                  setRoomIcon(null);
+                }
+              }}
+              disabled={!isEditingName || isGeneratingName}
+              className={`relative w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0 transition-all ${
+                isEditingName && roomIcon ? 'hover:ring-2 hover:ring-destructive/50 cursor-pointer' : ''
+              }`}
+            >
               {isGeneratingName ? (
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
               ) : roomIcon ? (
-                <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
+                <>
+                  <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
+                  {isEditingName && (
+                    <div className="absolute inset-0 bg-destructive/80 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <X className="w-5 h-5 text-destructive-foreground" />
+                    </div>
+                  )}
+                </>
               ) : (
                 <Sparkles className="w-5 h-5 text-primary" />
               )}
-            </div>
+            </button>
             
             {/* Editable name */}
             <div className="flex-1 min-w-0">
@@ -350,19 +367,36 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   {roomName}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-0.5">AI გენერირებული</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{isEditingName ? "დააჭირე აიკონს წასაშლელად" : "AI გენერირებული"}</p>
             </div>
             
             {/* Edit button */}
             <button
               onClick={() => {
-                setEditedName(roomName);
-                setIsEditingName(true);
+                if (isEditingName) {
+                  // Save and exit edit mode
+                  if (editedName.trim()) {
+                    setRoomName(editedName.trim());
+                  }
+                  setIsEditingName(false);
+                } else {
+                  // Enter edit mode
+                  setEditedName(roomName);
+                  setIsEditingName(true);
+                }
               }}
-              disabled={isGeneratingName || isEditingName}
-              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+              disabled={isGeneratingName}
+              className={`p-2 rounded-xl transition-colors ${
+                isEditingName 
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                  : 'bg-primary/10 hover:bg-primary/20'
+              }`}
             >
-              <Pencil className="w-4 h-4 text-primary" />
+              {isEditingName ? (
+                <span className="text-xs font-medium px-1">OK</span>
+              ) : (
+                <Pencil className="w-4 h-4 text-primary" />
+              )}
             </button>
             
             {/* Regenerate button */}
