@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Check } from "lucide-react";
+import { RefreshCw, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ interface RoomIconPickerModalProps {
   onClose: () => void;
   currentIconUrl: string | null;
   roomName: string;
-  onSelectIcon: (iconUrl: string) => void;
+  onConfirm: (iconUrl: string, newName: string) => void;
 }
 
 export function RoomIconPickerModal({
@@ -29,11 +30,13 @@ export function RoomIconPickerModal({
   onClose,
   currentIconUrl,
   roomName,
-  onSelectIcon,
+  onConfirm,
 }: RoomIconPickerModalProps) {
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [editableName, setEditableName] = useState(roomName);
+  const [isGeneratingName, setIsGeneratingName] = useState(false);
 
   // Fetch random icons from database
   const fetchRandomIcons = useCallback(async () => {
@@ -76,21 +79,43 @@ export function RoomIconPickerModal({
     }
   }, []);
 
-  // Load icons when modal opens
+  // Generate name for a specific icon
+  const generateNameForIcon = async (iconSlug: string) => {
+    setIsGeneratingName(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-room-name', {
+        body: { iconSlug }
+      });
+
+      if (!error && data?.name) {
+        setEditableName(data.name);
+      }
+    } catch (e) {
+      console.error('Failed to generate name:', e);
+    } finally {
+      setIsGeneratingName(false);
+    }
+  };
+
+  // Load icons when modal opens and reset state
   useEffect(() => {
     if (isOpen) {
       fetchRandomIcons();
-      setSelectedIcon(null);
+      setSelectedIcon(currentIconUrl);
+      setEditableName(roomName);
     }
-  }, [isOpen, fetchRandomIcons]);
+  }, [isOpen, fetchRandomIcons, currentIconUrl, roomName]);
 
-  const handleIconClick = (icon: IconItem) => {
+  // Handle icon click - select and generate name
+  const handleIconClick = async (icon: IconItem) => {
     setSelectedIcon(icon.icon_url);
+    // Generate new name for this icon
+    await generateNameForIcon(icon.slug);
   };
 
-  const handleConfirm = () => {
-    if (selectedIcon) {
-      onSelectIcon(selectedIcon);
+  const handleConfirmClick = () => {
+    if (selectedIcon && editableName.trim()) {
+      onConfirm(selectedIcon, editableName.trim());
       onClose();
     }
   };
@@ -105,9 +130,9 @@ export function RoomIconPickerModal({
         </DialogHeader>
 
         <div className="px-4 pb-4 space-y-4">
-          {/* Current icon preview */}
+          {/* Current icon preview with editable name */}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
-            <div className="w-16 h-16 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
               {(selectedIcon || currentIconUrl) ? (
                 <motion.img
                   key={selectedIcon || currentIconUrl}
@@ -121,21 +146,26 @@ export function RoomIconPickerModal({
                 <div className="w-12 h-12 rounded-full bg-primary/20" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground truncate">{roomName}</p>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="relative">
+                <Input
+                  value={editableName}
+                  onChange={(e) => setEditableName(e.target.value)}
+                  maxLength={35}
+                  className="text-base font-semibold pr-8 bg-background h-10"
+                  placeholder="ოთახის სახელი"
+                  disabled={isGeneratingName}
+                />
+                {isGeneratingName && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
-                {selectedIcon ? "ახალი აიკონი არჩეულია" : "მიმდინარე აიკონი"}
+                შეცვალე სახელი ან აირჩიე ახალი აიკონი
               </p>
             </div>
-            {selectedIcon && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
-              >
-                <Check className="w-4 h-4 text-primary-foreground" />
-              </motion.div>
-            )}
           </div>
 
           {/* Suggested icons header */}
@@ -176,7 +206,8 @@ export function RoomIconPickerModal({
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ delay: index * 0.03 }}
                     onClick={() => handleIconClick(icon)}
-                    className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden ${
+                    disabled={isGeneratingName}
+                    className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedIcon === icon.icon_url
                         ? "border-primary ring-2 ring-primary/30 bg-primary/10"
                         : "border-transparent hover:border-border"
@@ -205,10 +236,10 @@ export function RoomIconPickerModal({
 
           {/* Confirm button */}
           <button
-            onClick={handleConfirm}
-            disabled={!selectedIcon}
+            onClick={handleConfirmClick}
+            disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
             className={`w-full py-3 rounded-xl font-medium transition-all ${
-              selectedIcon
+              selectedIcon && editableName.trim() && !isGeneratingName
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
             }`}

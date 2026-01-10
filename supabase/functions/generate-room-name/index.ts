@@ -65,37 +65,65 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get random icons from the icon_library table
-    const { data: icons, error: iconError } = await supabase
-      .from('icon_library')
-      .select('slug, title, icon_url')
-      .not('icon_url', 'is', null)
-      .limit(100);
-
-    if (iconError || !icons || icons.length === 0) {
-      console.error('Failed to fetch icons:', iconError);
-      // Fallback to default name
-      return new Response(
-        JSON.stringify({ 
-          name: "სახალისო გუნდი", 
-          icon_url: null 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Parse request body for optional icon parameter
+    let iconSlug: string | null = null;
+    try {
+      const body = await req.json();
+      iconSlug = body?.iconSlug || null;
+    } catch {
+      // No body or invalid JSON, use random icon
     }
 
-    // Pick a random icon
-    const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-    const iconName = randomIcon.title || randomIcon.slug.replace(/-/g, ' ');
+    let selectedIcon: { slug: string; title: string; icon_url: string | null } | null = null;
 
-    console.log(`Selected icon: ${iconName} (${randomIcon.slug})`);
+    // If specific icon requested, find it by slug
+    if (iconSlug) {
+      const { data: specificIcon, error: specificError } = await supabase
+        .from('icon_library')
+        .select('slug, title, icon_url')
+        .eq('slug', iconSlug)
+        .single();
+      
+      if (!specificError && specificIcon) {
+        selectedIcon = specificIcon;
+        console.log(`Using requested icon: ${iconSlug}`);
+      }
+    }
+
+    // If no specific icon or not found, get random icons
+    if (!selectedIcon) {
+      const { data: icons, error: iconError } = await supabase
+        .from('icon_library')
+        .select('slug, title, icon_url')
+        .not('icon_url', 'is', null)
+        .limit(100);
+
+      if (iconError || !icons || icons.length === 0) {
+        console.error('Failed to fetch icons:', iconError);
+        // Fallback to default name
+        return new Response(
+          JSON.stringify({ 
+            name: "სახალისო გუნდი", 
+            icon_url: null 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Pick a random icon
+      selectedIcon = icons[Math.floor(Math.random() * icons.length)];
+    }
+
+    const iconName = selectedIcon.title || selectedIcon.slug.replace(/-/g, ' ');
+
+    console.log(`Selected icon: ${iconName} (${selectedIcon.slug})`);
 
     // If no AI key, generate a simple 2-word name
     if (!lovableApiKey) {
       return new Response(
         JSON.stringify({ 
           name: generateSimpleName(iconName), 
-          icon_url: randomIcon.icon_url 
+          icon_url: selectedIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -141,7 +169,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           name: `სახალისო ${iconName}`, 
-          icon_url: randomIcon.icon_url 
+          icon_url: selectedIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -158,7 +186,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         name: generatedName, 
-        icon_url: randomIcon.icon_url 
+        icon_url: selectedIcon.icon_url 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
