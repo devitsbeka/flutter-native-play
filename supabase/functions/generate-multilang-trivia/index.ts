@@ -203,14 +203,14 @@ async function findIconForQuestion(
   return null;
 }
 
-// Extract visual keywords from text for icon matching
-function extractVisualKeywords(text: string, correctAnswer: string): string[] {
-  const combined = `${text} ${correctAnswer}`.toLowerCase();
+// Extract visual keywords from QUESTION TEXT ONLY - never include answer to avoid spoilers
+function extractVisualKeywords(text: string): string[] {
+  const normalized = text.toLowerCase();
   
   // Extract meaningful words (4+ chars, not common words)
   const commonWords = new Set(['what', 'which', 'when', 'where', 'does', 'that', 'this', 'with', 'from', 'have', 'been', 'were', 'they', 'their', 'about', 'would', 'could', 'should', 'there', 'these', 'those', 'after', 'before', 'through', 'between', 'under', 'above', 'being', 'other', 'first', 'second', 'third', 'called', 'known', 'most', 'many', 'some', 'more', 'very', 'only', 'also', 'year', 'years']);
   
-  const words = combined
+  const words = normalized
     .replace(/[?.!,;:'"()]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length >= 4 && !commonWords.has(w) && !/^\d+$/.test(w));
@@ -333,8 +333,10 @@ Return a JSON object with a "questions" array. Each question should have:
 - incorrectAnswers: array of 3 wrong answers (each max ${ANSWER_MAX_LENGTH} chars)
 - difficulty: "easy", "medium", or "hard"
 - iconKeywords: array of 2-4 CONCRETE VISUAL English words for finding an icon
-  GOOD examples: ["pyramid", "egypt"], ["tank", "military"], ["violin", "music"], ["mountain", "snow"]
-  BAD examples: ["history", "culture", "knowledge"] - these are too abstract, use specific objects instead`;
+  ⚠️ NEVER include the correct answer or answer-related words - this spoils the answer!
+  GOOD examples: ["planet", "solar"] for "Which planet is closest to the Sun?"
+  BAD examples: ["mercury"] - this reveals the answer!
+  Use specific visual objects: ["pyramid", "egypt"], ["tank", "military"], ["violin", "music"]`;
 
     const allQuestions: any[] = [];
 
@@ -488,9 +490,9 @@ Return ONLY valid JSON with this structure:
     
     const questionsWithIcons = await Promise.all(
       trimmedQuestions.map(async (q: any) => {
-        // Combine AI-generated keywords with extracted text keywords
+        // Combine AI-generated keywords with extracted text keywords (question only, never answer!)
         const aiKeywords = (q.iconKeywords || []).map((k: string) => k.toLowerCase().trim());
-        const textKeywords = extractVisualKeywords(q.questionText || '', q.correctAnswer || '');
+        const textKeywords = extractVisualKeywords(q.questionText || '');
         
         // AI keywords first (more specific), then text keywords
         const allKeywords = [...new Set([...aiKeywords, ...textKeywords])];
