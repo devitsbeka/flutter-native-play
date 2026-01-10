@@ -82,7 +82,33 @@ export function DidYouKnowWidget() {
     );
   }
 
-  if (!fact) return null;
+  if (!fact) {
+    return (
+      <div
+        className="bg-card rounded-2xl p-5 border border-border/60"
+        style={{
+          boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.06) 100%)",
+            }}
+          >
+            {ImageIcons.whale}
+          </div>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            იცოდით თუ არა?
+          </h3>
+        </div>
+        <p className="text-[14px] text-muted-foreground mt-3">
+          ფაქტები მალე დაემატება...
+        </p>
+      </div>
+    );
+  }
 
   const icon = ImageIcons[fact.image_type] || ImageIcons.whale;
 
