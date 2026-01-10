@@ -69,11 +69,6 @@ export default function Flow() {
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchCategories();
-    fetchStats();
-  }, []);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -172,26 +167,30 @@ export default function Flow() {
     setCategories(data || []);
   };
 
-  const fetchStats = async () => {
-    const { count: libCount } = await supabase
-      .from('questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('in_production', false);
+  const fetchStats = useCallback(async () => {
+    // Fetch per-language stats with separate counts for library and production
+    const languageCodes = LANGUAGES.map(l => l.code);
     
-    const { count: prodCount } = await supabase
+    // Use a single query with grouping for efficiency
+    const { data: langData, error } = await supabase
       .from('questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('in_production', true);
+      .select('language, in_production')
+      .eq('is_active', true);
     
-    setStats({ inLib: libCount || 0, inProd: prodCount || 0 });
-
-    // Fetch per-language stats
-    const { data: langData } = await supabase
-      .from('questions')
-      .select('language, in_production');
+    if (error) {
+      console.error('Error fetching stats:', error);
+      return;
+    }
     
     if (langData) {
       const langStats: Record<string, { inLib: number; inProd: number }> = {};
+      
+      // Initialize all languages with 0
+      languageCodes.forEach(code => {
+        langStats[code] = { inLib: 0, inProd: 0 };
+      });
+      
+      // Count questions per language
       langData.forEach(q => {
         const lang = q.language || 'ka';
         if (!langStats[lang]) {
@@ -203,10 +202,42 @@ export default function Flow() {
           langStats[lang].inLib++;
         }
       });
+      
       setLanguageStats(langStats);
+      
+      // Calculate totals
+      const totalLib = Object.values(langStats).reduce((sum, s) => sum + s.inLib, 0);
+      const totalProd = Object.values(langStats).reduce((sum, s) => sum + s.inProd, 0);
+      setStats({ inLib: totalLib, inProd: totalProd });
     }
-  };
+  }, []);
 
+  // Initialize data and set up real-time subscription
+  useEffect(() => {
+    fetchCategories();
+    fetchStats();
+    
+    // Set up real-time subscription for question changes
+    const channel = supabase
+      .channel('questions-stats')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'questions'
+        },
+        () => {
+          // Refetch stats whenever questions table changes
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchStats]);
 
   // Check for duplicate questions in the database using semantic similarity
   const checkDuplicates = useCallback(async (questions: GeneratedQuestion[]): Promise<GeneratedQuestion[]> => {
@@ -485,31 +516,40 @@ export default function Flow() {
           </div>
         </div>
         
-        {/* Language Stats Bar */}
-        <div className="mt-3 flex flex-wrap gap-1">
-          {LANGUAGES.map(lang => {
-            const langStat = languageStats[lang.code] || { inLib: 0, inProd: 0 };
-            const total = langStat.inLib + langStat.inProd;
-            const hasQuestions = total > 0;
-            
-            return (
-              <div
-                key={lang.code}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-xs border ${
-                  hasQuestions 
-                    ? 'bg-card/50 border-border/50' 
-                    : 'bg-destructive/10 border-destructive/30 text-destructive'
-                }`}
-                title={`${lang.name}: ${langStat.inLib} in Library, ${langStat.inProd} in Production`}
-              >
-                <span>{lang.flag}</span>
-                <span className="font-medium">{lang.code.toUpperCase()}</span>
-                <span className="text-muted-foreground">
-                  {langStat.inLib}/{langStat.inProd}
-                </span>
-              </div>
-            );
-          })}
+        {/* Language Stats Bar - Horizontally Scrollable */}
+        <div className="mt-4 -mx-4 px-4">
+          <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent">
+            <div className="flex gap-2 min-w-max">
+              {LANGUAGES.map(lang => {
+                const langStat = languageStats[lang.code] || { inLib: 0, inProd: 0 };
+                const total = langStat.inLib + langStat.inProd;
+                const hasQuestions = total > 0;
+                
+                return (
+                  <div
+                    key={lang.code}
+                    className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 min-w-[90px] transition-all ${
+                      hasQuestions 
+                        ? 'bg-card border-border/50 shadow-sm hover:shadow-md' 
+                        : 'bg-destructive/5 border-destructive/40'
+                    }`}
+                    title={`${lang.name}: ${langStat.inLib} in Library, ${langStat.inProd} in Production`}
+                  >
+                    <span className="text-2xl">{lang.flag}</span>
+                    <span className="font-bold text-sm">{lang.code.toUpperCase()}</span>
+                    <div className="flex flex-col items-center text-xs">
+                      <span className={hasQuestions ? 'text-foreground font-semibold' : 'text-destructive font-medium'}>
+                        {total.toLocaleString()}
+                      </span>
+                      <span className="text-muted-foreground text-[10px]">
+                        {langStat.inLib.toLocaleString()} lib • {langStat.inProd.toLocaleString()} prod
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
