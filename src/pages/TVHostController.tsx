@@ -518,8 +518,17 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Reveal phase - skip detailed feedback, just show simple transition
-  // The TV display handles the reveal and auto-advances
+  // Reveal phase - auto-advance after 5 seconds
+  // Host controller triggers the next round
+  useEffect(() => {
+    if (localPhase === 'reveal') {
+      const timer = setTimeout(() => {
+        startNextRound();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [localPhase, startNextRound]);
+
   if (localPhase === 'reveal') {
     return (
       <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
