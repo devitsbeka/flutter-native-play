@@ -536,99 +536,50 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           
           <div className="space-y-3">
             {/* Random Option */}
-            {selectionMode === "random" && selectedCategory && !isSearchingRandom ? (
-              // Show selected random category
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
-              >
-                {/* Category video thumbnail */}
-                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
-                  {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
-                    <PingPongVideo
-                      src={CATEGORY_VIDEOS[selectedCategory.category_id]}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-white/20 flex items-center justify-center">
-                      <Dices className="w-6 h-6 text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-semibold text-white">{selectedCategory.name}</p>
-                  <p className="text-sm text-white/70">რანდომ კატეგორია</p>
-                </div>
-                {/* Re-roll button */}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    selectRandomCategory();
-                  }}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  title="სხვა კატეგორია"
+            <motion.button
+              onClick={() => !isSearchingRandom && handleOptionClick("random")}
+              disabled={isSearchingRandom}
+              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all overflow-hidden ${
+                isSearchingRandom || (selectionMode === "random" && selectedCategory)
+                  ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
+                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+              }`}
+              whileHover={{ scale: isSearchingRandom ? 1 : 1.01 }}
+              whileTap={{ scale: isSearchingRandom ? 1 : 0.99 }}
+            >
+              {/* Searching animation overlay */}
+              {isSearchingRandom && (
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                />
+              )}
+              
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                isSearchingRandom || (selectionMode === "random" && selectedCategory)
+                  ? "bg-white/20" 
+                  : "bg-purple-500/10"
+              }`}>
+                <motion.div
+                  animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
+                  transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
                 >
-                  <RefreshCw className="w-5 h-5 text-white" />
-                </button>
-                {/* Clear button */}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearSelection();
-                  }}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-white" />
-                </button>
-              </motion.div>
-            ) : (
-              // Show random selection button
-              <motion.button
-                onClick={() => !isSearchingRandom && handleOptionClick("random")}
-                disabled={isSearchingRandom}
-                className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all overflow-hidden ${
-                  isSearchingRandom
-                    ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
-                    : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-                }`}
-                whileHover={{ scale: isSearchingRandom ? 1 : 1.01 }}
-                whileTap={{ scale: isSearchingRandom ? 1 : 0.99 }}
-              >
-                {/* Searching animation overlay */}
-                {isSearchingRandom && (
-                  <motion.div 
-                    className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                  />
-                )}
-                
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                  isSearchingRandom
-                    ? "bg-white/20" 
-                    : "bg-purple-500/10"
-                }`}>
-                  <motion.div
-                    animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
-                    transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
-                  >
-                    <Dices className={`w-6 h-6 ${isSearchingRandom ? "text-white" : "text-purple-500"}`} />
-                  </motion.div>
-                </div>
-                <div className="flex-1 text-left relative z-10">
-                  <p className={`font-semibold ${isSearchingRandom ? "text-white" : "text-foreground"}`}>
-                    {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
-                  </p>
-                  <p className={`text-sm ${isSearchingRandom ? "text-white/70" : "text-muted-foreground"}`}>
-                    {isSearchingRandom 
-                      ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
-                      : "რანდომ კატეგორია თამაშისთვის"
-                    }
-                  </p>
-                </div>
-              </motion.button>
-            )}
+                  <Dices className={`w-6 h-6 ${isSearchingRandom || (selectionMode === "random" && selectedCategory) ? "text-white" : "text-purple-500"}`} />
+                </motion.div>
+              </div>
+              <div className="flex-1 text-left relative z-10">
+                <p className={`font-semibold ${isSearchingRandom || (selectionMode === "random" && selectedCategory) ? "text-white" : "text-foreground"}`}>
+                  {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
+                </p>
+                <p className={`text-sm ${isSearchingRandom || (selectionMode === "random" && selectedCategory) ? "text-white/70" : "text-muted-foreground"}`}>
+                  {isSearchingRandom 
+                    ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
+                    : "რანდომ კატეგორია თამაშისთვის"
+                  }
+                </p>
+              </div>
+            </motion.button>
 
             {/* Library Option */}
             <motion.button
@@ -688,8 +639,64 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           </div>
         </div>
 
-        {/* Selected Category Preview - only show for library selection (not random since it shows inline) */}
+        {/* Random Category Preview - show large video container */}
         <AnimatePresence>
+          {selectedCategory && selectionMode === "random" && !isSearchingRandom && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              className="overflow-hidden"
+            >
+              {/* Large video container */}
+              <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-3">
+                {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
+                  <PingPongVideo
+                    src={CATEGORY_VIDEOS[selectedCategory.category_id]}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                    <Dices className="w-12 h-12 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Category info card below video */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500/10 to-violet-500/10 border border-purple-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shrink-0">
+                    <Dices className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {selectedCategory.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      რანდომ კატეგორია თამაშისთვის
+                    </p>
+                  </div>
+                  {/* Re-roll button */}
+                  <button 
+                    onClick={selectRandomCategory}
+                    className="p-2 hover:bg-purple-500/10 rounded-lg transition-colors"
+                    title="სხვა კატეგორია"
+                  >
+                    <RefreshCw className="w-5 h-5 text-purple-500" />
+                  </button>
+                  {/* Clear button */}
+                  <button 
+                    onClick={clearSelection}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Library Category Preview */}
           {selectedCategory && selectionMode === "library" && (
             <motion.div
               initial={{ opacity: 0, y: 10, height: 0 }}
