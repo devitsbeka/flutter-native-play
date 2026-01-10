@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Loader2, AlertTriangle, Trash2 } from 'lucide-react';
+import { Search, Loader2, AlertTriangle, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useDuplicateDetection } from '@/hooks/useDuplicateDetection';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
-import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function DuplicateScanner() {
   const [categoryId, setCategoryId] = useState<string>('all');
@@ -19,8 +20,11 @@ export default function DuplicateScanner() {
   const { categories } = useAdminCategories();
   const { deleteQuestion } = useAdminQuestions();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const handleScan = async () => {
+    setSelectedIds(new Set());
     await scanDatabaseForDuplicates(
       categoryId === 'all' ? undefined : categoryId,
       threshold[0] / 100
@@ -31,7 +35,6 @@ export default function DuplicateScanner() {
     setDeletingId(id);
     try {
       const success = await deleteQuestion(id);
-      // Remove from scan results after successful delete
       if (success && scanResult) {
         const newDuplicates = scanResult.duplicates.filter(d => d.existingId !== id);
         setScanResult({
@@ -39,11 +42,67 @@ export default function DuplicateScanner() {
           duplicates: newDuplicates,
           duplicatesFound: newDuplicates.length
         });
+        setSelectedIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       }
     } finally {
       setDeletingId(null);
     }
   };
+
+  const handleSelectAll = () => {
+    if (!scanResult) return;
+    const allIds = scanResult.duplicates.map(d => d.existingId);
+    if (selectedIds.size === allIds.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setBulkDeleting(true);
+    let deleted = 0;
+    const idsToDelete = Array.from(selectedIds);
+    
+    for (const id of idsToDelete) {
+      const success = await deleteQuestion(id);
+      if (success) deleted++;
+    }
+    
+    if (scanResult) {
+      const newDuplicates = scanResult.duplicates.filter(d => !selectedIds.has(d.existingId));
+      setScanResult({
+        ...scanResult,
+        duplicates: newDuplicates,
+        duplicatesFound: newDuplicates.length
+      });
+    }
+    
+    setSelectedIds(new Set());
+    setBulkDeleting(false);
+    toast.success(`${deleted} კითხვა წაიშალა`);
+  };
+
+  const allSelected = scanResult && scanResult.duplicates.length > 0 && 
+    selectedIds.size === scanResult.duplicates.length;
 
   return (
     <ScrollArea className="h-full">
@@ -153,28 +212,69 @@ export default function DuplicateScanner() {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Bulk Actions */}
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="gap-2"
+                    >
+                      {allSelected ? (
+                        <CheckSquare className="h-4 w-4" />
+                      ) : (
+                        <Square className="h-4 w-4" />
+                      )}
+                      {allSelected ? 'ყველას გაუქმება' : 'ყველას მონიშვნა'}
+                    </Button>
+                    
+                    {selectedIds.size > 0 && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleDeleteSelected}
+                        disabled={bulkDeleting}
+                        className="gap-2"
+                      >
+                        {bulkDeleting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                        წაშალე მონიშნული ({selectedIds.size})
+                      </Button>
+                    )}
+                  </div>
+
                   {scanResult.duplicates.map((dup, idx) => (
                     <div
                       key={idx}
                       className="p-4 rounded-lg border border-destructive/20 bg-destructive/5"
                     >
                       <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-destructive" />
-                            <span className="text-sm font-medium text-destructive">
-                              {Math.round(dup.similarity * 100)}% მსგავსება
-                            </span>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="p-2 bg-background rounded border">
-                              <p className="text-sm font-medium">კითხვა 1:</p>
-                              <p className="text-sm text-muted-foreground">{dup.questionText}</p>
+                        <div className="flex items-start gap-3 flex-1">
+                          <Checkbox
+                            checked={selectedIds.has(dup.existingId)}
+                            onCheckedChange={() => handleToggleSelect(dup.existingId)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                              <span className="text-sm font-medium text-destructive">
+                                {Math.round(dup.similarity * 100)}% მსგავსება
+                              </span>
                             </div>
-                            <div className="p-2 bg-background rounded border">
-                              <p className="text-sm font-medium">კითხვა 2:</p>
-                              <p className="text-sm text-muted-foreground">{dup.existingQuestion}</p>
+                            
+                            <div className="space-y-2">
+                              <div className="p-2 bg-background rounded border">
+                                <p className="text-sm font-medium">კითხვა 1:</p>
+                                <p className="text-sm text-muted-foreground">{dup.questionText}</p>
+                              </div>
+                              <div className="p-2 bg-background rounded border">
+                                <p className="text-sm font-medium">კითხვა 2:</p>
+                                <p className="text-sm text-muted-foreground">{dup.existingQuestion}</p>
+                              </div>
                             </div>
                           </div>
                         </div>
