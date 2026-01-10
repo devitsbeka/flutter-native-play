@@ -146,106 +146,99 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Selected Language Display */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/30">
-        <span className="text-xl">
-          {languages.find(l => l.code === selectedLanguage)?.flag || '🌐'}
-        </span>
-        <span className="text-sm font-medium">
-          Generating in {languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage.toUpperCase()}
-        </span>
-      </div>
+    <div className="p-4">
+      {/* Horizontal Layout - Responsive Flex */}
+      <div className="flex flex-wrap items-end gap-4">
+        {/* Language Badge */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/30 h-9">
+          <span className="text-lg leading-none">
+            {languages.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+          </span>
+          <span className="text-sm font-medium whitespace-nowrap">
+            {languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage.toUpperCase()}
+          </span>
+        </div>
 
-      {/* Category */}
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Category</Label>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select category..." />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        {/* Category */}
+        <div className="flex flex-col gap-1 min-w-[180px]">
+          <Label className="text-xs text-muted-foreground">Category</Label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Select category..." />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Difficulty - Slider with 4 points */}
-      <div className="space-y-3">
-        <Label className="text-xs text-muted-foreground">Difficulty</Label>
-        <div className="px-1">
-          <Slider
-            value={[difficultyIndex]}
-            onValueChange={([v]) => setDifficultyIndex(v)}
-            min={0}
-            max={3}
-            step={1}
-            className="py-2"
-          />
-          <div className="flex justify-between mt-1">
-            {DIFFICULTIES.map((diff, idx) => (
-              <span
-                key={diff}
-                onClick={() => setDifficultyIndex(idx)}
-                className={cn(
-                  "text-xs cursor-pointer transition-colors",
-                  difficultyIndex === idx
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {DIFFICULTY_LABELS[diff]}
-              </span>
-            ))}
+        {/* Difficulty - Compact Slider */}
+        <div className="flex flex-col gap-1 min-w-[200px]">
+          <Label className="text-xs text-muted-foreground">Difficulty</Label>
+          <div className="flex items-center gap-2 h-9">
+            <Slider
+              value={[difficultyIndex]}
+              onValueChange={([v]) => setDifficultyIndex(v)}
+              min={0}
+              max={3}
+              step={1}
+              className="flex-1"
+            />
+            <span
+              className={cn(
+                "text-xs font-medium px-2 py-1 rounded bg-muted whitespace-nowrap min-w-[70px] text-center",
+                difficultyIndex === 0 && "text-primary"
+              )}
+            >
+              {DIFFICULTY_LABELS[difficulty]}
+            </span>
           </div>
         </div>
+
+        {/* Questions Count */}
+        <div className="flex flex-col gap-1 w-20">
+          <Label className="text-xs text-muted-foreground">Count</Label>
+          <Input
+            type="number"
+            value={count}
+            onChange={handleCountChange}
+            min={0}
+            max={300}
+            className="h-9 text-center"
+          />
+        </div>
+
+        {/* Knowledge Sources - Compact Inline */}
+        <div className="flex-shrink-0">
+          {knowledgeSourcesComponent}
+        </div>
+
+        {/* Generate Button */}
+        <Button
+          onClick={handleGenerate}
+          disabled={isGenerating || !selectedCategory}
+          className="gap-2 h-9 px-6"
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4" />
+              Generate {count}
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* Questions Count - Number Input */}
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">
-          Number of Questions
-        </Label>
-        <Input
-          type="number"
-          value={count}
-          onChange={handleCountChange}
-          min={0}
-          max={300}
-          className="h-9"
-        />
-        <p className="text-xs text-muted-foreground">
-          Recommended: 50-100 for best quality. Max 300.
-        </p>
-      </div>
-
-      {/* Knowledge Sources Component - Before Generate Button */}
-      {knowledgeSourcesComponent}
-
-      {/* Generate Button */}
-      <Button
-        onClick={handleGenerate}
-        disabled={isGenerating || !selectedCategory}
-        className="w-full gap-2"
-      >
-        {isGenerating ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Generating...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-4 w-4" />
-            Generate {count} Questions
-          </>
-        )}
-      </Button>
-
-      <p className="text-xs text-muted-foreground text-center">
+      {/* Limits hint */}
+      <p className="text-xs text-muted-foreground mt-2">
         Max {QUESTION_MAX_LENGTH} chars for questions, {ANSWER_MAX_LENGTH} for answers
       </p>
     </div>
