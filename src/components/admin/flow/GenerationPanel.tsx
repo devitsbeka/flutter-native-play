@@ -9,7 +9,7 @@ import { Sparkles, Link, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
-import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from '@/utils/questionValidation';
+import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, hasAnswerInQuestion } from '@/utils/questionValidation';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -38,18 +38,37 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
 
   const validateQuestion = (q: any): { isValid: boolean; warnings: string[] } => {
     const warnings: string[] = [];
+    const questionText = q.questionText || q.question_text || '';
+    const correctAnswer = q.correctAnswer || q.correct_answer || '';
+    const incorrectAnswers = q.incorrectAnswers || q.incorrect_answers || [];
     
-    if (q.questionText?.length > QUESTION_MAX_LENGTH) {
-      warnings.push(`Question too long: ${q.questionText.length}/${QUESTION_MAX_LENGTH}`);
+    // Length validations
+    if (questionText.length > QUESTION_MAX_LENGTH) {
+      warnings.push(`Question too long: ${questionText.length}/${QUESTION_MAX_LENGTH}`);
     }
-    if (q.correctAnswer?.length > ANSWER_MAX_LENGTH) {
-      warnings.push(`Correct answer too long: ${q.correctAnswer.length}/${ANSWER_MAX_LENGTH}`);
+    if (correctAnswer.length > ANSWER_MAX_LENGTH) {
+      warnings.push(`Correct answer too long: ${correctAnswer.length}/${ANSWER_MAX_LENGTH}`);
     }
-    q.incorrectAnswers?.forEach((a: string, i: number) => {
-      if (a.length > ANSWER_MAX_LENGTH) {
+    incorrectAnswers.forEach((a: string, i: number) => {
+      if (a && a.length > ANSWER_MAX_LENGTH) {
         warnings.push(`Answer ${i + 1} too long: ${a.length}/${ANSWER_MAX_LENGTH}`);
       }
     });
+
+    // Check if answer appears in question (critical quality issue)
+    if (hasAnswerInQuestion(questionText, correctAnswer)) {
+      warnings.push('Question reveals the answer');
+    }
+
+    // Check answer length parity (anti-cheating)
+    if (correctAnswer && incorrectAnswers.length === 3) {
+      const allAnswers = [correctAnswer, ...incorrectAnswers];
+      const lengths = allAnswers.map(a => (a || '').length);
+      const maxDiff = Math.max(...lengths) - Math.min(...lengths);
+      if (maxDiff > 8) {
+        warnings.push('Answer lengths vary too much (easy to guess)');
+      }
+    }
 
     return { isValid: warnings.length === 0, warnings };
   };

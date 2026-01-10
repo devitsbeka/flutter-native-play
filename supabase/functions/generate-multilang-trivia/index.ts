@@ -31,6 +31,79 @@ const LANGUAGE_NAMES: Record<string, string> = {
 
 const QUESTION_MAX_LENGTH = 65;
 const ANSWER_MAX_LENGTH = 20;
+const SIMILARITY_THRESHOLD = 0.55;
+
+// Normalize text for comparison
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[?.!,;:'"()]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+// Extract keywords from text for Jaccard similarity
+function extractKeywords(text: string): Set<string> {
+  const normalized = normalizeText(text);
+  const numbers = text.match(/\d+/g) || [];
+  const words = normalized.split(' ').filter(w => w.length > 3);
+  return new Set([...numbers, ...words]);
+}
+
+// Calculate similarity between two texts (Jaccard index)
+function calculateSimilarity(text1: string, text2: string): number {
+  const s1 = normalizeText(text1);
+  const s2 = normalizeText(text2);
+  
+  if (s1 === s2) return 1;
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  // Check if one contains the other
+  if (s1.includes(s2) || s2.includes(s1)) {
+    const shorter = Math.min(s1.length, s2.length);
+    const longer = Math.max(s1.length, s2.length);
+    return shorter / longer;
+  }
+  
+  // Keyword-based similarity (Jaccard index)
+  const keywords1 = extractKeywords(text1);
+  const keywords2 = extractKeywords(text2);
+  
+  if (keywords1.size === 0 || keywords2.size === 0) return 0;
+  
+  const intersection = [...keywords1].filter(k => keywords2.has(k));
+  const union = new Set([...keywords1, ...keywords2]);
+  
+  return intersection.length / union.size;
+}
+
+// Remove duplicates within a batch based on similarity
+function removeDuplicatesFromBatch(questions: any[]): any[] {
+  const unique: any[] = [];
+  
+  for (const q of questions) {
+    const qText = q.questionText || '';
+    const isDuplicate = unique.some(existing => 
+      calculateSimilarity(qText, existing.questionText || '') > SIMILARITY_THRESHOLD
+    );
+    
+    if (!isDuplicate) {
+      unique.push(q);
+    }
+  }
+  
+  return unique;
+}
+
+// Check if a question is similar to any existing questions
+function isSimilarToExisting(questionText: string, existingTexts: string[]): string | null {
+  for (const existing of existingTexts) {
+    if (calculateSimilarity(questionText, existing) > SIMILARITY_THRESHOLD) {
+      return existing;
+    }
+  }
+  return null;
+}
 
 // STRICT validation - returns true only if ALL limits are met
 function isValidQuestion(q: any): boolean {
@@ -74,9 +147,28 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch existing questions from this category for duplicate detection
+    console.log(`Fetching existing questions for category ${categoryId}...`);
+    const { data: existingQuestions, error: fetchError } = await supabase
+      .from('questions')
+      .select('question_text')
+      .eq('category_id', categoryId)
+      .eq('is_active', true);
+    
+    if (fetchError) {
+      console.error('Error fetching existing questions:', fetchError);
+    }
+    
+    const existingTexts = existingQuestions?.map(q => q.question_text) || [];
+    console.log(`Found ${existingTexts.length} existing questions in category`);
+
     // Support up to 200 questions by chunking - request extra to compensate for validation filtering
     const requestedCount = Math.min(count || 50, 200);
-    const extraForValidation = Math.ceil(requestedCount * 0.3); // Request 30% extra
+    const extraForValidation = Math.ceil(requestedCount * 0.5); // Request 50% extra to account for duplicates
     const adjustedCount = requestedCount + extraForValidation;
     const chunkSize = 50;
     const chunks = Math.ceil(adjustedCount / chunkSize);
@@ -89,6 +181,12 @@ serve(async (req) => {
 
     const topicInstruction = topic 
       ? `Focus specifically on the topic: "${topic}".`
+      : '';
+
+    // Include some existing questions in the prompt to help AI avoid them
+    const existingSample = existingTexts.slice(0, 30).map(t => `- ${t}`).join('\n');
+    const avoidDuplicatesInstruction = existingTexts.length > 0 
+      ? `\n\n⚠️ AVOID creating questions similar to these existing ones:\n${existingSample}\n\nCreate DIFFERENT questions about NEW facts and topics.`
       : '';
 
     const systemPrompt = `You are a trivia question generator. Generate unique, accurate trivia questions.
@@ -115,6 +213,10 @@ serve(async (req) => {
 3. If the correct answer is detailed, make ALL incorrect answers equally detailed
 4. NEVER make the correct answer stand out by length - this allows guessing
 
+🔴 DO NOT REVEAL ANSWERS IN QUESTIONS:
+- The correct answer text must NOT appear in the question
+- If asking about "X", don't say "Which X..." where X is the answer
+
 EXAMPLES:
 ❌ BAD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "ომი", "ბრძოლა", "კონფლიქტი"
 ✓ GOOD: Correct: "პირველი მსოფლიო ომი" | Incorrect: "მეორე მსოფლიო ომი", "კორეის ომი 1950", "ვიეტნამის ომი"
@@ -138,6 +240,7 @@ Return a JSON object with a "questions" array. Each question should have:
 
 ${difficultyInstruction}
 ${topicInstruction}
+${avoidDuplicatesInstruction}
 
 ${chunks > 1 ? `This is batch ${chunkIndex + 1} of ${chunks}, so ensure questions are unique and cover different aspects of the topic.` : ''}
 
@@ -226,14 +329,25 @@ Return ONLY valid JSON with this structure:
     const validQuestions = allQuestions.filter(isValidQuestion);
     console.log(`Validation: ${allQuestions.length} generated, ${validQuestions.length} passed strict limits`);
 
-    // Take only the requested number of valid questions
-    const trimmedQuestions = validQuestions.slice(0, requestedCount);
+    // Deduplicate within the generated batch
+    const batchDeduped = removeDuplicatesFromBatch(validQuestions);
+    console.log(`Batch deduplication: ${validQuestions.length} -> ${batchDeduped.length}`);
+
+    // Filter out questions similar to existing ones in database
+    const uniqueQuestions = batchDeduped.filter(q => {
+      const similarTo = isSimilarToExisting(q.questionText, existingTexts);
+      if (similarTo) {
+        console.log(`Filtered DB duplicate: "${q.questionText.substring(0, 40)}..." similar to "${similarTo.substring(0, 40)}..."`);
+        return false;
+      }
+      return true;
+    });
+    console.log(`DB deduplication: ${batchDeduped.length} -> ${uniqueQuestions.length}`);
+
+    // Take only the requested number of unique questions
+    const trimmedQuestions = uniqueQuestions.slice(0, requestedCount);
 
     // Try to find icons for each question
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     const questionsWithIcons = await Promise.all(
       trimmedQuestions.map(async (q: any) => {
         // Questions already passed validation, no need to truncate

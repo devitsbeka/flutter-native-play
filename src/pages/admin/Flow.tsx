@@ -5,7 +5,7 @@ import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList
 import { QuestionQueue } from '@/components/admin/flow/QuestionQueue';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
+import { calculateSimilarity, removeDuplicatesFromBatch } from '@/utils/duplicateDetection';
 export interface GeneratedQuestion {
   id: string;
   questionText: string;
@@ -204,34 +204,67 @@ export default function Flow() {
     }
   };
 
-  // Check for duplicate questions in the database
+  // Semantic duplicate detection threshold
+  const SIMILARITY_THRESHOLD = 0.55;
+
+  // Check for duplicate questions in the database using semantic similarity
   const checkDuplicates = useCallback(async (questions: GeneratedQuestion[]): Promise<GeneratedQuestion[]> => {
     if (questions.length === 0) return questions;
     
     setIsCheckingDuplicates(true);
     try {
-      const questionTexts = questions.map(q => q.questionText);
+      // First, deduplicate within the batch itself
+      const batchDeduped = removeDuplicatesFromBatch(
+        questions.map(q => ({ ...q, question_text: q.questionText })),
+        SIMILARITY_THRESHOLD
+      ).map(q => {
+        const { question_text, ...rest } = q as any;
+        return rest as GeneratedQuestion;
+      });
       
-      const { data: existing, error } = await supabase
-        .from('questions')
-        .select('question_text')
-        .in('question_text', questionTexts);
-      
-      if (error) {
-        console.error('Error checking duplicates:', error);
-        return questions;
+      const batchDuplicateCount = questions.length - batchDeduped.length;
+      if (batchDuplicateCount > 0) {
+        console.log(`Removed ${batchDuplicateCount} duplicates within the generated batch`);
       }
 
-      const duplicateTexts = new Set(existing?.map(e => e.question_text) || []);
+      // Get unique category IDs from questions
+      const categoryIds = [...new Set(batchDeduped.map(q => q.categoryId))];
       
-      return questions.map(q => ({
-        ...q,
-        isDuplicate: duplicateTexts.has(q.questionText),
-        warnings: duplicateTexts.has(q.questionText) 
-          ? [...q.warnings, 'Already exists in database']
-          : q.warnings,
-        isValid: !duplicateTexts.has(q.questionText) && q.isValid,
-      }));
+      // Fetch existing questions from the same categories for semantic comparison
+      const { data: existing, error } = await supabase
+        .from('questions')
+        .select('id, question_text')
+        .in('category_id', categoryIds)
+        .eq('is_active', true);
+      
+      if (error) {
+        console.error('Error fetching existing questions:', error);
+        return batchDeduped;
+      }
+
+      const existingTexts = existing?.map(e => e.question_text) || [];
+      console.log(`Checking ${batchDeduped.length} questions against ${existingTexts.length} existing in database`);
+      
+      // Use semantic similarity instead of exact match
+      return batchDeduped.map(q => {
+        const similarQuestion = existingTexts.find(existingText => 
+          calculateSimilarity(q.questionText, existingText) > SIMILARITY_THRESHOLD
+        );
+        
+        const isDuplicate = !!similarQuestion;
+        const duplicateWarning = isDuplicate 
+          ? `Similar to existing: "${similarQuestion!.substring(0, 40)}..."`
+          : null;
+        
+        return {
+          ...q,
+          isDuplicate,
+          warnings: duplicateWarning 
+            ? [...q.warnings, duplicateWarning]
+            : q.warnings,
+          isValid: !isDuplicate && q.isValid,
+        };
+      });
     } finally {
       setIsCheckingDuplicates(false);
     }
