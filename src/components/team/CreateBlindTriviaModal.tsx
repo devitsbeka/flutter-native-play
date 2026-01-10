@@ -150,50 +150,66 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-5"
+            className="space-y-6"
           >
+            {/* Header */}
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-3">
                 <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-1">შექმენი Trivia ✨</h3>
               <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
             </div>
 
-            {/* Popular topics */}
-            <div className="grid grid-cols-3 gap-2">
-              {POPULAR_TOPICS.map((topic) => (
-                <button
+            {/* Category chips - ChatGPT style */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {POPULAR_TOPICS.map((topic, idx) => (
+                <motion.button
                   key={topic.value}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
                   onClick={() => setSubject(topic.value)}
-                  className={`p-3 rounded-xl border-2 transition-all text-center ${
+                  className={`relative p-4 rounded-2xl border-2 transition-all text-center group ${
                     subject === topic.value
-                      ? "border-primary bg-primary/10 scale-105"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
+                      ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
+                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/50"
                   }`}
                 >
-                  <span className="text-2xl block mb-1">{topic.emoji}</span>
-                  <span className="text-xs font-medium text-foreground">{topic.label}</span>
-                </button>
+                  <span className="text-2xl block mb-1.5">{topic.emoji}</span>
+                  <span className="text-sm font-medium text-foreground">{topic.label}</span>
+                  {subject === topic.value && (
+                    <motion.div
+                      layoutId="topic-selected"
+                      className="absolute inset-0 rounded-2xl border-2 border-primary"
+                      transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
+                    />
+                  )}
+                </motion.button>
               ))}
             </div>
 
-            <div className="relative">
+            {/* Divider */}
+            <div className="relative py-1">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
+                <div className="w-full border-t border-border/60" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-background px-3 text-xs text-muted-foreground">ან ჩაწერე</span>
+                <span className="bg-background px-4 text-xs text-muted-foreground font-medium">ან ჩაწერე</span>
               </div>
             </div>
 
-            <Input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
-              className="text-center text-lg h-14 rounded-xl"
-            />
+            {/* Input field - Primary focus */}
+            <div className="relative">
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
+                className="w-full text-base h-14 px-5 rounded-2xl border-2 border-border/60 bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
+              />
+            </div>
 
+            {/* Continue button */}
             <ChunkyButton
               onClick={() => setStep(2)}
               disabled={!subject.trim()}
