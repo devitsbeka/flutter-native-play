@@ -284,11 +284,13 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         room = await createRoom(
           "custom", 
           customTriviaTitle || "Custom Trivia",
-          customTriviaQuestions
+          customTriviaQuestions,
+          roomName,
+          roomIcon
         );
       } else if (selectedCategory) {
         // Create the room with selected category
-        room = await createRoom(selectedCategory.category_id, selectedCategory.name);
+        room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, roomName, roomIcon);
       }
       
       // Send invitations immediately after room is created
