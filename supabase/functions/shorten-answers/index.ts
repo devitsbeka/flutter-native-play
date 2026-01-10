@@ -290,13 +290,13 @@ ${answersToShorten.map((a, i) => `${i + 1}. "${a.answer}" (${a.answer.length} áƒ
           unshortenable++;
         }
 
-        // Update database
+        // Update database - store in PENDING columns for review
         await supabase
           .from("questions")
           .update({
-            correct_answer: newCorrectAnswer,
-            incorrect_answers: newIncorrectAnswers,
-            answer_shorten_status: status,
+            pending_correct_answer: correctWasShortened ? newCorrectAnswer : null,
+            pending_incorrect_answers: incorrectShortenedCount > 0 ? newIncorrectAnswers : null,
+            answer_shorten_status: status === 'unshortenable' ? 'unshortenable' : 'pending_review',
             original_correct_answer: question.correct_answer,
             original_incorrect_answers: incorrectAnswers,
           })

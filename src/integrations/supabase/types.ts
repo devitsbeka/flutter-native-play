@@ -1095,6 +1095,9 @@ export type Database = {
           original_correct_answer: string | null
           original_incorrect_answers: Json | null
           original_question_text: string | null
+          pending_correct_answer: string | null
+          pending_incorrect_answers: Json | null
+          pending_question_text: string | null
           quality_issues: Json | null
           quality_status: string | null
           question_text: string
@@ -1118,6 +1121,9 @@ export type Database = {
           original_correct_answer?: string | null
           original_incorrect_answers?: Json | null
           original_question_text?: string | null
+          pending_correct_answer?: string | null
+          pending_incorrect_answers?: Json | null
+          pending_question_text?: string | null
           quality_issues?: Json | null
           quality_status?: string | null
           question_text: string
@@ -1141,6 +1147,9 @@ export type Database = {
           original_correct_answer?: string | null
           original_incorrect_answers?: Json | null
           original_question_text?: string | null
+          pending_correct_answer?: string | null
+          pending_incorrect_answers?: Json | null
+          pending_question_text?: string | null
           quality_issues?: Json | null
           quality_status?: string | null
           question_text?: string
