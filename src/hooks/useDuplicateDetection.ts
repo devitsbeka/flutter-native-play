@@ -202,6 +202,7 @@ export function useDuplicateDetection() {
   return {
     scanning,
     scanResult,
+    setScanResult,
     checkForDuplicates,
     scanDatabaseForDuplicates,
     clearScanResult,
