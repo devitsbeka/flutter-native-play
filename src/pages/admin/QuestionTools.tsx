@@ -83,7 +83,41 @@ interface ShortenStats {
   loading: boolean;
 }
 
+// Answer Shortening Types
+interface AnswerShortenResult {
+  id: string;
+  questionText: string;
+  originalCorrect: string;
+  shortenedCorrect: string | null;
+  originalIncorrect: string[];
+  shortenedIncorrect: (string | null)[];
+  status: 'shortened' | 'partially_shortened' | 'unshortenable' | 'failed';
+  correctShortened: boolean;
+  incorrectShortenedCount: number;
+}
+
+interface AnswerShortenProgress {
+  total: number;
+  processed: number;
+  shortened: number;
+  partiallyShortened: number;
+  unshortenable: number;
+  failed: number;
+  remaining: number;
+  status: 'idle' | 'running' | 'paused' | 'completed';
+  batchNumber: number;
+}
+
+interface AnswerShortenStats {
+  inLib: number;
+  longAnswers: number;
+  alreadyShortened: number;
+  unshortenable: number;
+  loading: boolean;
+}
+
 const MAX_QUESTION_LENGTH = 67;
+const MAX_ANSWER_LENGTH = 20;
 
 export default function QuestionTools() {
   const { categories } = useAdminCategories();
@@ -144,6 +178,32 @@ export default function QuestionTools() {
     loading: false
   });
   const [isShortenPaused, setIsShortenPaused] = useState(false);
+
+  // Answer Shortener State
+  const [answerCategoryId, setAnswerCategoryId] = useState<string>('all');
+  const [answerInProduction, setAnswerInProduction] = useState<boolean>(false);
+  const [answerProgress, setAnswerProgress] = useState<AnswerShortenProgress>({
+    total: 0,
+    processed: 0,
+    shortened: 0,
+    partiallyShortened: 0,
+    unshortenable: 0,
+    failed: 0,
+    remaining: 0,
+    status: 'idle',
+    batchNumber: 0
+  });
+  const [answerResults, setAnswerResults] = useState<AnswerShortenResult[]>([]);
+  const [selectedAnswerResults, setSelectedAnswerResults] = useState<Set<string>>(new Set());
+  const [answerStats, setAnswerStats] = useState<AnswerShortenStats>({
+    inLib: 0,
+    longAnswers: 0,
+    alreadyShortened: 0,
+    unshortenable: 0,
+    loading: false
+  });
+  const [isAnswerPaused, setIsAnswerPaused] = useState(false);
+  const [shortenMode, setShortenMode] = useState<'questions' | 'answers'>('questions');
 
   // Load icon stats on mount and when category changes
   useEffect(() => {
@@ -535,6 +595,218 @@ export default function QuestionTools() {
     }
   };
 
+  // Load answer shorten stats
+  useEffect(() => {
+    const loadAnswerStats = async () => {
+      setAnswerStats(prev => ({ ...prev, loading: true }));
+      
+      try {
+        let baseQuery = supabase
+          .from('questions')
+          .select('id, correct_answer, incorrect_answers, answer_shorten_status, in_production')
+          .eq('is_active', true);
+        
+        if (answerCategoryId !== 'all') {
+          baseQuery = baseQuery.eq('category_id', answerCategoryId);
+        }
+
+        const { data: questions } = await baseQuery;
+        
+        if (!questions) {
+          setAnswerStats(prev => ({ ...prev, loading: false }));
+          return;
+        }
+
+        const inLibQuestions = questions.filter(q => !q.in_production);
+        const inProdQuestions = questions.filter(q => q.in_production);
+        const targetQuestions = answerInProduction ? inProdQuestions : inLibQuestions;
+        
+        // Count questions with long answers
+        const longAnswerQuestions = targetQuestions.filter(q => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers as string[]
+            : [];
+          const correctTooLong = q.correct_answer.length > MAX_ANSWER_LENGTH;
+          const anyIncorrectTooLong = incorrectAnswers.some(a => a.length > MAX_ANSWER_LENGTH);
+          return (correctTooLong || anyIncorrectTooLong) && !q.answer_shorten_status;
+        });
+        
+        const shortened = targetQuestions.filter(q => q.answer_shorten_status === 'shortened');
+        const unshortenable = targetQuestions.filter(q => 
+          q.answer_shorten_status === 'unshortenable' || q.answer_shorten_status === 'partially_shortened'
+        );
+        
+        setAnswerStats({
+          inLib: targetQuestions.length,
+          longAnswers: longAnswerQuestions.length,
+          alreadyShortened: shortened.length,
+          unshortenable: unshortenable.length,
+          loading: false
+        });
+      } catch (err) {
+        console.error('Error loading answer stats:', err);
+        setAnswerStats(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    loadAnswerStats();
+  }, [answerCategoryId, answerInProduction, answerProgress.status]);
+
+  // Answer Shortening Functions
+  const startShortenAnswers = async (testMode = false) => {
+    setIsAnswerPaused(false);
+    setAnswerResults([]);
+    setSelectedAnswerResults(new Set());
+    
+    setAnswerProgress({
+      total: testMode ? 5 : answerStats.longAnswers,
+      processed: 0,
+      shortened: 0,
+      partiallyShortened: 0,
+      unshortenable: 0,
+      failed: 0,
+      remaining: testMode ? 5 : answerStats.longAnswers,
+      status: 'running',
+      batchNumber: 0
+    });
+
+    let batchNum = 0;
+    let shouldContinue = true;
+    let allResults: AnswerShortenResult[] = [];
+
+    try {
+      while (shouldContinue && !isAnswerPaused) {
+        batchNum++;
+        
+        const { data, error } = await supabase.functions.invoke('shorten-answers', {
+          body: { 
+            categoryId: answerCategoryId === 'all' ? null : answerCategoryId,
+            testMode,
+            inProduction: answerInProduction
+          }
+        });
+
+        if (error) {
+          console.error('Answer shorten batch error:', error);
+          toast({
+            title: 'შეცდომა',
+            description: 'პასუხების შემოკლება ვერ მოხერხდა',
+            variant: 'destructive',
+          });
+          break;
+        }
+
+        if (data.done || data.remaining === 0 || testMode) {
+          shouldContinue = false;
+        }
+
+        allResults = [...allResults, ...(data.results || [])];
+        setAnswerResults(allResults);
+
+        setAnswerProgress({
+          total: testMode ? data.processed : answerStats.longAnswers,
+          processed: allResults.length,
+          shortened: allResults.filter(r => r.status === 'shortened').length,
+          partiallyShortened: allResults.filter(r => r.status === 'partially_shortened').length,
+          unshortenable: allResults.filter(r => r.status === 'unshortenable').length,
+          failed: allResults.filter(r => r.status === 'failed').length,
+          remaining: data.remaining || 0,
+          status: shouldContinue ? 'running' : 'completed',
+          batchNumber: batchNum
+        });
+
+        if (!testMode && shouldContinue) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      if (!isAnswerPaused) {
+        setAnswerProgress(prev => ({ ...prev, status: 'completed' }));
+        toast({
+          title: testMode ? 'ტესტი დასრულდა! ✅' : 'პასუხების შემოკლება დასრულდა! 🎉',
+          description: `შემოკლდა ${allResults.filter(r => r.status === 'shortened').length} კითხვის პასუხები`,
+        });
+      }
+    } catch (err) {
+      console.error('Answer shorten error:', err);
+      toast({
+        title: 'შეცდომა',
+        description: 'პასუხების შემოკლება ვერ მოხერხდა',
+        variant: 'destructive',
+      });
+      setAnswerProgress(prev => ({ ...prev, status: 'idle' }));
+    }
+  };
+
+  const pauseShortenAnswers = () => {
+    setIsAnswerPaused(true);
+    setAnswerProgress(prev => ({ ...prev, status: 'paused' }));
+  };
+
+  const resetShortenAnswers = () => {
+    setIsAnswerPaused(false);
+    setAnswerResults([]);
+    setSelectedAnswerResults(new Set());
+    setAnswerProgress({
+      total: 0,
+      processed: 0,
+      shortened: 0,
+      partiallyShortened: 0,
+      unshortenable: 0,
+      failed: 0,
+      remaining: 0,
+      status: 'idle',
+      batchNumber: 0
+    });
+  };
+
+  const toggleAnswerResultSelection = (id: string) => {
+    setSelectedAnswerResults(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllShortenedAnswers = () => {
+    const shortenedIds = answerResults
+      .filter(r => r.status === 'shortened' || r.status === 'partially_shortened')
+      .map(r => r.id);
+    setSelectedAnswerResults(new Set(shortenedIds));
+  };
+
+  const pushSelectedAnswersToProd = async () => {
+    if (selectedAnswerResults.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ in_production: true })
+        .in('id', Array.from(selectedAnswerResults));
+
+      if (error) throw error;
+
+      toast({
+        title: 'წარმატება! ✅',
+        description: `${selectedAnswerResults.size} კითხვა გადავიდა პროდაქშენში`,
+      });
+
+      setAnswerResults(prev => prev.filter(r => !selectedAnswerResults.has(r.id)));
+      setSelectedAnswerResults(new Set());
+    } catch (err) {
+      console.error('Push answers to prod error:', err);
+      toast({
+        title: 'შეცდომა',
+        description: 'პროდაქშენში გადატანა ვერ მოხერხდა',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Long Questions Functions
   const scanLongQuestions = async () => {
     setScanningLong(true);
@@ -619,6 +891,30 @@ export default function QuestionTools() {
 
           {/* AI Shortener Tab */}
           <TabsContent value="shortener" className="space-y-6">
+            {/* Mode Toggle */}
+            <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+              <Button
+                variant={shortenMode === 'questions' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setShortenMode('questions')}
+                className="gap-2"
+              >
+                <Text className="h-4 w-4" />
+                კითხვები
+              </Button>
+              <Button
+                variant={shortenMode === 'answers' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setShortenMode('answers')}
+                className="gap-2"
+              >
+                <Check className="h-4 w-4" />
+                პასუხები
+              </Button>
+            </div>
+
+            {/* Questions Shortener */}
+            {shortenMode === 'questions' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -860,6 +1156,268 @@ export default function QuestionTools() {
                 )}
               </CardContent>
             </Card>
+            )}
+
+            {/* Answers Shortener */}
+            {shortenMode === 'answers' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  AI პასუხების შემოკლება
+                </CardTitle>
+                <CardDescription>
+                  AI ავტომატურად შეამოკლებს პასუხებს {MAX_ANSWER_LENGTH} სიმბოლომდე
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Stats Display */}
+                <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">
+                      {answerStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : answerStats.inLib}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {answerInProduction ? 'In Prod' : 'In Lib'}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-amber-500">
+                      {answerStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : answerStats.longAnswers}
+                    </div>
+                    <div className="text-xs text-muted-foreground">გრძელი ({`>${MAX_ANSWER_LENGTH}`})</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-500">
+                      {answerStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : answerStats.alreadyShortened}
+                    </div>
+                    <div className="text-xs text-muted-foreground">შემოკლებული</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-500">
+                      {answerStats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : answerStats.unshortenable}
+                    </div>
+                    <div className="text-xs text-muted-foreground">შეუმოკლებადი</div>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-end gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[200px] space-y-2">
+                    <Label>კატეგორია</Label>
+                    <Select value={answerCategoryId} onValueChange={setAnswerCategoryId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="აირჩიეთ კატეგორია" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">ყველა კატეგორია</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.icon} {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>სტატუსი</Label>
+                    <Select 
+                      value={answerInProduction ? 'prod' : 'lib'} 
+                      onValueChange={(v) => setAnswerInProduction(v === 'prod')}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lib">In Lib</SelectItem>
+                        <SelectItem value="prod">In Prod</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {answerProgress.status === 'idle' && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => startShortenAnswers(true)} 
+                          disabled={answerStats.longAnswers === 0}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          ტესტი (5)
+                        </Button>
+                        <Button 
+                          onClick={() => startShortenAnswers(false)} 
+                          disabled={answerStats.longAnswers === 0}
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          შემოკლება ({answerStats.longAnswers})
+                        </Button>
+                      </>
+                    )}
+                    {answerProgress.status === 'running' && (
+                      <Button variant="outline" onClick={pauseShortenAnswers}>
+                        <Pause className="h-4 w-4 mr-2" />
+                        პაუზა
+                      </Button>
+                    )}
+                    {(answerProgress.status === 'completed' || answerProgress.status === 'paused') && (
+                      <Button variant="ghost" onClick={resetShortenAnswers}>
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        თავიდან
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Progress */}
+                {answerProgress.total > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>პროგრესი: {answerProgress.processed} / {answerProgress.total}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="h-4 w-4" />
+                          {answerProgress.shortened}
+                        </span>
+                        <span className="flex items-center gap-1 text-blue-500">
+                          <Check className="h-4 w-4" />
+                          {answerProgress.partiallyShortened} ნაწილ.
+                        </span>
+                        <span className="flex items-center gap-1 text-red-500">
+                          <XCircle className="h-4 w-4" />
+                          {answerProgress.unshortenable}
+                        </span>
+                        <span className="flex items-center gap-1 text-amber-500">
+                          <AlertTriangle className="h-4 w-4" />
+                          {answerProgress.failed}
+                        </span>
+                      </div>
+                    </div>
+                    <Progress 
+                      value={answerProgress.total > 0 ? (answerProgress.processed / answerProgress.total) * 100 : 0} 
+                      className="h-2"
+                    />
+                    {answerProgress.status === 'running' && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        ბათჩი #{answerProgress.batchNumber} მუშავდება...
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Results */}
+                {answerResults.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>შედეგები ({answerResults.length})</Label>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={selectAllShortenedAnswers}
+                        >
+                          <Check className="h-3 w-3 mr-1" />
+                          მონიშნე შემოკლებულები
+                        </Button>
+                        {selectedAnswerResults.size > 0 && (
+                          <Button 
+                            size="sm" 
+                            onClick={pushSelectedAnswersToProd}
+                          >
+                            <ArrowRight className="h-3 w-3 mr-1" />
+                            Prod-ში ({selectedAnswerResults.size})
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                      {answerResults.map((result) => (
+                        <div
+                          key={result.id}
+                          className={`p-3 rounded-lg border ${
+                            result.status === 'shortened' 
+                              ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
+                              : result.status === 'partially_shortened'
+                              ? 'border-blue-200 bg-blue-50 dark:bg-blue-950/20'
+                              : result.status === 'unshortenable'
+                              ? 'border-red-200 bg-red-50 dark:bg-red-950/20'
+                              : 'border-amber-200 bg-amber-50 dark:bg-amber-950/20'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {(result.status === 'shortened' || result.status === 'partially_shortened') && (
+                              <Checkbox
+                                checked={selectedAnswerResults.has(result.id)}
+                                onCheckedChange={() => toggleAnswerResultSelection(result.id)}
+                                className="mt-1"
+                              />
+                            )}
+                            <div className="flex-1 space-y-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge 
+                                  variant={
+                                    result.status === 'shortened' ? 'default' : 
+                                    result.status === 'partially_shortened' ? 'secondary' :
+                                    result.status === 'unshortenable' ? 'destructive' : 'outline'
+                                  }
+                                  className="text-xs"
+                                >
+                                  {result.status === 'shortened' ? 'შემოკლდა' : 
+                                   result.status === 'partially_shortened' ? 'ნაწილობრივ' :
+                                   result.status === 'unshortenable' ? 'შეუმოკლებადი' : 'შეცდომა'}
+                                </Badge>
+                                {result.correctShortened && (
+                                  <Badge variant="outline" className="text-xs text-green-600">
+                                    ✓ სწორი პასუხი
+                                  </Badge>
+                                )}
+                                {result.incorrectShortenedCount > 0 && (
+                                  <Badge variant="outline" className="text-xs text-blue-600">
+                                    {result.incorrectShortenedCount} არასწორი
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground mb-2 line-clamp-1">
+                                {result.questionText}
+                              </div>
+                              <div className="text-sm space-y-1">
+                                {result.shortenedCorrect && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-green-600 font-medium">სწორი:</span>
+                                    <span className="line-through text-muted-foreground text-xs">{result.originalCorrect}</span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                    <span className="font-medium">{result.shortenedCorrect}</span>
+                                  </div>
+                                )}
+                                {result.shortenedIncorrect.map((shortened, idx) => shortened && (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <span className="text-muted-foreground text-xs">არასწორი {idx + 1}:</span>
+                                    <span className="line-through text-muted-foreground text-xs">{result.originalIncorrect[idx]}</span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-sm">{shortened}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {answerResults.length === 0 && answerProgress.status === 'idle' && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">დააჭირეთ "შემოკლება" გრძელი პასუხების AI შემოკლებისთვის</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            )}
           </TabsContent>
 
           {/* Icon Assignment Tab */}
