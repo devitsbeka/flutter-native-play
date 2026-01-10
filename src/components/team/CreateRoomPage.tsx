@@ -980,7 +980,10 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         onClose={() => setShowIconPickerModal(false)}
         currentIconUrl={roomIcon}
         roomName={roomName}
-        onSelectIcon={(iconUrl) => setRoomIcon(iconUrl)}
+        onConfirm={(iconUrl, newName) => {
+          setRoomIcon(iconUrl);
+          setRoomName(newName);
+        }}
       />
     </motion.div>
   );
