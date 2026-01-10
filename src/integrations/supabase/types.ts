@@ -1079,6 +1079,7 @@ export type Database = {
       }
       questions: {
         Row: {
+          answer_shorten_status: string | null
           category_id: string
           correct_answer: string
           created_at: string | null
@@ -1091,6 +1092,8 @@ export type Database = {
           language: string
           last_quality_check: string | null
           level_number: number | null
+          original_correct_answer: string | null
+          original_incorrect_answers: Json | null
           original_question_text: string | null
           quality_issues: Json | null
           quality_status: string | null
@@ -1099,6 +1102,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          answer_shorten_status?: string | null
           category_id: string
           correct_answer: string
           created_at?: string | null
@@ -1111,6 +1115,8 @@ export type Database = {
           language?: string
           last_quality_check?: string | null
           level_number?: number | null
+          original_correct_answer?: string | null
+          original_incorrect_answers?: Json | null
           original_question_text?: string | null
           quality_issues?: Json | null
           quality_status?: string | null
@@ -1119,6 +1125,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          answer_shorten_status?: string | null
           category_id?: string
           correct_answer?: string
           created_at?: string | null
@@ -1131,6 +1138,8 @@ export type Database = {
           language?: string
           last_quality_check?: string | null
           level_number?: number | null
+          original_correct_answer?: string | null
+          original_incorrect_answers?: Json | null
           original_question_text?: string | null
           quality_issues?: Json | null
           quality_status?: string | null

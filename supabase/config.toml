@@ -61,6 +61,9 @@ verify_jwt = false
 [functions.shorten-questions]
 verify_jwt = false
 
+[functions.shorten-answers]
+verify_jwt = false
+
 [functions.delete-user-account]
 verify_jwt = true
 
