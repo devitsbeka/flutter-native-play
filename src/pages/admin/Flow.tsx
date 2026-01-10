@@ -586,10 +586,12 @@ export default function Flow() {
               isGenerating={isGenerating}
               setIsGenerating={setIsGenerating}
               knowledgeSources={knowledgeSources}
-            />
-            <KnowledgeSourcesList
-              sources={knowledgeSources}
-              onSourcesChange={setKnowledgeSources}
+              knowledgeSourcesComponent={
+                <KnowledgeSourcesList
+                  sources={knowledgeSources}
+                  onSourcesChange={setKnowledgeSources}
+                />
+              }
             />
           </ScrollArea>
         </div>
