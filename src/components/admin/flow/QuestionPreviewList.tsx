@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Check, X, CheckCheck, XCircle, AlertTriangle, Search, Edit2 } from 'lucide-react';
 import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
-import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from '@/utils/questionValidation';
+import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 import { cn } from '@/lib/utils';
 import { FlowIconPicker } from './FlowIconPicker';
+
+const { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } = QUALITY_CONSTANTS;
 
 interface Props {
   questions: GeneratedQuestion[];

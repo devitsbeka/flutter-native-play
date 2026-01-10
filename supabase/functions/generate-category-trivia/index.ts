@@ -1,9 +1,82 @@
 /// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Quality constants - must match frontend
+const QUESTION_MAX_LENGTH = 65;
+const ANSWER_MAX_LENGTH = 20;
+const SIMILARITY_THRESHOLD = 0.55;
+
+// Semantic duplicate detection utilities
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[?.!,;:'"()]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function extractKeywords(text: string): Set<string> {
+  const normalized = normalizeText(text);
+  const numbers = text.match(/\d+/g) || [];
+  const words = normalized.split(' ').filter(w => w.length > 3);
+  return new Set([...numbers, ...words]);
+}
+
+function calculateSimilarity(text1: string, text2: string): number {
+  const s1 = normalizeText(text1);
+  const s2 = normalizeText(text2);
+  
+  if (s1 === s2) return 1;
+  if (s1.length === 0 || s2.length === 0) return 0;
+  
+  // Check if one contains the other
+  if (s1.includes(s2) || s2.includes(s1)) {
+    const shorter = Math.min(s1.length, s2.length);
+    const longer = Math.max(s1.length, s2.length);
+    return shorter / longer;
+  }
+  
+  // Keyword-based similarity (Jaccard index)
+  const keywords1 = extractKeywords(text1);
+  const keywords2 = extractKeywords(text2);
+  
+  if (keywords1.size === 0 || keywords2.size === 0) return 0;
+  
+  const intersection = [...keywords1].filter(k => keywords2.has(k));
+  const union = new Set([...keywords1, ...keywords2]);
+  
+  return intersection.length / union.size;
+}
+
+function removeDuplicatesFromBatch<T extends { question: string }>(
+  questions: T[],
+  threshold: number = SIMILARITY_THRESHOLD
+): T[] {
+  const unique: T[] = [];
+  
+  for (const q of questions) {
+    const isDuplicate = unique.some(existing => 
+      calculateSimilarity(q.question, existing.question) > threshold
+    );
+    
+    if (!isDuplicate) {
+      unique.push(q);
+    }
+  }
+  
+  return unique;
+}
+
+function isSimilarToExisting(question: string, existingQuestions: string[], threshold: number = SIMILARITY_THRESHOLD): boolean {
+  return existingQuestions.some(existing => 
+    calculateSimilarity(question, existing) > threshold
+  );
+}
 
 // Category-specific topic guidance to ensure relevance
 const categoryTopics: Record<string, string[]> = {
@@ -291,10 +364,7 @@ ${iconKeywordMappings}
 
     const rawQuestions = JSON.parse(jsonMatch[0]);
 
-    // Server-side STRICT validation - reject (not truncate) questions exceeding limits
-    const ANSWER_MAX_LENGTH = 20;
-    const QUESTION_MAX_LENGTH = 65;
-    
+    // Step 1: Server-side STRICT validation - reject questions exceeding limits
     const validQuestions = rawQuestions.filter((q: any) => {
       const questionText = q.question || '';
       const correctAnswer = q.correct_answer || '';
@@ -334,10 +404,27 @@ ${iconKeywordMappings}
       return true;
     });
 
-    console.log(`Generated ${rawQuestions.length} questions, ${validQuestions.length} passed strict validation for ${category}`);
+    console.log(`Step 1 - Length validation: ${rawQuestions.length} -> ${validQuestions.length} questions`);
+
+    // Step 2: Deduplicate within the generated batch
+    const batchDeduped = removeDuplicatesFromBatch(validQuestions, SIMILARITY_THRESHOLD);
+    console.log(`Step 2 - Batch deduplication: ${validQuestions.length} -> ${batchDeduped.length} questions`);
+
+    // Step 3: Filter against existing database questions using semantic similarity
+    const existingTexts = existingQuestions as string[];
+    const uniqueQuestions = batchDeduped.filter((q: any) => {
+      const isSimilar = isSimilarToExisting(q.question, existingTexts, SIMILARITY_THRESHOLD);
+      if (isSimilar) {
+        console.log(`Filtered duplicate: "${q.question.substring(0, 50)}..."`);
+      }
+      return !isSimilar;
+    });
+
+    console.log(`Step 3 - DB deduplication: ${batchDeduped.length} -> ${uniqueQuestions.length} questions`);
+    console.log(`Final: Generated ${rawQuestions.length} raw, ${uniqueQuestions.length} unique valid questions for ${category}`);
 
     return new Response(
-      JSON.stringify({ questions: validQuestions }),
+      JSON.stringify({ questions: uniqueQuestions }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

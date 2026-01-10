@@ -6,6 +6,9 @@ import { QuestionQueue } from '@/components/admin/flow/QuestionQueue';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { calculateSimilarity, removeDuplicatesFromBatch } from '@/utils/duplicateDetection';
+import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
+
+const { SIMILARITY_THRESHOLD } = QUALITY_CONSTANTS;
 export interface GeneratedQuestion {
   id: string;
   questionText: string;
@@ -204,8 +207,6 @@ export default function Flow() {
     }
   };
 
-  // Semantic duplicate detection threshold
-  const SIMILARITY_THRESHOLD = 0.55;
 
   // Check for duplicate questions in the database using semantic similarity
   const checkDuplicates = useCallback(async (questions: GeneratedQuestion[]): Promise<GeneratedQuestion[]> => {
@@ -374,6 +375,15 @@ export default function Flow() {
       return;
     }
 
+    // Quality gate: warn about questions without icons
+    const noIconQuestions = approved.filter(q => !q.iconSlug);
+    if (noIconQuestions.length > 0) {
+      const confirmed = window.confirm(
+        `${noIconQuestions.length} of ${approved.length} questions have no icon assigned.\n\nPublish anyway?`
+      );
+      if (!confirmed) return;
+    }
+
     const questionsToInsert = approved.map(q => ({
       question_text: q.questionText,
       correct_answer: q.correctAnswer,
@@ -404,6 +414,15 @@ export default function Flow() {
     if (approved.length === 0) {
       toast.error('No approved questions to publish');
       return;
+    }
+
+    // Quality gate: warn about questions without icons
+    const noIconQuestions = approved.filter(q => !q.iconSlug);
+    if (noIconQuestions.length > 0) {
+      const confirmed = window.confirm(
+        `${noIconQuestions.length} of ${approved.length} questions have no icon assigned.\n\nPublish to PRODUCTION anyway?`
+      );
+      if (!confirmed) return;
     }
 
     const questionsToInsert = approved.map(q => ({
