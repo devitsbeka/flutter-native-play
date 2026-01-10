@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
@@ -70,7 +70,9 @@ export default function Flow() {
   const [focusedQuestionId, setFocusedQuestionId] = useState<string | null>(null);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
+  const [isUserEditing, setIsUserEditing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fetchStatsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -224,6 +226,21 @@ export default function Flow() {
     }
   }, []);
 
+  // Debounced stats fetcher to prevent rapid re-renders during editing
+  const debouncedFetchStats = useCallback(() => {
+    // Clear any pending timeout
+    if (fetchStatsTimeoutRef.current) {
+      clearTimeout(fetchStatsTimeoutRef.current);
+    }
+    // Don't fetch if user is actively editing
+    if (isUserEditing) return;
+    
+    // Debounce by 2 seconds
+    fetchStatsTimeoutRef.current = setTimeout(() => {
+      fetchStats();
+    }, 2000);
+  }, [fetchStats, isUserEditing]);
+
   // Initialize data and set up real-time subscription
   useEffect(() => {
     fetchCategories();
@@ -240,16 +257,19 @@ export default function Flow() {
           table: 'questions'
         },
         () => {
-          // Refetch stats whenever questions table changes
-          fetchStats();
+          // Use debounced fetch to prevent disruption while editing
+          debouncedFetchStats();
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      if (fetchStatsTimeoutRef.current) {
+        clearTimeout(fetchStatsTimeoutRef.current);
+      }
     };
-  }, [fetchStats]);
+  }, [fetchStats, debouncedFetchStats]);
 
   // Check for duplicate questions in the database using semantic similarity
   const checkDuplicates = useCallback(async (questions: GeneratedQuestion[]): Promise<GeneratedQuestion[]> => {
@@ -607,6 +627,8 @@ export default function Flow() {
             languages={LANGUAGES}
             focusedQuestionId={focusedQuestionId}
             onFocusChange={setFocusedQuestionId}
+            onEditStart={() => setIsUserEditing(true)}
+            onEditEnd={() => setIsUserEditing(false)}
           />
         </div>
 

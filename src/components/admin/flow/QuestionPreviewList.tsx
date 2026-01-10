@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,6 +23,8 @@ interface Props {
   languages: { code: string; name: string; flag: string }[];
   focusedQuestionId: string | null;
   onFocusChange: (id: string | null) => void;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
 }
 
 type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
@@ -38,6 +40,8 @@ export function QuestionPreviewList({
   languages,
   focusedQuestionId,
   onFocusChange,
+  onEditStart,
+  onEditEnd,
 }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
@@ -266,8 +270,14 @@ export function QuestionPreviewList({
               onToggleSelect={() => toggleSelect(q.id)}
               onApprove={() => onApprove(q.id)}
               onReject={() => onReject(q.id)}
-              onStartEdit={() => setEditingId(q.id)}
-              onEndEdit={() => setEditingId(null)}
+              onStartEdit={() => {
+                setEditingId(q.id);
+                onEditStart?.();
+              }}
+              onEndEdit={() => {
+                setEditingId(null);
+                onEditEnd?.();
+              }}
               onUpdate={(updates) => onUpdateQuestion(q.id, updates)}
               onFocus={() => onFocusChange(q.id)}
               flag={getFlag(q.language)}
@@ -279,20 +289,7 @@ export function QuestionPreviewList({
   );
 }
 
-function QuestionCard({
-  question,
-  isSelected,
-  isEditing,
-  isFocused,
-  onToggleSelect,
-  onApprove,
-  onReject,
-  onStartEdit,
-  onEndEdit,
-  onUpdate,
-  onFocus,
-  flag,
-}: {
+interface QuestionCardProps {
   question: GeneratedQuestion;
   isSelected: boolean;
   isEditing: boolean;
@@ -305,7 +302,22 @@ function QuestionCard({
   onUpdate: (updates: Partial<GeneratedQuestion>) => void;
   onFocus: () => void;
   flag: string;
-}) {
+}
+
+const QuestionCard = React.memo(function QuestionCard({
+  question,
+  isSelected,
+  isEditing,
+  isFocused,
+  onToggleSelect,
+  onApprove,
+  onReject,
+  onStartEdit,
+  onEndEdit,
+  onUpdate,
+  onFocus,
+  flag,
+}: QuestionCardProps) {
   const [editedQuestion, setEditedQuestion] = useState(question.questionText);
   const [editedCorrect, setEditedCorrect] = useState(question.correctAnswer);
   const [editedIncorrect, setEditedIncorrect] = useState([...question.incorrectAnswers]);
@@ -531,7 +543,7 @@ function QuestionCard({
       </div>
     </div>
   );
-}
+});
 
 function AnswerChip({ answer, isCorrect = false }: { answer: string; isCorrect?: boolean }) {
   const length = answer?.length || 0;
