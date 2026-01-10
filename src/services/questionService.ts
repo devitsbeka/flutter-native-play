@@ -282,24 +282,22 @@ async function getCategoryQuestions(
   
   const totalAvailable = totalCount || 0;
   
-  // Get seen questions for this level (most granular)
+  // Get seen questions for THIS level ONLY (category mode is isolated from other modes)
   const levelSeenIds = getCategoryLevelSeenIds(categoryUuid, levelNumber);
-  const globalSeen = getSeenQuestionIds();
   
-  // Build initial exclusion list (prioritize fresh questions)
-  let excludeIds = [...new Set([...levelSeenIds, ...globalSeen, ...(additionalExcludeIds || [])])];
+  // Category mode: use ONLY level-specific tracking
+  // Do NOT include globalSeen from VS/TV modes - they are separate tracking scopes
+  let excludeIds = [...new Set([...levelSeenIds, ...(additionalExcludeIds || [])])];
   
-  // Check level-specific exhaustion ONLY against level tracking
-  // Don't let global seen from other modes trigger premature reset
+  // Check level-specific exhaustion
   const levelExhausted = levelSeenIds.length >= totalAvailable;
   
-  if (levelExhausted) {
-    // Level pool exhausted - clear level tracking, but KEEP global exclusions for first pass
+  if (levelExhausted && totalAvailable > 0) {
+    // Level pool exhausted - clear level tracking and start fresh
     clearCategoryLevelSeen(categoryUuid, levelNumber);
     wasReset = true;
     exhausted = true;
-    // Try with only global exclusions first (may still have unseen-in-this-level questions)
-    excludeIds = [...new Set([...globalSeen, ...(additionalExcludeIds || [])])];
+    excludeIds = [...(additionalExcludeIds || [])]; // Only keep explicit exclusions
   }
   
   // Build query
@@ -462,6 +460,9 @@ async function getTVQuestions(
     const existingIds = (questions || []).map(q => q.id);
     const remainingNeeded = count - (questions?.length || 0);
     
+    // Re-fetch global seen for fallback exclusions (prevent cross-mode repeats)
+    const fallbackSeenIds = getSeenQuestionIds();
+    
     let fallbackQuery = supabase
       .from('questions')
       .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
@@ -470,14 +471,18 @@ async function getTVQuestions(
       .eq('language', language)
       .neq('category_id', categoryUuid);
     
-    if (existingIds.length > 0) {
-      fallbackQuery = fallbackQuery.not('id', 'in', `(${existingIds.join(',')})`);
+    // Exclude both already-fetched AND globally seen
+    const fallbackExcludeIds = [...new Set([...existingIds, ...fallbackSeenIds])];
+    if (fallbackExcludeIds.length > 0) {
+      fallbackQuery = fallbackQuery.not('id', 'in', `(${fallbackExcludeIds.join(',')})`);
     }
     
-    const { data: fallbackQuestions } = await fallbackQuery.limit(remainingNeeded);
+    const { data: fallbackQuestions } = await fallbackQuery.limit(remainingNeeded * 2);
     
     if (fallbackQuestions) {
-      questions = [...(questions || []), ...fallbackQuestions];
+      const validFallback = (fallbackQuestions as RawQuestion[]).filter(isValidQuestionLength);
+      const formatted = shuffleArray(validFallback).slice(0, remainingNeeded);
+      questions = [...(questions || []), ...(formatted as typeof questions)];
     }
   }
   
@@ -534,17 +539,19 @@ async function getVSQuestions(
   
   const totalAvailable = totalCount || 0;
   
-  // Check if we need to reset
-  if (shouldResetGlobalPool(totalAvailable)) {
+  // Check exhaustion against SEEN ids (what we actually exclude), not global asked
+  const isExhausted = seenIds.length >= totalAvailable && totalAvailable > 0;
+  
+  if (isExhausted) {
     clearSeenQuestions();
     wasReset = true;
     exhausted = true;
   }
   
   // Get fresh exclude list after potential reset
-  const excludeIds = wasReset ? [] : getSeenQuestionIds();
+  let excludeIds = wasReset ? [] : [...seenIds];
   
-  // Get random categories
+  // Get all active categories
   const { data: categories } = await supabase
     .from('categories')
     .select('id, name, category_id, icon_slug')
@@ -554,15 +561,21 @@ async function getVSQuestions(
     return {
       questions: [],
       exhausted: true,
-      exhaustionInfo: { totalAvailable: 0, totalSeen: 0, wasReset, usedFallback },
+      exhaustionInfo: { totalAvailable: 0, totalSeen: 0, wasReset, usedFallback: false },
       language,
     };
   }
   
-  // Pick from random categories (one question per category)
-  const randomCategories = shuffleArray(categories).slice(0, count);
+  // Shuffle categories and pick questions with retry logic
+  const shuffledCategories = shuffleArray(categories);
+  const selectedQuestions: FormattedQuestion[] = [];
+  let categoryIndex = 0;
+  let usedFallbackLocal = false;
   
-  const questionPromises = randomCategories.map(async (cat) => {
+  // Try to get one question per category, retry with next category if exhausted
+  while (selectedQuestions.length < count && categoryIndex < shuffledCategories.length) {
+    const cat = shuffledCategories[categoryIndex];
+    
     let query = supabase
       .from('questions')
       .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
@@ -582,28 +595,59 @@ async function getVSQuestions(
       const validQuestions = rawQuestions.filter(isValidQuestionLength);
       if (validQuestions.length > 0) {
         const randomQ = validQuestions[Math.floor(Math.random() * validQuestions.length)];
-        return formatQuestion(randomQ, cat.name, cat.category_id);
+        selectedQuestions.push(formatQuestion(randomQ, cat.name, cat.category_id));
+        // Add to excludeIds to prevent same question in this batch
+        excludeIds.push(randomQ.id);
       }
     }
-    return null;
-  });
+    
+    categoryIndex++;
+  }
   
-  const results = await Promise.all(questionPromises);
-  const questions = results.filter((q): q is FormattedQuestion => q !== null);
+  // Global fallback: if still not enough, query across ALL categories
+  if (selectedQuestions.length < count) {
+    usedFallbackLocal = true;
+    const needed = count - selectedQuestions.length;
+    const existingIds = selectedQuestions.map(q => q.id);
+    
+    let fallbackQuery = supabase
+      .from('questions')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, category_id')
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language);
+    
+    const allExcludeIds = [...new Set([...excludeIds, ...existingIds])];
+    if (allExcludeIds.length > 0) {
+      fallbackQuery = fallbackQuery.not('id', 'in', `(${allExcludeIds.join(',')})`);
+    }
+    
+    const { data: fallbackData } = await fallbackQuery.limit(needed * 3);
+    
+    if (fallbackData && fallbackData.length > 0) {
+      const validFallback = (fallbackData as RawQuestion[]).filter(isValidQuestionLength);
+      const shuffled = shuffleArray(validFallback).slice(0, needed);
+      
+      for (const q of shuffled) {
+        const cat = categories.find(c => c.id === q.category_id);
+        selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
+      }
+    }
+  }
   
   // Mark as seen globally
-  if (questions.length > 0) {
-    markQuestionsAsAskedGlobally(questions.map(q => q.id));
+  if (selectedQuestions.length > 0) {
+    markQuestionsAsAskedGlobally(selectedQuestions.map(q => q.id));
   }
   
   return {
-    questions,
+    questions: selectedQuestions,
     exhausted,
     exhaustionInfo: {
       totalAvailable,
       totalSeen: seenIds.length,
       wasReset,
-      usedFallback,
+      usedFallback: usedFallbackLocal,
     },
     language,
   };
