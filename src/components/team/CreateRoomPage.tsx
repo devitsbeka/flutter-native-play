@@ -70,6 +70,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
+  const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>(null);
   const [isSearchingRandom, setIsSearchingRandom] = useState(false);
   
@@ -169,7 +170,19 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     } else if (mode === "library") {
       setShowCategoriesModal(true);
     } else if (mode === "create") {
+      // Toggle the sub-menu for create options
+      setShowCreateOptionsMenu(!showCreateOptionsMenu);
+      setSelectionMode("create");
+    }
+  };
+
+  const handleCreateOptionSelect = (type: "trivia" | "collection") => {
+    setShowCreateOptionsMenu(false);
+    if (type === "trivia") {
       setShowCreateTriviaModal(true);
+    } else {
+      // Navigate to collection creation
+      navigate("/social/collections/new");
     }
   };
 
@@ -728,33 +741,96 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
               </AnimatePresence>
             </div>
 
-            {/* Create Trivia Option */}
-            <motion.button
-              onClick={() => handleOptionClick("create")}
-              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                selectionMode === "create"
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25"
-                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-              }`}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                selectionMode === "create" 
-                  ? "bg-white/20" 
-                  : "bg-emerald-500/10"
-              }`}>
-                <Sparkles className={`w-6 h-6 ${selectionMode === "create" ? "text-white" : "text-emerald-500"}`} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className={`font-semibold ${selectionMode === "create" ? "text-white" : "text-foreground"}`}>
-                  შექმენი ტრივია
-                </p>
-                <p className={`text-sm ${selectionMode === "create" ? "text-white/70" : "text-muted-foreground"}`}>
-                  შექმენი შენი საკუთარი კითხვები
-                </p>
-              </div>
-            </motion.button>
+            {/* Create Trivia Option - Container that expands to show sub-options */}
+            <div className="rounded-2xl overflow-hidden">
+              <AnimatePresence mode="wait">
+                {showCreateOptionsMenu && selectionMode === "create" && !customTriviaQuestions ? (
+                  // Expanded state - show 2 sub-options
+                  <motion.div
+                    key="create-options"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-white font-semibold">აირჩიე ტიპი</p>
+                      <button 
+                        onClick={() => {
+                          setShowCreateOptionsMenu(false);
+                          setSelectionMode(null);
+                        }}
+                        className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                    
+                    {/* Trivia Option */}
+                    <motion.button
+                      onClick={() => handleCreateOptionSelect("trivia")}
+                      className="w-full flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-medium text-white">Trivia</p>
+                        <p className="text-xs text-white/70">ერთი რაუნდი კითხვებით</p>
+                      </div>
+                    </motion.button>
+                    
+                    {/* Collection Option */}
+                    <motion.button
+                      onClick={() => handleCreateOptionSelect("collection")}
+                      className="w-full flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                        <Library className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-medium text-white">Collection</p>
+                        <p className="text-xs text-white/70">მრავალი რაუნდი ერთად</p>
+                      </div>
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  // Collapsed state - regular button
+                  <motion.button
+                    key="create-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => handleOptionClick("create")}
+                    className={`relative w-full flex items-center gap-4 p-4 transition-all ${
+                      selectionMode === "create" && customTriviaQuestions
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25"
+                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                      selectionMode === "create" && customTriviaQuestions
+                        ? "bg-white/20" 
+                        : "bg-emerald-500/10"
+                    }`}>
+                      <Sparkles className={`w-6 h-6 ${selectionMode === "create" && customTriviaQuestions ? "text-white" : "text-emerald-500"}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className={`font-semibold ${selectionMode === "create" && customTriviaQuestions ? "text-white" : "text-foreground"}`}>
+                        შექმენი ტრივია
+                      </p>
+                      <p className={`text-sm ${selectionMode === "create" && customTriviaQuestions ? "text-white/70" : "text-muted-foreground"}`}>
+                        შექმენი შენი საკუთარი კითხვები
+                      </p>
+                    </div>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
 
