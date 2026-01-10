@@ -104,7 +104,7 @@ export const TVLobbyScreenV2: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-8 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-6 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         {/* Room Name - Editable */}
