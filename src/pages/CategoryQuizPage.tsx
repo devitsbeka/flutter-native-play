@@ -218,7 +218,8 @@ export default function CategoryQuizPage() {
         });
         
         if (result.questions.length === 0) {
-          setError("ამ კატეგორიაში კითხვები არ მოიძებნა.");
+          setError("ამ კატეგორიაში ახალი კითხვები დროებით არ არის ხელმისაწვდომი. სცადეთ მოგვიანებით ან აირჩიეთ სხვა კატეგორია.");
+          setLoading(false);
           return;
         }
         
@@ -662,7 +663,34 @@ export default function CategoryQuizPage() {
           <div className="text-6xl mb-4">😕</div>
           <h2 className="text-xl font-bold text-foreground mb-2">უპს!</h2>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <ChunkyButton onClick={() => navigate(-1)}>უკან დაბრუნება</ChunkyButton>
+          <div className="space-y-3">
+            <ChunkyButton 
+              variant="primary"
+              className="w-full"
+              onClick={() => {
+                // Clear tracking and retry
+                hasFetched.current = false;
+                setError(null);
+                setLoading(true);
+              }}
+            >
+              სცადე თავიდან
+            </ChunkyButton>
+            <ChunkyButton 
+              variant="secondary"
+              className="w-full"
+              onClick={() => navigate(`/category/${categoryId}`)}
+            >
+              სხვა დონის არჩევა
+            </ChunkyButton>
+            <ChunkyButton 
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/')}
+            >
+              მთავარ გვერდზე
+            </ChunkyButton>
+          </div>
         </div>
       </div>
     );
