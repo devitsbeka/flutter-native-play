@@ -84,8 +84,21 @@ export function useGameRoom() {
         attempts++;
       }
 
-      // Create the room with a random room name and gradient
-      const roomName = generateRoomName();
+      // Generate AI-powered funny room name based on random icon
+      let roomName = generateRoomName(); // fallback
+      let roomIcon: string | null = null;
+      
+      try {
+        const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name');
+        if (!nameError && nameData?.name) {
+          roomName = nameData.name;
+          roomIcon = nameData.icon_url || null;
+        }
+      } catch (e) {
+        console.log('Using fallback room name generator');
+      }
+
+      // Create the room with AI-generated name and gradient
       const { data: room, error: roomError } = await supabase
         .from("game_rooms")
         .insert({
@@ -95,7 +108,9 @@ export function useGameRoom() {
           category_name: categoryName || null,
           status: "waiting" as RoomStatus,
           room_name: roomName,
+          room_icon: roomIcon,
           background_gradient: getRandomGradient(),
+          last_activity_at: new Date().toISOString(), // Ensure new rooms appear first
         })
         .select()
         .single();
