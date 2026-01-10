@@ -303,6 +303,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     try {
       const roomCode = await generateRoomCode();
       
+      // Generate AI room name and icon
+      let roomName: string | null = null;
+      let roomIcon: string | null = null;
+      try {
+        const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name');
+        if (!nameError && nameData?.name) {
+          roomName = nameData.name;
+          roomIcon = nameData.icon_url || null;
+        }
+      } catch (e) {
+        console.log('Using default room name, edge function failed:', e);
+      }
+      
       const { data: room, error } = await supabase
         .from("game_rooms")
         .insert({
@@ -314,6 +327,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           is_permanent: true,
           background_gradient: getRandomGradient(),
           total_questions: customQuestions?.length || 5,
+          room_name: roomName,
+          room_icon: roomIcon,
+          last_activity_at: new Date().toISOString(),
         })
         .select()
         .single();
