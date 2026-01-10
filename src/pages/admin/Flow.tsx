@@ -530,7 +530,7 @@ export default function Flow() {
           </div>
           
           {/* Language Stats Bar - Compact Horizontal Scroll */}
-          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent -mx-1 px-1">
+          <div className="overflow-x-auto md:scrollbar-none scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent -mx-1 px-1">
             <div className="flex gap-2 min-w-max py-1">
               {LANGUAGES.map(lang => {
                 const langStat = languageStats[lang.code] || { inLib: 0, inProd: 0 };
