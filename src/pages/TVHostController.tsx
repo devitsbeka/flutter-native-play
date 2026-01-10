@@ -600,8 +600,10 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Waiting phase - show QR and start button
+  // Waiting phase - show category selector and players
   if (localPhase === 'waiting') {
+    const joinUrlCustom = `https://mytrivia.io/join?code=${displayCode}`;
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
         <motion.div
@@ -613,27 +615,22 @@ const TVHostController: React.FC = () => {
             <Tv className="w-6 h-6 text-purple-300" />
             <span className="font-bold text-white">მართვის პანელი</span>
           </div>
-          <div className="bg-white/10 border border-white/20 rounded-full px-3 py-1">
-            <span className="text-sm text-purple-200">მოლოდინი</span>
-          </div>
+          <button 
+            onClick={() => navigate('/team')}
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+          >
+            <X className="w-5 h-5 text-purple-200" />
+          </button>
         </motion.div>
 
-        {/* QR Code for guests */}
+        {/* Code section - simplified without QR */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6"
+          className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-4"
         >
-          <div className="flex items-center gap-2 mb-3">
-            <QrCode className="w-5 h-5 text-purple-300" />
-            <h2 className="font-bold text-white">მოთამაშეებს გადაუგზავნე</h2>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="bg-white p-3 rounded-xl">
-              <QRCodeSVG value={joinUrl} size={120} level="H" />
-            </div>
-            <div className="flex-1 flex flex-col justify-center">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm text-purple-200 mb-1">კოდი:</p>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-mono font-bold text-white tracking-wider">
@@ -646,19 +643,22 @@ const TVHostController: React.FC = () => {
                   {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-purple-300" />}
                 </button>
               </div>
-              <p className="text-xs text-purple-300 mt-2 break-all">{joinUrl}</p>
+              <p className="text-xs text-purple-300 mt-1">{joinUrlCustom}</p>
+            </div>
+            <div className="flex items-center gap-2 text-purple-300">
+              <Users className="w-5 h-5" />
+              <span className="font-medium">{players.length}</span>
             </div>
           </div>
         </motion.div>
 
         {/* Players section */}
-        <motion.div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Users className="w-5 h-5 text-purple-300" />
-            <span className="text-white font-medium">{players.length} მოთამაშე</span>
-          </div>
-          
-          {players.length > 0 && (
+        {players.length > 0 && (
+          <motion.div 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             <div className="flex gap-3 flex-wrap">
               {players.map((player, index) => (
                 <motion.div
@@ -670,82 +670,71 @@ const TVHostController: React.FC = () => {
                 >
                   <Avatar imageUrl={player.avatar_url || undefined} emoji={player.nickname?.[0] || '👤'} size="sm" />
                   <span className="text-sm font-medium text-white">{player.nickname}</span>
-                  {player.isHost ? (
+                  {player.isHost && (
                     <span className="text-xs bg-yellow-500/30 text-yellow-300 px-1.5 py-0.5 rounded">HOST</span>
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-purple-300" />
                   )}
                 </motion.div>
               ))}
             </div>
-          )}
-          
-          {players.length === 0 && (
-            <p className="text-purple-200 text-sm">ველოდებით მოთამაშეებს...</p>
-          )}
+          </motion.div>
+        )}
+
+        {/* Category selector - always visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-300" />
+            აირჩიე კატეგორია
+          </h3>
+          <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+            {categories.map((category, index) => (
+              <motion.button
+                key={category.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.03 }}
+                onClick={() => setSelectedCategory(category)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                  selectedCategory?.id === category.id
+                    ? 'bg-purple-500/30 border-purple-400'
+                    : 'bg-white/10 border-white/20 hover:border-purple-400/50'
+                }`}
+              >
+                <span className="text-2xl">{category.icon}</span>
+                <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                {selectedCategory?.id === category.id ? (
+                  <Check className="w-5 h-5 text-green-400" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-purple-300" />
+                )}
+              </motion.button>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Category selector modal */}
-        <AnimatePresence>
-          {showCategorySelector && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => setShowCategorySelector(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-gradient-to-br from-purple-800 to-purple-900 rounded-2xl p-4 max-w-md w-full max-h-[70vh] overflow-y-auto"
-                onClick={e => e.stopPropagation()}
-              >
-                <h3 className="text-white font-bold text-lg mb-4">აირჩიე კატეგორია</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setShowCategorySelector(false);
-                        // Immediately start the game after selection
-                        handleSelectCategory(category).then(() => {
-                          startGame(category.id);
-                        });
-                      }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
-                    >
-                      <span className="text-2xl">{category.icon}</span>
-                      <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-                      <ChevronRight className="w-5 h-5 text-purple-300" />
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Control buttons */}
-        <div className="space-y-3">
+        {/* Start Game Button - fixed at bottom */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent">
           <ChunkyButton
             variant="primary"
             className="w-full"
-            onClick={() => setShowCategorySelector(true)}
-            disabled={players.length < 1}
+            onClick={() => {
+              if (selectedCategory) {
+                handleSelectCategory(selectedCategory).then(() => {
+                  startGame(selectedCategory.id);
+                });
+              }
+            }}
+            disabled={players.length < 1 || !selectedCategory}
           >
             <Play className="w-5 h-5 mr-2" />
-            თამაშის დაწყება {players.length < 1 && '(საჭიროა მინ. 1 მოთამაშე)'}
-          </ChunkyButton>
-
-          <ChunkyButton
-            variant="secondary"
-            className="w-full"
-            onClick={handleEndGame}
-          >
-            თამაშის დასრულება
+            {!selectedCategory 
+              ? 'აირჩიე კატეგორია' 
+              : players.length < 1 
+                ? 'საჭიროა მინ. 1 მოთამაშე' 
+                : `დაწყება: ${selectedCategory.name}`}
           </ChunkyButton>
         </div>
       </div>
