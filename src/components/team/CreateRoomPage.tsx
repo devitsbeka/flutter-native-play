@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -62,6 +62,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [roomName, setRoomName] = useState<string>("იტვირთება...");
   const [roomIcon, setRoomIcon] = useState<string | null>(null);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
   
   const [showTVModal, setShowTVModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -300,33 +302,72 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         {/* Room Name with Icon - AI generated */}
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+          <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
             {/* Icon from 9k library */}
-            <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
               {isGeneratingName ? (
-                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <Loader2 className="w-5 h-5 text-primary animate-spin" />
               ) : roomIcon ? (
-                <img src={roomIcon} alt="" className="w-10 h-10 object-contain" />
+                <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
               ) : (
-                <Sparkles className="w-6 h-6 text-primary" />
+                <Sparkles className="w-5 h-5 text-primary" />
               )}
             </div>
             
-            {/* Funny name */}
+            {/* Editable name */}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground text-lg truncate">
-                {roomName}
-              </p>
-              <p className="text-xs text-muted-foreground">AI გენერირებული</p>
+              {isEditingName ? (
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={() => {
+                    if (editedName.trim()) {
+                      setRoomName(editedName.trim());
+                    }
+                    setIsEditingName(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (editedName.trim()) {
+                        setRoomName(editedName.trim());
+                      }
+                      setIsEditingName(false);
+                    } else if (e.key === 'Escape') {
+                      setIsEditingName(false);
+                    }
+                  }}
+                  autoFocus
+                  className="w-full bg-background border border-primary/30 rounded-lg px-2 py-1 text-[16px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="ოთახის სახელი"
+                />
+              ) : (
+                <p className="font-semibold text-foreground text-[16px] break-words leading-tight">
+                  {roomName}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-0.5">AI გენერირებული</p>
             </div>
+            
+            {/* Edit button */}
+            <button
+              onClick={() => {
+                setEditedName(roomName);
+                setIsEditingName(true);
+              }}
+              disabled={isGeneratingName || isEditingName}
+              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+            >
+              <Pencil className="w-4 h-4 text-primary" />
+            </button>
             
             {/* Regenerate button */}
             <button
               onClick={generateRoomName}
               disabled={isGeneratingName}
-              className="p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-5 h-5 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
