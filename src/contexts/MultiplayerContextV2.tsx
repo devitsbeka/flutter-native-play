@@ -4,6 +4,7 @@ import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
 import { toast } from "sonner";
 import { getRandomGradient } from "@/config/roomGradients";
+import { getQuestions } from "@/services/questionService";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 
 // Simplified 4-phase system
@@ -497,100 +498,40 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     const usedIds = state.currentRoom.used_question_ids || [];
-    // Include globally seen questions for maximum freshness
-    const seenIds = getSeenQuestionIds();
-    const allExcludeIds = [...new Set([...usedIds, ...seenIds])];
-    
-    // Get user's language preference
-    const language = typeof window !== 'undefined' 
-      ? localStorage.getItem('preferredLanguage') || 'ka' 
-      : 'ka';
     
     try {
-      let selectedQuestions: any[] = [];
-      let categoryUUID: string | null = null;
-      
-      // Phase 1: Fix category lookup - convert slug to UUID
-      if (state.currentRoom.category_id) {
-        const { data: category } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("category_id", state.currentRoom.category_id)
-          .single();
-        
-        if (category) {
-          categoryUUID = category.id;
-        }
-      }
-      
-      // Fetch questions with proper category UUID and exclude used questions
-      if (categoryUUID) {
-      let query = supabase
-        .from("questions")
-        .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-        .eq("is_active", true)
-        .eq("in_production", true)
-        .eq("language", language)
-        .eq("category_id", categoryUUID);
-        
-        // Exclude already used + seen questions
-        if (allExcludeIds.length > 0) {
-          query = query.not("id", "in", `(${allExcludeIds.join(",")})`);
-        }
-        
-        const { data: categoryQuestions } = await query;
-        
-        if (categoryQuestions && categoryQuestions.length >= questionCount) {
-          const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
-          selectedQuestions = shuffled.slice(0, questionCount);
-        }
-      }
-      
-      // Fallback: get random questions from entire library
-      if (selectedQuestions.length < questionCount) {
-        let fallbackQuery = supabase
-          .from("questions")
-          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("is_active", true)
-          .eq("in_production", true)
-          .eq("language", language);
-        
-        if (allExcludeIds.length > 0) {
-          fallbackQuery = fallbackQuery.not("id", "in", `(${allExcludeIds.join(",")})`);
-        }
-        
-        const { data: allQuestions, error: allError } = await fallbackQuery;
-        
-        if (allError || !allQuestions || allQuestions.length === 0) {
-          throw new Error("No questions available in database");
-        }
-        
-        const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-        selectedQuestions = shuffled.slice(0, questionCount);
-      }
-      
-      // Create TriviaQuestion objects with pre-shuffled answers
-      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => {
-        const shuffledAnswers = [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5);
-        return {
-          id: q.id, // Use actual question UUID for tracking
-          question: q.question_text,
-          correctAnswer: q.correct_answer,
-          incorrectAnswers: q.incorrect_answers as string[],
-          allAnswers: shuffledAnswers,
-          difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
-          category: state.currentRoom!.category_name || "General",
-        };
+      // Use unified questionService - it handles category resolution, seen tracking, etc.
+      const result = await getQuestions({
+        mode: 'vs', // Multiplayer uses VS-style selection (random categories)
+        categorySlug: state.currentRoom.category_id || undefined,
+        count: questionCount,
+        excludeIds: usedIds,
       });
       
+      if (result.questions.length === 0) {
+        toast.error("კითხვები ვერ მოიძებნა");
+        return;
+      }
+      
+      // Map to TriviaQuestion format
+      const questions: TriviaQuestion[] = result.questions.map(q => ({
+        id: q.id,
+        question: q.question,
+        correctAnswer: q.correctAnswer,
+        incorrectAnswers: q.incorrectAnswers,
+        allAnswers: q.allAnswers,
+        difficulty: q.difficulty,
+        category: state.currentRoom!.category_name || q.category || "General",
+      }));
+      
       // Update used_question_ids on game_rooms
-      const newUsedIds = [...usedIds, ...selectedQuestions.map(q => q.id)];
+      const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       await supabase
         .from("game_rooms")
         .update({ used_question_ids: newUsedIds })
         .eq("id", roomId);
       
-      // Mark questions as seen globally (unified tracking across all modes)
+      // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
       
       await saveQuestionsAndStartGame(roomId, questions);
@@ -761,11 +702,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     
-    // Get user's language preference
-    const language = typeof window !== 'undefined' 
-      ? localStorage.getItem('preferredLanguage') || 'ka' 
-      : 'ka';
-    
     // Get fresh room data to have latest used_question_ids
     const { data: freshRoom } = await supabase
       .from("game_rooms")
@@ -774,88 +710,31 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .single();
     
     const usedIds = (freshRoom?.used_question_ids as string[]) || [];
-    // Include globally seen questions for maximum freshness
-    const seenIds = getSeenQuestionIds();
-    const allExcludeIds = [...new Set([...usedIds, ...seenIds])];
     
     try {
-      let selectedQuestions: any[] = [];
-      let categoryUUID: string | null = null;
-      
-      // Phase 1: Fix category lookup - convert slug to UUID
-      if (state.currentRoom.category_id) {
-        const { data: category } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("category_id", state.currentRoom.category_id)
-          .single();
-        
-        if (category) {
-          categoryUUID = category.id;
-        }
-      }
-      
-      // Fetch questions with proper category UUID and exclude used questions
-      if (categoryUUID) {
-        let query = supabase
-          .from("questions")
-          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("is_active", true)
-          .eq("in_production", true)
-          .eq("language", language)
-          .eq("category_id", categoryUUID);
-        
-        // Exclude used + globally seen questions
-        if (allExcludeIds.length > 0) {
-          query = query.not("id", "in", `(${allExcludeIds.join(",")})`);
-        }
-        
-        const { data: categoryQuestions } = await query;
-        
-        if (categoryQuestions && categoryQuestions.length >= questionCount) {
-          const shuffled = [...categoryQuestions].sort(() => Math.random() - 0.5);
-          selectedQuestions = shuffled.slice(0, questionCount);
-        }
-      }
-      
-      // Fallback to all questions if not enough category-specific ones
-      if (selectedQuestions.length < questionCount) {
-        let fallbackQuery = supabase
-          .from("questions")
-          .select("id, question_text, correct_answer, incorrect_answers, difficulty, category_id")
-          .eq("is_active", true)
-          .eq("in_production", true)
-          .eq("language", language);
-        
-        if (allExcludeIds.length > 0) {
-          fallbackQuery = fallbackQuery.not("id", "in", `(${allExcludeIds.join(",")})`);
-        }
-        
-        const { data: allQuestions } = await fallbackQuery;
-        
-        if (allQuestions && allQuestions.length > 0) {
-          const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-          selectedQuestions = shuffled.slice(0, questionCount);
-        }
-      }
-      
-      if (selectedQuestions.length === 0) {
-        throw new Error("No questions available");
-      }
-      
-      // Create TriviaQuestion objects with pre-shuffled answers
-      const questions: TriviaQuestion[] = selectedQuestions.map((q, index) => {
-        const shuffledAnswers = [...(q.incorrect_answers as string[]), q.correct_answer].sort(() => Math.random() - 0.5);
-        return {
-          id: q.id, // Use actual question UUID for tracking
-          question: q.question_text,
-          correctAnswer: q.correct_answer,
-          incorrectAnswers: q.incorrect_answers as string[],
-          allAnswers: shuffledAnswers,
-          difficulty: (q.difficulty || "medium") as "easy" | "medium" | "hard",
-          category: state.currentRoom!.category_name || "General",
-        };
+      // Use unified questionService
+      const result = await getQuestions({
+        mode: 'vs',
+        categorySlug: state.currentRoom.category_id || undefined,
+        count: questionCount,
+        excludeIds: usedIds,
       });
+      
+      if (result.questions.length === 0) {
+        toast.error("კითხვები ვერ მოიძებნა");
+        return;
+      }
+      
+      // Map to TriviaQuestion format
+      const questions: TriviaQuestion[] = result.questions.map(q => ({
+        id: q.id,
+        question: q.question,
+        correctAnswer: q.correctAnswer,
+        incorrectAnswers: q.incorrectAnswers,
+        allAnswers: q.allAnswers,
+        difficulty: q.difficulty,
+        category: state.currentRoom!.category_name || q.category || "General",
+      }));
       
       // Clear old questions/answers for this room
       await supabase.from("room_questions").delete().eq("room_id", roomId);
@@ -869,19 +748,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           question_text: q.question,
           correct_answer: q.correctAnswer,
           incorrect_answers: q.incorrectAnswers,
-          shuffled_answers: q.allAnswers, // Store pre-shuffled order
+          shuffled_answers: q.allAnswers,
           difficulty: q.difficulty,
         })
       ));
       
       // Update used_question_ids on game_rooms
-      const newUsedIds = [...usedIds, ...selectedQuestions.map(q => q.id)];
+      const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       await supabase
         .from("game_rooms")
         .update({ used_question_ids: newUsedIds })
         .eq("id", roomId);
       
-      // Mark questions as seen globally (unified tracking across all modes)
+      // Mark questions as seen globally
       markQuestionsAsSeen(questions.map(q => q.id));
       
       // Reset only my score and current_question

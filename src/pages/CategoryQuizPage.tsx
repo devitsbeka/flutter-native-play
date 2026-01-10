@@ -13,10 +13,10 @@ import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useMissions } from "@/hooks/useMissions";
 import { useCurrency } from "@/hooks/useCurrency";
 import { REWARDS } from "@/config/rewardConfig";
-import { useSessionQuestions } from "@/hooks/useSessionQuestions";
 import confetti from "canvas-confetti";
-import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH } from "@/utils/questionValidation";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { getQuestions, QuestionResult } from "@/services/questionService";
+import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,6 +87,7 @@ export default function CategoryQuizPage() {
   const [previousProfileLevel, setPreviousProfileLevel] = useState(0);
   const [questionIds, setQuestionIds] = useState<string[]>([]);
   const [levelUpRewardsCredited, setLevelUpRewardsCredited] = useState(false);
+  const [exhaustionInfo, setExhaustionInfo] = useState<QuestionResult['exhaustionInfo'] | null>(null);
   
   // Currency hook for level-up rewards
   const { addCurrency } = useCurrency();
@@ -147,21 +148,6 @@ export default function CategoryQuizPage() {
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null; total_levels: number } | null>(null);
   const category = getCategoryById(categoryId || "");
   
-  // Session question tracking to prevent repetition (includes globally seen questions)
-  const { 
-    getAskedQuestionIds, 
-    getExcludeQuestionIds, 
-    getLevelExcludeQuestionIds,
-    markLevelQuestionsSeen,
-    isLevelExhausted,
-    clearLevelSeen,
-    markQuestionsAsAsked, 
-    clearAskedQuestions, 
-    shouldResetPool, 
-    shouldResetSeenPoolCheck, 
-    clearSeen 
-  } = useSessionQuestions(categoryId || "");
-  
   // Mock opponent data
   const opponent = useMemo(() => ({
     name: "QuizBot",
@@ -199,7 +185,7 @@ export default function CategoryQuizPage() {
     return shuffled;
   };
 
-  // Fetch questions from database ONLY
+  // Fetch questions using unified questionService
   useEffect(() => {
     if (hasFetched.current) return;
     if (!categoryId || !category) return;
@@ -208,127 +194,60 @@ export default function CategoryQuizPage() {
     setLoading(true);
     setError(null);
 
-    const fetchQuestions = async () => {
+    const fetchQuestionsFromService = async () => {
       try {
         const levelNumber = parseInt(levelId || "1");
         
-        // Get user's language preference
-        const language = localStorage.getItem('preferredLanguage') || 'ka';
-        
-        // First, get the category UUID and icon_slug from the category_id string
-        const { data: categoryData, error: categoryError } = await supabase
+        // Get category info for icon rendering
+        const { data: categoryData } = await supabase
           .from('categories')
           .select('id, name, icon_slug, total_levels')
           .eq('category_id', categoryId)
           .maybeSingle();
-
-        if (categoryError) {
-          console.error("Category fetch error:", categoryError);
-          setError("კატეგორია ვერ მოიძებნა.");
-          return;
-        }
-
-        if (!categoryData) {
-          setError("კატეგორია ვერ მოიძებნა.");
-          return;
-        }
-
-        // Store the database category for icon rendering
-        setDbCategory(categoryData);
-
-        // Expand level range to get more variety (N-3 to N+5)
-        const minLevel = Math.max(1, levelNumber - 3);
-        const maxLevel = Math.min(20, levelNumber + 5);
         
-        // First, check total available questions for this expanded level range
-        const { count: totalCount } = await supabase
-          .from('questions')
-          .select('id', { count: 'exact', head: true })
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .eq('category_id', categoryData.id)
-          .gte('level_number', minLevel)
-          .lte('level_number', maxLevel);
-        
-        // Get level-specific + globally seen question IDs to exclude
-        let excludeIds = getLevelExcludeQuestionIds(levelNumber);
-        
-        // Check if level is exhausted (100% of questions seen)
-        // Only then reset level tracking to allow repeats
-        if (totalCount && isLevelExhausted(levelNumber, totalCount)) {
-          clearLevelSeen(levelNumber);
-          excludeIds = []; // Allow all questions again for this level
-        }
-
-        // Build query excluding seen questions with expanded level range
-        let query = supabase
-          .from('questions')
-          .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
-          .eq('is_active', true)
-          .eq('in_production', true)
-          .eq('language', language)
-          .eq('category_id', categoryData.id)
-          .gte('level_number', minLevel)
-          .lte('level_number', maxLevel);
-        
-        // Exclude previously seen questions if any
-        if (excludeIds.length > 0) {
-          query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+        if (categoryData) {
+          setDbCategory(categoryData);
         }
         
-        const { data: dbQuestions, error: dbError } = await query.limit(100);
-
-        if (dbError) {
-          console.error("Questions fetch error:", dbError);
-          setError("კითხვების ჩატვირთვა ვერ მოხერხდა.");
-          return;
-        }
-
-        // If no new questions available, try fallback strategies
-        if (!dbQuestions || dbQuestions.length === 0) {
-          // First, try clearing level-specific tracking and retry same range
-          if (excludeIds.length > 0) {
-            clearLevelSeen(levelNumber);
-            const { data: retryQuestions } = await supabase
-              .from('questions')
-              .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
-              .eq('is_active', true)
-              .eq('in_production', true)
-              .eq('language', language)
-              .eq('category_id', categoryData.id)
-              .gte('level_number', minLevel)
-              .lte('level_number', maxLevel)
-              .limit(50);
-            
-            if (retryQuestions && retryQuestions.length > 0) {
-              processAndSetQuestions(retryQuestions, categoryData, levelNumber);
-              return;
-            }
-          }
-          
-          // Fallback: If level > 20 or no questions in range, query from level 1-20
-          const { data: fallbackQuestions } = await supabase
-            .from('questions')
-            .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
-            .eq('is_active', true)
-            .eq('in_production', true)
-            .eq('language', language)
-            .eq('category_id', categoryData.id)
-            .gte('level_number', 1)
-            .lte('level_number', 20)
-            .limit(100);
-          
-          if (fallbackQuestions && fallbackQuestions.length > 0) {
-            processAndSetQuestions(fallbackQuestions, categoryData, levelNumber);
-            return;
-          }
-          
-          setError("ამ კატეგორიაში კითხვები არ მოიძებნა. გთხოვთ დაამატოთ კითხვები ადმინ პანელიდან.");
+        // Use unified questionService
+        const result = await getQuestions({
+          mode: 'category',
+          categorySlug: categoryId,
+          levelNumber,
+          count: 5,
+        });
+        
+        if (result.questions.length === 0) {
+          setError("ამ კატეგორიაში კითხვები არ მოიძებნა.");
           return;
         }
         
-        processAndSetQuestions(dbQuestions, categoryData, levelNumber);
+        // Store exhaustion info for UI display
+        if (result.exhaustionInfo) {
+          setExhaustionInfo(result.exhaustionInfo);
+        }
+        
+        // Map to local format
+        const mapped = result.questions.map(q => ({
+          id: q.id,
+          question: q.question,
+          correct_answer: q.correctAnswer,
+          incorrect_answers: q.incorrectAnswers,
+          difficulty: q.difficulty,
+          allAnswers: q.allAnswers,
+          icon_slug: q.iconSlug,
+        }));
+        
+        setQuestionIds(mapped.map(q => q.id));
+        setQuestions(mapped);
+        
+        // Trigger background AI icon analysis
+        preloadQuestionIcons(
+          mapped.map(q => ({
+            question: q.question,
+            category: categoryData?.name || categoryId
+          }))
+        );
       } catch (err) {
         console.error("Unexpected error:", err);
         setError("მოულოდნელი შეცდომა მოხდა. გთხოვთ სცადოთ თავიდან.");
@@ -336,60 +255,8 @@ export default function CategoryQuizPage() {
         setLoading(false);
       }
     };
-    
-    const processAndSetQuestions = (dbQuestions: any[], categoryData: any, levelNum: number) => {
-      // Store the database category for icon rendering
-      setDbCategory(categoryData);
-      
-      // Filter and process questions
-      const processedQuestions = dbQuestions
-        .map((q: any) => {
-          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-            ? q.incorrect_answers 
-            : JSON.parse(q.incorrect_answers || '[]');
-          
-          return {
-            id: q.id,
-            question: q.question_text,
-            correct_answer: q.correct_answer,
-            incorrect_answers: incorrectAnswers,
-            difficulty: q.difficulty as "easy" | "medium" | "hard",
-            allAnswers: shuffleArray([q.correct_answer, ...incorrectAnswers]),
-            icon_slug: q.icon_slug,
-          };
-        })
-        // Filter out questions/answers that are too long for viewport
-        .filter((q) => {
-          if (q.question.length > QUESTION_MAX_LENGTH) return false;
-          if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
-          if (q.incorrect_answers.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
-          return true;
-        });
 
-      // Shuffle and take 5 questions
-      const shuffledDbQuestions = shuffleArray(processedQuestions).slice(0, 5);
-      
-      // Store question IDs for later marking as asked
-      const ids = shuffledDbQuestions.map(q => q.id);
-      setQuestionIds(ids);
-      
-      // IMMEDIATELY mark questions as seen when shown (not after quiz)
-      // This is the GOLDEN RULE: questions are tracked the moment they're displayed
-      markLevelQuestionsSeen(levelNum, ids);
-      
-      setQuestions(shuffledDbQuestions);
-      setLoading(false);
-      
-      // Trigger background AI icon analysis for all questions
-      preloadQuestionIcons(
-        shuffledDbQuestions.map(q => ({
-          question: q.question,
-          category: categoryData.name || categoryId
-        }))
-      );
-    };
-
-    fetchQuestions();
+    fetchQuestionsFromService();
   }, [categoryId, category, levelId]);
 
   // Timer - pauses when frozen
@@ -436,12 +303,6 @@ export default function CategoryQuizPage() {
 
     setIsSaving(true);
     const levelNumber = parseInt(levelId);
-    
-    // Mark questions as asked to prevent repetition
-    if (questionIds.length > 0) {
-      markQuestionsAsAsked(questionIds);
-    }
-    
     // Store previous profile level to detect level-ups
     const previousLevel = profile?.total_points ? calculateLevel(profile.total_points).level : 1;
     setPreviousProfileLevel(previousLevel);
@@ -918,6 +779,21 @@ export default function CategoryQuizPage() {
                 </motion.span>
               ))}
             </div>
+            
+            {/* Exhaustion indicator (show when 70%+ used) */}
+            {exhaustionInfo && exhaustionInfo.totalAvailable > 0 && 
+             Math.round((exhaustionInfo.totalSeen / exhaustionInfo.totalAvailable) * 100) >= 70 && (
+              <div className="mb-4">
+                <ExhaustionIndicator
+                  percentUsed={Math.round((exhaustionInfo.totalSeen / exhaustionInfo.totalAvailable) * 100)}
+                  totalAvailable={exhaustionInfo.totalAvailable}
+                  totalSeen={exhaustionInfo.totalSeen}
+                  wasReset={exhaustionInfo.wasReset}
+                  usedFallback={exhaustionInfo.usedFallback}
+                  compact
+                />
+              </div>
+            )}
 
             {isSaving && (
               <p className="text-sm text-muted-foreground mb-4">პროგრესის შენახვა...</p>
