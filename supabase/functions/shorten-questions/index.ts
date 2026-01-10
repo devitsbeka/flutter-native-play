@@ -229,12 +229,12 @@ serve(async (req) => {
           });
           unshortenable++;
         } else if (aiResponse.length > 0 && aiResponse.length <= MAX_LENGTH) {
-          // Successfully shortened
+          // Successfully shortened - store in PENDING columns for review
           await supabase
             .from("questions")
             .update({ 
-              question_text: aiResponse,
-              shorten_status: "shortened",
+              pending_question_text: aiResponse,
+              shorten_status: "pending_review",
               original_question_text: question.question_text
             })
             .eq("id", question.id);
