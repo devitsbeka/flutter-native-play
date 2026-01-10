@@ -72,23 +72,23 @@ export const TVResultsScreenV2: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-6 flex gap-6 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex gap-4 overflow-hidden">
       {/* Left Side - Podium */}
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         {/* Title */}
         <motion.div
-          className="text-center mb-6 flex-shrink-0"
+          className="text-center mb-4 flex-shrink-0"
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-            თამაში<br/>დასრულდა
+          <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+            თამაში დასრულდა
           </h1>
         </motion.div>
 
         {/* Podium */}
-        <div className="flex items-end justify-center gap-3 w-full max-w-xl">
+        <div className="flex items-end justify-center gap-2 w-full max-w-lg">
           {/* 2nd Place */}
           {secondPlace && (
             <motion.div
@@ -98,28 +98,28 @@ export const TVResultsScreenV2: React.FC = () => {
               transition={{ delay: 0.3, duration: 0.5 }}
             >
               <div className="relative mb-1">
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold text-sm z-10 border-2 border-white">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs z-10 border-2 border-white">
                   2
                 </div>
-                <Avatar className="w-14 h-14 ring-3 ring-gray-300 border-2 border-white">
+                <Avatar className="w-12 h-12 ring-2 ring-gray-300 border-2 border-white">
                   <AvatarImage src={secondPlace.avatar_url || undefined} />
-                  <AvatarFallback className="bg-gray-400 text-white font-bold text-base">
+                  <AvatarFallback className="bg-gray-400 text-white font-bold text-sm">
                     {secondPlace.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <p className="text-white font-bold text-base mb-0.5">{secondPlace.nickname}</p>
-              <p className="text-yellow-400 font-semibold text-xs flex items-center gap-1">
+              <p className="text-white font-bold text-sm mb-0.5">{secondPlace.nickname}</p>
+              <p className="text-yellow-400 font-semibold text-[10px] flex items-center gap-1">
                 🏅 +{XP_REWARDS[1]} XP
               </p>
               {/* Podium Platform */}
               <motion.div 
-                className="w-24 h-16 bg-gradient-to-b from-purple-400 to-purple-600 rounded-t-2xl mt-2 flex items-center justify-center"
+                className="w-20 h-12 bg-gradient-to-b from-purple-400 to-purple-600 rounded-t-xl mt-1 flex items-center justify-center"
                 initial={{ height: 0 }}
-                animate={{ height: 64 }}
+                animate={{ height: 48 }}
                 transition={{ delay: 0.5, duration: 0.4 }}
               >
-                <span className="text-white/60 text-3xl font-bold">2</span>
+                <span className="text-white/60 text-2xl font-bold">2</span>
               </motion.div>
             </motion.div>
           )}
@@ -138,32 +138,32 @@ export const TVResultsScreenV2: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 transition={{ delay: 0.8, type: "spring", bounce: 0.5 }}
               >
-                <Crown className="w-8 h-8 text-yellow-400 mb-0.5" />
+                <Crown className="w-6 h-6 text-yellow-400 mb-0.5" />
               </motion.div>
               
               <div className="relative mb-1">
-                <div className="absolute -top-1 -right-1 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-900 font-bold text-base z-10 border-2 border-white">
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-900 font-bold text-sm z-10 border-2 border-white">
                   1
                 </div>
-                <Avatar className="w-20 h-20 ring-4 ring-yellow-400 border-2 border-white">
+                <Avatar className="w-16 h-16 ring-4 ring-yellow-400 border-2 border-white">
                   <AvatarImage src={firstPlace.avatar_url || undefined} />
-                  <AvatarFallback className="bg-yellow-500 text-white font-bold text-xl">
+                  <AvatarFallback className="bg-yellow-500 text-white font-bold text-lg">
                     {firstPlace.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <p className="text-white font-bold text-lg mb-0.5">{firstPlace.nickname}</p>
-              <p className="text-yellow-400 font-semibold text-sm flex items-center gap-1">
+              <p className="text-white font-bold text-base mb-0.5">{firstPlace.nickname}</p>
+              <p className="text-yellow-400 font-semibold text-xs flex items-center gap-1">
                 🏅 +{XP_REWARDS[0]} XP
               </p>
               {/* Podium Platform */}
               <motion.div 
-                className="w-28 h-24 bg-gradient-to-b from-purple-300 to-purple-500 rounded-t-2xl mt-2 flex items-center justify-center"
+                className="w-24 h-16 bg-gradient-to-b from-purple-300 to-purple-500 rounded-t-xl mt-1 flex items-center justify-center"
                 initial={{ height: 0 }}
-                animate={{ height: 96 }}
+                animate={{ height: 64 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
               >
-                <span className="text-white/60 text-4xl font-bold">1</span>
+                <span className="text-white/60 text-3xl font-bold">1</span>
               </motion.div>
             </motion.div>
           )}
@@ -177,28 +177,28 @@ export const TVResultsScreenV2: React.FC = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               <div className="relative mb-1">
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold text-sm z-10 border-2 border-white">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xs z-10 border-2 border-white">
                   3
                 </div>
-                <Avatar className="w-12 h-12 ring-3 ring-amber-600 border-2 border-white">
+                <Avatar className="w-10 h-10 ring-2 ring-amber-600 border-2 border-white">
                   <AvatarImage src={thirdPlace.avatar_url || undefined} />
-                  <AvatarFallback className="bg-amber-700 text-white font-bold text-base">
+                  <AvatarFallback className="bg-amber-700 text-white font-bold text-sm">
                     {thirdPlace.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <p className="text-white font-bold text-base mb-0.5">{thirdPlace.nickname}</p>
-              <p className="text-yellow-400 font-semibold text-xs flex items-center gap-1">
+              <p className="text-white font-bold text-sm mb-0.5">{thirdPlace.nickname}</p>
+              <p className="text-yellow-400 font-semibold text-[10px] flex items-center gap-1">
                 🏅 +{XP_REWARDS[2]} XP
               </p>
               {/* Podium Platform */}
               <motion.div 
-                className="w-20 h-12 bg-gradient-to-b from-purple-500 to-purple-700 rounded-t-2xl mt-2 flex items-center justify-center"
+                className="w-16 h-10 bg-gradient-to-b from-purple-500 to-purple-700 rounded-t-xl mt-1 flex items-center justify-center"
                 initial={{ height: 0 }}
-                animate={{ height: 48 }}
+                animate={{ height: 40 }}
                 transition={{ delay: 0.6, duration: 0.3 }}
               >
-                <span className="text-white/60 text-2xl font-bold">3</span>
+                <span className="text-white/60 text-xl font-bold">3</span>
               </motion.div>
             </motion.div>
           )}
@@ -207,7 +207,7 @@ export const TVResultsScreenV2: React.FC = () => {
         {/* Host hint */}
         {isHost && (
           <motion.p
-            className="text-white/60 text-sm mt-8"
+            className="text-white/60 text-xs mt-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
@@ -219,61 +219,61 @@ export const TVResultsScreenV2: React.FC = () => {
 
       {/* Right Side - Leaderboard */}
       <motion.div 
-        className="w-80 bg-purple-800/50 backdrop-blur-sm rounded-2xl p-4 flex flex-col max-h-full"
+        className="w-72 bg-purple-800/50 backdrop-blur-sm rounded-xl p-3 flex flex-col max-h-full"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
       >
-        <h2 className="text-white text-lg font-bold mb-3 text-center flex-shrink-0">ლიდერბორდი</h2>
+        <h2 className="text-white text-base font-bold mb-2 text-center flex-shrink-0">ლიდერბორდი</h2>
         
-        <div className="space-y-2 flex-1 overflow-y-auto min-h-0">
+        <div className="space-y-1.5 flex-1 overflow-y-auto min-h-0">
           {sortedPlayers.map((player, index) => {
             const stats = getPlayerStats(player);
             return (
               <motion.div
                 key={player.id}
-                className="flex items-center gap-2 bg-purple-700/50 rounded-xl p-2 hover:bg-purple-700/70 transition-colors"
+                className="flex items-center gap-1.5 bg-purple-700/50 rounded-lg p-1.5 hover:bg-purple-700/70 transition-colors"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 + index * 0.05 }}
               >
                 {/* Rank */}
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-[10px]
                   ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-purple-600'}`}
                 >
                   {index + 1}
                 </div>
 
                 {/* Avatar */}
-                <Avatar className="w-8 h-8 ring-2 ring-cyan-400 border border-white/30">
+                <Avatar className="w-7 h-7 ring-1 ring-cyan-400 border border-white/30">
                   <AvatarImage src={player.avatar_url || undefined} />
-                  <AvatarFallback className="bg-purple-500 text-white font-bold text-xs">
+                  <AvatarFallback className="bg-purple-500 text-white font-bold text-[10px]">
                     {player.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 
                 {/* Name */}
-                <span className="text-white font-medium flex-1 truncate text-sm">
+                <span className="text-white font-medium flex-1 truncate text-xs">
                   {player.nickname}
                 </span>
 
                 {/* Stats */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   {/* Correct */}
-                  <span className="text-green-400 flex items-center gap-0.5 text-xs">
-                    <Check className="w-3 h-3" />
+                  <span className="text-green-400 flex items-center gap-0.5 text-[10px]">
+                    <Check className="w-2.5 h-2.5" />
                     {stats.correctCount}
                   </span>
 
                   {/* Incorrect */}
-                  <span className="text-red-400 flex items-center gap-0.5 text-xs">
-                    <X className="w-3 h-3" />
+                  <span className="text-red-400 flex items-center gap-0.5 text-[10px]">
+                    <X className="w-2.5 h-2.5" />
                     {stats.incorrectCount}
                   </span>
 
                   {/* Score with coin icon */}
-                  <span className="text-yellow-400 flex items-center gap-0.5 font-semibold text-sm min-w-[50px] justify-end">
-                    <Coins className="w-3 h-3" />
+                  <span className="text-yellow-400 flex items-center gap-0.5 font-semibold text-xs min-w-[40px] justify-end">
+                    <Coins className="w-2.5 h-2.5" />
                     {player.score}
                   </span>
                 </div>

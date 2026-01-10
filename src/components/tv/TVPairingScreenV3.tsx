@@ -53,18 +53,18 @@ export const TVPairingScreenV3: React.FC = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-12"
+          className="mb-8"
         >
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <Tv className="w-16 h-16 text-purple-300" />
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <Tv className="w-12 h-12 text-purple-300" />
           </div>
           <h1 
-            className="text-5xl font-bold text-white mb-2"
+            className="text-4xl font-bold text-white mb-2"
             style={{ fontFamily: 'var(--font-display, inherit)' }}
           >
             TV კვიზი
           </h1>
-          <p className="text-xl text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</p>
+          <p className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</p>
         </motion.div>
 
         {/* Pairing Code Display */}
@@ -72,34 +72,34 @@ export const TVPairingScreenV3: React.FC = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="mb-12"
+          className="mb-8"
         >
           <div 
-            className="inline-block rounded-3xl p-8"
+            className="inline-block rounded-2xl p-6"
             style={{
               background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
               backdropFilter: 'blur(20px)',
               border: '2px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
+              boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
             }}
           >
-            <p className="text-purple-200 mb-4 text-lg">შეიყვანეთ ეს კოდი თქვენს ტელეფონზე</p>
+            <p className="text-purple-200 mb-3 text-base">შეიყვანეთ ეს კოდი თქვენს ტელეფონზე</p>
             
             {/* 4-Digit Code Display */}
-            <div className="flex justify-center gap-4 mb-4">
+            <div className="flex justify-center gap-3 mb-3">
               {fourDigitCode.split('').map((digit, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + index * 0.1 }}
-                  className="w-20 h-24 rounded-2xl flex items-center justify-center"
+                  className="w-16 h-20 rounded-xl flex items-center justify-center"
                   style={{
                     background: 'linear-gradient(180deg, #A855F7 0%, #7C3AED 100%)',
-                    boxShadow: '0 8px 32px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255,255,255,0.3)',
+                    boxShadow: '0 6px 24px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255,255,255,0.3)',
                   }}
                 >
-                  <span className="text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                  <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display, inherit)' }}>
                     {digit}
                   </span>
                 </motion.div>
@@ -118,33 +118,33 @@ export const TVPairingScreenV3: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex flex-col items-center gap-6"
+          className="flex flex-col items-center gap-4"
         >
-          <div className="flex items-center gap-8 text-purple-200">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <Smartphone className="w-8 h-8" />
+          <div className="flex items-center gap-6 text-purple-200">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <Smartphone className="w-6 h-6" />
               </div>
-              <span className="text-sm">გახსენით</span>
-              <span className="font-bold">mytrivia.io/join</span>
+              <span className="text-xs">გახსენით</span>
+              <span className="font-bold text-sm">mytrivia.io/join</span>
             </div>
             
-            <div className="text-3xl text-purple-400">→</div>
+            <div className="text-2xl text-purple-400">→</div>
             
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <span className="text-2xl font-bold">1234</span>
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <span className="text-lg font-bold">1234</span>
               </div>
-              <span className="text-sm">შეიყვანეთ კოდი</span>
+              <span className="text-xs">შეიყვანეთ კოდი</span>
             </div>
             
-            <div className="text-3xl text-purple-400">→</div>
+            <div className="text-2xl text-purple-400">→</div>
             
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <QrCode className="w-8 h-8" />
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <QrCode className="w-6 h-6" />
               </div>
-              <span className="text-sm">მზად ხართ!</span>
+              <span className="text-xs">მზად ხართ!</span>
             </div>
           </div>
         </motion.div>
@@ -154,26 +154,26 @@ export const TVPairingScreenV3: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-12"
+          className="mt-8"
         >
           <div className="flex items-center justify-center gap-2">
             <motion.div
-              className="w-3 h-3 rounded-full bg-purple-400"
+              className="w-2.5 h-2.5 rounded-full bg-purple-400"
               animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
             />
             <motion.div
-              className="w-3 h-3 rounded-full bg-purple-400"
+              className="w-2.5 h-2.5 rounded-full bg-purple-400"
               animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
             />
             <motion.div
-              className="w-3 h-3 rounded-full bg-purple-400"
+              className="w-2.5 h-2.5 rounded-full bg-purple-400"
               animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
             />
           </div>
-          <p className="text-purple-300/60 mt-4">მოლოდინი მოთამაშეების...</p>
+          <p className="text-purple-300/60 mt-3 text-sm">მოლოდინი მოთამაშეების...</p>
         </motion.div>
       </div>
     </div>
