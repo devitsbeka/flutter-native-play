@@ -31,6 +31,7 @@ interface LongQuestion {
   question_text: string;
   category_id: string;
   length: number;
+  shorten_status: string | null;
 }
 
 interface IconAssignmentProgress {
@@ -254,7 +255,7 @@ export default function QuestionTools() {
     try {
       let query = supabase
         .from('questions')
-        .select('id, question_text, category_id')
+        .select('id, question_text, category_id, shorten_status')
         .eq('is_active', true);
       
       if (longQCategoryId !== 'all') {
@@ -580,9 +581,23 @@ export default function QuestionTools() {
                           className="p-3 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20"
                         >
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs">
-                              {getCategoryName(q.category_id)}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                {getCategoryName(q.category_id)}
+                              </Badge>
+                              {q.shorten_status === 'pending_review' && (
+                                <Badge className="text-xs bg-blue-500">📝 მოლოდინში</Badge>
+                              )}
+                              {q.shorten_status === 'shortened' && (
+                                <Badge className="text-xs bg-green-500">✅ შემოკლდა</Badge>
+                              )}
+                              {q.shorten_status === 'unshortenable' && (
+                                <Badge variant="destructive" className="text-xs">❌ შეუმოკლებადი</Badge>
+                              )}
+                              {!q.shorten_status && (
+                                <Badge variant="secondary" className="text-xs">🔴 დასამუშავებელი</Badge>
+                              )}
+                            </div>
                             <Badge variant="secondary" className="text-xs">
                               {q.length} სიმბოლო
                             </Badge>
