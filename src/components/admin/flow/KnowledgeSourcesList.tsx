@@ -3,13 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
-} from '@/components/ui/collapsible';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { 
   BookOpen, 
-  ChevronDown, 
   Plus, 
   X, 
   Loader2, 
@@ -36,7 +35,7 @@ interface Props {
 }
 
 export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 }: Props) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -102,30 +101,38 @@ export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
       e.preventDefault();
+      e.stopPropagation();
       handleAddSource();
     }
   };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border-t border-border/50">
-      <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 hover:bg-muted/50 transition-colors">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-primary" />
-          <span className="font-medium text-sm">Knowledge Sources</span>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-9 gap-2",
+            sources.length > 0 && "border-primary/50 bg-primary/5"
+          )}
+        >
+          <BookOpen className="h-4 w-4" />
+          <span className="hidden sm:inline">Sources</span>
           {sources.length > 0 && (
-            <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded-full font-medium">
+            <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full font-medium">
               {sources.length}
             </span>
           )}
-        </div>
-        <ChevronDown className={cn(
-          "h-4 w-4 text-muted-foreground transition-transform",
-          isOpen && "rotate-180"
-        )} />
-      </CollapsibleTrigger>
-
-      <CollapsibleContent>
-        <div className="px-4 pb-4 space-y-3">
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="start">
+        <div className="p-3 border-b border-border/50">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="font-medium text-sm">Knowledge Sources</span>
+          </div>
+          
           {/* URL Input */}
           <div className="flex gap-2">
             <Input
@@ -133,14 +140,14 @@ export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="https://en.wikipedia.org/..."
-              className="h-9 text-sm"
+              className="h-8 text-sm"
               disabled={isLoading || sources.length >= maxSources}
             />
             <Button
               size="sm"
               onClick={handleAddSource}
               disabled={isLoading || !url.trim() || sources.length >= maxSources}
-              className="h-9 px-3"
+              className="h-8 px-2"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -151,12 +158,14 @@ export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 
           </div>
 
           {sources.length >= maxSources && (
-            <p className="text-xs text-amber-500">
-              Maximum {maxSources} sources. Remove one to add more.
+            <p className="text-xs text-amber-500 mt-1">
+              Maximum {maxSources} sources reached
             </p>
           )}
+        </div>
 
-          {/* Sources List */}
+        {/* Sources List */}
+        <div className="p-3">
           {sources.length > 0 ? (
             <div className="space-y-2">
               <ScrollArea className="max-h-[200px]">
@@ -164,21 +173,21 @@ export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 
                   {sources.map((source) => (
                     <div
                       key={source.id}
-                      className="flex items-center gap-2 p-2 bg-card rounded-lg border border-border/50 group"
+                      className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg group"
                     >
                       <img
                         src={source.faviconUrl}
                         alt=""
-                        className="w-5 h-5 rounded flex-shrink-0"
+                        className="w-4 h-4 rounded flex-shrink-0"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23888"><circle cx="12" cy="12" r="10"/></svg>';
                         }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" title={source.title}>
+                        <p className="text-xs font-medium truncate" title={source.title}>
                           {source.title}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-[10px] text-muted-foreground truncate">
                           {source.domain}
                         </p>
                       </div>
@@ -186,17 +195,17 @@ export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 
                         href={source.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1 hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="p-1 hover:bg-background rounded opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Open in new tab"
                       >
-                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
                       </a>
                       <button
                         onClick={() => handleRemoveSource(source.id)}
                         className="p-1 hover:bg-destructive/20 rounded text-muted-foreground hover:text-destructive transition-colors"
                         title="Remove source"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
@@ -208,28 +217,22 @@ export function KnowledgeSourcesList({ sources, onSourcesChange, maxSources = 5 
                 variant="ghost"
                 size="sm"
                 onClick={handleClearAll}
-                className="w-full h-8 text-xs text-muted-foreground hover:text-destructive"
+                className="w-full h-7 text-xs text-muted-foreground hover:text-destructive"
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                Clear all sources
+                <Trash2 className="h-3 w-3 mr-1" />
+                Clear all
               </Button>
             </div>
           ) : (
-            <div className="text-center py-4 text-muted-foreground">
-              <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />
+            <div className="text-center py-3 text-muted-foreground">
+              <BookOpen className="h-6 w-6 mx-auto mb-1 opacity-30" />
               <p className="text-xs">
-                Add URLs (Wikipedia, etc.) for AI to use as knowledge when generating questions
+                Add URLs for AI to reference
               </p>
             </div>
           )}
-
-          {sources.length > 0 && (
-            <p className="text-xs text-muted-foreground text-center">
-              AI will use these {sources.length} source{sources.length !== 1 ? 's' : ''} for factual reference
-            </p>
-          )}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </PopoverContent>
+    </Popover>
   );
 }

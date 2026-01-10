@@ -573,30 +573,28 @@ export default function Flow() {
         </div>
       </div>
 
-      {/* Three Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Generation Panel */}
-        <div className="w-80 border-r border-border/50 flex flex-col bg-card/20">
-          <ScrollArea className="flex-1">
-            <GenerationPanel
-              categories={categories}
-              languages={LANGUAGES}
-              selectedLanguage={selectedLanguage}
-              onQuestionsGenerated={handleQuestionsGenerated}
-              isGenerating={isGenerating}
-              setIsGenerating={setIsGenerating}
-              knowledgeSources={knowledgeSources}
-              knowledgeSourcesComponent={
-                <KnowledgeSourcesList
-                  sources={knowledgeSources}
-                  onSourcesChange={setKnowledgeSources}
-                />
-              }
+      {/* Horizontal Generation Panel */}
+      <div className="border-b border-border/50 bg-card/30">
+        <GenerationPanel
+          categories={categories}
+          languages={LANGUAGES}
+          selectedLanguage={selectedLanguage}
+          onQuestionsGenerated={handleQuestionsGenerated}
+          isGenerating={isGenerating}
+          setIsGenerating={setIsGenerating}
+          knowledgeSources={knowledgeSources}
+          knowledgeSourcesComponent={
+            <KnowledgeSourcesList
+              sources={knowledgeSources}
+              onSourcesChange={setKnowledgeSources}
             />
-          </ScrollArea>
-        </div>
+          }
+        />
+      </div>
 
-        {/* Middle: Preview & Review */}
+      {/* Two Column Layout - More space for questions */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left: Preview & Review - NOW WIDER */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50">
           <QuestionPreviewList
             questions={generatedQuestions}
@@ -612,8 +610,8 @@ export default function Flow() {
           />
         </div>
 
-        {/* Right: Queue */}
-        <div className="w-80 border-l border-border/50 bg-card/20 flex flex-col">
+        {/* Right: Queue - Responsive width */}
+        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex flex-col flex-shrink-0">
           <QuestionQueue
             pendingCount={pendingCount}
             approvedCount={approvedCount}
