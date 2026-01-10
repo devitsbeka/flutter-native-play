@@ -117,13 +117,18 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     setIsSearchingRandom(false);
   };
 
-  const handleLibraryCategorySelect = (category: { id: string; name: string; icon?: string; color: string; image_url?: string | null; total_levels: number }) => {
-    // Find the full category from our local state
-    const fullCategory = categories.find(c => c.id === category.id);
-    if (fullCategory) {
-      setSelectedCategory(fullCategory);
-      setSelectionMode("library");
-    }
+  const handleLibraryCategorySelect = (category: { id: string; category_id: string; name: string; icon?: string; color: string; image_url?: string | null; total_levels: number }) => {
+    // Use the category directly from the modal - it already has category_id
+    setSelectedCategory({
+      id: category.id,
+      category_id: category.category_id,
+      name: category.name,
+      icon_slug: category.icon || null,
+      color: category.color,
+      image_url: category.image_url,
+      total_levels: category.total_levels,
+    });
+    setSelectionMode("library");
   };
 
   const handleOptionClick = (mode: SelectionMode) => {
