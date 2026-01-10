@@ -159,8 +159,9 @@ export default function Flow() {
   const fetchCategories = async () => {
     const { data, error } = await supabase
       .from('categories')
-      .select('id, name, category_id')
+      .select('id, name, category_id, sort_order')
       .eq('is_active', true)
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('name');
     
     if (error) {
