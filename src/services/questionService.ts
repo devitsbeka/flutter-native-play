@@ -282,17 +282,24 @@ async function getCategoryQuestions(
   
   const totalAvailable = totalCount || 0;
   
-  // Get seen questions for this level
-  let excludeIds = getCategoryLevelSeenIds(categoryUuid, levelNumber);
+  // Get seen questions for this level (most granular)
+  const levelSeenIds = getCategoryLevelSeenIds(categoryUuid, levelNumber);
   const globalSeen = getSeenQuestionIds();
-  excludeIds = [...new Set([...excludeIds, ...globalSeen, ...(additionalExcludeIds || [])])];
   
-  // Check exhaustion
-  if (excludeIds.length >= totalAvailable) {
+  // Build initial exclusion list (prioritize fresh questions)
+  let excludeIds = [...new Set([...levelSeenIds, ...globalSeen, ...(additionalExcludeIds || [])])];
+  
+  // Check level-specific exhaustion ONLY against level tracking
+  // Don't let global seen from other modes trigger premature reset
+  const levelExhausted = levelSeenIds.length >= totalAvailable;
+  
+  if (levelExhausted) {
+    // Level pool exhausted - clear level tracking, but KEEP global exclusions for first pass
     clearCategoryLevelSeen(categoryUuid, levelNumber);
-    excludeIds = [];
     wasReset = true;
     exhausted = true;
+    // Try with only global exclusions first (may still have unseen-in-this-level questions)
+    excludeIds = [...new Set([...globalSeen, ...(additionalExcludeIds || [])])];
   }
   
   // Build query
@@ -312,10 +319,36 @@ async function getCategoryQuestions(
   
   let { data: questions } = await query.limit(100);
   
-  // Fallback: try full level range if not enough
+  // Fallback 1: try full level range (1-20) with exclusions if not enough
   if (!questions || questions.length < count) {
     usedFallback = true;
-    const { data: fallbackQuestions } = await supabase
+    let fallbackQuery = supabase
+      .from('questions')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language)
+      .eq('category_id', categoryUuid)
+      .gte('level_number', 1)
+      .lte('level_number', 20);
+    
+    // Still apply exclusions in fallback
+    if (excludeIds.length > 0) {
+      fallbackQuery = fallbackQuery.not('id', 'in', `(${excludeIds.join(',')})`);
+    }
+    
+    const { data: fallbackQuestions } = await fallbackQuery.limit(100);
+    questions = fallbackQuestions || [];
+  }
+  
+  // Fallback 2: If still not enough, clear ALL exclusions (full pool reset)
+  if (!questions || questions.length < count) {
+    clearCategoryLevelSeen(categoryUuid, levelNumber);
+    clearSeenQuestions(); // Clear global seen as last resort
+    wasReset = true;
+    exhausted = true;
+    
+    const { data: resetQuestions } = await supabase
       .from('questions')
       .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
       .eq('is_active', true)
@@ -326,7 +359,7 @@ async function getCategoryQuestions(
       .lte('level_number', 20)
       .limit(100);
     
-    questions = fallbackQuestions || [];
+    questions = resetQuestions || [];
   }
   
   // Filter by length and format
