@@ -16,6 +16,7 @@ import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
+import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -93,6 +94,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
+  const [showIconPickerModal, setShowIconPickerModal] = useState(false);
   
   // Shuffle inspirational topics when menu opens
   const shuffledTopics = useMemo(() => {
@@ -347,28 +349,20 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-            {/* Icon from 9k library - clickable in edit mode to remove */}
+            {/* Icon from 9k library - clickable to open picker */}
             <button
-              onClick={() => {
-                if (isEditingName && roomIcon) {
-                  setRoomIcon(null);
-                }
-              }}
-              disabled={!isEditingName || isGeneratingName}
-              className={`relative w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0 transition-all ${
-                isEditingName && roomIcon ? 'hover:ring-2 hover:ring-destructive/50 cursor-pointer' : ''
-              }`}
+              onClick={() => setShowIconPickerModal(true)}
+              disabled={isGeneratingName}
+              className="relative w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0 transition-all hover:ring-2 hover:ring-primary/50 cursor-pointer group"
             >
               {isGeneratingName ? (
                 <Loader2 className="w-5 h-5 text-primary animate-spin" />
               ) : roomIcon ? (
                 <>
                   <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
-                  {isEditingName && (
-                    <div className="absolute inset-0 bg-destructive/80 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <X className="w-5 h-5 text-destructive-foreground" />
-                    </div>
-                  )}
+                  <div className="absolute inset-0 bg-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Pencil className="w-4 h-4 text-primary-foreground" />
+                  </div>
                 </>
               ) : (
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -407,7 +401,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   {roomName}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-0.5">{isEditingName ? "დააჭირე აიკონს წასაშლელად" : "AI გენერირებული"}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{isEditingName ? "შეცვალე სახელი" : "დააჭირე აიკონს შესაცვლელად"}</p>
             </div>
             
             {/* Edit button */}
@@ -978,6 +972,15 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             description: "ახლა შეგიძლია გამოიყენო მეგობრებთან ერთად",
           });
         }}
+      />
+
+      {/* Room Icon Picker Modal */}
+      <RoomIconPickerModal
+        isOpen={showIconPickerModal}
+        onClose={() => setShowIconPickerModal(false)}
+        currentIconUrl={roomIcon}
+        roomName={roomName}
+        onSelectIcon={(iconUrl) => setRoomIcon(iconUrl)}
       />
     </motion.div>
   );
