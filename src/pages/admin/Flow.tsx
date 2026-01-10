@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { calculateSimilarity, removeDuplicatesFromBatch } from '@/utils/duplicateDetection';
 import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
+import { usePersistedState } from '@/hooks/usePersistedState';
 
 const { SIMILARITY_THRESHOLD } = QUALITY_CONSTANTS;
 export interface GeneratedQuestion {
@@ -60,7 +61,7 @@ export { LANGUAGES };
 
 export default function Flow() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
+  const [generatedQuestions, setGeneratedQuestions, clearGeneratedQuestions] = usePersistedState<GeneratedQuestion[]>('flow-generated-questions', []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -150,6 +151,21 @@ export default function Flow() {
       }
     }
   }, [generatedQuestions.length]);
+
+  // Warn before closing tab with pending questions
+  useEffect(() => {
+    const pendingCount = generatedQuestions.filter(q => q.status === 'pending').length;
+    
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (pendingCount > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [generatedQuestions]);
 
   // Update selected preview when focus changes
   useEffect(() => {
