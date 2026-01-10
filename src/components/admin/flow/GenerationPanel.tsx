@@ -9,8 +9,11 @@ import { Sparkles, Link, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
-import { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, hasAnswerInQuestion } from '@/utils/questionValidation';
+import { hasAnswerInQuestion } from '@/utils/questionValidation';
+import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 import { cn } from '@/lib/utils';
+
+const { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, MAX_ANSWER_LENGTH_DIFF } = QUALITY_CONSTANTS;
 
 interface Props {
   categories: Category[];
@@ -65,7 +68,7 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
       const allAnswers = [correctAnswer, ...incorrectAnswers];
       const lengths = allAnswers.map(a => (a || '').length);
       const maxDiff = Math.max(...lengths) - Math.min(...lengths);
-      if (maxDiff > 8) {
+      if (maxDiff > MAX_ANSWER_LENGTH_DIFF) {
         warnings.push('Answer lengths vary too much (easy to guess)');
       }
     }

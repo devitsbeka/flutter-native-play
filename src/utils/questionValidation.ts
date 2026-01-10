@@ -2,8 +2,10 @@
 // These limits ensure questions fit within a single viewport on mobile devices
 // STRICT POLICY: Questions/answers exceeding these limits should be REJECTED, not truncated
 
-export const QUESTION_MAX_LENGTH = 65; // Max characters for question text (including "?")
-export const ANSWER_MAX_LENGTH = 20;   // Max characters for each answer option
+import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
+
+export const QUESTION_MAX_LENGTH = QUALITY_CONSTANTS.QUESTION_MAX_LENGTH;
+export const ANSWER_MAX_LENGTH = QUALITY_CONSTANTS.ANSWER_MAX_LENGTH;
 
 /**
  * Check if a question text is within the character limit

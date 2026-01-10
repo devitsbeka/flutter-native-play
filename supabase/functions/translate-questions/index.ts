@@ -39,6 +39,7 @@ interface Question {
   categoryId: string;
   categoryName: string;
   iconSlug?: string;
+  language?: string;
 }
 
 async function translateBatch(
@@ -109,14 +110,41 @@ Return ONLY valid JSON:
   const parsed = JSON.parse(content);
   const translations = parsed.translations || [];
 
-  // Merge translations with original metadata
-  return questions.map((original, idx) => ({
-    ...original,
-    questionText: translations[idx]?.questionText || original.questionText,
-    correctAnswer: translations[idx]?.correctAnswer || original.correctAnswer,
-    incorrectAnswers: translations[idx]?.incorrectAnswers || original.incorrectAnswers,
-    language: targetLanguage,
-  }));
+  // Validate and filter translations that exceed limits
+  const validatedTranslations: Question[] = [];
+  
+  for (let idx = 0; idx < questions.length; idx++) {
+    const original = questions[idx];
+    const translated = translations[idx];
+    
+    if (!translated) continue;
+    
+    const questionText = translated.questionText || original.questionText;
+    const correctAnswer = translated.correctAnswer || original.correctAnswer;
+    const incorrectAnswers = translated.incorrectAnswers || original.incorrectAnswers;
+    
+    // Validate lengths - skip translations that exceed limits
+    const questionTooLong = questionText.length > QUESTION_MAX_LENGTH;
+    const correctTooLong = correctAnswer.length > ANSWER_MAX_LENGTH;
+    const anyIncorrectTooLong = incorrectAnswers.some((a: string) => a && a.length > ANSWER_MAX_LENGTH);
+    
+    if (questionTooLong || correctTooLong || anyIncorrectTooLong) {
+      console.warn(`Translation to ${targetLanguage} exceeded limits: "${questionText.substring(0, 40)}..." - skipping`);
+      continue;
+    }
+    
+    validatedTranslations.push({
+      ...original,
+      questionText,
+      correctAnswer,
+      incorrectAnswers,
+      language: targetLanguage,
+    });
+  }
+  
+  console.log(`Validated ${validatedTranslations.length}/${translations.length} translations for ${targetLanguage}`);
+
+  return validatedTranslations;
 }
 
 serve(async (req) => {
