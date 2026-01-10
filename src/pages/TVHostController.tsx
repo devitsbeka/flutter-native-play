@@ -63,6 +63,7 @@ const TVHostController: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
   // isLoadingQuestions removed - questions now fetched in startGame only
   const [lastResult, setLastResult] = useState<boolean | null>(null);
   const [nickname, setNickname] = useState('Host');
@@ -693,12 +694,55 @@ const TVHostController: React.FC = () => {
           )}
         </motion.div>
 
+        {/* Category selector modal */}
+        <AnimatePresence>
+          {showCategorySelector && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowCategorySelector(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-gradient-to-br from-purple-800 to-purple-900 rounded-2xl p-4 max-w-md w-full max-h-[70vh] overflow-y-auto"
+                onClick={e => e.stopPropagation()}
+              >
+                <h3 className="text-white font-bold text-lg mb-4">აირჩიე კატეგორია</h3>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setShowCategorySelector(false);
+                        // Immediately start the game after selection
+                        handleSelectCategory(category).then(() => {
+                          startGame(category.id);
+                        });
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
+                    >
+                      <span className="text-2xl">{category.icon}</span>
+                      <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                      <ChevronRight className="w-5 h-5 text-purple-300" />
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Control buttons */}
         <div className="space-y-3">
           <ChunkyButton
             variant="primary"
             className="w-full"
-            onClick={handleStartGame}
+            onClick={() => setShowCategorySelector(true)}
             disabled={players.length < 1}
           >
             <Play className="w-5 h-5 mr-2" />
