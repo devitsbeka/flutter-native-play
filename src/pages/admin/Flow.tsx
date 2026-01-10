@@ -3,6 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
 import { QuestionQueue } from '@/components/admin/flow/QuestionQueue';
+import { KnowledgeSourcesList, KnowledgeSource } from '@/components/admin/flow/KnowledgeSourcesList';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { calculateSimilarity, removeDuplicatesFromBatch } from '@/utils/duplicateDetection';
@@ -68,6 +69,7 @@ export default function Flow() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('ka');
   const [focusedQuestionId, setFocusedQuestionId] = useState<string | null>(null);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
+  const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Keyboard shortcuts
@@ -582,6 +584,11 @@ export default function Flow() {
               onQuestionsGenerated={handleQuestionsGenerated}
               isGenerating={isGenerating}
               setIsGenerating={setIsGenerating}
+              knowledgeSources={knowledgeSources}
+            />
+            <KnowledgeSourcesList
+              sources={knowledgeSources}
+              onSourcesChange={setKnowledgeSources}
             />
           </ScrollArea>
         </div>
