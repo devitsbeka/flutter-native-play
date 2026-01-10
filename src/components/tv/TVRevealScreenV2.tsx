@@ -64,12 +64,12 @@ export const TVRevealScreenV2: React.FC = () => {
               const isCorrect = option === correctAnswer;
               
               return (
-                <motion.div
+              <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
-                  className={`relative rounded-xl p-3 flex items-center gap-3 shadow-lg overflow-hidden ${
+                  className={`relative rounded-xl p-3 flex items-center gap-3 shadow-lg overflow-hidden min-h-[64px] ${
                     isCorrect 
                       ? 'bg-gradient-to-r from-green-500 to-green-600 ring-2 ring-green-400/50' 
                       : `bg-gradient-to-r ${OPTION_COLORS[index].dimmed} opacity-60`
@@ -87,12 +87,12 @@ export const TVRevealScreenV2: React.FC = () => {
                     </motion.div>
                   )}
 
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold ${
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0 self-start mt-0.5 ${
                     isCorrect ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'
                   }`}>
                     {OPTION_COLORS[index].label}
                   </div>
-                  <p className={`text-base font-semibold flex-1 ${isCorrect ? 'text-white' : 'text-white/60'}`}>
+                  <p className={`text-base font-semibold flex-1 line-clamp-2 ${isCorrect ? 'text-white' : 'text-white/60'}`}>
                     {option}
                   </p>
                 </motion.div>

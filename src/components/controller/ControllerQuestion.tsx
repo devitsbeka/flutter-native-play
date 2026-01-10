@@ -75,25 +75,24 @@ export const ControllerQuestion: React.FC = () => {
       ) : (
         <div className="flex-1 flex flex-col gap-3">
           {currentQuestion.options.map((option, index) => (
-            <ChunkyButton
+            <div
               key={index}
-              variant="white"
-              size="md"
               onClick={() => handleAnswer(option)}
-              className="w-full text-left justify-start"
+              className="relative w-full rounded-2xl bg-white min-h-[72px] flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform p-3"
+              style={{ boxShadow: '0 4px 0 0 #CBD5E1' }}
             >
-              <span className="inline-flex items-center gap-3">
-                <span 
-                  className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
-                  style={{ 
-                    background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index] 
-                  }}
-                >
-                  {['A', 'B', 'C', 'D'][index]}
-                </span>
-                <span className="text-gray-800">{option}</span>
+              <span 
+                className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm flex-shrink-0 self-start mt-0.5"
+                style={{ 
+                  background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index] 
+                }}
+              >
+                {['A', 'B', 'C', 'D'][index]}
               </span>
-            </ChunkyButton>
+              <span className={`text-gray-800 font-semibold flex-1 line-clamp-2 ${option.length > 30 ? 'text-sm' : 'text-base'}`}>
+                {option}
+              </span>
+            </div>
           ))}
         </div>
       )}

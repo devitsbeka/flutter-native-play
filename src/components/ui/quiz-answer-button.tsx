@@ -113,7 +113,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         
         {/* Main Face */}
         <div
-          className="relative flex items-center min-h-[52px] py-2.5 rounded-2xl transition-transform duration-100"
+          className="relative flex items-center min-h-[72px] py-3 rounded-2xl transition-transform duration-100"
           style={{
             background: styles.faceBg,
             transform: `translateY(${isPressed ? 2 : 0}px)`,
@@ -123,7 +123,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           {/* Label Badge */}
           {showLabel && state !== "next" && (
             <div
-              className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base"
+              className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base self-start mt-1"
               style={{
                 background: styles.labelBg,
                 color: styles.labelText,
@@ -142,19 +142,16 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           {/* Text */}
           <span
             className={cn(
-              "flex-1 px-3 leading-tight break-words",
+              "flex-1 px-3 break-words line-clamp-2",
               state === "next" ? "text-center" : "text-left",
-              text.length > 18 ? "text-xs" : 
-              text.length > 14 ? "text-sm" : 
-              text.length > 10 ? "text-base" : 
-              "text-lg"
+              text.length > 30 ? "text-sm" : "text-base"
             )}
             style={{ 
               color: styles.textColor,
               wordBreak: 'break-word',
               overflowWrap: 'break-word',
               hyphens: 'auto',
-              lineHeight: text.length > 14 ? '1.2' : '1.3',
+              lineHeight: '1.3',
             }}
           >
             {isLoading ? (
