@@ -7,6 +7,9 @@ const corsHeaders = {
 };
 
 const MAX_LENGTH = 65;
+const MIN_LENGTH = 15; // Minimum characters for a valid shortened question
+const MIN_WORDS = 3;   // Minimum word count
+const MIN_REDUCTION_RATIO = 0.25; // Shortened must be at least 25% of original
 const BATCH_SIZE = 10;
 
 interface Question {
@@ -25,6 +28,77 @@ interface ShortenResult {
   originalLength: number;
   newLength: number | null;
   qualityIssue?: string;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  reason?: string;
+  reasonGe?: string;
+}
+
+// Validate shortened question quality
+function isValidShortenedQuestion(shortened: string, original: string): ValidationResult {
+  const trimmed = shortened.trim();
+  
+  // Must have minimum length
+  if (trimmed.length < MIN_LENGTH) {
+    return { 
+      valid: false, 
+      reason: 'too_short', 
+      reasonGe: `ძალიან მოკლეა (${trimmed.length} < ${MIN_LENGTH} სიმბოლო)` 
+    };
+  }
+  
+  // Must end with question mark
+  if (!trimmed.endsWith('?')) {
+    return { 
+      valid: false, 
+      reason: 'no_question_mark', 
+      reasonGe: 'არ მთავრდება კითხვის ნიშნით (?)' 
+    };
+  }
+  
+  // Must have at least MIN_WORDS words
+  const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+  if (words.length < MIN_WORDS) {
+    return { 
+      valid: false, 
+      reason: 'too_few_words', 
+      reasonGe: `ძალიან ცოტა სიტყვაა (${words.length} < ${MIN_WORDS})` 
+    };
+  }
+  
+  // Shortened version should be at least 25% of original (prevents massive info loss)
+  if (trimmed.length < original.length * MIN_REDUCTION_RATIO) {
+    return { 
+      valid: false, 
+      reason: 'too_much_reduction', 
+      reasonGe: `ძალიან ბევრი ინფორმაცია დაიკარგა (${Math.round(trimmed.length / original.length * 100)}% < ${MIN_REDUCTION_RATIO * 100}%)` 
+    };
+  }
+  
+  // Check for incomplete sentences (Georgian particles/prepositions that shouldn't end a sentence)
+  const incompleteEndings = ['რომ', 'რო', 'და', 'თუ', 'რა', 'ან', 'მაგრამ', 'ამიტომ', 'რადგან', 'როცა', 'სანამ', 'თუმცა'];
+  const lastWord = words[words.length - 1].replace('?', '').toLowerCase();
+  if (incompleteEndings.includes(lastWord)) {
+    return { 
+      valid: false, 
+      reason: 'incomplete_sentence', 
+      reasonGe: `არასრული წინადადება (მთავრდება: "${lastWord}")` 
+    };
+  }
+  
+  // Check if the shortened version is just repeated characters or nonsense
+  const uniqueChars = new Set(trimmed.replace(/\s/g, '').split(''));
+  if (uniqueChars.size < 5) {
+    return { 
+      valid: false, 
+      reason: 'nonsense_text', 
+      reasonGe: 'უაზრო ტექსტი (ძალიან ცოტა უნიკალური სიმბოლო)' 
+    };
+  }
+  
+  return { valid: true };
 }
 
 // Check if answer text appears in question
@@ -154,23 +228,36 @@ serve(async (req) => {
           continue;
         }
 
-        const prompt = `შენ ხარ ქართული ქვიზის კითხვების შემოკლების და გასწორების ექსპერტი.
+        const prompt = `შენ ხარ ქართული ქვიზის კითხვების შემოკლების ექსპერტი.
 
-ამოცანა: შეამოკლე კითხვა ${MAX_LENGTH} სიმბოლომდე და გაასწორე გრამატიკული შეცდომები.
+ამოცანა: შეამოკლე კითხვა ${MAX_LENGTH} სიმბოლომდე.
 
-წესები:
-1. შეინარჩუნე ზუსტად იგივე მნიშვნელობა
-2. გამოიყენე სწორი ქართული გრამატიკა
-3. წაშალე ზედმეტი სიტყვები
+მკაცრი წესები:
+1. შეინარჩუნე კითხვის სრული აზრი და კონტექსტი
+2. მინიმუმ ${MIN_LENGTH} სიმბოლო უნდა იყოს
+3. მინიმუმ ${MIN_WORDS} სიტყვა უნდა შეიცავდეს
 4. კითხვა უნდა დამთავრდეს კითხვის ნიშნით (?)
-5. იყავი ლაკონური მაგრამ გასაგები
+5. კითხვა უნდა იყოს სრულყოფილი და გასაგები კონტექსტის გარეშე
+6. არ დატოვო წინადადება ნახევრად - ყველა სიტყვას უნდა ჰქონდეს აზრი
+7. გამოიყენე სწორი ქართული გრამატიკა
+
+არასწორი მაგალითები (ასე არ გააკეთო):
+❌ "რო?" - არასრული, უაზრო
+❌ "რომელი?" - არ აქვს კონტექსტი  
+❌ "რა და რომელი?" - არ არის გასაგები
+❌ "რომელ ქვეყანაში რომ?" - არასრული წინადადება
+
+სწორი მაგალითები:
+✅ "რომელი ქალაქია საქართველოს დედაქალაქი?"
+✅ "ვინ დაწერა "ვეფხისტყაოსანი"?"
+✅ "რა წელს დაარსდა გაერო?"
 
 სწორი პასუხი (რეფერენსისთვის): "${question.correct_answer}"
 
-თუ კითხვის შემოკლება ${MAX_LENGTH} სიმბოლომდე შეუძლებელია, უპასუხე: CANNOT_SHORTEN
+თუ შემოკლება ${MAX_LENGTH} სიმბოლომდე შეუძლებელია სრული აზრის შენარჩუნებით, უპასუხე მხოლოდ: CANNOT_SHORTEN
 
-კითხვა: "${question.question_text}"
-სიგრძე: ${question.question_text.length} → ${MAX_LENGTH}
+ორიგინალი კითხვა: "${question.question_text}"
+სიგრძე: ${question.question_text.length} → მაქსიმუმ ${MAX_LENGTH}
 
 შემოკლებული კითხვა:`;
 
@@ -209,6 +296,8 @@ serve(async (req) => {
         const data = await response.json();
         const aiResponse = data.choices?.[0]?.message?.content?.trim() || "";
 
+        console.log(`Question ${question.id}: AI response = "${aiResponse}" (${aiResponse.length} chars)`);
+
         if (aiResponse === "CANNOT_SHORTEN" || aiResponse.includes("CANNOT_SHORTEN")) {
           // Mark as unshortenable
           await supabase
@@ -226,28 +315,9 @@ serve(async (req) => {
             status: 'unshortenable',
             originalLength: question.question_text.length,
             newLength: null,
+            qualityIssue: 'AI-მ ვერ შეამოკლა'
           });
           unshortenable++;
-        } else if (aiResponse.length > 0 && aiResponse.length <= MAX_LENGTH) {
-          // Successfully shortened - store in PENDING columns for review
-          await supabase
-            .from("questions")
-            .update({ 
-              pending_question_text: aiResponse,
-              shorten_status: "pending_review",
-              original_question_text: question.question_text
-            })
-            .eq("id", question.id);
-
-          results.push({
-            id: question.id,
-            original: question.question_text,
-            shortened: aiResponse,
-            status: 'shortened',
-            originalLength: question.question_text.length,
-            newLength: aiResponse.length,
-          });
-          shortened++;
         } else if (aiResponse.length > MAX_LENGTH) {
           // AI tried but still too long - mark as unshortenable
           await supabase
@@ -265,10 +335,60 @@ serve(async (req) => {
             status: 'unshortenable',
             originalLength: question.question_text.length,
             newLength: aiResponse.length,
+            qualityIssue: `კვლავ ძალიან გრძელია (${aiResponse.length} > ${MAX_LENGTH})`
           });
           unshortenable++;
+        } else if (aiResponse.length > 0) {
+          // Validate quality of shortened question
+          const validation = isValidShortenedQuestion(aiResponse, question.question_text);
+          
+          if (!validation.valid) {
+            // Failed quality validation - mark as unshortenable
+            console.log(`Question ${question.id}: Failed validation - ${validation.reason}: ${validation.reasonGe}`);
+            
+            await supabase
+              .from("questions")
+              .update({ 
+                shorten_status: "unshortenable",
+                quality_issues: JSON.stringify([validation.reason]),
+                original_question_text: question.question_text
+              })
+              .eq("id", question.id);
+
+            results.push({
+              id: question.id,
+              original: question.question_text,
+              shortened: aiResponse,
+              status: 'unshortenable',
+              originalLength: question.question_text.length,
+              newLength: aiResponse.length,
+              qualityIssue: validation.reasonGe
+            });
+            unshortenable++;
+          } else {
+            // Successfully shortened and validated - store in PENDING columns for review
+            await supabase
+              .from("questions")
+              .update({ 
+                pending_question_text: aiResponse,
+                shorten_status: "pending_review",
+                original_question_text: question.question_text
+              })
+              .eq("id", question.id);
+
+            results.push({
+              id: question.id,
+              original: question.question_text,
+              shortened: aiResponse,
+              status: 'shortened',
+              originalLength: question.question_text.length,
+              newLength: aiResponse.length,
+            });
+            shortened++;
+          }
         } else {
           // Empty response - mark as failed
+          console.log(`Question ${question.id}: Empty AI response`);
           results.push({
             id: question.id,
             original: question.question_text,
@@ -276,6 +396,7 @@ serve(async (req) => {
             status: 'failed',
             originalLength: question.question_text.length,
             newLength: null,
+            qualityIssue: 'AI-მ ცარიელი პასუხი დააბრუნა'
           });
           failed++;
         }
