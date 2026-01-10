@@ -158,12 +158,9 @@ export function CategorySelectorModal({
 
                     {/* Content */}
                     <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg drop-shadow-md">{category.icon}</span>
-                        <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
-                          {category.name}
-                        </span>
-                      </div>
+                      <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                        {category.name}
+                      </span>
                       <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                         {category.total_levels} დონე
                       </p>
