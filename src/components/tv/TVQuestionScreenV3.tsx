@@ -113,7 +113,7 @@ export const TVQuestionScreenV3: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="relative p-4 rounded-xl text-left flex items-center gap-3"
+              className="relative p-4 rounded-xl text-left flex items-center gap-3 min-h-[80px]"
               style={{
                 background: OPTION_COLORS[index].bg,
                 backdropFilter: 'blur(10px)',
@@ -123,14 +123,14 @@ export const TVQuestionScreenV3: React.FC = () => {
             >
               {/* Option Label Badge */}
               <span 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0 self-start mt-0.5"
                 style={{ background: OPTION_COLORS[index].labelBg }}
               >
                 {OPTION_COLORS[index].label}
               </span>
               
               {/* Option Text */}
-              <span className="text-lg lg:text-xl font-bold text-white line-clamp-2">
+              <span className="text-lg lg:text-xl font-bold text-white line-clamp-2 flex-1">
                 {option}
               </span>
             </motion.div>
