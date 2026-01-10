@@ -133,6 +133,91 @@ function isValidQuestion(q: any): boolean {
   }
   return true;
 }
+// Multi-tier icon search with guaranteed fallback
+async function findIconForQuestion(
+  supabase: any,
+  keywords: string[],
+  categoryIconSlug: string | null
+): Promise<string | null> {
+  const searchedSlugs = new Set<string>();
+  
+  // Tier 1: Exact slug match (most specific)
+  for (const keyword of keywords) {
+    const normalizedKw = keyword.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (normalizedKw.length >= 3 && !searchedSlugs.has(normalizedKw)) {
+      searchedSlugs.add(normalizedKw);
+      const { data } = await supabase
+        .from('icon_library')
+        .select('slug')
+        .eq('slug', normalizedKw)
+        .limit(1);
+      if (data?.length > 0) {
+        console.log(`Icon found (Tier 1 - exact slug): ${data[0].slug} for keyword: ${keyword}`);
+        return data[0].slug;
+      }
+    }
+  }
+  
+  // Tier 2: Title/slug contains keyword (ilike search)
+  for (const keyword of keywords) {
+    const kw = keyword.toLowerCase().trim();
+    if (kw.length >= 4) {
+      const { data } = await supabase
+        .from('icon_library')
+        .select('slug, title')
+        .or(`slug.ilike.%${kw}%,title.ilike.%${kw}%`)
+        .limit(5);
+      
+      if (data?.length > 0) {
+        // Prefer shorter slugs (more specific icons)
+        const sorted = data.sort((a: any, b: any) => a.slug.length - b.slug.length);
+        console.log(`Icon found (Tier 2 - ilike): ${sorted[0].slug} for keyword: ${keyword}`);
+        return sorted[0].slug;
+      }
+    }
+  }
+  
+  // Tier 3: Tag array search using contains
+  for (const keyword of keywords) {
+    const kw = keyword.toLowerCase().trim();
+    if (kw.length >= 3) {
+      const { data } = await supabase
+        .from('icon_library')
+        .select('slug')
+        .contains('tags', [kw])
+        .limit(1);
+      if (data?.length > 0) {
+        console.log(`Icon found (Tier 3 - tags): ${data[0].slug} for keyword: ${keyword}`);
+        return data[0].slug;
+      }
+    }
+  }
+  
+  // Tier 4: Guaranteed fallback to category icon
+  if (categoryIconSlug) {
+    console.log(`Icon fallback (Tier 4 - category): ${categoryIconSlug}`);
+    return categoryIconSlug;
+  }
+  
+  console.log(`No icon found for keywords: ${keywords.join(', ')}`);
+  return null;
+}
+
+// Extract visual keywords from text for icon matching
+function extractVisualKeywords(text: string, correctAnswer: string): string[] {
+  const combined = `${text} ${correctAnswer}`.toLowerCase();
+  
+  // Extract meaningful words (4+ chars, not common words)
+  const commonWords = new Set(['what', 'which', 'when', 'where', 'does', 'that', 'this', 'with', 'from', 'have', 'been', 'were', 'they', 'their', 'about', 'would', 'could', 'should', 'there', 'these', 'those', 'after', 'before', 'through', 'between', 'under', 'above', 'being', 'other', 'first', 'second', 'third', 'called', 'known', 'most', 'many', 'some', 'more', 'very', 'only', 'also', 'year', 'years']);
+  
+  const words = combined
+    .replace(/[?.!,;:'"()]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 4 && !commonWords.has(w) && !/^\d+$/.test(w));
+  
+  // Remove duplicates and limit
+  return [...new Set(words)].slice(0, 8);
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -150,6 +235,16 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch category icon for fallback
+    const { data: categoryData } = await supabase
+      .from('categories')
+      .select('icon_slug')
+      .eq('id', categoryId)
+      .single();
+    
+    const categoryIconSlug = categoryData?.icon_slug || null;
+    console.log(`Category icon fallback: ${categoryIconSlug || 'none'}`);
 
     // Fetch existing questions from this category for duplicate detection
     console.log(`Fetching existing questions for category ${categoryId}...`);
@@ -237,7 +332,9 @@ Return a JSON object with a "questions" array. Each question should have:
 - correctAnswer: the correct answer (max ${ANSWER_MAX_LENGTH} chars)
 - incorrectAnswers: array of 3 wrong answers (each max ${ANSWER_MAX_LENGTH} chars)
 - difficulty: "easy", "medium", or "hard"
-- iconKeywords: array of 2-3 English keywords for finding an icon (e.g., ["mountain", "nature", "landscape"])`;
+- iconKeywords: array of 2-4 CONCRETE VISUAL English words for finding an icon
+  GOOD examples: ["pyramid", "egypt"], ["tank", "military"], ["violin", "music"], ["mountain", "snow"]
+  BAD examples: ["history", "culture", "knowledge"] - these are too abstract, use specific objects instead`;
 
     const allQuestions: any[] = [];
 
@@ -384,25 +481,36 @@ Return ONLY valid JSON with this structure:
     // Take only the requested number of unique questions
     const trimmedQuestions = uniqueQuestions.slice(0, requestedCount);
 
-    // Try to find icons for each question
+    // Find icons for each question using multi-tier search with category fallback
+    console.log(`Finding icons for ${trimmedQuestions.length} questions...`);
+    let iconsFound = 0;
+    let iconsFallback = 0;
+    
     const questionsWithIcons = await Promise.all(
       trimmedQuestions.map(async (q: any) => {
-        // Questions already passed validation, no need to truncate
-        if (q.iconKeywords?.length > 0) {
-          const { data: icons } = await supabase
-            .from('icon_library')
-            .select('slug')
-            .or(q.iconKeywords.map((k: string) => `tags.cs.{${k.toLowerCase()}}`).join(','))
-            .limit(1);
-
-          if (icons && icons.length > 0) {
-            q.iconSlug = icons[0].slug;
+        // Combine AI-generated keywords with extracted text keywords
+        const aiKeywords = (q.iconKeywords || []).map((k: string) => k.toLowerCase().trim());
+        const textKeywords = extractVisualKeywords(q.questionText || '', q.correctAnswer || '');
+        
+        // AI keywords first (more specific), then text keywords
+        const allKeywords = [...new Set([...aiKeywords, ...textKeywords])];
+        
+        const iconSlug = await findIconForQuestion(supabase, allKeywords, categoryIconSlug);
+        
+        if (iconSlug) {
+          q.iconSlug = iconSlug;
+          iconsFound++;
+          if (iconSlug === categoryIconSlug) {
+            iconsFallback++;
           }
         }
+        
         delete q.iconKeywords;
         return q;
       })
     );
+    
+    console.log(`Icon assignment complete: ${iconsFound}/${trimmedQuestions.length} icons found (${iconsFallback} used category fallback)`);
 
     return new Response(JSON.stringify({ questions: questionsWithIcons }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
