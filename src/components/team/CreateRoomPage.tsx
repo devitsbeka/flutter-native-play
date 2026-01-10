@@ -85,7 +85,11 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     try {
       const { data, error } = await supabase.functions.invoke('generate-room-name');
       if (!error && data) {
-        setRoomName(data.name || "სახალისო გუნდი");
+        // Strip emojis from the name - only show the library icon
+        const nameWithoutEmoji = (data.name || "სახალისო გუნდი")
+          .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1FA00}-\u{1FAFF}]/gu, '')
+          .trim();
+        setRoomName(nameWithoutEmoji || "სახალისო გუნდი");
         setRoomIcon(data.icon_url || null);
       } else {
         console.error('Error generating room name:', error);
