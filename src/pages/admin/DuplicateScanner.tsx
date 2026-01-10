@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 export default function DuplicateScanner() {
   const [categoryId, setCategoryId] = useState<string>('all');
   const [threshold, setThreshold] = useState([80]);
-  const { scanning, scanResult, scanDatabaseForDuplicates, clearScanResult } = useDuplicateDetection();
+  const { scanning, scanResult, setScanResult, scanDatabaseForDuplicates, clearScanResult } = useDuplicateDetection();
   const { categories } = useAdminCategories();
   const { deleteQuestion } = useAdminQuestions();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -30,11 +30,15 @@ export default function DuplicateScanner() {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await deleteQuestion(id);
-      // Remove from scan results
-      if (scanResult) {
+      const success = await deleteQuestion(id);
+      // Remove from scan results after successful delete
+      if (success && scanResult) {
         const newDuplicates = scanResult.duplicates.filter(d => d.existingId !== id);
-        // Would need to update scanResult here - for now just re-scan
+        setScanResult({
+          ...scanResult,
+          duplicates: newDuplicates,
+          duplicatesFound: newDuplicates.length
+        });
       }
     } finally {
       setDeletingId(null);
