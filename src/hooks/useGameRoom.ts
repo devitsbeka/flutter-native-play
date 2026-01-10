@@ -11,6 +11,7 @@ export interface GameRoom {
   id: string;
   room_code: string;
   room_name: string | null;
+  room_icon: string | null;
   host_user_id: string;
   status: RoomStatus;
   category_id: string | null;
@@ -146,6 +147,7 @@ export function useGameRoom() {
         id: room.id,
         room_code: room.room_code,
         room_name: room.room_name,
+        room_icon: room.room_icon ?? null,
         host_user_id: room.host_user_id,
         status: room.status as RoomStatus,
         category_id: room.category_id,
@@ -227,6 +229,7 @@ export function useGameRoom() {
           id: room.id,
           room_code: room.room_code,
           room_name: room.room_name,
+          room_icon: room.room_icon ?? null,
           host_user_id: room.host_user_id,
           status: room.status as RoomStatus,
           category_id: room.category_id,
@@ -270,6 +273,7 @@ export function useGameRoom() {
         id: room.id,
         room_code: room.room_code,
         room_name: room.room_name,
+        room_icon: room.room_icon ?? null,
         host_user_id: room.host_user_id,
         status: room.status as RoomStatus,
         category_id: room.category_id,
@@ -389,6 +393,7 @@ export function useGameRoom() {
       id: data.id,
       room_code: data.room_code,
       room_name: data.room_name,
+      room_icon: data.room_icon ?? null,
       host_user_id: data.host_user_id,
       status: data.status as RoomStatus,
       category_id: data.category_id,

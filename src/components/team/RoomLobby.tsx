@@ -316,7 +316,7 @@ export function RoomLobby() {
           </motion.div>
         )}
 
-        {/* Room Name */}
+        {/* Room Name with Icon */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -340,6 +340,13 @@ export function RoomLobby() {
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
+              {room.room_icon && (
+                <img 
+                  src={room.room_icon} 
+                  alt="" 
+                  className="w-8 h-8 object-contain"
+                />
+              )}
               <h2 className="text-2xl font-bold text-foreground">
                 {room.room_name || `ოთახი #${room.room_code.slice(-4)}`}
               </h2>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, Shuffle, HelpCircle, Library, Sparkles, UserPlus, X, Play, Dices, Share2, Link } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -418,6 +418,18 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                   <p className="font-semibold text-white">{selectedCategory.name}</p>
                   <p className="text-sm text-white/70">რანდომ კატეგორია</p>
                 </div>
+                {/* Re-roll button */}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectRandomCategory();
+                  }}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="სხვა კატეგორია"
+                >
+                  <RefreshCw className="w-5 h-5 text-white" />
+                </button>
+                {/* Clear button */}
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
