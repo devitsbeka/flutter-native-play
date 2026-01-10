@@ -62,7 +62,7 @@ export const TVCountdownScreenV2: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-8 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6 overflow-hidden">
       {/* Category info */}
       {categoryName && (
         <motion.div
