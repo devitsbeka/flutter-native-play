@@ -535,79 +535,198 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("team.category")}</h2>
           
           <div className="space-y-3">
-            {/* Random Option */}
-            <motion.button
-              onClick={() => !isSearchingRandom && handleOptionClick("random")}
-              disabled={isSearchingRandom}
-              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all overflow-hidden ${
-                isSearchingRandom || (selectionMode === "random" && selectedCategory)
-                  ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
-                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-              }`}
-              whileHover={{ scale: isSearchingRandom ? 1 : 1.01 }}
-              whileTap={{ scale: isSearchingRandom ? 1 : 0.99 }}
-            >
-              {/* Searching animation overlay */}
-              {isSearchingRandom && (
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                />
-              )}
-              
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                isSearchingRandom || (selectionMode === "random" && selectedCategory)
-                  ? "bg-white/20" 
-                  : "bg-purple-500/10"
-              }`}>
-                <motion.div
-                  animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
-                  transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
-                >
-                  <Dices className={`w-6 h-6 ${isSearchingRandom || (selectionMode === "random" && selectedCategory) ? "text-white" : "text-purple-500"}`} />
-                </motion.div>
-              </div>
-              <div className="flex-1 text-left relative z-10">
-                <p className={`font-semibold ${isSearchingRandom || (selectionMode === "random" && selectedCategory) ? "text-white" : "text-foreground"}`}>
-                  {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
-                </p>
-                <p className={`text-sm ${isSearchingRandom || (selectionMode === "random" && selectedCategory) ? "text-white/70" : "text-muted-foreground"}`}>
-                  {isSearchingRandom 
-                    ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
-                    : "რანდომ კატეგორია თამაშისთვის"
-                  }
-                </p>
-              </div>
-            </motion.button>
+            {/* Random Option - Container that expands to show preview */}
+            <div className="rounded-2xl overflow-hidden">
+              <AnimatePresence mode="wait">
+                {selectionMode === "random" && selectedCategory && !isSearchingRandom ? (
+                  // Expanded state - video preview inside the button area
+                  <motion.div
+                    key="random-preview"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="relative w-full aspect-video"
+                  >
+                    {/* Video/Gradient Background */}
+                    {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
+                      <>
+                        <PingPongVideo
+                          src={CATEGORY_VIDEOS[selectedCategory.category_id]}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600" />
+                    )}
+                    
+                    {/* Overlaid Info Bar at Bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                          <Dices className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
+                            {selectedCategory.name}
+                          </p>
+                          <p className="text-xs text-white/80">
+                            რანდომ კატეგორია თამაშისთვის
+                          </p>
+                        </div>
+                        {/* Re-roll button */}
+                        <button 
+                          onClick={selectRandomCategory}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          title="სხვა კატეგორია"
+                        >
+                          <RefreshCw className="w-5 h-5 text-white" />
+                        </button>
+                        {/* Clear button */}
+                        <button 
+                          onClick={clearSelection}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  // Collapsed state - regular button
+                  <motion.button
+                    key="random-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => !isSearchingRandom && handleOptionClick("random")}
+                    disabled={isSearchingRandom}
+                    className={`relative w-full flex items-center gap-4 p-4 transition-all overflow-hidden ${
+                      isSearchingRandom
+                        ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
+                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {/* Searching animation overlay */}
+                    {isSearchingRandom && (
+                      <motion.div 
+                        className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
+                        animate={{ x: ["-100%", "100%"] }}
+                        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                      />
+                    )}
+                    
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                      isSearchingRandom ? "bg-white/20" : "bg-purple-500/10"
+                    }`}>
+                      <motion.div
+                        animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
+                        transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
+                      >
+                        <Dices className={`w-6 h-6 ${isSearchingRandom ? "text-white" : "text-purple-500"}`} />
+                      </motion.div>
+                    </div>
+                    <div className="flex-1 text-left relative z-10">
+                      <p className={`font-semibold ${isSearchingRandom ? "text-white" : "text-foreground"}`}>
+                        {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
+                      </p>
+                      <p className={`text-sm ${isSearchingRandom ? "text-white/70" : "text-muted-foreground"}`}>
+                        {isSearchingRandom 
+                          ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
+                          : "რანდომ კატეგორია თამაშისთვის"
+                        }
+                      </p>
+                    </div>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
 
-            {/* Library Option */}
-            <motion.button
-              onClick={() => handleOptionClick("library")}
-              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                selectionMode === "library"
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
-                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-              }`}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                selectionMode === "library" 
-                  ? "bg-white/20" 
-                  : "bg-blue-500/10"
-              }`}>
-                <Library className={`w-6 h-6 ${selectionMode === "library" ? "text-white" : "text-blue-500"}`} />
-              </div>
-              <div className="flex-1 text-left">
-                <p className={`font-semibold ${selectionMode === "library" ? "text-white" : "text-foreground"}`}>
-                  ბიბლიოთეკა
-                </p>
-                <p className={`text-sm ${selectionMode === "library" ? "text-white/70" : "text-muted-foreground"}`}>
-                  აირჩიე კატეგორია სიიდან
-                </p>
-              </div>
-            </motion.button>
+            {/* Library Option - Container that expands to show preview */}
+            <div className="rounded-2xl overflow-hidden">
+              <AnimatePresence mode="wait">
+                {selectionMode === "library" && selectedCategory ? (
+                  // Expanded state - video preview inside the button area
+                  <motion.div
+                    key="library-preview"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="relative w-full aspect-video"
+                  >
+                    {/* Video/Gradient Background */}
+                    {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
+                      <>
+                        <PingPongVideo
+                          src={CATEGORY_VIDEOS[selectedCategory.category_id]}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      </>
+                    ) : (
+                      <div 
+                        className="w-full h-full"
+                        style={{ background: `linear-gradient(135deg, ${selectedCategory.color || 'hsl(var(--primary))'}, ${selectedCategory.color || 'hsl(var(--primary))'}dd)` }}
+                      />
+                    )}
+                    
+                    {/* Overlaid Info Bar at Bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                          <Library className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
+                            {selectedCategory.name}
+                          </p>
+                          <p className="text-xs text-white/80">
+                            არჩეული კატეგორია
+                          </p>
+                        </div>
+                        {/* Clear button */}
+                        <button 
+                          onClick={clearSelection}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  // Collapsed state - regular button
+                  <motion.button
+                    key="library-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => handleOptionClick("library")}
+                    className={`relative w-full flex items-center gap-4 p-4 transition-all ${
+                      selectionMode === "library" && !selectedCategory
+                        ? "bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25"
+                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                      selectionMode === "library" && !selectedCategory
+                        ? "bg-white/20" 
+                        : "bg-blue-500/10"
+                    }`}>
+                      <Library className={`w-6 h-6 ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-blue-500"}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className={`font-semibold ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-foreground"}`}>
+                        ბიბლიოთეკა
+                      </p>
+                      <p className={`text-sm ${selectionMode === "library" && !selectedCategory ? "text-white/70" : "text-muted-foreground"}`}>
+                        აირჩიე კატეგორია სიიდან
+                      </p>
+                    </div>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Create Trivia Option */}
             <motion.button
@@ -639,117 +758,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           </div>
         </div>
 
-        {/* Random Category Preview - unified video container with overlaid info */}
+        {/* Custom Trivia Preview */}
         <AnimatePresence>
-          {selectedCategory && selectionMode === "random" && !isSearchingRandom && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: "auto" }}
-              exit={{ opacity: 0, y: -10, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
-                {/* Video/Gradient Background */}
-                {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
-                  <>
-                    <PingPongVideo
-                      src={CATEGORY_VIDEOS[selectedCategory.category_id]}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-violet-600" />
-                )}
-                
-                {/* Overlaid Info Bar at Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                      <Dices className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                        {selectedCategory.name}
-                      </p>
-                      <p className="text-xs text-white/80">
-                        რანდომ კატეგორია თამაშისთვის
-                      </p>
-                    </div>
-                    {/* Re-roll button */}
-                    <button 
-                      onClick={selectRandomCategory}
-                      className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                      title="სხვა კატეგორია"
-                    >
-                      <RefreshCw className="w-5 h-5 text-white" />
-                    </button>
-                    {/* Clear button */}
-                    <button 
-                      onClick={clearSelection}
-                      className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                    >
-                      <X className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Library Category Preview - unified video container with overlaid info */}
-          {selectedCategory && selectionMode === "library" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: "auto" }}
-              exit={{ opacity: 0, y: -10, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
-                {/* Video/Gradient Background */}
-                {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
-                  <>
-                    <PingPongVideo
-                      src={CATEGORY_VIDEOS[selectedCategory.category_id]}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  </>
-                ) : (
-                  <div 
-                    className="w-full h-full"
-                    style={{ background: `linear-gradient(135deg, ${selectedCategory.color || 'hsl(var(--primary))'}, ${selectedCategory.color || 'hsl(var(--primary))'}dd)` }}
-                  />
-                )}
-                
-                {/* Overlaid Info Bar at Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                      <Library className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
-                        {selectedCategory.name}
-                      </p>
-                      <p className="text-xs text-white/80">
-                        არჩეული კატეგორია
-                      </p>
-                    </div>
-                    {/* Clear button */}
-                    <button 
-                      onClick={clearSelection}
-                      className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
-                    >
-                      <X className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Custom Trivia Preview */}
           {selectionMode === "create" && customTriviaQuestions && (
             <motion.div
               initial={{ opacity: 0, y: 10, height: 0 }}
