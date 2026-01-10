@@ -57,7 +57,12 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
   const [isCreating, setIsCreating] = useState(false);
-  // Room name is AI-generated during room creation - no local state needed
+  
+  // Room name & icon state - AI-generated via edge function
+  const [roomName, setRoomName] = useState<string>("იტვირთება...");
+  const [roomIcon, setRoomIcon] = useState<string | null>(null);
+  const [isGeneratingName, setIsGeneratingName] = useState(false);
+  
   const [showTVModal, setShowTVModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
@@ -72,7 +77,27 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
 
-  // Fetch categories from database
+  // Generate room name via edge function
+  const generateRoomName = async () => {
+    setIsGeneratingName(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-room-name');
+      if (!error && data) {
+        setRoomName(data.name || "სახალისო გუნდი");
+        setRoomIcon(data.icon_url || null);
+      } else {
+        console.error('Error generating room name:', error);
+        setRoomName("სახალისო გუნდი");
+      }
+    } catch (e) {
+      console.error('Failed to generate room name:', e);
+      setRoomName("სახალისო გუნდი");
+    } finally {
+      setIsGeneratingName(false);
+    }
+  };
+
+  // Fetch categories from database & generate room name on mount
   useEffect(() => {
     const fetchCategories = async () => {
       setLoadingCategories(true);
@@ -91,6 +116,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     };
 
     fetchCategories();
+    generateRoomName();
   }, []);
 
   // Select random category with animation
@@ -271,10 +297,42 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-        {/* Room name is AI-generated during room creation */}
+        {/* Room Name with Icon - AI generated */}
+        <div>
+          <h2 className="text-xs font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+            {/* Icon from 9k library */}
+            <div className="w-14 h-14 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
+              {isGeneratingName ? (
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+              ) : roomIcon ? (
+                <img src={roomIcon} alt="" className="w-10 h-10 object-contain" />
+              ) : (
+                <Sparkles className="w-6 h-6 text-primary" />
+              )}
+            </div>
+            
+            {/* Funny name */}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-foreground text-lg truncate">
+                {roomName}
+              </p>
+              <p className="text-xs text-muted-foreground">AI გენერირებული</p>
+            </div>
+            
+            {/* Regenerate button */}
+            <button
+              onClick={generateRoomName}
+              disabled={isGeneratingName}
+              className="p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-5 h-5 text-primary ${isGeneratingName ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
 
         {/* Invite Friends - Horizontal Scroll */}
-        <div className="pt-4">
+        <div>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები</h2>
             {acceptedFriends.length > 5 && (
