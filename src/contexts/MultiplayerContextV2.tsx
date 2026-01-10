@@ -88,7 +88,7 @@ interface MultiplayerContextType extends MultiplayerState {
   loading: boolean;
   
   // Actions
-  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[]) => Promise<GameRoom | null>;
+  createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: () => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
@@ -294,7 +294,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   };
 
   // Create room
-  const createRoom = useCallback(async (categoryId?: string, categoryName?: string, customQuestions?: any[]): Promise<GameRoom | null> => {
+  const createRoom = useCallback(async (
+    categoryId?: string, 
+    categoryName?: string, 
+    customQuestions?: any[],
+    providedRoomName?: string | null,
+    providedRoomIcon?: string | null
+  ): Promise<GameRoom | null> => {
     if (!user || !profile) {
       toast.error("ჯერ გაიარე ავტორიზაცია");
       return null;
@@ -304,17 +310,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     try {
       const roomCode = await generateRoomCode();
       
-      // Generate AI room name and icon
-      let generatedRoomName: string | null = null;
-      let generatedRoomIcon: string | null = null;
-      try {
-        const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name');
-        if (!nameError && nameData?.name) {
-          generatedRoomName = nameData.name;
-          generatedRoomIcon = nameData.icon_url || null;
+      // Use provided room name/icon or generate new ones
+      let finalRoomName: string | null = providedRoomName || null;
+      let finalRoomIcon: string | null = providedRoomIcon || null;
+      
+      // Only generate if not provided
+      if (!finalRoomName) {
+        try {
+          const { data: nameData, error: nameError } = await supabase.functions.invoke('generate-room-name');
+          if (!nameError && nameData?.name) {
+            finalRoomName = nameData.name;
+            finalRoomIcon = nameData.icon_url || null;
+          }
+        } catch (e) {
+          console.log('Using default room name, edge function failed:', e);
         }
-      } catch (e) {
-        console.log('Using default room name, edge function failed:', e);
       }
       
       const { data: room, error } = await supabase
@@ -328,8 +338,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           is_permanent: true,
           background_gradient: getRandomGradient(),
           total_questions: customQuestions?.length || 5,
-          room_name: generatedRoomName,
-          room_icon: generatedRoomIcon,
+          room_name: finalRoomName,
+          room_icon: finalRoomIcon,
           last_activity_at: new Date().toISOString(),
         })
         .select()
