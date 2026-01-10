@@ -463,7 +463,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                             </div>
                           )}
                         </div>
-                        <span className="text-sm text-foreground font-medium max-w-[60px] truncate">
+                        <span className="text-xs text-foreground font-medium max-w-[70px] truncate">
                           {friend.nickname}
                         </span>
                       </motion.button>
@@ -481,7 +481,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                       <div className="w-[52px] h-[52px] rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-base text-primary font-bold">+{acceptedFriends.length - 10}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">მეტი</span>
+                      <span className="text-xs text-muted-foreground">მეტი</span>
                     </motion.button>
                   )}
                   
@@ -495,7 +495,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                     <div className="w-[52px] h-[52px] rounded-full bg-primary/20 flex items-center justify-center">
                       <Share2 className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="text-sm text-primary font-medium">მოწვევა</span>
+                    <span className="text-xs text-primary font-medium">მოწვევა</span>
                   </motion.button>
                 </div>
               </div>
