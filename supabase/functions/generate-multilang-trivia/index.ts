@@ -319,15 +319,40 @@ Return ONLY valid JSON with this structure:
       const content = aiData.choices?.[0]?.message?.content;
       
       if (!content) {
+        console.error('No content in AI response:', JSON.stringify(aiData).substring(0, 500));
         throw new Error('No content in AI response');
       }
 
       let parsedContent;
       try {
+        // First attempt: direct parse
         parsedContent = JSON.parse(content);
       } catch (e) {
-        console.error('Failed to parse AI response:', content);
-        throw new Error('Invalid JSON from AI');
+        // Second attempt: try to extract valid JSON from potentially truncated response
+        console.log('Direct parse failed, attempting JSON extraction...');
+        try {
+          // Find the questions array and try to salvage what we can
+          const questionsMatch = content.match(/"questions"\s*:\s*\[/);
+          if (questionsMatch) {
+            // Find all complete question objects
+            const questionRegex = /\{\s*"questionText"\s*:\s*"[^"]*"\s*,\s*"correctAnswer"\s*:\s*"[^"]*"\s*,\s*"incorrectAnswers"\s*:\s*\[\s*"[^"]*"\s*,\s*"[^"]*"\s*,\s*"[^"]*"\s*\]\s*,\s*"difficulty"\s*:\s*"[^"]*"\s*,\s*"iconKeywords"\s*:\s*\[[^\]]*\]\s*\}/g;
+            const matches = content.match(questionRegex);
+            if (matches && matches.length > 0) {
+              parsedContent = { questions: matches.map((m: string) => JSON.parse(m)) };
+              console.log(`Salvaged ${matches.length} questions from truncated response`);
+            } else {
+              throw new Error('Could not extract questions');
+            }
+          } else {
+            throw new Error('No questions array found');
+          }
+        } catch (extractError) {
+          console.error('Failed to parse AI response (first 2000 chars):', content.substring(0, 2000));
+          console.error('Extraction error:', extractError);
+          // Don't throw - just continue with empty for this chunk
+          parsedContent = { questions: [] };
+          console.log('Chunk failed to parse, continuing with empty batch');
+        }
       }
 
       const questions = parsedContent.questions || [];
