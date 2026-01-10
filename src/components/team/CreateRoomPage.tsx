@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,9 +15,30 @@ import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
+import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import iconCollections from "@/assets/icon-collections.png";
+
+// Inspirational topics for trivia creation
+const INSPIRATIONAL_TOPICS = [
+  { emoji: "🎬", label: "კინო" },
+  { emoji: "⚽", label: "სპორტი" },
+  { emoji: "🎵", label: "მუსიკა" },
+  { emoji: "🌍", label: "გეოგრაფია" },
+  { emoji: "📚", label: "ისტორია" },
+  { emoji: "🔬", label: "მეცნიერება" },
+  { emoji: "🎨", label: "ხელოვნება" },
+  { emoji: "⭐", label: "ცნობილები" },
+  { emoji: "🎮", label: "გეიმინგი" },
+  { emoji: "🍕", label: "საჭმელი" },
+  { emoji: "🌸", label: "ანიმე" },
+  { emoji: "📺", label: "სერიალები" },
+  { emoji: "🚀", label: "კოსმოსი" },
+  { emoji: "🐾", label: "ცხოველები" },
+  { emoji: "💻", label: "ტექნოლოგია" },
+];
 
 interface GeneratedQuestion {
   question_text: string;
@@ -70,7 +91,13 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
+  const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
+  
+  // Shuffle inspirational topics when menu opens
+  const shuffledTopics = useMemo(() => {
+    return [...INSPIRATIONAL_TOPICS].sort(() => Math.random() - 0.5);
+  }, [showCreateOptionsMenu]);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>(null);
   const [isSearchingRandom, setIsSearchingRandom] = useState(false);
   
@@ -181,8 +208,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     if (type === "trivia") {
       setShowCreateTriviaModal(true);
     } else {
-      // Navigate to collection creation
-      navigate("/social/collections/new");
+      // Open collection modal instead of navigating
+      setShowCreateCollectionModal(true);
     }
   };
 
@@ -745,7 +772,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
                 {showCreateOptionsMenu && selectionMode === "create" && !customTriviaQuestions ? (
-                  // Expanded state - show 2 sub-options
+                  // Expanded state - show inspirational chips + 2 sub-options
                   <motion.div
                     key="create-options"
                     initial={{ opacity: 0, height: 0 }}
@@ -753,7 +780,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                     exit={{ opacity: 0, height: 0 }}
                     className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 space-y-3"
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1">
                       <p className="text-white font-semibold">აირჩიე ტიპი</p>
                       <button 
                         onClick={() => {
@@ -764,6 +791,21 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                       >
                         <X className="w-4 h-4 text-white" />
                       </button>
+                    </div>
+                    
+                    {/* Inspirational Category Chips */}
+                    <div className="flex flex-wrap gap-1.5 pb-1">
+                      {shuffledTopics.slice(0, 5).map((topic, idx) => (
+                        <motion.span
+                          key={topic.label}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="px-2.5 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs text-white/95 font-medium"
+                        >
+                          {topic.emoji} {topic.label}
+                        </motion.span>
+                      ))}
                     </div>
                     
                     {/* Trivia Option */}
@@ -777,8 +819,8 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                         <Sparkles className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white">Trivia</p>
-                        <p className="text-xs text-white/70">ერთი რაუნდი კითხვებით</p>
+                        <p className="font-medium text-white">🎯 ტრივია</p>
+                        <p className="text-xs text-white/70">1 რაუნდი, სწრაფი შექმნა</p>
                       </div>
                     </motion.button>
                     
@@ -789,12 +831,12 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <Library className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0 overflow-hidden">
+                        <img src={iconCollections} alt="" className="w-6 h-6 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white">Collection</p>
-                        <p className="text-xs text-white/70">მრავალი რაუნდი ერთად</p>
+                        <p className="font-medium text-white">📚 კოლექცია</p>
+                        <p className="text-xs text-white/70">რამდენიმე რაუნდი ერთად</p>
                       </div>
                     </motion.button>
                   </motion.div>
@@ -923,6 +965,19 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
       <HowItWorksModal
         isOpen={showHowItWorksModal}
         onClose={() => setShowHowItWorksModal(false)}
+      />
+
+      {/* Create Collection Modal */}
+      <CreateCollectionModal
+        open={showCreateCollectionModal}
+        onOpenChange={setShowCreateCollectionModal}
+        onCollectionCreated={() => {
+          // After collection is created, could auto-select it for the room
+          toast({
+            title: "✨ კოლექცია შეიქმნა!",
+            description: "ახლა შეგიძლია გამოიყენო მეგობრებთან ერთად",
+          });
+        }}
       />
     </motion.div>
   );
