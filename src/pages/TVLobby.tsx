@@ -3,9 +3,9 @@ import { TVGameProvider, useTVGame } from '@/contexts/TVGameContext';
 import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
-import { TVQuestionScreenV3 } from '@/components/tv/TVQuestionScreenV3';
+import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
 import { TVRevealScreenV2 } from '@/components/tv/TVRevealScreenV2';
-import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
+import { TVResultsScreenV2 } from '@/components/tv/TVResultsScreenV2';
 import { TVIdleScreen } from '@/components/tv/TVIdleScreen';
 import { Loader2 } from 'lucide-react';
 
@@ -81,12 +81,12 @@ const TVLobbyContent: React.FC = () => {
       return <TVCountdownScreenV2 />;
     case 'question':
     case 'playing': // Map 'playing' status from DB to question phase
-      return <TVQuestionScreenV3 />;
+      return <TVQuestionScreenV4 />;
     case 'reveal':
       return <TVRevealScreenV2 />;
     case 'results':
     case 'completed': // Map 'completed' status from DB to results phase
-      return <TVResultsScreen />;
+      return <TVResultsScreenV2 />;
     case 'idle':
       return <TVIdleScreen />;
     default:
