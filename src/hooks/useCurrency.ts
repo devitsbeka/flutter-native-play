@@ -8,13 +8,23 @@ export function useCurrency() {
   const coins = profile?.coins ?? 0;
   const gems = profile?.gems ?? 0;
 
-  // Add coins to user balance
+  // Add coins to user balance using secure RPC
   const addCoins = async (amount: number): Promise<boolean> => {
     if (!user || amount <= 0) return false;
 
     try {
-      const newCoins = coins + amount;
-      await updateProfile({ coins: newCoins } as any);
+      const { data, error } = await supabase.rpc('update_user_currency', {
+        p_user_id: user.id,
+        p_coins_delta: amount,
+        p_gems_delta: 0,
+      });
+
+      if (error) throw error;
+
+      // Update local state with server response
+      if (data && data.length > 0) {
+        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+      }
       return true;
     } catch (error) {
       console.error("Error adding coins:", error);
@@ -22,18 +32,29 @@ export function useCurrency() {
     }
   };
 
-  // Spend coins from user balance
+  // Spend coins from user balance using secure RPC with database-level locking
   const spendCoins = async (amount: number): Promise<boolean> => {
     if (!user || amount <= 0) return false;
 
-    if (coins < amount) {
-      // Return false - let the calling component handle the notification
-      return false;
-    }
-
     try {
-      const newCoins = coins - amount;
-      await updateProfile({ coins: newCoins } as any);
+      const { data, error } = await supabase.rpc('update_user_currency', {
+        p_user_id: user.id,
+        p_coins_delta: -amount,
+        p_gems_delta: 0,
+      });
+
+      if (error) {
+        // Handle insufficient funds error gracefully
+        if (error.message?.includes('Insufficient')) {
+          return false;
+        }
+        throw error;
+      }
+
+      // Update local state with server response
+      if (data && data.length > 0) {
+        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+      }
       return true;
     } catch (error) {
       console.error("Error spending coins:", error);
@@ -41,13 +62,23 @@ export function useCurrency() {
     }
   };
 
-  // Add gems to user balance
+  // Add gems to user balance using secure RPC
   const addGems = async (amount: number): Promise<boolean> => {
     if (!user || amount <= 0) return false;
 
     try {
-      const newGems = gems + amount;
-      await updateProfile({ gems: newGems } as any);
+      const { data, error } = await supabase.rpc('update_user_currency', {
+        p_user_id: user.id,
+        p_coins_delta: 0,
+        p_gems_delta: amount,
+      });
+
+      if (error) throw error;
+
+      // Update local state with server response
+      if (data && data.length > 0) {
+        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+      }
       return true;
     } catch (error) {
       console.error("Error adding gems:", error);
@@ -55,18 +86,29 @@ export function useCurrency() {
     }
   };
 
-  // Spend gems from user balance
+  // Spend gems from user balance using secure RPC with database-level locking
   const spendGems = async (amount: number): Promise<boolean> => {
     if (!user || amount <= 0) return false;
 
-    if (gems < amount) {
-      // Return false - let the calling component handle the notification
-      return false;
-    }
-
     try {
-      const newGems = gems - amount;
-      await updateProfile({ gems: newGems } as any);
+      const { data, error } = await supabase.rpc('update_user_currency', {
+        p_user_id: user.id,
+        p_coins_delta: 0,
+        p_gems_delta: -amount,
+      });
+
+      if (error) {
+        // Handle insufficient funds error gracefully
+        if (error.message?.includes('Insufficient')) {
+          return false;
+        }
+        throw error;
+      }
+
+      // Update local state with server response
+      if (data && data.length > 0) {
+        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+      }
       return true;
     } catch (error) {
       console.error("Error spending gems:", error);
@@ -80,17 +122,23 @@ export function useCurrency() {
   // Check if user can afford gems
   const canAffordGems = (amount: number): boolean => gems >= amount;
 
-  // Add both coins and gems at once (for rewards)
+  // Add both coins and gems at once (for rewards) using secure RPC
   const addCurrency = async (coinsAmount: number, gemsAmount: number = 0): Promise<boolean> => {
     if (!user) return false;
+    if (coinsAmount <= 0 && gemsAmount <= 0) return true;
 
     try {
-      const updates: any = {};
-      if (coinsAmount > 0) updates.coins = coins + coinsAmount;
-      if (gemsAmount > 0) updates.gems = gems + gemsAmount;
-      
-      if (Object.keys(updates).length > 0) {
-        await updateProfile(updates);
+      const { data, error } = await supabase.rpc('update_user_currency', {
+        p_user_id: user.id,
+        p_coins_delta: coinsAmount > 0 ? coinsAmount : 0,
+        p_gems_delta: gemsAmount > 0 ? gemsAmount : 0,
+      });
+
+      if (error) throw error;
+
+      // Update local state with server response
+      if (data && data.length > 0) {
+        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
       return true;
     } catch (error) {

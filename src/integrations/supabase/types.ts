@@ -2720,6 +2720,17 @@ export type Database = {
         Returns: boolean
       }
       increment_quiz_plays: { Args: { post_id: string }; Returns: undefined }
+      update_user_currency: {
+        Args: {
+          p_coins_delta?: number
+          p_gems_delta?: number
+          p_user_id: string
+        }
+        Returns: {
+          new_coins: number
+          new_gems: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
