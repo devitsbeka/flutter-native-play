@@ -64,8 +64,21 @@ interface CombinedProgress {
 interface CombinedStats {
   total: number;
   needsWork: number;
+  pendingReview: number;
   alreadyProcessed: number;
   loading: boolean;
+}
+
+interface PendingQuestion {
+  id: string;
+  question_text: string;
+  pending_question_text: string | null;
+  correct_answer: string;
+  pending_correct_answer: string | null;
+  incorrect_answers: string[];
+  pending_incorrect_answers: string[] | null;
+  shorten_status: string | null;
+  answer_shorten_status: string | null;
 }
 
 interface EditedValues {
@@ -101,9 +114,15 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
   const [stats, setStats] = useState<CombinedStats>({
     total: 0,
     needsWork: 0,
+    pendingReview: 0,
     alreadyProcessed: 0,
     loading: false
   });
+  
+  // Pending review state
+  const [viewMode, setViewMode] = useState<'shorten' | 'pending'>('shorten');
+  const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>([]);
+  const [loadingPending, setLoadingPending] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   
   // Edit state
@@ -148,6 +167,11 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           return questionTooLong || answersTooLong;
         });
         
+        // Questions pending review - have shortened versions waiting
+        const pendingReview = targetQuestions.filter(q => 
+          q.shorten_status === 'pending_review' || q.answer_shorten_status === 'pending_review'
+        );
+        
         const alreadyProcessed = targetQuestions.filter(q => 
           q.shorten_status === 'shortened' || q.answer_shorten_status === 'shortened'
         );
@@ -155,6 +179,7 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
         setStats({
           total: targetQuestions.length,
           needsWork: needsWork.length,
+          pendingReview: pendingReview.length,
           alreadyProcessed: alreadyProcessed.length,
           loading: false
         });
@@ -541,6 +566,130 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
     }
   };
 
+  // Load pending review questions
+  const loadPendingQuestions = async () => {
+    setLoadingPending(true);
+    try {
+      let query = supabase
+        .from('questions')
+        .select('id, question_text, pending_question_text, correct_answer, pending_correct_answer, incorrect_answers, pending_incorrect_answers, shorten_status, answer_shorten_status')
+        .eq('is_active', true)
+        .or('shorten_status.eq.pending_review,answer_shorten_status.eq.pending_review');
+      
+      if (categoryId !== 'all') {
+        query = query.eq('category_id', categoryId);
+      }
+      
+      if (!inProduction) {
+        query = query.eq('in_production', false);
+      } else {
+        query = query.eq('in_production', true);
+      }
+
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      setPendingQuestions((data || []).map(q => ({
+        ...q,
+        incorrect_answers: Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [],
+        pending_incorrect_answers: Array.isArray(q.pending_incorrect_answers) ? q.pending_incorrect_answers as string[] : null
+      })));
+    } catch (err) {
+      console.error('Error loading pending questions:', err);
+      toast({
+        title: 'შეცდომა',
+        description: 'მოლოდინის კითხვების ჩატვირთვა ვერ მოხერხდა',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingPending(false);
+    }
+  };
+
+  // Approve pending question
+  const approvePending = async (id: string) => {
+    try {
+      const question = pendingQuestions.find(q => q.id === id);
+      if (!question) return;
+
+      const updates: Record<string, unknown> = {
+        pending_question_text: null,
+        pending_correct_answer: null,
+        pending_incorrect_answers: null
+      };
+
+      if (question.pending_question_text) {
+        updates.question_text = question.pending_question_text;
+        updates.shorten_status = 'shortened';
+      }
+      if (question.pending_correct_answer) {
+        updates.correct_answer = question.pending_correct_answer;
+        updates.answer_shorten_status = 'shortened';
+      }
+      if (question.pending_incorrect_answers) {
+        updates.incorrect_answers = question.pending_incorrect_answers;
+        updates.answer_shorten_status = 'shortened';
+      }
+
+      const { error } = await supabase
+        .from('questions')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'დადასტურებულია ✅' });
+      setPendingQuestions(prev => prev.filter(q => q.id !== id));
+      // Refresh stats
+      setStats(prev => ({
+        ...prev,
+        pendingReview: prev.pendingReview - 1,
+        alreadyProcessed: prev.alreadyProcessed + 1
+      }));
+    } catch (err) {
+      console.error('Approve error:', err);
+      toast({ title: 'შეცდომა', variant: 'destructive' });
+    }
+  };
+
+  // Approve all selected pending
+  const approveAllPending = async () => {
+    for (const id of selectedResults) {
+      await approvePending(id);
+    }
+    setSelectedResults(new Set());
+  };
+
+  // Reject pending (mark as needs reprocess)
+  const rejectPending = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({
+          shorten_status: null,
+          answer_shorten_status: null,
+          pending_question_text: null,
+          pending_correct_answer: null,
+          pending_incorrect_answers: null
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: 'უარყოფილია - ხელახლა დასამუშავებელი' });
+      setPendingQuestions(prev => prev.filter(q => q.id !== id));
+      setStats(prev => ({
+        ...prev,
+        pendingReview: prev.pendingReview - 1,
+        needsWork: prev.needsWork + 1
+      }));
+    } catch (err) {
+      console.error('Reject error:', err);
+      toast({ title: 'შეცდომა', variant: 'destructive' });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -554,8 +703,10 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Stats Display */}
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-          <div className="text-center">
+        <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+          <div 
+            className={`text-center cursor-pointer p-2 rounded-lg transition-colors ${viewMode === 'shorten' ? '' : ''}`}
+          >
             <div className="text-2xl font-bold text-foreground">
               {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.total}
             </div>
@@ -563,17 +714,29 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
               {inProduction ? 'In Prod' : 'In Lib'}
             </div>
           </div>
-          <div className="text-center">
+          <div 
+            className={`text-center cursor-pointer p-2 rounded-lg transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/30 ${viewMode === 'shorten' ? 'ring-2 ring-amber-500' : ''}`}
+            onClick={() => setViewMode('shorten')}
+          >
             <div className="text-2xl font-bold text-amber-500">
               {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.needsWork}
             </div>
             <div className="text-xs text-muted-foreground">შესამოკლებელი</div>
           </div>
-          <div className="text-center">
+          <div 
+            className={`text-center cursor-pointer p-2 rounded-lg transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/30 ${viewMode === 'pending' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => { setViewMode('pending'); loadPendingQuestions(); }}
+          >
+            <div className="text-2xl font-bold text-blue-500">
+              {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.pendingReview}
+            </div>
+            <div className="text-xs text-muted-foreground">📝 მოლოდინში</div>
+          </div>
+          <div className="text-center p-2">
             <div className="text-2xl font-bold text-green-500">
               {stats.loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : stats.alreadyProcessed}
             </div>
-            <div className="text-xs text-muted-foreground">უკვე დამუშავებული</div>
+            <div className="text-xs text-muted-foreground">დამუშავებული</div>
           </div>
         </div>
 
@@ -647,278 +810,421 @@ export default function CombinedShortener({ categories }: CombinedShortenerProps
           </div>
         </div>
 
-        {/* Progress */}
-        {progress.total > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span>პროგრესი: {progress.processed} / {progress.total}</span>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1 text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  {progress.shortened}
-                </span>
-                <span className="flex items-center gap-1 text-red-500">
-                  <XCircle className="h-4 w-4" />
-                  {progress.unshortenable}
-                </span>
-                <span className="flex items-center gap-1 text-amber-500">
-                  <AlertTriangle className="h-4 w-4" />
-                  {progress.failed}
-                </span>
-              </div>
-            </div>
-            <Progress 
-              value={progress.total > 0 ? (progress.processed / progress.total) * 100 : 0} 
-              className="h-2"
-            />
-            {progress.status === 'running' && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                ბათჩი #{progress.batchNumber} მუშავდება...
+        {/* View Mode Content */}
+        {viewMode === 'shorten' ? (
+          <>
+            {/* Progress */}
+            {progress.total > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span>პროგრესი: {progress.processed} / {progress.total}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1 text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      {progress.shortened}
+                    </span>
+                    <span className="flex items-center gap-1 text-red-500">
+                      <XCircle className="h-4 w-4" />
+                      {progress.unshortenable}
+                    </span>
+                    <span className="flex items-center gap-1 text-amber-500">
+                      <AlertTriangle className="h-4 w-4" />
+                      {progress.failed}
+                    </span>
+                  </div>
+                </div>
+                <Progress 
+                  value={progress.total > 0 ? (progress.processed / progress.total) * 100 : 0} 
+                  className="h-2"
+                />
+                {progress.status === 'running' && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    ბათჩი #{progress.batchNumber} მუშავდება...
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        {/* Results */}
-        {results.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>შედეგები ({results.length})</Label>
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={selectAllShortened}
-                >
-                  <Check className="h-3 w-3 mr-1" />
-                  მონიშნე შემოკლებულები
-                </Button>
-                {selectedResults.size > 0 && (
-                  <Button 
-                    size="sm" 
-                    onClick={pushSelectedToProd}
-                  >
-                    <ArrowRight className="h-3 w-3 mr-1" />
-                    Prod-ში ({selectedResults.size})
-                  </Button>
-                )}
-                {results.some(r => r.overallStatus === 'unshortenable') && (
-                  <Button 
-                    size="sm" 
-                    variant="destructive"
-                    onClick={hideUnshortenable}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    დამალე შეუმოკლებადი
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {results.map((result) => (
-                <div
-                  key={result.id}
-                  className={`p-4 rounded-lg border ${
-                    result.overallStatus === 'shortened' 
-                      ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
-                      : result.overallStatus === 'partially'
-                      ? 'border-blue-200 bg-blue-50 dark:bg-blue-950/20'
-                      : result.overallStatus === 'unshortenable'
-                      ? 'border-red-200 bg-red-50 dark:bg-red-950/20'
-                      : 'border-amber-200 bg-amber-50 dark:bg-amber-950/20'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    {(result.overallStatus === 'shortened' || result.overallStatus === 'partially') && (
-                      <Checkbox
-                        checked={selectedResults.has(result.id)}
-                        onCheckedChange={() => toggleSelection(result.id)}
-                        className="mt-1"
-                      />
+            {/* Results */}
+            {results.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>შედეგები ({results.length})</Label>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={selectAllShortened}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      მონიშნე შემოკლებულები
+                    </Button>
+                    {selectedResults.size > 0 && (
+                      <Button 
+                        size="sm" 
+                        onClick={pushSelectedToProd}
+                      >
+                        <ArrowRight className="h-3 w-3 mr-1" />
+                        Prod-ში ({selectedResults.size})
+                      </Button>
                     )}
-                    <div className="flex-1 space-y-3">
-                      {/* Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge 
-                            variant={
-                              result.overallStatus === 'shortened' ? 'default' : 
-                              result.overallStatus === 'partially' ? 'secondary' :
-                              result.overallStatus === 'unshortenable' ? 'destructive' : 'outline'
-                            }
-                            className="text-xs"
-                          >
-                            {result.overallStatus === 'shortened' ? 'შემოკლდა' : 
-                             result.overallStatus === 'partially' ? 'ნაწილობრივ' :
-                             result.overallStatus === 'unshortenable' ? 'შეუმოკლებადი' : 'შეცდომა'}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {(result.overallStatus === 'shortened' || result.overallStatus === 'partially') && editingId !== result.id && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => startEdit(result)}
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                            onClick={() => deleteQuestion(result.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {editingId === result.id ? (
-                        /* Edit Mode */
-                        <div className="space-y-4">
-                          {/* Question Edit */}
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-violet-600">კითხვა:</label>
-                            <Input
-                              value={editedValues.questionText || ''}
-                              onChange={(e) => setEditedValues(prev => ({ ...prev, questionText: e.target.value }))}
-                              className="text-sm"
-                            />
-                            <span className={`text-xs ${(editedValues.questionText?.length || 0) > MAX_QUESTION_LENGTH ? 'text-red-500' : 'text-muted-foreground'}`}>
-                              {editedValues.questionText?.length || 0}/{MAX_QUESTION_LENGTH} სიმბოლო
-                            </span>
-                          </div>
-                          
-                          {/* Correct Answer Edit */}
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-green-600">სწორი პასუხი:</label>
-                            <Input
-                              value={editedValues.correctAnswer || ''}
-                              onChange={(e) => setEditedValues(prev => ({ ...prev, correctAnswer: e.target.value }))}
-                              className="text-sm"
-                            />
-                            <span className={`text-xs ${(editedValues.correctAnswer?.length || 0) > MAX_ANSWER_LENGTH ? 'text-red-500' : 'text-muted-foreground'}`}>
-                              {editedValues.correctAnswer?.length || 0}/{MAX_ANSWER_LENGTH} სიმბოლო
-                            </span>
-                          </div>
-                          
-                          {/* Incorrect Answers Edit */}
-                          {editedValues.incorrectAnswers?.map((ans, idx) => (
-                            <div key={idx} className="space-y-1">
-                              <label className="text-xs font-medium text-muted-foreground">არასწორი {idx + 1}:</label>
-                              <Input
-                                value={ans}
-                                onChange={(e) => {
-                                  const newIncorrect = [...(editedValues.incorrectAnswers || [])];
-                                  newIncorrect[idx] = e.target.value;
-                                  setEditedValues(prev => ({ ...prev, incorrectAnswers: newIncorrect }));
-                                }}
-                                className="text-sm"
-                              />
-                              <span className={`text-xs ${ans.length > MAX_ANSWER_LENGTH ? 'text-red-500' : 'text-muted-foreground'}`}>
-                                {ans.length}/{MAX_ANSWER_LENGTH} სიმბოლო
-                              </span>
+                    {results.some(r => r.overallStatus === 'unshortenable') && (
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={hideUnshortenable}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        დამალე შეუმოკლებადი
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {results.map((result) => (
+                    <div
+                      key={result.id}
+                      className={`p-4 rounded-lg border ${
+                        result.overallStatus === 'shortened' 
+                          ? 'border-green-200 bg-green-50 dark:bg-green-950/20' 
+                          : result.overallStatus === 'partially'
+                          ? 'border-blue-200 bg-blue-50 dark:bg-blue-950/20'
+                          : result.overallStatus === 'unshortenable'
+                          ? 'border-red-200 bg-red-50 dark:bg-red-950/20'
+                          : 'border-amber-200 bg-amber-50 dark:bg-amber-950/20'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {(result.overallStatus === 'shortened' || result.overallStatus === 'partially') && (
+                          <Checkbox
+                            checked={selectedResults.has(result.id)}
+                            onCheckedChange={() => toggleSelection(result.id)}
+                            className="mt-1"
+                          />
+                        )}
+                        <div className="flex-1 space-y-3">
+                          {/* Header */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge 
+                                variant={
+                                  result.overallStatus === 'shortened' ? 'default' : 
+                                  result.overallStatus === 'partially' ? 'secondary' :
+                                  result.overallStatus === 'unshortenable' ? 'destructive' : 'outline'
+                                }
+                                className="text-xs"
+                              >
+                                {result.overallStatus === 'shortened' ? 'შემოკლდა' : 
+                                 result.overallStatus === 'partially' ? 'ნაწილობრივ' :
+                                 result.overallStatus === 'unshortenable' ? 'შეუმოკლებადი' : 'შეცდომა'}
+                              </Badge>
                             </div>
-                          ))}
-                          
-                          <div className="flex justify-end gap-1 pt-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7"
-                              onClick={cancelEdit}
-                            >
-                              <X className="h-3 w-3 mr-1" />
-                              გაუქმება
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="h-7"
-                              onClick={() => saveEdit(result.id)}
-                            >
-                              <Save className="h-3 w-3 mr-1" />
-                              შენახვა
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              {(result.overallStatus === 'shortened' || result.overallStatus === 'partially') && editingId !== result.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => startEdit(result)}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                onClick={() => deleteQuestion(result.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        /* View Mode */
-                        <div className="space-y-3">
-                          {/* Question */}
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium text-violet-600">კითხვა:</label>
-                            {result.shortenedQuestion ? (
-                              <div className="text-sm">
-                                <span className="line-through text-muted-foreground text-xs block">{result.originalQuestion}</span>
-                                <span className="flex items-center gap-2 mt-1">
-                                  <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                                  <span className="font-medium">{result.shortenedQuestion}</span>
-                                  <span className="text-xs text-muted-foreground">({result.newQuestionLength} სიმბ.)</span>
+
+                          {editingId === result.id ? (
+                            /* Edit Mode */
+                            <div className="space-y-4">
+                              {/* Question Edit */}
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-violet-600">კითხვა:</label>
+                                <Input
+                                  value={editedValues.questionText || ''}
+                                  onChange={(e) => setEditedValues(prev => ({ ...prev, questionText: e.target.value }))}
+                                  className="text-sm"
+                                />
+                                <span className={`text-xs ${(editedValues.questionText?.length || 0) > MAX_QUESTION_LENGTH ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                  {editedValues.questionText?.length || 0}/{MAX_QUESTION_LENGTH} სიმბოლო
                                 </span>
                               </div>
-                            ) : (
-                              <div className="text-sm text-muted-foreground">{result.originalQuestion}</div>
-                            )}
-                          </div>
-                          
-                          {/* Correct Answer */}
-                          {(result.shortenedCorrect || result.originalCorrect) && (
-                            <div className="space-y-1">
-                              <label className="text-xs font-medium text-green-600">სწორი პასუხი:</label>
-                              {result.shortenedCorrect ? (
-                                <div className="text-sm flex items-center gap-2">
-                                  <span className="line-through text-muted-foreground text-xs">{result.originalCorrect}</span>
-                                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                  <span className="font-medium">{result.shortenedCorrect}</span>
+                              
+                              {/* Correct Answer Edit */}
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-green-600">სწორი პასუხი:</label>
+                                <Input
+                                  value={editedValues.correctAnswer || ''}
+                                  onChange={(e) => setEditedValues(prev => ({ ...prev, correctAnswer: e.target.value }))}
+                                  className="text-sm"
+                                />
+                                <span className={`text-xs ${(editedValues.correctAnswer?.length || 0) > MAX_ANSWER_LENGTH ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                  {editedValues.correctAnswer?.length || 0}/{MAX_ANSWER_LENGTH} სიმბოლო
+                                </span>
+                              </div>
+                              
+                              {/* Incorrect Answers Edit */}
+                              {editedValues.incorrectAnswers?.map((ans, idx) => (
+                                <div key={idx} className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">არასწორი {idx + 1}:</label>
+                                  <Input
+                                    value={ans}
+                                    onChange={(e) => {
+                                      const newIncorrect = [...(editedValues.incorrectAnswers || [])];
+                                      newIncorrect[idx] = e.target.value;
+                                      setEditedValues(prev => ({ ...prev, incorrectAnswers: newIncorrect }));
+                                    }}
+                                    className="text-sm"
+                                  />
+                                  <span className={`text-xs ${ans.length > MAX_ANSWER_LENGTH ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                    {ans.length}/{MAX_ANSWER_LENGTH} სიმბოლო
+                                  </span>
                                 </div>
-                              ) : (
-                                <div className="text-sm text-muted-foreground">{result.originalCorrect}</div>
+                              ))}
+                              
+                              <div className="flex justify-end gap-1 pt-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7"
+                                  onClick={cancelEdit}
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  გაუქმება
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="h-7"
+                                  onClick={() => saveEdit(result.id)}
+                                >
+                                  <Save className="h-3 w-3 mr-1" />
+                                  შენახვა
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* View Mode */
+                            <div className="space-y-3">
+                              {/* Question */}
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-violet-600">კითხვა:</label>
+                                {result.shortenedQuestion ? (
+                                  <div className="text-sm">
+                                    <span className="line-through text-muted-foreground text-xs block">{result.originalQuestion}</span>
+                                    <span className="flex items-center gap-2 mt-1">
+                                      <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                      <span className="font-medium">{result.shortenedQuestion}</span>
+                                      <span className="text-xs text-muted-foreground">({result.newQuestionLength} სიმბ.)</span>
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="text-sm text-muted-foreground">{result.originalQuestion}</div>
+                                )}
+                              </div>
+                              
+                              {/* Correct Answer */}
+                              {(result.shortenedCorrect || result.originalCorrect) && (
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-green-600">სწორი პასუხი:</label>
+                                  {result.shortenedCorrect ? (
+                                    <div className="text-sm flex items-center gap-2">
+                                      <span className="line-through text-muted-foreground text-xs">{result.originalCorrect}</span>
+                                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                      <span className="font-medium">{result.shortenedCorrect}</span>
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-muted-foreground">{result.originalCorrect}</div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Incorrect Answers */}
+                              {result.originalIncorrect.length > 0 && (
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">არასწორი პასუხები:</label>
+                                  <div className="space-y-1">
+                                    {result.originalIncorrect.map((original, idx) => (
+                                      <div key={idx} className="text-sm">
+                                        {result.shortenedIncorrect[idx] ? (
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground">{idx + 1}.</span>
+                                            <span className="line-through text-muted-foreground text-xs">{original}</span>
+                                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                            <span className="font-medium">{result.shortenedIncorrect[idx]}</span>
+                                          </div>
+                                        ) : (
+                                          <div className="flex items-center gap-2 text-muted-foreground">
+                                            <span className="text-xs">{idx + 1}.</span>
+                                            <span>{original}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
                             </div>
                           )}
-                          
-                          {/* Incorrect Answers */}
-                          {result.originalIncorrect.length > 0 && (
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {results.length === 0 && progress.status === 'idle' && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                <p className="text-sm">დააჭირეთ "შემოკლება" კითხვებისა და პასუხების AI შემოკლებისთვის</p>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Pending Review View */
+          <div className="space-y-4">
+            {loadingPending ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-500" />
+                <p className="text-sm text-muted-foreground mt-2">იტვირთება...</p>
+              </div>
+            ) : pendingQuestions.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <Label>მოლოდინში ({pendingQuestions.length})</Label>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        const allIds = pendingQuestions.map(q => q.id);
+                        setSelectedResults(new Set(allIds));
+                      }}
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      მონიშნე ყველა
+                    </Button>
+                    {selectedResults.size > 0 && (
+                      <Button 
+                        size="sm" 
+                        onClick={approveAllPending}
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        დადასტურება ({selectedResults.size})
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {pendingQuestions.map((q) => (
+                    <div
+                      key={q.id}
+                      className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20"
+                    >
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedResults.has(q.id)}
+                          onCheckedChange={() => toggleSelection(q.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Badge className="text-xs bg-blue-500">მოლოდინში</Badge>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-100"
+                                onClick={() => approvePending(q.id)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                დადასტურება
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-100"
+                                onClick={() => rejectPending(q.id)}
+                              >
+                                <RotateCcw className="h-3 w-3 mr-1" />
+                                ხელახლა
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                onClick={() => deleteQuestion(q.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Question comparison */}
+                          {q.pending_question_text && (
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-violet-600">კითხვა:</label>
+                              <div className="text-sm">
+                                <span className="line-through text-muted-foreground text-xs block">{q.question_text}</span>
+                                <span className="flex items-center gap-2 mt-1">
+                                  <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                  <span className="font-medium">{q.pending_question_text}</span>
+                                  <span className={`text-xs ${q.pending_question_text.length <= MAX_QUESTION_LENGTH ? 'text-green-600' : 'text-red-500'}`}>
+                                    ({q.pending_question_text.length} სიმბ.)
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Answer comparison */}
+                          {q.pending_correct_answer && (
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-green-600">სწორი პასუხი:</label>
+                              <div className="text-sm flex items-center gap-2">
+                                <span className="line-through text-muted-foreground text-xs">{q.correct_answer}</span>
+                                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                <span className="font-medium">{q.pending_correct_answer}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Incorrect answers comparison */}
+                          {q.pending_incorrect_answers && q.pending_incorrect_answers.length > 0 && (
                             <div className="space-y-1">
                               <label className="text-xs font-medium text-muted-foreground">არასწორი პასუხები:</label>
                               <div className="space-y-1">
-                                {result.originalIncorrect.map((original, idx) => (
-                                  <div key={idx} className="text-sm">
-                                    {result.shortenedIncorrect[idx] ? (
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground">{idx + 1}.</span>
-                                        <span className="line-through text-muted-foreground text-xs">{original}</span>
-                                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                                        <span>{result.shortenedIncorrect[idx]}</span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center gap-2 text-muted-foreground">
-                                        <span className="text-xs">{idx + 1}.</span>
-                                        <span>{original}</span>
-                                      </div>
-                                    )}
+                                {q.incorrect_answers.map((original, idx) => (
+                                  <div key={idx} className="text-sm flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">{idx + 1}.</span>
+                                    <span className="line-through text-muted-foreground text-xs">{original}</span>
+                                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                    <span className="font-medium">{q.pending_incorrect_answers?.[idx] || original}</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
                           )}
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {results.length === 0 && progress.status === 'idle' && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p className="text-sm">დააჭირეთ "შემოკლება" კითხვებისა და პასუხების AI შემოკლებისთვის</p>
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-20 text-green-500" />
+                <p className="text-sm">მოლოდინში კითხვები არ არის</p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
