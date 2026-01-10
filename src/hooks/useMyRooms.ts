@@ -9,6 +9,7 @@ export interface MyRoom {
   id: string;
   room_code: string;
   room_name: string | null;
+  room_icon: string | null;
   category_name: string | null;
   category_id: string | null;
   status: string;
@@ -128,6 +129,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           id: room.id,
           room_code: room.room_code,
           room_name: room.room_name,
+          room_icon: room.room_icon || null,
           category_name: room.category_name,
           category_id: room.category_id,
           status: room.status || "waiting",

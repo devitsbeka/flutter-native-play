@@ -33,6 +33,7 @@ export interface GameRoom {
   id: string;
   room_code: string;
   room_name: string | null;
+  room_icon: string | null;
   host_user_id: string;
   category_id: string | null;
   category_name: string | null;

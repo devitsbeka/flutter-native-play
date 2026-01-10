@@ -248,10 +248,19 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
             )}
           </div>
           
-          {/* Room name - white text */}
-          <h3 className="font-bold text-white text-lg leading-tight truncate mb-1 drop-shadow-md">
-            {displayName}
-          </h3>
+          {/* Room name with icon */}
+          <div className="flex items-center gap-2 mb-1">
+            {room.room_icon && (
+              <img 
+                src={room.room_icon} 
+                alt="" 
+                className="w-6 h-6 object-contain drop-shadow-md"
+              />
+            )}
+            <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-md">
+              {displayName}
+            </h3>
+          </div>
           
           {/* Category - white text */}
           {room.category_name && (
