@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Check, Loader2 } from "lucide-react";
+import { RefreshCw, Check, Loader2, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,16 +33,19 @@ export function RoomIconPickerModal({
   onConfirm,
 }: RoomIconPickerModalProps) {
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
+  const [searchResults, setSearchResults] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [editableName, setEditableName] = useState(roomName);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch random icons from database
   const fetchRandomIcons = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Get total count first
       const { count } = await supabase
         .from("icon_library")
         .select("*", { count: "exact", head: true })
@@ -53,7 +56,6 @@ export function RoomIconPickerModal({
         return;
       }
 
-      // Fetch a random subset - get 50 and shuffle client-side
       const randomOffset = Math.max(0, Math.floor(Math.random() * Math.max(1, count - 50)));
       const { data, error } = await supabase
         .from("icon_library")
@@ -68,7 +70,6 @@ export function RoomIconPickerModal({
       }
 
       if (data) {
-        // Shuffle and take 12
         const shuffled = [...data].sort(() => Math.random() - 0.5);
         setSuggestedIcons(shuffled.slice(0, 12) as IconItem[]);
       }
@@ -78,6 +79,71 @@ export function RoomIconPickerModal({
       setIsLoading(false);
     }
   }, []);
+
+  // Search icons by query
+  const searchIcons = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const searchTerm = query.toLowerCase().trim();
+      
+      const { data, error } = await supabase
+        .from("icon_library")
+        .select("id, slug, title, icon_url")
+        .not("icon_url", "is", null)
+        .or(`title.ilike.%${searchTerm}%,slug.ilike.%${searchTerm}%,tags.cs.{${searchTerm}}`)
+        .limit(24);
+
+      if (error) {
+        console.error("Error searching icons:", error);
+        return;
+      }
+
+      if (data) {
+        setSearchResults(data as IconItem[]);
+      }
+    } catch (e) {
+      console.error("Failed to search icons:", e);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchIcons(searchQuery);
+      }, 300);
+    } else {
+      setSearchResults([]);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, searchIcons]);
+
+  // Load icons when modal opens and reset state
+  useEffect(() => {
+    if (isOpen) {
+      fetchRandomIcons();
+      setSelectedIcon(currentIconUrl);
+      setEditableName(roomName);
+      setSearchQuery("");
+      setSearchResults([]);
+    }
+  }, [isOpen, fetchRandomIcons, currentIconUrl, roomName]);
 
   // Generate name for a specific icon
   const generateNameForIcon = async (iconSlug: string) => {
@@ -97,19 +163,8 @@ export function RoomIconPickerModal({
     }
   };
 
-  // Load icons when modal opens and reset state
-  useEffect(() => {
-    if (isOpen) {
-      fetchRandomIcons();
-      setSelectedIcon(currentIconUrl);
-      setEditableName(roomName);
-    }
-  }, [isOpen, fetchRandomIcons, currentIconUrl, roomName]);
-
-  // Handle icon click - select and generate name
   const handleIconClick = async (icon: IconItem) => {
     setSelectedIcon(icon.icon_url);
-    // Generate new name for this icon
     await generateNameForIcon(icon.slug);
   };
 
@@ -120,16 +175,43 @@ export function RoomIconPickerModal({
     }
   };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  const displayIcons = searchQuery.trim() ? searchResults : suggestedIcons;
+  const isDisplayLoading = searchQuery.trim() ? isSearching : isLoading;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-background border-border p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md bg-background border-border p-0 gap-0 overflow-hidden max-h-[90vh]">
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="text-lg font-display text-foreground">
             აირჩიე აიკონი
           </DialogTitle>
         </DialogHeader>
 
-        <div className="px-4 pb-4 space-y-4">
+        <div className="px-4 pb-4 space-y-4 overflow-y-auto">
+          {/* Search input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="მოძებნე აიკონი..."
+              className="pl-9 pr-9 bg-muted/50 border-border"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
           {/* Current icon preview with editable name */}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
             <div className="w-16 h-16 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -168,26 +250,30 @@ export function RoomIconPickerModal({
             </div>
           </div>
 
-          {/* Suggested icons header */}
+          {/* Icons section header */}
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">
-              შემოთავაზებული
+              {searchQuery.trim() 
+                ? `ძებნის შედეგები (${searchResults.length})` 
+                : "შემოთავაზებული"
+              }
             </h3>
-            <button
-              onClick={fetchRandomIcons}
-              disabled={isLoading}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-              განახლება
-            </button>
+            {!searchQuery.trim() && (
+              <button
+                onClick={fetchRandomIcons}
+                disabled={isLoading}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+                განახლება
+              </button>
+            )}
           </div>
 
           {/* Icons grid - 4x3 */}
           <div className="grid grid-cols-4 gap-2">
             <AnimatePresence mode="popLayout">
-              {isLoading ? (
-                // Loading skeletons
+              {isDisplayLoading ? (
                 Array.from({ length: 12 }).map((_, i) => (
                   <motion.div
                     key={`skeleton-${i}`}
@@ -197,8 +283,12 @@ export function RoomIconPickerModal({
                     className="aspect-square rounded-xl bg-muted animate-pulse"
                   />
                 ))
+              ) : displayIcons.length === 0 && searchQuery.trim() ? (
+                <div className="col-span-4 py-8 text-center text-muted-foreground text-sm">
+                  აიკონი ვერ მოიძებნა
+                </div>
               ) : (
-                suggestedIcons.map((icon, index) => (
+                displayIcons.map((icon, index) => (
                   <motion.button
                     key={icon.id}
                     initial={{ opacity: 0, scale: 0.8 }}
