@@ -468,36 +468,40 @@ async function getTVQuestions(
     questions = resetQuestions || [];
   }
   
-  // Cross-category fallback if still not enough
-  if ((questions?.length || 0) < count) {
-    usedFallback = true;
-    const existingIds = (questions || []).map(q => q.id);
-    const remainingNeeded = count - (questions?.length || 0);
+  // TV Mode: NEVER pull from other categories - only repeat from same category
+  // If still not enough after reset, clear global seen and try one more time
+  if (!questions || questions.length < count) {
+    clearSeenQuestions(); // Clear global seen to allow repeats from same category
+    wasReset = true;
+    exhausted = true;
     
-    // Re-fetch global seen for fallback exclusions (prevent cross-mode repeats)
-    const fallbackSeenIds = getSeenQuestionIds();
-    
-    let fallbackQuery = supabase
+    const { data: finalQuestions } = await supabase
       .from('questions')
       .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .neq('category_id', categoryUuid);
+      .eq('category_id', categoryUuid)
+      .limit(count * 3);
     
-    // Exclude both already-fetched AND globally seen
-    const fallbackExcludeIds = [...new Set([...existingIds, ...fallbackSeenIds])];
-    if (fallbackExcludeIds.length > 0) {
-      fallbackQuery = fallbackQuery.not('id', 'in', `(${fallbackExcludeIds.join(',')})`);
-    }
-    
-    const { data: fallbackQuestions } = await fallbackQuery.limit(remainingNeeded * 2);
-    
-    if (fallbackQuestions) {
-      const validFallback = (fallbackQuestions as RawQuestion[]).filter(isValidQuestionLength);
-      const formatted = shuffleArray(validFallback).slice(0, remainingNeeded);
-      questions = [...(questions || []), ...(formatted as typeof questions)];
-    }
+    questions = finalQuestions || [];
+  }
+  
+  // If STILL empty (truly no questions in this category), return empty gracefully
+  if (!questions || questions.length === 0) {
+    console.warn(`[TV Mode] No questions available for category ${categoryUuid} in language ${language}`);
+    return {
+      questions: [],
+      exhausted: true,
+      exhaustionInfo: {
+        totalAvailable,
+        totalSeen: excludeIds.length,
+        wasReset: true,
+        usedFallback: false,
+      },
+      language,
+      categoryUuid,
+    };
   }
   
   // Filter by length and format
