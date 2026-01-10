@@ -339,10 +339,9 @@ async function getCategoryQuestions(
     questions = fallbackQuestions || [];
   }
   
-  // Fallback 2: If still not enough, clear ALL exclusions (full pool reset)
+  // Fallback 2: If still not enough, clear ALL exclusions and try ANY level
   if (!questions || questions.length < count) {
     clearCategoryLevelSeen(categoryUuid, levelNumber);
-    clearSeenQuestions(); // Clear global seen as last resort
     wasReset = true;
     exhausted = true;
     
@@ -353,11 +352,26 @@ async function getCategoryQuestions(
       .eq('in_production', true)
       .eq('language', language)
       .eq('category_id', categoryUuid)
-      .gte('level_number', 1)
-      .lte('level_number', 20)
       .limit(100);
     
     questions = resetQuestions || [];
+  }
+  
+  // Fallback 3: If STILL empty (truly no questions in category), return empty gracefully
+  if (!questions || questions.length === 0) {
+    console.warn(`[questionService] No questions available for category ${categoryUuid} in language ${language}`);
+    return {
+      questions: [],
+      exhausted: true,
+      exhaustionInfo: {
+        totalAvailable,
+        totalSeen: 0,
+        wasReset: true,
+        usedFallback: true,
+      },
+      language,
+      categoryUuid,
+    };
   }
   
   // Filter by length and format
