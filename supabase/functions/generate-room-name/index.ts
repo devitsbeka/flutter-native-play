@@ -6,6 +6,52 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Banned inappropriate Georgian words
+const BANNED_WORDS = [
+  'ტრაკი', 'განავალი', 'ფურთხი', 'ბოზი', 'შევეცი', 'მოვეცი', 
+  'ტყვნა', 'მუტელი', 'ყლე', 'ქერა', 'დედა', 'მამა', 'შენი'
+];
+
+// Helper to generate simple 2-word name
+function generateSimpleName(iconName: string): string {
+  const suffixes = ['ოთახი', 'გუნდი', 'კლუბი', 'არენა', 'ბრძოლა'];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  return `${iconName} ${suffix}`;
+}
+
+// Validate and clean generated name
+function validateAndCleanName(name: string, iconName: string): string {
+  if (!name) return generateSimpleName(iconName);
+  
+  // Remove quotes
+  let cleaned = name.replace(/^["']|["']$/g, '').trim();
+  
+  // Remove emojis
+  cleaned = cleaned.replace(/[\u{1F600}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/gu, '').trim();
+  
+  // Check for banned words
+  const containsBanned = BANNED_WORDS.some(word => 
+    cleaned.toLowerCase().includes(word.toLowerCase())
+  );
+  
+  if (containsBanned) {
+    return generateSimpleName(iconName);
+  }
+  
+  // Ensure max 2 words
+  const words = cleaned.split(/\s+/).filter(w => w.length > 0);
+  if (words.length > 2) {
+    cleaned = words.slice(0, 2).join(' ');
+  }
+  
+  // If too long or empty, use fallback
+  if (!cleaned || cleaned.length > 35) {
+    return generateSimpleName(iconName);
+  }
+  
+  return cleaned;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -44,37 +90,36 @@ serve(async (req) => {
 
     console.log(`Selected icon: ${iconName} (${randomIcon.slug})`);
 
-    // If no AI key, generate a simple name
+    // If no AI key, generate a simple 2-word name
     if (!lovableApiKey) {
-      const funnyPrefixes = [
-        "გიჟური", "მაგარი", "ეპიკური", "ლეგენდარული", "საოცარი",
-        "ბრწყინვალე", "ფანტასტიური", "დიდებული", "მხიარული", "ჭკვიანი"
-      ];
-      const prefix = funnyPrefixes[Math.floor(Math.random() * funnyPrefixes.length)];
       return new Response(
         JSON.stringify({ 
-          name: `${prefix} ${iconName}`, 
+          name: generateSimpleName(iconName), 
           icon_url: randomIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use AI to generate a funny name based on the icon
-    const prompt = `შექმენი ძალიან სასაცილო და კრეატიული ქართული სახელი ტრივია თამაშის ოთახისთვის, რომელიც ეფუძნება ამ იკონას/თემას: "${iconName}".
+    // Use AI to generate a 2-word name based on the icon
+    const prompt = `შექმენი მოკლე ქართული სახელი ტრივია თამაშის ოთახისთვის, რომელიც ეფუძნება ამ იკონას: "${iconName}".
+
+მკაცრი წესები:
+- მაქსიმუმ 2 სიტყვა! ეს ძალიან მნიშვნელოვანია!
+- არ გამოიყენო უხამსი სიტყვები
+- არ დაამატო ემოჯი
 
 მაგალითები:
-- "pizza" → "პიცის მოყვარულები 🍕"
-- "dragon" → "ცეცხლის მფრქვეველები 🐉"
-- "banana" → "გადარეული ბანანები 🍌"
-- "robot" → "რობოტების აჯანყება 🤖"
-- "thunder" → "მეხი-ჭექა ბრიგადა ⚡"
+- shark → "ზვიგენების ოთახი" ან "ზვიგენთა ბრძოლა"
+- fireplace → "ბუხრის ოთახი"
+- pizza → "პიცის კლუბი"
+- dragon → "დრაკონთა არენა"
+- book → "მკითხველთა ოთახი"
+- basket → "კალათბურთელები"
+- cat → "კატების ოთახი"
+- star → "ვარსკვლავთა არენა"
 
-მოთხოვნები:
-- მაქსიმუმ 25 სიმბოლო (ემოჯის გარეშე)
-- უნდა იყოს სასაცილო და დასამახსოვრებელი
-- შეიძლება დაამატო შესაბამისი ემოჯი ბოლოს
-- მხოლოდ სახელი დააბრუნე, არაფერი სხვა`;
+დაბრუნე მხოლოდ 2 სიტყვიანი სახელი, არაფერი სხვა.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -103,17 +148,12 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    let generatedName = data.choices?.[0]?.message?.content?.trim() || `სახალისო ${iconName}`;
+    const rawName = data.choices?.[0]?.message?.content?.trim() || '';
     
-    // Clean up the response - remove quotes if present
-    generatedName = generatedName.replace(/^["']|["']$/g, '').trim();
-    
-    // Ensure it's not too long (max 30 chars including emoji)
-    if (generatedName.length > 35) {
-      generatedName = generatedName.substring(0, 32) + '...';
-    }
+    // Validate and clean the generated name
+    const generatedName = validateAndCleanName(rawName, iconName);
 
-    console.log(`Generated room name: ${generatedName}`);
+    console.log(`Generated room name: ${generatedName} (raw: ${rawName})`);
 
     return new Response(
       JSON.stringify({ 
