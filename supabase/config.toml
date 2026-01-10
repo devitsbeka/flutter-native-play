@@ -120,3 +120,6 @@ verify_jwt = false
 
 [functions.validate-cover-image]
 verify_jwt = false
+
+[functions.generate-room-name]
+verify_jwt = false
