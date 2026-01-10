@@ -1,13 +1,16 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, Search, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CATEGORY_VIDEOS } from "@/config/videoConfig";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
 
 interface Category {
   id: string;
+  category_id: string;
   name: string;
   icon: string;
   color: string;
@@ -35,7 +38,7 @@ export function CategorySelectorModal({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, name, icon, color, image_url, total_levels")
+        .select("id, category_id, name, icon, color, image_url, total_levels")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -108,7 +111,8 @@ export function CategorySelectorModal({
               </div>
             ) : (
               filteredCategories.map((category) => {
-                // Fallback gradient colors based on index
+                const videoUrl = CATEGORY_VIDEOS[category.category_id];
+                // Fallback gradient colors
                 const fallbackColors = [
                   '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', 
                   '#f97316', '#eab308', '#22c55e', '#14b8a6',
@@ -129,31 +133,26 @@ export function CategorySelectorModal({
                         : ""
                     }`}
                   >
-                    {/* Background */}
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background: category.image_url 
-                          ? undefined 
-                          : `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
-                      }}
-                    >
-                      {category.image_url && (
+                    {/* Background - Video or gradient */}
+                    <div className="absolute inset-0">
+                      {videoUrl ? (
                         <>
-                          <video
-                            src={category.image_url}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
+                          <PingPongVideo
+                            src={videoUrl}
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         </>
-                      )}
-                      {/* Always add overlay for text readability */}
-                      {!category.image_url && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      ) : (
+                        <>
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                        </>
                       )}
                     </div>
 

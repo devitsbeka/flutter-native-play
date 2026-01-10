@@ -9,8 +9,7 @@ import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { generateRoomName } from "@/utils/roomNameGenerator";
-import { Input } from "@/components/ui/input";
+// Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HowItWorksModal } from "@/components/team/HowItWorksModal";
@@ -58,7 +57,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
   const [isCreating, setIsCreating] = useState(false);
-  const [roomName, setRoomName] = useState(() => generateRoomName());
+  // Room name is AI-generated during room creation - no local state needed
   const [showTVModal, setShowTVModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
@@ -151,13 +150,14 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const handleShareInviteLink = async () => {
     const baseUrl = window.location.origin;
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const inviteLink = `${baseUrl}/join?invite=${inviteCode}&room=${roomName}`;
+    const categoryName = selectedCategory?.name || "ტრივია";
+    const inviteLink = `${baseUrl}/join?invite=${inviteCode}`;
     
     if (navigator.share) {
       try {
         await navigator.share({
           title: "შემოგვიერთდი ტრივიაში! 🎮",
-          text: `${roomName} - მოდი ითამაშე ჩვენთან ერთად!`,
+          text: `${categoryName} - მოდი ითამაშე ჩვენთან ერთად!`,
           url: inviteLink,
         });
       } catch (err) {
@@ -266,26 +266,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-        {/* Room Name Input - Compact */}
-        <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-1.5">{t("team.roomName")}</h2>
-          <div className="relative">
-            <Input
-              value={roomName}
-              onChange={(e) => setRoomName(e.target.value)}
-              placeholder={t("team.enterRoomName")}
-              className="h-10 pr-10 bg-muted/50 border-border/50 text-foreground text-sm"
-              maxLength={30}
-            />
-            <button
-              onClick={() => setRoomName(generateRoomName())}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-muted transition-colors"
-              title={t("team.randomName")}
-            >
-              <Shuffle className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </div>
-        </div>
+        {/* Room name is AI-generated during room creation */}
 
         {/* Invite Friends - Horizontal Scroll */}
         <div className="pt-4">
@@ -413,50 +394,87 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           
           <div className="space-y-3">
             {/* Random Option */}
-            <motion.button
-              onClick={() => !isSearchingRandom && handleOptionClick("random")}
-              disabled={isSearchingRandom}
-              className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all overflow-hidden ${
-                selectionMode === "random"
-                  ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
-                  : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-              }`}
-              whileHover={{ scale: isSearchingRandom ? 1 : 1.01 }}
-              whileTap={{ scale: isSearchingRandom ? 1 : 0.99 }}
-            >
-              {/* Searching animation overlay */}
-              {isSearchingRandom && (
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                />
-              )}
-              
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                selectionMode === "random" 
-                  ? "bg-white/20" 
-                  : "bg-purple-500/10"
-              }`}>
-                <motion.div
-                  animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
-                  transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
+            {selectionMode === "random" && selectedCategory && !isSearchingRandom ? (
+              // Show selected random category
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
+              >
+                {/* Category video thumbnail */}
+                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
+                  {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
+                    <PingPongVideo
+                      src={CATEGORY_VIDEOS[selectedCategory.category_id]}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                      <Dices className="w-6 h-6 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-white">{selectedCategory.name}</p>
+                  <p className="text-sm text-white/70">რანდომ კატეგორია</p>
+                </div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearSelection();
+                  }}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
-                  <Dices className={`w-6 h-6 ${selectionMode === "random" ? "text-white" : "text-purple-500"}`} />
-                </motion.div>
-              </div>
-              <div className="flex-1 text-left relative z-10">
-                <p className={`font-semibold ${selectionMode === "random" ? "text-white" : "text-foreground"}`}>
-                  {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
-                </p>
-                <p className={`text-sm ${selectionMode === "random" ? "text-white/70" : "text-muted-foreground"}`}>
-                  {isSearchingRandom 
-                    ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
-                    : "რანდომ კატეგორია თამაშისთვის"
-                  }
-                </p>
-              </div>
-            </motion.button>
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </motion.div>
+            ) : (
+              // Show random selection button
+              <motion.button
+                onClick={() => !isSearchingRandom && handleOptionClick("random")}
+                disabled={isSearchingRandom}
+                className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all overflow-hidden ${
+                  isSearchingRandom
+                    ? "bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/25"
+                    : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+                }`}
+                whileHover={{ scale: isSearchingRandom ? 1 : 1.01 }}
+                whileTap={{ scale: isSearchingRandom ? 1 : 0.99 }}
+              >
+                {/* Searching animation overlay */}
+                {isSearchingRandom && (
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-violet-500/40 to-purple-500/20"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+                
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                  isSearchingRandom
+                    ? "bg-white/20" 
+                    : "bg-purple-500/10"
+                }`}>
+                  <motion.div
+                    animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
+                    transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
+                  >
+                    <Dices className={`w-6 h-6 ${isSearchingRandom ? "text-white" : "text-purple-500"}`} />
+                  </motion.div>
+                </div>
+                <div className="flex-1 text-left relative z-10">
+                  <p className={`font-semibold ${isSearchingRandom ? "text-white" : "text-foreground"}`}>
+                    {isSearchingRandom ? "ვეძებთ..." : "შემთხვევითი"}
+                  </p>
+                  <p className={`text-sm ${isSearchingRandom ? "text-white/70" : "text-muted-foreground"}`}>
+                    {isSearchingRandom 
+                      ? (selectedCategory?.name || "კატეგორიის არჩევა...") 
+                      : "რანდომ კატეგორია თამაშისთვის"
+                    }
+                  </p>
+                </div>
+              </motion.button>
+            )}
 
             {/* Library Option */}
             <motion.button
