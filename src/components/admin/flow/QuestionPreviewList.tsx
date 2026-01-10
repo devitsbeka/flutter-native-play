@@ -147,7 +147,7 @@ export function QuestionPreviewList({
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Toolbar */}
       <div className="p-3 border-b border-border/50 space-y-2 bg-card/30">
         {/* Search */}

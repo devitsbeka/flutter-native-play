@@ -504,33 +504,33 @@ export default function Flow() {
 
   return (
     <div className="h-full flex flex-col" ref={containerRef}>
-      {/* Header */}
-      <div className="p-4 border-b border-border/50 bg-card/30">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <span className="text-2xl">⚡</span>
-            Flow - Question Factory
-          </h1>
-          {(isCheckingDuplicates || isTranslating) && (
-            <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              {isTranslating ? 'Translating...' : 'Checking duplicates...'}
+      {/* Header - Compact Card Design */}
+      <div className="p-3 border-b border-border/50">
+        <div className="bg-card rounded-lg border border-border/50 shadow-sm p-3">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚡</span>
+              <h1 className="text-base font-semibold">Flow - Question Factory</h1>
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                Generate, review, and publish questions in 20 languages
+              </span>
             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-4 mt-1">
-          <p className="text-sm text-muted-foreground">
-            Generate, review, and publish questions in 20 languages
-          </p>
-          <div className="text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
-            <kbd className="font-mono">Enter</kbd> Approve • <kbd className="font-mono">⌫</kbd> Reject • <kbd className="font-mono">Tab</kbd> Navigate
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded hidden md:block">
+                <kbd className="font-mono text-[10px]">Enter</kbd> Approve • <kbd className="font-mono text-[10px]">⌫</kbd> Reject • <kbd className="font-mono text-[10px]">Tab</kbd> Navigate
+              </div>
+              {(isCheckingDuplicates || isTranslating) && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  {isTranslating ? 'Translating...' : 'Checking...'}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        
-        {/* Language Stats Bar - Horizontally Scrollable & Clickable */}
-        <div className="mt-4 -mx-4 px-4">
-          <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent">
-            <div className="flex gap-3 min-w-max">
+          
+          {/* Language Stats Bar - Compact Horizontal Scroll */}
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent -mx-1 px-1">
+            <div className="flex gap-2 min-w-max py-1">
               {LANGUAGES.map(lang => {
                 const langStat = languageStats[lang.code] || { inLib: 0, inProd: 0 };
                 const total = langStat.inLib + langStat.inProd;
@@ -541,29 +541,29 @@ export default function Flow() {
                   <button
                     key={lang.code}
                     onClick={() => setSelectedLanguage(lang.code)}
-                    className={`flex flex-col items-center gap-1.5 px-5 py-4 rounded-xl border-2 min-w-[100px] transition-all cursor-pointer ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-primary/10 border-primary shadow-lg ring-2 ring-primary/30'
+                        ? 'bg-primary/10 border-primary shadow-sm'
                         : hasQuestions 
-                          ? 'bg-card border-border/50 shadow-sm hover:shadow-md hover:border-primary/50' 
-                          : 'bg-destructive/5 border-destructive/40 hover:bg-destructive/10'
+                          ? 'bg-background border-border/50 hover:border-primary/50' 
+                          : 'bg-destructive/5 border-destructive/30 hover:bg-destructive/10'
                     }`}
-                    title={`${lang.name}: ${langStat.inLib} in Library, ${langStat.inProd} in Production`}
+                    title={`${lang.name}: ${langStat.inLib} lib, ${langStat.inProd} prod`}
                   >
-                    <span className="text-3xl">{lang.flag}</span>
-                    <span className={`font-bold text-base ${isSelected ? 'text-primary' : ''}`}>
-                      {lang.code.toUpperCase()}
-                    </span>
-                    <div className="flex flex-col items-center">
-                      <span className={`text-lg font-bold ${
+                    <span className="text-lg">{lang.flag}</span>
+                    <div className="flex flex-col items-start text-left">
+                      <span className={`text-xs font-semibold leading-tight ${isSelected ? 'text-primary' : ''}`}>
+                        {lang.code.toUpperCase()}
+                      </span>
+                      <span className={`text-sm font-bold leading-tight ${
                         isSelected ? 'text-primary' : hasQuestions ? 'text-foreground' : 'text-destructive'
                       }`}>
                         {total.toLocaleString()}
                       </span>
-                      <span className="text-muted-foreground text-xs">
-                        {langStat.inLib.toLocaleString()} lib • {langStat.inProd.toLocaleString()} prod
-                      </span>
                     </div>
+                    <span className="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">
+                      {langStat.inLib}L • {langStat.inProd}P
+                    </span>
                   </button>
                 );
               })}
@@ -594,7 +594,7 @@ export default function Flow() {
         </div>
 
         {/* Middle: Preview & Review */}
-        <div className="flex-1 flex flex-col bg-background/50">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50">
           <QuestionPreviewList
             questions={generatedQuestions}
             categories={categories}
