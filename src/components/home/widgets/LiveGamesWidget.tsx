@@ -21,9 +21,13 @@ export function LiveGamesWidget() {
           boxShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
         }}
       >
-        <div className="animate-pulse space-y-3">
-          <div className="h-5 bg-muted/60 rounded w-1/2" />
-          <div className="h-16 bg-muted/40 rounded-xl" />
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-5 bg-muted/60 rounded w-12 animate-pulse" />
+          <div className="h-4 bg-destructive/20 rounded w-10 animate-pulse" />
+          <div className="h-5 bg-muted/60 rounded w-16 animate-pulse" />
+        </div>
+        <div className="animate-pulse space-y-2">
+          <div className="h-14 bg-muted/40 rounded-xl" />
         </div>
       </div>
     );
