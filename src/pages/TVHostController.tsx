@@ -518,10 +518,11 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Reveal phase
+  // Reveal phase - auto advance after delay (no manual button)
+  // The TV display handles advancing, host just sees feedback
   if (localPhase === 'reveal') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+      <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <AnimatePresence>
           {lastResult !== null && (
             <motion.div
@@ -542,20 +543,25 @@ const TVHostController: React.FC = () => {
         <h2 className="text-2xl font-bold text-white mb-2">
           {lastResult ? 'სწორია! 🎉' : 'არასწორია! 😔'}
         </h2>
-        <div className="flex items-center gap-2 text-yellow-500 mb-6">
+        <div className="flex items-center gap-2 text-yellow-500 mb-4">
           <Star className="w-5 h-5 fill-yellow-500" />
           <span className="font-bold text-xl">{myScore}</span>
         </div>
-        <ChunkyButton variant="primary" onClick={handleNextQuestion}>
-          {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგები' : 'შემდეგი კითხვა'}
-        </ChunkyButton>
+        <motion.p
+          className="text-purple-300 text-sm"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          შემდეგი კითხვა მალე...
+        </motion.p>
       </div>
     );
   }
 
   // Completed phase - show game over screen with leaderboard
   if (localPhase === 'completed') {
-    // Map players to expected format
+    // Use players from context directly - they already have correct data
+    // The host is already in the players list via presence tracking
     const allPlayers = players.map(p => ({
       id: p.id,
       nickname: p.nickname,
@@ -563,21 +569,6 @@ const TVHostController: React.FC = () => {
       score: p.score,
       isHost: p.isHost,
     }));
-
-    // Ensure host is in the players list with correct score
-    const hostPlayerIdx = allPlayers.findIndex(p => p.id === user?.id);
-    if (hostPlayerIdx === -1 && user) {
-      allPlayers.push({
-        id: user.id,
-        nickname: nickname,
-        score: myScore,
-        isHost: true,
-        avatar_url: avatarUrl,
-      });
-    } else if (hostPlayerIdx !== -1) {
-      allPlayers[hostPlayerIdx].score = myScore;
-      allPlayers[hostPlayerIdx].isHost = true;
-    }
 
     const handlePlayAgain = async () => {
       try {
