@@ -219,6 +219,133 @@ function extractVisualKeywords(text: string): string[] {
   return [...new Set(words)].slice(0, 8);
 }
 
+// Filter out keywords that could reveal any of the answers
+function filterAnswerKeywords(
+  keywords: string[], 
+  correctAnswer: string,
+  incorrectAnswers: string[]
+): string[] {
+  const allAnswers = [correctAnswer, ...incorrectAnswers]
+    .filter(Boolean)
+    .map(a => a.toLowerCase().trim());
+  
+  // Create set of words to exclude (answer words + translations)
+  const excludeWords = new Set<string>();
+  
+  for (const answer of allAnswers) {
+    // Add the full answer
+    excludeWords.add(answer);
+    
+    // Add individual words from answer (3+ chars)
+    answer.split(/\s+/).forEach(word => {
+      if (word.length >= 3) excludeWords.add(word);
+    });
+  }
+  
+  // Common Georgian-to-English animal/object mappings that could spoil answers
+  const georgianToEnglish: Record<string, string[]> = {
+    // Animals
+    'ლომი': ['lion', 'leo'],
+    'ვეფხვი': ['tiger'],
+    'დათვი': ['bear'],
+    'მგელი': ['wolf'],
+    'ძაღლი': ['dog', 'hound'],
+    'კატა': ['cat', 'feline'],
+    'ცხენი': ['horse', 'equine'],
+    'სპილო': ['elephant'],
+    'ზებრა': ['zebra'],
+    'ჟირაფი': ['giraffe'],
+    'მაიმუნი': ['monkey', 'ape'],
+    'გველი': ['snake', 'serpent'],
+    'არწივი': ['eagle'],
+    'ბუ': ['owl'],
+    'თევზი': ['fish'],
+    'ზვიგენი': ['shark'],
+    'დელფინი': ['dolphin'],
+    'ვეშაპი': ['whale'],
+    'კურდღელი': ['rabbit', 'bunny'],
+    'თაგვი': ['mouse', 'rat'],
+    // Planets
+    'მერკური': ['mercury'],
+    'ვენერა': ['venus'],
+    'მარსი': ['mars'],
+    'იუპიტერი': ['jupiter'],
+    'სატურნი': ['saturn'],
+    'ურანი': ['uranus'],
+    'ნეპტუნი': ['neptune'],
+    'პლუტონი': ['pluto'],
+    // Elements/Nature
+    'მზე': ['sun', 'solar'],
+    'მთვარე': ['moon', 'lunar'],
+    'ვარსკვლავი': ['star'],
+    'წყალი': ['water', 'aqua'],
+    'ცეცხლი': ['fire', 'flame'],
+    'მიწა': ['earth', 'ground'],
+    'ჰაერი': ['air', 'wind'],
+    // Common objects
+    'გული': ['heart'],
+    'თვალი': ['eye'],
+    'ხელი': ['hand'],
+    'ფეხი': ['foot', 'leg'],
+    'თავი': ['head'],
+    // Countries
+    'საქართველო': ['georgia', 'georgian'],
+    'ამერიკა': ['america', 'usa'],
+    'რუსეთი': ['russia', 'russian'],
+    'ჩინეთი': ['china', 'chinese'],
+    'იაპონია': ['japan', 'japanese'],
+    'გერმანია': ['germany', 'german'],
+    'საფრანგეთი': ['france', 'french'],
+    'იტალია': ['italy', 'italian'],
+    'ესპანეთი': ['spain', 'spanish'],
+    'ინგლისი': ['england', 'english', 'britain'],
+  };
+  
+  // Add English translations for any Georgian answers
+  for (const answer of allAnswers) {
+    for (const [georgian, english] of Object.entries(georgianToEnglish)) {
+      if (answer.includes(georgian)) {
+        english.forEach(w => excludeWords.add(w));
+      }
+    }
+  }
+  
+  // Also add reverse: if answer is in English, add common variations
+  for (const answer of allAnswers) {
+    // Find if this English word maps to Georgian
+    for (const [_, english] of Object.entries(georgianToEnglish)) {
+      if (english.some(e => answer.includes(e) || e.includes(answer))) {
+        english.forEach(w => excludeWords.add(w));
+      }
+    }
+  }
+  
+  console.log(`Answer filter: excluding words [${[...excludeWords].slice(0, 10).join(', ')}${excludeWords.size > 10 ? '...' : ''}]`);
+  
+  // Filter out any keyword that matches or contains answer words
+  return keywords.filter(keyword => {
+    const kw = keyword.toLowerCase().trim();
+    
+    // Exact match
+    if (excludeWords.has(kw)) {
+      console.log(`  Filtered keyword "${kw}" - exact match with answer`);
+      return false;
+    }
+    
+    // Check if keyword contains or is contained by any answer word
+    for (const word of excludeWords) {
+      if (word.length >= 4 && kw.length >= 4) {
+        if (kw.includes(word) || word.includes(kw)) {
+          console.log(`  Filtered keyword "${kw}" - partial match with "${word}"`);
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -494,10 +621,19 @@ Return ONLY valid JSON with this structure:
         const aiKeywords = (q.iconKeywords || []).map((k: string) => k.toLowerCase().trim());
         const textKeywords = extractVisualKeywords(q.questionText || '');
         
-        // AI keywords first (more specific), then text keywords
-        const allKeywords = [...new Set([...aiKeywords, ...textKeywords])];
+        // Combine all keywords
+        let combinedKeywords = [...new Set([...aiKeywords, ...textKeywords])];
         
-        const iconSlug = await findIconForQuestion(supabase, allKeywords, categoryIconSlug);
+        // 🚨 CRITICAL: Filter out any keywords that could reveal the answer!
+        const safeKeywords = filterAnswerKeywords(
+          combinedKeywords,
+          q.correctAnswer || '',
+          q.incorrectAnswers || []
+        );
+        
+        console.log(`Keywords for "${q.questionText?.substring(0, 30)}...": [${combinedKeywords.join(', ')}] -> safe: [${safeKeywords.join(', ')}]`);
+        
+        const iconSlug = await findIconForQuestion(supabase, safeKeywords, categoryIconSlug);
         
         if (iconSlug) {
           q.iconSlug = iconSlug;
