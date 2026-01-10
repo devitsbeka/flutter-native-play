@@ -807,6 +807,39 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_sources: {
+        Row: {
+          content_summary: string | null
+          created_at: string | null
+          favicon_url: string | null
+          id: string
+          is_active: boolean | null
+          title: string | null
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          content_summary?: string | null
+          created_at?: string | null
+          favicon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          content_summary?: string | null
+          created_at?: string | null
+          favicon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          title?: string | null
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       leaderboard_badges: {
         Row: {
           badge_id: string

@@ -140,7 +140,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryId, categoryName, language, difficulty, count, topic } = await req.json();
+    const { categoryId, categoryName, language, difficulty, count, topic, knowledgeSources } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -188,6 +188,17 @@ serve(async (req) => {
     const avoidDuplicatesInstruction = existingTexts.length > 0 
       ? `\n\n⚠️ AVOID creating questions similar to these existing ones:\n${existingSample}\n\nCreate DIFFERENT questions about NEW facts and topics.`
       : '';
+
+    // Build knowledge sources context if provided
+    let knowledgeSourcesContext = '';
+    if (knowledgeSources && knowledgeSources.length > 0) {
+      const sourcesText = knowledgeSources.map((source: any, i: number) => 
+        `\n📖 SOURCE ${i + 1}: ${source.title || source.url}\nURL: ${source.url}\n${source.content?.substring(0, 1500) || ''}`
+      ).join('\n\n');
+      
+      knowledgeSourcesContext = `\n\n📚 KNOWLEDGE SOURCES - Use these as factual references for generating questions:\n${sourcesText}\n\n✅ IMPORTANT: Generate questions based on FACTS from these sources. Use the information provided to create accurate, educational trivia questions.`;
+      console.log(`Using ${knowledgeSources.length} knowledge sources for context`);
+    }
 
     const systemPrompt = `You are a trivia question generator. Generate unique, accurate trivia questions.
 
@@ -241,6 +252,7 @@ Return a JSON object with a "questions" array. Each question should have:
 ${difficultyInstruction}
 ${topicInstruction}
 ${avoidDuplicatesInstruction}
+${knowledgeSourcesContext}
 
 ${chunks > 1 ? `This is batch ${chunkIndex + 1} of ${chunks}, so ensure questions are unique and cover different aspects of the topic.` : ''}
 

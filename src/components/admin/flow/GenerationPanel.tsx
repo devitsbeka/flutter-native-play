@@ -12,6 +12,7 @@ import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
 import { hasAnswerInQuestion } from '@/utils/questionValidation';
 import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 import { cn } from '@/lib/utils';
+import type { KnowledgeSource } from './KnowledgeSourcesList';
 
 const { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, MAX_ANSWER_LENGTH_DIFF } = QUALITY_CONSTANTS;
 
@@ -22,6 +23,7 @@ interface Props {
   onQuestionsGenerated: (questions: GeneratedQuestion[]) => void;
   isGenerating: boolean;
   setIsGenerating: (v: boolean) => void;
+  knowledgeSources?: KnowledgeSource[];
 }
 
 const DIFFICULTIES = [
@@ -31,7 +33,7 @@ const DIFFICULTIES = [
   { id: 'hard', label: 'Hard' },
 ];
 
-export function GenerationPanel({ categories, languages, selectedLanguage, onQuestionsGenerated, isGenerating, setIsGenerating }: Props) {
+export function GenerationPanel({ categories, languages, selectedLanguage, onQuestionsGenerated, isGenerating, setIsGenerating, knowledgeSources = [] }: Props) {
   const [mode, setMode] = useState<'ai' | 'url'>('ai');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('mixed');
@@ -87,6 +89,15 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
 
     setIsGenerating(true);
     try {
+      // Prepare knowledge sources for API
+      const knowledgeContext = knowledgeSources.length > 0 
+        ? knowledgeSources.map(s => ({
+            url: s.url,
+            title: s.title,
+            content: s.contentSummary,
+          }))
+        : null;
+
       const { data, error } = await supabase.functions.invoke('generate-multilang-trivia', {
         body: {
           categoryId: selectedCategory,
@@ -95,6 +106,7 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
           difficulty: difficulty === 'mixed' ? null : difficulty,
           count,
           topic: topic || null,
+          knowledgeSources: knowledgeContext,
         },
       });
 
@@ -282,6 +294,14 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
           <p className="text-xs text-muted-foreground text-center">
             Max {QUESTION_MAX_LENGTH} chars for questions, {ANSWER_MAX_LENGTH} for answers
           </p>
+          
+          {knowledgeSources.length > 0 && (
+            <div className="mt-2 px-2 py-1.5 bg-primary/10 rounded-md border border-primary/20">
+              <p className="text-xs text-primary font-medium text-center">
+                📚 Using {knowledgeSources.length} knowledge source{knowledgeSources.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="url" className="space-y-4 mt-4">
