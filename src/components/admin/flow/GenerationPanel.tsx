@@ -23,6 +23,8 @@ interface Props {
   isGenerating: boolean;
   setIsGenerating: (v: boolean) => void;
   knowledgeSources?: KnowledgeSource[];
+  onKnowledgeSourcesChange?: (sources: KnowledgeSource[]) => void;
+  knowledgeSourcesComponent?: React.ReactNode;
 }
 
 const DIFFICULTIES = ['mixed', 'easy', 'medium', 'hard'];
@@ -33,7 +35,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   hard: 'Hard',
 };
 
-export function GenerationPanel({ categories, languages, selectedLanguage, onQuestionsGenerated, isGenerating, setIsGenerating, knowledgeSources = [] }: Props) {
+export function GenerationPanel({ categories, languages, selectedLanguage, onQuestionsGenerated, isGenerating, setIsGenerating, knowledgeSources = [], knowledgeSourcesComponent }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [difficultyIndex, setDifficultyIndex] = useState<number>(0); // 0=mixed, 1=easy, 2=medium, 3=hard
   const [count, setCount] = useState(50);
@@ -221,14 +223,8 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
         </p>
       </div>
 
-      {/* Knowledge Sources - Before Generate Button */}
-      {knowledgeSources.length > 0 && (
-        <div className="px-2 py-1.5 bg-primary/10 rounded-md border border-primary/20">
-          <p className="text-xs text-primary font-medium text-center">
-            📚 Using {knowledgeSources.length} knowledge source{knowledgeSources.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-      )}
+      {/* Knowledge Sources Component - Before Generate Button */}
+      {knowledgeSourcesComponent}
 
       {/* Generate Button */}
       <Button
