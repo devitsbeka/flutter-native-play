@@ -65,6 +65,7 @@ export default function Flow() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [stats, setStats] = useState({ inLib: 0, inProd: 0 });
   const [languageStats, setLanguageStats] = useState<Record<string, { inLib: number; inProd: number }>>({});
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('ka');
   const [focusedQuestionId, setFocusedQuestionId] = useState<string | null>(null);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -168,38 +169,44 @@ export default function Flow() {
   };
 
   const fetchStats = useCallback(async () => {
-    // Fetch per-language stats with separate counts for library and production
+    // Use RPC or multiple count queries to avoid 1000 row limit
     const languageCodes = LANGUAGES.map(l => l.code);
+    const langStats: Record<string, { inLib: number; inProd: number }> = {};
     
-    // Use a single query with grouping for efficiency
-    const { data: langData, error } = await supabase
-      .from('questions')
-      .select('language, in_production')
-      .eq('is_active', true);
+    // Initialize all languages with 0
+    languageCodes.forEach(code => {
+      langStats[code] = { inLib: 0, inProd: 0 };
+    });
     
-    if (error) {
-      console.error('Error fetching stats:', error);
-      return;
-    }
+    // Fetch counts per language using separate count queries (more accurate)
+    const promises = languageCodes.flatMap(code => [
+      supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('language', code)
+        .eq('is_active', true)
+        .eq('in_production', false)
+        .then(({ count }) => ({ code, type: 'lib' as const, count: count || 0 })),
+      supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('language', code)
+        .eq('is_active', true)
+        .eq('in_production', true)
+        .then(({ count }) => ({ code, type: 'prod' as const, count: count || 0 })),
+    ]);
     
-    if (langData) {
-      const langStats: Record<string, { inLib: number; inProd: number }> = {};
+    try {
+      const results = await Promise.all(promises);
       
-      // Initialize all languages with 0
-      languageCodes.forEach(code => {
-        langStats[code] = { inLib: 0, inProd: 0 };
-      });
-      
-      // Count questions per language
-      langData.forEach(q => {
-        const lang = q.language || 'ka';
-        if (!langStats[lang]) {
-          langStats[lang] = { inLib: 0, inProd: 0 };
+      results.forEach(({ code, type, count }) => {
+        if (!langStats[code]) {
+          langStats[code] = { inLib: 0, inProd: 0 };
         }
-        if (q.in_production) {
-          langStats[lang].inProd++;
+        if (type === 'lib') {
+          langStats[code].inLib = count;
         } else {
-          langStats[lang].inLib++;
+          langStats[code].inProd = count;
         }
       });
       
@@ -209,6 +216,8 @@ export default function Flow() {
       const totalLib = Object.values(langStats).reduce((sum, s) => sum + s.inLib, 0);
       const totalProd = Object.values(langStats).reduce((sum, s) => sum + s.inProd, 0);
       setStats({ inLib: totalLib, inProd: totalProd });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
   }, []);
 
@@ -516,36 +525,44 @@ export default function Flow() {
           </div>
         </div>
         
-        {/* Language Stats Bar - Horizontally Scrollable */}
+        {/* Language Stats Bar - Horizontally Scrollable & Clickable */}
         <div className="mt-4 -mx-4 px-4">
           <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent">
-            <div className="flex gap-2 min-w-max">
+            <div className="flex gap-3 min-w-max">
               {LANGUAGES.map(lang => {
                 const langStat = languageStats[lang.code] || { inLib: 0, inProd: 0 };
                 const total = langStat.inLib + langStat.inProd;
                 const hasQuestions = total > 0;
+                const isSelected = selectedLanguage === lang.code;
                 
                 return (
-                  <div
+                  <button
                     key={lang.code}
-                    className={`flex flex-col items-center gap-1 px-4 py-3 rounded-xl border-2 min-w-[90px] transition-all ${
-                      hasQuestions 
-                        ? 'bg-card border-border/50 shadow-sm hover:shadow-md' 
-                        : 'bg-destructive/5 border-destructive/40'
+                    onClick={() => setSelectedLanguage(lang.code)}
+                    className={`flex flex-col items-center gap-1.5 px-5 py-4 rounded-xl border-2 min-w-[100px] transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary/10 border-primary shadow-lg ring-2 ring-primary/30'
+                        : hasQuestions 
+                          ? 'bg-card border-border/50 shadow-sm hover:shadow-md hover:border-primary/50' 
+                          : 'bg-destructive/5 border-destructive/40 hover:bg-destructive/10'
                     }`}
                     title={`${lang.name}: ${langStat.inLib} in Library, ${langStat.inProd} in Production`}
                   >
-                    <span className="text-2xl">{lang.flag}</span>
-                    <span className="font-bold text-sm">{lang.code.toUpperCase()}</span>
-                    <div className="flex flex-col items-center text-xs">
-                      <span className={hasQuestions ? 'text-foreground font-semibold' : 'text-destructive font-medium'}>
+                    <span className="text-3xl">{lang.flag}</span>
+                    <span className={`font-bold text-base ${isSelected ? 'text-primary' : ''}`}>
+                      {lang.code.toUpperCase()}
+                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className={`text-lg font-bold ${
+                        isSelected ? 'text-primary' : hasQuestions ? 'text-foreground' : 'text-destructive'
+                      }`}>
                         {total.toLocaleString()}
                       </span>
-                      <span className="text-muted-foreground text-[10px]">
+                      <span className="text-muted-foreground text-xs">
                         {langStat.inLib.toLocaleString()} lib • {langStat.inProd.toLocaleString()} prod
                       </span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -561,6 +578,7 @@ export default function Flow() {
             <GenerationPanel
               categories={categories}
               languages={LANGUAGES}
+              selectedLanguage={selectedLanguage}
               onQuestionsGenerated={handleQuestionsGenerated}
               isGenerating={isGenerating}
               setIsGenerating={setIsGenerating}

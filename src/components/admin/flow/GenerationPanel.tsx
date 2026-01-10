@@ -18,6 +18,7 @@ const { QUESTION_MAX_LENGTH, ANSWER_MAX_LENGTH, MAX_ANSWER_LENGTH_DIFF } = QUALI
 interface Props {
   categories: Category[];
   languages: { code: string; name: string; flag: string }[];
+  selectedLanguage: string;
   onQuestionsGenerated: (questions: GeneratedQuestion[]) => void;
   isGenerating: boolean;
   setIsGenerating: (v: boolean) => void;
@@ -30,10 +31,9 @@ const DIFFICULTIES = [
   { id: 'hard', label: 'Hard' },
 ];
 
-export function GenerationPanel({ categories, languages, onQuestionsGenerated, isGenerating, setIsGenerating }: Props) {
+export function GenerationPanel({ categories, languages, selectedLanguage, onQuestionsGenerated, isGenerating, setIsGenerating }: Props) {
   const [mode, setMode] = useState<'ai' | 'url'>('ai');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('ka');
   const [difficulty, setDifficulty] = useState<string>('mixed');
   const [count, setCount] = useState(50);
   const [topic, setTopic] = useState('');
@@ -183,26 +183,14 @@ export function GenerationPanel({ categories, languages, onQuestionsGenerated, i
         </TabsList>
 
         <TabsContent value="ai" className="space-y-4 mt-4">
-          {/* Language - Inline Circles */}
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Language</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => setSelectedLanguage(lang.code)}
-                  className={cn(
-                    "w-9 h-9 rounded-full flex items-center justify-center text-lg border-2 transition-all hover:scale-105",
-                    selectedLanguage === lang.code
-                      ? "border-primary ring-2 ring-primary/30 scale-110"
-                      : "border-transparent hover:border-muted-foreground/30"
-                  )}
-                  title={lang.name}
-                >
-                  {lang.flag}
-                </button>
-              ))}
-            </div>
+          {/* Selected Language Display */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg border border-primary/30">
+            <span className="text-xl">
+              {languages.find(l => l.code === selectedLanguage)?.flag || '🌐'}
+            </span>
+            <span className="text-sm font-medium">
+              Generating in {languages.find(l => l.code === selectedLanguage)?.name || selectedLanguage.toUpperCase()}
+            </span>
           </div>
 
           {/* Category */}
