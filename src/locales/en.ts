@@ -411,6 +411,8 @@ export const en: KaTranslations = {
     all: "All",
     friends: "Friends",
     games: "Games",
+    social: "Social",
+    rewards: "Rewards",
     markAsRead: "Mark as read",
     delete: "Delete",
     markAllAsRead: "Mark all as read",
@@ -429,6 +431,10 @@ export const en: KaTranslations = {
     friendAccepted: "Friend Accepted",
     challengeReceived: "Challenge",
     gameResult: "Game Result",
+    accept: "Accept",
+    decline: "Decline",
+    join: "Join",
+    category: "Category",
   },
 
   // ==========================================

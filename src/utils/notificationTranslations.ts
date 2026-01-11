@@ -69,7 +69,8 @@ export function translateNotificationMessage(
     if (data?.sender_nickname) {
       return translation.replace('{name}', data.sender_nickname);
     }
-    return translation;
+    // If no name available, clean up the placeholder
+    return translation.replace('{name} ', '').replace('{name}', '');
   }
 
   return originalMessage;

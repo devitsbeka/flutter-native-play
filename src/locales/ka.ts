@@ -409,6 +409,8 @@ export const ka = {
     all: "ყველა",
     friends: "მეგობრები",
     games: "თამაშები",
+    social: "სოციალური",
+    rewards: "ჯილდოები",
     markAsRead: "წაკითხულად",
     delete: "წაშლა",
     markAllAsRead: "ყველას წაკითხულად მონიშვნა",
@@ -427,6 +429,10 @@ export const ka = {
     friendAccepted: "მეგობარი დაემატა",
     challengeReceived: "გამოწვევა",
     gameResult: "თამაშის შედეგი",
+    accept: "მიღება",
+    decline: "უარყოფა",
+    join: "შესვლა",
+    category: "კატეგორია",
   },
 
   // ==========================================
