@@ -789,20 +789,6 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                       </button>
                     </div>
                     
-                    {/* Inspirational Category Chips */}
-                    <div className="flex flex-wrap gap-1.5 pb-1">
-                      {shuffledTopics.slice(0, 5).map((topic, idx) => (
-                        <motion.span
-                          key={topic.label}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: idx * 0.05 }}
-                          className="px-2.5 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs text-white/95 font-medium"
-                        >
-                          {topic.emoji} {topic.label}
-                        </motion.span>
-                      ))}
-                    </div>
                     
                     {/* Trivia Option */}
                     <motion.button
