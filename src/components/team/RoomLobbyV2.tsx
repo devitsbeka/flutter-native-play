@@ -357,31 +357,39 @@ export function RoomLobbyV2() {
                 </ChunkyButton>
               </div>
             ) : (
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-white drop-shadow-lg">
+              <div className="flex items-center justify-center gap-3">
+                {/* Room Icon */}
+                {currentRoom.room_icon && (
+                  <img 
+                    src={currentRoom.room_icon} 
+                    alt="Room icon" 
+                    className="w-8 h-8 object-contain"
+                  />
+                )}
+                <h2 className="text-base font-bold text-white drop-shadow-lg">
                   {roomName}
                 </h2>
                 {isHost && (
-                  <div className="flex items-center justify-center gap-2">
+                  <>
                     <motion.button
                       onClick={() => setIsEditingName(true)}
-                      className="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 text-sm font-medium transition-colors flex items-center gap-1.5"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      title="Edit name"
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      შეცვლა
+                      <Edit2 className="w-4 h-4" />
                     </motion.button>
                     <motion.button
                       onClick={() => setShowGradientPicker(true)}
-                      className="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 text-sm font-medium transition-colors flex items-center gap-1.5"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      title="Change background"
                     >
-                      <Palette className="w-3.5 h-3.5" />
-                      ფერი
+                      <Palette className="w-4 h-4" />
                     </motion.button>
-                  </div>
+                  </>
                 )}
               </div>
             )}
