@@ -10,8 +10,9 @@ import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
-import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
+import { getNotificationConfig, NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
 type FilterType = 'all' | 'unread' | 'friends' | 'games' | 'rewards';
@@ -37,6 +38,16 @@ function NotificationCard({
     locale: dateLocale 
   });
 
+  const data = notification.data as {
+    sender_nickname?: string;
+    sender_avatar_url?: string;
+    category_name?: string;
+    [key: string]: unknown;
+  };
+
+  const hasSenderInfo = data?.sender_nickname || data?.sender_avatar_url;
+  const config = getNotificationConfig(notification.type);
+  const IconComponent = config.icon;
 
   return (
     <motion.div
@@ -56,21 +67,32 @@ function NotificationCard({
         onNavigate(notification);
       }}
     >
-      {/* Unread indicator dot */}
       {isUnread && (
         <div className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
       )}
 
       <div className="flex items-start gap-3">
-        {/* Icon */}
-        <NotificationBadge type={notification.type} size="lg" />
+        {hasSenderInfo ? (
+          <div className="relative flex-shrink-0">
+            <Avatar className="w-12 h-12 border-2 border-primary/20">
+              <AvatarImage src={data.sender_avatar_url} alt={data.sender_nickname} />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {data.sender_nickname?.charAt(0)?.toUpperCase() || '?'}
+              </AvatarFallback>
+            </Avatar>
+            <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-card", config.bgColor)}>
+              <IconComponent className={cn("w-3 h-3", config.color)} />
+            </div>
+          </div>
+        ) : (
+          <NotificationBadge type={notification.type} size="lg" />
+        )}
 
-        {/* Content */}
         <div className="flex-1 min-w-0 pr-8">
-          <p className={cn(
-            "font-bold text-sm line-clamp-1",
-            isUnread ? "text-foreground" : "text-muted-foreground"
-          )}>
+          {data?.sender_nickname && (
+            <p className="font-bold text-sm text-foreground mb-0.5">{data.sender_nickname}</p>
+          )}
+          <p className={cn("text-sm line-clamp-1", isUnread && !data?.sender_nickname ? "font-bold text-foreground" : "text-muted-foreground")}>
             {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
           </p>
           {notification.message && (
@@ -78,9 +100,12 @@ function NotificationCard({
               {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
             </p>
           )}
-          <p className="text-xs text-muted-foreground/60 mt-2">
-            {timeAgo}
-          </p>
+          {data?.category_name && (
+            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-primary/10 text-xs text-primary font-medium">
+              {t('notifications.category')}: {data.category_name}
+            </span>
+          )}
+          <p className="text-xs text-muted-foreground/60 mt-2">{timeAgo}</p>
         </div>
       </div>
 
@@ -184,9 +209,9 @@ export default function Notifications() {
   const filters: { key: FilterType; label: string }[] = [
     { key: 'all', label: t('notifications.all') },
     { key: 'unread', label: t('notifications.unread') },
-    { key: 'friends', label: t('notifications.social') || 'სოციალური' },
+    { key: 'friends', label: t('notifications.social') },
     { key: 'games', label: t('notifications.games') },
-    { key: 'rewards', label: t('notifications.rewards') || 'ჯილდოები' },
+    { key: 'rewards', label: t('notifications.rewards') },
   ];
 
   return (

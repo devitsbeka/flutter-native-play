@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
-import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { getNotificationConfig, NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
@@ -304,9 +305,9 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   const filters: { key: FilterType; label: string }[] = [
     { key: 'all', label: t('notifications.all') },
     { key: 'unread', label: t('notifications.unread') },
-    { key: 'friends', label: t('notifications.friends') },
+    { key: 'friends', label: t('notifications.social') },
     { key: 'games', label: t('notifications.games') },
-    { key: 'rewards', label: t('menu.rewards') },
+    { key: 'rewards', label: t('notifications.rewards') },
   ];
 
   return (
