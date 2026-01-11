@@ -15,7 +15,11 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
 import { ChallengeTypeModal } from "@/components/challenge/ChallengeTypeModal";
-import { useNavigate } from "react-router-dom";
+import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
+import { QuizPlayModal } from "@/components/social/QuizPlayModal";
+import { CollectionPreviewModal } from "@/components/social/CollectionPreviewModal";
+import { SamplePost } from "@/data/samplePosts";
+
 // Custom time formatter for Georgian (no "დაახლოებით")
 const formatTimeAgo = (date: Date) => {
   const now = new Date();
@@ -52,20 +56,158 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { data, loading } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
+  const [loadingTrivia, setLoadingTrivia] = useState(false);
+  
+  // Trivia/Collection play modals
+  const [selectedPost, setSelectedPost] = useState<SamplePost | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [playModalOpen, setPlayModalOpen] = useState(false);
+  const [collectionPreviewOpen, setCollectionPreviewOpen] = useState(false);
+  const [collectionPosts, setCollectionPosts] = useState<SamplePost[]>([]);
 
-  const handlePlayTrivia = (triviaId: string) => {
-    onClose();
-    navigate(`/play/trivia/${triviaId}`);
+  const handlePlayTrivia = async (triviaId: string) => {
+    if (loadingTrivia) return;
+    setLoadingTrivia(true);
+    
+    try {
+      // Fetch full trivia data with questions
+      const { data: trivia, error } = await supabase
+        .from("user_quiz_posts")
+        .select("*, profiles:user_id(nickname, avatar_url)")
+        .eq("id", triviaId)
+        .single();
+      
+      if (error || !trivia) {
+        toast.error("ტრივია ვერ მოიძებნა");
+        return;
+      }
+      
+      // Transform to SamplePost format
+      const post: SamplePost = {
+        id: trivia.id,
+        username: (trivia.profiles as any)?.nickname || "user",
+        displayName: (trivia.profiles as any)?.nickname || "მომხმარებელი",
+        avatarUrl: (trivia.profiles as any)?.avatar_url || "",
+        verified: false,
+        createdAt: trivia.created_at || new Date().toISOString(),
+        title: trivia.title,
+        description: trivia.description || "",
+        subject: trivia.subject,
+        hashtags: trivia.hashtags || [],
+        coverGradient: trivia.cover_gradient,
+        coverImage: trivia.cover_image || undefined,
+        questionCount: trivia.question_count,
+        answerFormat: trivia.answer_format as '4_answers' | 'true_false',
+        likesCount: trivia.likes_count || 0,
+        playsCount: trivia.plays_count || 0,
+        commentsCount: 0,
+        questions: (trivia.questions as any[]) || [],
+        isPublic: trivia.is_public,
+      };
+      
+      setSelectedPost(post);
+      setPreviewModalOpen(true);
+    } catch (err) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setLoadingTrivia(false);
+    }
   };
 
-  const handlePlayCollection = (collectionId: string) => {
-    onClose();
-    navigate(`/play/collection/${collectionId}`);
+  const handlePlayCollection = async (collectionId: string) => {
+    if (loadingTrivia) return;
+    setLoadingTrivia(true);
+    
+    try {
+      // Fetch collection data
+      const { data: collection, error: collError } = await supabase
+        .from("quiz_collections")
+        .select("*, profiles:user_id(nickname, avatar_url)")
+        .eq("id", collectionId)
+        .single();
+      
+      if (collError || !collection) {
+        toast.error("კოლექცია ვერ მოიძებნა");
+        return;
+      }
+      
+      // Fetch all rounds in the collection
+      const { data: rounds } = await supabase
+        .from("user_quiz_posts")
+        .select("*")
+        .eq("collection_id", collectionId)
+        .order("round_number", { ascending: true });
+      
+      if (!rounds || rounds.length === 0) {
+        toast.error("კოლექციაში რაუნდები ვერ მოიძებნა");
+        return;
+      }
+      
+      // Transform rounds to SamplePost format
+      const posts: SamplePost[] = rounds.map(r => ({
+        id: r.id,
+        username: (collection.profiles as any)?.nickname || "user",
+        displayName: (collection.profiles as any)?.nickname || "მომხმარებელი",
+        avatarUrl: (collection.profiles as any)?.avatar_url || "",
+        verified: false,
+        createdAt: r.created_at || new Date().toISOString(),
+        title: r.title,
+        description: r.description || "",
+        subject: r.subject,
+        hashtags: r.hashtags || [],
+        coverGradient: r.cover_gradient,
+        coverImage: r.cover_image || undefined,
+        questionCount: r.question_count,
+        answerFormat: r.answer_format as '4_answers' | 'true_false',
+        likesCount: r.likes_count || 0,
+        playsCount: r.plays_count || 0,
+        commentsCount: 0,
+        questions: (r.questions as any[]) || [],
+        isPublic: r.is_public,
+        roundNumber: r.round_number,
+      }));
+      
+      // Create collection post with rounds
+      const collectionPost: SamplePost = {
+        id: collection.id,
+        username: (collection.profiles as any)?.nickname || "user",
+        displayName: (collection.profiles as any)?.nickname || "მომხმარებელი",
+        avatarUrl: (collection.profiles as any)?.avatar_url || "",
+        verified: false,
+        createdAt: collection.created_at || new Date().toISOString(),
+        title: collection.title,
+        description: collection.description || "",
+        subject: "",
+        hashtags: collection.hashtags || [],
+        coverGradient: collection.cover_gradient,
+        coverImage: collection.cover_image || undefined,
+        questionCount: posts.reduce((sum, p) => sum + p.questionCount, 0),
+        answerFormat: "4_answers",
+        likesCount: collection.likes_count || 0,
+        playsCount: collection.plays_count || 0,
+        commentsCount: 0,
+        questions: [],
+        collectionPosts: posts,
+      };
+      
+      setSelectedPost(collectionPost);
+      setCollectionPosts(posts);
+      setCollectionPreviewOpen(true);
+    } catch (err) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setLoadingTrivia(false);
+    }
+  };
+
+  const handleStartPlay = (post: SamplePost) => {
+    setPreviewModalOpen(false);
+    setCollectionPreviewOpen(false);
+    setPlayModalOpen(true);
   };
 
   const getFlagEmoji = (countryCode: string) => {
@@ -406,6 +548,31 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           avatar_url: data.profile.avatar_url,
           animated_avatar_url: data.profile.animated_avatar_url,
         } : null}
+      />
+
+      {/* Trivia Preview Modal */}
+      <TriviaPreviewModal
+        open={previewModalOpen}
+        onOpenChange={setPreviewModalOpen}
+        post={selectedPost}
+        onPlay={handleStartPlay}
+      />
+
+      {/* Collection Preview Modal */}
+      <CollectionPreviewModal
+        open={collectionPreviewOpen}
+        onOpenChange={setCollectionPreviewOpen}
+        posts={collectionPosts}
+        collectionTitle={selectedPost?.title}
+        onPlay={handleStartPlay}
+      />
+
+      {/* Quiz Play Modal */}
+      <QuizPlayModal
+        open={playModalOpen}
+        onOpenChange={setPlayModalOpen}
+        post={selectedPost}
+        collectionPosts={collectionPosts.length > 0 ? collectionPosts : undefined}
       />
     </Sheet>
   );
