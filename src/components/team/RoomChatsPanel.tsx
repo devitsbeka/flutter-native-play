@@ -548,12 +548,12 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             </AnimatePresence>
 
             {/* User Action Menu */}
-            {userMenuTarget && (
-              <UserActionMenu
-                targetUserId={userMenuTarget.userId}
-                onClose={() => setUserMenuTarget(null)}
-              />
-            )}
+            <UserActionMenu
+              isOpen={!!userMenuTarget}
+              targetUserId={userMenuTarget?.userId || ""}
+              targetUserName={userMenuTarget?.nickname || ""}
+              onClose={() => setUserMenuTarget(null)}
+            />
           </motion.div>
         </>
       )}
