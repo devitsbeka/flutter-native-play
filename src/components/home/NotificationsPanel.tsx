@@ -1,25 +1,27 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, BellOff, Check, CheckCheck, Trash2 } from 'lucide-react';
+import { X, Bell, BellOff, Check, Trash2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { ka } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getNotificationConfig, NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
+import { PingPongVideo } from '@/components/shared/PingPongVideo';
+import { MAP_VIDEOS } from '@/config/videoConfig';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type FilterType = 'all' | 'unread' | 'friends' | 'games' | 'rewards';
+type FilterType = 'all' | 'unread' | 'social' | 'games';
 
 function NotificationCard({
   notification,
@@ -43,7 +45,7 @@ function NotificationCard({
   actionLoading?: string | null;
 }) {
   const isUnread = !notification.read_at;
-  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: false, locale: ka });
   
   const isFriendRequest = notification.type === 'friend_request';
   const isGameInvite = notification.type === 'challenge';
@@ -70,15 +72,15 @@ function NotificationCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -20 }}
       className={cn(
-        "relative p-4 rounded-xl border transition-all group",
+        "relative px-4 py-4 rounded-2xl transition-all group border-l-4",
         isUnread
-          ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
-          : "bg-secondary/50 border-border/50 hover:bg-secondary",
-        !hasActions && "cursor-pointer"
+          ? "bg-card/90 backdrop-blur-sm border-l-primary"
+          : "bg-card/70 backdrop-blur-sm border-l-transparent",
+        !hasActions && "cursor-pointer hover:bg-card"
       )}
       onClick={() => {
         if (!hasActions) {
@@ -87,29 +89,24 @@ function NotificationCard({
         }
       }}
     >
-      {/* Unread indicator */}
-      {isUnread && !hasActions && (
-        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary animate-pulse" />
-      )}
-
       <div className="flex items-start gap-3">
         {/* Icon */}
-        <NotificationBadge type={notification.type} size="md" />
+        <NotificationBadge type={notification.type} size="lg" />
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <p className={cn(
-            "font-medium text-sm line-clamp-1",
+            "font-bold text-base",
             isUnread ? "text-foreground" : "text-muted-foreground"
           )}>
             {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
           </p>
           {notification.message && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
               {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
             </p>
           )}
-          <p className="text-xs text-muted-foreground/60 mt-1">
+          <p className="text-xs text-muted-foreground/70 mt-1.5">
             {timeAgo}
           </p>
 
@@ -119,7 +116,7 @@ function NotificationCard({
               <motion.button
                 onClick={handleAccept}
                 disabled={isLoading}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors text-sm font-medium disabled:opacity-50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -129,7 +126,7 @@ function NotificationCard({
               <motion.button
                 onClick={handleDecline}
                 disabled={isLoading}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors text-sm font-medium disabled:opacity-50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -148,7 +145,7 @@ function NotificationCard({
                 e.stopPropagation();
                 onDelete(notification.id);
               }}
-              className="p-1.5 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+              className="p-2 rounded-xl hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -179,12 +176,10 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     switch (filter) {
       case 'unread':
         return !n.read_at;
-      case 'friends':
+      case 'social':
         return NOTIFICATION_FILTER_CATEGORIES.social.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.social[number]);
       case 'games':
         return NOTIFICATION_FILTER_CATEGORIES.games.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.games[number]);
-      case 'rewards':
-        return NOTIFICATION_FILTER_CATEGORIES.rewards.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.rewards[number]);
       default:
         return true;
     }
@@ -303,11 +298,10 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   };
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: t('notifications.all') },
-    { key: 'unread', label: t('notifications.unread') },
-    { key: 'friends', label: t('notifications.social') },
-    { key: 'games', label: t('notifications.games') },
-    { key: 'rewards', label: t('notifications.rewards') },
+    { key: 'all', label: 'ყველა' },
+    { key: 'unread', label: 'წაუკითხავი' },
+    { key: 'social', label: 'სოციალური' },
+    { key: 'games', label: 'თამაშები' },
   ];
 
   return (
@@ -319,109 +313,87 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
           {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
+            exit={{ opacity: 0, y: 50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[60] bg-card flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-border/50">
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-lg">{t('notifications.title')}</h2>
-                    {unreadCount > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {unreadCount} {t('notifications.unread')}
-                      </p>
-                    )}
-                  </div>
-                </div>
+            {/* Video Background */}
+            <div className="absolute inset-0">
+              <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
+            </div>
 
-                <div className="flex items-center gap-2">
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      title="Mark all as read"
-                    >
-                      <CheckCheck className="w-5 h-5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={onClose}
-                    className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+            {/* Header */}
+            <div className="relative z-10 px-4 pt-4 pb-3">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Bell className="w-6 h-6 text-primary" />
+                  </div>
+                  <h2 className="font-bold text-xl text-foreground">შეტყობინებები</h2>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                >
+                  <X className="w-5 h-5 text-foreground" />
+                </button>
               </div>
 
               {/* Filter tabs */}
-              <div className="flex gap-2 px-4 pb-4 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                 {filters.map((f) => (
                   <motion.button
                     key={f.key}
                     onClick={() => setFilter(f.key)}
-                    className="px-4 py-2.5 rounded-full text-sm font-semibold transition-all flex-shrink-0"
-                    style={{
-                      background: filter === f.key
-                        ? "linear-gradient(135deg, hsl(263 70% 55%) 0%, hsl(280 65% 50%) 100%)"
-                        : "hsl(var(--muted))",
-                      color: filter === f.key ? "white" : "hsl(var(--muted-foreground))",
-                      boxShadow: filter === f.key
-                        ? "0 4px 0 hsl(263 60% 40%), inset 0 1px 0 hsl(0 0% 100% / 0.2)"
-                        : "0 2px 0 hsl(var(--border))",
-                    }}
+                    className={cn(
+                      "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border",
+                      filter === f.key
+                        ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/25"
+                        : "bg-card/80 backdrop-blur-sm text-foreground border-border/50 hover:bg-card"
+                    )}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     {f.label}
-                    {f.key === 'unread' && unreadCount > 0 && (
-                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
-                        {unreadCount}
-                      </span>
-                    )}
                   </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 pb-8">
+            <div className="relative z-10 flex-1 overflow-y-auto px-2 pb-8">
               {loading ? (
-                <div className="flex flex-col items-center py-8">
+                <div className="flex flex-col items-center py-12">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm text-muted-foreground mt-3">{t('notifications.loading')}</p>
+                  <p className="text-sm text-muted-foreground mt-3">იტვირთება...</p>
                 </div>
               ) : filteredNotifications.length === 0 ? (
-                <div className="flex flex-col items-center py-8">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                <div className="flex flex-col items-center py-12">
+                  <div className="w-20 h-20 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
                     <BellOff className="w-10 h-10 text-muted-foreground" />
                   </div>
-                  <h3 className="font-bold text-lg text-foreground mb-2">{t('notifications.noNotifications')}</h3>
+                  <h3 className="font-bold text-lg text-foreground mb-2">შეტყობინებები არ არის</h3>
                   <p className="text-sm text-muted-foreground text-center max-w-[250px]">
                     {filter === 'unread'
-                      ? t('notifications.allRead')
-                      : filter === 'friends'
-                      ? t('notifications.noFriendActivity')
+                      ? "ყველა შეტყობინება წაკითხულია"
+                      : filter === 'social'
+                      ? "სოციალური აქტივობა არ არის"
                       : filter === 'games'
-                      ? t('notifications.noGameNotifications')
-                      : t('notifications.whenSomethingHappens')}
+                      ? "თამაშის შეტყობინებები არ არის"
+                      : "როცა რამე მოხდება, აქ გამოჩნდება"}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 px-2">
                   <AnimatePresence mode="popLayout">
                     {filteredNotifications.map((notification) => (
                       <NotificationCard
