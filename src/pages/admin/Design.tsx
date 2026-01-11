@@ -2,7 +2,13 @@ import { useState, Suspense, lazy, memo, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { 
+  createMemoryRouter, 
+  RouterProvider,
+  UNSAFE_LocationContext,
+  UNSAFE_NavigationContext,
+  UNSAFE_RouteContext
+} from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 // Lazy load page components
@@ -95,6 +101,21 @@ const ErrorFallback = ({ error }: { error: Error }) => (
   </div>
 );
 
+// Reset router context wrapper - clears parent router context
+const RouterContextReset = ({ children }: { children: React.ReactNode }) => (
+  <UNSAFE_LocationContext.Provider value={null as any}>
+    <UNSAFE_NavigationContext.Provider value={null as any}>
+      <UNSAFE_RouteContext.Provider value={{
+        outlet: null,
+        matches: [],
+        isDataRoute: false
+      }}>
+        {children}
+      </UNSAFE_RouteContext.Provider>
+    </UNSAFE_NavigationContext.Provider>
+  </UNSAFE_LocationContext.Provider>
+);
+
 // Isolated page renderer with its own router
 const IsolatedPageRenderer = memo(function IsolatedPageRenderer({
   Component,
@@ -124,7 +145,9 @@ const IsolatedPageRenderer = memo(function IsolatedPageRenderer({
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <RouterProvider router={router} />
+      <RouterContextReset>
+        <RouterProvider router={router} />
+      </RouterContextReset>
     </ErrorBoundary>
   );
 });
