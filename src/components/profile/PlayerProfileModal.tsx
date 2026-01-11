@@ -195,61 +195,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 )}
               </div>
 
-              {/* Recent Interactions - Only show for friends/non-current-user */}
-              {!data.isCurrentUser && data.interactions.length > 0 && (
-                <div className="px-4 pb-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    ბოლო აქტივობა
-                  </h4>
-                  <div className="space-y-2">
-                    {data.interactions.slice(0, 3).map((interaction) => (
-                      <motion.div
-                        key={interaction.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-card/50 border border-border/50"
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          interaction.type === 'invitation_sent' 
-                            ? 'bg-primary/20 text-primary'
-                            : interaction.type === 'invitation_received'
-                              ? 'bg-green-500/20 text-green-500'
-                              : 'bg-amber-500/20 text-amber-500'
-                        }`}>
-                          {interaction.type === 'invitation_sent' && <Send className="w-4 h-4" />}
-                          {interaction.type === 'invitation_received' && <ArrowRight className="w-4 h-4" />}
-                          {interaction.type === 'room_together' && <Users className="w-4 h-4" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">
-                            {interaction.message}
-                          </p>
-                          {interaction.details && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {interaction.details}
-                            </p>
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDistanceToNow(new Date(interaction.timestamp), { 
-                            addSuffix: true, 
-                            locale: ka 
-                          })}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tabs */}
-              <Tabs defaultValue="trophies" className="px-4 pb-6">
+              {/* Tabs - Trivias, Collections, Trophies */}
+              <Tabs defaultValue="trivias" className="px-4 pb-4">
                 <TabsList className="grid w-full grid-cols-3 mb-4 h-auto py-2">
-                  <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
-                    <img src={iconTrophy} alt="" className="w-9 h-9" />
-                    <span className="text-xs">ჯილდოები</span>
-                  </TabsTrigger>
                   <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
                     <img src={iconTrivia} alt="" className="w-9 h-9" />
                     <span className="text-xs">ტრივია</span>
@@ -257,6 +205,10 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   <TabsTrigger value="collections" className="flex flex-col items-center gap-0.5">
                     <img src={iconCollections} alt="" className="w-9 h-9" />
                     <span className="text-xs">კოლექციები</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
+                    <img src={iconTrophy} alt="" className="w-9 h-9" />
+                    <span className="text-xs">ჯილდოები</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -355,6 +307,54 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   )}
                 </TabsContent>
               </Tabs>
+
+              {/* Recent Interactions - Only show for friends/non-current-user */}
+              {!data.isCurrentUser && data.interactions.length > 0 && (
+                <div className="px-4 pb-6">
+                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    ბოლო აქტივობა
+                  </h4>
+                  <div className="space-y-2">
+                    {data.interactions.slice(0, 3).map((interaction) => (
+                      <motion.div
+                        key={interaction.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-card/50 border border-border/50"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          interaction.type === 'invitation_sent' 
+                            ? 'bg-primary/20 text-primary'
+                            : interaction.type === 'invitation_received'
+                              ? 'bg-green-500/20 text-green-500'
+                              : 'bg-amber-500/20 text-amber-500'
+                        }`}>
+                          {interaction.type === 'invitation_sent' && <Send className="w-4 h-4" />}
+                          {interaction.type === 'invitation_received' && <ArrowRight className="w-4 h-4" />}
+                          {interaction.type === 'room_together' && <Users className="w-4 h-4" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">
+                            {interaction.message}
+                          </p>
+                          {interaction.details && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {interaction.details}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(interaction.timestamp), { 
+                            addSuffix: true, 
+                            locale: ka 
+                          })}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
