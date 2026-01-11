@@ -83,6 +83,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       
       if (error || !trivia) {
         toast.error("ტრივია ვერ მოიძებნა");
+        setLoadingTrivia(false);
         return;
       }
       
@@ -110,10 +111,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       };
       
       setSelectedPost(post);
-      setPreviewModalOpen(true);
+      // Close the profile sheet first, then open preview modal
+      onClose();
+      setTimeout(() => {
+        setPreviewModalOpen(true);
+        setLoadingTrivia(false);
+      }, 150);
     } catch (err) {
       toast.error("შეცდომა მოხდა");
-    } finally {
       setLoadingTrivia(false);
     }
   };
@@ -132,6 +137,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       
       if (collError || !collection) {
         toast.error("კოლექცია ვერ მოიძებნა");
+        setLoadingTrivia(false);
         return;
       }
       
@@ -144,6 +150,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       
       if (!rounds || rounds.length === 0) {
         toast.error("კოლექციაში რაუნდები ვერ მოიძებნა");
+        setLoadingTrivia(false);
         return;
       }
       
@@ -196,10 +203,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       
       setSelectedPost(collectionPost);
       setCollectionPosts(posts);
-      setCollectionPreviewOpen(true);
+      // Close the profile sheet first, then open collection preview modal
+      onClose();
+      setTimeout(() => {
+        setCollectionPreviewOpen(true);
+        setLoadingTrivia(false);
+      }, 150);
     } catch (err) {
       toast.error("შეცდომა მოხდა");
-    } finally {
       setLoadingTrivia(false);
     }
   };
