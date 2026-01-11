@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy, memo, useMemo } from "react";
+import { useState, Suspense, lazy, memo, useMemo, useRef, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
@@ -10,6 +10,88 @@ import {
   UNSAFE_RouteContext
 } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
+
+// Drag scroll hook with momentum
+function useDragScroll() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  const velocity = useRef(0);
+  const lastX = useRef(0);
+  const lastTime = useRef(0);
+  const animationFrame = useRef<number>();
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!ref.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - ref.current.offsetLeft;
+    scrollLeft.current = ref.current.scrollLeft;
+    lastX.current = e.pageX;
+    lastTime.current = Date.now();
+    velocity.current = 0;
+    if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
+    ref.current.style.cursor = 'grabbing';
+    ref.current.style.userSelect = 'none';
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    ref.current.scrollLeft = scrollLeft.current - walk;
+    
+    // Calculate velocity for momentum
+    const now = Date.now();
+    const dt = now - lastTime.current;
+    if (dt > 0) {
+      velocity.current = (e.pageX - lastX.current) / dt;
+    }
+    lastX.current = e.pageX;
+    lastTime.current = now;
+  }, []);
+
+  const applyMomentum = useCallback(() => {
+    if (!ref.current || Math.abs(velocity.current) < 0.01) return;
+    
+    ref.current.scrollLeft -= velocity.current * 16;
+    velocity.current *= 0.95; // Friction
+    
+    if (Math.abs(velocity.current) > 0.01) {
+      animationFrame.current = requestAnimationFrame(applyMomentum);
+    }
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    if (!ref.current) return;
+    isDragging.current = false;
+    ref.current.style.cursor = 'grab';
+    ref.current.style.userSelect = '';
+    
+    // Apply momentum
+    applyMomentum();
+  }, [applyMomentum]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isDragging.current && ref.current) {
+      isDragging.current = false;
+      ref.current.style.cursor = 'grab';
+      ref.current.style.userSelect = '';
+      applyMomentum();
+    }
+  }, [applyMomentum]);
+
+  return {
+    ref,
+    handlers: {
+      onMouseDown: handleMouseDown,
+      onMouseMove: handleMouseMove,
+      onMouseUp: handleMouseUp,
+      onMouseLeave: handleMouseLeave,
+    }
+  };
+}
 
 // Lazy load page components
 const Index = lazy(() => import("@/pages/Index"));
@@ -115,6 +197,40 @@ const RouterContextReset = ({ children }: { children: React.ReactNode }) => (
     </UNSAFE_NavigationContext.Provider>
   </UNSAFE_LocationContext.Provider>
 );
+
+// Drag scroll container component
+const DragScrollContainer = ({ children, categoryId }: { children: React.ReactNode; categoryId: string }) => {
+  const { ref, handlers } = useDragScroll();
+  
+  return (
+    <div 
+      ref={ref}
+      {...handlers}
+      className="overflow-x-auto pb-4 cursor-grab"
+      style={{ 
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
+      }}
+    >
+      <style>{`
+        [data-category="${categoryId}"]::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <div 
+        data-category={categoryId}
+        className="flex"
+        style={{ 
+          gap: '100px',
+          paddingRight: '2rem',
+          minWidth: 'max-content'
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 // Isolated page renderer with its own router
 const IsolatedPageRenderer = memo(function IsolatedPageRenderer({
@@ -288,28 +404,20 @@ export default function Design() {
                 <div className="h-0.5 w-16 bg-primary/50 mt-2 rounded-full" />
               </div>
               
-              {/* Horizontal Scroll of iPhones */}
-              <div className="overflow-x-auto pb-4">
-                <div 
-                  className="flex gap-6"
-                  style={{ 
-                    paddingRight: '2rem',
-                    minWidth: 'max-content'
-                  }}
-                >
-                  {category.pages.map((page) => (
-                    <IPhoneMockup
-                      key={page.id}
-                      id={page.id}
-                      label={page.label}
-                      sublabel={page.sublabel}
-                      scale={scale}
-                      Component={page.Component}
-                      route={page.route}
-                    />
-                  ))}
-                </div>
-              </div>
+              {/* Horizontal Scroll of iPhones with drag */}
+              <DragScrollContainer categoryId={category.title}>
+                {category.pages.map((page) => (
+                  <IPhoneMockup
+                    key={page.id}
+                    id={page.id}
+                    label={page.label}
+                    sublabel={page.sublabel}
+                    scale={scale}
+                    Component={page.Component}
+                    route={page.route}
+                  />
+                ))}
+              </DragScrollContainer>
             </div>
           ))}
         </div>
