@@ -15,8 +15,21 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
 import { ChallengeTypeModal } from "@/components/challenge/ChallengeTypeModal";
-import { formatDistanceToNow } from "date-fns";
-import { ka } from "date-fns/locale";
+// Custom time formatter for Georgian (no "დაახლოებით")
+const formatTimeAgo = (date: Date) => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return "ახლა";
+  if (diffMins < 60) return `${diffMins} წუთის წინ`;
+  if (diffHours < 24) return `${diffHours} საათის წინ`;
+  if (diffDays < 7) return `${diffDays} დღის წინ`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} კვირის წინ`;
+  return `${Math.floor(diffDays / 30)} თვის წინ`;
+};
 
 interface PlayerProfileModalProps {
   isOpen: boolean;
@@ -335,7 +348,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           {interaction.type === 'room_together' && <Users className="w-4 h-4" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">
+                          <p className="text-sm font-medium text-foreground truncate whitespace-nowrap">
                             {interaction.message}
                           </p>
                           {interaction.details && (
@@ -344,11 +357,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                             </p>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDistanceToNow(new Date(interaction.timestamp), { 
-                            addSuffix: true, 
-                            locale: ka 
-                          })}
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+                          {formatTimeAgo(new Date(interaction.timestamp))}
                         </span>
                       </motion.div>
                     ))}
