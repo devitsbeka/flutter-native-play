@@ -150,7 +150,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
+            className="space-y-5"
           >
             {/* Header */}
             <div className="text-center">
@@ -161,52 +161,35 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
             </div>
 
-            {/* Category chips - ChatGPT style */}
-            <div className="grid grid-cols-3 gap-2.5">
-              {POPULAR_TOPICS.map((topic, idx) => (
-                <motion.button
-                  key={topic.value}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  onClick={() => setSubject(topic.value)}
-                  className={`relative p-4 rounded-2xl border-2 transition-all text-center group ${
-                    subject === topic.value
-                      ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
-                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-muted/50"
-                  }`}
-                >
-                  <span className="text-2xl block mb-1.5">{topic.emoji}</span>
-                  <span className="text-sm font-medium text-foreground">{topic.label}</span>
-                  {subject === topic.value && (
-                    <motion.div
-                      layoutId="topic-selected"
-                      className="absolute inset-0 rounded-2xl border-2 border-primary"
-                      transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
-                    />
-                  )}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Divider */}
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border/60" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-background px-4 text-xs text-muted-foreground font-medium">ან ჩაწერე</span>
-              </div>
-            </div>
-
             {/* Input field - Primary focus */}
-            <div className="relative">
+            <div className="space-y-3">
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
                 className="w-full text-base h-14 px-5 rounded-2xl border-2 border-border/60 bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
               />
+              
+              {/* Suggestion chips - show below input */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {POPULAR_TOPICS.map((topic, idx) => (
+                  <motion.button
+                    key={topic.value}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.03 }}
+                    onClick={() => setSubject(topic.value)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                      subject === topic.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <span>{topic.emoji}</span>
+                    <span>{topic.label}</span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
 
             {/* Continue button */}
