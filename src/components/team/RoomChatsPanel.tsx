@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Users, Check } from "lucide-react";
+import { X, Send, MessageCircle, Users, Check, Search } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
@@ -31,7 +31,7 @@ function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardPr
     <motion.button
       onClick={onClick}
       className={cn(
-        "relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 min-w-[180px] max-w-[220px]",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 flex-shrink-0",
         isSelected 
           ? "bg-primary/10 ring-1 ring-primary/50" 
           : "bg-secondary/50 hover:bg-secondary/80"
@@ -48,9 +48,9 @@ function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardPr
       </div>
 
       {/* Room info */}
-      <div className="flex-1 min-w-0 text-left">
+      <div className="text-left">
         <div className="flex items-center gap-1.5">
-          <h4 className="font-semibold text-sm truncate">
+          <h4 className="font-semibold text-sm whitespace-nowrap">
             {displayName}
           </h4>
           {isPlaying && (
@@ -101,8 +101,15 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
   const [userMenuTarget, setUserMenuTarget] = useState<{ userId: string; nickname: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter rooms by search query
+  const filteredRooms = rooms.filter(room => {
+    const name = room.room_name || room.category_name || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   // Filter blocked users from messages
   const filteredMessages = filterBlockedUsers(messages);
@@ -200,12 +207,24 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="ძებნა..."
+                    className="w-[140px] pl-9 pr-3 py-2 text-sm rounded-lg bg-secondary/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground"
+                  />
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Room cards - horizontal scroll */}
@@ -216,10 +235,12 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                     <div key={i} className="w-[180px] h-[52px] rounded-xl bg-muted animate-pulse" />
                   ))}
                 </div>
-              ) : rooms.length === 0 ? (
-                <p className="text-sm text-muted-foreground px-2">ოთახები არ არის</p>
+              ) : filteredRooms.length === 0 ? (
+                <p className="text-sm text-muted-foreground px-2">
+                  {searchQuery ? "ოთახი ვერ მოიძებნა" : "ოთახები არ არის"}
+                </p>
               ) : (
-                rooms.map((room) => (
+                filteredRooms.map((room) => (
                   <MiniRoomCard
                     key={room.id}
                     room={room}
