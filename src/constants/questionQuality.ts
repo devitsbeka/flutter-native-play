@@ -8,7 +8,7 @@ export const QUALITY_CONSTANTS = {
   SIMILARITY_THRESHOLD: 0.55,
   
   /** Maximum characters for question text (including "?") */
-  QUESTION_MAX_LENGTH: 65,
+  QUESTION_MAX_LENGTH: 70,
   
   /** Maximum characters for each answer option */
   ANSWER_MAX_LENGTH: 20,
