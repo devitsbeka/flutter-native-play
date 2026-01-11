@@ -12,16 +12,59 @@ const BANNED_WORDS = [
   'ტყვნა', 'მუტელი', 'ყლე', 'ქერა', 'დედა', 'მამა', 'შენი'
 ];
 
-// Helper to generate simple 2-word name
-function generateSimpleName(iconName: string): string {
-  const suffixes = ['ოთახი', 'გუნდი', 'კლუბი', 'არენა', 'ბრძოლა'];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-  return `${iconName} ${suffix}`;
+// Curated inspirational fallback names - epic and creative
+const INSPIRATIONAL_NAMES = [
+  // Cosmic
+  "კოსმოსური ხომალდი",      // Cosmic Ship
+  "ვარსკვლავთა კავშირი",    // Star Alliance
+  "გალაქტიკის მცველები",    // Galaxy Guardians
+  "მთვარის მხარე",          // Moon Side
+  "კოსმოსური არენა",        // Cosmic Arena
+  // Adventure
+  "მოგზაურთა ბანაკი",       // Travelers' Camp
+  "აღმომჩენთა კლუბი",       // Explorers' Club
+  "თავგადასავლის გზა",      // Path of Adventure
+  "ჰორიზონტის მიღმა",       // Beyond the Horizon
+  // Nature
+  "ბუნების მცველები",       // Nature Guardians
+  "მწვანე ოაზისი",          // Green Oasis
+  "ტყის საიდუმლო",          // Forest Secret
+  "მთის მწვერვალი",         // Mountain Peak
+  // Fantasy
+  "დრაკონთა ბუდე",          // Dragons' Nest
+  "ფენიქსის ფრთები",        // Phoenix Wings
+  "ჯადოსნური ტყე",          // Magical Forest
+  "მოჯადოებული სასახლე",    // Enchanted Palace
+  // Wisdom
+  "ბრძენთა საბჭო",          // Council of Sages
+  "გენიოსების კლუბი",       // Geniuses' Club
+  "ცოდნის ციხე",            // Fortress of Knowledge
+  "ჭკვიანების ოთახი",       // Smart Ones' Room
+  // Legends
+  "ლეგენდების ოთახი",       // Room of Legends
+  "მითების სამყარო",        // World of Myths
+  "გმირთა არენა",           // Heroes' Arena
+  "დიდებულთა კლუბი",        // Club of the Great
+  // Champions
+  "ჩემპიონთა ლიგა",         // Champions' League
+  "გამარჯვებულთა კლუბი",    // Winners' Club
+  "ტიტანების არენა",        // Titans' Arena
+  "ძლევამოსილთა ოთახი",     // Room of the Victorious
+  // Friends
+  "მეგობრების ოთახი",       // Friends' Room
+  "სახალისო კომპანია",      // Fun Company
+  "მხიარულთა არენა",        // Arena of the Cheerful
+  "ხუმრობების კლუბი",       // Jokes Club
+];
+
+// Get random inspirational name
+function getRandomInspirationalName(): string {
+  return INSPIRATIONAL_NAMES[Math.floor(Math.random() * INSPIRATIONAL_NAMES.length)];
 }
 
 // Validate and clean generated name
-function validateAndCleanName(name: string, iconName: string): string {
-  if (!name) return generateSimpleName(iconName);
+function validateAndCleanName(name: string): string {
+  if (!name) return getRandomInspirationalName();
   
   // Remove quotes
   let cleaned = name.replace(/^["']|["']$/g, '').trim();
@@ -35,7 +78,7 @@ function validateAndCleanName(name: string, iconName: string): string {
   );
   
   if (containsBanned) {
-    return generateSimpleName(iconName);
+    return getRandomInspirationalName();
   }
   
   // Ensure max 2 words
@@ -46,7 +89,7 @@ function validateAndCleanName(name: string, iconName: string): string {
   
   // If too long or empty, use fallback
   if (!cleaned || cleaned.length > 35) {
-    return generateSimpleName(iconName);
+    return getRandomInspirationalName();
   }
   
   return cleaned;
@@ -100,10 +143,10 @@ serve(async (req) => {
 
       if (iconError || !icons || icons.length === 0) {
         console.error('Failed to fetch icons:', iconError);
-        // Fallback to default name
+        // Fallback to inspirational name
         return new Response(
           JSON.stringify({ 
-            name: "სახალისო გუნდი", 
+            name: getRandomInspirationalName(), 
             icon_url: null 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -118,36 +161,41 @@ serve(async (req) => {
 
     console.log(`Selected icon: ${iconName} (${selectedIcon.slug})`);
 
-    // If no AI key, generate a simple 2-word name
+    // If no AI key, return inspirational name
     if (!lovableApiKey) {
       return new Response(
         JSON.stringify({ 
-          name: generateSimpleName(iconName), 
+          name: getRandomInspirationalName(), 
           icon_url: selectedIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use AI to generate a 2-word name based on the icon
-    const prompt = `შექმენი მოკლე ქართული სახელი ტრივია თამაშის ოთახისთვის, რომელიც ეფუძნება ამ იკონას: "${iconName}".
+    // Use AI to generate an INSPIRATIONAL 2-word name
+    const prompt = `შექმენი შთამაგონებელი, კრეატიული ქართული სახელი ტრივია თამაშის ოთახისთვის.
 
-მკაცრი წესები:
-- მაქსიმუმ 2 სიტყვა! ეს ძალიან მნიშვნელოვანია!
-- არ გამოიყენო უხამსი სიტყვები
-- არ დაამატო ემოჯი
+კონტექსტი: მეგობრები იკრიბებიან ერთად სახალისო ტრივიას სათამაშოდ. სახელი უნდა იყოს:
+- ეპიკური და შთამაგონებელი
+- მაქსიმუმ 2 სიტყვა
+- მხიარული და სასიამოვნო
 
-მაგალითები:
-- shark → "ზვიგენების ოთახი" ან "ზვიგენთა ბრძოლა"
-- fireplace → "ბუხრის ოთახი"
-- pizza → "პიცის კლუბი"
-- dragon → "დრაკონთა არენა"
-- book → "მკითხველთა ოთახი"
-- basket → "კალათბურთელები"
-- cat → "კატების ოთახი"
-- star → "ვარსკვლავთა არენა"
+აირჩიე ერთ-ერთი თემატიკა და შექმენი ორიგინალური სახელი:
+🚀 კოსმოსი: "კოსმოსური ხომალდი", "ვარსკვლავთა კავშირი", "გალაქტიკის მცველები"
+🗺️ თავგადასავალი: "მოგზაურთა ბანაკი", "აღმომჩენთა კლუბი", "ჰორიზონტის მიღმა"
+🌲 ბუნება: "ბუნების მცველები", "მწვანე ოაზისი", "ტყის საიდუმლო"
+🐉 ფანტაზია: "დრაკონთა ბუდე", "ფენიქსის ფრთები", "ჯადოსნური ტყე"
+📚 სიბრძნე: "ბრძენთა საბჭო", "გენიოსების კლუბი", "ცოდნის ციხე"
+⚔️ ლეგენდები: "გმირთა არენა", "ლეგენდების ოთახი", "მითების სამყარო"
+🏆 ჩემპიონები: "ჩემპიონთა ლიგა", "ტიტანების არენა", "გამარჯვებულთა კლუბი"
+👥 მეგობრობა: "მეგობრების ოთახი", "სახალისო კომპანია", "მხიარულთა არენა"
 
-დაბრუნე მხოლოდ 2 სიტყვიანი სახელი, არაფერი სხვა.`;
+⚠️ მნიშვნელოვანი წესი: მოცემული აიკონია "${iconName}" - ეს მხოლოდ ვიზუალური დეკორაციაა!
+- ნუ თარგმნი აიკონს პირდაპირ!
+- თუ აიკონი არის ყოველდღიური საგანი (სტეპლერი, ტუალეტი, სარეცხი მანქანა, ჭიქა, კარადა...), სრულად იგნორირება უყავი და შექმენი რაღაც ეპიკური!
+- სახელი ყოველთვის უნდა იყოს შთამაგონებელი და სახალისო, არა მოსაწყენი!
+
+დაბრუნე მხოლოდ 2 სიტყვიანი კრეატიული სახელი, არაფერი სხვა.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -165,10 +213,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('AI API error:', response.status);
-      // Fallback
+      // Fallback to inspirational name
       return new Response(
         JSON.stringify({ 
-          name: `სახალისო ${iconName}`, 
+          name: getRandomInspirationalName(), 
           icon_url: selectedIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -179,7 +227,7 @@ serve(async (req) => {
     const rawName = data.choices?.[0]?.message?.content?.trim() || '';
     
     // Validate and clean the generated name
-    const generatedName = validateAndCleanName(rawName, iconName);
+    const generatedName = validateAndCleanName(rawName);
 
     console.log(`Generated room name: ${generatedName} (raw: ${rawName})`);
 
@@ -196,7 +244,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ 
-        name: "სახალისო გუნდი", 
+        name: getRandomInspirationalName(), 
         icon_url: null,
         error: errorMessage 
       }),
