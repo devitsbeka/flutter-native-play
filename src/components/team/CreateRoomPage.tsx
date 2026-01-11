@@ -464,7 +464,20 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             <div className="flex items-center gap-2">
               {/* Horizontal scrolling friends */}
               <div className="flex-1 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-3 pb-1">
+                <div className="flex gap-3 pb-1 pt-1">
+                  {/* Invite via link button - FIRST */}
+                  <motion.button
+                    onClick={handleShareInviteLink}
+                    className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 transition-colors min-w-[68px] border border-dashed border-primary/30"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="w-[52px] h-[52px] rounded-full bg-primary/20 flex items-center justify-center">
+                      <Share2 className="w-6 h-6 text-primary" />
+                    </div>
+                    <span className="text-xs text-primary font-medium">მოწვევა</span>
+                  </motion.button>
+                  
                   {acceptedFriends.slice(0, 10).map((friend) => {
                     const isSelected = selectedFriends.has(friend.friendId);
                     return (
@@ -520,19 +533,6 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                       <span className="text-xs text-muted-foreground">მეტი</span>
                     </motion.button>
                   )}
-                  
-                  {/* Invite via link button */}
-                  <motion.button
-                    onClick={handleShareInviteLink}
-                    className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 transition-colors min-w-[68px] border border-dashed border-primary/30"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="w-[52px] h-[52px] rounded-full bg-primary/20 flex items-center justify-center">
-                      <Share2 className="w-6 h-6 text-primary" />
-                    </div>
-                    <span className="text-xs text-primary font-medium">მოწვევა</span>
-                  </motion.button>
                 </div>
               </div>
             </div>
