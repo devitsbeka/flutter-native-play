@@ -124,7 +124,7 @@ const AllRecentRoomsModal = lazy(() => import("@/components/team/AllRecentRoomsM
 const RoomIconPickerModal = lazy(() => import("@/components/team/RoomIconPickerModal").then(m => ({ default: m.RoomIconPickerModal })));
 const GradientPicker = lazy(() => import("@/components/team/GradientPicker").then(m => ({ default: m.GradientPicker })));
 const ChatModal = lazy(() => import("@/components/team/ChatModal").then(m => ({ default: m.ChatModal })));
-const QRScannerModal = lazy(() => import("@/components/team/QRScannerModal").then(m => ({ default: m.QRScannerModal })));
+// QRScannerModal removed - triggers camera access
 const CreateBlindTriviaModal = lazy(() => import("@/components/team/CreateBlindTriviaModal").then(m => ({ default: m.CreateBlindTriviaModal })));
 const MyTriviasPickerModal = lazy(() => import("@/components/team/MyTriviasPickerModal").then(m => ({ default: m.MyTriviasPickerModal })));
 
@@ -431,7 +431,7 @@ const pageCategories: CategoryDefinition[] = [
       { id: "room-icon-picker-modal", label: "Room Icon Picker", labelGe: "აიქონის არჩევა", Component: RoomIconPickerModal, isModal: true, modalProps: {} },
       { id: "gradient-picker-modal", label: "Gradient Picker", labelGe: "გრადიენტის არჩევა", Component: GradientPicker, isModal: true, modalProps: {} },
       { id: "chat-modal", label: "Chat", labelGe: "ჩატი", Component: ChatModal, isModal: true, modalProps: { roomId: "test-room" } },
-      { id: "qr-scanner-modal", label: "QR Scanner", labelGe: "QR სკანერი", Component: QRScannerModal, isModal: true, modalProps: {} },
+      // QR Scanner removed - triggers camera access which is not needed for design preview
       { id: "create-blind-trivia-modal", label: "Create Blind Trivia", labelGe: "ბრმა ტრივიას შექმნა", Component: CreateBlindTriviaModal, isModal: true, modalProps: {} },
       { id: "my-trivias-picker-modal", label: "My Trivias Picker", labelGe: "ჩემი ტრივიების არჩევა", Component: MyTriviasPickerModal, isModal: true, modalProps: {} },
     ],
