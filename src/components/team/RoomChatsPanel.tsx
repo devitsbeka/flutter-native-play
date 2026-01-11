@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Users, Search, ChevronLeft, ArrowLeft } from "lucide-react";
-import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
-import { useFriends, Friend } from "@/hooks/useFriends";
+import { X, Send, MessageCircle, Users, Search, ArrowLeft, MoreVertical } from "lucide-react";
+import { useMyRooms } from "@/hooks/useMyRooms";
+import { useFriends } from "@/hooks/useFriends";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useChat } from "@/hooks/useChat";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
@@ -13,6 +13,8 @@ import { useUserModeration } from "@/hooks/useUserModeration";
 import { useConversationPreviews, ConversationPreview } from "@/hooks/useConversationPreviews";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
+import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { MAP_VIDEOS } from "@/config/videoConfig";
 import { cn } from "@/lib/utils";
 
 interface RoomChatsPanelProps {
@@ -34,16 +36,16 @@ interface ConversationCardProps {
   onClick: () => void;
 }
 
-function ConversationCard({ conversation, onClick }: ConversationCardProps) {
+const ConversationCard = memo(function ConversationCard({ conversation, onClick }: ConversationCardProps) {
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-secondary/50 transition-colors text-left border-b border-border/30 last:border-b-0"
+      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-foreground/5 active:bg-foreground/10 transition-colors text-left border-b border-border/30 last:border-b-0"
       whileTap={{ scale: 0.98 }}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <Avatar className="w-14 h-14">
+        <Avatar className="w-14 h-14 border-2 border-background shadow-md">
           {conversation.type === "room" && conversation.roomIcon ? (
             <div className="w-full h-full bg-muted/50 flex items-center justify-center">
               <img src={conversation.roomIcon} alt="" className="w-8 h-8 object-contain" />
@@ -65,55 +67,44 @@ function ConversationCard({ conversation, onClick }: ConversationCardProps) {
         
         {/* Badge overlay */}
         {conversation.type === "room" && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-sm">
             <Users className="w-3 h-3 text-primary-foreground" />
           </div>
         )}
         {conversation.type === "friend" && conversation.isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-card" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-background" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h3 className={cn(
-            "font-semibold truncate",
-            conversation.unreadCount > 0 ? "text-foreground" : "text-foreground/90"
-          )}>
+          <h3 className="font-bold text-foreground truncate text-base">
             {conversation.name}
           </h3>
           {conversation.lastMessageTime && (
-            <span className={cn(
-              "text-xs flex-shrink-0",
-              conversation.unreadCount > 0 ? "text-primary font-medium" : "text-muted-foreground"
-            )}>
+            <span className="text-xs text-muted-foreground flex-shrink-0">
               {conversation.lastMessageTime}
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className={cn(
-            "text-sm truncate",
-            conversation.unreadCount > 0 ? "text-foreground/80 font-medium" : "text-muted-foreground"
-          )}>
-            {conversation.lastMessage || (conversation.type === "room" 
-              ? `${conversation.roomParticipantCount} მონაწილე`
-              : "დაიწყე საუბარი..."
-            )}
-          </p>
-          
-          {/* Unread badge */}
-          {conversation.unreadCount > 0 && (
-            <span className="min-w-[20px] h-5 flex items-center justify-center px-1.5 text-[11px] font-bold text-destructive-foreground bg-destructive rounded-full flex-shrink-0">
-              {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
-            </span>
+        <p className="text-sm text-muted-foreground truncate mt-0.5">
+          {conversation.lastMessage || (conversation.type === "room" 
+            ? `${conversation.roomParticipantCount} მონაწილე`
+            : "დაიწყე საუბარი..."
           )}
-        </div>
+        </p>
       </div>
+      
+      {/* Unread badge */}
+      {conversation.unreadCount > 0 && (
+        <span className="min-w-[22px] h-[22px] flex items-center justify-center px-1.5 text-xs font-bold text-primary-foreground bg-primary rounded-full flex-shrink-0">
+          {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
+        </span>
+      )}
     </motion.button>
   );
-}
+});
 
 export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const { user } = useAuth();
@@ -279,18 +270,24 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
           {/* Panel */}
           <motion.div
-            initial={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
+            exit={{ opacity: 0, y: 50 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[60] bg-card flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
           >
+            {/* Video Background */}
+            <div className="absolute inset-0">
+              <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
+            </div>
+
             <AnimatePresence mode="wait">
               {!selectedConversation ? (
                 // Conversation List View
@@ -299,87 +296,81 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="flex flex-col h-full"
+                  className="relative flex flex-col h-full"
                 >
                   {/* Header */}
-                  <div className="flex items-center justify-between p-4 border-b border-border/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <MessageCircle className="w-5 h-5 text-primary" />
+                  <div className="relative z-10 px-4 pt-4 pb-3">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                          <MessageCircle className="w-6 h-6 text-primary" />
+                        </div>
+                        <h2 className="font-bold text-xl text-foreground">შეტყობინებები</h2>
                       </div>
-                      <div>
-                        <h2 className="font-bold text-lg">შეტყობინებები</h2>
-                        {totalUnread > 0 && (
-                          <p className="text-xs text-primary font-medium">
-                            {totalUnread} ახალი
-                          </p>
-                        )}
-                      </div>
+                      <button
+                        onClick={onClose}
+                        className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                      >
+                        <X className="w-5 h-5 text-foreground" />
+                      </button>
                     </div>
-                    <button
-                      onClick={onClose}
-                      className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
 
-                  {/* Search */}
-                  <div className="px-4 py-3 border-b border-border/30">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    {/* Search */}
+                    <div className="relative mb-4">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="ძებნა..."
-                        className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl bg-secondary/50 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
+                        className="w-full h-12 pl-12 pr-4 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
+                    </div>
+
+                    {/* Filter Chips */}
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                      {filters.map(filter => (
+                        <motion.button
+                          key={filter.id}
+                          onClick={() => setActiveFilter(filter.id)}
+                          className={cn(
+                            "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border",
+                            activeFilter === filter.id 
+                              ? "bg-foreground text-background border-foreground" 
+                              : "bg-card/80 backdrop-blur-sm text-foreground border-border/50 hover:bg-card"
+                          )}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {filter.label}
+                        </motion.button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Filter Chips */}
-                  <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide border-b border-border/30">
-                    {filters.map(filter => (
-                      <button
-                        key={filter.id}
-                        onClick={() => setActiveFilter(filter.id)}
-                        className={cn(
-                          "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                          activeFilter === filter.id 
-                            ? "bg-foreground text-background" 
-                            : "bg-secondary text-foreground/70 hover:bg-secondary/80"
-                        )}
-                      >
-                        {filter.label}
-                        {filter.id === "unread" && totalUnread > 0 && (
-                          <span className="ml-1.5 text-xs">({totalUnread})</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
                   {/* Conversation List */}
-                  <div className="flex-1 overflow-y-auto">
-                    {isLoading ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    ) : filteredConversations.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                        <MessageCircle className="w-12 h-12 text-muted-foreground/50 mb-3" />
-                        <p className="text-muted-foreground text-sm">
-                          {searchQuery 
-                            ? "ვერ მოიძებნა" 
-                            : activeFilter === "unread"
-                              ? "ახალი შეტყობინებები არ არის"
-                              : "საუბრები არ არის"
-                          }
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        {filteredConversations.map((conversation, index) => (
+                  <div className="relative z-10 flex-1 overflow-y-auto">
+                    <div className="bg-card/60 backdrop-blur-sm mx-2 rounded-2xl overflow-hidden">
+                      {isLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : filteredConversations.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 px-4">
+                          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                            <MessageCircle className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <p className="text-muted-foreground text-center">
+                            {searchQuery 
+                              ? "ვერ მოიძებნა" 
+                              : activeFilter === "unread"
+                                ? "ახალი შეტყობინებები არ არის"
+                                : "საუბრები არ არის"
+                            }
+                          </p>
+                        </div>
+                      ) : (
+                        filteredConversations.map((conversation, index) => (
                           <motion.div
                             key={conversation.id}
                             initial={{ opacity: 0, y: 10 }}
@@ -391,9 +382,10 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                               onClick={() => handleConversationClick(conversation)}
                             />
                           </motion.div>
-                        ))}
-                      </div>
-                    )}
+                        ))
+                      )}
+                    </div>
+                    <div className="h-8" />
                   </div>
                 </motion.div>
               ) : (
@@ -403,19 +395,19 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="flex flex-col h-full"
+                  className="relative flex flex-col h-full"
                 >
                   {/* Chat Header */}
-                  <div className="flex items-center gap-3 p-4 border-b border-border/50">
+                  <div className="relative z-10 flex items-center gap-3 px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border/30">
                     <button
                       onClick={handleBack}
-                      className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                      className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
                     >
-                      <ArrowLeft className="w-5 h-5" />
+                      <ArrowLeft className="w-5 h-5 text-foreground" />
                     </button>
                     
                     <div className="relative">
-                      <Avatar className="w-10 h-10">
+                      <Avatar className="w-11 h-11 border-2 border-background">
                         {selectedConversation.type === "room" && selectedConversation.roomIcon ? (
                           <div className="w-full h-full bg-muted/50 flex items-center justify-center">
                             <img src={selectedConversation.roomIcon} alt="" className="w-6 h-6 object-contain" />
@@ -435,147 +427,97 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         )}
                       </Avatar>
                       {selectedConversation.type === "friend" && selectedConversation.isOnline && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card" />
                       )}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{selectedConversation.name}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {selectedConversation.type === "room" 
-                          ? `${selectedConversation.roomParticipantCount} მონაწილე`
-                          : selectedConversation.isOnline ? "ონლაინ" : "ოფლაინ"
-                        }
-                      </p>
+                      <h3 className="font-bold text-foreground truncate">{selectedConversation.name}</h3>
+                      {selectedConversation.type === "room" && typingUsers.length > 0 && (
+                        <p className="text-xs text-primary animate-pulse">
+                          {typingUsers.join(", ")} წერს...
+                        </p>
+                      )}
                     </div>
 
-                    <button
-                      onClick={onClose}
-                      className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                    {selectedConversation.type === "friend" && (
+                      <button
+                        onClick={() => setUserMenuTarget({ 
+                          userId: selectedConversation.id, 
+                          nickname: selectedConversation.name 
+                        })}
+                        className="w-10 h-10 rounded-full hover:bg-muted/50 flex items-center justify-center transition-colors"
+                      >
+                        <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                      </button>
+                    )}
                   </div>
 
-                  {/* Messages Area */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {/* Messages */}
+                  <div className="relative z-10 flex-1 overflow-y-auto px-4 py-4">
                     {messagesLoading ? (
                       <div className="flex items-center justify-center h-full">
                         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : currentMessages.length === 0 ? (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center justify-center h-full text-center"
-                      >
-                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                          <Send className="w-8 h-8 text-muted-foreground" />
+                      <div className="flex flex-col items-center justify-center h-full text-center">
+                        <div className="w-16 h-16 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
+                          <MessageCircle className="w-8 h-8 text-muted-foreground" />
                         </div>
-                        <p className="text-muted-foreground text-sm">ჯერ შეტყობინებები არ არის</p>
-                        <p className="text-muted-foreground/60 text-xs mt-1">დაიწყე საუბარი!</p>
-                      </motion.div>
+                        <p className="text-muted-foreground">შეტყობინებები არ არის</p>
+                        <p className="text-sm text-muted-foreground/70 mt-1">დაიწყე საუბარი!</p>
+                      </div>
                     ) : (
-                      <>
-                        {currentMessages.map((message: any, index: number) => {
-                          const isMe = selectedConversation.type === "room"
-                            ? message.user_id === user?.id
-                            : message.sender_id === user?.id;
-                          const nickname = selectedConversation.type === "room"
-                            ? message.nickname
-                            : selectedConversation.name;
-                          const avatarUrl = selectedConversation.type === "room"
-                            ? message.avatar_url
-                            : selectedConversation.avatarUrl;
-
+                      <div className="space-y-3">
+                        {currentMessages.map((msg) => {
+                          const isOwn = msg.sender_id === user?.id || msg.user_id === user?.id;
                           return (
                             <motion.div
-                              key={message.id}
-                              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              transition={{ delay: Math.min(index * 0.03, 0.3) }}
-                              className={cn("flex gap-2", isMe ? "justify-end" : "justify-start")}
+                              key={msg.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className={cn("flex", isOwn ? "justify-end" : "justify-start")}
                             >
-                              {!isMe && (
-                                <button
-                                  onClick={() => setUserMenuTarget({ 
-                                    userId: selectedConversation.type === "room" ? message.user_id : selectedConversation.id, 
-                                    nickname 
-                                  })}
-                                  className="flex-shrink-0"
-                                >
-                                  <Avatar className="w-8 h-8 ring-2 ring-background shadow-md">
-                                    <AvatarImage src={avatarUrl || undefined} />
-                                    <AvatarFallback 
-                                      className="text-xs text-primary-foreground font-bold"
-                                      style={{
-                                        background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
-                                      }}
-                                    >
-                                      {nickname?.charAt(0).toUpperCase()}
+                              <div className="flex items-end gap-2 max-w-[80%]">
+                                {!isOwn && (
+                                  <Avatar className="w-8 h-8 flex-shrink-0">
+                                    <AvatarImage src={msg.avatar_url} />
+                                    <AvatarFallback className="bg-muted text-xs">
+                                      {(msg.nickname || "?").charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
-                                </button>
-                              )}
-
-                              <div
-                                className={cn(
-                                  "max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm",
-                                  isMe ? "rounded-br-sm" : "rounded-bl-sm"
                                 )}
-                                style={isMe ? {
-                                  background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 45%) 100%)",
-                                  color: "white",
-                                  boxShadow: "0 4px 15px hsla(var(--primary), 0.35)",
-                                } : {
-                                  background: "hsl(var(--card))",
-                                  boxShadow: "0 2px 10px hsla(var(--foreground), 0.08)",
-                                  border: "1px solid hsl(var(--border) / 0.5)",
-                                }}
-                              >
-                                {!isMe && selectedConversation.type === "room" && (
-                                  <button
-                                    onClick={() => setUserMenuTarget({ userId: message.user_id, nickname })}
-                                    className="text-xs font-semibold mb-1 block hover:opacity-80 transition-opacity"
-                                    style={{ color: "hsl(var(--primary))" }}
-                                  >
-                                    {nickname}
-                                  </button>
-                                )}
-                                <p className="text-sm break-words">{message.message}</p>
-                                <p className={cn(
-                                  "text-xs mt-1.5",
-                                  isMe ? "text-white/70" : "text-muted-foreground"
-                                )}>
-                                  {formatTime(message.created_at)}
-                                </p>
+                                <div
+                                  className={cn(
+                                    "px-4 py-2.5 rounded-2xl text-sm",
+                                    isOwn
+                                      ? "bg-primary text-primary-foreground rounded-br-md"
+                                      : "bg-card/90 backdrop-blur-sm text-foreground rounded-bl-md border border-border/30"
+                                  )}
+                                >
+                                  {!isOwn && selectedConversation.type === "room" && (
+                                    <p className="text-xs font-medium text-primary mb-1">{msg.nickname}</p>
+                                  )}
+                                  <p className="break-words">{msg.message}</p>
+                                  <p className={cn(
+                                    "text-[10px] mt-1",
+                                    isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
+                                  )}>
+                                    {formatTime(msg.created_at)}
+                                  </p>
+                                </div>
                               </div>
                             </motion.div>
                           );
                         })}
                         <div ref={messagesEndRef} />
-                      </>
+                      </div>
                     )}
                   </div>
 
-                  {/* Input Area */}
-                  <div className="p-3 border-t border-border/50">
-                    {/* Typing indicator for rooms */}
-                    {selectedConversation.type === "room" && typingUsers.length > 0 && (
-                      <div className="flex items-center gap-2 px-2 pb-2 text-xs text-muted-foreground">
-                        <div className="flex gap-0.5">
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                        </div>
-                        <span>
-                          {typingUsers.length === 1
-                            ? `${typingUsers[0].nickname} წერს...`
-                            : `${typingUsers.length} მომხმარებელი წერს...`}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
+                  {/* Input */}
+                  <div className="relative z-10 px-4 py-3 bg-card/80 backdrop-blur-xl border-t border-border/30">
+                    <div className="flex items-center gap-3">
                       <input
                         ref={inputRef}
                         type="text"
@@ -583,21 +525,21 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         placeholder="შეტყობინება..."
-                        className="flex-1 px-4 py-3 rounded-xl bg-secondary text-foreground placeholder-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="flex-1 h-12 px-5 rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                       <motion.button
                         onClick={handleSend}
                         disabled={!inputValue.trim() || sending}
                         className={cn(
-                          "p-3 rounded-xl transition-colors",
-                          inputValue.trim() && !sending
+                          "w-12 h-12 rounded-full flex items-center justify-center transition-all",
+                          inputValue.trim()
                             ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
+                            : "bg-muted/50 text-muted-foreground"
                         )}
-                        whileHover={inputValue.trim() ? { scale: 1.05 } : {}}
-                        whileTap={inputValue.trim() ? { scale: 0.95 } : {}}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <Send className={cn("w-5 h-5", sending && "animate-pulse")} />
+                        <Send className="w-5 h-5" />
                       </motion.button>
                     </div>
                   </div>
@@ -605,14 +547,11 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
               )}
             </AnimatePresence>
 
-            {/* User Action Menu for Report/Block */}
+            {/* User Action Menu */}
             {userMenuTarget && (
               <UserActionMenu
-                isOpen={!!userMenuTarget}
-                onClose={() => setUserMenuTarget(null)}
                 targetUserId={userMenuTarget.userId}
-                targetUserName={userMenuTarget.nickname}
-                roomId={selectedConversation?.type === "room" ? selectedConversation.id : undefined}
+                onClose={() => setUserMenuTarget(null)}
               />
             )}
           </motion.div>
