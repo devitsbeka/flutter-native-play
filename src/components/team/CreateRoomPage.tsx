@@ -395,44 +395,23 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
                     }
                   }}
                   autoFocus
-                  className="w-full bg-background border border-primary/30 rounded-lg px-2 py-1 text-[16px] font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-background border border-primary/30 rounded-lg px-2 py-1 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="ოთახის სახელი"
                 />
               ) : (
-                <p className="font-semibold text-foreground text-[16px] break-words leading-tight">
+                <p className="font-semibold text-foreground text-sm truncate">
                   {roomName}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-0.5">{isEditingName ? "შეცვალე სახელი" : "დააჭირე აიკონს შესაცვლელად"}</p>
             </div>
             
-            {/* Edit button */}
+            {/* Edit button - opens modal for both name and icon */}
             <button
-              onClick={() => {
-                if (isEditingName) {
-                  // Save and exit edit mode
-                  if (editedName.trim()) {
-                    setRoomName(editedName.trim());
-                  }
-                  setIsEditingName(false);
-                } else {
-                  // Enter edit mode
-                  setEditedName(roomName);
-                  setIsEditingName(true);
-                }
-              }}
+              onClick={() => setShowIconPickerModal(true)}
               disabled={isGeneratingName}
-              className={`p-2 rounded-xl transition-colors ${
-                isEditingName 
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                  : 'bg-primary/10 hover:bg-primary/20'
-              }`}
+              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
             >
-              {isEditingName ? (
-                <span className="text-xs font-medium px-1">OK</span>
-              ) : (
-                <Pencil className="w-4 h-4 text-primary" />
-              )}
+              <Pencil className="w-4 h-4 text-primary" />
             </button>
             
             {/* Regenerate button */}
