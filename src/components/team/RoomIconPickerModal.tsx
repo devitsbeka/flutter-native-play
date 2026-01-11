@@ -185,14 +185,14 @@ export function RoomIconPickerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-background border-border p-0 gap-0 overflow-hidden max-h-[90vh]">
-        <DialogHeader className="p-4 pb-2">
+      <DialogContent className="sm:max-w-md bg-background border-border p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
+        <DialogHeader className="p-4 pb-2 shrink-0">
           <DialogTitle className="text-lg font-display text-foreground">
             აირჩიე აიკონი
           </DialogTitle>
         </DialogHeader>
 
-        <div className="px-4 pb-4 space-y-4 overflow-y-auto">
+        <div className="flex-1 px-4 pb-4 space-y-4 overflow-y-auto min-h-0">
           {/* Search input */}
           <div className="relative px-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -324,7 +324,10 @@ export function RoomIconPickerModal({
             </AnimatePresence>
           </div>
 
-          {/* Confirm button */}
+        </div>
+
+        {/* Fixed CTA footer */}
+        <div className="px-4 pb-4 pt-3 border-t border-border/30 shrink-0 bg-background">
           <button
             onClick={handleConfirmClick}
             disabled={!selectedIcon || !editableName.trim() || isGeneratingName}

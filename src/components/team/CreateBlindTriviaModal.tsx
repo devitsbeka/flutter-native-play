@@ -465,16 +465,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               </p>
             </div>
 
-            {/* Start game button */}
-            <ChunkyButton
-              onClick={handleStartGame}
-              className="w-full"
-              variant="primary"
-              size="lg"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              დაიწყე თამაში 🎮
-            </ChunkyButton>
           </motion.div>
         );
 
@@ -489,9 +479,9 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 gap-0 rounded-3xl overflow-hidden max-h-[90vh]">
+      <DialogContent className="max-w-md p-0 gap-0 rounded-3xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Progress dots */}
-        <div className="flex justify-center gap-1.5 py-3 border-b border-border/50">
+        <div className="flex justify-center gap-1.5 py-3 border-b border-border/50 shrink-0">
           {progressDots.map((dot) => (
             <div
               key={dot}
@@ -507,7 +497,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 shrink-0">
           <div className="w-9" />
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -523,12 +513,27 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-5 overflow-y-auto">
+        {/* Content - scrollable */}
+        <div className="flex-1 p-5 overflow-y-auto min-h-0">
           <AnimatePresence mode="wait">
             {renderStep()}
           </AnimatePresence>
         </div>
+
+        {/* Fixed CTA footer for step 5 */}
+        {step === 5 && (
+          <div className="p-5 pt-3 border-t border-border/30 shrink-0 bg-background">
+            <ChunkyButton
+              onClick={handleStartGame}
+              className="w-full"
+              variant="primary"
+              size="lg"
+            >
+              <Play className="w-5 h-5 mr-2" />
+              დაიწყე თამაში 🎮
+            </ChunkyButton>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

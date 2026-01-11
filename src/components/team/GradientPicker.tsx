@@ -27,7 +27,7 @@ export function GradientPicker({ isOpen, onClose, currentGradient, onSelect }: G
       title="ფონის არჩევა"
       subtitle="აირჩიე შენი ოთახის ფერები"
     >
-      <div className="grid grid-cols-3 gap-3 p-4">
+      <div className="grid grid-cols-3 gap-3 p-4 pb-6">
         {ROOM_GRADIENTS.map((gradient) => (
           <motion.button
             key={gradient.id}

@@ -218,11 +218,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-sm mx-auto rounded-3xl border-none bg-background p-0 overflow-hidden max-h-[90vh]">
+      <DialogContent className="max-w-sm mx-auto rounded-3xl border-none bg-background p-0 overflow-hidden max-h-[90vh] flex flex-col">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-6 overflow-y-auto"
+          className="flex-1 p-6 overflow-y-auto min-h-0"
         >
           {/* Header */}
           <DialogHeader className="text-center mb-4">
@@ -393,20 +393,23 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             ))}
           </div>
           
-          {/* Copy Link Button */}
+        </motion.div>
+
+        {/* Fixed CTA footer */}
+        <div className="p-6 pt-3 border-t border-border/30 shrink-0 bg-background">
           <motion.button
             onClick={() => {
               navigator.clipboard.writeText(appLink);
               toast.success("ლინკი დაკოპირდა!");
             }}
-            className="w-full mt-4 py-2.5 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
             <Share2 className="w-4 h-4" />
             ლინკის კოპირება
           </motion.button>
-        </motion.div>
+        </div>
       </DialogContent>
     </Dialog>
   );
