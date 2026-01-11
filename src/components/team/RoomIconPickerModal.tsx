@@ -192,9 +192,9 @@ export function RoomIconPickerModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 px-4 pb-4 space-y-4 overflow-y-auto min-h-0">
+        <div className="flex-1 px-4 pt-2 pb-4 space-y-4 overflow-y-auto overflow-x-visible min-h-0">
           {/* Search input */}
-          <div className="relative px-1">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={searchQuery}
