@@ -280,6 +280,13 @@ export function useShopData() {
     // Section definitions
     const SHOP_SECTIONS: ShopSection[] = [
       {
+        id: "powers",
+        title: t("shop.powers"),
+        description: t("shop.advantage"),
+        videoSrc: "/videos/powers.mp4",
+        items: POWERS_ITEMS,
+      },
+      {
         id: "starter",
         title: t("shop.starterPack"),
         description: t("shop.forBeginners"),
@@ -299,13 +306,6 @@ export function useShopData() {
         description: t("shop.vipBenefits"),
         videoSrc: "/videos/vip.mp4",
         items: VIP_PROMO_ITEMS,
-      },
-      {
-        id: "powers",
-        title: t("shop.powers"),
-        description: t("shop.advantage"),
-        videoSrc: "/videos/powers.mp4",
-        items: POWERS_ITEMS,
       },
       {
         id: "frames",
