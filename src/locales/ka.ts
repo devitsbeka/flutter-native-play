@@ -213,7 +213,7 @@ export const ka = {
     victory: "გამარჯვება!",
     defeat: "წააგე",
     draw: "ფრე",
-    playAgain: "თავიდან ითამაშე",
+    playAgain: "კიდევ ითამაშე",
     backToHome: "მთავარზე დაბრუნება",
     pointsEarned: "+{points} ქულა",
     streakBonus: "სტრიკ ბონუსი!",
