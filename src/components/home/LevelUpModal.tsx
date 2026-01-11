@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gift } from "lucide-react";
 import { getLevelRewards } from "@/utils/levelCalculation";
@@ -5,8 +6,8 @@ import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { useLanguage } from "@/contexts/LanguageContext";
-import upgradeVideo from "@/assets/animations/upgrade.mp4";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import confetti from "canvas-confetti";
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -19,12 +20,50 @@ interface LevelUpModalProps {
 export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: LevelUpModalProps) {
   const { t } = useLanguage();
   const rewards = getLevelRewards(newLevel);
+  const confettiTriggered = useRef(false);
 
   // Calculate level-up coins and gems for DISPLAY ONLY
   const levelUpCoins = newLevel * REWARDS.LEVEL_UP_COINS_PER_LEVEL;
   const levelUpGems = newLevel >= REWARDS.LEVEL_UP_GEMS_THRESHOLD && newLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
     ? Math.floor(newLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD) 
     : 0;
+
+  // Fire confetti when modal opens
+  useEffect(() => {
+    if (isOpen && !confettiTriggered.current) {
+      confettiTriggered.current = true;
+      
+      // Initial burst
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.3 },
+        colors: ["#FFD700", "#FFA500", "#FFFFFF", "#8795EB"],
+      });
+
+      // Second burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ["#FFD700", "#FFA500", "#FFFFFF"],
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ["#FFD700", "#FFA500", "#FFFFFF"],
+        });
+      }, 250);
+    }
+    
+    if (!isOpen) {
+      confettiTriggered.current = false;
+    }
+  }, [isOpen]);
 
   return (
     <AnimatePresence>
@@ -43,43 +82,27 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-3xl font-bold text-white mb-6 text-center"
+              className="text-4xl font-bold text-white mb-8 text-center"
+              style={{ fontFamily: "'TASolivare', sans-serif" }}
             >
-              {t("modals.levelUp")} 🎉
+              {t("modals.levelUp")}
             </motion.h1>
-
-            {/* Animated Video Icon - No shadow/background */}
-            <motion.div
-              className="relative mx-auto mb-6"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.3, stiffness: 200 }}
-            >
-              <video 
-                src={upgradeVideo}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-40 h-40 object-contain"
-              />
-            </motion.div>
 
             {/* Level Badge - White elegant design */}
             <motion.div
               initial={{ scale: 0, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
-              className="relative w-28 h-28 mx-auto flex flex-col items-center justify-center rounded-full mb-4 bg-white border-4 border-white/50"
+              transition={{ type: "spring", delay: 0.3, stiffness: 200 }}
+              className="relative w-32 h-32 mx-auto flex flex-col items-center justify-center rounded-full mb-4 bg-white border-4 border-white/50"
               style={{
                 boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
               }}
             >
               <motion.span
-                className="text-5xl font-display font-bold text-[#8795EB]"
+                className="text-6xl font-display font-bold text-[#8795EB]"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", delay: 0.7, stiffness: 200 }}
+                transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
               >
                 {newLevel}
               </motion.span>
@@ -90,7 +113,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
+              transition={{ delay: 0.5 }}
               className="text-center text-white/90 text-lg font-medium mb-6"
             >
               {t("modals.levelLabel")} {previousLevel} → {t("modals.levelLabel")} {newLevel}
@@ -100,7 +123,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
+              transition={{ delay: 0.6 }}
               className="rounded-2xl p-5 w-full max-w-xs bg-white/95 backdrop-blur-sm"
               style={{
                 boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
