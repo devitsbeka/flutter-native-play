@@ -49,6 +49,7 @@ import AIGenerations from "./pages/admin/AIGenerations";
 import PushNotifications from "./pages/admin/PushNotifications";
 import AdminReports from "./pages/admin/Reports";
 import AdminFlow from "./pages/admin/Flow";
+import AdminDesign from "./pages/admin/Design";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
@@ -121,6 +122,7 @@ const App = () => (
                 <Route path="ai-generations" element={<AIGenerations />} />
                 <Route path="push" element={<PushNotifications />} />
                 <Route path="reports" element={<AdminReports />} />
+                <Route path="design" element={<AdminDesign />} />
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="/all-buttons" element={<AllButtons />} />
