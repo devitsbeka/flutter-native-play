@@ -530,7 +530,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               size="lg"
             >
               <Play className="w-5 h-5 mr-2" />
-              დაიწყე თამაში 🎮
+              მზადაა! 🚀
             </ChunkyButton>
           </div>
         )}
