@@ -464,7 +464,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
             <div className="flex items-center gap-2">
               {/* Horizontal scrolling friends */}
               <div className="flex-1 overflow-x-auto scrollbar-hide">
-                <div className="flex gap-3 pb-1 pt-1">
+                <div className="flex gap-3 pb-1 pt-1 pl-1">
                   {/* Invite via link button - FIRST */}
                   <motion.button
                     onClick={handleShareInviteLink}
