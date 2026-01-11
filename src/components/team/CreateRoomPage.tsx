@@ -2,13 +2,14 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play, Pencil } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play, Pencil, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { createNotification } from "@/hooks/useNotifications";
 // Room names are AI-generated via edge function during room creation
 import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
@@ -17,6 +18,7 @@ import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
+import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -59,13 +61,15 @@ interface Category {
   total_levels?: number;
 }
 
-type SelectionMode = "random" | "library" | "create" | null;
+type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
 
 interface CreateRoomPageProps {
   onClose: () => void;
+  challengeUserId?: string | null;
+  defaultChallengeType?: "random" | "library" | "my-trivias" | "create" | null;
 }
 
-export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType }: CreateRoomPageProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -95,6 +99,10 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
   const [showIconPickerModal, setShowIconPickerModal] = useState(false);
+  const [showMyTriviasModal, setShowMyTriviasModal] = useState(false);
+  
+  // Challenge mode state
+  const [challengeTrivia, setChallengeTrivia] = useState<{ id: string; title: string; type: "trivia" | "collection" } | null>(null);
   
   // Shuffle inspirational topics when menu opens
   const shuffledTopics = useMemo(() => {
@@ -102,9 +110,17 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
   }, [showCreateOptionsMenu]);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>(null);
   const [isSearchingRandom, setIsSearchingRandom] = useState(false);
+  const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
   
   // Track friends to invite with a ref so it's available when room is created
   const friendsToInviteRef = useRef<Set<string>>(new Set());
+  
+  // If challenge user provided, auto-add to selected friends
+  useEffect(() => {
+    if (challengeUserId) {
+      setSelectedFriends(new Set([challengeUserId]));
+    }
+  }, [challengeUserId]);
 
   // Only accepted friends
   const acceptedFriends = friends.filter(f => f.status === "accepted");
@@ -155,6 +171,31 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     generateRoomName();
   }, []);
 
+  // Auto-trigger based on challenge type
+  useEffect(() => {
+    if (hasAutoTriggered || loadingCategories || categories.length === 0) return;
+    
+    if (defaultChallengeType) {
+      setHasAutoTriggered(true);
+      
+      switch (defaultChallengeType) {
+        case "random":
+          selectRandomCategory();
+          break;
+        case "library":
+          setShowCategoriesModal(true);
+          break;
+        case "my-trivias":
+          setShowMyTriviasModal(true);
+          break;
+        case "create":
+          setShowCreateOptionsMenu(true);
+          setSelectionMode("create");
+          break;
+      }
+    }
+  }, [defaultChallengeType, hasAutoTriggered, loadingCategories, categories]);
+
   // Select random category with animation
   const selectRandomCategory = async () => {
     if (categories.length === 0) return;
@@ -198,11 +239,20 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
       selectRandomCategory();
     } else if (mode === "library") {
       setShowCategoriesModal(true);
+    } else if (mode === "my-trivias") {
+      setShowMyTriviasModal(true);
     } else if (mode === "create") {
       // Toggle the sub-menu for create options
       setShowCreateOptionsMenu(!showCreateOptionsMenu);
       setSelectionMode("create");
     }
+  };
+
+  const handleMyTriviaSelect = (item: { id: string; title: string; type: "trivia" | "collection" }) => {
+    setChallengeTrivia(item);
+    setSelectionMode("my-trivias");
+    // Update room name to trivia/collection title
+    setRoomName(item.title);
   };
 
   const handleCreateOptionSelect = (type: "trivia" | "collection") => {
@@ -247,7 +297,7 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     }
   };
 
-  const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library" || selectionMode === "create") && (selectedCategory !== null || selectionMode === "create");
+  const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library" || selectionMode === "create" || selectionMode === "my-trivias") && (selectedCategory !== null || selectionMode === "create" || (selectionMode === "my-trivias" && challengeTrivia !== null));
 
   // State for custom trivia questions
   const [customTriviaQuestions, setCustomTriviaQuestions] = useState<GeneratedQuestion[] | null>(null);
@@ -279,7 +329,49 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
     try {
       let room = null;
       
-      if (selectionMode === "create" && customTriviaQuestions) {
+      if (selectionMode === "my-trivias" && challengeTrivia) {
+        // Create room with trivia/collection reference
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("nickname, avatar_url, country_code")
+          .eq("user_id", user.id)
+          .single();
+
+        const { data: codeData } = await supabase.rpc("generate_room_code");
+        const roomCode = codeData || generateRoomCode();
+        
+        const { data: createdRoom, error } = await supabase
+          .from("game_rooms")
+          .insert({
+            room_code: roomCode,
+            host_user_id: user.id,
+            room_name: roomName,
+            room_icon: roomIcon,
+            game_type: "async",
+            game_mode: challengeTrivia.type === "collection" ? `collection:${challengeTrivia.id}` : `trivia:${challengeTrivia.id}`,
+            status: "waiting",
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Add host as participant
+        await supabase.from("room_participants").insert({
+          room_id: createdRoom.id,
+          user_id: user.id,
+          nickname: userProfile?.nickname || "Player",
+          avatar_url: userProfile?.avatar_url,
+          country_code: userProfile?.country_code || "GE",
+          is_host: true,
+          status: "joined",
+        });
+
+        room = createdRoom;
+        
+        // Navigate to room after creation
+        navigate(`/team?room=${roomCode}`);
+      } else if (selectionMode === "create" && customTriviaQuestions) {
         // Create room with custom trivia questions
         room = await createRoom(
           "custom", 
@@ -310,12 +402,61 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           // Then send notification
           await sendInvitation(friendId, room.id);
         }
+        
+        // If this is a challenge, also send a notification to the challenged user
+        if (challengeUserId && !acceptedFriends.find(f => f.friendId === challengeUserId)) {
+          // The user may not be in friends list, so add them as participant
+          const { data: targetProfile } = await supabase
+            .from("profiles")
+            .select("nickname, avatar_url, country_code")
+            .eq("user_id", challengeUserId)
+            .single();
+          
+          if (targetProfile) {
+            await addInvitedParticipant(
+              room.id,
+              challengeUserId,
+              targetProfile.nickname,
+              targetProfile.avatar_url,
+              targetProfile.country_code
+            );
+          }
+          await sendInvitation(challengeUserId, room.id);
+          
+          // Create challenge notification
+          const { data: userProfile } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("user_id", user.id)
+            .single();
+          
+          await createNotification(
+            challengeUserId,
+            "challenge",
+            `${userProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
+            roomName,
+            {
+              room_id: room.id,
+              room_code: room.room_code,
+              sender_id: user.id,
+            }
+          );
+        }
       }
     } catch (error) {
       console.error("Error creating room:", error);
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const generateRoomCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   };
 
 
@@ -951,6 +1092,13 @@ export function CreateRoomPage({ onClose }: CreateRoomPageProps) {
           setRoomIcon(iconUrl);
           setRoomName(newName);
         }}
+      />
+
+      {/* My Trivias Picker Modal */}
+      <MyTriviasPickerModal
+        open={showMyTriviasModal}
+        onOpenChange={setShowMyTriviasModal}
+        onSelect={handleMyTriviaSelect}
       />
     </motion.div>
   );
