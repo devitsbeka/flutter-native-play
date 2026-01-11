@@ -292,7 +292,7 @@ export function QuizGameScreenProd() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -305,7 +305,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Players Row - No VS */}
-      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
+      <div className="flex items-start justify-between px-4 pt-1 flex-shrink-0 z-10">
         {/* Player (Left) - Use user's profile avatar */}
         <QuizPlayerAvatar
           avatarUrl={profile?.avatar_url}
@@ -327,7 +327,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Question Card with 3D Icon Overlay */}
-      <div className="px-4 flex-shrink-0 mt-3 relative">
+      <div className="px-4 flex-shrink-0 mt-2 relative">
         {/* 3D Icon - Absolute positioned on top of question card */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20 w-32 h-32">
           <DynamicIcon 
@@ -353,7 +353,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center my-2 flex-shrink-0">
+      <div className="flex justify-center my-1 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -362,7 +362,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Answer Buttons - No Scroll */}
-      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
+      <div className="flex-1 px-4 flex flex-col gap-1 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
@@ -392,7 +392,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Bottom Area - Power-ups OR Next Button */}
-      <div className="px-4 pb-4 pt-2 flex-shrink-0">
+      <div className="px-4 pb-3 pt-1 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed ? (

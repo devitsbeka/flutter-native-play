@@ -56,8 +56,9 @@ export function useTrivia() {
 
       // Use unified questionService for all fetching
       const result = await getQuestions({
-        mode: 'vs',
+        mode: category ? 'category' : 'vs',
         categorySlug: category,
+        levelNumber: level,
         count: amount,
         excludeIds: excludeHashes,
       });
