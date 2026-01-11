@@ -1,101 +1,78 @@
-import { useState, Suspense, lazy, memo } from "react";
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, RotateCcw, Loader2 } from "lucide-react";
-import { MemoryRouter } from "react-router-dom";
+import { Minus, Plus, RotateCcw, Home, LogIn, Compass, Users, Trophy, User, Bell, Crown, Zap, Globe, FileText, Shield, HelpCircle, AlertCircle, Gamepad2, Tv, UserPlus } from "lucide-react";
 
-// Lazy load page components to avoid loading everything at once
-const Index = lazy(() => import("@/pages/Index"));
-const Auth = lazy(() => import("@/pages/Auth"));
-const Discover = lazy(() => import("@/pages/Discover"));
-const TeamV2 = lazy(() => import("@/pages/TeamV2"));
-const Leaderboards = lazy(() => import("@/pages/Leaderboards"));
-const Profile = lazy(() => import("@/pages/Profile"));
-const Notifications = lazy(() => import("@/pages/Notifications"));
-const VIP = lazy(() => import("@/pages/VIP"));
-const PowerUps = lazy(() => import("@/pages/PowerUps"));
-const WorldHome = lazy(() => import("@/pages/WorldHome"));
-const Support = lazy(() => import("@/pages/Support"));
-const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
-const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-
-// Page definitions with their components
+// Page definitions with icons and descriptions
 const pageCategories = [
   {
     title: "მთავარი გვერდები",
     pages: [
-      { id: "home", label: "მთავარი", sublabel: "Home", Component: Index },
-      { id: "auth", label: "ავტორიზაცია", sublabel: "Authentication", Component: Auth },
-      { id: "discover", label: "აღმოჩენა", sublabel: "Discover", Component: Discover },
-      { id: "team", label: "თიმი", sublabel: "Social Feed", Component: TeamV2 },
-      { id: "leaderboards", label: "ლიდერბორდი", sublabel: "Leaderboards", Component: Leaderboards },
-      { id: "profile", label: "პროფილი", sublabel: "Profile", Component: Profile },
-      { id: "notifications", label: "შეტყობინებები", sublabel: "Notifications", Component: Notifications },
+      { id: "home", route: "/", label: "მთავარი", sublabel: "Home", icon: Home, description: "მთავარი გვერდი კატეგორიების სიით და თამაშის დაწყებით" },
+      { id: "auth", route: "/auth", label: "ავტორიზაცია", sublabel: "Authentication", icon: LogIn, description: "რეგისტრაცია და შესვლის გვერდი" },
+      { id: "discover", route: "/discover", label: "აღმოჩენა", sublabel: "Discover", icon: Compass, description: "ახალი კატეგორიებისა და ტრივიების აღმოჩენა" },
+      { id: "team", route: "/team", label: "თიმი", sublabel: "Social Feed", icon: Users, description: "სოციალური ფიდი მომხმარებლის ტრივიებით" },
+      { id: "leaderboards", route: "/leaderboards", label: "ლიდერბორდი", sublabel: "Leaderboards", icon: Trophy, description: "რეიტინგები კატეგორიების მიხედვით" },
+      { id: "profile", route: "/profile", label: "პროფილი", sublabel: "Profile", icon: User, description: "მომხმარებლის პროფილი და სტატისტიკა" },
+      { id: "notifications", route: "/notifications", label: "შეტყობინებები", sublabel: "Notifications", icon: Bell, description: "შეტყობინებების ცენტრი" },
     ],
   },
   {
     title: "მაღაზია და VIP",
     pages: [
-      { id: "vip", label: "VIP", sublabel: "Subscription", Component: VIP },
-      { id: "powerups", label: "პაუერაფები", sublabel: "Power-Ups Shop", Component: PowerUps },
+      { id: "vip", route: "/vip", label: "VIP", sublabel: "Subscription", icon: Crown, description: "VIP სტატუსი და უპირატესობები" },
+      { id: "powerups", route: "/power-ups", label: "პაუერაფები", sublabel: "Power-Ups Shop", icon: Zap, description: "პაუერაფების მაღაზია" },
     ],
   },
   {
     title: "თამაშის ფლოუ",
     pages: [
-      { id: "world", label: "მსოფლიო", sublabel: "World Map", Component: WorldHome },
+      { id: "world", route: "/world", label: "მსოფლიო", sublabel: "World Map", icon: Globe, description: "მსოფლიო რუკა კონტინენტებით" },
+      { id: "category", route: "/category/:id", label: "კატეგორია", sublabel: "Category Detail", icon: Gamepad2, description: "კატეგორიის დეტალური გვერდი დონეებით" },
+      { id: "play", route: "/play/:categoryId/:levelId", label: "თამაში", sublabel: "Quiz Game", icon: Gamepad2, description: "ტრივიის თამაშის გვერდი" },
+    ],
+  },
+  {
+    title: "TV / მულტიპლეიერი",
+    pages: [
+      { id: "tv", route: "/tv", label: "TV ლობი", sublabel: "TV Lobby", icon: Tv, description: "TV მოდი მსხვილ ეკრანზე" },
+      { id: "join", route: "/join", label: "შეერთება", sublabel: "Join Game", icon: UserPlus, description: "თამაშზე შეერთების გვერდი" },
     ],
   },
   {
     title: "იურიდიული / დახმარება",
     pages: [
-      { id: "privacy", label: "კონფიდენციალურობა", sublabel: "Privacy Policy", Component: PrivacyPolicy },
-      { id: "terms", label: "წესები", sublabel: "Terms of Service", Component: TermsOfService },
-      { id: "support", label: "დახმარება", sublabel: "Support", Component: Support },
+      { id: "privacy", route: "/privacy-policy", label: "კონფიდენციალურობა", sublabel: "Privacy Policy", icon: Shield, description: "კონფიდენციალურობის პოლიტიკა" },
+      { id: "terms", route: "/terms", label: "წესები", sublabel: "Terms of Service", icon: FileText, description: "მომსახურების პირობები" },
+      { id: "support", route: "/support", label: "დახმარება", sublabel: "Support", icon: HelpCircle, description: "დახმარების ცენტრი და FAQ" },
     ],
   },
   {
     title: "შეცდომები",
     pages: [
-      { id: "notfound", label: "404", sublabel: "Not Found", Component: NotFound },
+      { id: "notfound", route: "/404", label: "404", sublabel: "Not Found", icon: AlertCircle, description: "გვერდი ვერ მოიძებნა" },
     ],
   },
 ];
 
-// Loading placeholder
-const LoadingPlaceholder = () => (
-  <div className="w-full h-full flex items-center justify-center bg-background">
-    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-  </div>
-);
-
-// Error boundary fallback
-const ErrorFallback = ({ name }: { name: string }) => (
-  <div className="w-full h-full flex flex-col items-center justify-center bg-destructive/10 p-4">
-    <p className="text-sm text-destructive font-medium text-center">
-      შეცდომა: {name}
-    </p>
-  </div>
-);
-
-// iPhone mockup component - memoized to prevent unnecessary re-renders
-const IPhoneMockup = memo(function IPhoneMockup({ 
-  id,
+// iPhone mockup component with placeholder content
+function IPhoneMockup({ 
+  route,
   label, 
-  sublabel, 
-  scale,
-  Component
+  sublabel,
+  icon: Icon,
+  description,
+  scale 
 }: { 
-  id: string;
+  route: string;
   label: string; 
   sublabel?: string; 
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
   scale: number;
-  Component: React.LazyExoticComponent<React.ComponentType<any>>;
 }) {
   const width = 375;
   const height = 812;
-  const [hasError, setHasError] = useState(false);
   
   return (
     <div 
@@ -122,7 +99,7 @@ const IPhoneMockup = memo(function IPhoneMockup({
         
         {/* Screen container */}
         <div 
-          className="relative rounded-[45px] overflow-hidden bg-background"
+          className="relative rounded-[45px] overflow-hidden bg-gradient-to-br from-primary/20 via-background to-primary/10"
           style={{ width, height }}
         >
           {/* Dynamic Island */}
@@ -131,27 +108,36 @@ const IPhoneMockup = memo(function IPhoneMockup({
           {/* Home indicator */}
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-36 h-1.5 bg-foreground/30 rounded-full z-50" />
           
-          {/* Page content - wrapped in isolated MemoryRouter */}
-          <div className="w-full h-full overflow-hidden">
-            {hasError ? (
-              <ErrorFallback name={label} />
-            ) : (
-              <MemoryRouter>
-                <Suspense fallback={<LoadingPlaceholder />}>
-                  <div 
-                    className="w-full h-full overflow-y-auto overflow-x-hidden"
-                    style={{ 
-                      // Disable all interactions in preview mode
-                      pointerEvents: 'none',
-                      // Force mobile viewport feel
-                      touchAction: 'none'
-                    }}
-                  >
-                    <Component />
-                  </div>
-                </Suspense>
-              </MemoryRouter>
-            )}
+          {/* Page placeholder content */}
+          <div className="w-full h-full flex flex-col items-center justify-center p-8 pt-16">
+            {/* Large Icon */}
+            <div className="w-24 h-24 rounded-3xl bg-primary/20 flex items-center justify-center mb-6">
+              <Icon className="w-12 h-12 text-primary" />
+            </div>
+            
+            {/* Page Title */}
+            <h3 className="text-2xl font-bold text-foreground mb-2 text-center">{label}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{sublabel}</p>
+            
+            {/* Route Badge */}
+            <div className="px-3 py-1.5 rounded-full bg-muted text-xs font-mono text-muted-foreground mb-6">
+              {route}
+            </div>
+            
+            {/* Description */}
+            <p className="text-sm text-center text-muted-foreground leading-relaxed max-w-[280px]">
+              {description}
+            </p>
+            
+            {/* Mock UI Elements */}
+            <div className="mt-8 w-full space-y-3 px-4">
+              <div className="h-10 rounded-xl bg-muted/50 animate-pulse" />
+              <div className="h-10 rounded-xl bg-muted/30 animate-pulse" />
+              <div className="flex gap-3">
+                <div className="h-20 flex-1 rounded-xl bg-muted/40 animate-pulse" />
+                <div className="h-20 flex-1 rounded-xl bg-muted/40 animate-pulse" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -165,7 +151,7 @@ const IPhoneMockup = memo(function IPhoneMockup({
       </div>
     </div>
   );
-});
+}
 
 export default function Design() {
   const [scale, setScale] = useState(0.5);
@@ -240,11 +226,12 @@ export default function Design() {
                   {category.pages.map((page) => (
                     <IPhoneMockup
                       key={page.id}
-                      id={page.id}
+                      route={page.route}
                       label={page.label}
                       sublabel={page.sublabel}
+                      icon={page.icon}
+                      description={page.description}
                       scale={scale}
-                      Component={page.Component}
                     />
                   ))}
                 </div>
