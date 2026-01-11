@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
+import { ChallengeTypeModal } from "@/components/challenge/ChallengeTypeModal";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 
@@ -40,6 +41,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const { data, loading } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
 
   const getFlagEmoji = (countryCode: string) => {
     const codePoints = countryCode
@@ -70,9 +72,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   };
 
   const handleChallenge = () => {
-    // TODO: Implement challenge flow
-    toast.info("გამოწვევის ფუნქცია მალე!");
-    onClose();
+    setChallengeModalOpen(true);
   };
 
   const handleMessage = () => {
@@ -366,6 +366,18 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
         onClose={() => setChatOpen(false)}
         friendId={userId}
         friendProfile={data?.profile ? {
+          nickname: data.profile.nickname,
+          avatar_url: data.profile.avatar_url,
+          animated_avatar_url: data.profile.animated_avatar_url,
+        } : null}
+      />
+
+      {/* Challenge Modal */}
+      <ChallengeTypeModal
+        isOpen={challengeModalOpen}
+        onClose={() => setChallengeModalOpen(false)}
+        targetUserId={userId || ""}
+        targetUserProfile={data?.profile ? {
           nickname: data.profile.nickname,
           avatar_url: data.profile.avatar_url,
           animated_avatar_url: data.profile.animated_avatar_url,
