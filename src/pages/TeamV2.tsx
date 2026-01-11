@@ -41,6 +41,8 @@ import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
 import { GenerationQueueDropdown } from "@/components/generation/GenerationQueueDropdown";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function TeamContentV2() {
   const navigate = useNavigate();
@@ -177,6 +179,120 @@ function TeamContentV2() {
       setSearchParams(searchParams, { replace: true });
     }
   }, [searchParams, user, setSearchParams, setShowCreateModal]);
+
+  // Handle playTrivia and playCollection from URL (from PlayerProfileModal)
+  useEffect(() => {
+    const playTriviaId = searchParams.get("playTrivia");
+    const playCollectionId = searchParams.get("playCollection");
+    
+    if (playTriviaId && user) {
+      // Clear URL param first
+      searchParams.delete("playTrivia");
+      setSearchParams(searchParams, { replace: true });
+      
+      // Fetch and play trivia
+      (async () => {
+        try {
+          const { data: trivia, error } = await supabase
+            .from("user_quiz_posts")
+            .select("*, profiles:user_id(nickname, avatar_url)")
+            .eq("id", playTriviaId)
+            .single();
+          
+          if (error || !trivia) {
+            toast.error("ტრივია ვერ მოიძებნა");
+            return;
+          }
+          
+          const post: SamplePost = {
+            id: trivia.id,
+            username: (trivia.profiles as any)?.nickname || "user",
+            displayName: (trivia.profiles as any)?.nickname || "მომხმარებელი",
+            avatarUrl: (trivia.profiles as any)?.avatar_url || "",
+            verified: false,
+            createdAt: trivia.created_at || new Date().toISOString(),
+            title: trivia.title,
+            description: trivia.description || "",
+            subject: trivia.subject,
+            hashtags: trivia.hashtags || [],
+            coverGradient: trivia.cover_gradient,
+            coverImage: trivia.cover_image || undefined,
+            questionCount: trivia.question_count,
+            answerFormat: trivia.answer_format as '4_answers' | 'true_false',
+            likesCount: trivia.likes_count || 0,
+            playsCount: trivia.plays_count || 0,
+            commentsCount: 0,
+            questions: (trivia.questions as any[]) || [],
+            isPublic: trivia.is_public,
+          };
+          
+          setPlayingQuiz({ post });
+        } catch (err) {
+          toast.error("შეცდომა მოხდა");
+        }
+      })();
+    }
+    
+    if (playCollectionId && user) {
+      // Clear URL param first
+      searchParams.delete("playCollection");
+      setSearchParams(searchParams, { replace: true });
+      
+      // Fetch and play collection
+      (async () => {
+        try {
+          const { data: collection, error: collError } = await supabase
+            .from("quiz_collections")
+            .select("*, profiles:user_id(nickname, avatar_url)")
+            .eq("id", playCollectionId)
+            .single();
+          
+          if (collError || !collection) {
+            toast.error("კოლექცია ვერ მოიძებნა");
+            return;
+          }
+          
+          const { data: rounds } = await supabase
+            .from("user_quiz_posts")
+            .select("*")
+            .eq("collection_id", playCollectionId)
+            .order("round_number", { ascending: true });
+          
+          if (!rounds || rounds.length === 0) {
+            toast.error("კოლექციაში რაუნდები ვერ მოიძებნა");
+            return;
+          }
+          
+          const posts: SamplePost[] = rounds.map(r => ({
+            id: r.id,
+            username: (collection.profiles as any)?.nickname || "user",
+            displayName: (collection.profiles as any)?.nickname || "მომხმარებელი",
+            avatarUrl: (collection.profiles as any)?.avatar_url || "",
+            verified: false,
+            createdAt: r.created_at || new Date().toISOString(),
+            title: r.title,
+            description: r.description || "",
+            subject: r.subject,
+            hashtags: r.hashtags || [],
+            coverGradient: r.cover_gradient,
+            coverImage: r.cover_image || undefined,
+            questionCount: r.question_count,
+            answerFormat: r.answer_format as '4_answers' | 'true_false',
+            likesCount: r.likes_count || 0,
+            playsCount: r.plays_count || 0,
+            commentsCount: 0,
+            questions: (r.questions as any[]) || [],
+            isPublic: r.is_public,
+            roundNumber: r.round_number,
+          }));
+          
+          setPlayingQuiz({ post: posts[0], collectionPosts: posts });
+        } catch (err) {
+          toast.error("შეცდომა მოხდა");
+        }
+      })();
+    }
+  }, [searchParams, user, setSearchParams]);
 
   // Handle accepting invitation
   const handleAcceptInvitation = async (invitationId: string) => {
