@@ -51,13 +51,13 @@ export function RoomFiltersBar({
   const currentSortLabel = sortOptions.find((opt) => opt.value === sort)?.label || "ბოლო აქტივობით";
 
   return (
-    <div className="flex items-center gap-2 px-4 py-3 overflow-hidden">
+    <div className="flex items-center gap-2 px-4 py-1.5 overflow-hidden">
       {/* Combined Filter & Sort Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/50 border border-border/30 hover:!bg-card/60 hover:border-border/50 min-w-0 flex-shrink"
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:!bg-muted hover:border-border/50 min-w-0 flex-shrink"
           >
             <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm font-medium truncate">
@@ -137,7 +137,7 @@ export function RoomFiltersBar({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSearchOpen(true)}
-                className="h-9 w-9 rounded-full bg-card/50 border border-border/30 hover:bg-card/80"
+                className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:!bg-muted hover:border-border/50"
               >
                 <Search className="h-4 w-4 text-muted-foreground" />
               </Button>
