@@ -171,6 +171,15 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
     return date.toLocaleTimeString("ka-GE", { hour: "2-digit", minute: "2-digit" });
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ka-GE", { 
+      day: "numeric", 
+      month: "short",
+      year: "numeric"
+    });
+  };
+
   const selectedRoom = rooms.find(r => r.id === selectedRoomId);
 
   return (
@@ -201,7 +210,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   <MessageCircle className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-lg">ოთახის ჩატები</h2>
+                  <h2 className="font-bold text-lg">ჩატი</h2>
                   <p className="text-xs text-muted-foreground">
                     {rooms.length} ოთახი
                   </p>
@@ -252,32 +261,30 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
               )}
             </div>
 
-            {/* Selected room header */}
+            {/* Selected room header - show players and creation date */}
             {selectedRoom && (
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 bg-muted/30">
-                {selectedRoom.room_icon && (
-                  <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center">
-                    <img src={selectedRoom.room_icon} alt="" className="w-6 h-6 object-contain" />
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 bg-muted/30">
+                {/* Participants avatars */}
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    {selectedRoom.participants.map((p) => (
+                      <Avatar key={p.user_id} className="w-8 h-8 border-2 border-background">
+                        <AvatarImage src={p.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs bg-muted font-bold">
+                          {p.nickname?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm truncate">
-                    {selectedRoom.room_name || selectedRoom.category_name || "თამაშის ოთახი"}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <span className="text-sm text-muted-foreground ml-2">
                     {selectedRoom.participants.length} მონაწილე
-                  </p>
+                  </span>
                 </div>
-                <div className="flex -space-x-2">
-                  {selectedRoom.participants.slice(0, 4).map((p) => (
-                    <Avatar key={p.user_id} className="w-7 h-7 border-2 border-background">
-                      <AvatarImage src={p.avatar_url || undefined} />
-                      <AvatarFallback className="text-[10px] bg-muted font-bold">
-                        {p.nickname?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                </div>
+                
+                {/* Room creation date */}
+                <p className="text-xs text-muted-foreground">
+                  შექმნილი: {formatDate(selectedRoom.created_at)}
+                </p>
               </div>
             )}
 
