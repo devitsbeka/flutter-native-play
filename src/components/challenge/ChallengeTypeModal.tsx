@@ -293,16 +293,18 @@ export function ChallengeTypeModal({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => handleOptionSelect(option.id)}
-                      className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden`}
+                      className={`p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="absolute top-2 right-2 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                        <option.icon className="w-5 h-5" />
-                      </div>
-                      <div className="mt-8">
-                        <p className="font-bold">{option.title}</p>
-                        <p className="text-xs text-white/80">{option.description}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <option.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-bold">{option.title}</p>
+                          <p className="text-xs text-white/80">{option.description}</p>
+                        </div>
                       </div>
                     </motion.button>
                   ))}
