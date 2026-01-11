@@ -811,7 +811,7 @@ export const ka = {
     getFreeCoins: "აიღე უფასო მონეტები",
     myPowers: "ჩემი ძალები",
     goToShop: "მაღაზიაში გადასვლა",
-    levelUp: "დონე აიწია! 🎉",
+    levelUp: "დონემ აიწია!",
     levelLabel: "დონე",
     rewards: "ჯილდოები",
     coin: "მონეტა",
