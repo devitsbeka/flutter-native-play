@@ -1,142 +1,141 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, BellOff, CheckCheck, Check, Trash2 } from 'lucide-react';
+import { Bell, BellOff, Check, X } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useFriends } from '@/hooks/useFriends';
+import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
-import { getNotificationConfig, NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
+import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
+import { PingPongVideo } from '@/components/shared/PingPongVideo';
+import { MAP_VIDEOS } from '@/config/videoConfig';
 
-type FilterType = 'all' | 'unread' | 'friends' | 'games' | 'rewards';
+type FilterType = 'all' | 'unread' | 'social' | 'games';
 
 function NotificationCard({
   notification,
   onMarkRead,
-  onDelete,
   onNavigate,
-  t,
+  onAcceptFriend,
+  onDeclineFriend,
+  onAcceptInvite,
+  onDeclineInvite,
+  actionLoading,
   dateLocale,
 }: {
   notification: Notification;
   onMarkRead: (id: string) => void;
-  onDelete: (id: string) => void;
   onNavigate: (notification: Notification) => void;
-  t: (key: string) => string;
+  onAcceptFriend?: (friendshipId: string, notificationId: string) => void;
+  onDeclineFriend?: (friendshipId: string, notificationId: string) => void;
+  onAcceptInvite?: (invitationId: string, notificationId: string) => void;
+  onDeclineInvite?: (invitationId: string, notificationId: string) => void;
+  actionLoading?: string | null;
   dateLocale: typeof ka;
 }) {
   const isUnread = !notification.read_at;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), { 
-    addSuffix: true,
+    addSuffix: false,
     locale: dateLocale 
   });
+  
+  const isFriendRequest = notification.type === 'friend_request';
+  const isGameInvite = notification.type === 'challenge';
+  const hasActions = (isFriendRequest || isGameInvite) && isUnread;
+  const isLoading = actionLoading === notification.id;
 
-  const data = notification.data as {
-    sender_nickname?: string;
-    sender_avatar_url?: string;
-    category_name?: string;
-    [key: string]: unknown;
+  const handleAccept = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFriendRequest && notification.data?.friendship_id) {
+      onAcceptFriend?.(notification.data.friendship_id as string, notification.id);
+    } else if (isGameInvite && notification.data?.invitation_id) {
+      onAcceptInvite?.(notification.data.invitation_id as string, notification.id);
+    }
   };
 
-  const hasSenderInfo = data?.sender_nickname || data?.sender_avatar_url;
-  const config = getNotificationConfig(notification.type);
-  const IconComponent = config.icon;
+  const handleDecline = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFriendRequest && notification.data?.friendship_id) {
+      onDeclineFriend?.(notification.data.friendship_id as string, notification.id);
+    } else if (isGameInvite && notification.data?.invitation_id) {
+      onDeclineInvite?.(notification.data.invitation_id as string, notification.id);
+    }
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -100 }}
+      exit={{ opacity: 0, x: -20 }}
       className={cn(
-        "relative p-4 rounded-2xl border transition-all cursor-pointer",
+        "relative px-4 py-4 rounded-2xl transition-all group border-l-4",
         isUnread
-          ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
-          : "bg-card/50 border-border/50 hover:bg-card/80"
+          ? "bg-card/90 backdrop-blur-sm border-l-primary"
+          : "bg-card/70 backdrop-blur-sm border-l-transparent",
+        !hasActions && "cursor-pointer hover:bg-card"
       )}
       onClick={() => {
-        if (isUnread) {
-          onMarkRead(notification.id);
+        if (!hasActions) {
+          if (isUnread) onMarkRead(notification.id);
+          onNavigate(notification);
         }
-        onNavigate(notification);
       }}
     >
-      {isUnread && (
-        <div className="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-      )}
-
       <div className="flex items-start gap-3">
-        {hasSenderInfo ? (
-          <div className="relative flex-shrink-0">
-            <Avatar className="w-12 h-12 border-2 border-primary/20">
-              <AvatarImage src={data.sender_avatar_url} alt={data.sender_nickname} />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                {data.sender_nickname?.charAt(0)?.toUpperCase() || '?'}
-              </AvatarFallback>
-            </Avatar>
-            <div className={cn("absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-card", config.bgColor)}>
-              <IconComponent className={cn("w-3 h-3", config.color)} />
-            </div>
-          </div>
-        ) : (
-          <NotificationBadge type={notification.type} size="lg" />
-        )}
+        {/* Icon */}
+        <NotificationBadge type={notification.type} size="lg" />
 
-        <div className="flex-1 min-w-0 pr-8">
-          {data?.sender_nickname && (
-            <p className="font-bold text-sm text-foreground mb-0.5">{data.sender_nickname}</p>
-          )}
-          <p className={cn("text-sm line-clamp-1", isUnread && !data?.sender_nickname ? "font-bold text-foreground" : "text-muted-foreground")}>
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <p className={cn(
+            "font-bold text-base",
+            isUnread ? "text-foreground" : "text-muted-foreground"
+          )}>
             {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
           </p>
           {notification.message && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
               {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
             </p>
           )}
-          {data?.category_name && (
-            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-primary/10 text-xs text-primary font-medium">
-              {t('notifications.category')}: {data.category_name}
-            </span>
-          )}
-          <p className="text-xs text-muted-foreground/60 mt-2">{timeAgo}</p>
-        </div>
-      </div>
+          <p className="text-xs text-muted-foreground/70 mt-1.5">
+            {timeAgo}
+          </p>
 
-      {/* Actions row */}
-      <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-border/30">
-        {isUnread && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMarkRead(notification.id);
-            }}
-            className="h-8 px-3 text-xs gap-1.5"
-          >
-            <Check className="w-3.5 h-3.5" />
-            {t('notifications.markAsRead')}
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(notification.id);
-          }}
-          className="h-8 px-3 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          {t('notifications.delete')}
-        </Button>
+          {/* Action buttons for friend requests and game invites */}
+          {hasActions && (
+            <div className="flex gap-2 mt-3">
+              <motion.button
+                onClick={handleAccept}
+                disabled={isLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Check className="w-4 h-4" />
+                {isFriendRequest ? "მიღება" : "შესვლა"}
+              </motion.button>
+              <motion.button
+                onClick={handleDecline}
+                disabled={isLoading}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 text-red-600 hover:bg-red-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <X className="w-4 h-4" />
+                უარყოფა
+              </motion.button>
+            </div>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -146,7 +145,10 @@ export default function Notifications() {
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { acceptFriendRequest, declineFriendRequest } = useFriends();
+  const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const dateLocale = language === 'ka' ? ka : enUS;
 
@@ -154,19 +156,75 @@ export default function Notifications() {
     switch (filter) {
       case 'unread':
         return !n.read_at;
-      case 'friends':
+      case 'social':
         return NOTIFICATION_FILTER_CATEGORIES.social.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.social[number]);
       case 'games':
         return NOTIFICATION_FILTER_CATEGORIES.games.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.games[number]);
-      case 'rewards':
-        return NOTIFICATION_FILTER_CATEGORIES.rewards.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.rewards[number]);
       default:
         return true;
     }
   });
 
+  const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      await acceptFriendRequest(friendshipId);
+      await markAsRead(notificationId);
+      toast.success("მეგობრის მოთხოვნა მიღებულია!");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeclineFriend = async (friendshipId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      await declineFriendRequest(friendshipId);
+      await deleteNotification(notificationId);
+      toast.success("მოთხოვნა უარყოფილია");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAcceptInvite = async (invitationId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      const roomCode = await acceptInvitation(invitationId);
+      await markAsRead(notificationId);
+      if (roomCode) {
+        navigate(`/team?join=${roomCode}`);
+      }
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeclineInvite = async (invitationId: string, notificationId: string) => {
+    setActionLoading(notificationId);
+    try {
+      await declineInvitation(invitationId);
+      await deleteNotification(notificationId);
+      toast.success("მოწვევა უარყოფილია");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleNavigate = (notification: Notification) => {
     const data = notification.data as Record<string, unknown>;
+    
+    if (!notification.read_at) {
+      markAsRead(notification.id);
+    }
     
     switch (notification.type) {
       case 'game_started':
@@ -207,106 +265,107 @@ export default function Notifications() {
   };
 
   const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: t('notifications.all') },
-    { key: 'unread', label: t('notifications.unread') },
-    { key: 'friends', label: t('notifications.social') },
-    { key: 'games', label: t('notifications.games') },
-    { key: 'rewards', label: t('notifications.rewards') },
+    { key: 'all', label: 'ყველა' },
+    { key: 'unread', label: 'წაუკითხავი' },
+    { key: 'social', label: 'სოციალური' },
+    { key: 'games', label: 'თამაშები' },
   ];
 
+  // Mark all as read when page loads
+  useState(() => {
+    if (unreadCount > 0) {
+      markAllAsRead();
+    }
+  });
+
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen pb-24 relative overflow-hidden">
+      {/* Video Background */}
+      <div className="fixed inset-0">
+        <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/50">
-        <div className="flex items-center gap-3 p-4">
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-full"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="font-bold text-xl">{t('notifications.title')}</h1>
-            {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {unreadCount} {t('notifications.unread').toLowerCase()}
-              </p>
-            )}
+      <div className="relative z-10 px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <Bell className="w-6 h-6 text-primary" />
+            </div>
+            <h2 className="font-bold text-xl text-foreground">შეტყობინებები</h2>
           </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+          >
+            <X className="w-5 h-5 text-foreground" />
+          </button>
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-2 px-4 pb-4 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {filters.map((f) => (
-            <Button
+            <motion.button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              variant={filter === f.key ? "default" : "secondary"}
-              size="sm"
-              className="rounded-full flex-shrink-0"
+              className={cn(
+                "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border",
+                filter === f.key
+                  ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/25"
+                  : "bg-card/80 backdrop-blur-sm text-foreground border-border/50 hover:bg-card"
+              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {f.label}
-              {f.key === 'unread' && unreadCount > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary-foreground/20 text-xs">
-                  {unreadCount}
-                </span>
-              )}
-            </Button>
+            </motion.button>
           ))}
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
-        {/* Mark all as read button - moved here */}
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            onClick={markAllAsRead}
-            className="w-full gap-2"
-          >
-            <CheckCheck className="w-4 h-4" />
-            {t('notifications.markAllAsRead')}
-          </Button>
-        )}
-
+      <div className="relative z-10 px-2 pb-8">
         {loading ? (
           <div className="flex flex-col items-center py-12">
-            <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-muted-foreground mt-4">{t('notifications.loading')}</p>
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground mt-3">იტვირთება...</p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="flex flex-col items-center py-12">
-            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
-              <BellOff className="w-12 h-12 text-muted-foreground" />
+            <div className="w-20 h-20 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
+              <BellOff className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h3 className="font-bold text-lg text-foreground mb-2">{t('notifications.noNotifications')}</h3>
-            <p className="text-sm text-muted-foreground text-center max-w-[280px]">
+            <h3 className="font-bold text-lg text-foreground mb-2">შეტყობინებები არ არის</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-[250px]">
               {filter === 'unread'
-                ? t('notifications.allRead')
-                : filter === 'friends'
-                ? t('notifications.noFriendActivity')
+                ? "ყველა შეტყობინება წაკითხულია"
+                : filter === 'social'
+                ? "სოციალური აქტივობა არ არის"
                 : filter === 'games'
-                ? t('notifications.noGameNotifications')
-                : t('notifications.whenSomethingHappens')}
+                ? "თამაშის შეტყობინებები არ არის"
+                : "როცა რამე მოხდება, აქ გამოჩნდება"}
             </p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredNotifications.map((notification) => (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                onMarkRead={markAsRead}
-                onDelete={deleteNotification}
-                onNavigate={handleNavigate}
-                t={t}
-                dateLocale={dateLocale}
-              />
-            ))}
-          </AnimatePresence>
+          <div className="space-y-2 px-2">
+            <AnimatePresence mode="popLayout">
+              {filteredNotifications.map((notification) => (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  onMarkRead={markAsRead}
+                  onNavigate={handleNavigate}
+                  onAcceptFriend={handleAcceptFriend}
+                  onDeclineFriend={handleDeclineFriend}
+                  onAcceptInvite={handleAcceptInvite}
+                  onDeclineInvite={handleDeclineInvite}
+                  actionLoading={actionLoading}
+                  dateLocale={dateLocale}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         )}
       </div>
 
