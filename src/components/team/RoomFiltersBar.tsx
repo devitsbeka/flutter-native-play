@@ -51,7 +51,7 @@ export function RoomFiltersBar({
   const currentSortLabel = sortOptions.find((opt) => opt.value === sort)?.label || "ბოლო აქტივობით";
 
   return (
-    <div className="flex items-center gap-2 px-4 py-1.5 overflow-hidden">
+    <div className="flex items-center gap-2 px-4 py-2">
       {/* Combined Filter & Sort Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
