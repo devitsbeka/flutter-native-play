@@ -21,36 +21,15 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
-// Import video animations
-import wonVideo from "@/assets/animations/won.mp4";
-import lostVideo from "@/assets/animations/lost.mp4";
-
-// Animated video icon component with ping-pong effect
-const AnimatedResultIcon = ({ videoSrc }: { videoSrc: string }) => {
-  return (
-    <motion.div
-      initial={{ scale: 0, y: 50, opacity: 0 }}
-      animate={{ 
-        scale: 1, 
-        y: 0, 
-        opacity: 1,
-      }}
-      transition={{ 
-        scale: { type: "spring", stiffness: 200, damping: 15 },
-        opacity: { duration: 0.3 }
-      }}
-      className="relative"
-    >
-      <video 
-        src={videoSrc}
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="w-40 h-40 object-contain relative"
-      />
-    </motion.div>
-  );
+// Compact number formatter (1.3m, 2.5k, etc.)
+const formatCompactNumber = (num: number): string => {
+  if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'm';
+  }
+  if (num >= 1_000) {
+    return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
 };
 
 // Floating confetti component with looping effect
@@ -106,6 +85,7 @@ const PlayerCard = ({
   isWinner,
   winnerLabel,
   coinChange,
+  formatNumber,
 }: { 
   avatarUrl?: string | null; 
   name: string;
@@ -113,6 +93,7 @@ const PlayerCard = ({
   level: number;
   isWinner: boolean;
   winnerLabel: string;
+  formatNumber: (n: number) => string;
   coinChange?: number;
 }) => (
   <motion.div 
@@ -204,9 +185,9 @@ const PlayerCard = ({
       className="flex flex-col items-center mt-1"
     >
       <div className="flex items-center gap-1.5">
-        <img src={coinIcon} alt="" className="w-6 h-6" />
-        <span className="text-3xl font-black" style={{ color: "#F5A623" }}>
-          {coinBalance.toLocaleString()}
+        <img src={coinIcon} alt="" className="w-5 h-5" />
+        <span className="text-2xl font-black" style={{ color: "#F5A623" }}>
+          {formatNumber(coinBalance)}
         </span>
       </div>
       <span className="text-white/70 text-xs font-medium">
@@ -400,27 +381,14 @@ export function MatchResultScreen() {
   const userLevel = calculateLevel(profile?.total_points || 0).level;
   const opponentLevel = Math.floor(Math.random() * 5) + 1; // Mock opponent level
 
-  // Get result icon and colors based on outcome
-  const getResultConfig = () => {
-    if (isWin) {
-      return {
-        icon: <AnimatedResultIcon videoSrc={wonVideo} />,
-        text: t("game.victory"),
-      };
-    }
-    if (isDraw) {
-      return {
-        icon: <Target className="w-16 h-16 text-white" />,
-        text: t("game.tie"),
-      };
-    }
-    return {
-      icon: <AnimatedResultIcon videoSrc={lostVideo} />,
-      text: t("game.lose"),
-    };
+  // Get result text based on outcome
+  const getResultText = () => {
+    if (isWin) return t("game.victory");
+    if (isDraw) return t("game.tie");
+    return t("game.lose");
   };
 
-  const resultConfig = getResultConfig();
+  const resultText = getResultText();
 
   return (
     <>
@@ -457,29 +425,19 @@ export function MatchResultScreen() {
         </motion.div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center px-6 pt-2 relative z-10">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
           
-          {/* Result Icon */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="mb-4"
-          >
-            {resultConfig.icon}
-          </motion.div>
-
           {/* Result Text */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-4xl font-black mb-10 text-white"
+            transition={{ delay: 0.1 }}
+            className="text-5xl font-black mb-8 text-white"
             style={{
               fontFamily: "'TASolivare', sans-serif",
             }}
           >
-            {resultConfig.text}
+            {resultText}
           </motion.h1>
 
           {/* Players Side by Side */}
@@ -493,22 +451,24 @@ export function MatchResultScreen() {
             <PlayerCard 
               avatarUrl={profile?.avatar_url} 
               name={profile?.nickname || t("game.you")}
-              coinBalance={profile?.coins || 0}
+              coinBalance={profile?.total_points || 0}
               level={userLevel}
               isWinner={isWin}
               winnerLabel={t("game.winner")}
               coinChange={isLose ? -Math.abs(netLoss) : isWin ? netWinProfit : undefined}
+              formatNumber={formatCompactNumber}
             />
 
             {/* Opponent */}
             <PlayerCard 
               avatarUrl={opponent?.avatarUrl} 
               name={opponent?.name || t("game.opponent")}
-              coinBalance={Math.floor(Math.random() * 5000) + 500}
+              coinBalance={opponent?.points || 0}
               level={opponentLevel}
               isWinner={!isWin && !isDraw}
               winnerLabel={t("game.winner")}
               coinChange={isLose ? Math.abs(netLoss) : isWin ? -netWinProfit : undefined}
+              formatNumber={formatCompactNumber}
             />
           </motion.div>
 
