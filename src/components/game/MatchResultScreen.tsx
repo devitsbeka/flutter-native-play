@@ -406,8 +406,8 @@ export function MatchResultScreen() {
           background: "#858EE7",
         }}
       >
-        {/* Floating Confetti Effect */}
-        <FloatingConfetti />
+        {/* Floating Confetti Effect - Only show on win */}
+        {isWin && <FloatingConfetti />}
 
         {/* Header */}
         <motion.div 
