@@ -685,7 +685,7 @@ function TeamContentV2() {
       <CreateTriviaTypeModal
         open={showCreateTypeModal}
         onOpenChange={setShowCreateTypeModal}
-        onSelectSingle={() => setShowBlindTriviaModal(true)}
+        onSelectSingle={() => setShowCreateQuizModal(true)}
         onSelectCollection={() => setShowCreateCollectionModal(true)}
       />
       <CreateBlindTriviaModal
