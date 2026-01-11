@@ -55,16 +55,13 @@ export function RoomFiltersBar({
       {/* Combined Filter & Sort Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:bg-transparent min-w-0 flex-shrink"
-          >
+          <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 min-w-0 flex-shrink">
             <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm font-medium truncate">
               {currentFilterLabel} • {currentSortLabel}
             </span>
             <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          </Button>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
           <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
@@ -119,29 +116,25 @@ export function RoomFiltersBar({
                 className="h-9 w-40 rounded-full bg-card/50 border-border/30"
                 autoFocus
               />
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={() => {
                   setIsSearchOpen(false);
                   onSearchQueryChange("");
                 }}
-                className="h-8 w-8 rounded-full hover:bg-transparent"
+                className="h-8 w-8 rounded-full flex items-center justify-center"
               >
                 <X className="h-4 w-4" />
-              </Button>
+              </button>
             </motion.div>
           ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSearchOpen(true)}
-                className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:bg-transparent"
-              >
-                <Search className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </motion.div>
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => setIsSearchOpen(true)}
+              className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 flex items-center justify-center"
+            >
+              <Search className="h-4 w-4 text-muted-foreground" />
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
