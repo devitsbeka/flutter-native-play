@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Dice5, Library, Gamepad2, Sparkles } from "lucide-react";
+import { X, Dice5, Library, Gamepad2, Sparkles, Loader2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { LibraryCategoryPicker } from "./LibraryCategoryPicker";
@@ -9,6 +9,8 @@ import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { createNotification } from "@/hooks/useNotifications";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChallengeTypeModalProps {
   isOpen: boolean;
@@ -61,8 +63,10 @@ export function ChallengeTypeModal({
   targetUserProfile,
 }: ChallengeTypeModalProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<ChallengeStep>("select-type");
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOptionSelect = async (optionId: string) => {
     switch (optionId) {
@@ -82,6 +86,9 @@ export function ChallengeTypeModal({
   };
 
   const handleRandomChallenge = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    
     try {
       // Fetch a random category
       const { data: categories, error } = await supabase
@@ -101,26 +108,38 @@ export function ChallengeTypeModal({
     } catch (err) {
       console.error("Error creating random challenge:", err);
       toast.error("შეცდომა მოხდა");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCategorySelect = async (category: { id: string; name: string }) => {
-    await createChallengeRoom(category.id, category.name);
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await createChallengeRoom(category.id, category.name);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTriviaSelect = async (trivia: { id: string; title: string; type: "trivia" | "collection" }) => {
-    // For user-created trivias, we'll create a room with reference to the trivia
+    if (isLoading || !user) return;
+    setIsLoading(true);
+    
     try {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) {
-        toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
-        return;
-      }
+      // Get user's profile for participant info
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("nickname, avatar_url, country_code")
+        .eq("user_id", user.id)
+        .single();
 
-      // Generate room code using the database function
+      // Generate room code
       const { data: codeData } = await supabase.rpc("generate_room_code");
       const roomCode = codeData || generateRoomCode();
       
+      // Create room with trivia reference stored in game_mode
       const { data: room, error } = await supabase
         .from("game_rooms")
         .insert({
@@ -129,6 +148,7 @@ export function ChallengeTypeModal({
           challenged_user_id: targetUserId,
           room_name: trivia.title,
           game_type: "async",
+          game_mode: trivia.type === "collection" ? `collection:${trivia.id}` : `trivia:${trivia.id}`,
           status: "waiting",
         })
         .select()
@@ -136,7 +156,31 @@ export function ChallengeTypeModal({
 
       if (error) throw error;
 
-      // Send invitation to target user
+      // Add host as participant
+      await supabase.from("room_participants").insert({
+        room_id: room.id,
+        user_id: user.id,
+        nickname: userProfile?.nickname || "Player",
+        avatar_url: userProfile?.avatar_url,
+        country_code: userProfile?.country_code || "GE",
+        is_host: true,
+        status: "joined",
+      });
+
+      // Add invited user as participant (with invited status)
+      if (targetUserProfile) {
+        await supabase.from("room_participants").insert({
+          room_id: room.id,
+          user_id: targetUserId,
+          nickname: targetUserProfile.nickname,
+          avatar_url: targetUserProfile.avatar_url,
+          country_code: "GE",
+          is_host: false,
+          status: "invited",
+        });
+      }
+
+      // Send invitation
       await supabase.from("game_invitations").insert({
         room_id: room.id,
         sender_id: user.id,
@@ -144,28 +188,51 @@ export function ChallengeTypeModal({
         status: "pending",
       });
 
+      // Create notification for receiver
+      await createNotification(
+        targetUserId,
+        "challenge",
+        `${userProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
+        `ტრივია: ${trivia.title}`,
+        {
+          room_id: room.id,
+          room_code: roomCode,
+          sender_id: user.id,
+          trivia_id: trivia.id,
+          trivia_type: trivia.type,
+        }
+      );
+
       toast.success(`${targetUserProfile?.nickname}-ს გამოწვევა გაიგზავნა!`);
       onClose();
       navigate(`/team?room=${room.room_code}`);
     } catch (err) {
       console.error("Error creating trivia challenge:", err);
       toast.error("შეცდომა მოხდა");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const createChallengeRoom = async (categoryId: string, categoryName: string) => {
+    if (!user) {
+      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
+      return;
+    }
+
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      // Get user's profile for participant info
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("nickname, avatar_url, country_code")
+        .eq("user_id", user.id)
+        .single();
 
-      if (!user) {
-        toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
-        return;
-      }
-
-      // Generate room code using the database function
+      // Generate room code
       const { data: codeData } = await supabase.rpc("generate_room_code");
       const roomCode = codeData || generateRoomCode();
 
+      // Create the room
       const { data: room, error } = await supabase
         .from("game_rooms")
         .insert({
@@ -175,6 +242,7 @@ export function ChallengeTypeModal({
           category_id: categoryId,
           category_name: categoryName,
           game_type: "async",
+          game_mode: `category:${categoryId}`,
           status: "waiting",
         })
         .select()
@@ -182,13 +250,52 @@ export function ChallengeTypeModal({
 
       if (error) throw error;
 
-      // Send invitation to target user
+      // Add host as participant
+      await supabase.from("room_participants").insert({
+        room_id: room.id,
+        user_id: user.id,
+        nickname: userProfile?.nickname || "Player",
+        avatar_url: userProfile?.avatar_url,
+        country_code: userProfile?.country_code || "GE",
+        is_host: true,
+        status: "joined",
+      });
+
+      // Add invited user as participant (with invited status)
+      if (targetUserProfile) {
+        await supabase.from("room_participants").insert({
+          room_id: room.id,
+          user_id: targetUserId,
+          nickname: targetUserProfile.nickname,
+          avatar_url: targetUserProfile.avatar_url,
+          country_code: "GE",
+          is_host: false,
+          status: "invited",
+        });
+      }
+
+      // Send invitation
       await supabase.from("game_invitations").insert({
         room_id: room.id,
         sender_id: user.id,
         receiver_id: targetUserId,
         status: "pending",
       });
+
+      // Create notification for receiver
+      await createNotification(
+        targetUserId,
+        "challenge",
+        `${userProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
+        `კატეგორია: ${categoryName}`,
+        {
+          room_id: room.id,
+          room_code: roomCode,
+          sender_id: user.id,
+          category_id: categoryId,
+          category_name: categoryName,
+        }
+      );
 
       toast.success(`${targetUserProfile?.nickname}-ს გამოწვევა გაიგზავნა!`);
       onClose();
@@ -271,7 +378,17 @@ export function ChallengeTypeModal({
           </div>
 
           {/* Content */}
-          <div className="p-4">
+          <div className="p-4 relative">
+            {/* Loading overlay */}
+            {isLoading && (
+              <div className="absolute inset-0 bg-card/80 flex items-center justify-center z-10 rounded-xl">
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">იქმნება...</p>
+                </div>
+              </div>
+            )}
+            
             {step === "select-type" && (
               <>
                 {/* Target User Info */}
@@ -305,11 +422,12 @@ export function ChallengeTypeModal({
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        handleOptionSelect(option.id);
+                        if (!isLoading) handleOptionSelect(option.id);
                       }}
-                      className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden min-h-[120px] flex flex-col`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      disabled={isLoading}
+                      className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden min-h-[120px] flex flex-col ${isLoading ? 'opacity-70' : ''}`}
+                      whileHover={isLoading ? {} : { scale: 1.02 }}
+                      whileTap={isLoading ? {} : { scale: 0.98 }}
                     >
                       {/* Decorative circles */}
                       <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10" />
