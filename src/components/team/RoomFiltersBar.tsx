@@ -57,7 +57,7 @@ export function RoomFiltersBar({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/50 border border-border/30 hover:bg-card/70 hover:border-border/50 min-w-0 flex-shrink"
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/50 border border-border/30 hover:!bg-card/60 hover:border-border/50 min-w-0 flex-shrink"
           >
             <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm font-medium truncate">
