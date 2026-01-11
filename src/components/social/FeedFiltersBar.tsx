@@ -51,7 +51,7 @@ export function FeedFiltersBar({
         {/* Filter Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors">
+            <button className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted">
               <Filter className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium text-foreground">{currentLabel}</span>
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -99,7 +99,7 @@ export function FeedFiltersBar({
                 {searchQuery && (
                   <button 
                     onClick={() => onSearchQueryChange("")}
-                    className="p-0.5 rounded-full hover:bg-background/50"
+                    className="p-0.5 rounded-full"
                   >
                     <X className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
@@ -110,7 +110,7 @@ export function FeedFiltersBar({
                   setIsSearchOpen(false);
                   onSearchQueryChange("");
                 }}
-                className="p-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+                className="p-2 rounded-xl bg-muted"
               >
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -122,7 +122,7 @@ export function FeedFiltersBar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+              className="p-2 rounded-xl bg-muted"
             >
               <Search className="w-5 h-5 text-muted-foreground" />
             </motion.button>

@@ -57,7 +57,7 @@ export function RoomFiltersBar({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:!bg-muted hover:border-border/50 min-w-0 flex-shrink"
+            className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:bg-transparent min-w-0 flex-shrink"
           >
             <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm font-medium truncate">
@@ -126,7 +126,7 @@ export function RoomFiltersBar({
                   setIsSearchOpen(false);
                   onSearchQueryChange("");
                 }}
-                className="h-8 w-8 rounded-full"
+                className="h-8 w-8 rounded-full hover:bg-transparent"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -137,7 +137,7 @@ export function RoomFiltersBar({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSearchOpen(true)}
-                className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:!bg-muted hover:border-border/50"
+                className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 hover:bg-transparent"
               >
                 <Search className="h-4 w-4 text-muted-foreground" />
               </Button>
