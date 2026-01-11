@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 import confetti from "canvas-confetti";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
@@ -79,6 +79,7 @@ const POPULAR_TOPICS = [
 export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection }: CreateQuizModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { startCoverGeneration, isGenerating: isGeneratingCover } = useBackgroundGeneration();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -89,11 +90,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [generationProgress, setGenerationProgress] = useState(0);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [selectedGradient, setSelectedGradient] = useState(COVER_GRADIENTS[0]);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [isGeneratingCoverLocal, setIsGeneratingCoverLocal] = useState(false);
+  const [coverGenerationCount, setCoverGenerationCount] = useState(0);
   const [isPublic, setIsPublic] = useState(true);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   // Reset on open
   useEffect(() => {
@@ -110,12 +114,44 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     setDifficulty("mixed");
     setQuestions([]);
     setTitle("");
-    setDescription("");
     setGenerationProgress(0);
     setSelectedGradient(COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]);
+    setCoverImageUrl(null);
+    setIsGeneratingCoverLocal(false);
+    setCoverGenerationCount(0);
     setIsPublic(true);
     setSuggestedTitles([]);
+    setIsEditingTitle(false);
   };
+
+  // Auto-generate cover image when entering step 5
+  const handleGenerateCover = async () => {
+    if (!user || isGeneratingCoverLocal || coverGenerationCount >= 3) return;
+    
+    setIsGeneratingCoverLocal(true);
+    setCoverGenerationCount(prev => prev + 1);
+    
+    try {
+      await startCoverGeneration(
+        { title: title || subject, subject },
+        (imageUrl) => {
+          setCoverImageUrl(imageUrl);
+          setIsGeneratingCoverLocal(false);
+        }
+      );
+    } catch (error) {
+      console.error("Cover generation failed:", error);
+      setIsGeneratingCoverLocal(false);
+      // Fall back to gradient - already set
+    }
+  };
+
+  // Trigger cover generation when entering step 5
+  useEffect(() => {
+    if (step === 5 && questions.length > 0 && !coverImageUrl && !isGeneratingCoverLocal && coverGenerationCount === 0) {
+      handleGenerateCover();
+    }
+  }, [step, questions.length]);
 
   // Generate title suggestions when subject changes
   useEffect(() => {
@@ -212,9 +248,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       const { error } = await supabase.from("user_quiz_posts").insert([{
         user_id: user.id,
         title,
-        description,
         subject,
         hashtags,
+        cover_image: coverImageUrl,
         cover_gradient: selectedGradient,
         question_count: questions.length,
         answer_format: answerFormat,
@@ -578,62 +614,71 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               <p className="text-xs text-muted-foreground">{questions.length} კითხვა შეიქმნა</p>
             </div>
 
-            {/* Preview card */}
+            {/* AI Cover Preview with Title */}
             <div 
-              className="p-3 rounded-2xl text-white flex-shrink-0"
-              style={{ background: selectedGradient }}
+              className="p-4 rounded-2xl text-white flex-shrink-0 relative overflow-hidden min-h-[100px]"
+              style={{ 
+                background: coverImageUrl 
+                  ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${coverImageUrl}) center/cover`
+                  : selectedGradient 
+              }}
             >
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Trivia-ს სახელი"
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 text-base font-bold h-10 rounded-xl"
-              />
-            </div>
-
-            {/* Gradient picker */}
-            <div className="flex justify-center gap-1.5 flex-wrap flex-shrink-0">
-              {COVER_GRADIENTS.map((gradient, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedGradient(gradient)}
-                  className={`w-7 h-7 rounded-lg transition-all ${
-                    selectedGradient === gradient ? "ring-2 ring-primary ring-offset-1" : ""
-                  }`}
-                  style={{ background: gradient }}
-                />
-              ))}
-            </div>
-
-            {/* Visibility Toggle + Description row */}
-            <div className="flex gap-2 items-start flex-shrink-0">
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="მოკლე აღწერა (არასავალდებულო)"
-                rows={2}
-                className="rounded-xl resize-none text-sm flex-1"
-              />
-              <button
-                onClick={() => setIsPublic(!isPublic)}
-                className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl border-2 transition-all min-w-[70px] ${
-                  isPublic 
-                    ? 'border-green-500 bg-green-500/10 text-green-600' 
-                    : 'border-muted bg-muted/50 text-muted-foreground'
-                }`}
-              >
-                {isPublic ? (
-                  <>
-                    <Globe className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">საჯარო</span>
-                  </>
+              {/* Loading overlay */}
+              {isGeneratingCoverLocal && (
+                <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10">
+                  <Loader2 className="w-8 h-8 animate-spin text-white mb-2" />
+                  <span className="text-xs text-white/80">სურათი იქმნება...</span>
+                </div>
+              )}
+              
+              {/* Title with edit */}
+              <div className="relative z-0 flex items-center gap-2">
+                {isEditingTitle ? (
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onBlur={() => setIsEditingTitle(false)}
+                    onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+                    autoFocus
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/70 text-base font-bold h-10 rounded-xl flex-1"
+                    placeholder="Trivia-ს სახელი"
+                  />
                 ) : (
-                  <>
-                    <Lock className="w-5 h-5" />
-                    <span className="text-[10px] font-medium">პირადი</span>
-                  </>
+                  <button 
+                    onClick={() => setIsEditingTitle(true)}
+                    className="flex-1 text-left flex items-center gap-2 group"
+                  >
+                    <span className="text-lg font-bold text-white drop-shadow-lg truncate">
+                      {title || "Trivia-ს სახელი"}
+                    </span>
+                    <Edit3 className="w-4 h-4 text-white/70 group-hover:text-white transition-colors flex-shrink-0" />
+                  </button>
                 )}
-              </button>
+              </div>
+
+              {/* Regenerate button */}
+              <div className="flex items-center justify-between mt-3">
+                <button
+                  onClick={() => setIsPublic(!isPublic)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    isPublic 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-black/30 text-white/80'
+                  }`}
+                >
+                  {isPublic ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  {isPublic ? 'საჯარო' : 'პირადი'}
+                </button>
+                
+                <button
+                  onClick={handleGenerateCover}
+                  disabled={isGeneratingCoverLocal || coverGenerationCount >= 3}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingCoverLocal ? 'animate-spin' : ''}`} />
+                  {coverGenerationCount >= 3 ? 'ლიმიტი ამოიწურა' : `ხელახლა (${3 - coverGenerationCount})`}
+                </button>
+              </div>
             </div>
 
             {/* Questions preview with icon picker and edit */}
