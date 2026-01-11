@@ -239,7 +239,7 @@ function TeamContentV2() {
                 <motion.button
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  onClick={() => setShowBlindTriviaModal(true)}
+                  onClick={() => setShowCreateTypeModal(true)}
                   className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground shadow-sm"
                 >
                   <Plus className="w-5 h-5" />
@@ -434,7 +434,7 @@ function TeamContentV2() {
           {activeTab === "my-content" && (
             <div className="lg:hidden px-4 pb-3 flex gap-2">
               <ChunkyButton 
-                onClick={() => setShowBlindTriviaModal(true)}
+                onClick={() => setShowCreateTypeModal(true)}
                 className="flex-1 gap-1.5"
                 variant="primary"
                 size="lg"
