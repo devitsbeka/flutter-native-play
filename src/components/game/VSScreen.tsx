@@ -15,7 +15,7 @@ import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
-import { PrizePoolAnimation } from "./PrizePoolAnimation";
+
 import coinIcon from "@/assets/icons/icon-coin.png";
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
 import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
@@ -402,12 +402,31 @@ export function VSScreen() {
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Prize Pool Animation - Positioned above category blob */}
-            <PrizePoolAnimation
-              isVisible={isOpponentLocked}
-              playerCoins={profile?.coins || 0}
-              opponentCoins={500}
-            />
+            {/* Combined Prize + Category Badge */}
+            <AnimatePresence>
+              {isOpponentLocked && (
+                <motion.div
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full backdrop-blur-md"
+                  initial={{ opacity: 0, y: -20, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
+                    border: "2px solid rgba(255,215,0,0.4)",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <img src={coinIcon} alt="" className="w-5 h-5" />
+                  <span className="text-lg font-black text-white">
+                    {REWARDS.GAME_WIN_REWARD.toLocaleString()}
+                  </span>
+                  <span className="text-white/50 text-lg">•</span>
+                  <span className="text-white font-bold text-base truncate max-w-[160px]">
+                    {selectedCategory?.name || currentCategory?.name || t("game.category")}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Interactive Blob - Icons during spin, Video on reveal */}
             <InteractiveBlobVideo
@@ -416,19 +435,6 @@ export function VSScreen() {
               isLocked={isCategoryLocked}
               shouldAnimate={showCategorySlot && !isCategoryLocked}
             />
-            
-            {/* Category Name */}
-            <motion.h2 
-              className="text-2xl font-black text-white text-center"
-              style={{ 
-                fontFamily: "'TASolivare', sans-serif",
-                textShadow: "0 4px 20px rgba(0,0,0,0.4)"
-              }}
-            >
-              {showCategorySlot 
-                ? (selectedCategory?.name || currentCategory?.name || t("game.category")) 
-                : t("game.findingCategory")}
-            </motion.h2>
           </motion.div>
 
           {/* Player - Bottom Right */}
