@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CreateRoomPage } from "@/components/team/CreateRoomPage";
+import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
 import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreenV2";
@@ -129,6 +130,7 @@ function TeamContentV2() {
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
+  const [showBlindTriviaModal, setShowBlindTriviaModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
@@ -237,7 +239,7 @@ function TeamContentV2() {
                 <motion.button
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  onClick={() => setShowCreateTypeModal(true)}
+                  onClick={() => setShowBlindTriviaModal(true)}
                   className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground shadow-sm"
                 >
                   <Plus className="w-5 h-5" />
@@ -432,7 +434,7 @@ function TeamContentV2() {
           {activeTab === "my-content" && (
             <div className="lg:hidden px-4 pb-3 flex gap-2">
               <ChunkyButton 
-                onClick={() => setShowCreateTypeModal(true)}
+                onClick={() => setShowBlindTriviaModal(true)}
                 className="flex-1 gap-1.5"
                 variant="primary"
                 size="lg"
@@ -534,8 +536,16 @@ function TeamContentV2() {
       <CreateTriviaTypeModal
         open={showCreateTypeModal}
         onOpenChange={setShowCreateTypeModal}
-        onSelectSingle={() => setShowCreateQuizModal(true)}
+        onSelectSingle={() => setShowBlindTriviaModal(true)}
         onSelectCollection={() => setShowCreateCollectionModal(true)}
+      />
+      <CreateBlindTriviaModal
+        open={showBlindTriviaModal}
+        onOpenChange={setShowBlindTriviaModal}
+        onTriviaReady={() => {
+          setShowBlindTriviaModal(false);
+          setActiveTab("my-content");
+        }}
       />
       <CreateQuizModal
         open={showCreateQuizModal}
