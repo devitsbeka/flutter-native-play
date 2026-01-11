@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
 import { ChallengeTypeModal } from "@/components/challenge/ChallengeTypeModal";
+import { useNavigate } from "react-router-dom";
 // Custom time formatter for Georgian (no "დაახლოებით")
 const formatTimeAgo = (date: Date) => {
   const now = new Date();
@@ -51,10 +52,21 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data, loading } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
+
+  const handlePlayTrivia = (triviaId: string) => {
+    onClose();
+    navigate(`/play/trivia/${triviaId}`);
+  };
+
+  const handlePlayCollection = (collectionId: string) => {
+    onClose();
+    navigate(`/play/collection/${collectionId}`);
+  };
 
   const getFlagEmoji = (countryCode: string) => {
     const codePoints = countryCode
@@ -258,7 +270,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           key={trivia.id}
                           initial={{ y: 10, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+                          onClick={() => handlePlayTrivia(trivia.id)}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
                         >
                           <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
                             {trivia.cover_image ? (
@@ -296,7 +309,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           key={collection.id}
                           initial={{ scale: 0.9, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="rounded-xl overflow-hidden border border-border"
+                          onClick={() => handlePlayCollection(collection.id)}
+                          className="rounded-xl overflow-hidden border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
                         >
                           <div 
                             className="aspect-video"
