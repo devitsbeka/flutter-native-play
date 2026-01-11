@@ -17,7 +17,7 @@ interface SocialFeedProps {
   popularityFilter?: PopularityFilter;
   sortFilter?: SortFilter;
   searchQuery?: string;
-  onHashtagClick?: (hashtag: string) => void;
+  onHashtagClick?: (hashtag: string | null) => void;
 }
 
 // Shop Ad Component - reuses feed styling
@@ -262,6 +262,25 @@ export function SocialFeed({
 
   return (
     <div>
+      {/* Active Hashtag Banner */}
+      {selectedHashtag && (
+        <div className="px-4 py-3 bg-primary/5 border-b border-primary/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Hash className="w-4 h-4 text-primary" />
+            <span className="text-sm text-foreground">
+              მოიძებნა <strong>{filteredFeedItems.length}</strong> ტრივია ჰეშთეგით{" "}
+              <span className="text-primary font-semibold">#{selectedHashtag}</span>
+            </span>
+          </div>
+          <button 
+            onClick={() => onHashtagClick?.(null)}
+            className="text-sm text-primary hover:underline font-medium"
+          >
+            გასუფთავება
+          </button>
+        </div>
+      )}
+      
       {/* Feed Content */}
       <motion.div
         initial={{ opacity: 0 }}

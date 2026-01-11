@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, ChevronDown, X } from "lucide-react";
+import { Search, Filter, ChevronDown, X, Hash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -23,6 +23,8 @@ interface FeedFiltersBarProps {
   onSortFilterChange: (filter: SortFilter) => void;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
+  selectedHashtag?: string | null;
+  onClearHashtag?: () => void;
 }
 
 const filterOptions: { value: SortFilter; label: string }[] = [
@@ -40,6 +42,8 @@ export function FeedFiltersBar({
   onSortFilterChange,
   searchQuery,
   onSearchQueryChange,
+  selectedHashtag,
+  onClearHashtag,
 }: FeedFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -48,7 +52,21 @@ export function FeedFiltersBar({
   return (
     <div className="px-4 pt-0 pb-2">
       <div className="flex items-center justify-between gap-3">
-        {/* Filter Dropdown */}
+        {/* Active Hashtag Chip */}
+        {selectedHashtag && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
+            <Hash className="w-3.5 h-3.5 text-primary" />
+            <span className="text-sm font-medium text-primary">{selectedHashtag}</span>
+            <button 
+              onClick={onClearHashtag}
+              className="p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+            >
+              <X className="w-3.5 h-3.5 text-primary" />
+            </button>
+          </div>
+        )}
+        {/* Filter Dropdown - hide when hashtag active to save space */}
+        {!selectedHashtag && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted">
@@ -74,6 +92,7 @@ export function FeedFiltersBar({
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+        )}
 
         {/* Search Section */}
         <AnimatePresence mode="wait">
