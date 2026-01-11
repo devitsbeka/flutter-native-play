@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Users, MoreVertical } from "lucide-react";
-import { useMyRooms } from "@/hooks/useMyRooms";
+import { X, Send, MessageCircle, Users } from "lucide-react";
+import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
@@ -10,10 +10,126 @@ import { useUserModeration } from "@/hooks/useUserModeration";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { cn } from "@/lib/utils";
+import { getGradientById } from "@/config/roomGradients";
+import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 
 interface RoomChatsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface MiniRoomCardProps {
+  room: MyRoom;
+  isSelected: boolean;
+  unreadCount: number;
+  onClick: () => void;
+}
+
+function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardProps) {
+  const gradient = getGradientById(room.background_gradient);
+  const displayName = room.room_name || "თამაშის ოთახი";
+  const isPlaying = room.status === "playing";
+
+  return (
+    <motion.button
+      onClick={onClick}
+      className={cn(
+        "relative flex-shrink-0 w-[140px] rounded-xl overflow-hidden transition-all",
+        isSelected && "ring-2 ring-white ring-offset-2 ring-offset-background"
+      )}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+    >
+      {/* Gradient background */}
+      <div
+        className="relative p-2 rounded-xl min-h-[100px]"
+        style={{ background: gradient?.gradient }}
+      >
+        {/* Cover image overlay */}
+        <div
+          className="absolute inset-0 opacity-20 overflow-hidden rounded-xl"
+          style={{
+            backgroundImage: `url(${room.cover_image || roomCoverPlaceholder})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+
+        {/* Status badge */}
+        <div className="relative z-10 mb-1.5">
+          {isPlaying ? (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold">
+              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
+              LIVE
+            </span>
+          ) : (
+            <span className="inline-flex px-1.5 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-[9px] font-medium">
+              მოლოდინი
+            </span>
+          )}
+        </div>
+
+        {/* Room name with icon */}
+        <div className="relative z-10 flex items-center gap-1 mb-0.5">
+          {room.room_icon && (
+            <img src={room.room_icon} alt="" className="w-3.5 h-3.5 object-contain" />
+          )}
+          <h4 className="font-bold text-white text-xs truncate drop-shadow-md">
+            {displayName}
+          </h4>
+        </div>
+
+        {/* Category name */}
+        {room.category_name && (
+          <p className="relative z-10 text-[9px] text-white/70 truncate mb-1.5">
+            {room.category_name}
+          </p>
+        )}
+
+        {/* Bottom: participants count + avatars */}
+        <div className="relative z-10 flex items-center justify-between bg-white/15 backdrop-blur-sm rounded-lg p-1">
+          <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white/20 rounded">
+            <Users className="w-2.5 h-2.5 text-white/80" />
+            <span className="text-[9px] font-bold text-white">
+              {room.participants.length}
+            </span>
+          </div>
+
+          {/* Stacked avatars */}
+          <div className="flex -space-x-1.5">
+            {room.participants.slice(0, 3).map((p) => (
+              <div
+                key={p.user_id}
+                className="w-5 h-5 rounded-full overflow-hidden border border-white/40 bg-white/20"
+              >
+                {p.avatar_url ? (
+                  <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white text-[7px] font-bold">
+                    {p.nickname?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            ))}
+            {room.participants.length > 3 && (
+              <div className="w-5 h-5 rounded-full bg-white/30 border border-white/40 flex items-center justify-center">
+                <span className="text-[7px] font-bold text-white">
+                  +{room.participants.length - 3}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Unread badge */}
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-red-500 rounded-full shadow-lg z-20">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </div>
+    </motion.button>
+  );
 }
 
 export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
@@ -134,46 +250,26 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
               </button>
             </div>
 
-            {/* Room tabs */}
-            <div className="flex gap-2 p-3 overflow-x-auto scrollbar-hide border-b border-border/30">
+            {/* Room cards - horizontal scroll */}
+            <div className="flex gap-3 p-3 overflow-x-auto scrollbar-hide border-b border-border/30">
               {roomsLoading ? (
-                <div className="flex items-center gap-2 px-4">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-muted-foreground">იტვირთება...</span>
+                <div className="flex gap-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="w-[140px] h-[100px] rounded-xl bg-muted animate-pulse" />
+                  ))}
                 </div>
               ) : rooms.length === 0 ? (
                 <p className="text-sm text-muted-foreground px-2">ოთახები არ არის</p>
               ) : (
-                rooms.map((room) => {
-                  const unreadCount = unreadCounts[room.id] || 0;
-                  return (
-                    <motion.button
-                      key={room.id}
-                      onClick={() => setSelectedRoomId(room.id)}
-                      className={cn(
-                        "relative flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all flex-shrink-0",
-                        selectedRoomId === room.id
-                          ? "bg-primary text-primary-foreground shadow-md"
-                          : "bg-secondary/80 text-muted-foreground hover:bg-secondary"
-                      )}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Users className="w-4 h-4" />
-                      <span className="max-w-[100px] truncate">
-                        {room.room_name || room.category_name || room.room_code}
-                      </span>
-                      <span className="text-xs opacity-60">
-                        ({room.participants.length})
-                      </span>
-                      {unreadCount > 0 && selectedRoomId !== room.id && (
-                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
-                          {unreadCount > 99 ? "99+" : unreadCount}
-                        </span>
-                      )}
-                    </motion.button>
-                  );
-                })
+                rooms.map((room) => (
+                  <MiniRoomCard
+                    key={room.id}
+                    room={room}
+                    isSelected={selectedRoomId === room.id}
+                    unreadCount={unreadCounts[room.id] || 0}
+                    onClick={() => setSelectedRoomId(room.id)}
+                  />
+                ))
               )}
             </div>
 
