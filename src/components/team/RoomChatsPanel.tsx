@@ -10,7 +10,6 @@ import { useUserModeration } from "@/hooks/useUserModeration";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { cn } from "@/lib/utils";
-import { getGradientById } from "@/config/roomGradients";
 
 interface RoomChatsPanelProps {
   isOpen: boolean;
@@ -25,7 +24,6 @@ interface MiniRoomCardProps {
 }
 
 function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardProps) {
-  const gradient = getGradientById(room.background_gradient);
   const displayName = room.room_name || room.category_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
 
@@ -33,106 +31,61 @@ function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardPr
     <motion.button
       onClick={onClick}
       className={cn(
-        "relative flex-shrink-0 w-[180px] rounded-xl overflow-hidden transition-all duration-200",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 min-w-[180px] max-w-[220px]",
         isSelected 
-          ? "ring-2 ring-primary shadow-[0_0_20px_hsla(var(--primary),0.4)] scale-[1.02]" 
-          : "opacity-70 hover:opacity-100 hover:scale-[1.01]"
+          ? "bg-primary/10 ring-1 ring-primary/50" 
+          : "bg-secondary/50 hover:bg-secondary/80"
       )}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.98 }}
     >
-      {/* Gradient background */}
-      <div
-        className="relative p-3 rounded-xl min-h-[110px]"
-        style={{ background: gradient?.gradient }}
-      >
-        {/* Selection indicator */}
-        {isSelected && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="absolute top-2 left-2 z-20 w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md"
-          >
-            <Check className="w-3 h-3 text-primary" />
-          </motion.div>
-        )}
-
-        {/* Status badge */}
-        <div className="relative z-10 mb-2 flex justify-end">
-          {isPlaying ? (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold">
-              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-              LIVE
-            </span>
-          ) : (
-            <span className="inline-flex px-1.5 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-[9px] font-medium">
-              მოლოდინი
-            </span>
-          )}
-        </div>
-
-        {/* Room name with icon */}
-        <div className="relative z-10 flex items-start gap-1.5 mb-1">
-          {room.room_icon && (
-            <img src={room.room_icon} alt="" className="w-5 h-5 object-contain flex-shrink-0 drop-shadow" />
-          )}
-          <h4 className="font-bold text-white text-xs leading-tight line-clamp-2 drop-shadow-md text-left">
-            {displayName}
-          </h4>
-        </div>
-
-        {/* Category name */}
-        {room.category_name && room.room_name && (
-          <p className="relative z-10 text-[10px] text-white/70 truncate mb-2 text-left">
-            {room.category_name}
-          </p>
-        )}
-
-        {/* Bottom: participants count + avatars */}
-        <div className="relative z-10 flex items-center justify-between mt-auto pt-1">
-          <div className="flex items-center gap-1">
-            <Users className="w-3 h-3 text-white/70" />
-            <span className="text-[10px] font-bold text-white/80">
-              {room.participants.length}
-            </span>
-          </div>
-
-          {/* Stacked avatars */}
-          <div className="flex -space-x-1.5">
-            {room.participants.slice(0, 3).map((p) => (
-              <div
-                key={p.user_id}
-                className="w-5 h-5 rounded-full overflow-hidden border border-white/40 bg-white/20"
-              >
-                {p.avatar_url ? (
-                  <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-[7px] font-bold">
-                    {p.nickname?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-            ))}
-            {room.participants.length > 3 && (
-              <div className="w-5 h-5 rounded-full bg-white/30 border border-white/40 flex items-center justify-center">
-                <span className="text-[7px] font-bold text-white">
-                  +{room.participants.length - 3}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Unread badge */}
-        {unreadCount > 0 && (
-          <motion.span 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-destructive-foreground bg-destructive rounded-full shadow-lg z-20"
-          >
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </motion.span>
+      {/* Room icon */}
+      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden">
+        {room.room_icon ? (
+          <img src={room.room_icon} alt="" className="w-7 h-7 object-contain" />
+        ) : (
+          <MessageCircle className="w-5 h-5 text-muted-foreground" />
         )}
       </div>
+
+      {/* Room info */}
+      <div className="flex-1 min-w-0 text-left">
+        <div className="flex items-center gap-1.5">
+          <h4 className="font-semibold text-sm truncate">
+            {displayName}
+          </h4>
+          {isPlaying && (
+            <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          )}
+        </div>
+        <div className="flex items-center gap-1 mt-0.5">
+          <Users className="w-3 h-3 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">
+            {room.participants.length}
+          </span>
+        </div>
+      </div>
+
+      {/* Selection indicator */}
+      {isSelected && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex-shrink-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
+        >
+          <Check className="w-3 h-3 text-primary-foreground" />
+        </motion.div>
+      )}
+
+      {/* Unread badge */}
+      {unreadCount > 0 && !isSelected && (
+        <motion.span 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="flex-shrink-0 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-[10px] font-bold text-destructive-foreground bg-destructive rounded-full"
+        >
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </motion.span>
+      )}
     </motion.button>
   );
 }
@@ -256,11 +209,11 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             </div>
 
             {/* Room cards - horizontal scroll */}
-            <div className="flex gap-3 p-3 overflow-x-auto scrollbar-hide border-b border-border/30">
+            <div className="flex gap-2 p-3 overflow-x-auto scrollbar-hide border-b border-border/30">
               {roomsLoading ? (
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {[1, 2].map((i) => (
-                    <div key={i} className="w-[180px] h-[110px] rounded-xl bg-muted animate-pulse" />
+                    <div key={i} className="w-[180px] h-[52px] rounded-xl bg-muted animate-pulse" />
                   ))}
                 </div>
               ) : rooms.length === 0 ? (
@@ -280,28 +233,25 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
             {/* Selected room header */}
             {selectedRoom && (
-              <div 
-                className="flex items-center gap-3 px-4 py-2.5 border-b border-border/30"
-                style={{ 
-                  background: `linear-gradient(to right, ${getGradientById(selectedRoom.background_gradient)?.colors?.[0] || 'hsl(var(--muted))'}, transparent)` 
-                }}
-              >
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 bg-muted/30">
                 {selectedRoom.room_icon && (
-                  <img src={selectedRoom.room_icon} alt="" className="w-7 h-7 object-contain drop-shadow" />
+                  <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center">
+                    <img src={selectedRoom.room_icon} alt="" className="w-6 h-6 object-contain" />
+                  </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm truncate">
                     {selectedRoom.room_name || selectedRoom.category_name || "თამაშის ოთახი"}
                   </h3>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {selectedRoom.participants.length} მონაწილე
                   </p>
                 </div>
-                <div className="flex -space-x-1.5">
+                <div className="flex -space-x-2">
                   {selectedRoom.participants.slice(0, 4).map((p) => (
-                    <Avatar key={p.user_id} className="w-6 h-6 border-2 border-background">
+                    <Avatar key={p.user_id} className="w-7 h-7 border-2 border-background">
                       <AvatarImage src={p.avatar_url || undefined} />
-                      <AvatarFallback className="text-[9px] bg-muted font-bold">
+                      <AvatarFallback className="text-[10px] bg-muted font-bold">
                         {p.nickname?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
