@@ -232,13 +232,20 @@ export function ChallengeTypeModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="max-w-sm p-0 gap-0 border-0 bg-card rounded-3xl overflow-hidden">
+        <DialogContent 
+          className="max-w-sm p-0 gap-0 border-0 bg-card rounded-3xl overflow-hidden"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-3">
               {step !== "select-type" && (
                 <motion.button
-                  onClick={handleBack}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBack();
+                  }}
                   className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
                   whileTap={{ scale: 0.95 }}
                 >
@@ -252,7 +259,10 @@ export function ChallengeTypeModal({
               </h2>
             </div>
             <motion.button
-              onClick={handleClose}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClose();
+              }}
               className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
               whileTap={{ scale: 0.95 }}
             >
@@ -292,19 +302,28 @@ export function ChallengeTypeModal({
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => handleOptionSelect(option.id)}
-                      className={`p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleOptionSelect(option.id);
+                      }}
+                      className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden min-h-[120px] flex flex-col`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <option.icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="font-bold">{option.title}</p>
-                          <p className="text-xs text-white/80">{option.description}</p>
-                        </div>
+                      {/* Decorative circles */}
+                      <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10" />
+                      <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10" />
+                      
+                      {/* Icon top-left */}
+                      <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center mb-auto">
+                        <option.icon className="w-5 h-5" />
+                      </div>
+                      
+                      {/* Text bottom-left */}
+                      <div className="mt-3">
+                        <p className="font-bold text-base leading-tight">{option.title}</p>
+                        <p className="text-xs text-white/80 mt-0.5">{option.description}</p>
                       </div>
                     </motion.button>
                   ))}
