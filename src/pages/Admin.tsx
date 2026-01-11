@@ -18,7 +18,8 @@ import {
   Bell,
   Workflow,
   FileArchive,
-  Flag
+  Flag,
+  Palette
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,11 @@ const mainNavItems: NavItem[] = [
     to: '/admin/reports', 
     icon: Flag, 
     label: 'რეპორტები' 
+  },
+  { 
+    to: '/admin/design', 
+    icon: Palette, 
+    label: 'დიზაინი' 
   },
 ];
 
