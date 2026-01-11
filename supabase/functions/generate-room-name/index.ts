@@ -12,54 +12,94 @@ const BANNED_WORDS = [
   'ტყვნა', 'მუტელი', 'ყლე', 'ქერა', 'დედა', 'მამა', 'შენი'
 ];
 
-// Curated inspirational fallback names - epic and creative
-const INSPIRATIONAL_NAMES = [
-  // Cosmic
-  "კოსმოსური ხომალდი",      // Cosmic Ship
-  "ვარსკვლავთა კავშირი",    // Star Alliance
-  "გალაქტიკის მცველები",    // Galaxy Guardians
-  "მთვარის მხარე",          // Moon Side
-  "კოსმოსური არენა",        // Cosmic Arena
-  // Adventure
-  "მოგზაურთა ბანაკი",       // Travelers' Camp
-  "აღმომჩენთა კლუბი",       // Explorers' Club
-  "თავგადასავლის გზა",      // Path of Adventure
-  "ჰორიზონტის მიღმა",       // Beyond the Horizon
-  // Nature
-  "ბუნების მცველები",       // Nature Guardians
-  "მწვანე ოაზისი",          // Green Oasis
-  "ტყის საიდუმლო",          // Forest Secret
-  "მთის მწვერვალი",         // Mountain Peak
-  // Fantasy
-  "დრაკონთა ბუდე",          // Dragons' Nest
-  "ფენიქსის ფრთები",        // Phoenix Wings
-  "ჯადოსნური ტყე",          // Magical Forest
-  "მოჯადოებული სასახლე",    // Enchanted Palace
-  // Wisdom
-  "ბრძენთა საბჭო",          // Council of Sages
-  "გენიოსების კლუბი",       // Geniuses' Club
-  "ცოდნის ციხე",            // Fortress of Knowledge
-  "ჭკვიანების ოთახი",       // Smart Ones' Room
-  // Legends
-  "ლეგენდების ოთახი",       // Room of Legends
-  "მითების სამყარო",        // World of Myths
-  "გმირთა არენა",           // Heroes' Arena
-  "დიდებულთა კლუბი",        // Club of the Great
-  // Champions
-  "ჩემპიონთა ლიგა",         // Champions' League
-  "გამარჯვებულთა კლუბი",    // Winners' Club
-  "ტიტანების არენა",        // Titans' Arena
-  "ძლევამოსილთა ოთახი",     // Room of the Victorious
-  // Friends
-  "მეგობრების ოთახი",       // Friends' Room
-  "სახალისო კომპანია",      // Fun Company
-  "მხიარულთა არენა",        // Arena of the Cheerful
-  "ხუმრობების კლუბი",       // Jokes Club
-];
+// Theme-matched configuration - icons and names are paired by theme
+const THEME_CONFIG: Record<string, { categories: string[]; names: string[] }> = {
+  cosmic: {
+    categories: ['Space & Science'],
+    names: [
+      "კოსმოსური ხომალდი",      // Cosmic Ship
+      "ვარსკვლავთა კავშირი",    // Star Alliance
+      "გალაქტიკის მცველები",    // Galaxy Guardians
+      "მთვარის მხარე",          // Moon Side
+      "კოსმოსური არენა",        // Cosmic Arena
+      "ვარსკვლავთა რბოლა",      // Star Race
+      "ნისლეულის საიდუმლო",     // Nebula Secret
+    ]
+  },
+  nature: {
+    categories: ['Nature & Outdoors', 'Animals'],
+    names: [
+      "ბუნების მცველები",       // Nature Guardians
+      "მწვანე ოაზისი",          // Green Oasis
+      "ტყის საიდუმლო",          // Forest Secret
+      "მთის მწვერვალი",         // Mountain Peak
+      "ველური სამყარო",         // Wild World
+      "ბუნების ძალა",           // Nature's Power
+    ]
+  },
+  fantasy: {
+    categories: ['Fantasy & Imagination'],
+    names: [
+      "დრაკონთა ბუდე",          // Dragons' Nest
+      "ფენიქსის ფრთები",        // Phoenix Wings
+      "ჯადოსნური ტყე",          // Magical Forest
+      "მოჯადოებული სასახლე",    // Enchanted Palace
+      "ჯადოქართა კლუბი",        // Wizards' Club
+      "მითიური სამყარო",        // Mythical World
+    ]
+  },
+  champions: {
+    categories: ['Sports'],
+    names: [
+      "ჩემპიონთა ლიგა",         // Champions' League
+      "გამარჯვებულთა კლუბი",    // Winners' Club
+      "ტიტანების არენა",        // Titans' Arena
+      "ძლევამოსილთა ოთახი",     // Room of the Victorious
+      "სპორტული არენა",         // Sports Arena
+      "ჩემპიონთა დარბაზი",      // Champions' Hall
+    ]
+  },
+  adventure: {
+    categories: ['Places & Structures', 'Vehicles & Transport'],
+    names: [
+      "მოგზაურთა ბანაკი",       // Travelers' Camp
+      "აღმომჩენთა კლუბი",       // Explorers' Club
+      "თავგადასავლის გზა",      // Path of Adventure
+      "ჰორიზონტის მიღმა",       // Beyond the Horizon
+      "მოგზაურთა გილდია",       // Travelers' Guild
+      "აღმოჩენის გზა",          // Path of Discovery
+    ]
+  },
+  legends: {
+    categories: ['Historical Figures', 'History & Culture'],
+    names: [
+      "გმირთა არენა",           // Heroes' Arena
+      "ლეგენდების ოთახი",       // Room of Legends
+      "მითების სამყარო",        // World of Myths
+      "დიდებულთა კლუბი",        // Club of the Great
+      "ბრძენთა საბჭო",          // Council of Sages
+      "ცოდნის ციხე",            // Fortress of Knowledge
+    ]
+  },
+  entertainment: {
+    categories: ['Entertainment & Leisure', 'Events'],
+    names: [
+      "სახალისო კომპანია",      // Fun Company
+      "მხიარულთა არენა",        // Arena of the Cheerful
+      "მეგობრების ოთახი",       // Friends' Room
+      "ხუმრობების კლუბი",       // Jokes Club
+      "წვეულების ოთახი",        // Party Room
+      "სიცილის კლუბი",          // Laughter Club
+    ]
+  },
+};
+
+// Get all names flattened for fallback
+const ALL_INSPIRATIONAL_NAMES = Object.values(THEME_CONFIG).flatMap(t => t.names);
 
 // Get random inspirational name
 function getRandomInspirationalName(): string {
-  return INSPIRATIONAL_NAMES[Math.floor(Math.random() * INSPIRATIONAL_NAMES.length)];
+  return ALL_INSPIRATIONAL_NAMES[Math.floor(Math.random() * ALL_INSPIRATIONAL_NAMES.length)];
 }
 
 // Validate and clean generated name
@@ -118,59 +158,60 @@ serve(async (req) => {
     }
 
     let selectedIcon: { slug: string; title: string; icon_url: string | null } | null = null;
+    let selectedThemeName: string | null = null;
 
     // If specific icon requested, find it by slug
     if (iconSlug) {
       const { data: specificIcon, error: specificError } = await supabase
         .from('icon_library')
-        .select('slug, title, icon_url')
+        .select('slug, title, icon_url, category')
         .eq('slug', iconSlug)
         .single();
       
       if (!specificError && specificIcon) {
         selectedIcon = specificIcon;
-        console.log(`Using requested icon: ${iconSlug}`);
+        // Find matching theme for the icon's category
+        for (const [themeName, config] of Object.entries(THEME_CONFIG)) {
+          if (config.categories.includes(specificIcon.category)) {
+            selectedThemeName = themeName;
+            break;
+          }
+        }
+        console.log(`Using requested icon: ${iconSlug}, theme: ${selectedThemeName}`);
       }
     }
 
-    // Only pick icons from inspirational categories (no mundane items like spoons, washing machines)
-    const INSPIRATIONAL_CATEGORIES = [
-      'Space & Science',
-      'Fantasy & Imagination',
-      'Animals',
-      'Nature & Outdoors',
-      'Sports',
-      'Historical Figures',
-      'Entertainment & Leisure',
-      'Places & Structures',
-      'Vehicles & Transport',
-      'Events',
-      'History & Culture',
-      'Professions',
-    ];
-
-    // If no specific icon or not found, get random icons from inspirational categories only
+    // If no specific icon, pick a random THEME first, then get matching icon
     if (!selectedIcon) {
+      // 1. Pick a random theme
+      const themes = Object.keys(THEME_CONFIG);
+      selectedThemeName = themes[Math.floor(Math.random() * themes.length)];
+      const themeConfig = THEME_CONFIG[selectedThemeName];
+
+      console.log(`Selected theme: ${selectedThemeName}, categories: ${themeConfig.categories.join(', ')}`);
+
+      // 2. Get icons only from this theme's categories
       const { data: icons, error: iconError } = await supabase
         .from('icon_library')
         .select('slug, title, icon_url, category')
         .not('icon_url', 'is', null)
-        .in('category', INSPIRATIONAL_CATEGORIES)
-        .limit(200);
+        .in('category', themeConfig.categories)
+        .limit(100);
 
       if (iconError || !icons || icons.length === 0) {
-        console.error('Failed to fetch icons:', iconError);
-        // Fallback to inspirational name
+        console.error('Failed to fetch icons for theme:', iconError);
+        // Fallback to theme name without icon
+        const themeName = themeConfig.names[Math.floor(Math.random() * themeConfig.names.length)];
         return new Response(
           JSON.stringify({ 
-            name: getRandomInspirationalName(), 
+            name: themeName, 
             icon_url: null 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Pick a random icon
+      // 3. Pick a random icon from matching category
       selectedIcon = icons[Math.floor(Math.random() * icons.length)];
     }
 
@@ -178,41 +219,48 @@ serve(async (req) => {
 
     console.log(`Selected icon: ${iconName} (${selectedIcon.slug})`);
 
-    // If no AI key, return inspirational name
+    // Get the theme config for name selection
+    const themeConfig = selectedThemeName ? THEME_CONFIG[selectedThemeName] : null;
+    const getThemeMatchedName = () => {
+      if (themeConfig) {
+        return themeConfig.names[Math.floor(Math.random() * themeConfig.names.length)];
+      }
+      return getRandomInspirationalName();
+    };
+
+    // If no AI key, return theme-matched inspirational name
     if (!lovableApiKey) {
       return new Response(
         JSON.stringify({ 
-          name: getRandomInspirationalName(), 
+          name: getThemeMatchedName(), 
           icon_url: selectedIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use AI to generate an INSPIRATIONAL 2-word name
+    // Build theme-specific examples for the AI prompt
+    const themeExamples = themeConfig ? themeConfig.names.slice(0, 4).map(n => `"${n}"`).join(', ') : '';
+    const themeLabel = selectedThemeName || 'random';
+
+    // Use AI to generate a theme-matched 2-word name
     const prompt = `შექმენი შთამაგონებელი, კრეატიული ქართული სახელი ტრივია თამაშის ოთახისთვის.
 
-კონტექსტი: მეგობრები იკრიბებიან ერთად სახალისო ტრივიას სათამაშოდ. სახელი უნდა იყოს:
+კონტექსტი: მეგობრები იკრიბებიან ერთად სახალისო ტრივიას სათამაშოდ.
+
+🎯 არჩეული თემატიკა: ${themeLabel}
+📌 მაგალითები ამ თემატიკიდან: ${themeExamples}
+🎨 არჩეული აიკონი: "${iconName}"
+
+სახელი უნდა იყოს:
 - ეპიკური და შთამაგონებელი
 - მაქსიმუმ 2 სიტყვა
-- მხიარული და სასიამოვნო
-
-აირჩიე ერთ-ერთი თემატიკა და შექმენი ორიგინალური სახელი:
-🚀 კოსმოსი: "კოსმოსური ხომალდი", "ვარსკვლავთა კავშირი", "გალაქტიკის მცველები"
-🗺️ თავგადასავალი: "მოგზაურთა ბანაკი", "აღმომჩენთა კლუბი", "ჰორიზონტის მიღმა"
-🌲 ბუნება: "ბუნების მცველები", "მწვანე ოაზისი", "ტყის საიდუმლო"
-🐉 ფანტაზია: "დრაკონთა ბუდე", "ფენიქსის ფრთები", "ჯადოსნური ტყე"
-📚 სიბრძნე: "ბრძენთა საბჭო", "გენიოსების კლუბი", "ცოდნის ციხე"
-⚔️ ლეგენდები: "გმირთა არენა", "ლეგენდების ოთახი", "მითების სამყარო"
-🏆 ჩემპიონები: "ჩემპიონთა ლიგა", "ტიტანების არენა", "გამარჯვებულთა კლუბი"
-👥 მეგობრობა: "მეგობრების ოთახი", "სახალისო კომპანია", "მხიარულთა არენა"
-
-⚠️ მნიშვნელოვანი წესი: მოცემული აიკონია "${iconName}" - ეს მხოლოდ ვიზუალური დეკორაციაა!
-- ნუ თარგმნი აიკონს პირდაპირ!
-- თუ აიკონი არის ყოველდღიური საგანი (სტეპლერი, ტუალეტი, სარეცხი მანქანა, ჭიქა, კარადა...), სრულად იგნორირება უყავი და შექმენი რაღაც ეპიკური!
-- სახელი ყოველთვის უნდა იყოს შთამაგონებელი და სახალისო, არა მოსაწყენი!
+- ამ თემატიკის შესაბამისი
+- აიკონთან თანხვედრაში
 
 დაბრუნე მხოლოდ 2 სიტყვიანი კრეატიული სახელი, არაფერი სხვა.`;
+
+    console.log(`Generating name for theme: ${themeLabel}, icon: ${iconName}`);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -230,10 +278,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('AI API error:', response.status);
-      // Fallback to inspirational name
+      // Fallback to theme-matched inspirational name
       return new Response(
         JSON.stringify({ 
-          name: getRandomInspirationalName(), 
+          name: getThemeMatchedName(), 
           icon_url: selectedIcon.icon_url 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
