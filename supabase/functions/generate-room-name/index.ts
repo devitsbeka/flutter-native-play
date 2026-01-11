@@ -133,13 +133,30 @@ serve(async (req) => {
       }
     }
 
-    // If no specific icon or not found, get random icons
+    // Only pick icons from inspirational categories (no mundane items like spoons, washing machines)
+    const INSPIRATIONAL_CATEGORIES = [
+      'Space & Science',
+      'Fantasy & Imagination',
+      'Animals',
+      'Nature & Outdoors',
+      'Sports',
+      'Historical Figures',
+      'Entertainment & Leisure',
+      'Places & Structures',
+      'Vehicles & Transport',
+      'Events',
+      'History & Culture',
+      'Professions',
+    ];
+
+    // If no specific icon or not found, get random icons from inspirational categories only
     if (!selectedIcon) {
       const { data: icons, error: iconError } = await supabase
         .from('icon_library')
-        .select('slug, title, icon_url')
+        .select('slug, title, icon_url, category')
         .not('icon_url', 'is', null)
-        .limit(100);
+        .in('category', INSPIRATIONAL_CATEGORIES)
+        .limit(200);
 
       if (iconError || !icons || icons.length === 0) {
         console.error('Failed to fetch icons:', iconError);
