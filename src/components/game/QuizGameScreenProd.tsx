@@ -361,8 +361,8 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Answer Buttons - No Scroll */}
-      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
+      {/* Answer Buttons - Scrollable */}
+      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-y-auto min-h-0 pb-2">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
