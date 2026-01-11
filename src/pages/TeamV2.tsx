@@ -595,6 +595,8 @@ function TeamContentV2() {
                 onSortFilterChange={setSortFilter}
                 searchQuery={searchQuery}
                 onSearchQueryChange={setSearchQuery}
+                selectedHashtag={selectedHashtag}
+                onClearHashtag={() => setSelectedHashtag(null)}
               />
             </div>
           )}
