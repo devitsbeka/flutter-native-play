@@ -265,8 +265,7 @@ const pageCategories: CategoryDefinition[] = [
     pages: [
       { id: "tv-lobby", label: "TV Lobby", labelGe: "TV ლობი", Component: TVLobby, route: "/tv" },
       { id: "tv-join", label: "TV Join", labelGe: "შეერთება", Component: TVJoin, route: "/join" },
-      { id: "tv-display", label: "TV Display", labelGe: "TV ეკრანი", Component: TVDisplay, route: "/tv/ABC123" },
-      { id: "tv-host", label: "Host Controller", labelGe: "ჰოსტის კონტროლი", Component: TVHostController, route: "/tv/host/test-session" },
+      // TVDisplay and TVHostController removed - require TVGameProvider context
     ],
   },
   {
@@ -363,7 +362,7 @@ const pageCategories: CategoryDefinition[] = [
       { id: "ad-free-modal", label: "Ad Free", labelGe: "რეკლამის გარეშე", Component: AdFreeModal, isModal: true, modalProps: {} },
       { id: "watch-ad-modal", label: "Watch Ad", labelGe: "რეკლამის ნახვა", Component: WatchAdModal, isModal: true, modalProps: { rewardType: "coins", rewardAmount: 50 } },
       { id: "home-help-modal", label: "Help", labelGe: "დახმარება", Component: HomeHelpModal, isModal: true, modalProps: {} },
-      { id: "powerup-tutorial-modal", label: "Power-Up Tutorial", labelGe: "პაუერაფ ტუტორიალი", Component: PowerUpTutorialModalHome, isModal: true, modalProps: { powerUpType: "double" } },
+      // PowerUpTutorialModalHome removed - requires powerUp prop with name property
     ],
   },
   {
@@ -389,10 +388,8 @@ const pageCategories: CategoryDefinition[] = [
     pages: [
       { id: "game-lose-modal", label: "Game Lose", labelGe: "წაგება", Component: GameLoseModal, isModal: true, modalProps: { userScore: 1500, opponentScore: 2000, opponentName: "Player2", coinsEarned: 10 } },
       { id: "coming-soon-modal", label: "Coming Soon", labelGe: "მალე", Component: ComingSoonModal, isModal: true, modalProps: { categoryName: "Science", levelNumber: 5 } },
-      { id: "category-wheel-modal", label: "Category Wheel", labelGe: "კატეგორიის წრე", Component: CategoryWheelModal, isModal: true, modalProps: {} },
+      // CategoryWheelModal, PowerUpDetailModal, GamePowerUpTutorialModal removed - require callbacks/props that crash in isolation
       { id: "lucky-spin-modal", label: "Lucky Spin", labelGe: "იღბლიანი სპინი", Component: LuckySpinModal, isModal: true, modalProps: {} },
-      { id: "powerup-detail-modal", label: "Power-Up Detail", labelGe: "პაუერაფის დეტალები", Component: PowerUpDetailModal, isModal: true, modalProps: { type: "double" } },
-      { id: "game-powerup-tutorial-modal", label: "Power-Up Tutorial", labelGe: "პაუერაფ ტუტორიალი", Component: GamePowerUpTutorialModal, isModal: true, modalProps: { powerUpType: "bomb" } },
       { id: "vs-match-help-modal", label: "VS Match Help", labelGe: "VS დახმარება", Component: VSMatchHelpModal, isModal: true, modalProps: {} },
     ],
   },
@@ -416,24 +413,15 @@ const pageCategories: CategoryDefinition[] = [
     icon: "👥",
     isModal: true,
     pages: [
-      { id: "create-room-modal", label: "Create Room", labelGe: "ოთახის შექმნა", Component: CreateRoomModal, isModal: true, modalProps: {} },
-      { id: "join-room-modal", label: "Join Room", labelGe: "ოთახში შესვლა", Component: JoinRoomModal, isModal: true, modalProps: {} },
-      { id: "quick-play-modal", label: "Quick Play", labelGe: "სწრაფი თამაში", Component: QuickPlayModal, isModal: true, modalProps: {} },
+      // CreateRoomModal, JoinRoomModal, QuickPlayModal removed - require MultiplayerProvider context
       { id: "category-selector-modal", label: "Category Selector", labelGe: "კატეგორიის არჩევა", Component: CategorySelectorModal, isModal: true, modalProps: {} },
       { id: "team-help-modal", label: "Team Help", labelGe: "გუნდის დახმარება", Component: TeamHelpModal, isModal: true, modalProps: {} },
       { id: "how-it-works-modal", label: "How It Works", labelGe: "როგორ მუშაობს", Component: HowItWorksModal, isModal: true, modalProps: {} },
       { id: "invite-friends-modal", label: "Invite Friends", labelGe: "მეგობრების მოწვევა", Component: InviteFriendsModal, isModal: true, modalProps: { roomCode: "ABC123" } },
-      { id: "game-invite-modal", label: "Game Invite", labelGe: "თამაშზე მოწვევა", Component: GameInviteModal, isModal: true, modalProps: { invitation: { id: "1", senderName: "Player1", roomCode: "ABC123" } } },
       { id: "add-friend-modal", label: "Add Friend", labelGe: "მეგობრის დამატება", Component: AddFriendModal, isModal: true, modalProps: {} },
-      { id: "all-friends-modal", label: "All Friends", labelGe: "ყველა მეგობარი", Component: AllFriendsModal, isModal: true, modalProps: {} },
-      { id: "all-recent-players-modal", label: "Recent Players", labelGe: "ბოლო მოთამაშეები", Component: AllRecentPlayersModal, isModal: true, modalProps: {} },
-      { id: "all-recent-rooms-modal", label: "Recent Rooms", labelGe: "ბოლო ოთახები", Component: AllRecentRoomsModal, isModal: true, modalProps: {} },
       { id: "room-icon-picker-modal", label: "Room Icon Picker", labelGe: "აიქონის არჩევა", Component: RoomIconPickerModal, isModal: true, modalProps: {} },
       { id: "gradient-picker-modal", label: "Gradient Picker", labelGe: "გრადიენტის არჩევა", Component: GradientPicker, isModal: true, modalProps: {} },
-      { id: "chat-modal", label: "Chat", labelGe: "ჩატი", Component: ChatModal, isModal: true, modalProps: { roomId: "test-room" } },
-      // QR Scanner removed - triggers camera access which is not needed for design preview
-      { id: "create-blind-trivia-modal", label: "Create Blind Trivia", labelGe: "ბრმა ტრივიას შექმნა", Component: CreateBlindTriviaModal, isModal: true, modalProps: {} },
-      { id: "my-trivias-picker-modal", label: "My Trivias Picker", labelGe: "ჩემი ტრივიების არჩევა", Component: MyTriviasPickerModal, isModal: true, modalProps: {} },
+      // QR Scanner, Chat, BlindTrivia, TriviaPicker removed - require context providers or complex state
     ],
   },
   {
@@ -443,13 +431,8 @@ const pageCategories: CategoryDefinition[] = [
     icon: "📺",
     isModal: true,
     pages: [
-      { id: "tv-mirror-modal", label: "TV Mirror", labelGe: "TV სარკე", Component: TVMirrorModal, isModal: true, modalProps: {} },
-      { id: "tv-connect-modal", label: "TV Connect", labelGe: "TV დაკავშირება", Component: TVConnectModal, isModal: true, modalProps: {} },
-      { id: "tv-discovery-modal", label: "TV Discovery", labelGe: "TV აღმოჩენა", Component: TVDiscoveryModal, isModal: true, modalProps: {} },
+      // TV modals removed - require TVGameProvider context
       { id: "tv-enter-code-modal", label: "TV Enter Code", labelGe: "კოდის შეყვანა", Component: TVEnterCodeModal, isModal: true, modalProps: {} },
-      { id: "tv-join-modal", label: "TV Join", labelGe: "TV შეერთება", Component: TVJoinModal, isModal: true, modalProps: {} },
-      { id: "tv-play-modal", label: "TV Play", labelGe: "TV თამაში", Component: TVPlayModal, isModal: true, modalProps: {} },
-      { id: "tv-setup-modal", label: "TV Setup", labelGe: "TV დაყენება", Component: TVSetupModal, isModal: true, modalProps: {} },
     ],
   },
   {
@@ -459,14 +442,7 @@ const pageCategories: CategoryDefinition[] = [
     icon: "📱",
     isModal: true,
     pages: [
-      { id: "create-quiz-modal", label: "Create Quiz", labelGe: "ქვიზის შექმნა", Component: CreateQuizModal, isModal: true, modalProps: {} },
-      { id: "edit-quiz-modal", label: "Edit Quiz", labelGe: "ქვიზის რედაქტირება", Component: EditQuizModal, isModal: true, modalProps: { quiz: { id: "1", title: "Test Quiz", questions: [] } } },
-      { id: "create-collection-modal", label: "Create Collection", labelGe: "კოლექციის შექმნა", Component: CreateCollectionModal, isModal: true, modalProps: {} },
-      { id: "add-round-to-collection-modal", label: "Add Round", labelGe: "რაუნდის დამატება", Component: AddRoundToCollectionModal, isModal: true, modalProps: { collectionId: "1" } },
-      { id: "edit-round-modal", label: "Edit Round", labelGe: "რაუნდის რედაქტირება", Component: EditRoundModal, isModal: true, modalProps: { round: { id: "1", title: "Test Round", questions: [] } } },
-      { id: "trivia-preview-modal", label: "Trivia Preview", labelGe: "ტრივიას წინასწარი ნახვა", Component: TriviaPreviewModal, isModal: true, modalProps: { triviaId: "1" } },
-      { id: "quiz-play-modal", label: "Quiz Play", labelGe: "ქვიზის თამაში", Component: QuizPlayModal, isModal: true, modalProps: { quizId: "1" } },
-      { id: "collection-preview-modal", label: "Collection Preview", labelGe: "კოლექციის წინასწარი ნახვა", Component: CollectionPreviewModal, isModal: true, modalProps: { collectionId: "1" } },
+      // Complex UGC modals removed - require auth context and database queries
       { id: "create-trivia-type-modal", label: "Create Trivia Type", labelGe: "ტრივიას ტიპის შექმნა", Component: CreateTriviaTypeModal, isModal: true, modalProps: {} },
     ],
   },
