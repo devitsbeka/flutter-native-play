@@ -460,26 +460,58 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : currentMessages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-center">
-                        <div className="w-16 h-16 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
-                          <MessageCircle className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-muted-foreground">შეტყობინებები არ არის</p>
-                        <p className="text-sm text-muted-foreground/70 mt-1">დაიწყე საუბარი!</p>
-                      </div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                        className="flex flex-col items-center justify-center h-full"
+                      >
+                        <motion.div
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.1 }}
+                          className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4"
+                        >
+                          <Send className="w-8 h-8 text-muted-foreground" />
+                        </motion.div>
+                        <motion.p 
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className="text-muted-foreground text-sm"
+                        >
+                          დაიწყეთ საუბარი!
+                        </motion.p>
+                      </motion.div>
                     ) : (
                       <div className="space-y-3">
-                        {currentMessages.map((msg) => {
+                        {currentMessages.map((msg, index) => {
                           const isOwn = msg.sender_id === user?.id || msg.user_id === user?.id;
                           return (
                             <motion.div
                               key={msg.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
+                              initial={{ 
+                                opacity: 0, 
+                                y: 20, 
+                                scale: 0.9,
+                                x: isOwn ? 20 : -20 
+                              }}
+                              animate={{ 
+                                opacity: 1, 
+                                y: 0, 
+                                scale: 1,
+                                x: 0 
+                              }}
+                              transition={{ 
+                                type: "spring", 
+                                damping: 20, 
+                                stiffness: 300,
+                                delay: Math.min(index * 0.03, 0.3)
+                              }}
                               className={cn("flex", isOwn ? "justify-end" : "justify-start")}
                             >
-                              <div className="flex items-end gap-2 max-w-[80%]">
-                                {!isOwn && (
+                              <div className="flex items-end gap-2 max-w-[75%]">
+                                {!isOwn && selectedConversation.type === "room" && (
                                   <Avatar className="w-8 h-8 flex-shrink-0">
                                     <AvatarImage src={msg.avatar_url} />
                                     <AvatarFallback className="bg-muted text-xs">
@@ -487,25 +519,33 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                                     </AvatarFallback>
                                   </Avatar>
                                 )}
-                                <div
-                                  className={cn(
-                                    "px-4 py-2.5 rounded-2xl text-sm",
-                                    isOwn
-                                      ? "bg-primary text-primary-foreground rounded-br-md"
-                                      : "bg-card/90 backdrop-blur-sm text-foreground rounded-bl-md border border-border/30"
-                                  )}
+                                <motion.div
+                                  whileHover={{ scale: 1.02 }}
+                                  className="px-4 py-2 rounded-2xl"
+                                  style={isOwn ? {
+                                    background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(271, 81%, 56%) 100%)",
+                                    color: "hsl(var(--primary-foreground))",
+                                    borderBottomRightRadius: "4px",
+                                    boxShadow: "0 4px 12px hsla(var(--primary), 0.35)",
+                                  } : {
+                                    background: "hsl(var(--muted))",
+                                    backdropFilter: "blur(8px)",
+                                    color: "hsl(var(--foreground))",
+                                    borderBottomLeftRadius: "4px",
+                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+                                  }}
                                 >
                                   {!isOwn && selectedConversation.type === "room" && (
                                     <p className="text-xs font-medium text-primary mb-1">{msg.nickname}</p>
                                   )}
-                                  <p className="break-words">{msg.message}</p>
+                                  <p className="text-sm break-words">{msg.message}</p>
                                   <p className={cn(
-                                    "text-[10px] mt-1",
-                                    isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
+                                    "text-xs mt-1",
+                                    isOwn ? "opacity-70" : "text-muted-foreground"
                                   )}>
                                     {formatTime(msg.created_at)}
                                   </p>
-                                </div>
+                                </motion.div>
                               </div>
                             </motion.div>
                           );
@@ -516,7 +556,12 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   </div>
 
                   {/* Input */}
-                  <div className="relative z-10 px-4 py-3 bg-card/80 backdrop-blur-xl border-t border-border/30">
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.1 }}
+                    className="relative z-10 px-4 py-3 border-t border-border bg-background"
+                  >
                     <div className="flex items-center gap-3">
                       <input
                         ref={inputRef}
@@ -525,24 +570,28 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         placeholder="შეტყობინება..."
-                        className="flex-1 h-12 px-5 rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="flex-1 h-12 px-5 rounded-full bg-muted/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                       <motion.button
                         onClick={handleSend}
                         disabled={!inputValue.trim() || sending}
-                        className={cn(
-                          "w-12 h-12 rounded-full flex items-center justify-center transition-all",
-                          inputValue.trim()
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted/50 text-muted-foreground"
-                        )}
+                        className="w-12 h-12 rounded-full flex items-center justify-center transition-all"
+                        style={{
+                          background: inputValue.trim() 
+                            ? "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(271, 81%, 56%) 100%)"
+                            : "hsl(var(--muted))",
+                          boxShadow: inputValue.trim() ? "0 4px 12px hsla(var(--primary), 0.35)" : "none",
+                        }}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <Send className="w-5 h-5" />
+                        <Send className={cn(
+                          "w-5 h-5",
+                          inputValue.trim() ? "text-primary-foreground" : "text-muted-foreground"
+                        )} />
                       </motion.button>
                     </div>
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
