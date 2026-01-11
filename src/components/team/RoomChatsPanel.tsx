@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Users } from "lucide-react";
+import { X, Send, MessageCircle, Users, Check } from "lucide-react";
 import { useMyRooms, MyRoom } from "@/hooks/useMyRooms";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { cn } from "@/lib/utils";
 import { getGradientById } from "@/config/roomGradients";
-import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 
 interface RoomChatsPanelProps {
   isOpen: boolean;
@@ -27,36 +26,38 @@ interface MiniRoomCardProps {
 
 function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardProps) {
   const gradient = getGradientById(room.background_gradient);
-  const displayName = room.room_name || "თამაშის ოთახი";
+  const displayName = room.room_name || room.category_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
 
   return (
     <motion.button
       onClick={onClick}
       className={cn(
-        "relative flex-shrink-0 w-[140px] rounded-xl overflow-hidden transition-all",
-        isSelected && "ring-2 ring-white ring-offset-2 ring-offset-background"
+        "relative flex-shrink-0 w-[180px] rounded-xl overflow-hidden transition-all duration-200",
+        isSelected 
+          ? "ring-2 ring-primary shadow-[0_0_20px_hsla(var(--primary),0.4)] scale-[1.02]" 
+          : "opacity-70 hover:opacity-100 hover:scale-[1.01]"
       )}
-      whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
     >
       {/* Gradient background */}
       <div
-        className="relative p-2 rounded-xl min-h-[100px]"
+        className="relative p-3 rounded-xl min-h-[110px]"
         style={{ background: gradient?.gradient }}
       >
-        {/* Cover image overlay */}
-        <div
-          className="absolute inset-0 opacity-20 overflow-hidden rounded-xl"
-          style={{
-            backgroundImage: `url(${room.cover_image || roomCoverPlaceholder})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
+        {/* Selection indicator */}
+        {isSelected && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="absolute top-2 left-2 z-20 w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md"
+          >
+            <Check className="w-3 h-3 text-primary" />
+          </motion.div>
+        )}
 
         {/* Status badge */}
-        <div className="relative z-10 mb-1.5">
+        <div className="relative z-10 mb-2 flex justify-end">
           {isPlaying ? (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-bold">
               <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
@@ -70,27 +71,27 @@ function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardPr
         </div>
 
         {/* Room name with icon */}
-        <div className="relative z-10 flex items-center gap-1 mb-0.5">
+        <div className="relative z-10 flex items-start gap-1.5 mb-1">
           {room.room_icon && (
-            <img src={room.room_icon} alt="" className="w-3.5 h-3.5 object-contain" />
+            <img src={room.room_icon} alt="" className="w-5 h-5 object-contain flex-shrink-0 drop-shadow" />
           )}
-          <h4 className="font-bold text-white text-xs truncate drop-shadow-md">
+          <h4 className="font-bold text-white text-xs leading-tight line-clamp-2 drop-shadow-md text-left">
             {displayName}
           </h4>
         </div>
 
         {/* Category name */}
-        {room.category_name && (
-          <p className="relative z-10 text-[9px] text-white/70 truncate mb-1.5">
+        {room.category_name && room.room_name && (
+          <p className="relative z-10 text-[10px] text-white/70 truncate mb-2 text-left">
             {room.category_name}
           </p>
         )}
 
         {/* Bottom: participants count + avatars */}
-        <div className="relative z-10 flex items-center justify-between bg-white/15 backdrop-blur-sm rounded-lg p-1">
-          <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white/20 rounded">
-            <Users className="w-2.5 h-2.5 text-white/80" />
-            <span className="text-[9px] font-bold text-white">
+        <div className="relative z-10 flex items-center justify-between mt-auto pt-1">
+          <div className="flex items-center gap-1">
+            <Users className="w-3 h-3 text-white/70" />
+            <span className="text-[10px] font-bold text-white/80">
               {room.participants.length}
             </span>
           </div>
@@ -123,9 +124,13 @@ function MiniRoomCard({ room, isSelected, unreadCount, onClick }: MiniRoomCardPr
 
         {/* Unread badge */}
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-red-500 rounded-full shadow-lg z-20">
+          <motion.span 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-destructive-foreground bg-destructive rounded-full shadow-lg z-20"
+          >
             {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
+          </motion.span>
         )}
       </div>
     </motion.button>
@@ -255,7 +260,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
               {roomsLoading ? (
                 <div className="flex gap-3">
                   {[1, 2].map((i) => (
-                    <div key={i} className="w-[140px] h-[100px] rounded-xl bg-muted animate-pulse" />
+                    <div key={i} className="w-[180px] h-[110px] rounded-xl bg-muted animate-pulse" />
                   ))}
                 </div>
               ) : rooms.length === 0 ? (
@@ -272,6 +277,38 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                 ))
               )}
             </div>
+
+            {/* Selected room header */}
+            {selectedRoom && (
+              <div 
+                className="flex items-center gap-3 px-4 py-2.5 border-b border-border/30"
+                style={{ 
+                  background: `linear-gradient(to right, ${getGradientById(selectedRoom.background_gradient)?.colors?.[0] || 'hsl(var(--muted))'}, transparent)` 
+                }}
+              >
+                {selectedRoom.room_icon && (
+                  <img src={selectedRoom.room_icon} alt="" className="w-7 h-7 object-contain drop-shadow" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm truncate">
+                    {selectedRoom.room_name || selectedRoom.category_name || "თამაშის ოთახი"}
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground">
+                    {selectedRoom.participants.length} მონაწილე
+                  </p>
+                </div>
+                <div className="flex -space-x-1.5">
+                  {selectedRoom.participants.slice(0, 4).map((p) => (
+                    <Avatar key={p.user_id} className="w-6 h-6 border-2 border-background">
+                      <AvatarImage src={p.avatar_url || undefined} />
+                      <AvatarFallback className="text-[9px] bg-muted font-bold">
+                        {p.nickname?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Messages area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
