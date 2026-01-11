@@ -44,7 +44,7 @@ import { QRScannerModal } from "@/components/team/QRScannerModal";
 
 function TeamContentV2() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { t } = useLanguage();
   const { 
@@ -63,6 +63,12 @@ function TeamContentV2() {
     acceptInvitation,
   } = useGameInvitations();
   const { createRoom } = useMultiplayerV2();
+
+  // Challenge context from URL
+  const [challengeContext, setChallengeContext] = useState<{
+    targetUserId: string;
+    challengeType: "random" | "library" | "my-trivias" | "create";
+  } | null>(null);
 
   // Quick play state
   const [quickPlayFriend, setQuickPlayFriend] = useState<{
@@ -151,6 +157,26 @@ function TeamContentV2() {
       enterRoom(joinCode);
     }
   }, [searchParams, user, phase, enterRoom]);
+
+  // Handle challenge context from URL
+  useEffect(() => {
+    const challengeUserId = searchParams.get("challenge");
+    const challengeType = searchParams.get("type") as "random" | "library" | "my-trivias" | "create" | null;
+    
+    if (challengeUserId && challengeType && user) {
+      // Store challenge context and open create modal
+      setChallengeContext({
+        targetUserId: challengeUserId,
+        challengeType: challengeType,
+      });
+      setShowCreateModal(true);
+      
+      // Clear URL params to prevent re-triggering
+      searchParams.delete("challenge");
+      searchParams.delete("type");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, user, setSearchParams, setShowCreateModal]);
 
   // Handle accepting invitation
   const handleAcceptInvitation = async (invitationId: string) => {
@@ -504,7 +530,12 @@ function TeamContentV2() {
       <AnimatePresence>
         {showCreateModal && (
           <CreateRoomPage 
-            onClose={() => setShowCreateModal(false)} 
+            onClose={() => {
+              setShowCreateModal(false);
+              setChallengeContext(null);
+            }}
+            challengeUserId={challengeContext?.targetUserId}
+            defaultChallengeType={challengeContext?.challengeType}
           />
         )}
       </AnimatePresence>

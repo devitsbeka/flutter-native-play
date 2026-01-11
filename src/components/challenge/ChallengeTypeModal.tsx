@@ -1,16 +1,8 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Dice5, Library, Gamepad2, Sparkles, Loader2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { LibraryCategoryPicker } from "./LibraryCategoryPicker";
-import { MyTriviasPicker } from "./MyTriviasPicker";
-import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { createNotification } from "@/hooks/useNotifications";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface ChallengeTypeModalProps {
   isOpen: boolean;
@@ -22,8 +14,6 @@ interface ChallengeTypeModalProps {
     animated_avatar_url: string | null;
   } | null;
 }
-
-type ChallengeStep = "select-type" | "library" | "my-trivias" | "create";
 
 const challengeOptions = [
   {
@@ -63,410 +53,114 @@ export function ChallengeTypeModal({
   targetUserProfile,
 }: ChallengeTypeModalProps) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [step, setStep] = useState<ChallengeStep>("select-type");
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleOptionSelect = async (optionId: string) => {
+  const handleOptionSelect = (optionId: string) => {
+    // Close modal first
+    onClose();
+    
+    // Navigate to team page with challenge context
     switch (optionId) {
       case "random":
-        await handleRandomChallenge();
+        navigate(`/team?challenge=${targetUserId}&type=random`);
         break;
       case "library":
-        setStep("library");
+        navigate(`/team?challenge=${targetUserId}&type=library`);
         break;
       case "my-trivias":
-        setStep("my-trivias");
+        navigate(`/team?challenge=${targetUserId}&type=my-trivias`);
         break;
       case "create":
-        setCreateModalOpen(true);
+        navigate(`/team?challenge=${targetUserId}&type=create`);
         break;
     }
-  };
-
-  const handleRandomChallenge = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    
-    try {
-      // Fetch a random category
-      const { data: categories, error } = await supabase
-        .from("categories")
-        .select("id, name, icon")
-        .eq("is_active", true);
-
-      if (error) throw error;
-
-      if (!categories || categories.length === 0) {
-        toast.error("კატეგორიები ვერ მოიძებნა");
-        return;
-      }
-
-      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-      await createChallengeRoom(randomCategory.id, randomCategory.name);
-    } catch (err) {
-      console.error("Error creating random challenge:", err);
-      toast.error("შეცდომა მოხდა");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCategorySelect = async (category: { id: string; name: string }) => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      await createChallengeRoom(category.id, category.name);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTriviaSelect = async (trivia: { id: string; title: string; type: "trivia" | "collection" }) => {
-    if (isLoading || !user) return;
-    setIsLoading(true);
-    
-    try {
-      // Get user's profile for participant info
-      const { data: userProfile } = await supabase
-        .from("profiles")
-        .select("nickname, avatar_url, country_code")
-        .eq("user_id", user.id)
-        .single();
-
-      // Generate room code
-      const { data: codeData } = await supabase.rpc("generate_room_code");
-      const roomCode = codeData || generateRoomCode();
-      
-      // Create room with trivia reference stored in game_mode
-      const { data: room, error } = await supabase
-        .from("game_rooms")
-        .insert({
-          room_code: roomCode,
-          host_user_id: user.id,
-          challenged_user_id: targetUserId,
-          room_name: trivia.title,
-          game_type: "async",
-          game_mode: trivia.type === "collection" ? `collection:${trivia.id}` : `trivia:${trivia.id}`,
-          status: "waiting",
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Add host as participant
-      await supabase.from("room_participants").insert({
-        room_id: room.id,
-        user_id: user.id,
-        nickname: userProfile?.nickname || "Player",
-        avatar_url: userProfile?.avatar_url,
-        country_code: userProfile?.country_code || "GE",
-        is_host: true,
-        status: "joined",
-      });
-
-      // Add invited user as participant (with invited status)
-      if (targetUserProfile) {
-        await supabase.from("room_participants").insert({
-          room_id: room.id,
-          user_id: targetUserId,
-          nickname: targetUserProfile.nickname,
-          avatar_url: targetUserProfile.avatar_url,
-          country_code: "GE",
-          is_host: false,
-          status: "invited",
-        });
-      }
-
-      // Send invitation
-      await supabase.from("game_invitations").insert({
-        room_id: room.id,
-        sender_id: user.id,
-        receiver_id: targetUserId,
-        status: "pending",
-      });
-
-      // Create notification for receiver
-      await createNotification(
-        targetUserId,
-        "challenge",
-        `${userProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
-        `ტრივია: ${trivia.title}`,
-        {
-          room_id: room.id,
-          room_code: roomCode,
-          sender_id: user.id,
-          trivia_id: trivia.id,
-          trivia_type: trivia.type,
-        }
-      );
-
-      toast.success(`${targetUserProfile?.nickname}-ს გამოწვევა გაიგზავნა!`);
-      onClose();
-      navigate(`/team?room=${room.room_code}`);
-    } catch (err) {
-      console.error("Error creating trivia challenge:", err);
-      toast.error("შეცდომა მოხდა");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createChallengeRoom = async (categoryId: string, categoryName: string) => {
-    if (!user) {
-      toast.error("გთხოვთ გაიაროთ ავტორიზაცია");
-      return;
-    }
-
-    try {
-      // Get user's profile for participant info
-      const { data: userProfile } = await supabase
-        .from("profiles")
-        .select("nickname, avatar_url, country_code")
-        .eq("user_id", user.id)
-        .single();
-
-      // Generate room code
-      const { data: codeData } = await supabase.rpc("generate_room_code");
-      const roomCode = codeData || generateRoomCode();
-
-      // Create the room
-      const { data: room, error } = await supabase
-        .from("game_rooms")
-        .insert({
-          room_code: roomCode,
-          host_user_id: user.id,
-          challenged_user_id: targetUserId,
-          category_id: categoryId,
-          category_name: categoryName,
-          game_type: "async",
-          game_mode: `category:${categoryId}`,
-          status: "waiting",
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Add host as participant
-      await supabase.from("room_participants").insert({
-        room_id: room.id,
-        user_id: user.id,
-        nickname: userProfile?.nickname || "Player",
-        avatar_url: userProfile?.avatar_url,
-        country_code: userProfile?.country_code || "GE",
-        is_host: true,
-        status: "joined",
-      });
-
-      // Add invited user as participant (with invited status)
-      if (targetUserProfile) {
-        await supabase.from("room_participants").insert({
-          room_id: room.id,
-          user_id: targetUserId,
-          nickname: targetUserProfile.nickname,
-          avatar_url: targetUserProfile.avatar_url,
-          country_code: "GE",
-          is_host: false,
-          status: "invited",
-        });
-      }
-
-      // Send invitation
-      await supabase.from("game_invitations").insert({
-        room_id: room.id,
-        sender_id: user.id,
-        receiver_id: targetUserId,
-        status: "pending",
-      });
-
-      // Create notification for receiver
-      await createNotification(
-        targetUserId,
-        "challenge",
-        `${userProfile?.nickname || "მეგობარი"} გიწვევს თამაშში!`,
-        `კატეგორია: ${categoryName}`,
-        {
-          room_id: room.id,
-          room_code: roomCode,
-          sender_id: user.id,
-          category_id: categoryId,
-          category_name: categoryName,
-        }
-      );
-
-      toast.success(`${targetUserProfile?.nickname}-ს გამოწვევა გაიგზავნა!`);
-      onClose();
-      navigate(`/team?room=${room.room_code}`);
-    } catch (err) {
-      console.error("Error creating challenge room:", err);
-      toast.error("შეცდომა მოხდა");
-    }
-  };
-
-  const generateRoomCode = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  const handleBack = () => {
-    setStep("select-type");
   };
 
   const handleClose = () => {
-    setStep("select-type");
-    onClose();
-  };
-
-  const handleCreateSingle = () => {
-    setCreateModalOpen(false);
-    navigate("/create-trivia?challenge=" + targetUserId);
-    onClose();
-  };
-
-  const handleCreateCollection = () => {
-    setCreateModalOpen(false);
-    navigate("/create-collection?challenge=" + targetUserId);
     onClose();
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent 
-          className="max-w-sm p-0 gap-0 border-0 bg-card rounded-3xl overflow-hidden"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              {step !== "select-type" && (
-                <motion.button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleBack();
-                  }}
-                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <X className="w-4 h-4 rotate-45" />
-                </motion.button>
-              )}
-              <h2 className="font-bold text-foreground">
-                {step === "select-type" && "⚔️ გამოწვევა"}
-                {step === "library" && "📚 კატეგორია"}
-                {step === "my-trivias" && "🎯 ჩემი ტრივია"}
-              </h2>
-            </div>
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-              whileTap={{ scale: 0.95 }}
-            >
-              <X className="w-4 h-4" />
-            </motion.button>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent 
+        className="max-w-sm p-0 gap-0 border-0 bg-card rounded-3xl overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <h2 className="font-bold text-foreground">⚔️ გამოწვევა</h2>
           </div>
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }}
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+            whileTap={{ scale: 0.95 }}
+          >
+            <X className="w-4 h-4" />
+          </motion.button>
+        </div>
 
-          {/* Content */}
-          <div className="p-4 relative">
-            {/* Loading overlay */}
-            {isLoading && (
-              <div className="absolute inset-0 bg-card/80 flex items-center justify-center z-10 rounded-xl">
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">იქმნება...</p>
-                </div>
+        {/* Content */}
+        <div className="p-4 relative">
+          {/* Target User Info */}
+          {targetUserProfile && (
+            <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-muted/50">
+              <SmartAvatar
+                avatarUrl={targetUserProfile.avatar_url}
+                animatedAvatarUrl={targetUserProfile.animated_avatar_url}
+                fallback={targetUserProfile.nickname}
+                size="md"
+              />
+              <div>
+                <p className="font-medium text-foreground">
+                  {targetUserProfile.nickname}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  გამოწვევის ტიპი აირჩიე
+                </p>
               </div>
-            )}
-            
-            {step === "select-type" && (
-              <>
-                {/* Target User Info */}
-                {targetUserProfile && (
-                  <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-muted/50">
-                    <SmartAvatar
-                      avatarUrl={targetUserProfile.avatar_url}
-                      animatedAvatarUrl={targetUserProfile.animated_avatar_url}
-                      fallback={targetUserProfile.nickname}
-                      size="md"
-                    />
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {targetUserProfile.nickname}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        გამოწვევის ტიპი აირჩიე
-                      </p>
-                    </div>
-                  </div>
-                )}
+            </div>
+          )}
 
-                {/* Options Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {challengeOptions.map((option, index) => (
-                    <motion.button
-                      key={option.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        if (!isLoading) handleOptionSelect(option.id);
-                      }}
-                      disabled={isLoading}
-                      className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden min-h-[120px] flex flex-col ${isLoading ? 'opacity-70' : ''}`}
-                      whileHover={isLoading ? {} : { scale: 1.02 }}
-                      whileTap={isLoading ? {} : { scale: 0.98 }}
-                    >
-                      {/* Decorative circles */}
-                      <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10" />
-                      <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10" />
-                      
-                      {/* Icon top-left */}
-                      <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center mb-auto">
-                        <option.icon className="w-5 h-5" />
-                      </div>
-                      
-                      {/* Text bottom-left */}
-                      <div className="mt-3">
-                        <p className="font-bold text-base leading-tight">{option.title}</p>
-                        <p className="text-xs text-white/80 mt-0.5">{option.description}</p>
-                      </div>
-                    </motion.button>
-                  ))}
+          {/* Options Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {challengeOptions.map((option, index) => (
+              <motion.button
+                key={option.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleOptionSelect(option.id);
+                }}
+                className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden min-h-[120px] flex flex-col`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {/* Decorative circles */}
+                <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10" />
+                <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10" />
+                
+                {/* Icon top-left */}
+                <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center mb-auto">
+                  <option.icon className="w-5 h-5" />
                 </div>
-              </>
-            )}
-
-            {step === "library" && (
-              <LibraryCategoryPicker onSelect={handleCategorySelect} />
-            )}
-
-            {step === "my-trivias" && (
-              <MyTriviasPicker onSelect={handleTriviaSelect} />
-            )}
+                
+                {/* Text bottom-left */}
+                <div className="mt-3">
+                  <p className="font-bold text-base leading-tight">{option.title}</p>
+                  <p className="text-xs text-white/80 mt-0.5">{option.description}</p>
+                </div>
+              </motion.button>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Trivia Modal */}
-      <CreateTriviaTypeModal
-        open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
-        onSelectSingle={handleCreateSingle}
-        onSelectCollection={handleCreateCollection}
-      />
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
