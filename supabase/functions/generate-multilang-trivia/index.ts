@@ -392,7 +392,8 @@ serve(async (req) => {
     const requestedCount = Math.min(count || 50, 200);
     const extraForValidation = Math.ceil(requestedCount * 0.5); // Request 50% extra to account for duplicates
     const adjustedCount = requestedCount + extraForValidation;
-    const chunkSize = 50;
+    // Reduced chunk size to 15 to prevent API timeouts
+    const chunkSize = 15;
     const chunks = Math.ceil(adjustedCount / chunkSize);
 
     const languageName = LANGUAGE_NAMES[language] || language;
@@ -538,10 +539,24 @@ Return ONLY valid JSON with this structure:
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        throw new Error(`AI API error: ${response.status}`);
+        // For other errors, log and continue with next chunk instead of failing completely
+        console.error(`Chunk ${chunkIndex + 1} failed with status ${response.status}, skipping...`);
+        continue;
       }
 
-      const aiData = await response.json();
+      // Safely parse the response with error handling
+      let aiData;
+      try {
+        const responseText = await response.text();
+        if (!responseText || responseText.trim() === '') {
+          console.error(`Chunk ${chunkIndex + 1} returned empty response, skipping...`);
+          continue;
+        }
+        aiData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`Chunk ${chunkIndex + 1} JSON parse error:`, parseError);
+        continue;
+      }
       const content = aiData.choices?.[0]?.message?.content;
       
       if (!content) {
