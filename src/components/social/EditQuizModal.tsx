@@ -217,7 +217,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
           className="fixed inset-0 z-[100] bg-background flex flex-col"
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
+          <div className="flex-shrink-0 fixed top-0 left-0 right-0 z-[110] bg-background border-b border-border safe-top">
             <div className="flex items-center h-14 px-4">
               <motion.button
                 onClick={() => viewMode === "questions" ? setViewMode("info") : onClose()}
@@ -264,7 +264,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex-1 overflow-y-auto p-4 space-y-5"
+                className="flex-1 overflow-y-auto pt-[72px] p-4 space-y-5"
               >
                 {/* Cover Image Picker */}
                 <CoverImagePicker
