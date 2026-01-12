@@ -12,6 +12,7 @@ import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 import { getGradientById } from "@/config/roomGradients";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
+import { LiveBadge } from "@/components/social/LiveBadge";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -235,10 +236,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
           {/* Status badge row */}
           <div className="flex items-center justify-between mb-3">
             {isPlaying ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                LIVE
-              </span>
+              <LiveBadge />
             ) : isCompleted ? (
               <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                 დასრულდა
