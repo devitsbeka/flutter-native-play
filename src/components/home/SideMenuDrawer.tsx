@@ -21,7 +21,7 @@ import iconRewards from "@/assets/icons/icon-coin-purse.png";
 import iconMissions from "@/assets/icons/icon-mission-crystal.png";
 import iconTreasure from "@/assets/icons/icon-chest-box.png";
 import iconShop from "@/assets/icons/icon-magical-shop.png";
-import iconParty from "@/assets/icons/icon-party.png";
+import iconParty from "@/assets/group-of-people.png";
 import iconOtherGames from "@/assets/icons/icon-other-games.png";
 
 interface SideMenuDrawerProps {
