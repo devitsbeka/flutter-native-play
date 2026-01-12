@@ -124,7 +124,7 @@ export function ChallengeTypeModal({
                   {targetUserProfile.nickname}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  გამოწვევის ტიპი აირჩიე
+                  აირჩიე რას ითამაშებთ
                 </p>
               </div>
             </div>
