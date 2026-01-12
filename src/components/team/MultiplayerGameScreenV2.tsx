@@ -96,8 +96,11 @@ export function MultiplayerGameScreenV2() {
   const handleAnswer = useCallback((answer: string) => {
     if (answerRevealed) return;
     setSelectedAnswer(answer);
+    // Play tap sound for True/False selection
+    playSound("button-click");
+    vibrate(30);
     submitAnswer(answer, timeRemaining);
-  }, [answerRevealed, submitAnswer, timeRemaining]);
+  }, [answerRevealed, submitAnswer, timeRemaining, playSound, vibrate]);
 
   const handleNext = useCallback(() => {
     nextQuestion();
