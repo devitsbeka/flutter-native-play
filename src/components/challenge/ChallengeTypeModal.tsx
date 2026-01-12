@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 interface ChallengeTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onChallengeStart?: () => void;
   targetUserId: string;
   targetUserProfile: {
     nickname: string;
@@ -49,6 +50,7 @@ const challengeOptions = [
 export function ChallengeTypeModal({
   isOpen,
   onClose,
+  onChallengeStart,
   targetUserId,
   targetUserProfile,
 }: ChallengeTypeModalProps) {
@@ -57,6 +59,9 @@ export function ChallengeTypeModal({
   const handleOptionSelect = (optionId: string) => {
     // Close modal first
     onClose();
+    
+    // Notify parent to close as well (e.g., PlayerProfileModal)
+    onChallengeStart?.();
     
     // Navigate to team page with challenge context
     switch (optionId) {
