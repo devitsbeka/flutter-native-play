@@ -86,6 +86,8 @@ interface GameModalProps {
   showBackButton?: boolean;
   onBack?: () => void;
   disableBackdropClick?: boolean;
+  fullScreen?: boolean;
+  headerActions?: React.ReactNode;
   // Quick footer props (alternative to custom footer)
   primaryLabel?: string;
   primaryIcon?: React.ReactNode;
@@ -105,7 +107,7 @@ export function GameModal({
   subtitle,
   children,
   footer,
-  showSparkles = true,
+  showSparkles = false,
   showStars = false,
   className,
   hideCloseButton = false,
@@ -113,6 +115,8 @@ export function GameModal({
   showBackButton = false,
   onBack,
   disableBackdropClick = false,
+  fullScreen = true,
+  headerActions,
   primaryLabel,
   primaryIcon,
   onPrimaryClick,
@@ -137,7 +141,167 @@ export function GameModal({
   ) : null);
 
   const handleClose = onClose || (() => {});
+  const handleBack = onBack || onClose || (() => {});
 
+  // Full-screen modal layout
+  if (fullScreen) {
+    return (
+      <AnimatePresence mode="wait">
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] flex flex-col"
+            style={{
+              background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+            }}
+          >
+            {/* Fixed Header */}
+            <motion.div 
+              className="sticky top-0 z-10 flex items-center h-14 px-2 border-b border-gray-200/60"
+              style={{
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
+              }}
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              {/* Back button */}
+              <motion.button
+                onClick={handleBack}
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ChevronLeft className="w-6 h-6 text-gray-700" />
+              </motion.button>
+              
+              {/* Centered title */}
+              <div className="flex-1 text-center px-2">
+                <h1 className="font-display text-lg font-bold text-gray-900 truncate">
+                  {title}
+                </h1>
+              </div>
+              
+              {/* Right spacer or actions */}
+              <div className="w-10 flex items-center justify-center">
+                {headerActions}
+              </div>
+            </motion.div>
+            
+            {/* Scrollable content area */}
+            <motion.div 
+              className={cn("flex-1 overflow-y-auto", className)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              {/* Background sparkles */}
+              {showSparkles && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {sparkles.map((i) => (
+                    <ModalSparkle key={i} index={i} />
+                  ))}
+                </div>
+              )}
+              
+              {/* Floating stars */}
+              {showStars && (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {stars.map((i) => (
+                    <FloatingStar key={i} index={i} />
+                  ))}
+                </div>
+              )}
+              
+              {/* Subtitle section if provided */}
+              {subtitle && (
+                <div className="px-5 pt-4 pb-2 text-center">
+                  <p className="text-sm text-gray-500">{subtitle}</p>
+                </div>
+              )}
+              
+              {/* Icon section if provided */}
+              {(icon || iconEmoji) && (
+                <div className="flex justify-center pt-6 pb-4">
+                  {iconEmoji ? (
+                    <motion.div
+                      className="relative"
+                      initial={{ scale: 0, rotate: -20 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
+                    >
+                      {/* Subtle glow ring */}
+                      <motion.div
+                        className="absolute inset-0 rounded-full blur-lg"
+                        style={{
+                          background: "radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, transparent 70%)",
+                        }}
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      
+                      {/* Badge container */}
+                      <div 
+                        className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                          boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+                        }}
+                      >
+                        <motion.span 
+                          className="text-4xl"
+                          animate={{ 
+                            rotate: [-5, 5, -5],
+                            y: [0, -3, 0],
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          {iconEmoji}
+                        </motion.span>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -20 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
+                    >
+                      {icon}
+                    </motion.div>
+                  )}
+                </div>
+              )}
+              
+              {/* Main content */}
+              <div className="px-5 pb-5">
+                {children}
+              </div>
+            </motion.div>
+            
+            {/* Fixed Footer */}
+            {effectiveFooter && (
+              <motion.div 
+                className="sticky bottom-0 px-5 py-4 border-t border-gray-200/60"
+                style={{
+                  background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
+                }}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                {effectiveFooter}
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
+
+  // Original card modal layout (when fullScreen is false)
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
