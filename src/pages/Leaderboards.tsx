@@ -127,19 +127,16 @@ export default function Leaderboards() {
       >
         {/* Simplified Header */}
         <LeagueHeroHeader league={currentLeague} />
-
-        {/* Spacer to push info card down */}
-        <div className="flex-1 min-h-[180px]" />
-
-        {/* League Info Card - positioned lower */}
-        <div className="pb-8 mt-auto">
-          <LeagueInfoCard
-            league={currentLeague}
-            rankChange={rankChange}
-            isLocked={isLeagueLocked}
-          />
-        </div>
       </LeaderboardHeroBackground>
+
+      {/* League Info Card - positioned at top of leaderboard section */}
+      <div className="px-4 -mt-20 relative z-20 pb-4">
+        <LeagueInfoCard
+          league={currentLeague}
+          rankChange={rankChange}
+          isLocked={isLeagueLocked}
+        />
+      </div>
 
       {/* Main Content - Swipeable Leagues */}
       <div className="flex-1 overflow-hidden pb-28 relative">
