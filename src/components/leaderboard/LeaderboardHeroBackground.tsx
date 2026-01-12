@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import gameMapBg from "@/assets/gamemap.jpg";
 
 interface LeaderboardHeroBackgroundProps {
@@ -9,17 +9,16 @@ interface LeaderboardHeroBackgroundProps {
   userTier?: number;
 }
 
-// Trophy hotspot positions (as % of the scaled 160% image)
-// Based on highlighted reference image analysis
-const TROPHY_HOTSPOTS = [
-  { tier: 2, x: 25, y: 55, width: 16, height: 35, label: 'Silver' },
-  { tier: 3, x: 50, y: 52, width: 18, height: 35, label: 'Gold' },
-  { tier: 1, x: 73, y: 55, width: 17, height: 35, label: 'Bronze' },
+// Trophy positions on the original image (as % of full image width/height)
+const TROPHY_IMAGE_POSITIONS = [
+  { tier: 2, x: 25, label: 'Silver' },   // Silver at 25% of image
+  { tier: 3, x: 50, label: 'Gold' },     // Gold at 50% of image (center)
+  { tier: 1, x: 73, label: 'Bronze' },   // Bronze at 73% of image
 ];
 
 // Map pan positions to center each trophy in the viewport
-// Image is 160% width with -30% margin, viewport sees ~62.5% of image
-// Calculate offset to center each trophy X position
+// Image is 160% width, viewport sees ~62.5% of image
+// When centered (offset 0), viewport shows 18.75% to 81.25% of image
 const MAP_POSITIONS: Record<number, number> = {
   1: -14.5,  // Bronze at 73% -> pan left
   2: 15.5,   // Silver at 25% -> pan right
@@ -28,6 +27,32 @@ const MAP_POSITIONS: Record<number, number> = {
 
 export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTier = 1 }: LeaderboardHeroBackgroundProps) {
   const mapOffset = MAP_POSITIONS[tier] || 0;
+
+  // Calculate where each trophy appears in the viewport based on current pan offset
+  // The image is 160% wide, offset as % of that width
+  // We need to translate image coordinates to viewport coordinates
+  const hotspotsInViewport = useMemo(() => {
+    return TROPHY_IMAGE_POSITIONS.map((trophy) => {
+      // Image is 160% wide with -30% margin, offset applied on top
+      // Trophy X in image space: trophy.x% of 160% width
+      // With offset: trophy position shifts by offset% of 160% width
+      // Viewport sees from (30% - offset*1.6) to (30% + 62.5% - offset*1.6) of image
+      
+      // Convert image X to viewport X:
+      // viewportX = (imageX - viewportStart) / viewportWidth * 100%
+      // viewportStart = 30% - offset*1.6
+      // viewportWidth = 62.5% (100/160)
+      
+      const viewportStart = 30 - mapOffset * 1.6;
+      const viewportWidth = 62.5;
+      const viewportX = ((trophy.x - viewportStart) / viewportWidth) * 100;
+      
+      return {
+        ...trophy,
+        viewportX,
+      };
+    });
+  }, [mapOffset]);
 
   return (
     <motion.div
@@ -56,39 +81,45 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
             alt="" 
             className="w-full h-full object-cover object-bottom"
           />
-          
-          {/* Clickable Trophy Hotspots - positioned over the scaled map */}
-          {TROPHY_HOTSPOTS.map((hotspot) => {
-            const isLocked = hotspot.tier > userTier;
-            const isActive = hotspot.tier === tier;
-            
-            return (
-              <motion.button
-                key={hotspot.tier}
-                onClick={() => !isLocked && onTierSelect?.(hotspot.tier)}
-                disabled={isLocked}
-                className={`absolute rounded-xl transition-all duration-200 ${
-                  isLocked 
-                    ? 'cursor-not-allowed' 
-                    : 'cursor-pointer'
-                }`}
-                style={{
-                  left: `${hotspot.x - hotspot.width / 2}%`,
-                  top: `${hotspot.y - hotspot.height / 2}%`,
-                  width: `${hotspot.width}%`,
-                  height: `${hotspot.height}%`,
-                }}
-                whileTap={!isLocked ? { scale: 0.95 } : {}}
-                animate={{
-                  boxShadow: isActive && !isLocked
-                    ? '0 0 30px 10px rgba(255,255,255,0.15)'
-                    : 'none',
-                }}
-                aria-label={`Select ${hotspot.label} league`}
-              />
-            );
-          })}
         </motion.div>
+      </div>
+
+      {/* Clickable Trophy Hotspots - positioned in viewport space, NOT moving with map */}
+      <div className="absolute inset-0 z-[4]" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
+        {hotspotsInViewport.map((hotspot) => {
+          const isLocked = hotspot.tier > userTier;
+          const isActive = hotspot.tier === tier;
+          
+          // Only show hotspots that are within viewport (0-100%)
+          if (hotspot.viewportX < -20 || hotspot.viewportX > 120) return null;
+          
+          return (
+            <motion.button
+              key={hotspot.tier}
+              onClick={() => !isLocked && onTierSelect?.(hotspot.tier)}
+              disabled={isLocked}
+              className={`absolute rounded-xl ${
+                isLocked 
+                  ? 'cursor-not-allowed opacity-50' 
+                  : 'cursor-pointer'
+              }`}
+              style={{
+                left: `${hotspot.viewportX - 10}%`,
+                top: '30%',
+                width: '20%',
+                height: '45%',
+              }}
+              whileTap={!isLocked ? { scale: 0.95 } : {}}
+              animate={{
+                backgroundColor: isActive 
+                  ? 'rgba(255,255,255,0.1)' 
+                  : 'rgba(255,255,255,0)',
+              }}
+              transition={{ duration: 0.2 }}
+              aria-label={`Select ${hotspot.label} league`}
+            />
+          );
+        })}
       </div>
       
       {/* Fade to white gradient at bottom */}
