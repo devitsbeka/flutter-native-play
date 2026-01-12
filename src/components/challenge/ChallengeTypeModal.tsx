@@ -1,7 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Dice5, Library, Gamepad2, Sparkles } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useNavigate } from "react-router-dom";
+import storyDice from "@/assets/story-dice.png";
+import secretBookcase from "@/assets/secret-bookcase.png";
+import iconCollections from "@/assets/icon-collections.png";
+import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 
 interface ChallengeTypeModalProps {
   isOpen: boolean;
@@ -18,28 +22,28 @@ interface ChallengeTypeModalProps {
 const challengeOptions = [
   {
     id: "random",
-    icon: Dice5,
+    icon: storyDice,
     title: "შემთხვევითი",
     description: "რანდომ კატეგორია",
     gradient: "from-purple-500 to-indigo-600",
   },
   {
     id: "library",
-    icon: Library,
+    icon: secretBookcase,
     title: "ბიბლიოთეკა",
     description: "აირჩიე კატეგორია",
     gradient: "from-blue-500 to-cyan-600",
   },
   {
     id: "my-trivias",
-    icon: Gamepad2,
+    icon: iconCollections,
     title: "ჩემი ტრივია",
     description: "ტრივია/კოლექცია",
     gradient: "from-amber-500 to-orange-600",
   },
   {
     id: "create",
-    icon: Sparkles,
+    icon: triviaBuzzer,
     title: "შექმნა",
     description: "ახალი ტრივია",
     gradient: "from-pink-500 to-rose-600",
@@ -142,7 +146,7 @@ export function ChallengeTypeModal({
                   
                   {/* Icon top-left */}
                   <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-auto">
-                    <option.icon className="w-6 h-6" />
+                    <img src={option.icon} alt="" className="w-7 h-7 object-contain" />
                   </div>
                   
                   {/* Text bottom-left */}
