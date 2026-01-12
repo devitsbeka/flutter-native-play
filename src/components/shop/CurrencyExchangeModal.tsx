@@ -125,19 +125,11 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
 
   const presets = isCoinsToGems ? COIN_TO_GEM_PRESETS : GEM_TO_COIN_PRESETS;
 
-  const headerIcon = (
-    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-      <ArrowLeftRight className="w-10 h-10 text-white" />
-    </div>
-  );
-
   return (
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      icon={headerIcon}
       title={t("shop.currencyExchange")}
-      subtitle={t("shop.exchangeDescription")}
     >
       <div className="space-y-3">
         {/* Exchange Direction - Icons only */}
@@ -145,7 +137,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
           <motion.div 
             className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-colors ${
               isCoinsToGems 
-                ? "bg-amber-100 border-2 border-amber-300" 
+                ? "bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-700" 
                 : "bg-muted border-2 border-transparent"
             }`}
             animate={{ scale: isCoinsToGems ? 1.05 : 1 }}
@@ -155,18 +147,18 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
           
           <motion.button
             onClick={handleDirectionSwitch}
-            className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg"
+            className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg"
             whileHover={{ scale: 1.1, rotate: 180 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <ArrowLeftRight className="w-5 h-5 text-white" />
+            <ArrowLeftRight className="w-5 h-5 text-primary-foreground" />
           </motion.button>
           
           <motion.div 
             className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-colors ${
               !isCoinsToGems 
-                ? "bg-violet-100 border-2 border-violet-300" 
+                ? "bg-violet-100 dark:bg-violet-900/30 border-2 border-violet-300 dark:border-violet-700" 
                 : "bg-muted border-2 border-transparent"
             }`}
             animate={{ scale: !isCoinsToGems ? 1.05 : 1 }}
@@ -176,15 +168,15 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
         </div>
 
         {/* Amount Selector */}
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-3 border border-slate-200">
+        <div className="bg-muted/50 rounded-2xl p-3 border border-border">
           <div className="flex items-center justify-center gap-3">
             <motion.button
               onClick={handleDecrement}
-              className="w-9 h-9 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center shadow-sm"
+              className="w-9 h-9 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-sm"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Minus className="w-4 h-4 text-slate-600" />
+              <Minus className="w-4 h-4 text-foreground" />
             </motion.button>
             
             <div className="flex items-center gap-2 min-w-[100px] justify-center">
@@ -195,7 +187,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="text-xl font-black"
+                  className="text-xl font-black text-foreground"
                 >
                   {formatCompactNumber(amount)}
                 </motion.span>
@@ -204,11 +196,11 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
             
             <motion.button
               onClick={handleIncrement}
-              className="w-9 h-9 rounded-full bg-white border-2 border-slate-200 flex items-center justify-center shadow-sm"
+              className="w-9 h-9 rounded-full bg-background border-2 border-border flex items-center justify-center shadow-sm"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Plus className="w-4 h-4 text-slate-600" />
+              <Plus className="w-4 h-4 text-foreground" />
             </motion.button>
           </div>
 
@@ -220,10 +212,8 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
                 onClick={() => handlePresetClick(preset)}
                 className={`px-3 py-1 rounded-full text-sm font-bold transition-colors ${
                   amount === preset
-                    ? isCoinsToGems
-                      ? "bg-amber-500 text-white"
-                      : "bg-violet-500 text-white"
-                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background border border-border text-foreground hover:bg-muted"
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -243,9 +233,7 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className={`text-xl font-black ${
-                isCoinsToGems ? "text-violet-700" : "text-amber-700"
-              }`}
+              className="text-xl font-black text-primary"
             >
               {formatCompactNumber(exchangeResult)}
             </motion.span>
@@ -276,16 +264,10 @@ export function CurrencyExchangeModal({ isOpen, onClose }: CurrencyExchangeModal
           <Button
             onClick={handleExchange}
             disabled={!canAfford || !hasValidResult || isExchanging}
-            className={`w-full h-14 text-lg font-black rounded-xl ${
-              isCoinsToGems
-                ? "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
-                : "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
-            }`}
+            className="w-full h-14 text-lg font-black rounded-xl bg-primary hover:bg-primary/90"
             style={{ 
               boxShadow: canAfford && hasValidResult 
-                ? isCoinsToGems 
-                  ? "0 4px 0 #6D28D9" 
-                  : "0 4px 0 #B45309"
+                ? "0 4px 0 hsl(var(--primary) / 0.7)"
                 : "none"
             }}
           >

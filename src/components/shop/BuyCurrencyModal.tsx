@@ -111,12 +111,10 @@ export function BuyCurrencyModal({
         isOpen={isOpen}
         onClose={onClose}
         title={t("shop.buyGems")}
-        icon={<img src={gemIcon} alt="" className="w-10 h-10" />}
-        variant="primary"
       >
         <div className="flex flex-col items-center gap-4 py-6">
-          <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-violet-500" />
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-primary" />
           </div>
           <p className="text-center text-muted-foreground">
             {t("shop.gemsPurchaseSoon")}
@@ -131,8 +129,6 @@ export function BuyCurrencyModal({
       isOpen={isOpen}
       onClose={onClose}
       title={t("shop.buyPackages")}
-      icon={<img src={coinIcon} alt="" className="w-10 h-10" />}
-      variant="primary"
     >
       <div className="space-y-3 pt-2">
         {COIN_PACKAGES.map((pkg, index) => {
@@ -144,7 +140,7 @@ export function BuyCurrencyModal({
               key={index}
               className={`rounded-2xl p-4 transition-colors ${
                 canAfford
-                  ? "bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200"
+                  ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-2 border-amber-200 dark:border-amber-800"
                   : "bg-muted/50 border-2 border-transparent opacity-60"
               }`}
               whileHover={canAfford ? { scale: 1.01 } : {}}
@@ -153,7 +149,7 @@ export function BuyCurrencyModal({
               <div className="flex items-center justify-between mb-3">
                 <span className="font-bold text-foreground">{pkg.label}</span>
                 {pkg.bonus && (
-                  <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
                     {pkg.bonus}
                   </span>
                 )}
@@ -164,7 +160,7 @@ export function BuyCurrencyModal({
                 {/* Coins row */}
                 <div className="flex items-center gap-2">
                   <img src={coinIcon} alt="" className="w-5 h-5" />
-                  <span className="font-semibold text-amber-700">{pkg.coins.toLocaleString()} {t("shop.coin")}</span>
+                  <span className="font-semibold text-amber-700 dark:text-amber-400">{pkg.coins.toLocaleString()} {t("shop.coin")}</span>
                 </div>
                 
                 {/* Powers row */}
@@ -172,7 +168,7 @@ export function BuyCurrencyModal({
                   {Object.entries(pkg.powers).map(([type, count]) => (
                     <div 
                       key={type}
-                      className="flex items-center gap-1 bg-white/80 px-2 py-1 rounded-lg border border-border/50"
+                      className="flex items-center gap-1 bg-background/80 px-2 py-1 rounded-lg border border-border/50"
                     >
                       {type === "time-drain" ? (
                         <div className="w-5 h-5 rounded-full bg-gradient-to-b from-purple-300 to-purple-500 flex items-center justify-center">
@@ -191,17 +187,17 @@ export function BuyCurrencyModal({
               <motion.button
                 onClick={() => handlePurchase(index)}
                 disabled={!canAfford || isPurchasing !== null}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-white"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-white disabled:opacity-50"
                 style={{
                   background: canAfford 
-                    ? "linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%)"
+                    ? "linear-gradient(180deg, hsl(45 93% 58%) 0%, hsl(37 91% 55%) 100%)"
                     : "hsl(var(--muted-foreground))",
                   boxShadow: canAfford 
-                    ? "0 4px 0 #B45309, inset 0 1px 2px rgba(255,255,255,0.4)"
+                    ? "0 4px 0 hsl(28 80% 35%)"
                     : "0 3px 0 hsl(var(--border))",
                 }}
                 whileHover={canAfford ? { y: -2 } : {}}
-                whileTap={canAfford ? { y: 2, boxShadow: "0 0 0 #B45309" } : {}}
+                whileTap={canAfford ? { y: 2, boxShadow: "0 0 0 hsl(28 80% 35%)" } : {}}
               >
                 <img src={gemIcon} alt="" className="w-5 h-5" />
                 <span>{isPurchasingThis ? "..." : t("shop.buyFor").replace("{price}", String(pkg.gems))}</span>
