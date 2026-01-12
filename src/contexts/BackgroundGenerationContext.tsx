@@ -25,7 +25,7 @@ interface BackgroundGenerationContextType {
     onComplete?: (avatarUrl: string) => void
   ) => Promise<string>;
   startCoverGeneration: (
-    params: { title: string; subject: string; roundId?: string },
+    params: { title: string; subject: string; roundId?: string; skipNotification?: boolean },
     onComplete?: (imageUrl: string) => void
   ) => Promise<string>;
   getJob: (id: string) => GenerationJob | undefined;
@@ -203,7 +203,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
   }, [user, updateProfile, showNotification, updateJob, scheduleJobCleanup]);
 
   const startCoverGeneration = useCallback(async (
-    params: { title: string; subject: string; roundId?: string },
+    params: { title: string; subject: string; roundId?: string; skipNotification?: boolean },
     onComplete?: (imageUrl: string) => void
   ) => {
     if (!user) throw new Error("User not authenticated");
@@ -259,30 +259,36 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
         if (data?.imageUrl) {
           updateJob(jobId, { status: "completed", imageUrl: data.imageUrl });
 
-          // Show success notification with Apply and Generate Again buttons
-          showNotification("success", {
-            title: "სურათი მზადაა! ✨",
-            description: "AI-ს მიერ შექმნილი სურათი",
-            icon: "🖼️",
-            imageUrl: data.imageUrl,
-            actionButton: {
-              label: "გამოყენება",
-              onClick: () => {
-                // Call onComplete to apply the image
-                onComplete?.(data.imageUrl);
-                toast.success("სურათი გამოყენებულია!");
+          // If skipNotification is true, auto-apply without popup
+          if (params.skipNotification) {
+            onComplete?.(data.imageUrl);
+            toast.success("გარეკანი შეიქმნა! ✓");
+          } else {
+            // Show success notification with Apply and Generate Again buttons
+            showNotification("success", {
+              title: "სურათი მზადაა! ✨",
+              description: "AI-ს მიერ შექმნილი სურათი",
+              icon: "🖼️",
+              imageUrl: data.imageUrl,
+              actionButton: {
+                label: "გამოყენება",
+                onClick: () => {
+                  // Call onComplete to apply the image
+                  onComplete?.(data.imageUrl);
+                  toast.success("სურათი გამოყენებულია!");
+                },
               },
-            },
-            secondaryButton: {
-              label: `🔄 ხელახლა (${remainingAfterThis} დარჩა ${MAX_GENERATIONS}-დან)`,
-              onClick: () => {
-                // Re-trigger generation with same params
-                startCoverGeneration(params, onComplete);
+              secondaryButton: {
+                label: `🔄 ხელახლა (${remainingAfterThis} დარჩა ${MAX_GENERATIONS}-დან)`,
+                onClick: () => {
+                  // Re-trigger generation with same params
+                  startCoverGeneration(params, onComplete);
+                },
+                disabled: remainingAfterThis <= 0,
               },
-              disabled: remainingAfterThis <= 0,
-            },
-            duration: 60000, // Keep visible longer for user decision
-          });
+              duration: 60000, // Keep visible longer for user decision
+            });
+          }
         }
 
         scheduleJobCleanup(jobId);

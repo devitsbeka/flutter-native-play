@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2, Save, ChevronUp, CheckCircle2 } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, Edit2, Save, ChevronUp, CheckCircle2 } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { QuestionIconPicker } from "./QuestionIconPicker";
+import { CoverImagePicker } from "./CoverImagePicker";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 
@@ -51,14 +52,14 @@ interface CreateCollectionModalProps {
 }
 
 const COVER_GRADIENTS = [
-  "from-purple-500 to-indigo-600",
-  "from-pink-500 to-rose-500",
-  "from-orange-400 to-pink-500",
-  "from-cyan-400 to-blue-500",
-  "from-green-400 to-emerald-500",
-  "from-violet-500 to-purple-600",
-  "from-amber-400 to-orange-500",
-  "from-teal-400 to-cyan-500",
+  "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
+  "linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)",
+  "linear-gradient(135deg, #F97316 0%, #EF4444 100%)",
+  "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
+  "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)",
+  "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
+  "radial-gradient(ellipse 120% 80% at 20% 30%, rgba(139,92,246,0.8) 0%, transparent 50%), radial-gradient(ellipse 100% 120% at 80% 70%, rgba(236,72,153,0.7) 0%, transparent 50%), linear-gradient(135deg, #4C1D95 0%, #831843 100%)",
+  "radial-gradient(ellipse 80% 100% at 70% 20%, rgba(59,130,246,0.8) 0%, transparent 45%), radial-gradient(ellipse 100% 80% at 20% 80%, rgba(6,182,212,0.7) 0%, transparent 45%), linear-gradient(150deg, #1E3A8A 0%, #0E7490 100%)",
 ];
 
 export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId }: CreateCollectionModalProps) {
@@ -68,7 +69,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [coverGradient] = useState(COVER_GRADIENTS[0]);
+  const [coverGradient, setCoverGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(true);
   const [rounds, setRounds] = useState<CollectionRound[]>([
     { subject: "", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }
@@ -837,48 +838,14 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         {/* Cover Image Section */}
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">გარეკანი</label>
-          <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-muted border border-border">
-            {generatedData.coverImage ? (
-              <img 
-                src={generatedData.coverImage} 
-                alt="Cover" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className={`w-full h-full bg-gradient-to-br ${coverGradient} flex items-center justify-center`}>
-                <span className="text-white/60 text-sm">გარეკანი არ არის</span>
-              </div>
-            )}
-            
-            {/* Overlay with title */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
-              <p className="text-white font-bold text-lg truncate">{title}</p>
-              <p className="text-white/70 text-sm">
-                {generatedData.rounds.length} რაუნდი • {generatedData.rounds.reduce((acc, r) => acc + r.questions.length, 0)} კითხვა
-              </p>
-            </div>
-
-            {/* Regenerate button */}
-            {remainingCoverTries > 0 && (
-              <button
-                onClick={regenerateCover}
-                disabled={isGeneratingCover}
-                className="absolute top-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-background/90 backdrop-blur-sm rounded-lg text-sm font-medium hover:bg-background transition-colors disabled:opacity-50"
-              >
-                {isGeneratingCover ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    იქმნება...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    ახალი ({remainingCoverTries})
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          <CoverImagePicker
+            currentImage={generatedData.coverImage}
+            currentGradient={coverGradient}
+            onImageChange={(url) => setGeneratedData(prev => ({ ...prev!, coverImage: url }))}
+            onGradientChange={setCoverGradient}
+            title={title}
+            suggestPrompt={rounds.map(r => r.subject).filter(Boolean).join(", ")}
+          />
         </div>
 
         {/* Editable Title */}

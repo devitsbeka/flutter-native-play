@@ -13,6 +13,7 @@ import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext"
 import confetti from "canvas-confetti";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
+import { EditQuestionDialog } from "./EditQuestionDialog";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -98,6 +99,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [isPublic, setIsPublic] = useState(true);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<{ index: number; question: GeneratedQuestion } | null>(null);
 
   // Reset on open
   useEffect(() => {
@@ -711,17 +713,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0 flex-shrink-0"
-                    onClick={() => {
-                      const newQuestion = prompt("კითხვა:", q.question_text);
-                      if (newQuestion !== null) {
-                        const newAnswer = prompt("სწორი პასუხი:", q.correct_answer);
-                        if (newAnswer !== null) {
-                          setQuestions(prev => prev.map((question, idx) => 
-                            idx === i ? { ...question, question_text: newQuestion, correct_answer: newAnswer } : question
-                          ));
-                        }
-                      }
-                    }}
+                    onClick={() => setEditingQuestion({ index: i, question: q })}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </Button>
@@ -777,27 +769,45 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md p-6 overflow-hidden">
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md p-6 overflow-hidden">
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-2 mb-4">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <motion.div
-              key={s}
-              animate={{
-                width: s === step ? 24 : s < step ? 12 : 8,
-                backgroundColor: s <= step ? "hsl(var(--primary))" : "hsl(var(--muted))",
-              }}
-              className="h-2 rounded-full"
-            />
-          ))}
-        </div>
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2 mb-4">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <motion.div
+                key={s}
+                animate={{
+                  width: s === step ? 24 : s < step ? 12 : 8,
+                  backgroundColor: s <= step ? "hsl(var(--primary))" : "hsl(var(--muted))",
+                }}
+                className="h-2 rounded-full"
+              />
+            ))}
+          </div>
 
-        <AnimatePresence mode="wait">
-          {renderStep()}
-        </AnimatePresence>
-      </DialogContent>
-    </Dialog>
+          <AnimatePresence mode="wait">
+            {renderStep()}
+          </AnimatePresence>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Question Dialog */}
+      {editingQuestion && (
+        <EditQuestionDialog
+          open={!!editingQuestion}
+          onOpenChange={(open) => !open && setEditingQuestion(null)}
+          question={editingQuestion.question}
+          answerFormat={answerFormat}
+          onSave={(updated) => {
+            setQuestions(prev => prev.map((q, idx) => 
+              idx === editingQuestion.index ? { ...q, ...updated } : q
+            ));
+            setEditingQuestion(null);
+          }}
+        />
+      )}
+    </>
   );
 }
