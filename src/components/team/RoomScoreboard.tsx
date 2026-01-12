@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { Crown, Swords, Target, Users } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
@@ -73,84 +74,70 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
         {/* VS Display for 2 players */}
         {sortedParticipants.length === 2 ? (
           <div className="flex items-center justify-center gap-4 mb-4">
-            {/* Player 1 */}
-            <div className="flex-1 text-center">
-              <div className="relative inline-block mb-2">
-                {showHostCrown && sortedParticipants[0].is_host && (
-                  <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
-                )}
-                <SmartAvatar
-                  avatarUrl={sortedParticipants[0].avatar_url}
-                  fallback={sortedParticipants[0].nickname}
-                  size="xl"
-                />
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
-                  {getFlagEmoji(sortedParticipants[0].country_code || "GE")}
-                </div>
-              </div>
-              <p className="font-medium text-foreground text-sm truncate max-w-[100px] mx-auto">
-                {sortedParticipants[0].user_id === currentUserId ? "შენ" : sortedParticipants[0].nickname}
-              </p>
-              {/* Total Score with Rounds */}
-              <div className="flex flex-col items-center mt-2">
-                <div className="flex items-center gap-1">
-                  <Target className="w-4 h-4 text-primary" />
-                  <span className="text-2xl font-display font-bold text-foreground">
-                    {(sortedParticipants[0] as any).total_score || 0}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {sortedParticipants[0].total_rounds_played || 0} რაუნდი • {sortedParticipants[0].total_wins || 0} მოგ.
-                </p>
-              </div>
-            </div>
+            {sortedParticipants.map((player, idx) => {
+              const isInvited = (player.status as string) === 'invited';
+              return (
+                <React.Fragment key={player.id}>
+                  {/* Player */}
+                  <div className={`flex-1 text-center ${isInvited ? 'opacity-60' : ''}`}>
+                    <div className={`relative inline-block mb-2 ${isInvited ? 'grayscale' : ''}`}>
+                      {showHostCrown && player.is_host && !isInvited && (
+                        <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
+                      )}
+                      <SmartAvatar
+                        avatarUrl={player.avatar_url}
+                        fallback={player.nickname}
+                        size="xl"
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
+                        {getFlagEmoji(player.country_code || "GE")}
+                      </div>
+                    </div>
+                    <p className={`font-medium text-sm truncate max-w-[100px] mx-auto ${isInvited ? 'text-white/50' : 'text-foreground'}`}>
+                      {player.user_id === currentUserId ? "შენ" : player.nickname}
+                    </p>
+                    {isInvited ? (
+                      <motion.p 
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-xs text-white/40 mt-2 italic"
+                      >
+                        მოწვეული...
+                      </motion.p>
+                    ) : (
+                      <div className="flex flex-col items-center mt-2">
+                        <div className="flex items-center gap-1">
+                          <Target className="w-4 h-4 text-primary" />
+                          <span className="text-2xl font-display font-bold text-foreground">
+                            {(player as any).total_score || 0}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {player.total_rounds_played || 0} რაუნდი • {player.total_wins || 0} მოგ.
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-            {/* VS */}
-            <div className="flex flex-col items-center">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center"
-                style={{ boxShadow: "0 4px 16px rgba(239,68,68,0.4)" }}
-              >
-                <Swords className="w-6 h-6 text-white" />
-              </motion.div>
-              <span className="text-xs text-muted-foreground mt-1">
-                {(sortedParticipants[0].total_rounds_played || 0)} რაუნდი
-              </span>
-            </div>
-
-            {/* Player 2 */}
-            <div className="flex-1 text-center">
-              <div className="relative inline-block mb-2">
-                {showHostCrown && sortedParticipants[1].is_host && (
-                  <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
-                )}
-                <SmartAvatar
-                  avatarUrl={sortedParticipants[1].avatar_url}
-                  fallback={sortedParticipants[1].nickname}
-                  size="xl"
-                />
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
-                  {getFlagEmoji(sortedParticipants[1].country_code || "GE")}
-                </div>
-              </div>
-              <p className="font-medium text-foreground text-sm truncate max-w-[100px] mx-auto">
-                {sortedParticipants[1].user_id === currentUserId ? "შენ" : sortedParticipants[1].nickname}
-              </p>
-              {/* Total Score with Rounds */}
-              <div className="flex flex-col items-center mt-2">
-                <div className="flex items-center gap-1">
-                  <Target className="w-4 h-4 text-primary" />
-                  <span className="text-2xl font-display font-bold text-foreground">
-                    {(sortedParticipants[1] as any).total_score || 0}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {sortedParticipants[1].total_rounds_played || 0} რაუნდი • {sortedParticipants[1].total_wins || 0} მოგ.
-                </p>
-              </div>
-            </div>
+                  {/* VS icon between players */}
+                  {idx === 0 && (
+                    <div className="flex flex-col items-center">
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center"
+                        style={{ boxShadow: "0 4px 16px rgba(239,68,68,0.4)" }}
+                      >
+                        <Swords className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <span className="text-xs text-muted-foreground mt-1">
+                        {sortedParticipants[0].total_rounds_played || 0} რაუნდი
+                      </span>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         ) : (
           /* Multi-player list */
