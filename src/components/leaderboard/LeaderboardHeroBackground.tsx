@@ -15,31 +15,31 @@ interface LeaderboardHeroBackgroundProps {
   userTier?: number;
 }
 
-// Trophy configuration with precise positioning on the podiums (shifted left for center alignment)
+// Trophy configuration - all centered horizontally, 2x size
 const TROPHY_CONFIG = {
   1: { 
-    left: '74%', 
-    top: '54%', 
+    left: '50%', 
+    top: '50%', 
     image: trophyBronze, 
     label: 'Bronze League', 
     labelKa: 'ბრინჯაოს ლიგა',
-    size: '22%',
+    size: '44%',
   },
   2: { 
-    left: '20%', 
-    top: '54%', 
+    left: '50%', 
+    top: '50%', 
     image: trophySilver, 
     label: 'Silver League', 
     labelKa: 'ვერცხლის ლიგა',
-    size: '22%',
+    size: '44%',
   },
   3: { 
-    left: '47%', 
-    top: '48%', 
+    left: '50%', 
+    top: '46%', 
     image: trophyGold, 
     label: 'Gold League', 
     labelKa: 'ოქროს ლიგა',
-    size: '26%', // Gold trophy slightly bigger (center podium)
+    size: '52%',
   },
 } as const;
 
