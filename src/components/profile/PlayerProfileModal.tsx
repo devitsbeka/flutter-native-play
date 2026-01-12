@@ -1,11 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconChatBubble from "@/assets/chat-bubble.png";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/hooks/usePlayerProfile";
@@ -106,16 +105,36 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
     setChatOpen(true);
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
-      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 border-0">
-          <div className="flex flex-col h-full bg-background">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <SheetTitle className="text-lg font-semibold text-foreground">
-                პროფილი
-              </SheetTitle>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-background flex flex-col"
+          >
+            {/* Fixed Header */}
+            <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
+              <div className="flex items-center h-14 px-4">
+                <motion.button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronLeft className="w-6 h-6 text-foreground" />
+                </motion.button>
+                
+                <h1 className="flex-1 text-center font-display text-lg font-bold text-foreground">
+                  პროფილი
+                </h1>
+                
+                <div className="w-10" />
+              </div>
             </div>
 
             {loading ? (
@@ -338,7 +357,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   </TabsContent>
                 </Tabs>
 
-                {/* Recent Interactions - Only show for friends/non-current-user */}
+                {/* Recent Interactions */}
                 {!data.isCurrentUser && data.interactions.length > 0 && (
                   <div className="px-4 pb-6">
                     <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -365,18 +384,13 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                             {interaction.type === 'room_together' && <Users className="w-4 h-4" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate whitespace-nowrap">
+                            <p className="text-sm text-foreground truncate">
                               {interaction.message}
                             </p>
-                            {interaction.details && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {interaction.details}
-                              </p>
-                            )}
+                            <p className="text-xs text-muted-foreground">
+                              {formatTimeAgo(new Date(interaction.timestamp))}
+                            </p>
                           </div>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
-                            {formatTimeAgo(new Date(interaction.timestamp))}
-                          </span>
                         </motion.div>
                       ))}
                     </div>
@@ -384,39 +398,36 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 )}
               </div>
             )}
-          </div>
-        </SheetContent>
-      </Sheet>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Chat Sheet - OUTSIDE Sheet to avoid focus trap */}
-      <FriendChatSheet
-        isOpen={chatOpen}
-        onClose={() => setChatOpen(false)}
-        friendId={userId}
-        friendProfile={data?.profile ? {
-          nickname: data.profile.nickname,
-          avatar_url: data.profile.avatar_url,
-          animated_avatar_url: data.profile.animated_avatar_url,
-        } : null}
-      />
+      {/* Chat Sheet */}
+      {data?.profile && (
+        <FriendChatSheet
+          isOpen={chatOpen}
+          onClose={() => setChatOpen(false)}
+          friendId={userId}
+          friendProfile={{
+            nickname: data.profile.nickname,
+            avatar_url: data.profile.avatar_url,
+            animated_avatar_url: data.profile.animated_avatar_url,
+          }}
+        />
+      )}
 
-      {/* Challenge Modal - OUTSIDE Sheet to avoid focus trap */}
+      {/* Challenge Modal */}
       <ChallengeTypeModal
         isOpen={challengeModalOpen}
         onClose={() => setChallengeModalOpen(false)}
-        onChallengeStart={() => {
-          // Close both modals when challenge starts
-          setChallengeModalOpen(false);
-          onClose();
-        }}
-        targetUserId={userId || ""}
+        onChallengeStart={() => setChallengeModalOpen(false)}
+        targetUserId={userId || undefined}
         targetUserProfile={data?.profile ? {
           nickname: data.profile.nickname,
-          avatar_url: data.profile.avatar_url,
-          animated_avatar_url: data.profile.animated_avatar_url,
-        } : null}
+          avatar_url: data.profile.avatar_url || "",
+          animated_avatar_url: data.profile.animated_avatar_url || "",
+        } : undefined}
       />
-
     </>
   );
 }
