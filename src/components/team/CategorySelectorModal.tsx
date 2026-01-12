@@ -83,8 +83,8 @@ export function CategorySelectorModal({
       </div>
 
       {/* Categories Grid */}
-      <ScrollArea className="max-h-[50vh]">
-        <div className="grid grid-cols-2 gap-3 pb-2">
+      <ScrollArea className="h-[60vh]">
+        <div className="grid grid-cols-2 gap-3 pb-6">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div
