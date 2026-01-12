@@ -259,36 +259,9 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
         if (data?.imageUrl) {
           updateJob(jobId, { status: "completed", imageUrl: data.imageUrl });
 
-          // If skipNotification is true, auto-apply without popup
-          if (params.skipNotification) {
-            onComplete?.(data.imageUrl);
-            toast.success("გარეკანი შეიქმნა! ✓");
-          } else {
-            // Show success notification with Apply and Generate Again buttons
-            showNotification("success", {
-              title: "სურათი მზადაა! ✨",
-              description: "AI-ს მიერ შექმნილი სურათი",
-              icon: "🖼️",
-              imageUrl: data.imageUrl,
-              actionButton: {
-                label: "გამოყენება",
-                onClick: () => {
-                  // Call onComplete to apply the image
-                  onComplete?.(data.imageUrl);
-                  toast.success("სურათი გამოყენებულია!");
-                },
-              },
-              secondaryButton: {
-                label: `🔄 ხელახლა (${remainingAfterThis} დარჩა ${MAX_GENERATIONS}-დან)`,
-                onClick: () => {
-                  // Re-trigger generation with same params
-                  startCoverGeneration(params, onComplete);
-                },
-                disabled: remainingAfterThis <= 0,
-              },
-              duration: 60000, // Keep visible longer for user decision
-            });
-          }
+          // Always auto-apply cover without blocking popup
+          onComplete?.(data.imageUrl);
+          toast.success("გარეკანი შეიქმნა! ✓");
         }
 
         scheduleJobCleanup(jobId);
