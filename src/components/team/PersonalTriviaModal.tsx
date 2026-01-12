@@ -1,14 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -638,28 +636,40 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <SheetHeader className="p-5 pb-3 border-b border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                <PartyPopper className="w-6 h-6 text-white" />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+        >
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                <PartyPopper className="w-4 h-4 text-white" />
               </div>
               <div>
-                <SheetTitle className="text-left text-lg">🎉 MyTrivia Party</SheetTitle>
-                <p className="text-sm text-muted-foreground">შენი კითხვები, შენი პასუხები</p>
+                <h2 className="text-lg font-bold text-foreground">🎉 MyTrivia Party</h2>
               </div>
             </div>
-          </SheetHeader>
+          </div>
 
-          <ScrollArea className="flex-1 px-5">
+          <ScrollArea className="flex-1 px-4">
             <div className="py-5 space-y-5 pb-24">
-          {/* Title Input */}
-          <div className="px-1">
-            <label className="text-sm font-medium text-foreground mb-1.5 block">
+              {/* Title Input */}
+              <div className="px-1">
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
                   ტრივიის სახელი
                 </label>
                 <Input
@@ -746,8 +756,8 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
             </div>
           </ScrollArea>
 
-          {/* Footer */}
-          <div className="p-5 pt-4 border-t border-border/50 bg-background">
+          {/* Fixed Footer */}
+          <div className="flex-shrink-0 p-4 border-t border-border/50 bg-background">
             <Button
               onClick={handleSave}
               disabled={!isValid}
@@ -757,8 +767,8 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
               შენახვა ({questions.filter(q => q.question.trim() && q.answers.every(a => a.trim())).length} კითხვა)
             </Button>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

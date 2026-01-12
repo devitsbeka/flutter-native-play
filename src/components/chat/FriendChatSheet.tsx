@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ChevronLeft, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ka } from "date-fns/locale";
 
@@ -174,25 +173,27 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 border-0">
-        <div className="flex flex-col h-full bg-background">
-          {/* Header */}
-          <motion.div 
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="flex items-center gap-3 p-4 border-b border-border"
-          >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+        >
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
             </button>
             {friendProfile && (
-              <>
+              <div className="flex items-center gap-3">
                 <SmartAvatar
                   avatarUrl={friendProfile.avatar_url}
                   animatedAvatarUrl={friendProfile.animated_avatar_url}
@@ -200,12 +201,12 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                   size="sm"
                   showSparkle={false}
                 />
-                <SheetTitle className="text-lg font-semibold text-foreground">
+                <h2 className="text-lg font-bold text-foreground">
                   {friendProfile.nickname}
-                </SheetTitle>
-              </>
+                </h2>
+              </div>
             )}
-          </motion.div>
+          </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -226,7 +227,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                   transition={{ delay: 0.1 }}
                   className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4"
                 >
-                  <Send className="w-8 h-8 text-muted-foreground" />
+                  <MessageCircle className="w-8 h-8 text-muted-foreground" />
                 </motion.div>
                 <motion.p 
                   initial={{ y: 10, opacity: 0 }}
@@ -313,12 +314,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
           </div>
 
           {/* Input */}
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.1 }}
-            className="p-4 border-t border-border"
-          >
+          <div className="flex-shrink-0 p-4 border-t border-border/50 bg-background">
             <div className="flex gap-2">
               <Input
                 value={newMessage}
@@ -338,9 +334,9 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
                 <Send className="w-4 h-4" />
               </ChunkyButton>
             </div>
-          </motion.div>
-        </div>
-      </SheetContent>
-    </Sheet>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

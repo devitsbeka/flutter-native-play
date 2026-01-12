@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tv, Loader2, Check } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tv, Loader2, Check, ChevronLeft } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -147,85 +146,106 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Tv className="w-5 h-5 text-primary" />
-            TV-სთან დაკავშირება
-          </DialogTitle>
-        </DialogHeader>
-
-        <AnimatePresence mode="wait">
-          {isConnected ? (
-            <motion.div
-              key="connected"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="py-8 text-center"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+        >
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', bounce: 0.5 }}
-                className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
-              >
-                <Check className="w-10 h-10 text-white" />
-              </motion.div>
-              <h3 className="text-xl font-bold text-foreground mb-2">დაკავშირებულია!</h3>
-              <p className="text-muted-foreground">გადამისამართება მართვის პანელზე...</p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="input"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="py-4"
-            >
-              <p className="text-muted-foreground text-center mb-6">
-                შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე
-              </p>
-
-              <div className="flex justify-center mb-6">
-                <InputOTP
-                  maxLength={4}
-                  value={code}
-                  onChange={setCode}
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} className="w-14 h-16 text-2xl" />
-                    <InputOTPSlot index={1} className="w-14 h-16 text-2xl" />
-                    <InputOTPSlot index={2} className="w-14 h-16 text-2xl" />
-                    <InputOTPSlot index={3} className="w-14 h-16 text-2xl" />
-                  </InputOTPGroup>
-                </InputOTP>
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <Tv className="w-4 h-4 text-primary" />
               </div>
+              <h2 className="text-lg font-bold text-foreground">TV-სთან დაკავშირება</h2>
+            </div>
+          </div>
 
-              <ChunkyButton
-                variant="primary"
-                className="w-full"
-                onClick={handleConnect}
-                disabled={code.length !== 4 || isConnecting}
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    დაკავშირება...
-                  </>
-                ) : (
-                  'დაკავშირება'
-                )}
-              </ChunkyButton>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4">
+            <AnimatePresence mode="wait">
+              {isConnected ? (
+                <motion.div
+                  key="connected"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="py-8 text-center"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', bounce: 0.5 }}
+                    className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                  >
+                    <Check className="w-10 h-10 text-white" />
+                  </motion.div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">დაკავშირებულია!</h3>
+                  <p className="text-muted-foreground">გადამისამართება მართვის პანელზე...</p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="input"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="py-4 w-full max-w-md"
+                >
+                  <p className="text-muted-foreground text-center mb-6">
+                    შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე
+                  </p>
 
-              <p className="text-sm text-muted-foreground text-center mt-4">
-                ჯერ გახსენი <span className="text-primary font-medium">mytrivia.io/tv</span> შენს TV-ზე
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </DialogContent>
-    </Dialog>
+                  <div className="flex justify-center mb-6">
+                    <InputOTP
+                      maxLength={4}
+                      value={code}
+                      onChange={setCode}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} className="w-14 h-16 text-2xl" />
+                        <InputOTPSlot index={1} className="w-14 h-16 text-2xl" />
+                        <InputOTPSlot index={2} className="w-14 h-16 text-2xl" />
+                        <InputOTPSlot index={3} className="w-14 h-16 text-2xl" />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <ChunkyButton
+                    variant="primary"
+                    className="w-full"
+                    onClick={handleConnect}
+                    disabled={code.length !== 4 || isConnecting}
+                  >
+                    {isConnecting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                        დაკავშირება...
+                      </>
+                    ) : (
+                      'დაკავშირება'
+                    )}
+                  </ChunkyButton>
+
+                  <p className="text-sm text-muted-foreground text-center mt-4">
+                    ჯერ გახსენი <span className="text-primary font-medium">mytrivia.io/tv</span> შენს TV-ზე
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
