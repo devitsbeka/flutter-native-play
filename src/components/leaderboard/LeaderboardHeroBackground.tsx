@@ -217,7 +217,7 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
       )}
       
       {/* Fade gradient at top */}
-      <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-background via-background/60 to-transparent z-[5] pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-36 bg-gradient-to-b from-background via-background/80 to-transparent z-[5] pointer-events-none" />
       
       {/* Fade gradient at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent z-[5] pointer-events-none" />
