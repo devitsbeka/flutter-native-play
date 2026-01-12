@@ -36,6 +36,15 @@ interface PersonalTriviaModalProps {
     incorrect_answers: string[];
     icon_slug?: string | null;
   }>, title: string) => void;
+  initialData?: {
+    title: string;
+    questions: Array<{
+      question_text: string;
+      correct_answer: string;
+      incorrect_answers: string[];
+      icon_slug?: string | null;
+    }>;
+  } | null;
 }
 
 const EXAMPLE_QUESTIONS = [
@@ -207,11 +216,25 @@ function QuestionIconPickerInline({
   );
 }
 
-export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaModalProps) {
+export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: PersonalTriviaModalProps) {
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState<PersonalQuestion[]>([
     { id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }
   ]);
+
+  // Load initial data when editing existing trivia
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setTitle(initialData.title);
+      setQuestions(initialData.questions.map((q, idx) => ({
+        id: (idx + 1).toString(),
+        question: q.question_text,
+        answers: [q.correct_answer, ...q.incorrect_answers],
+        correctIndex: 0, // Correct answer is always first in the formatted data
+        iconSlug: q.icon_slug || undefined
+      })));
+    }
+  }, [initialData, isOpen]);
 
   const addQuestion = useCallback(() => {
     setQuestions(prev => [
@@ -266,9 +289,11 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
 
     onSave(formattedQuestions, title || "MyTrivia Party");
     
-    // Reset state
-    setTitle("");
-    setQuestions([{ id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }]);
+    // Only reset state if not editing (no initial data)
+    if (!initialData) {
+      setTitle("");
+      setQuestions([{ id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }]);
+    }
     onClose();
   };
 
