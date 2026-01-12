@@ -117,8 +117,11 @@ export default function Leaderboards() {
           onSelectTier={handleSelectTier}
         />
 
-        {/* League Info Card */}
-        <div className="pb-6">
+        {/* Spacer to push info card down */}
+        <div className="flex-1 min-h-[180px]" />
+
+        {/* League Info Card - positioned lower */}
+        <div className="pb-8 mt-auto">
           <LeagueInfoCard
             league={currentLeague}
             rankChange={rankChange}

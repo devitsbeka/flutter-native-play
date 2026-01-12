@@ -7,13 +7,11 @@ interface LeaderboardHeroBackgroundProps {
   children: ReactNode;
 }
 
-// Map pan positions for each tier (percentage offset)
+// Map pan positions for each tier (percentage offset) - only 3 tiers
 const MAP_POSITIONS: Record<number, number> = {
-  1: 15,   // Bronze - pan right to show right area
-  2: -15,  // Silver - pan left to show left area
+  1: 12,   // Bronze - pan right to show right area
+  2: -12,  // Silver - pan left to show left area
   3: 0,    // Gold - center
-  4: -8,   // Diamond - slightly left
-  5: -20,  // Champion - far left
 };
 
 export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBackgroundProps) {
@@ -25,12 +23,13 @@ export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBac
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ minHeight: '65vh' }}
     >
       {/* Pannable Map Background */}
-      <div className="absolute inset-0 h-[110%]">
+      <div className="absolute inset-0" style={{ height: 'calc(100% + 50px)' }}>
         <motion.div
-          className="absolute inset-0 w-[150%] h-full"
-          style={{ marginLeft: '-25%' }}
+          className="absolute inset-0 w-[160%] h-full"
+          style={{ marginLeft: '-30%' }}
           animate={{
             x: `${mapOffset}%`,
           }}
@@ -43,16 +42,16 @@ export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBac
           <img 
             src={gameMapBg} 
             alt="" 
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-bottom"
           />
         </motion.div>
       </div>
       
       {/* Fade to white gradient at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent z-[5]" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent z-[5]" />
       
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col h-full">
         {children}
       </div>
     </motion.div>

@@ -25,8 +25,6 @@ export const LEAGUES: LeagueInfo[] = [
   { tier: 1, name: "Bronze League", nameKa: "ბრინჯაოს ლიგა" },
   { tier: 2, name: "Silver League", nameKa: "ვერცხლის ლიგა" },
   { tier: 3, name: "Gold League", nameKa: "ოქროს ლიგა" },
-  { tier: 4, name: "Diamond League", nameKa: "ბრილიანტის ლიგა" },
-  { tier: 5, name: "Champion League", nameKa: "ჩემპიონთა ლიგა" },
 ];
 
 // AI user names for each league tier
