@@ -130,7 +130,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           className={`absolute h-full will-change-transform ${isDesktop ? '' : 'touch-none cursor-grab active:cursor-grabbing'}`}
           style={{ 
             width: isDesktop ? '100%' : '250vw',
-            left: isDesktop ? 0 : '-75vw',
+            left: isDesktop ? 0 : 'calc(-75vw - 30px)',
           }}
           drag={isDesktop ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
@@ -246,7 +246,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                   <motion.div
                     className="absolute z-[10]"
                     style={{
-                      left: '50%',
+                      left: 'calc(50% - 30px)',
                       top: 'calc(22% + 100px)',
                       transform: 'translateX(-50%)',
                     }}
