@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Lock, Globe, ChevronRight, Check, Loader2 } from "lucide-react";
+import { User, Lock, Globe, ChevronRight, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { GameModal } from "@/components/ui/game-modal";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -132,201 +133,171 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     },
   ];
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
-          />
+  const getTitle = () => {
+    if (view === "main") return t("settings.title");
+    if (view === "editName") return t("settings.editName");
+    if (view === "changePassword") return t("settings.changePassword");
+    if (view === "language") return t("settings.language");
+    return t("settings.title");
+  };
 
-          {/* Modal */}
+  return (
+    <GameModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      onBack={view !== "main" ? handleBack : undefined}
+      title={getTitle()}
+      hideFooter
+    >
+      <AnimatePresence mode="wait">
+        {view === "main" && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-4 m-auto w-[calc(100%-32px)] max-w-[360px] h-fit max-h-[85vh] bg-background rounded-3xl z-[60] shadow-2xl overflow-hidden"
+            key="main"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-2"
           >
-            {/* Header */}
-            <div className="relative px-5 py-4 border-b border-border">
+            {settingsItems.map((item) => (
               <button
-                onClick={view === "main" ? handleClose : handleBack}
-                className="absolute left-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-muted/80 flex items-center justify-center hover:bg-muted transition-colors"
+                key={item.label}
+                onClick={item.action}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                style={{ boxShadow: "0 2px 0 #E5E7EB" }}
               >
-                {view === "main" ? (
-                  <X className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground rotate-180" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <item.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-900">{item.label}</p>
+                  <p className="text-sm text-gray-500">{item.sublabel}</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-gray-400" />
+              </button>
+            ))}
+          </motion.div>
+        )}
+
+        {view === "editName" && (
+          <motion.div
+            key="editName"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="text-sm font-medium text-gray-500 mb-2 block">
+                {t("settings.editName")}
+              </label>
+              <Input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder={t("auth.usernamePlaceholder")}
+                className="h-12 rounded-xl"
+                maxLength={20}
+              />
+            </div>
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full"
+              onClick={handleSaveNickname}
+              disabled={isLoading || !nickname.trim()}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                t("common.save")
+              )}
+            </ChunkyButton>
+          </motion.div>
+        )}
+
+        {view === "changePassword" && (
+          <motion.div
+            key="changePassword"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="text-sm font-medium text-gray-500 mb-2 block">
+                {t("settings.newPassword")}
+              </label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={t("auth.passwordPlaceholder")}
+                className="h-12 rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500 mb-2 block">
+                {t("settings.confirmPassword")}
+              </label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={t("auth.passwordPlaceholder")}
+                className="h-12 rounded-xl"
+              />
+            </div>
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full"
+              onClick={handleChangePassword}
+              disabled={isLoading || !newPassword || !confirmPassword}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                t("settings.changePassword")
+              )}
+            </ChunkyButton>
+          </motion.div>
+        )}
+
+        {view === "language" && (
+          <motion.div
+            key="language"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-2"
+          >
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => handleLanguageChange(lang.code)}
+                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors ${
+                  language === lang.code
+                    ? "bg-primary/10 ring-2 ring-primary"
+                    : "bg-gray-50 hover:bg-gray-100"
+                }`}
+                style={{ boxShadow: language === lang.code ? "0 2px 0 hsl(var(--primary) / 0.3)" : "0 2px 0 #E5E7EB" }}
+              >
+                <span className="text-2xl">{lang.flag}</span>
+                <div className="flex-1 text-left">
+                  <span className="font-medium text-gray-900 block">
+                    {lang.nativeName}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {lang.name}
+                  </span>
+                </div>
+                {language === lang.code && (
+                  <Check className="h-5 w-5 text-primary" />
                 )}
               </button>
-
-              <h2 className="text-center font-display text-lg font-bold text-foreground">
-                {view === "main" && t("settings.title")}
-                {view === "editName" && t("settings.editName")}
-                {view === "changePassword" && t("settings.changePassword")}
-                {view === "language" && t("settings.language")}
-              </h2>
-            </div>
-
-            {/* Content */}
-            <div className="p-4">
-              <AnimatePresence mode="wait">
-                {view === "main" && (
-                  <motion.div
-                    key="main"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="space-y-2"
-                  >
-                    {settingsItems.map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={item.action}
-                        className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <item.icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="font-medium text-foreground">{item.label}</p>
-                          <p className="text-sm text-muted-foreground">{item.sublabel}</p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-
-                {view === "editName" && (
-                  <motion.div
-                    key="editName"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        {t("settings.editName")}
-                      </label>
-                      <Input
-                        value={nickname}
-                        onChange={(e) => setNickname(e.target.value)}
-                        placeholder={t("auth.usernamePlaceholder")}
-                        className="h-12 rounded-xl"
-                        maxLength={20}
-                      />
-                    </div>
-                    <ChunkyButton
-                      variant="mint"
-                      size="lg"
-                      className="w-full"
-                      onClick={handleSaveNickname}
-                      disabled={isLoading || !nickname.trim()}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        t("common.save")
-                      )}
-                    </ChunkyButton>
-                  </motion.div>
-                )}
-
-                {view === "changePassword" && (
-                  <motion.div
-                    key="changePassword"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        {t("settings.newPassword")}
-                      </label>
-                      <Input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder={t("auth.passwordPlaceholder")}
-                        className="h-12 rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        {t("settings.confirmPassword")}
-                      </label>
-                      <Input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder={t("auth.passwordPlaceholder")}
-                        className="h-12 rounded-xl"
-                      />
-                    </div>
-                    <ChunkyButton
-                      variant="mint"
-                      size="lg"
-                      className="w-full"
-                      onClick={handleChangePassword}
-                      disabled={isLoading || !newPassword || !confirmPassword}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        t("settings.changePassword")
-                      )}
-                    </ChunkyButton>
-                  </motion.div>
-                )}
-
-                {view === "language" && (
-                  <motion.div
-                    key="language"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-2"
-                  >
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang.code)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-colors ${
-                          language === lang.code
-                            ? "bg-primary/10 ring-2 ring-primary"
-                            : "bg-muted/50 hover:bg-muted"
-                        }`}
-                      >
-                        <span className="text-2xl">{lang.flag}</span>
-                        <div className="flex-1 text-left">
-                          <span className="font-medium text-foreground block">
-                            {lang.nativeName}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {lang.name}
-                          </span>
-                        </div>
-                        {language === lang.code && (
-                          <Check className="h-5 w-5 text-primary" />
-                        )}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            ))}
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </GameModal>
   );
 }
