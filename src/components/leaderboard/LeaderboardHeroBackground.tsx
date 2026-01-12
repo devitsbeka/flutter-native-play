@@ -244,9 +244,9 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                 {/* Floating tooltip above trophy (only for active tier) */}
                 {isActive && (
                   <motion.div
-                    className="fixed z-[10] left-1/2 -translate-x-1/2"
+                    className="fixed z-[10] left-0 right-0 flex justify-center px-4"
                     style={{
-                      top: '280px',
+                      top: '100px',
                     }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ 
