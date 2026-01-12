@@ -191,10 +191,10 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background flex flex-col"
+          className="fixed inset-0 z-[100] bg-background flex flex-col"
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+          <div className="flex-shrink-0 fixed top-0 left-0 right-0 z-[110] bg-background border-b border-border safe-top">
             <div className="flex items-center gap-3 px-4 py-3">
               <button 
                 onClick={() => viewMode === "questions" ? setViewMode("info") : onClose()} 
