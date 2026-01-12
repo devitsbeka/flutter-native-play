@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Crown, Zap, Star, Check } from "lucide-react";
+import { ChevronLeft, Crown, Zap, Star, Check } from "lucide-react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useVipStatus, VipDuration, VIP_PRICES } from "@/hooks/useVipStatus";
@@ -308,218 +308,173 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[100] bg-black/60"
-          />
-
-          {/* Modal - New whitish 3D chunky style */}
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-lg z-[100] max-h-[85vh] flex flex-col"
-          >
-            <div 
-              className="rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col max-h-[85vh]"
-              style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
-                boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
-                border: "3px solid rgba(255, 255, 255, 0.95)",
-              }}
-            >
-              {/* Header */}
-              <div className="relative px-6 pt-5 pb-3 flex-shrink-0">
-                <motion.button
-                  onClick={onClose}
-                  className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-                  style={{ boxShadow: "0 3px 0 #D1D5DB" }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95, y: 2 }}
-                >
-                  <X className="w-4 h-4 text-gray-600" />
-                </motion.button>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
-                      <span>💎</span> {t('shop.gemShop')}
-                    </h2>
-                    <p className="text-gray-500 text-sm">{t('shop.premiumItems')}</p>
-                  </div>
-                  
-                  {/* Gem Balance */}
-                  <motion.div 
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-full"
-                    style={{
-                      background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
-                      boxShadow: "0 3px 0 #C4B5FD",
-                      border: "2px solid #A78BFA",
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <img src={gemIcon} alt="" className="w-6 h-6" />
-                    <span className="font-bold text-purple-700 text-lg">{gems}</span>
-                  </motion.div>
-                </div>
-
-                {/* VIP Status Banner */}
-                {isVip && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-3 px-4 py-2 rounded-xl flex items-center justify-between"
-                    style={{
-                      background: "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)",
-                      boxShadow: "0 2px 0 #F59E0B",
-                      border: "2px solid #FBBF24",
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Crown className="w-5 h-5 text-amber-600" />
-                      <span className="text-amber-800 font-semibold">{t('shop.vipActive')}</span>
-                    </div>
-                    <span className="text-amber-700 text-sm font-bold">
-                      {t('shop.daysRemaining').replace('{days}', String(getDaysRemaining()))}
-                    </span>
-                  </motion.div>
-                )}
-
-                {/* Category Tabs - 3D chunky style */}
-                <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
-                  {CATEGORY_KEYS.map((category) => (
-                    <motion.button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all"
-                      style={{
-                        background: selectedCategory === category.id
-                          ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                          : "#F3F4F6",
-                        boxShadow: selectedCategory === category.id
-                          ? "0 2px 0 #C4B5FD"
-                          : "0 2px 0 #E5E7EB",
-                        color: selectedCategory === category.id
-                          ? "#7C3AED"
-                          : "#6B7280",
-                      }}
-                      whileTap={{ scale: 0.95, y: 2 }}
-                    >
-                      <span>{category.icon}</span>
-                      <span>{t(`shop.${category.nameKey}`)}</span>
-                    </motion.button>
-                  ))}
-                </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-background flex flex-col"
+        >
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
+            <div className="flex items-center h-14 px-4">
+              <motion.button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ChevronLeft className="w-6 h-6 text-foreground" />
+              </motion.button>
+              
+              <h1 className="flex-1 text-center font-display text-lg font-bold text-foreground flex items-center justify-center gap-2">
+                <span>💎</span> {t('shop.gemShop')}
+              </h1>
+              
+              {/* Gem Balance */}
+              <div 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                style={{
+                  background: "linear-gradient(180deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.2) 100%)",
+                  border: "2px solid hsl(var(--primary) / 0.3)",
+                }}
+              >
+                <img src={gemIcon} alt="" className="w-5 h-5" />
+                <span className="font-bold text-primary text-sm">{gems}</span>
               </div>
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto px-4 pb-6 pt-2">
-                {selectedCategory === "frames" ? (
-                  <AvatarFrameShop />
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    {filteredItems.map((item, index) => {
-                      const canAfford = gems >= item.price;
-                      const isPurchased = purchasedItems.has(item.id);
-                      const isLoading = isPurchasing === item.id;
-                      const isVipItem = item.category === "vip";
-                      const isVipActive = isVipItem && isVip;
-
-                      return (
-                        <motion.div
-                          key={item.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="relative"
-                        >
-                          {/* Popular badge */}
-                          {item.popular && (
-                            <motion.div 
-                              className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
-                              style={{ 
-                                background: "linear-gradient(135deg, #EC4899 0%, #F97316 100%)",
-                                boxShadow: "0 2px 0 #BE185D",
-                              }}
-                              animate={{ scale: [1, 1.05, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
-                              {t('shop.popular')}
-                            </motion.div>
-                          )}
-
-                          <motion.button
-                            onClick={() => !isPurchased && !isLoading && handlePurchase(item)}
-                            disabled={isPurchased || isLoading}
-                            className="w-full p-4 rounded-2xl text-left transition-all"
-                            style={{
-                              background: isPurchased 
-                                ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)" 
-                                : canAfford 
-                                  ? "#F9FAFB" 
-                                  : "#F3F4F6",
-                              boxShadow: isPurchased
-                                ? "0 3px 0 #6EE7B7"
-                                : canAfford
-                                  ? "0 3px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)"
-                                  : "0 2px 0 #E5E7EB",
-                              border: isPurchased 
-                                ? "2px solid #34D399" 
-                                : "2px solid transparent",
-                              opacity: !canAfford && !isPurchased ? 0.6 : 1,
-                            }}
-                            whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
-                            whileTap={!isPurchased && canAfford ? { scale: 0.98 } : {}}
-                          >
-                            {/* Icon */}
-                            <div 
-                              className={`w-14 h-14 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-3 mx-auto`}
-                              style={{ boxShadow: "0 4px 0 rgba(0,0,0,0.15)" }}
-                            >
-                              {isPurchased ? (
-                                <Check className="w-8 h-8 text-white" />
-                              ) : (
-                                item.icon
-                              )}
-                            </div>
-
-                            {/* Name & Description */}
-                            <h3 className="font-bold text-gray-800 text-sm text-center mb-1">
-                              {getItemDisplayName(item, t)}
-                            </h3>
-                            <p className="text-gray-500 text-xs text-center mb-3 line-clamp-2">
-                              {getItemDescription(item, t)}
-                            </p>
-
-                            {/* Price */}
-                            <div className="flex items-center justify-center gap-1.5">
-                              <img src={gemIcon} alt="" className="w-5 h-5" />
-                              <span className={`font-bold ${canAfford ? "text-gray-800" : "text-red-500"}`}>
-                                {isPurchased ? t('shop.purchased') : isVipActive ? t('team.continue') : item.price}
-                              </span>
-                            </div>
-                          </motion.button>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Safe Area */}
-              <div className="h-6 flex-shrink-0 md:hidden" />
             </div>
-          </motion.div>
-        </>
+
+            {/* VIP Status Banner */}
+            {isVip && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-4 mb-3 px-4 py-2 rounded-xl flex items-center justify-between bg-amber-100 border-2 border-amber-300"
+              >
+                <div className="flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-amber-600" />
+                  <span className="text-amber-800 font-semibold">{t('shop.vipActive')}</span>
+                </div>
+                <span className="text-amber-700 text-sm font-bold">
+                  {t('shop.daysRemaining').replace('{days}', String(getDaysRemaining()))}
+                </span>
+              </motion.div>
+            )}
+
+            {/* Category Tabs */}
+            <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
+              {CATEGORY_KEYS.map((category) => (
+                <motion.button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all"
+                  style={{
+                    background: selectedCategory === category.id
+                      ? "hsl(var(--primary))"
+                      : "hsl(var(--muted))",
+                    color: selectedCategory === category.id
+                      ? "hsl(var(--primary-foreground))"
+                      : "hsl(var(--muted-foreground))",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span>{category.icon}</span>
+                  <span>{t(`shop.${category.nameKey}`)}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-4 pb-6 pt-4">
+            {selectedCategory === "frames" ? (
+              <AvatarFrameShop />
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {filteredItems.map((item, index) => {
+                  const canAfford = gems >= item.price;
+                  const isPurchased = purchasedItems.has(item.id);
+                  const isLoading = isPurchasing === item.id;
+                  const isVipItem = item.category === "vip";
+                  const isVipActive = isVipItem && isVip;
+
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="relative"
+                    >
+                      {/* Popular badge */}
+                      {item.popular && (
+                        <motion.div 
+                          className="absolute -top-1.5 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white z-10 bg-gradient-to-r from-pink-500 to-orange-500"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          {t('shop.popular')}
+                        </motion.div>
+                      )}
+
+                      <motion.button
+                        onClick={() => !isPurchased && !isLoading && handlePurchase(item)}
+                        disabled={isPurchased || isLoading}
+                        className="w-full p-4 rounded-2xl text-left transition-all bg-card border-2 border-border"
+                        whileHover={canAfford && !isPurchased ? { scale: 1.02 } : {}}
+                        whileTap={canAfford && !isPurchased ? { scale: 0.98 } : {}}
+                      >
+                        {/* Item Icon */}
+                        <div className={`w-full aspect-square rounded-xl flex items-center justify-center mb-3 bg-gradient-to-br ${item.gradient}`}>
+                          {isPurchased ? (
+                            <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                              <Check className="w-6 h-6 text-white" />
+                            </div>
+                          ) : isVipActive ? (
+                            <div className="text-center">
+                              <Crown className="w-8 h-8 text-white/80 mx-auto" />
+                              <span className="text-[10px] text-white/80 font-bold">{t('shop.active')}</span>
+                            </div>
+                          ) : (
+                            <div className="transform scale-125">{item.icon}</div>
+                          )}
+                        </div>
+
+                        {/* Item Info */}
+                        <div className="text-center">
+                          <h3 className="font-bold text-foreground text-sm mb-0.5 truncate">
+                            {getItemDisplayName(item, t)}
+                          </h3>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {getItemDescription(item, t)}
+                          </p>
+                        </div>
+
+                        {/* Price Tag */}
+                        {!isPurchased && (
+                          <div className={`mt-2 flex items-center justify-center gap-1.5 py-1.5 rounded-lg ${
+                            canAfford ? "bg-primary/10" : "bg-muted"
+                          }`}>
+                            <img src={gemIcon} alt="" className="w-4 h-4" />
+                            <span className={`font-bold text-sm ${
+                              canAfford ? "text-primary" : "text-muted-foreground"
+                            }`}>
+                              {isLoading ? "..." : item.price}
+                            </span>
+                          </div>
+                        )}
+                      </motion.button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

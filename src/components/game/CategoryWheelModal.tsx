@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import confetti from "canvas-confetti";
 
@@ -112,185 +113,180 @@ export function CategoryWheelModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-        style={{ background: "linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }}
+        className="fixed inset-0 z-[100] bg-background flex flex-col"
       >
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
-        >
-          <h1 
-            className="text-3xl font-black text-white mb-2"
-            style={{ fontFamily: "'TASolivare', sans-serif" }}
-          >
-            {phase === "spinning" ? "ბრუნვა..." : phase === "revealing" || phase === "done" ? "კატეგორია!" : "კატეგორიის არჩევა"}
-          </h1>
-          <p className="text-white/60 text-sm">ბორბალი აირჩევს თამაშის კატეგორიას</p>
-        </motion.div>
-
-        {/* Player Avatars watching */}
-        <div className="flex items-center justify-center gap-8 mb-4">
-          {/* Player */}
-          <motion.div
-            animate={{ y: isSpinning ? [0, -5, 0] : 0 }}
-            transition={{ duration: 0.5, repeat: isSpinning ? Infinity : 0 }}
-            className="w-16 h-16 rounded-full overflow-hidden border-3 border-white/30"
-            style={{ background: "linear-gradient(135deg, #5EE8B5, #3FC99A)" }}
-          >
-            {playerAvatar ? (
-              <img src={playerAvatar} alt="You" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
-            )}
-          </motion.div>
-
-          {/* VS */}
-          <span className="text-white/40 font-bold text-lg">VS</span>
-
-          {/* Opponent */}
-          <motion.div
-            animate={{ y: isSpinning ? [0, -5, 0] : 0 }}
-            transition={{ duration: 0.5, repeat: isSpinning ? Infinity : 0, delay: 0.25 }}
-            className="w-16 h-16 rounded-full overflow-hidden border-3 border-white/30"
-            style={{ background: "linear-gradient(135deg, #FF6B6B, #EE5A5A)" }}
-          >
-            {opponentAvatar ? (
-              <img src={opponentAvatar} alt="Opponent" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-2xl">🤖</div>
-            )}
-          </motion.div>
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center h-14 px-4">
+            <div className="w-10" />
+            
+            <h1 className="flex-1 text-center font-display text-lg font-bold text-foreground">
+              {phase === "spinning" ? "ბრუნვა..." : phase === "revealing" || phase === "done" ? "კატეგორია!" : "კატეგორიის არჩევა"}
+            </h1>
+            
+            <div className="w-10" />
+          </div>
         </div>
 
-        {/* Wheel Container */}
-        <div className="relative" style={{ width: 280, height: 280 }}>
-          {/* Pointer */}
-          <div 
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10"
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "15px solid transparent",
-              borderRight: "15px solid transparent",
-              borderTop: "25px solid #FFD700",
-              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
-            }}
-          />
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8">
+          {/* Player Avatars watching */}
+          <div className="flex items-center justify-center gap-8 mb-6">
+            {/* Player */}
+            <motion.div
+              animate={{ y: isSpinning ? [0, -5, 0] : 0 }}
+              transition={{ duration: 0.5, repeat: isSpinning ? Infinity : 0 }}
+              className="w-16 h-16 rounded-full overflow-hidden border-3 border-border"
+              style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))" }}
+            >
+              {playerAvatar ? (
+                <img src={playerAvatar} alt="You" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-2xl">👤</div>
+              )}
+            </motion.div>
 
-          {/* Wheel */}
-          <motion.div
-            className="relative w-full h-full rounded-full overflow-hidden"
-            style={{
-              boxShadow: "0 0 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.1)",
-              border: "4px solid rgba(255,255,255,0.2)",
-            }}
-            animate={{ rotate: rotation }}
-            transition={{
-              duration: 4,
-              ease: [0.17, 0.67, 0.12, 0.99],
-            }}
-          >
-            {wheelCategories.map((cat, index) => {
-              const startAngle = index * segmentAngle;
-              const midAngle = startAngle + segmentAngle / 2;
-              
-              return (
-                <div
-                  key={cat.id}
-                  className="absolute w-full h-full"
-                  style={{
-                    clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle - 90) * Math.PI / 180)}%, ${50 + 50 * Math.cos((startAngle + segmentAngle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle + segmentAngle - 90) * Math.PI / 180)}%)`,
-                    background: WHEEL_COLORS[index % WHEEL_COLORS.length],
-                  }}
-                >
-                  {/* Category label */}
-                  <div
-                    className="absolute flex flex-col items-center justify-center"
-                    style={{
-                      left: `${50 + 30 * Math.cos((midAngle - 90) * Math.PI / 180)}%`,
-                      top: `${50 + 30 * Math.sin((midAngle - 90) * Math.PI / 180)}%`,
-                      transform: `translate(-50%, -50%) rotate(${midAngle}deg)`,
-                    }}
-                  >
-                    <span className="text-2xl">{cat.icon}</span>
-                    <span 
-                      className="text-[9px] font-bold text-white max-w-[50px] text-center leading-tight"
-                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
-                    >
-                      {cat.name.length > 12 ? cat.name.slice(0, 10) + "..." : cat.name}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+            {/* VS */}
+            <span className="text-muted-foreground font-bold text-lg">VS</span>
 
-            {/* Center circle */}
+            {/* Opponent */}
+            <motion.div
+              animate={{ y: isSpinning ? [0, -5, 0] : 0 }}
+              transition={{ duration: 0.5, repeat: isSpinning ? Infinity : 0, delay: 0.25 }}
+              className="w-16 h-16 rounded-full overflow-hidden border-3 border-border"
+              style={{ background: "linear-gradient(135deg, hsl(var(--destructive)), hsl(var(--destructive) / 0.7))" }}
+            >
+              {opponentAvatar ? (
+                <img src={opponentAvatar} alt="Opponent" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-2xl">🤖</div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Wheel Container */}
+          <div className="relative" style={{ width: 280, height: 280 }}>
+            {/* Pointer */}
             <div 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full"
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10"
               style={{
-                background: "radial-gradient(circle, #FFD700 0%, #FFA500 100%)",
-                boxShadow: "0 0 15px rgba(255,215,0,0.5)",
+                width: 0,
+                height: 0,
+                borderLeft: "15px solid transparent",
+                borderRight: "15px solid transparent",
+                borderTop: "25px solid hsl(var(--primary))",
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
               }}
             />
-          </motion.div>
-        </div>
 
-        {/* Selected Category Reveal */}
-        <AnimatePresence>
-          {selectedCategory && (phase === "revealing" || phase === "done") && (
+            {/* Wheel */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.5, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              className="mt-6 text-center"
+              className="relative w-full h-full rounded-full overflow-hidden border-4 border-border"
+              style={{
+                boxShadow: "0 0 30px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.1)",
+              }}
+              animate={{ rotate: rotation }}
+              transition={{
+                duration: 4,
+                ease: [0.17, 0.67, 0.12, 0.99],
+              }}
             >
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity }}
-                className="text-5xl mb-2"
-              >
-                {selectedCategory.icon}
-              </motion.div>
-              <h2 
-                className="text-2xl font-black text-white"
-                style={{ fontFamily: "'TASolivare', sans-serif" }}
-              >
-                {selectedCategory.name}
-              </h2>
-              <p className="text-white/60 text-sm mt-1">თამაში იწყება...</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {wheelCategories.map((cat, index) => {
+                const startAngle = index * segmentAngle;
+                const midAngle = startAngle + segmentAngle / 2;
+                
+                return (
+                  <div
+                    key={cat.id}
+                    className="absolute w-full h-full"
+                    style={{
+                      clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle - 90) * Math.PI / 180)}%, ${50 + 50 * Math.cos((startAngle + segmentAngle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle + segmentAngle - 90) * Math.PI / 180)}%)`,
+                      background: WHEEL_COLORS[index % WHEEL_COLORS.length],
+                    }}
+                  >
+                    {/* Category label */}
+                    <div
+                      className="absolute flex flex-col items-center justify-center"
+                      style={{
+                        left: `${50 + 30 * Math.cos((midAngle - 90) * Math.PI / 180)}%`,
+                        top: `${50 + 30 * Math.sin((midAngle - 90) * Math.PI / 180)}%`,
+                        transform: `translate(-50%, -50%) rotate(${midAngle}deg)`,
+                      }}
+                    >
+                      <span className="text-2xl">{cat.icon}</span>
+                      <span 
+                        className="text-[9px] font-bold text-white max-w-[50px] text-center leading-tight"
+                        style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
+                      >
+                        {cat.name.length > 12 ? cat.name.slice(0, 10) + "..." : cat.name}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
 
-        {/* Decorative particles */}
-        {isSpinning && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 rounded-full"
+              {/* Center circle */}
+              <div 
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-primary"
                 style={{
-                  background: WHEEL_COLORS[i % WHEEL_COLORS.length],
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -200],
-                  x: [0, (Math.random() - 0.5) * 100],
-                  opacity: [1, 0],
-                  scale: [1, 0],
-                }}
-                transition={{
-                  duration: 1 + Math.random(),
-                  repeat: Infinity,
-                  delay: Math.random() * 0.5,
+                  boxShadow: "0 0 15px hsl(var(--primary) / 0.5)",
                 }}
               />
-            ))}
+            </motion.div>
           </div>
-        )}
+
+          {/* Selected Category Reveal */}
+          <AnimatePresence>
+            {selectedCategory && (phase === "revealing" || phase === "done") && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                className="mt-6 text-center"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 0.6, repeat: Infinity }}
+                  className="text-5xl mb-2"
+                >
+                  {selectedCategory.icon}
+                </motion.div>
+                <h2 className="text-2xl font-display font-bold text-foreground">
+                  {selectedCategory.name}
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">თამაში იწყება...</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Decorative particles */}
+          {isSpinning && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full"
+                  style={{
+                    background: WHEEL_COLORS[i % WHEEL_COLORS.length],
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -200],
+                    x: [0, (Math.random() - 0.5) * 100],
+                    opacity: [1, 0],
+                    scale: [1, 0],
+                  }}
+                  transition={{
+                    duration: 1 + Math.random(),
+                    repeat: Infinity,
+                    delay: Math.random() * 0.5,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </motion.div>
     </AnimatePresence>
   );

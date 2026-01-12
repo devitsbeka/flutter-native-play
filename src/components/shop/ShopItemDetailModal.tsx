@@ -116,9 +116,9 @@ function ItemContentsDisplay({ item, t }: { item: { id: string; description: str
         
         {/* Coins row if applicable */}
         {contents.coins > 0 && (
-          <div className="flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-xl">
+          <div className="flex items-center gap-2 bg-amber-100 dark:bg-amber-900/30 px-4 py-2 rounded-xl">
             <img src={iconCoin} alt="Coins" className="w-6 h-6 object-contain" />
-            <span className="text-sm font-bold text-amber-600">
+            <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
               + {contents.coins} {t('shop.coin')}
             </span>
           </div>
@@ -201,7 +201,6 @@ export function ShopItemDetailModal({
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      variant="primary"
       title={item.name}
     >
       <div className="flex flex-col items-center gap-4 py-2">
@@ -234,7 +233,7 @@ export function ShopItemDetailModal({
           transition={{ delay: 0.2 }}
         >
           {isPurchased ? (
-            <div className="flex items-center justify-center gap-2 text-success font-bold py-3">
+            <div className="flex items-center justify-center gap-2 text-green-600 font-bold py-3">
               <span>✓</span>
               <span>{t('shop.purchased')}</span>
             </div>
@@ -242,7 +241,7 @@ export function ShopItemDetailModal({
             <button
               onClick={onBuy}
               disabled={!canAfford || isLoading}
-              className="flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-amber-900 disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
+              className="flex items-center gap-2 px-8 py-3 rounded-2xl font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
               style={{
                 background: "linear-gradient(180deg, hsl(45 95% 60%) 0%, hsl(40 90% 50%) 100%)",
                 boxShadow: "0 4px 0 hsl(35 85% 40%), 0 6px 12px rgba(0,0,0,0.15)",
