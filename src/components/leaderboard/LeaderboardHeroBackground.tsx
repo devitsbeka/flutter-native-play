@@ -37,8 +37,11 @@ const getTranslateForTier = (tier: number, isDesktop: boolean): number => {
   
   const trophy = TROPHIES.find(t => t.tier === tier);
   if (!trophy) return 0;
-  // For 200% width mobile: shift to center the trophy
-  return -(trophy.position - 50) * 2;
+  // For 250% width mobile: shift to center the trophy
+  // Image is 250vw wide, positioned at -75vw left
+  // Trophy at position% of image = position * 2.5vw from image left
+  // We need to translate so that trophy is at 50vw (center of screen)
+  return -(trophy.position - 50) * 2.5;
 };
 
 // Find nearest tier based on drag position
@@ -78,27 +81,27 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
 
   return (
     <motion.div
-      className="relative overflow-hidden"
+      className="relative overflow-hidden w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ minHeight: '62vh' }}
     >
-      {/* Map container */}
+      {/* Map container - full width to prevent gaps */}
       <div 
-        className="absolute inset-0" 
+        className="absolute inset-0 w-full" 
         style={{ height: 'calc(100% + 100px)', top: '-100px' }}
       >
         {/* 
           Responsive image:
           - Desktop (md+): 100% width, no panning, shows full image
-          - Mobile: 200vw width, panning enabled between trophies
+          - Mobile: 250vw width (extra wide to prevent gaps), panning enabled between trophies
         */}
         <motion.div
           className={`absolute h-full ${isDesktop ? '' : 'touch-none cursor-grab active:cursor-grabbing'}`}
           style={{ 
-            width: isDesktop ? '100%' : '200vw',
-            left: isDesktop ? 0 : '-50vw',
+            width: isDesktop ? '100%' : '250vw',
+            left: isDesktop ? 0 : '-75vw',
           }}
           drag={isDesktop ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
@@ -179,8 +182,10 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
             const isLocked = trophy.tier > userTier;
             
             // Calculate where this trophy appears in viewport
-            const trophyInVw = (trophy.position / 100) * 200;
-            const imageLeftEdge = -50 + targetTranslate;
+            // Image is 250vw wide, trophy at position% of that = position * 2.5vw from image left
+            const trophyInVw = (trophy.position / 100) * 250;
+            // Image left edge is at -75vw + translation
+            const imageLeftEdge = -75 + targetTranslate;
             const trophyViewportPos = imageLeftEdge + trophyInVw;
             
             if (trophyViewportPos < -10 || trophyViewportPos > 110) return null;
