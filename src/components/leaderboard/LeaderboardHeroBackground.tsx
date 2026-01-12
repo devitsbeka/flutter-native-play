@@ -42,12 +42,11 @@ const getTranslateForTier = (tier: number, isDesktop: boolean): number => {
 };
 
 // Find nearest tier based on drag position
-const findNearestTier = (currentTranslateVw: number, userTier: number): number => {
-  const unlocked = TROPHIES.filter(t => t.tier <= userTier);
-  let nearest = unlocked[0];
+const findNearestTier = (currentTranslateVw: number): number => {
+  let nearest = TROPHIES[0];
   let minDist = Math.abs(currentTranslateVw - getTranslateForTier(nearest.tier, false));
   
-  for (const trophy of unlocked) {
+  for (const trophy of TROPHIES) {
     const translate = getTranslateForTier(trophy.tier, false);
     const dist = Math.abs(currentTranslateVw - translate);
     if (dist < minDist) {
@@ -73,9 +72,9 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
     const velocityVw = info.velocity.x * vwPerPixel * 0.1;
     const finalPosition = targetTranslate + dragVw + velocityVw;
     
-    const nearestTier = findNearestTier(finalPosition, userTier);
+    const nearestTier = findNearestTier(finalPosition);
     onTierSelect?.(nearestTier);
-  }, [isDesktop, targetTranslate, userTier, onTierSelect]);
+  }, [isDesktop, targetTranslate, onTierSelect]);
 
   return (
     <motion.div
