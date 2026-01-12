@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play, Pencil, Gamepad2 } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play, Pencil, Gamepad2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -19,6 +19,7 @@ import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
+import { PersonalTriviaModal } from "@/components/team/PersonalTriviaModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -100,6 +101,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
   const [showIconPickerModal, setShowIconPickerModal] = useState(false);
   const [showMyTriviasModal, setShowMyTriviasModal] = useState(false);
+  const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(false);
   
   // Challenge mode state
   const [challengeTrivia, setChallengeTrivia] = useState<{ id: string; title: string; type: "trivia" | "collection" } | null>(null);
@@ -255,14 +257,29 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
     setRoomName(item.title);
   };
 
-  const handleCreateOptionSelect = (type: "trivia" | "collection") => {
+  const handleCreateOptionSelect = (type: "trivia" | "collection" | "personal") => {
     setShowCreateOptionsMenu(false);
     if (type === "trivia") {
       setShowCreateTriviaModal(true);
-    } else {
+    } else if (type === "collection") {
       // Open collection modal instead of navigating
       setShowCreateCollectionModal(true);
+    } else if (type === "personal") {
+      setShowPersonalTriviaModal(true);
     }
+  };
+
+  // Handle personal trivia save
+  const handlePersonalTriviaSave = (questions: Array<{
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+  }>, triviaTitle: string) => {
+    setCustomTriviaQuestions(questions as GeneratedQuestion[]);
+    setCustomTriviaTitle(triviaTitle);
+    setCustomTriviaSubject("personal");
+    setSelectionMode("create");
+    setRoomName(triviaTitle);
   };
 
   const clearSelection = () => {
@@ -941,6 +958,22 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                         <p className="text-xs text-white/70">რამდენიმე რაუნდი ერთად</p>
                       </div>
                     </motion.button>
+                    
+                    {/* MyTrivia Party Option */}
+                    <motion.button
+                      onClick={() => handleCreateOptionSelect("personal")}
+                      className="w-full flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-medium text-white">🎉 MyTrivia Party</p>
+                        <p className="text-xs text-white/70">შენი კითხვები, შენი პასუხები</p>
+                      </div>
+                    </motion.button>
                   </motion.div>
                 ) : (
                   // Collapsed state - regular button
@@ -1099,6 +1132,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
         open={showMyTriviasModal}
         onOpenChange={setShowMyTriviasModal}
         onSelect={handleMyTriviaSelect}
+      />
+
+      {/* Personal Trivia Modal */}
+      <PersonalTriviaModal
+        isOpen={showPersonalTriviaModal}
+        onClose={() => setShowPersonalTriviaModal(false)}
+        onSave={handlePersonalTriviaSave}
       />
     </motion.div>
   );
