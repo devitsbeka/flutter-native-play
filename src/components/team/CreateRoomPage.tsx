@@ -24,6 +24,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useIconLibrary } from "@/hooks/useIconLibrary";
 import iconCollections from "@/assets/icon-collections.png";
 import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
@@ -32,21 +33,21 @@ import iconGroupOfPeople from "@/assets/group-of-people.png";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPICS = [
-  { emoji: "🎬", label: "კინო" },
-  { emoji: "⚽", label: "სპორტი" },
-  { emoji: "🎵", label: "მუსიკა" },
-  { emoji: "🌍", label: "გეოგრაფია" },
-  { emoji: "📚", label: "ისტორია" },
-  { emoji: "🔬", label: "მეცნიერება" },
-  { emoji: "🎨", label: "ხელოვნება" },
-  { emoji: "⭐", label: "ცნობილები" },
-  { emoji: "🎮", label: "გეიმინგი" },
-  { emoji: "🍕", label: "საჭმელი" },
-  { emoji: "🌸", label: "ანიმე" },
-  { emoji: "📺", label: "სერიალები" },
-  { emoji: "🚀", label: "კოსმოსი" },
-  { emoji: "🐾", label: "ცხოველები" },
-  { emoji: "💻", label: "ტექნოლოგია" },
+  { categoryId: "movies", label: "კინო" },
+  { categoryId: "sports", label: "სპორტი" },
+  { categoryId: "music", label: "მუსიკა" },
+  { categoryId: "geography", label: "გეოგრაფია" },
+  { categoryId: "world_history", label: "ისტორია" },
+  { categoryId: "science", label: "მეცნიერება" },
+  { categoryId: "art", label: "ხელოვნება" },
+  { categoryId: "celebrities", label: "ცნობილები" },
+  { categoryId: "video_games", label: "გეიმინგი" },
+  { categoryId: "world_cuisine", label: "საჭმელი" },
+  { categoryId: "anime_manga", label: "ანიმე" },
+  { categoryId: "tv_series", label: "სერიალები" },
+  { categoryId: "space", label: "კოსმოსი" },
+  { categoryId: "animals", label: "ცხოველები" },
+  { categoryId: "technology", label: "ტექნოლოგია" },
 ];
 
 interface GeneratedQuestion {
@@ -83,6 +84,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
   const { createRoom, loading } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
+  const { getIconForCategory } = useIconLibrary();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
