@@ -1,17 +1,30 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { buildSearchTerms } from "@/utils/transliteration";
+
+const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
+
+interface IconItem {
+  id: string;
+  slug: string;
+  title: string;
+  icon_url: string | null;
+}
 
 interface PersonalQuestion {
   id: string;
   question: string;
   answers: string[];
   correctIndex: number;
+  iconSlug?: string;
 }
 
 interface PersonalTriviaModalProps {
@@ -21,6 +34,7 @@ interface PersonalTriviaModalProps {
     question_text: string;
     correct_answer: string;
     incorrect_answers: string[];
+    icon_slug?: string | null;
   }>, title: string) => void;
 }
 
@@ -31,6 +45,167 @@ const EXAMPLE_QUESTIONS = [
   "სად დაიბადა დედა? 🏠",
   "რა ფერის მანქანა აქვს გიოს? 🚗",
 ];
+
+// Inline Icon Picker Component
+function QuestionIconPickerInline({ 
+  selectedSlug, 
+  onSelect 
+}: { 
+  selectedSlug?: string; 
+  onSelect: (slug: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [icons, setIcons] = useState<IconItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const getIconUrl = (icon: IconItem): string => {
+    if (icon.icon_url) return icon.icon_url;
+    return `${ICON_STORAGE_URL}/${icon.slug}.png`;
+  };
+
+  // Search icons when query changes or popover opens
+  useEffect(() => {
+    if (!open) return;
+    
+    const searchIcons = async () => {
+      setIsLoading(true);
+      try {
+        const searchTerms = buildSearchTerms(searchQuery);
+        
+        let query = supabase
+          .from("icon_library")
+          .select("id, slug, title, icon_url")
+          .limit(50);
+
+        if (searchQuery.trim() && searchTerms.length > 0) {
+          // Build OR conditions for all search terms
+          const orConditions = searchTerms.map(term => 
+            `title.ilike.%${term}%,slug.ilike.%${term}%`
+          ).join(',');
+          query = query.or(orConditions);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        setIcons(data || []);
+      } catch (error) {
+        console.error("Error searching icons:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(searchIcons, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery, open]);
+
+  const handleSelect = (slug: string) => {
+    onSelect(slug);
+    setOpen(false);
+    setSearchQuery("");
+  };
+
+  const handleRemove = () => {
+    onSelect(null);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "h-7 rounded-lg border flex items-center gap-1.5 px-2 hover:bg-muted transition-colors text-xs",
+            selectedSlug 
+              ? "border-primary/50 bg-primary/5" 
+              : "border-border bg-muted/50"
+          )}
+        >
+          {selectedSlug ? (
+            <>
+              <img
+                src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
+                alt=""
+                className="w-4 h-4 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span className="text-muted-foreground">აიკონი</span>
+            </>
+          ) : (
+            <>
+              <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-muted-foreground">+ აიკონი</span>
+            </>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0" align="end">
+        <div className="p-3 space-y-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="ძებნა... (ქართულად ან English)"
+              className="pl-8 h-8 text-sm"
+            />
+          </div>
+
+          {/* Icons Grid */}
+          <ScrollArea className="h-48">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : icons.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-xs">
+                აიკონი ვერ მოიძებნა
+              </div>
+            ) : (
+              <div className="grid grid-cols-5 gap-1.5 p-1">
+                {icons.map((icon) => (
+                  <button
+                    key={icon.id}
+                    onClick={() => handleSelect(icon.slug)}
+                    className={cn(
+                      "flex flex-col items-center p-1.5 rounded-lg border transition-all hover:scale-105",
+                      selectedSlug === icon.slug
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-muted/30 hover:border-primary/50"
+                    )}
+                    title={icon.title}
+                  >
+                    <img
+                      src={getIconUrl(icon)}
+                      alt={icon.title}
+                      className="w-8 h-8 object-contain"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+
+          {/* Remove Button */}
+          {selectedSlug && (
+            <button
+              onClick={handleRemove}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-lg transition-colors border border-destructive/20"
+            >
+              <X className="w-3 h-3" />
+              წაშლა
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaModalProps) {
   const [title, setTitle] = useState("");
@@ -56,7 +231,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
     }
   }, [questions.length]);
 
-  const updateQuestion = useCallback((id: string, field: "question" | "correctIndex", value: string | number) => {
+  const updateQuestion = useCallback((id: string, field: "question" | "correctIndex" | "iconSlug", value: string | number | null) => {
     setQuestions(prev => prev.map(q => 
       q.id === id ? { ...q, [field]: value } : q
     ));
@@ -86,6 +261,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
       question_text: q.question,
       correct_answer: q.answers[q.correctIndex],
       incorrect_answers: q.answers.filter((_, i) => i !== q.correctIndex),
+      icon_slug: q.iconSlug || null,
     }));
 
     onSave(formattedQuestions, title || "MyTrivia Party");
@@ -122,7 +298,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
       <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <SheetHeader className="p-4 pb-2 border-b border-border/50">
+          <SheetHeader className="p-5 pb-3 border-b border-border/50">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
                 <PartyPopper className="w-6 h-6 text-white" />
@@ -134,8 +310,8 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
             </div>
           </SheetHeader>
 
-          <ScrollArea className="flex-1 px-4">
-            <div className="py-4 space-y-4">
+          <ScrollArea className="flex-1 px-5">
+            <div className="py-5 space-y-5 pb-24">
               {/* Title Input */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">
@@ -150,7 +326,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
               </div>
 
               {/* Example Questions */}
-              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Lightbulb className="w-4 h-4 text-amber-500" />
                   <span className="text-sm font-medium text-foreground">იდეები:</span>
@@ -181,9 +357,15 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
                     >
                       {/* Question Header */}
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-foreground">
-                          კითხვა {qIdx + 1}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-foreground">
+                            კითხვა {qIdx + 1}
+                          </span>
+                          <QuestionIconPickerInline
+                            selectedSlug={q.iconSlug}
+                            onSelect={(slug) => updateQuestion(q.id, "iconSlug", slug)}
+                          />
+                        </div>
                         {questions.length > 1 && (
                           <button
                             onClick={() => removeQuestion(q.id)}
@@ -251,7 +433,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaM
           </ScrollArea>
 
           {/* Footer */}
-          <div className="p-4 border-t border-border/50 bg-background">
+          <div className="p-5 pt-4 border-t border-border/50 bg-background">
             <Button
               onClick={handleSave}
               disabled={!isValid}
