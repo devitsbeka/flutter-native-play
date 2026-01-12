@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, Edit2, Save, ChevronUp, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, Edit2, Save, ChevronUp, CheckCircle2 } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -1042,64 +1041,79 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     );
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] p-0 gap-0 rounded-3xl overflow-hidden">
-        <DialogTitle className="sr-only">შექმენი კოლექცია</DialogTitle>
-        
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-background">
-          {step > 1 && !isGenerating ? (
-            <button 
-              onClick={() => setStep(step - 1)} 
-              className="p-2 -ml-2 hover:bg-muted rounded-xl"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-          ) : (
-            <div className="w-9" />
-          )}
-          
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex gap-1.5">
-              {[1, 2, 3].map((s) => (
-                <div
-                  key={s}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    s === step ? "bg-primary" : s < step ? "bg-primary/50" : "bg-muted-foreground/30"
-                  }`}
-                />
-              ))}
-            </div>
-            {/* Auto-save indicator */}
-            {lastAutoSaved && !isGenerating && !isPosting && (
-              <motion.div 
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-1 text-[10px] text-green-600"
-              >
-                <CheckCircle2 className="w-3 h-3" />
-                შენახულია
-              </motion.div>
-            )}
-          </div>
-          
-          <button onClick={handleClose} className="p-2 -mr-2 hover:bg-muted rounded-xl">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  if (!open) return null;
 
-        {/* Content with ScrollArea */}
-        <ScrollArea className="max-h-[calc(90vh-60px)]">
-          <div className="p-6">
-            <AnimatePresence mode="wait">
-              {step === 1 && renderStep1()}
-              {step === 2 && renderStep2()}
-              {step === 3 && renderStep3()}
-            </AnimatePresence>
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background"
+        >
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+            <div className="flex items-center justify-between px-4 py-3">
+              {step > 1 && !isGenerating ? (
+                <button 
+                  onClick={() => setStep(step - 1)} 
+                  className="p-2 -ml-2 hover:bg-muted rounded-xl"
+                >
+                  <ChevronLeft className="w-6 h-6 text-foreground" />
+                </button>
+              ) : (
+                <button 
+                  onClick={handleClose} 
+                  className="p-2 -ml-2 hover:bg-muted rounded-xl"
+                >
+                  <ChevronLeft className="w-6 h-6 text-foreground" />
+                </button>
+              )}
+              
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex gap-1.5">
+                  {[1, 2, 3].map((s) => (
+                    <div
+                      key={s}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        s === step ? "bg-primary" : s < step ? "bg-primary/50" : "bg-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+                {/* Auto-save indicator */}
+                {lastAutoSaved && !isGenerating && !isPosting && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-1 text-[10px] text-green-600"
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    შენახულია
+                  </motion.div>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">AI</span>
+              </div>
+            </div>
           </div>
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+
+          {/* Scrollable Content */}
+          <div className="h-full overflow-y-auto pt-[60px] pb-6 safe-top">
+            <div className="p-5">
+              <AnimatePresence mode="wait">
+                {step === 1 && renderStep1()}
+                {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
