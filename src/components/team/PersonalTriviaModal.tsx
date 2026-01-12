@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X } from "lucide-react";
+import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSearchTerms } from "@/utils/transliteration";
@@ -25,6 +25,12 @@ interface PersonalQuestion {
   answers: string[];
   correctIndex: number;
   iconSlug?: string;
+}
+
+interface AnswerItem {
+  id: string;
+  value: string;
+  originalIndex: number;
 }
 
 interface PersonalTriviaModalProps {
@@ -73,7 +79,6 @@ function QuestionIconPickerInline({
     return `${ICON_STORAGE_URL}/${icon.slug}.png`;
   };
 
-  // Search icons when query changes or popover opens
   useEffect(() => {
     if (!open) return;
     
@@ -88,7 +93,6 @@ function QuestionIconPickerInline({
           .limit(50);
 
         if (searchQuery.trim() && searchTerms.length > 0) {
-          // Build OR conditions for all search terms
           const orConditions = searchTerms.map(term => 
             `title.ilike.%${term}%,slug.ilike.%${term}%`
           ).join(',');
@@ -154,7 +158,6 @@ function QuestionIconPickerInline({
       </PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="end">
         <div className="p-3 space-y-3">
-          {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
@@ -165,7 +168,6 @@ function QuestionIconPickerInline({
             />
           </div>
 
-          {/* Icons Grid */}
           <ScrollArea className="h-48">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
@@ -200,7 +202,6 @@ function QuestionIconPickerInline({
             )}
           </ScrollArea>
 
-          {/* Remove Button */}
           {selectedSlug && (
             <button
               onClick={handleRemove}
@@ -216,6 +217,228 @@ function QuestionIconPickerInline({
   );
 }
 
+// Draggable Answer Item Component
+function DraggableAnswer({
+  answer,
+  isCorrect,
+  onCorrectSelect,
+  onValueChange,
+  answerNumber,
+}: {
+  answer: AnswerItem;
+  isCorrect: boolean;
+  onCorrectSelect: () => void;
+  onValueChange: (value: string) => void;
+  answerNumber: number;
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={answer}
+      dragListener={false}
+      dragControls={dragControls}
+      className="flex items-center gap-2"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.15 }}
+    >
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="cursor-grab active:cursor-grabbing touch-none p-1 -ml-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+      <button
+        onClick={onCorrectSelect}
+        className={cn(
+          "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+          isCorrect
+            ? "border-emerald-500 bg-emerald-500 text-white"
+            : "border-border hover:border-muted-foreground"
+        )}
+      >
+        {isCorrect && <Check className="w-3.5 h-3.5" />}
+      </button>
+      <Input
+        placeholder={`პასუხი ${answerNumber}`}
+        value={answer.value}
+        onChange={(e) => onValueChange(e.target.value)}
+        className={cn(
+          "flex-1 bg-background transition-all",
+          isCorrect && "border-emerald-500/50 ring-1 ring-emerald-500/20"
+        )}
+      />
+    </Reorder.Item>
+  );
+}
+
+// Draggable Question Card Component
+function DraggableQuestionCard({
+  question,
+  questionIndex,
+  questionsCount,
+  onRemove,
+  onDuplicate,
+  onUpdateQuestion,
+  onUpdateAnswers,
+  onUpdateCorrectIndex,
+}: {
+  question: PersonalQuestion;
+  questionIndex: number;
+  questionsCount: number;
+  onRemove: () => void;
+  onDuplicate: () => void;
+  onUpdateQuestion: (field: "question" | "iconSlug", value: string | null) => void;
+  onUpdateAnswers: (answers: string[], correctIndex: number) => void;
+  onUpdateCorrectIndex: (index: number) => void;
+}) {
+  const dragControls = useDragControls();
+  
+  // Convert answers to AnswerItem format for Reorder
+  const [answerItems, setAnswerItems] = useState<AnswerItem[]>(() =>
+    question.answers.map((value, idx) => ({
+      id: `${question.id}-answer-${idx}`,
+      value,
+      originalIndex: idx,
+    }))
+  );
+
+  // Sync answerItems when question.answers changes externally
+  useEffect(() => {
+    setAnswerItems(
+      question.answers.map((value, idx) => ({
+        id: `${question.id}-answer-${idx}`,
+        value,
+        originalIndex: idx,
+      }))
+    );
+  }, [question.id, question.answers]);
+
+  const handleAnswerReorder = (newOrder: AnswerItem[]) => {
+    setAnswerItems(newOrder);
+    
+    // Find where the correct answer moved to
+    const correctAnswerItem = newOrder.find(
+      (item) => item.originalIndex === question.correctIndex
+    );
+    const newCorrectIndex = correctAnswerItem
+      ? newOrder.indexOf(correctAnswerItem)
+      : 0;
+
+    // Update parent with new order
+    onUpdateAnswers(
+      newOrder.map((item) => item.value),
+      newCorrectIndex
+    );
+  };
+
+  const handleAnswerValueChange = (answerId: string, newValue: string) => {
+    const newItems = answerItems.map((item) =>
+      item.id === answerId ? { ...item, value: newValue } : item
+    );
+    setAnswerItems(newItems);
+    onUpdateAnswers(
+      newItems.map((item) => item.value),
+      question.correctIndex
+    );
+  };
+
+  const handleCorrectSelect = (index: number) => {
+    onUpdateCorrectIndex(index);
+  };
+
+  return (
+    <Reorder.Item
+      value={question}
+      dragListener={false}
+      dragControls={dragControls}
+      className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-3"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      whileDrag={{ 
+        scale: 1.02, 
+        boxShadow: "0 10px 30px -10px rgba(0,0,0,0.3)",
+        zIndex: 50 
+      }}
+    >
+      {/* Question Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div
+            onPointerDown={(e) => dragControls.start(e)}
+            className="cursor-grab active:cursor-grabbing touch-none p-1 -ml-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-semibold text-foreground">
+            კითხვა {questionIndex + 1}
+          </span>
+          <QuestionIconPickerInline
+            selectedSlug={question.iconSlug}
+            onSelect={(slug) => onUpdateQuestion("iconSlug", slug)}
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onDuplicate}
+            className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+            title="დუბლირება"
+          >
+            <Copy className="w-4 h-4" />
+          </button>
+          {questionsCount > 1 && (
+            <button
+              onClick={onRemove}
+              className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              title="წაშლა"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Question Input */}
+      <Input
+        placeholder="ჩაწერე კითხვა..."
+        value={question.question}
+        onChange={(e) => onUpdateQuestion("question", e.target.value)}
+        className="bg-background"
+      />
+
+      {/* Answer Options with Drag Reorder */}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">
+          აირჩიე სწორი პასუხი (გადაათრიე გადასალაგებლად):
+        </p>
+        <Reorder.Group
+          axis="y"
+          values={answerItems}
+          onReorder={handleAnswerReorder}
+          className="space-y-2"
+        >
+          <AnimatePresence mode="popLayout">
+            {answerItems.map((answer, aIdx) => (
+              <DraggableAnswer
+                key={answer.id}
+                answer={answer}
+                isCorrect={question.correctIndex === aIdx}
+                onCorrectSelect={() => handleCorrectSelect(aIdx)}
+                onValueChange={(value) => handleAnswerValueChange(answer.id, value)}
+                answerNumber={aIdx + 1}
+              />
+            ))}
+          </AnimatePresence>
+        </Reorder.Group>
+      </div>
+    </Reorder.Item>
+  );
+}
+
 export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: PersonalTriviaModalProps) {
   const [title, setTitle] = useState("");
   const [questions, setQuestions] = useState<PersonalQuestion[]>([
@@ -227,10 +450,10 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     if (initialData && isOpen) {
       setTitle(initialData.title);
       setQuestions(initialData.questions.map((q, idx) => ({
-        id: (idx + 1).toString(),
+        id: `init-${idx}-${Date.now()}`,
         question: q.question_text,
         answers: [q.correct_answer, ...q.incorrect_answers],
-        correctIndex: 0, // Correct answer is always first in the formatted data
+        correctIndex: 0,
         iconSlug: q.icon_slug || undefined
       })));
     }
@@ -254,25 +477,42 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     }
   }, [questions.length]);
 
-  const updateQuestion = useCallback((id: string, field: "question" | "correctIndex" | "iconSlug", value: string | number | null) => {
+  const duplicateQuestion = useCallback((id: string) => {
+    setQuestions(prev => {
+      const questionToDuplicate = prev.find(q => q.id === id);
+      if (!questionToDuplicate) return prev;
+      
+      const index = prev.findIndex(q => q.id === id);
+      const duplicatedQuestion: PersonalQuestion = {
+        ...questionToDuplicate,
+        id: `dup-${Date.now()}`,
+      };
+      
+      const newQuestions = [...prev];
+      newQuestions.splice(index + 1, 0, duplicatedQuestion);
+      return newQuestions;
+    });
+  }, []);
+
+  const updateQuestion = useCallback((id: string, field: "question" | "iconSlug", value: string | null) => {
     setQuestions(prev => prev.map(q => 
       q.id === id ? { ...q, [field]: value } : q
     ));
   }, []);
 
-  const updateAnswer = useCallback((questionId: string, answerIndex: number, value: string) => {
-    setQuestions(prev => prev.map(q => {
-      if (q.id === questionId) {
-        const newAnswers = [...q.answers];
-        newAnswers[answerIndex] = value;
-        return { ...q, answers: newAnswers };
-      }
-      return q;
-    }));
+  const updateAnswers = useCallback((id: string, answers: string[], correctIndex: number) => {
+    setQuestions(prev => prev.map(q => 
+      q.id === id ? { ...q, answers, correctIndex } : q
+    ));
+  }, []);
+
+  const updateCorrectIndex = useCallback((id: string, correctIndex: number) => {
+    setQuestions(prev => prev.map(q => 
+      q.id === id ? { ...q, correctIndex } : q
+    ));
   }, []);
 
   const handleSave = () => {
-    // Validate: at least one question with all fields filled
     const validQuestions = questions.filter(q => 
       q.question.trim() && 
       q.answers.every(a => a.trim())
@@ -289,7 +529,6 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
 
     onSave(formattedQuestions, title || "MyTrivia Party");
     
-    // Only reset state if not editing (no initial data)
     if (!initialData) {
       setTitle("");
       setQuestions([{ id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }]);
@@ -369,80 +608,34 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
                 </div>
               </div>
 
-              {/* Questions List */}
-              <div className="space-y-4">
+              {/* Hint for drag and drop */}
+              <p className="text-xs text-muted-foreground text-center">
+                💡 გადაათრიე კითხვები ან პასუხები გადასალაგებლად
+              </p>
+
+              {/* Questions List with Drag Reorder */}
+              <Reorder.Group
+                axis="y"
+                values={questions}
+                onReorder={setQuestions}
+                className="space-y-4"
+              >
                 <AnimatePresence mode="popLayout">
                   {questions.map((q, qIdx) => (
-                    <motion.div
+                    <DraggableQuestionCard
                       key={q.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-3"
-                    >
-                      {/* Question Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-foreground">
-                            კითხვა {qIdx + 1}
-                          </span>
-                          <QuestionIconPickerInline
-                            selectedSlug={q.iconSlug}
-                            onSelect={(slug) => updateQuestion(q.id, "iconSlug", slug)}
-                          />
-                        </div>
-                        {questions.length > 1 && (
-                          <button
-                            onClick={() => removeQuestion(q.id)}
-                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Question Input */}
-                      <Input
-                        placeholder="ჩაწერე კითხვა..."
-                        value={q.question}
-                        onChange={(e) => updateQuestion(q.id, "question", e.target.value)}
-                        className="bg-background"
-                      />
-
-                      {/* Answer Options */}
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground">
-                          აირჩიე სწორი პასუხი:
-                        </p>
-                        {q.answers.map((answer, aIdx) => (
-                          <div key={aIdx} className="flex items-center gap-2">
-                            <button
-                              onClick={() => updateQuestion(q.id, "correctIndex", aIdx)}
-                              className={cn(
-                                "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-                                q.correctIndex === aIdx
-                                  ? "border-emerald-500 bg-emerald-500 text-white"
-                                  : "border-border hover:border-muted-foreground"
-                              )}
-                            >
-                              {q.correctIndex === aIdx && <Check className="w-3.5 h-3.5" />}
-                            </button>
-                            <Input
-                              placeholder={`პასუხი ${aIdx + 1}`}
-                              value={answer}
-                              onChange={(e) => updateAnswer(q.id, aIdx, e.target.value)}
-                              className={cn(
-                                "flex-1 bg-background transition-all",
-                                q.correctIndex === aIdx && "border-emerald-500/50 ring-1 ring-emerald-500/20"
-                              )}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
+                      question={q}
+                      questionIndex={qIdx}
+                      questionsCount={questions.length}
+                      onRemove={() => removeQuestion(q.id)}
+                      onDuplicate={() => duplicateQuestion(q.id)}
+                      onUpdateQuestion={(field, value) => updateQuestion(q.id, field, value)}
+                      onUpdateAnswers={(answers, correctIndex) => updateAnswers(q.id, answers, correctIndex)}
+                      onUpdateCorrectIndex={(index) => updateCorrectIndex(q.id, index)}
+                    />
                   ))}
                 </AnimatePresence>
-              </div>
+              </Reorder.Group>
 
               {/* Add Question Button */}
               <motion.button
