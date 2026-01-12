@@ -78,7 +78,7 @@ export function LeagueCountdown() {
   
   return (
     <motion.div
-      className="bg-background/20 backdrop-blur-md rounded-2xl p-4 border border-border/30"
+      className="bg-card/80 backdrop-blur-md rounded-2xl p-4 border border-border/30 shadow-sm"
       whileHover={{ scale: 1.02 }}
     >
       <div className="text-xs text-foreground/70 uppercase tracking-wide mb-2 text-center font-medium">
