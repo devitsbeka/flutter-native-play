@@ -12,6 +12,7 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { QuizTrueFalseButton, QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { cn } from "@/lib/utils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
@@ -126,7 +127,7 @@ export function MultiplayerGameScreenV2() {
 
   // Get answer button state
   const getAnswerState = useCallback(
-    (answer: string): QuizAnswerState => {
+    (answer: string): QuizAnswerState | QuizTrueFalseState => {
       if (!answerRevealed) {
         return "default";
       }
@@ -140,6 +141,18 @@ export function MultiplayerGameScreenV2() {
     },
     [answerRevealed, currentQuestion, selectedAnswer]
   );
+  
+  // Check if this is a True/False question
+  const isTrueFalseQuestion = useMemo(() => {
+    if (!currentQuestion?.allAnswers) return false;
+    if (currentQuestion.allAnswers.length !== 2) return false;
+    
+    const answers = currentQuestion.allAnswers.map(a => a.toLowerCase());
+    return (
+      (answers.includes("მართალია") && answers.includes("მცდარია")) ||
+      (answers.includes("true") && answers.includes("false"))
+    );
+  }, [currentQuestion?.allAnswers]);
 
   // Get player avatar state
   const getPlayerState = useCallback(() => {
@@ -331,64 +344,93 @@ export function MultiplayerGameScreenV2() {
       </div>
 
       {/* Answer Buttons */}
-      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
-        <AnimatePresence mode="wait">
-          {currentQuestion.allAnswers.map((answer, index) => {
-            // Find opponents who chose this answer (only show when revealed)
-            const opponentsWhoChoseThis = answerRevealed 
-              ? Object.entries(opponentAnswers)
-                  .filter(([_, ans]) => ans.answer === answer)
-                  .map(([userId]) => participants.find(p => p.user_id === userId))
-                  .filter(Boolean)
-              : [];
+      {isTrueFalseQuestion ? (
+        /* True/False Layout - side by side cards */
+        <div className="flex-1 px-4 flex gap-3 items-start pt-2">
+          <AnimatePresence mode="wait">
+            {currentQuestion.allAnswers.map((answer, index) => {
+              const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
+              return (
+                <motion.div
+                  key={`${currentQuestionIndex}-${index}`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-1"
+                >
+                  <QuizTrueFalseButton
+                    variant={isTrue ? "true" : "false"}
+                    state={getAnswerState(answer) as QuizTrueFalseState}
+                    onClick={() => handleAnswer(answer)}
+                    disabled={answerRevealed}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      ) : (
+        /* Regular 4-answer layout */
+        <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
+          <AnimatePresence mode="wait">
+            {currentQuestion.allAnswers.map((answer, index) => {
+              // Find opponents who chose this answer (only show when revealed)
+              const opponentsWhoChoseThis = answerRevealed 
+                ? Object.entries(opponentAnswers)
+                    .filter(([_, ans]) => ans.answer === answer)
+                    .map(([userId]) => participants.find(p => p.user_id === userId))
+                    .filter(Boolean)
+                : [];
 
-            return (
-              <motion.div
-                key={`${currentQuestionIndex}-${index}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex-shrink-0 relative"
-              >
-                <QuizAnswerButton
-                  label={ANSWER_LABELS[index]}
-                  text={answer}
-                  state={getAnswerState(answer)}
-                  onClick={() => handleAnswer(answer)}
-                  disabled={answerRevealed}
-                  showLabel={true}
-                />
-                
-                {/* Opponent avatars overlay */}
-                {opponentsWhoChoseThis.length > 0 && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5">
-                    {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
-                      <Avatar 
-                        key={opp?.id || i} 
-                        className={cn(
-                          "w-7 h-7 border-2",
-                          opponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
-                        )}
-                      >
-                        <AvatarImage src={opp?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                          {opp?.nickname?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {opponentsWhoChoseThis.length > 4 && (
-                      <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
-                        +{opponentsWhoChoseThis.length - 4}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+              return (
+                <motion.div
+                  key={`${currentQuestionIndex}-${index}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-shrink-0 relative"
+                >
+                  <QuizAnswerButton
+                    label={ANSWER_LABELS[index]}
+                    text={answer}
+                    state={getAnswerState(answer) as QuizAnswerState}
+                    onClick={() => handleAnswer(answer)}
+                    disabled={answerRevealed}
+                    showLabel={true}
+                  />
+                  
+                  {/* Opponent avatars overlay */}
+                  {opponentsWhoChoseThis.length > 0 && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5">
+                      {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
+                        <Avatar 
+                          key={opp?.id || i} 
+                          className={cn(
+                            "w-7 h-7 border-2",
+                            opponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
+                          )}
+                        >
+                          <AvatarImage src={opp?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-purple-500 text-white text-[10px]">
+                            {opp?.nickname?.charAt(0) || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {opponentsWhoChoseThis.length > 4 && (
+                        <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">
+                          +{opponentsWhoChoseThis.length - 4}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Bottom Area - Next Button */}
       <div className="px-4 pb-4 pt-2 flex-shrink-0">
