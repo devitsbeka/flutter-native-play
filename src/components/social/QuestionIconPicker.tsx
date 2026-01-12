@@ -155,30 +155,32 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`${large ? "w-20 h-20" : "w-12 h-12"} rounded-xl border flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
+        className={`rounded-2xl border-2 flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
           selectedIconUnsafe 
             ? "border-destructive bg-destructive/10" 
             : "border-border bg-muted/50"
         }`}
+        style={{ width: large ? 86 : 48, height: large ? 86 : 48 }}
       >
         {selectedSlug ? (
           <>
             <img
               src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
               alt=""
-              className={`${large ? "w-14 h-14" : "w-8 h-8"} object-contain`}
+              style={{ width: large ? 60 : 32, height: large ? 60 : 32 }}
+              className="object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
             {selectedIconUnsafe && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-2.5 h-2.5 text-white" />
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-3 h-3 text-white" />
               </div>
             )}
           </>
         ) : (
-          <ImageIcon className={`${large ? "w-10 h-10" : "w-6 h-6"} text-muted-foreground`} />
+          <ImageIcon style={{ width: large ? 40 : 24, height: large ? 40 : 24 }} className="text-muted-foreground" />
         )}
       </button>
 
@@ -238,12 +240,12 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                 {suggestedIcons.length > 0 && !searchQuery && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-3 px-1">შემოთავაზებული</p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-3">
                       {suggestedIcons.slice(0, 8).map((icon) => (
                         <button
                           key={icon.id}
                           onClick={() => handleSelect(icon.slug)}
-                          className={`flex flex-col items-center p-2 rounded-xl border transition-all hover:scale-105 ${
+                          className={`flex flex-col items-center p-2 rounded-2xl border-2 transition-all hover:scale-105 ${
                             selectedSlug === icon.slug
                               ? "border-primary bg-primary/10"
                               : "border-border bg-muted/30 hover:border-primary/50"
@@ -252,11 +254,9 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                           <img
                             src={getIconUrl(icon)}
                             alt={icon.title}
-                            className="w-12 h-12 object-contain"
+                            className="object-contain"
+                            style={{ width: 86, height: 86 }}
                           />
-                          <span className="text-[10px] text-muted-foreground mt-1 px-0.5 text-center leading-tight" style={{ wordBreak: 'break-word' }}>
-                            {icon.title}
-                          </span>
                         </button>
                       ))}
                     </div>
@@ -275,7 +275,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                       აიკონი ვერ მოიძებნა
                     </div>
                   ) : (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-3">
                       {icons.map((icon) => {
                         const isSafe = isIconSafe(icon.slug);
                         return (
@@ -283,7 +283,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                             key={icon.id}
                             onClick={() => isSafe && handleSelect(icon.slug)}
                             disabled={!isSafe}
-                            className={`flex flex-col items-center p-2 rounded-xl border transition-all relative ${
+                            className={`flex flex-col items-center p-2 rounded-2xl border-2 transition-all relative ${
                               !isSafe
                                 ? "border-destructive/50 bg-destructive/5 opacity-50 cursor-not-allowed"
                                 : selectedSlug === icon.slug
@@ -295,14 +295,12 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                             <img
                               src={getIconUrl(icon)}
                               alt={icon.title}
-                              className="w-12 h-12 object-contain"
+                              className="object-contain"
+                              style={{ width: 86, height: 86 }}
                             />
-                            <span className="text-[10px] text-muted-foreground mt-1 px-0.5 text-center leading-tight" style={{ wordBreak: 'break-word' }}>
-                              {icon.title}
-                            </span>
                             {!isSafe && (
-                              <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
-                                <X className="w-2 h-2 text-white" />
+                              <div className="absolute top-1 right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
+                                <X className="w-3 h-3 text-white" />
                               </div>
                             )}
                           </button>
