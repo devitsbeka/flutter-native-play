@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw, ChevronLeft, Sparkles } from "lucide-react";
@@ -234,7 +235,7 @@ function QuestionIconPickerInline({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-80 p-0" align="end" side="top" sideOffset={8}>
         <div className="p-3 space-y-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -342,7 +343,12 @@ function DraggableAnswer({
       <Input
         placeholder={`პასუხი ${answerNumber}`}
         value={answer.value}
-        onChange={(e) => onValueChange(e.target.value)}
+        onChange={(e) => {
+          if (e.target.value.length <= 25) {
+            onValueChange(e.target.value);
+          }
+        }}
+        maxLength={25}
         className={cn(
           "flex-1 bg-background transition-all",
           isCorrect && "border-emerald-500/50 ring-1 ring-emerald-500/20"
@@ -508,12 +514,23 @@ function DraggableQuestionCard({
       <div className="p-4 pt-3 space-y-3">
 
       {/* Question Input */}
-      <Input
-        placeholder="ჩაწერე კითხვა..."
-        value={question.question}
-        onChange={(e) => onUpdateQuestion("question", e.target.value)}
-        className="bg-background"
-      />
+      <div className="space-y-1">
+        <Textarea
+          placeholder="ჩაწერე კითხვა..."
+          value={question.question}
+          onChange={(e) => {
+            if (e.target.value.length <= 70) {
+              onUpdateQuestion("question", e.target.value);
+            }
+          }}
+          maxLength={70}
+          rows={2}
+          className="bg-background resize-none min-h-[52px]"
+        />
+        <div className="text-xs text-muted-foreground text-right">
+          {question.question.length}/70
+        </div>
+      </div>
 
       {/* Answer Options with Drag Reorder */}
       <div className="space-y-2">
