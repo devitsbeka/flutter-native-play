@@ -60,7 +60,7 @@ interface GeneratedQuestion {
 }
 
 // STRICT validation - returns true only if ALL limits are met
-function isValidQuestion(q: GeneratedQuestion): boolean {
+function isValidQuestion(q: GeneratedQuestion, isTrueFalse: boolean = false): boolean {
   if (!q.question_text || !q.correct_answer || !Array.isArray(q.incorrect_answers)) {
     return false;
   }
@@ -72,9 +72,14 @@ function isValidQuestion(q: GeneratedQuestion): boolean {
     console.log(`Rejecting answer (${q.correct_answer.length} chars > ${ANSWER_MAX_LENGTH}): ${q.correct_answer}`);
     return false;
   }
-  if (q.incorrect_answers.length !== 3) {
+  
+  // True/False questions have 1 incorrect answer, multiple choice has 3
+  const expectedIncorrectCount = isTrueFalse ? 1 : 3;
+  if (q.incorrect_answers.length !== expectedIncorrectCount) {
+    console.log(`Rejecting question: expected ${expectedIncorrectCount} incorrect answers, got ${q.incorrect_answers.length}`);
     return false;
   }
+  
   for (const answer of q.incorrect_answers) {
     if (!answer || answer.length > ANSWER_MAX_LENGTH) {
       console.log(`Rejecting incorrect answer (${(answer || '').length} chars > ${ANSWER_MAX_LENGTH}): ${answer}`);
@@ -325,7 +330,7 @@ Return ONLY valid JSON.`;
     }
 
     // STRICT validation: Filter out questions that exceed character limits
-    const validQuestions = quizData.questions.filter(isValidQuestion);
+    const validQuestions = quizData.questions.filter((q: GeneratedQuestion) => isValidQuestion(q, isTrueFalse));
     console.log(`Validation: ${quizData.questions.length} generated, ${validQuestions.length} passed strict limits`);
 
     // Remove duplicates from the valid questions
