@@ -1551,6 +1551,7 @@ export type Database = {
           correct_answer: string
           created_at: string | null
           difficulty: string | null
+          icon_slug: string | null
           id: string
           incorrect_answers: Json
           question_index: number
@@ -1562,6 +1563,7 @@ export type Database = {
           correct_answer: string
           created_at?: string | null
           difficulty?: string | null
+          icon_slug?: string | null
           id?: string
           incorrect_answers: Json
           question_index: number
@@ -1573,6 +1575,7 @@ export type Database = {
           correct_answer?: string
           created_at?: string | null
           difficulty?: string | null
+          icon_slug?: string | null
           id?: string
           incorrect_answers?: Json
           question_index?: number
