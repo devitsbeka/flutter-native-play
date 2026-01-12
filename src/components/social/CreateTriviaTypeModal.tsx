@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ interface CreateTriviaTypeModalProps {
   onOpenChange: (open: boolean) => void;
   onSelectSingle: () => void;
   onSelectCollection: (draftId?: string) => void;
+  onSelectPersonal?: () => void;
 }
 
 export function CreateTriviaTypeModal({
@@ -17,6 +18,7 @@ export function CreateTriviaTypeModal({
   onOpenChange,
   onSelectSingle,
   onSelectCollection,
+  onSelectPersonal,
 }: CreateTriviaTypeModalProps) {
   const handleResumeDraft = (draftId: string) => {
     onSelectCollection(draftId);
@@ -89,6 +91,31 @@ export function CreateTriviaTypeModal({
               </p>
             </div>
           </motion.button>
+
+          {/* MyTrivia Party Card */}
+          {onSelectPersonal && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                onOpenChange(false);
+                onSelectPersonal();
+              }}
+              className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-pink-500/5 to-rose-500/10 transition-all text-left flex items-center gap-4 group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-pink-500/30 transition-shadow">
+                <Users className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-foreground text-lg">🎉 MyTrivia Party</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  შენი კითხვები, შენი პასუხები
+                </p>
+              </div>
+            </motion.button>
+          )}
 
           {/* Drafts List */}
           <DraftsList 
