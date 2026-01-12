@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Tv, Wifi, WifiOff, Loader2, Check, ChevronRight, Keyboard } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tv, Wifi, WifiOff, Loader2, Check, ChevronRight, Keyboard, ChevronLeft } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Input } from '@/components/ui/input';
 import { useTVDiscovery, DiscoveredTV } from '@/hooks/useTVDiscovery';
@@ -84,195 +83,210 @@ export function TVDiscoveryModal({ open, onOpenChange }: TVDiscoveryModalProps) 
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden bg-gradient-to-b from-white to-slate-50 border-0">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-white text-xl">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Tv className="w-6 h-6" />
-              </div>
-              {t('tv.connectToTV')}
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-white/80 text-sm mt-2">
-            {t('tv.discoverNearbyTVs')}
-          </p>
-        </div>
+  if (!open) return null;
 
-        <div className="p-5 space-y-4">
-          <AnimatePresence mode="wait">
-            {!showManualInput ? (
-              <motion.div
-                key="discovery"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4"
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background"
+        >
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-indigo-600 safe-top">
+            <div className="flex items-center gap-3 px-4 py-4">
+              <button 
+                onClick={() => onOpenChange(false)} 
+                className="p-2 -ml-2 hover:bg-white/10 rounded-xl transition-colors"
               >
-                {/* Scanning indicator */}
-                {isScanning && (
+                <ChevronLeft className="w-6 h-6 text-white" />
+              </button>
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Tv className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-lg font-bold text-white">{t('tv.connectToTV')}</h1>
+                <p className="text-white/70 text-xs">{t('tv.discoverNearbyTVs')}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="h-full overflow-y-auto pt-[88px] pb-6 safe-top">
+            <div className="p-5 space-y-4">
+              <AnimatePresence mode="wait">
+                {!showManualInput ? (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-center gap-2 py-4"
+                    key="discovery"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-4"
                   >
-                    {/* Radar animation */}
-                    <div className="relative w-16 h-16">
+                    {/* Scanning indicator */}
+                    {isScanning && (
                       <motion.div
-                        className="absolute inset-0 rounded-full border-2 border-purple-500/30"
-                        animate={{ scale: [1, 2], opacity: [0.5, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      <motion.div
-                        className="absolute inset-0 rounded-full border-2 border-purple-500/30"
-                        animate={{ scale: [1, 2], opacity: [0.5, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center">
-                          <Wifi className="w-4 h-4 text-white" />
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center justify-center gap-2 py-8"
+                      >
+                        {/* Radar animation */}
+                        <div className="relative w-20 h-20">
+                          <motion.div
+                            className="absolute inset-0 rounded-full border-2 border-purple-500/30"
+                            animate={{ scale: [1, 2], opacity: [0.5, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                          <motion.div
+                            className="absolute inset-0 rounded-full border-2 border-purple-500/30"
+                            animate={{ scale: [1, 2], opacity: [0.5, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
+                              <Wifi className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                        <span className="text-muted-foreground text-sm ml-2">{t('tv.scanningForDevices')}</span>
+                      </motion.div>
+                    )}
+
+                    {/* Discovered TVs list */}
+                    <div className="space-y-3 min-h-[150px]">
+                      {discoveredTVs.length === 0 && isScanning && (
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="text-center text-muted-foreground text-sm py-8"
+                        >
+                          {t('tv.lookingForTVs')}
+                        </motion.p>
+                      )}
+
+                      {discoveredTVs.map((tv, index) => (
+                        <motion.button
+                          key={tv.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          onClick={() => handleConnectToTV(tv)}
+                          disabled={connectingToId !== null}
+                          className="w-full flex items-center gap-3 p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all disabled:opacity-50"
+                        >
+                          {/* TV Icon */}
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center flex-shrink-0">
+                            <Tv className="w-7 h-7 text-foreground" />
+                          </div>
+
+                          {/* TV Info */}
+                          <div className="flex-1 text-left">
+                            <p className="font-semibold text-foreground">{tv.deviceName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {t('tv.code')}: {tv.pairingCode}
+                            </p>
+                          </div>
+
+                          {/* Status / Signal */}
+                          <div className="flex items-center gap-2">
+                            {connectingToId === tv.id ? (
+                              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                            ) : tv.status === 'paired' ? (
+                              <Check className="w-5 h-5 text-emerald-500" />
+                            ) : (
+                              <>
+                                {getSignalIcon(tv.signalStrength)}
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                              </>
+                            )}
+                          </div>
+                        </motion.button>
+                      ))}
+
+                      {!isScanning && discoveredTVs.length === 0 && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="text-center py-12"
+                        >
+                          <WifiOff className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                          <p className="text-muted-foreground text-sm mb-4">{t('tv.noDevicesFound')}</p>
+                          <ChunkyButton
+                            variant="outline"
+                            size="sm"
+                            onClick={startScanning}
+                          >
+                            {t('tv.scanAgain')}
+                          </ChunkyButton>
+                        </motion.div>
+                      )}
                     </div>
-                    <span className="text-slate-600 text-sm ml-2">{t('tv.scanningForDevices')}</span>
+
+                    {/* Manual code button */}
+                    <button
+                      onClick={() => setShowManualInput(true)}
+                      className="w-full flex items-center justify-center gap-2 py-4 text-muted-foreground hover:text-primary transition-colors text-sm"
+                    >
+                      <Keyboard className="w-4 h-4" />
+                      {t('tv.enterCodeManually')}
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="manual"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-6 pt-4"
+                  >
+                    <p className="text-muted-foreground text-sm text-center">
+                      {t('tv.enterCodeFromTV')}
+                    </p>
+
+                    {/* Code input */}
+                    <div className="flex justify-center">
+                      <Input
+                        type="text"
+                        maxLength={4}
+                        value={manualCode}
+                        onChange={(e) => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        placeholder="0000"
+                        className="text-center text-4xl font-bold tracking-[0.5em] w-52 h-20 border-2 bg-card"
+                        autoFocus
+                      />
+                    </div>
+
+                    <ChunkyButton
+                      variant="primary"
+                      onClick={handleManualConnect}
+                      disabled={manualCode.length !== 4 || connectionState === 'connecting'}
+                      className="w-full"
+                    >
+                      {connectionState === 'connecting' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          {t('tv.connecting')}
+                        </>
+                      ) : (
+                        t('tv.connect')
+                      )}
+                    </ChunkyButton>
+
+                    <button
+                      onClick={() => setShowManualInput(false)}
+                      className="w-full text-center text-muted-foreground text-sm hover:text-foreground py-2"
+                    >
+                      {t('common.back')}
+                    </button>
                   </motion.div>
                 )}
-
-                {/* Discovered TVs list */}
-                <div className="space-y-2 min-h-[120px]">
-                  {discoveredTVs.length === 0 && isScanning && (
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center text-slate-500 text-sm py-6"
-                    >
-                      {t('tv.lookingForTVs')}
-                    </motion.p>
-                  )}
-
-                  {discoveredTVs.map((tv, index) => (
-                    <motion.button
-                      key={tv.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      onClick={() => handleConnectToTV(tv)}
-                      disabled={connectingToId !== null}
-                      className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all disabled:opacity-50"
-                    >
-                      {/* TV Icon */}
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center flex-shrink-0">
-                        <Tv className="w-6 h-6 text-slate-700" />
-                      </div>
-
-                      {/* TV Info */}
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-slate-800">{tv.deviceName}</p>
-                        <p className="text-xs text-slate-500">
-                          {t('tv.code')}: {tv.pairingCode}
-                        </p>
-                      </div>
-
-                      {/* Status / Signal */}
-                      <div className="flex items-center gap-2">
-                        {connectingToId === tv.id ? (
-                          <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />
-                        ) : tv.status === 'paired' ? (
-                          <Check className="w-5 h-5 text-emerald-500" />
-                        ) : (
-                          <>
-                            {getSignalIcon(tv.signalStrength)}
-                            <ChevronRight className="w-4 h-4 text-slate-400" />
-                          </>
-                        )}
-                      </div>
-                    </motion.button>
-                  ))}
-
-                  {!isScanning && discoveredTVs.length === 0 && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-8"
-                    >
-                      <WifiOff className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500 text-sm">{t('tv.noDevicesFound')}</p>
-                      <ChunkyButton
-                        variant="outline"
-                        size="sm"
-                        onClick={startScanning}
-                        className="mt-4"
-                      >
-                        {t('tv.scanAgain')}
-                      </ChunkyButton>
-                    </motion.div>
-                  )}
-                </div>
-
-                {/* Manual code button */}
-                <button
-                  onClick={() => setShowManualInput(true)}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-slate-600 hover:text-purple-600 transition-colors text-sm"
-                >
-                  <Keyboard className="w-4 h-4" />
-                  {t('tv.enterCodeManually')}
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="manual"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-4"
-              >
-                <p className="text-slate-600 text-sm text-center">
-                  {t('tv.enterCodeFromTV')}
-                </p>
-
-                {/* Code input */}
-                <div className="flex justify-center">
-                  <Input
-                    type="text"
-                    maxLength={4}
-                    value={manualCode}
-                    onChange={(e) => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="0000"
-                    className="text-center text-4xl font-bold tracking-[0.5em] w-48 h-16 border-2"
-                    autoFocus
-                  />
-                </div>
-
-                <ChunkyButton
-                  variant="primary"
-                  onClick={handleManualConnect}
-                  disabled={manualCode.length !== 4 || connectionState === 'connecting'}
-                  className="w-full"
-                >
-                  {connectionState === 'connecting' ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      {t('tv.connecting')}
-                    </>
-                  ) : (
-                    t('tv.connect')
-                  )}
-                </ChunkyButton>
-
-                <button
-                  onClick={() => setShowManualInput(false)}
-                  className="w-full text-center text-slate-500 text-sm hover:text-slate-700 py-2"
-                >
-                  {t('common.back')}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </DialogContent>
-    </Dialog>
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

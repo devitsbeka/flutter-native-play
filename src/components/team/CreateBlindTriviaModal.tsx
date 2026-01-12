@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Lock, Play } from "lucide-react";
+import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, Lock, Play } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -477,64 +476,75 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
   const totalSteps = 5;
   const progressDots = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 gap-0 rounded-3xl overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Progress dots */}
-        <div className="flex justify-center gap-1.5 py-3 border-b border-border/50 shrink-0">
-          {progressDots.map((dot) => (
-            <div
-              key={dot}
-              className={`w-2 h-2 rounded-full transition-all ${
-                dot === step
-                  ? "w-6 bg-primary"
-                  : dot < step
-                  ? "bg-primary/50"
-                  : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 shrink-0">
-          <div className="w-9" />
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">
-              თამაშისთვის Trivia
-            </span>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background"
+        >
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+            <div className="flex items-center justify-between px-4 py-3">
+              <button 
+                onClick={handleClose} 
+                className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6 text-foreground" />
+              </button>
+              
+              {/* Progress dots */}
+              <div className="flex items-center gap-1.5">
+                {progressDots.map((dot) => (
+                  <div
+                    key={dot}
+                    className={`h-2 rounded-full transition-all ${
+                      dot === step
+                        ? "w-6 bg-primary"
+                        : dot < step
+                        ? "w-2 bg-primary/50"
+                        : "w-2 bg-muted"
+                    }`}
+                  />
+                ))}
+              </div>
+              
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-xs font-semibold text-primary">AI</span>
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={handleClose} 
-            className="p-2 -mr-2 hover:bg-muted rounded-xl transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Content - scrollable */}
-        <div className="flex-1 p-5 overflow-y-auto min-h-0">
-          <AnimatePresence mode="wait">
-            {renderStep()}
-          </AnimatePresence>
-        </div>
-
-        {/* Fixed CTA footer for step 5 */}
-        {step === 5 && (
-          <div className="p-5 pt-3 border-t border-border/30 shrink-0 bg-background">
-            <ChunkyButton
-              onClick={handleStartGame}
-              className="w-full"
-              variant="primary"
-              size="lg"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              მზადაა! 🚀
-            </ChunkyButton>
+          {/* Scrollable Content */}
+          <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+            <div className="p-5">
+              <AnimatePresence mode="wait">
+                {renderStep()}
+              </AnimatePresence>
+            </div>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+
+          {/* Fixed CTA footer for step 5 */}
+          {step === 5 && (
+            <div className="fixed bottom-0 left-0 right-0 p-5 pt-3 border-t border-border/30 bg-background safe-bottom">
+              <ChunkyButton
+                onClick={handleStartGame}
+                className="w-full"
+                variant="primary"
+                size="lg"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                მზადაა! 🚀
+              </ChunkyButton>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
