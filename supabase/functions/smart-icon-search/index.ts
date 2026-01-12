@@ -126,6 +126,10 @@ const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
   'ლომი': ['lion', 'cat', 'king', 'wild'],
   'დათვი': ['bear', 'wild', 'forest', 'animal'],
   'არწივი': ['eagle', 'bird', 'flying', 'predator'],
+  'ცხენი': ['horse', 'equine', 'riding', 'animal'],
+  'სპილო': ['elephant', 'animal', 'trunk', 'large'],
+  'გველი': ['snake', 'serpent', 'reptile'],
+  'მგელი': ['wolf', 'canine', 'wild', 'pack'],
   
   // Food/Cuisine
   'საკვები': ['food', 'meal', 'dish', 'cuisine'],
@@ -133,6 +137,9 @@ const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
   'პური': ['bread', 'bakery', 'wheat', 'food'],
   'ხინკალი': ['khinkali', 'dumpling', 'food', 'georgian'],
   'ხაჭაპური': ['khachapuri', 'cheese', 'bread', 'food'],
+  'ხორცი': ['meat', 'beef', 'food', 'steak'],
+  'ბოსტნეული': ['vegetable', 'veggie', 'food', 'salad'],
+  'ხილი': ['fruit', 'apple', 'food', 'fresh'],
   
   // Nature
   'ბუნება': ['nature', 'environment', 'natural', 'green'],
@@ -163,6 +170,155 @@ const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
   'სიცოცხლე': ['life', 'living', 'alive', 'heart'],
   'სიკვდილი': ['death', 'skull', 'end', 'grave'],
   'ბედნიერება': ['happiness', 'joy', 'smile', 'happy'],
+  
+  // === NEW: Entertainment/Media ===
+  'კინო': ['movie', 'film', 'cinema', 'theater', 'screen', 'camera', 'video'],
+  'ფილმი': ['movie', 'film', 'cinema', 'video', 'camera', 'screen'],
+  'თეატრი': ['theater', 'stage', 'drama', 'mask', 'curtain', 'play'],
+  'სერიალი': ['series', 'tv', 'show', 'episode', 'television'],
+  'მულტფილმი': ['cartoon', 'animation', 'animated', 'movie'],
+  'აქტიორი': ['actor', 'actress', 'star', 'movie', 'film'],
+  'რეჟისორი': ['director', 'film', 'camera', 'movie', 'cinema'],
+  'სცენარი': ['script', 'screenplay', 'movie', 'film'],
+  'კომედია': ['comedy', 'funny', 'laugh', 'humor', 'movie'],
+  'დრამა': ['drama', 'theater', 'movie', 'emotional'],
+  'ტელევიზია': ['tv', 'television', 'screen', 'broadcast'],
+  
+  // === NEW: Technology ===
+  'კომპიუტერი': ['computer', 'laptop', 'desktop', 'tech', 'screen'],
+  'ტელეფონი': ['phone', 'mobile', 'smartphone', 'call', 'cell'],
+  'ინტერნეტი': ['internet', 'web', 'online', 'wifi', 'network'],
+  'პროგრამა': ['program', 'software', 'app', 'application'],
+  'ტექნოლოგია': ['technology', 'tech', 'digital', 'innovation'],
+  'ელექტრო': ['electric', 'electronic', 'power', 'plug'],
+  'კამერა': ['camera', 'photo', 'photography', 'film'],
+  
+  // === NEW: Vehicles/Transport ===
+  'მანქანა': ['car', 'vehicle', 'automobile', 'drive', 'auto'],
+  'თვითმფრინავი': ['airplane', 'plane', 'flight', 'travel', 'jet'],
+  'გემი': ['ship', 'boat', 'vessel', 'sea', 'cruise'],
+  'მატარებელი': ['train', 'railway', 'transport', 'locomotive'],
+  'ველოსიპედი': ['bicycle', 'bike', 'cycling', 'wheel'],
+  'ავტობუსი': ['bus', 'transport', 'vehicle', 'public'],
+  'მოტოციკლი': ['motorcycle', 'bike', 'motor', 'vehicle'],
+  
+  // === NEW: Music ===
+  'მუსიკა': ['music', 'song', 'melody', 'note', 'audio'],
+  'სიმღერა': ['song', 'music', 'singing', 'melody'],
+  'გიტარა': ['guitar', 'music', 'instrument', 'string'],
+  'პიანინო': ['piano', 'keyboard', 'music', 'instrument'],
+  'კონცერტი': ['concert', 'music', 'show', 'performance'],
+  'ალბომი': ['album', 'music', 'record', 'cd'],
+  
+  // === NEW: Household/Objects ===
+  'წიგნი': ['book', 'reading', 'literature', 'library'],
+  'კარადა': ['closet', 'wardrobe', 'furniture', 'cabinet'],
+  'მაგიდა': ['table', 'desk', 'furniture'],
+  'სკამი': ['chair', 'seat', 'furniture'],
+  'ლამპა': ['lamp', 'light', 'bulb', 'lighting'],
+  'სარკე': ['mirror', 'glass', 'reflection'],
+  'ფანჯარა': ['window', 'glass', 'view'],
+  'კარი': ['door', 'entrance', 'gate'],
+  'საათი': ['clock', 'watch', 'time', 'hour'],
+  
+  // === NEW: Clothing ===
+  'ტანსაცმელი': ['clothing', 'clothes', 'fashion', 'apparel'],
+  'ფეხსაცმელი': ['shoes', 'footwear', 'boot', 'sneaker'],
+  'ქუდი': ['hat', 'cap', 'head', 'headwear'],
+  'პერანგი': ['shirt', 'clothing', 'top', 'blouse'],
+  'შარვალი': ['pants', 'trousers', 'jeans'],
+  'კაბა': ['dress', 'clothing', 'gown', 'fashion'],
+  
+  // === NEW: Weather/Climate ===
+  'ამინდი': ['weather', 'climate', 'forecast'],
+  'წვიმა': ['rain', 'rainy', 'water', 'weather'],
+  'თოვლი': ['snow', 'winter', 'cold', 'snowflake'],
+  'ქარი': ['wind', 'windy', 'breeze', 'weather'],
+  'ღრუბელი': ['cloud', 'cloudy', 'sky', 'weather'],
+  
+  // === NEW: Common Actions/Verbs ===
+  'თამაში': ['game', 'play', 'gaming', 'sport'],
+  'სწავლა': ['study', 'learn', 'education', 'school'],
+  'მუშაობა': ['work', 'job', 'office', 'business'],
+  'მოგზაურობა': ['travel', 'trip', 'journey', 'vacation'],
+  'სირბილი': ['running', 'run', 'jog', 'sprint'],
+  'ცურვა': ['swimming', 'swim', 'pool', 'water'],
+  
+  // === NEW: Family ===
+  'ოჯახი': ['family', 'home', 'household', 'relatives'],
+  'მშობელი': ['parent', 'family', 'mother', 'father'],
+  'დედა': ['mother', 'mom', 'parent', 'family'],
+  'მამა': ['father', 'dad', 'parent', 'family'],
+  'ბავშვი': ['child', 'kid', 'baby', 'children'],
+  'ძმა': ['brother', 'sibling', 'family'],
+  'და': ['sister', 'sibling', 'family'],
+  'ბებია': ['grandmother', 'grandma', 'family'],
+  'ბაბუა': ['grandfather', 'grandpa', 'family'],
+  
+  // === NEW: Colors ===
+  'ფერი': ['color', 'colour', 'hue', 'shade'],
+  'წითელი': ['red', 'color', 'crimson'],
+  'ლურჯი': ['blue', 'color', 'azure'],
+  'მწვანე': ['green', 'color', 'nature'],
+  'ყვითელი': ['yellow', 'color', 'gold'],
+  'შავი': ['black', 'color', 'dark'],
+  'თეთრი': ['white', 'color', 'light'],
+  
+  // === NEW: Numbers/Math ===
+  'რიცხვი': ['number', 'digit', 'math', 'count'],
+  'მათემატიკა': ['math', 'mathematics', 'calculation'],
+  'პროცენტი': ['percent', 'percentage', 'number'],
+};
+
+// English synonyms for better English search results
+const ENGLISH_SYNONYMS: Record<string, string[]> = {
+  // Entertainment
+  'movie': ['film', 'cinema', 'video', 'theater', 'screen'],
+  'film': ['movie', 'cinema', 'video', 'screen'],
+  'cinema': ['movie', 'film', 'theater', 'screen'],
+  'tv': ['television', 'screen', 'broadcast', 'show'],
+  'music': ['song', 'melody', 'audio', 'sound'],
+  
+  // Technology
+  'computer': ['laptop', 'desktop', 'pc', 'screen'],
+  'phone': ['mobile', 'smartphone', 'cell', 'telephone'],
+  'car': ['vehicle', 'auto', 'automobile'],
+  'plane': ['airplane', 'aircraft', 'jet', 'flight'],
+  
+  // Animals
+  'dog': ['puppy', 'canine', 'pet'],
+  'cat': ['kitten', 'feline', 'pet'],
+  'bird': ['avian', 'flying', 'wing'],
+  
+  // People
+  'actor': ['actress', 'performer', 'star'],
+  'singer': ['vocalist', 'artist', 'performer'],
+  'writer': ['author', 'novelist', 'scribe'],
+  
+  // Places
+  'city': ['town', 'urban', 'metropolis'],
+  'country': ['nation', 'state', 'land'],
+  'house': ['home', 'dwelling', 'building'],
+  
+  // Nature
+  'tree': ['plant', 'forest', 'wood'],
+  'flower': ['bloom', 'blossom', 'plant'],
+  'sun': ['solar', 'sunny', 'light'],
+  'moon': ['lunar', 'night', 'crescent'],
+  
+  // Food
+  'food': ['meal', 'dish', 'cuisine'],
+  'drink': ['beverage', 'liquid', 'water'],
+  
+  // Sports
+  'football': ['soccer', 'ball', 'sport'],
+  'basketball': ['ball', 'hoop', 'sport'],
+  'tennis': ['racket', 'ball', 'court'],
+  
+  // Abstract
+  'love': ['heart', 'romance', 'affection'],
+  'money': ['cash', 'currency', 'dollar', 'coin'],
+  'time': ['clock', 'watch', 'hour'],
 };
 
 // Context patterns - phrases that suggest specific icon categories
@@ -338,8 +494,23 @@ serve(async (req) => {
         searchTerms.add(fullTransliteration);
       }
     } else {
-      // For non-Georgian (English) queries, just use the query directly
-      searchTerms.add(query.toLowerCase());
+      // For non-Georgian (English) queries, add synonyms for better results
+      const queryLower = query.toLowerCase();
+      searchTerms.add(queryLower);
+      
+      // Add English synonyms
+      const synonyms = ENGLISH_SYNONYMS[queryLower];
+      if (synonyms) {
+        synonyms.forEach(s => searchTerms.add(s));
+      }
+      
+      // Also check for partial matches in synonym keys
+      for (const [word, syns] of Object.entries(ENGLISH_SYNONYMS)) {
+        if (queryLower.includes(word) || word.includes(queryLower)) {
+          syns.forEach(s => searchTerms.add(s));
+          searchTerms.add(word);
+        }
+      }
     }
 
     console.log('Search terms:', [...searchTerms]);

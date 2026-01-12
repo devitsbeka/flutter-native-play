@@ -129,8 +129,8 @@ function QuestionIconPickerInline({
     const searchIcons = async () => {
       setIsLoading(true);
       try {
-        if (searchQuery.trim() && isGeorgian(searchQuery)) {
-          // Use smart search for Georgian input
+        if (searchQuery.trim()) {
+          // Always use smart search for both Georgian AND English queries
           const { data, error } = await supabase.functions.invoke('smart-icon-search', {
             body: { query: searchQuery, limit: 50 }
           });
@@ -149,31 +149,12 @@ function QuestionIconPickerInline({
             setIcons(randomData || []);
           }
         } else {
-          // Standard English search or no search query
-          let query = supabase
+          // No search query - fetch random icons
+          const { data: randomData } = await supabase
             .from("icon_library")
             .select("id, slug, title, icon_url")
             .limit(50);
-
-          if (searchQuery.trim()) {
-            query = query.or(
-              `title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%`
-            );
-          }
-
-          const { data, error } = await query;
-          if (error) throw error;
-          
-          // If no results found for English search, fetch random icons
-          if (!data || data.length === 0) {
-            const { data: randomData } = await supabase
-              .from("icon_library")
-              .select("id, slug, title, icon_url")
-              .limit(50);
-            setIcons(randomData || []);
-          } else {
-            setIcons(data);
-          }
+          setIcons(randomData || []);
         }
       } catch (error) {
         console.error("Error searching icons:", error);
