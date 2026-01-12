@@ -27,11 +27,7 @@ interface EditQuestionDialogProps {
   answerFormat?: "4_answers" | "true_false";
 }
 
-const DIFFICULTY_OPTIONS = [
-  { value: "easy", emoji: "🟢", label: "ადვილი" },
-  { value: "medium", emoji: "🟡", label: "საშუალო" },
-  { value: "hard", emoji: "🔴", label: "რთული" },
-];
+// Difficulty options removed per design update
 
 export function EditQuestionDialog({
   open,
@@ -45,7 +41,6 @@ export function EditQuestionDialog({
   const [incorrectAnswers, setIncorrectAnswers] = useState<string[]>(
     question.incorrect_answers || ["", "", ""]
   );
-  const [difficulty, setDifficulty] = useState(question.difficulty || "medium");
   const [iconSlug, setIconSlug] = useState<string | null>(question.icon_slug || null);
 
   // Reset when question changes
@@ -54,7 +49,6 @@ export function EditQuestionDialog({
       setQuestionText(question.question_text);
       setCorrectAnswer(question.correct_answer);
       setIncorrectAnswers(question.incorrect_answers || ["", "", ""]);
-      setDifficulty(question.difficulty || "medium");
       setIconSlug(question.icon_slug || null);
     }
   }, [open, question]);
@@ -64,7 +58,6 @@ export function EditQuestionDialog({
       question_text: questionText,
       correct_answer: correctAnswer,
       incorrect_answers: incorrectAnswers,
-      difficulty,
       icon_slug: iconSlug,
     });
     onOpenChange(false);
@@ -105,13 +98,13 @@ export function EditQuestionDialog({
           {/* Scrollable Content */}
           <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
             <div className="p-5 space-y-5">
-              {/* Icon Picker */}
-              <div className="flex items-center gap-3">
-                <Label className="text-sm font-medium min-w-[60px]">აიქონი</Label>
+              {/* Icon Picker - 86px large version */}
+              <div className="flex justify-center">
                 <QuestionIconPicker
                   selectedSlug={iconSlug}
                   onSelect={setIconSlug}
                   questionText={questionText}
+                  large
                 />
               </div>
 
@@ -155,25 +148,6 @@ export function EditQuestionDialog({
                 </div>
               )}
 
-              {/* Difficulty Selector */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">სირთულე</Label>
-                <div className="flex gap-2">
-                  {DIFFICULTY_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setDifficulty(opt.value)}
-                      className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all text-sm font-medium ${
-                        difficulty === opt.value
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {opt.emoji} {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
 
