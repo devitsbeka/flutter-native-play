@@ -104,7 +104,8 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
     const searchIcons = async () => {
       setIsLoading(true);
       try {
-        if (searchQuery.trim() && isGeorgian(searchQuery)) {
+        if (searchQuery.trim()) {
+          // Always use smart search for both Georgian AND English queries
           const { data, error } = await supabase.functions.invoke('smart-icon-search', {
             body: { query: searchQuery, limit: 50 }
           });
@@ -112,17 +113,11 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
           if (error) throw error;
           setIcons(data?.icons || []);
         } else {
-          let query = supabase
+          // No search query - fetch random icons
+          const { data } = await supabase
             .from("icon_library")
             .select("id, slug, title, icon_url")
             .limit(50);
-
-          if (searchQuery.trim()) {
-            query = query.or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`);
-          }
-
-          const { data, error } = await query;
-          if (error) throw error;
           setIcons(data || []);
         }
       } catch (error) {

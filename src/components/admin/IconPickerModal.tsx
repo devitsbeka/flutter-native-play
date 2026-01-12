@@ -173,24 +173,13 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
   const searchIcons = async () => {
     setIsLoading(true);
     try {
-      if (isGeorgian(searchQuery)) {
-        // Use smart search for Georgian input
-        const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-          body: { query: searchQuery, limit: 60 }
-        });
-        
-        if (error) throw error;
-        setIcons(data?.icons || []);
-      } else {
-        // Standard English search
-        const { data } = await supabase
-          .from('icon_library')
-          .select('id, slug, title, icon_url')
-          .or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
-          .limit(60);
-        
-        setIcons(data || []);
-      }
+      // Always use smart search for both Georgian AND English queries
+      const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+        body: { query: searchQuery, limit: 60 }
+      });
+      
+      if (error) throw error;
+      setIcons(data?.icons || []);
     } catch (error) {
       console.error('Error searching icons:', error);
     } finally {
