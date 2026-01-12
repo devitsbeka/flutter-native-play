@@ -105,15 +105,17 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           }}
           drag={isDesktop ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
+          dragElastic={0.2}
+          dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
           onDragEnd={handleDragEnd}
           animate={{
             x: isDesktop ? 0 : `${targetTranslate}vw`,
           }}
           transition={{
             type: "spring",
-            stiffness: 400,
-            damping: 40,
+            stiffness: 180,
+            damping: 28,
+            mass: 1.2,
           }}
         >
           <img 
