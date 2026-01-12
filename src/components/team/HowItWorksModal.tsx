@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Gamepad2 } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
@@ -14,19 +14,19 @@ const steps = [
   { 
     icon: storyDice, 
     title: "შემთხვევითი", 
-    desc: "რანდომულად შეირჩევა კატეგორია",
+    desc: "სისტემა ავტომატურად აირჩევს შემთხვევით კატეგორიას - იდეალურია სწრაფი თამაშისთვის!",
     color: "from-purple-500 to-pink-500"
   },
   { 
     icon: secretBookcase, 
     title: "ბიბლიოთეკა", 
-    desc: "აირჩიე კატეგორია კოლექციიდან",
+    desc: "აირჩიე შენთვის სასურველი კატეგორია ჩვენი მრავალფეროვანი კოლექციიდან",
     color: "from-orange-500 to-amber-500"
   },
   { 
     icon: triviaBuzzer, 
     title: "შექმენი შენი", 
-    desc: "გააკეთე საკუთარი ტრივია",
+    desc: "შექმენი საკუთარი კითხვები ან გამოიყენე AI დახმარებით გენერირებული ტრივია",
     color: "from-emerald-500 to-teal-500"
   },
 ];
@@ -51,16 +51,24 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
             >
               <ChevronLeft className="w-5 h-5 text-muted-foreground" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Gamepad2 className="w-4 h-4 text-primary" />
-              </div>
-              <h2 className="text-lg font-bold text-foreground">როგორ მუშაობს?</h2>
-            </div>
+            <h2 className="text-lg font-bold text-foreground">როგორ მუშაობს?</h2>
           </div>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-4 py-6">
+            {/* Friends explanation */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
+            >
+              <h3 className="font-semibold text-foreground mb-2">მეგობრებთან თამაში</h3>
+              <p className="text-sm text-muted-foreground">
+                მოიწვიე მეგობრები და ითამაშეთ ერთად! თითოეული მოთამაშე პასუხობს კითხვებს 
+                და იგებს ის, ვინც მეტ ქულას დააგროვებს.
+              </p>
+            </motion.div>
+
             <div className="space-y-3">
               {steps.map((step, index) => (
                 <motion.div
@@ -88,8 +96,7 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
               transition={{ delay: 0.4 }}
               className="flex items-center justify-center gap-2 py-4 mt-6 rounded-2xl bg-gradient-to-r from-primary/20 to-accent/20"
             >
-              <Gamepad2 className="w-5 h-5 text-primary" />
-              <span className="font-medium text-foreground">გართობა გარანტირებულია!</span>
+              <span className="font-medium text-foreground">გართობა გარანტირებულია! 🎉</span>
             </motion.div>
           </div>
 
