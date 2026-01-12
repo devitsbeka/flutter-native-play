@@ -92,14 +92,15 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     }
   }, [draftId, open]);
 
-  // Auto-save every 30 seconds during creation
+  // Auto-save every 30 seconds during creation (simplified - uses saveDraftNow)
   useEffect(() => {
     if (!open || !user || isGenerating || isPosting) return;
     
     const hasContent = rounds.some(r => r.subject.trim().length > 0) || title.trim().length > 0 || generatedData;
     if (!hasContent) return;
 
-    const autoSave = async () => {
+    const interval = setInterval(async () => {
+      // Inline save logic since saveDraftNow may not be defined yet
       try {
         const draftData = {
           user_id: user.id,
@@ -113,19 +114,23 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         };
 
         if (currentDraftId) {
-          await supabase
+          const { error } = await supabase
             .from("collection_drafts")
             .update({ ...draftData, updated_at: new Date().toISOString() })
             .eq("id", currentDraftId);
+          if (error) throw error;
+          console.log("Auto-save updated draft:", currentDraftId);
         } else {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from("collection_drafts")
             .insert([draftData])
             .select("id")
             .single();
           
+          if (error) throw error;
           if (data) {
             setCurrentDraftId(data.id);
+            console.log("Auto-save created draft:", data.id);
           }
         }
         
@@ -134,9 +139,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       } catch (error) {
         console.error("Auto-save failed:", error);
       }
-    };
-
-    const interval = setInterval(autoSave, 30000); // Every 30 seconds
+    }, 30000);
+    
     return () => clearInterval(interval);
   }, [open, user, rounds, title, description, generatedData, isPublic, coverGradient, currentDraftId, isGenerating, isPosting, queryClient]);
 
@@ -291,8 +295,65 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
   const canProceed = rounds.every(r => r.subject.trim().length > 0);
 
+  const saveDraftNow = async () => {
+    if (!user) {
+      console.warn("Cannot save draft: user not authenticated");
+      return null;
+    }
+    
+    try {
+      const draftData = {
+        user_id: user.id,
+        title: title || null,
+        description: description || null,
+        cover_image: generatedData?.coverImage || null,
+        cover_gradient: coverGradient,
+        is_public: isPublic,
+        rounds_config: rounds as unknown as any,
+        generated_data: generatedData as unknown as any,
+      };
+
+      if (currentDraftId) {
+        const { error } = await supabase
+          .from("collection_drafts")
+          .update({ ...draftData, updated_at: new Date().toISOString() })
+          .eq("id", currentDraftId);
+        
+        if (error) throw error;
+        console.log("Draft updated:", currentDraftId);
+      } else {
+        const { data, error } = await supabase
+          .from("collection_drafts")
+          .insert([draftData])
+          .select("id")
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setCurrentDraftId(data.id);
+          console.log("Draft created:", data.id);
+        }
+      }
+      
+      setLastAutoSaved(new Date());
+      queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
+      return currentDraftId;
+    } catch (error) {
+      console.error("Save draft failed:", error);
+      toast.error("დრაფტის შენახვა ვერ მოხერხდა");
+      return null;
+    }
+  };
+
   const handleGenerate = async () => {
     if (!user) return;
+
+    // Save draft BEFORE generation starts
+    const hasContent = rounds.some(r => r.subject.trim().length > 0);
+    if (hasContent) {
+      await saveDraftNow();
+      toast.success("დრაფტი შეინახა");
+    }
 
     setIsGenerating(true);
     setStep(2);
