@@ -686,7 +686,12 @@ function TeamContentV2() {
         open={showCreateTypeModal}
         onOpenChange={setShowCreateTypeModal}
         onSelectSingle={() => setShowCreateQuizModal(true)}
-        onSelectCollection={() => setShowCreateCollectionModal(true)}
+        onSelectCollection={(draftId) => {
+          if (draftId) {
+            setEditingDraftId(draftId);
+          }
+          setShowCreateCollectionModal(true);
+        }}
       />
       <CreateBlindTriviaModal
         open={showBlindTriviaModal}

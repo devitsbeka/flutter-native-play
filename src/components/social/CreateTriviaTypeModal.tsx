@@ -1,14 +1,15 @@
 import { motion } from "framer-motion";
-import { X, Sparkles, Layers } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { DraftsList } from "./DraftsList";
 
 interface CreateTriviaTypeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectSingle: () => void;
-  onSelectCollection: () => void;
+  onSelectCollection: (draftId?: string) => void;
 }
 
 export function CreateTriviaTypeModal({
@@ -17,6 +18,10 @@ export function CreateTriviaTypeModal({
   onSelectSingle,
   onSelectCollection,
 }: CreateTriviaTypeModalProps) {
+  const handleResumeDraft = (draftId: string) => {
+    onSelectCollection(draftId);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm p-0 gap-0 rounded-3xl overflow-hidden">
@@ -84,6 +89,12 @@ export function CreateTriviaTypeModal({
               </p>
             </div>
           </motion.button>
+
+          {/* Drafts List */}
+          <DraftsList 
+            onResumeDraft={handleResumeDraft}
+            onClose={() => onOpenChange(false)}
+          />
 
           {/* Hint */}
           <p className="text-xs text-center text-muted-foreground pt-2">

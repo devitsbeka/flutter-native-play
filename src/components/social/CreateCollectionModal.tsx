@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2, Save, ChevronUp } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, RefreshCw, Edit2, Save, ChevronUp, CheckCircle2 } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   
   // Generated data for Step 3
   const [generatedData, setGeneratedData] = useState<GeneratedData | null>(null);
@@ -90,6 +91,98 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       loadDraft(draftId);
     }
   }, [draftId, open]);
+
+  // Auto-save every 30 seconds during creation
+  useEffect(() => {
+    if (!open || !user || isGenerating || isPosting) return;
+    
+    const hasContent = rounds.some(r => r.subject.trim().length > 0) || title.trim().length > 0 || generatedData;
+    if (!hasContent) return;
+
+    const autoSave = async () => {
+      try {
+        const draftData = {
+          user_id: user.id,
+          title: title || null,
+          description: description || null,
+          cover_image: generatedData?.coverImage || null,
+          cover_gradient: coverGradient,
+          is_public: isPublic,
+          rounds_config: rounds as unknown as any,
+          generated_data: generatedData as unknown as any,
+        };
+
+        if (currentDraftId) {
+          await supabase
+            .from("collection_drafts")
+            .update({ ...draftData, updated_at: new Date().toISOString() })
+            .eq("id", currentDraftId);
+        } else {
+          const { data } = await supabase
+            .from("collection_drafts")
+            .insert([draftData])
+            .select("id")
+            .single();
+          
+          if (data) {
+            setCurrentDraftId(data.id);
+          }
+        }
+        
+        setLastAutoSaved(new Date());
+        queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
+      } catch (error) {
+        console.error("Auto-save failed:", error);
+      }
+    };
+
+    const interval = setInterval(autoSave, 30000); // Every 30 seconds
+    return () => clearInterval(interval);
+  }, [open, user, rounds, title, description, generatedData, isPublic, coverGradient, currentDraftId, isGenerating, isPosting, queryClient]);
+
+  // Save immediately after generation completes
+  useEffect(() => {
+    if (!generatedData || !user || !open) return;
+    
+    const saveAfterGeneration = async () => {
+      try {
+        const draftData = {
+          user_id: user.id,
+          title: title || null,
+          description: description || null,
+          cover_image: generatedData?.coverImage || null,
+          cover_gradient: coverGradient,
+          is_public: isPublic,
+          rounds_config: rounds as unknown as any,
+          generated_data: generatedData as unknown as any,
+        };
+
+        if (currentDraftId) {
+          await supabase
+            .from("collection_drafts")
+            .update({ ...draftData, updated_at: new Date().toISOString() })
+            .eq("id", currentDraftId);
+        } else {
+          const { data } = await supabase
+            .from("collection_drafts")
+            .insert([draftData])
+            .select("id")
+            .single();
+          
+          if (data) {
+            setCurrentDraftId(data.id);
+          }
+        }
+        
+        setLastAutoSaved(new Date());
+        queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
+      } catch (error) {
+        console.error("Post-generation save failed:", error);
+      }
+    };
+
+    saveAfterGeneration();
+  }, [generatedData?.rounds.length]); // Only when generatedData.rounds changes
 
   const loadDraft = async (id: string) => {
     if (!user) return;
@@ -136,6 +229,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     setExpandedQuestion(null);
     setIsGeneratingCover(false);
     setCurrentDraftId(null);
+    setLastAutoSaved(null);
   };
 
   const handleClose = async () => {
@@ -938,15 +1032,28 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             <div className="w-9" />
           )}
           
-          <div className="flex gap-1.5">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  s === step ? "bg-primary" : s < step ? "bg-primary/50" : "bg-muted-foreground/30"
-                }`}
-              />
-            ))}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-1.5">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    s === step ? "bg-primary" : s < step ? "bg-primary/50" : "bg-muted-foreground/30"
+                  }`}
+                />
+              ))}
+            </div>
+            {/* Auto-save indicator */}
+            {lastAutoSaved && !isGenerating && !isPosting && (
+              <motion.div 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-1 text-[10px] text-green-600"
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                შენახულია
+              </motion.div>
+            )}
           </div>
           
           <button onClick={handleClose} className="p-2 -mr-2 hover:bg-muted rounded-xl">
