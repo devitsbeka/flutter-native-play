@@ -1,0 +1,268 @@
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface PersonalQuestion {
+  id: string;
+  question: string;
+  answers: string[];
+  correctIndex: number;
+}
+
+interface PersonalTriviaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (questions: Array<{
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+  }>, title: string) => void;
+}
+
+const EXAMPLE_QUESTIONS = [
+  "როდის მიდის ნინო პარიზში? 🗼",
+  "რამდენი ძაღლი ჰყავს გიორგის? 🐕",
+  "რა არის ბექას საყვარელი საჭმელი? 🍕",
+  "სად დაიბადა დედა? 🏠",
+  "რა ფერის მანქანა აქვს გიოს? 🚗",
+];
+
+export function PersonalTriviaModal({ isOpen, onClose, onSave }: PersonalTriviaModalProps) {
+  const [title, setTitle] = useState("");
+  const [questions, setQuestions] = useState<PersonalQuestion[]>([
+    { id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }
+  ]);
+
+  const addQuestion = useCallback(() => {
+    setQuestions(prev => [
+      ...prev,
+      { 
+        id: Date.now().toString(), 
+        question: "", 
+        answers: ["", "", "", ""], 
+        correctIndex: 0 
+      }
+    ]);
+  }, []);
+
+  const removeQuestion = useCallback((id: string) => {
+    if (questions.length > 1) {
+      setQuestions(prev => prev.filter(q => q.id !== id));
+    }
+  }, [questions.length]);
+
+  const updateQuestion = useCallback((id: string, field: "question" | "correctIndex", value: string | number) => {
+    setQuestions(prev => prev.map(q => 
+      q.id === id ? { ...q, [field]: value } : q
+    ));
+  }, []);
+
+  const updateAnswer = useCallback((questionId: string, answerIndex: number, value: string) => {
+    setQuestions(prev => prev.map(q => {
+      if (q.id === questionId) {
+        const newAnswers = [...q.answers];
+        newAnswers[answerIndex] = value;
+        return { ...q, answers: newAnswers };
+      }
+      return q;
+    }));
+  }, []);
+
+  const handleSave = () => {
+    // Validate: at least one question with all fields filled
+    const validQuestions = questions.filter(q => 
+      q.question.trim() && 
+      q.answers.every(a => a.trim())
+    );
+
+    if (validQuestions.length === 0) return;
+
+    const formattedQuestions = validQuestions.map(q => ({
+      question_text: q.question,
+      correct_answer: q.answers[q.correctIndex],
+      incorrect_answers: q.answers.filter((_, i) => i !== q.correctIndex),
+    }));
+
+    onSave(formattedQuestions, title || "MyTrivia Party");
+    
+    // Reset state
+    setTitle("");
+    setQuestions([{ id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }]);
+    onClose();
+  };
+
+  const isValid = questions.some(q => 
+    q.question.trim() && 
+    q.answers.every(a => a.trim())
+  );
+
+  const useExampleQuestion = (example: string) => {
+    if (questions.length === 1 && !questions[0].question) {
+      updateQuestion(questions[0].id, "question", example.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, ''));
+    } else {
+      setQuestions(prev => [
+        ...prev,
+        { 
+          id: Date.now().toString(), 
+          question: example.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, ''), 
+          answers: ["", "", "", ""], 
+          correctIndex: 0 
+        }
+      ]);
+    }
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-0">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <SheetHeader className="p-4 pb-2 border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                <PartyPopper className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <SheetTitle className="text-left text-lg">🎉 MyTrivia Party</SheetTitle>
+                <p className="text-sm text-muted-foreground">შენი კითხვები, შენი პასუხები</p>
+              </div>
+            </div>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 px-4">
+            <div className="py-4 space-y-4">
+              {/* Title Input */}
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  ტრივიის სახელი
+                </label>
+                <Input
+                  placeholder="მაგ: ოჯახური ტრივია 🏠"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="bg-muted/50"
+                />
+              </div>
+
+              {/* Example Questions */}
+              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Lightbulb className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium text-foreground">იდეები:</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {EXAMPLE_QUESTIONS.map((example, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => useExampleQuestion(example)}
+                      className="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-colors"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Questions List */}
+              <div className="space-y-4">
+                <AnimatePresence mode="popLayout">
+                  {questions.map((q, qIdx) => (
+                    <motion.div
+                      key={q.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
+                      className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-3"
+                    >
+                      {/* Question Header */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-foreground">
+                          კითხვა {qIdx + 1}
+                        </span>
+                        {questions.length > 1 && (
+                          <button
+                            onClick={() => removeQuestion(q.id)}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Question Input */}
+                      <Input
+                        placeholder="ჩაწერე კითხვა..."
+                        value={q.question}
+                        onChange={(e) => updateQuestion(q.id, "question", e.target.value)}
+                        className="bg-background"
+                      />
+
+                      {/* Answer Options */}
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          აირჩიე სწორი პასუხი:
+                        </p>
+                        {q.answers.map((answer, aIdx) => (
+                          <div key={aIdx} className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateQuestion(q.id, "correctIndex", aIdx)}
+                              className={cn(
+                                "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                                q.correctIndex === aIdx
+                                  ? "border-emerald-500 bg-emerald-500 text-white"
+                                  : "border-border hover:border-muted-foreground"
+                              )}
+                            >
+                              {q.correctIndex === aIdx && <Check className="w-3.5 h-3.5" />}
+                            </button>
+                            <Input
+                              placeholder={`პასუხი ${aIdx + 1}`}
+                              value={answer}
+                              onChange={(e) => updateAnswer(q.id, aIdx, e.target.value)}
+                              className={cn(
+                                "flex-1 bg-background transition-all",
+                                q.correctIndex === aIdx && "border-emerald-500/50 ring-1 ring-emerald-500/20"
+                              )}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* Add Question Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={addQuestion}
+                className="w-full p-3 rounded-xl border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">დაამატე კითხვა</span>
+              </motion.button>
+            </div>
+          </ScrollArea>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-border/50 bg-background">
+            <Button
+              onClick={handleSave}
+              disabled={!isValid}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold shadow-lg shadow-pink-500/25"
+            >
+              <Users className="w-5 h-5 mr-2" />
+              შენახვა ({questions.filter(q => q.question.trim() && q.answers.every(a => a.trim())).length} კითხვა)
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
