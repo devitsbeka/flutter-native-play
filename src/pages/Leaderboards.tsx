@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeagueLeaderboard, LEAGUES } from "@/hooks/useLeagueLeaderboard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { LeagueBadgeRow } from "@/components/leaderboard/LeagueBadgeRow";
+
 import { LeagueInfoCard } from "@/components/leaderboard/LeagueInfoCard";
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
 import { LeagueLockedOverlay } from "@/components/leaderboard/LeagueLockedOverlay";
@@ -93,28 +93,40 @@ export default function Leaderboards() {
     };
   }, [userEntry]);
 
-  const handleSelectTier = useCallback((tier: number) => {
-    setViewingTier(tier);
-    if (carouselApi) {
-      carouselApi.scrollTo(tier - 1);
-    }
-  }, [carouselApi]);
-
   const activeTier = viewingTier ?? userTier;
+
+  const handleSelectTier = useCallback((tier: number) => {
+    if (tier >= 1 && tier <= LEAGUES.length && tier <= userTier) {
+      setViewingTier(tier);
+      if (carouselApi) {
+        carouselApi.scrollTo(tier - 1);
+      }
+    }
+  }, [carouselApi, userTier]);
+
+  const handlePrevTier = useCallback(() => {
+    if (activeTier > 1) {
+      handleSelectTier(activeTier - 1);
+    }
+  }, [activeTier, handleSelectTier]);
+
+  const handleNextTier = useCallback(() => {
+    if (activeTier < LEAGUES.length && activeTier < userTier) {
+      handleSelectTier(activeTier + 1);
+    }
+  }, [activeTier, userTier, handleSelectTier]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       
       {/* Hero Section with Animated Background */}
       <LeaderboardHeroBackground tier={activeTier}>
-        {/* Gamified Header */}
-        <LeagueHeroHeader league={currentLeague} />
-        
-        {/* League Badges Row */}
-        <LeagueBadgeRow 
-          currentTier={activeTier} 
+        {/* Gamified Header with arrows */}
+        <LeagueHeroHeader 
+          league={currentLeague}
+          onPrevTier={handlePrevTier}
+          onNextTier={handleNextTier}
           userTier={userTier}
-          onSelectTier={handleSelectTier}
         />
 
         {/* Spacer to push info card down */}
