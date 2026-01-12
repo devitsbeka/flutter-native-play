@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
+import { ka } from "date-fns/locale";
 
 export function LiveGamesWidget() {
   const navigate = useNavigate();
@@ -79,7 +81,7 @@ export function LiveGamesWidget() {
                     {room.room_name || room.category_name || "თამაშის ოთახი"}
                   </h4>
                   <p className="text-[11px] text-muted-foreground">
-                    {room.participants.length} მოთამაშე
+                    {room.participants.length} მოთამაშე • {formatDistanceToNow(new Date(room.created_at), { addSuffix: true, locale: ka })}
                   </p>
                 </div>
                 <div className="flex items-center -space-x-2">
