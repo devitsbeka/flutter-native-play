@@ -74,9 +74,10 @@ interface CreateRoomPageProps {
   onClose: () => void;
   challengeUserId?: string | null;
   defaultChallengeType?: "random" | "library" | "my-trivias" | "create" | null;
+  autoOpenPersonalTrivia?: boolean;
 }
 
-export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia }: CreateRoomPageProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
   const [showIconPickerModal, setShowIconPickerModal] = useState(false);
   const [showMyTriviasModal, setShowMyTriviasModal] = useState(false);
-  const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(false);
+  const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(autoOpenPersonalTrivia || false);
   
   // Challenge mode state
   const [challengeTrivia, setChallengeTrivia] = useState<{ id: string; title: string; type: "trivia" | "collection" } | null>(null);

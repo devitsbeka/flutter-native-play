@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Plus, Bell, MessageCircle, Layers, ScanLine } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
@@ -46,6 +46,7 @@ import { toast } from "sonner";
 
 function TeamContentV2() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -65,6 +66,18 @@ function TeamContentV2() {
     acceptInvitation,
   } = useGameInvitations();
   const { createRoom } = useMultiplayerV2();
+
+  // Auto-open PersonalTrivia from navigation state
+  const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
+  
+  useEffect(() => {
+    if (location.state?.openPersonalTrivia) {
+      setAutoOpenPersonalTrivia(true);
+      setShowCreateModal(true);
+      // Clear the state to prevent re-triggering
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, setShowCreateModal]);
 
   // Challenge context from URL
   const [challengeContext, setChallengeContext] = useState<{
@@ -651,9 +664,11 @@ function TeamContentV2() {
             onClose={() => {
               setShowCreateModal(false);
               setChallengeContext(null);
+              setAutoOpenPersonalTrivia(false);
             }}
             challengeUserId={challengeContext?.targetUserId}
             defaultChallengeType={challengeContext?.challengeType}
+            autoOpenPersonalTrivia={autoOpenPersonalTrivia}
           />
         )}
       </AnimatePresence>
