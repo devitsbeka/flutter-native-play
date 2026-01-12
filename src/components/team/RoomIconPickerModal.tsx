@@ -1,14 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Check, Loader2, Search, X } from "lucide-react";
+import { RefreshCw, Check, Loader2, Search, X, ChevronLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface IconItem {
   id: string;
@@ -183,164 +178,182 @@ export function RoomIconPickerModal({
   const displayIcons = searchQuery.trim() ? searchResults : suggestedIcons;
   const isDisplayLoading = searchQuery.trim() ? isSearching : isLoading;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-background border-border p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
-        <DialogHeader className="p-4 pb-2 shrink-0">
-          <DialogTitle className="text-lg font-display text-foreground">
-            აირჩიე აიკონი
-          </DialogTitle>
-        </DialogHeader>
+  if (!isOpen) return null;
 
-        <div className="flex-1 px-4 pt-2 pb-4 space-y-4 overflow-y-auto overflow-x-visible min-h-0">
-          {/* Search input */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="მოძებნე აიკონი..."
-              className="pl-9 pr-9 bg-muted/50 border-border"
-            />
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background"
+        >
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <button 
+                onClick={onClose} 
+                className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
               >
-                <X className="w-4 h-4" />
+                <ChevronLeft className="w-6 h-6 text-foreground" />
               </button>
-            )}
+              <div className="flex-1">
+                <h1 className="text-lg font-bold text-foreground">აირჩიე აიკონი</h1>
+              </div>
+            </div>
           </div>
 
-          {/* Current icon preview with editable name */}
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border">
-            <div className="w-16 h-16 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
-              {(selectedIcon || currentIconUrl) ? (
-                <motion.img
-                  key={selectedIcon || currentIconUrl}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  src={selectedIcon || currentIconUrl || ""}
-                  alt=""
-                  className="w-12 h-12 object-contain"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-primary/20" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0 space-y-1">
+          {/* Scrollable Content */}
+          <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+            <div className="p-4 space-y-4">
+              {/* Search input */}
               <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  value={editableName}
-                  onChange={(e) => setEditableName(e.target.value)}
-                  maxLength={35}
-                  className="text-base font-semibold pr-8 bg-background h-10"
-                  placeholder="ოთახის სახელი"
-                  disabled={isGeneratingName}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="მოძებნე აიკონი..."
+                  className="pl-10 pr-10 h-12 bg-muted/50 border-border rounded-xl"
                 />
-                {isGeneratingName && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  </div>
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
-                შეცვალე სახელი ან აირჩიე ახალი აიკონი
-              </p>
+
+              {/* Current icon preview with editable name */}
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
+                <div className="w-18 h-18 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {(selectedIcon || currentIconUrl) ? (
+                    <motion.img
+                      key={selectedIcon || currentIconUrl}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      src={selectedIcon || currentIconUrl || ""}
+                      alt=""
+                      className="w-14 h-14 object-contain"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-primary/20" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="relative">
+                    <Input
+                      value={editableName}
+                      onChange={(e) => setEditableName(e.target.value)}
+                      maxLength={35}
+                      className="text-base font-semibold pr-8 bg-background h-12"
+                      placeholder="ოთახის სახელი"
+                      disabled={isGeneratingName}
+                    />
+                    {isGeneratingName && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    შეცვალე სახელი ან აირჩიე ახალი აიკონი
+                  </p>
+                </div>
+              </div>
+
+              {/* Icons section header */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {searchQuery.trim() 
+                    ? `ძებნის შედეგები (${searchResults.length})` 
+                    : "შემოთავაზებული"
+                  }
+                </h3>
+                {!searchQuery.trim() && (
+                  <button
+                    onClick={fetchRandomIcons}
+                    disabled={isLoading}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+                    განახლება
+                  </button>
+                )}
+              </div>
+
+              {/* Icons grid - 4x3 */}
+              <div className="grid grid-cols-4 gap-3">
+                <AnimatePresence mode="popLayout">
+                  {isDisplayLoading ? (
+                    Array.from({ length: 12 }).map((_, i) => (
+                      <motion.div
+                        key={`skeleton-${i}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="aspect-square rounded-xl bg-muted animate-pulse"
+                      />
+                    ))
+                  ) : displayIcons.length === 0 && searchQuery.trim() ? (
+                    <div className="col-span-4 py-12 text-center text-muted-foreground text-sm">
+                      აიკონი ვერ მოიძებნა
+                    </div>
+                  ) : (
+                    displayIcons.map((icon, index) => (
+                      <motion.button
+                        key={icon.id}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => handleIconClick(icon)}
+                        disabled={isGeneratingName}
+                        className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
+                          selectedIcon === icon.icon_url
+                            ? "border-primary ring-2 ring-primary/30 bg-primary/10"
+                            : "border-transparent hover:border-border"
+                        }`}
+                      >
+                        <img
+                          src={icon.icon_url}
+                          alt={icon.title}
+                          className="w-12 h-12 object-contain"
+                          loading="lazy"
+                        />
+                        {selectedIcon === icon.icon_url && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
+                          >
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
-          {/* Icons section header */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {searchQuery.trim() 
-                ? `ძებნის შედეგები (${searchResults.length})` 
-                : "შემოთავაზებული"
-              }
-            </h3>
-            {!searchQuery.trim() && (
-              <button
-                onClick={fetchRandomIcons}
-                disabled={isLoading}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
-                განახლება
-              </button>
-            )}
+          {/* Fixed Footer */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-background safe-bottom">
+            <ChunkyButton
+              onClick={handleConfirmClick}
+              disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
+              className="w-full"
+              variant="success"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              არჩევა
+            </ChunkyButton>
           </div>
-
-          {/* Icons grid - 4x3 */}
-          <div className="grid grid-cols-4 gap-2">
-            <AnimatePresence mode="popLayout">
-              {isDisplayLoading ? (
-                Array.from({ length: 12 }).map((_, i) => (
-                  <motion.div
-                    key={`skeleton-${i}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="aspect-square rounded-xl bg-muted animate-pulse"
-                  />
-                ))
-              ) : displayIcons.length === 0 && searchQuery.trim() ? (
-                <div className="col-span-4 py-8 text-center text-muted-foreground text-sm">
-                  აიკონი ვერ მოიძებნა
-                </div>
-              ) : (
-                displayIcons.map((icon, index) => (
-                  <motion.button
-                    key={icon.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ delay: index * 0.03 }}
-                    onClick={() => handleIconClick(icon)}
-                    disabled={isGeneratingName}
-                    className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selectedIcon === icon.icon_url
-                        ? "border-primary ring-2 ring-primary/30 bg-primary/10"
-                        : "border-transparent hover:border-border"
-                    }`}
-                  >
-                    <img
-                      src={icon.icon_url}
-                      alt={icon.title}
-                      className="w-10 h-10 object-contain"
-                      loading="lazy"
-                    />
-                    {selectedIcon === icon.icon_url && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center"
-                      >
-                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
-                      </motion.div>
-                    )}
-                  </motion.button>
-                ))
-              )}
-            </AnimatePresence>
-          </div>
-
-        </div>
-
-        {/* Fixed CTA footer */}
-        <div className="px-4 pb-4 pt-3 border-t border-border/30 shrink-0 bg-background">
-          <button
-            onClick={handleConfirmClick}
-            disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
-            className={`w-full py-3 rounded-xl font-medium transition-all ${
-              selectedIcon && editableName.trim() && !isGeneratingName
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-            }`}
-          >
-            არჩევა
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
