@@ -3,7 +3,6 @@ import { ReactNode, useCallback, useEffect, useState, memo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import gameMapBg from "@/assets/gamemap.jpg";
 import { LeaderboardClouds } from "./LeaderboardClouds";
-import { FlyingBirds } from "./FlyingBirds";
 
 interface LeaderboardHeroBackgroundProps {
   tier: number;
@@ -208,9 +207,6 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
       {/* Animated Clouds */}
       <LeaderboardClouds />
-      
-      {/* Flying Birds */}
-      <FlyingBirds />
 
       {/* Edge Tap Zones (mobile only) */}
       {!isDesktop && (
