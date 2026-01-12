@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, Users } from "lucide-react";
+import { ChevronLeft, Sparkles } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
 import { DraftsList } from "./DraftsList";
 
 interface CreateTriviaTypeModalProps {
@@ -66,11 +67,11 @@ export function CreateTriviaTypeModal({
               className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-purple-500/5 to-purple-500/10 transition-all text-left flex items-center gap-4 group"
             >
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-purple-500/30 transition-shadow">
-                <img src={triviaBuzzer} alt="" className="w-9 h-9 object-contain" />
+                <img src={triviaBuzzer} alt="" className="w-[41px] h-[41px] object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-foreground text-lg">🎯 ტრივია</span>
+                  <span className="font-bold text-foreground text-lg">ტრივია</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   1 რაუნდი, სწრაფი შექმნა
@@ -92,11 +93,11 @@ export function CreateTriviaTypeModal({
               className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-cyan-500/5 to-blue-500/10 transition-all text-left flex items-center gap-4 group"
             >
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-cyan-500/30 transition-shadow">
-                <img src={iconCollections} alt="" className="w-9 h-9 object-contain" />
+                <img src={iconCollections} alt="" className="w-[41px] h-[41px] object-contain" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-foreground text-lg">📚 კოლექცია</span>
+                  <span className="font-bold text-foreground text-lg">კოლექცია</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   რამდენიმე რაუნდი ერთად
@@ -119,11 +120,11 @@ export function CreateTriviaTypeModal({
                 className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-pink-500/5 to-rose-500/10 transition-all text-left flex items-center gap-4 group"
               >
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-pink-500/30 transition-shadow">
-                  <Users className="w-7 h-7 text-white" />
+                  <img src={iconGroupOfPeople} alt="" className="w-[41px] h-[41px] object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-foreground text-lg">🎉 MyTrivia Party</span>
+                    <span className="font-bold text-foreground text-lg">MyTrivia Party</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     შენი კითხვები, შენი პასუხები
