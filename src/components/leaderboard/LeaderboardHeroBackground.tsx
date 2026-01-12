@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { ReactNode, useCallback, useEffect, useState, memo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -15,35 +15,28 @@ interface LeaderboardHeroBackgroundProps {
   userTier?: number;
 }
 
-// Trophy configuration - all centered horizontally, 2x size
-const TROPHY_CONFIG = {
-  1: { 
-    left: '50%', 
-    top: '50%', 
-    image: trophyBronze, 
-    label: 'Bronze League', 
-    labelKa: 'ბრინჯაოს ლიგა',
-    size: '44%',
-  },
-  2: { 
-    left: '50%', 
-    top: '50%', 
-    image: trophySilver, 
-    label: 'Silver League', 
-    labelKa: 'ვერცხლის ლიგა',
-    size: '44%',
-  },
-  3: { 
-    left: '50%', 
-    top: '46%', 
-    image: trophyGold, 
-    label: 'Gold League', 
-    labelKa: 'ოქროს ლიგა',
-    size: '52%',
-  },
+// Desktop/Tablet: Trophy positions on the actual podiums in the background image
+const DESKTOP_TROPHY_CONFIG = {
+  1: { left: '77%', top: '58%', size: '18%' }, // Bronze - right podium
+  2: { left: '23%', top: '58%', size: '18%' }, // Silver - left podium
+  3: { left: '50%', top: '52%', size: '22%' }, // Gold - center podium (bigger)
 } as const;
 
-// Check if we're on desktop (wide screen where full image fits)
+// Mobile: Centered trophy for active tier
+const MOBILE_TROPHY_CONFIG = {
+  1: { left: '50%', top: '50%', size: '44%' },
+  2: { left: '50%', top: '50%', size: '44%' },
+  3: { left: '50%', top: '46%', size: '52%' },
+} as const;
+
+// Trophy metadata
+const TROPHY_META = {
+  1: { image: trophyBronze, label: 'Bronze League', labelKa: 'ბრინჯაოს ლიგა' },
+  2: { image: trophySilver, label: 'Silver League', labelKa: 'ვერცხლის ლიგა' },
+  3: { image: trophyGold, label: 'Gold League', labelKa: 'ოქროს ლიგა' },
+} as const;
+
+// Check if we're on desktop/tablet (>= 768px)
 const useIsDesktop = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   
@@ -65,10 +58,6 @@ const TROPHY_ENTER_SPRING = {
   mass: 0.8,
 };
 
-const TROPHY_EXIT = {
-  duration: 0.12,
-};
-
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
   tier, 
   children, 
@@ -79,8 +68,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   const { language } = useLanguage();
   
   // Get label for current tier
-  const currentTrophyConfig = TROPHY_CONFIG[tier as keyof typeof TROPHY_CONFIG];
-  const currentLabel = language === 'ka' ? currentTrophyConfig?.labelKa : currentTrophyConfig?.label;
+  const currentMeta = TROPHY_META[tier as keyof typeof TROPHY_META];
+  const currentLabel = language === 'ka' ? currentMeta?.labelKa : currentMeta?.label;
 
   // Handle trophy click (desktop)
   const handleTrophyClick = useCallback((clickedTier: number) => {
@@ -88,6 +77,21 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       onTierSelect?.(clickedTier);
     }
   }, [userTier, onTierSelect]);
+
+  // Mobile swipe handler
+  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    const swipeThreshold = 50;
+    const velocityThreshold = 300;
+    
+    const swipedLeft = info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold;
+    const swipedRight = info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold;
+    
+    if (swipedLeft && tier < 3 && tier + 1 <= userTier) {
+      onTierSelect?.(tier + 1);
+    } else if (swipedRight && tier > 1) {
+      onTierSelect?.(tier - 1);
+    }
+  }, [tier, userTier, onTierSelect]);
 
   // Keyboard navigation support
   useEffect(() => {
@@ -99,9 +103,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         }
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        if (tier < 3 && tier < userTier) {
-          onTierSelect?.(tier + 1);
-        } else if (tier < 3 && tier + 1 <= userTier) {
+        if (tier < 3 && tier + 1 <= userTier) {
           onTierSelect?.(tier + 1);
         }
       }
@@ -134,105 +136,134 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           }}
         />
         
-        {/* Layer 2: Trophies with animations */}
-        <div className="absolute inset-0 w-full h-full">
-          {Object.entries(TROPHY_CONFIG).map(([tierKey, config]) => {
-            const tierNum = parseInt(tierKey);
-            const isActive = tierNum === tier;
-            const isLocked = tierNum > userTier;
-            
-            return (
-              <div key={tierKey}>
-                {/* Inactive trophies (faded) */}
-                {!isActive && (
-                  <motion.button
-                    onClick={() => handleTrophyClick(tierNum)}
-                    disabled={isLocked}
-                    className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                    style={{
-                      left: config.left,
-                      top: config.top,
-                      transform: 'translate(calc(-50% - 50px), -100%)',
-                      width: config.size,
-                    }}
-                    initial={{ opacity: 0.4, scale: 0.75 }}
-                    animate={{ opacity: isLocked ? 0.25 : 0.45, scale: 0.75 }}
-                    whileHover={!isLocked ? { scale: 0.82, opacity: 0.65 } : {}}
-                    whileTap={!isLocked ? { scale: 0.7 } : {}}
-                  >
-                    <img 
-                      src={config.image} 
-                      alt="" 
-                      className="w-full h-auto select-none pointer-events-none"
-                      draggable={false}
-                    />
-                  </motion.button>
-                )}
-              </div>
-            );
-          })}
-          
-          {/* Active trophy with enter/exit animation */}
-          <AnimatePresence mode="wait">
-            {currentTrophyConfig && (
-              <motion.div
-                key={tier}
-                className="absolute pointer-events-none"
-                style={{
-                  left: currentTrophyConfig.left,
-                  top: currentTrophyConfig.top,
-                  transform: 'translate(calc(-50% - 50px), -100%)',
-                  width: currentTrophyConfig.size,
-                  transformOrigin: 'center bottom',
-                }}
-                initial={{ scale: 0.3, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.2, opacity: 0 }}
-                transition={TROPHY_ENTER_SPRING}
-              >
-                <img 
-                  src={currentTrophyConfig.image} 
-                  alt="" 
-                  className="w-full h-auto select-none pointer-events-none drop-shadow-2xl"
-                  draggable={false}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        
-        {/* Floating Label (above active trophy) */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`label-${tier}`}
-            className="absolute z-[10] left-0 right-0 flex justify-center px-4"
-            style={{ top: isDesktop ? '22%' : '100px' }}
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ 
-              opacity: 1, 
-              y: [0, -5, 0],
-              scale: 1,
-            }}
-            exit={{ opacity: 0, y: -10, scale: 0.9 }}
-            transition={{
-              opacity: { duration: 0.25 },
-              scale: { duration: 0.25 },
-              y: {
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }
-            }}
+        {/* Layer 2: Trophies */}
+        {isDesktop ? (
+          /* DESKTOP/TABLET: Show all 3 trophies at their podium positions */
+          <div className="absolute inset-0 w-full h-full">
+            {Object.entries(DESKTOP_TROPHY_CONFIG).map(([tierKey, config]) => {
+              const tierNum = parseInt(tierKey);
+              const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
+              const isActive = tierNum === tier;
+              const isLocked = tierNum > userTier;
+              const label = language === 'ka' ? meta.labelKa : meta.label;
+              
+              return (
+                <motion.button
+                  key={tierKey}
+                  onClick={() => handleTrophyClick(tierNum)}
+                  disabled={isLocked}
+                  className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'} group`}
+                  style={{
+                    left: config.left,
+                    top: config.top,
+                    transform: 'translate(-50%, -100%)',
+                    width: config.size,
+                  }}
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ 
+                    opacity: isLocked ? 0.3 : 1, 
+                    scale: isActive ? 1.1 : 1,
+                  }}
+                  whileHover={!isLocked ? { scale: isActive ? 1.15 : 1.08 } : {}}
+                  whileTap={!isLocked ? { scale: 0.95 } : {}}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <img 
+                    src={meta.image} 
+                    alt={label}
+                    className={`w-full h-auto select-none pointer-events-none transition-all duration-300 ${
+                      isActive ? 'drop-shadow-2xl' : 'drop-shadow-lg'
+                    } ${isLocked ? 'grayscale' : ''}`}
+                    draggable={false}
+                  />
+                  {/* Floating label on hover */}
+                  <div className={`absolute left-1/2 -translate-x-1/2 -top-10 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    isActive ? 'opacity-100' : ''
+                  }`}>
+                    <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
+                      <span className="text-sm font-medium text-foreground/90">
+                        {label}
+                      </span>
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        ) : (
+          /* MOBILE: Show only active trophy centered, with swipe support */
+          <motion.div 
+            className="absolute inset-0 w-full h-full touch-pan-y"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
+            style={{ cursor: 'grab' }}
+            whileDrag={{ cursor: 'grabbing' }}
           >
-            <div className="bg-background/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-border/50">
-              <span className="text-sm font-semibold text-foreground/90 whitespace-nowrap">
-                {currentLabel}
-              </span>
-            </div>
-            {/* Tooltip arrow */}
-            <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
+            <AnimatePresence mode="wait">
+              {currentMeta && (
+                <motion.div
+                  key={tier}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].left,
+                    top: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].top,
+                    transform: 'translate(calc(-50% - 50px), -100%)',
+                    width: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].size,
+                    transformOrigin: 'center bottom',
+                  }}
+                  initial={{ scale: 0.3, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.2, opacity: 0 }}
+                  transition={TROPHY_ENTER_SPRING}
+                >
+                  <img 
+                    src={currentMeta.image} 
+                    alt="" 
+                    className="w-full h-auto select-none pointer-events-none drop-shadow-2xl"
+                    draggable={false}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
-        </AnimatePresence>
+        )}
+        
+        {/* Floating Label - Mobile only (desktop has hover labels) */}
+        {!isDesktop && (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`label-${tier}`}
+              className="absolute z-[10] left-0 right-0 flex justify-center px-4"
+              style={{ top: '100px' }}
+              initial={{ opacity: 0, y: 10, scale: 0.9 }}
+              animate={{ 
+                opacity: 1, 
+                y: [0, -5, 0],
+                scale: 1,
+              }}
+              exit={{ opacity: 0, y: -10, scale: 0.9 }}
+              transition={{
+                opacity: { duration: 0.25 },
+                scale: { duration: 0.25 },
+                y: {
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }
+              }}
+            >
+              <div className="bg-background/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-border/50">
+                <span className="text-sm font-semibold text-foreground/90 whitespace-nowrap">
+                  {currentLabel}
+                </span>
+              </div>
+              {/* Tooltip arrow */}
+              <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
       
       {/* Layer 3: Fade gradients */}
