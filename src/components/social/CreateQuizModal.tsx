@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock, X } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -13,7 +13,7 @@ import confetti from "canvas-confetti";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
 import { EditQuestionDialog } from "./EditQuestionDialog";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 interface GeneratedQuestion {
   question_text: string;
   correct_answer: string;
@@ -67,14 +67,11 @@ const COVER_GRADIENTS = [
   "radial-gradient(ellipse 105% 95% at 45% 65%, rgba(251,113,133,0.8) 0%, transparent 50%), radial-gradient(ellipse 95% 105% at 70% 25%, rgba(253,164,175,0.6) 0%, transparent 50%), linear-gradient(160deg, #881337 0%, #BE185D 100%)",
 ];
 
-const POPULAR_TOPICS = [
-  { emoji: "🎬", label: "კინო", value: "კინო და ფილმები" },
-  { emoji: "⚽", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
-  { emoji: "🎵", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
-  { emoji: "🌍", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
-  { emoji: "📚", label: "ისტორია", value: "ისტორია" },
-  { emoji: "🔬", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
-];
+interface TopicSuggestion {
+  icon_url: string;
+  title: string;
+  value: string;
+}
 
 export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection }: CreateQuizModalProps) {
   const { user } = useAuth();
@@ -99,13 +96,45 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<{ index: number; question: GeneratedQuestion } | null>(null);
+  const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
+  // Fetch random topic suggestions from icon library
+  const fetchTopicSuggestions = useCallback(async () => {
+    setIsLoadingTopics(true);
+    try {
+      const { data, error } = await supabase
+        .from("icon_library")
+        .select("slug, title, icon_url, category")
+        .not("icon_url", "is", null)
+        .limit(100);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Shuffle and pick 6 random icons
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setTopicSuggestions(
+          shuffled.slice(0, 6).map(icon => ({
+            icon_url: icon.icon_url!,
+            title: icon.title,
+            value: icon.title
+          }))
+        );
+      }
+    } catch (e) {
+      console.error("Failed to fetch topic suggestions:", e);
+    } finally {
+      setIsLoadingTopics(false);
+    }
+  }, []);
   // Reset on open
   useEffect(() => {
     if (open) {
       resetForm();
+      fetchTopicSuggestions();
     }
-  }, [open]);
+  }, [open, fetchTopicSuggestions]);
 
   const resetForm = () => {
     setStep(1);
@@ -324,39 +353,61 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
             </div>
 
-            {/* Popular topics */}
-            <div className="grid grid-cols-3 gap-2">
-              {POPULAR_TOPICS.map((topic) => (
-                <button
-                  key={topic.value}
-                  onClick={() => setSubject(topic.value)}
-                  className={`p-3 rounded-xl border-2 transition-all text-center ${
-                    subject === topic.value
-                      ? "border-primary bg-primary/10 scale-105"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
-                  }`}
-                >
-                  <span className="text-2xl block mb-1">{topic.emoji}</span>
-                  <span className="text-xs font-medium text-foreground">{topic.label}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-background px-3 text-xs text-muted-foreground">ან ჩაწერე</span>
-              </div>
-            </div>
-
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
               className="text-center text-lg h-14 rounded-xl"
             />
+
+            {/* Topic suggestion icons with tooltips */}
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">
+                იდეები:
+              </span>
+              
+              {isLoadingTopics ? (
+                // Loading skeletons
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-10 h-10 rounded-lg bg-muted animate-pulse" />
+                ))
+              ) : (
+                <TooltipProvider delayDuration={200}>
+                  {topicSuggestions.map((topic) => (
+                    <Tooltip key={topic.icon_url}>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setSubject(topic.value)}
+                          className={`w-10 h-10 rounded-lg border-2 transition-all flex items-center justify-center ${
+                            subject === topic.value
+                              ? "border-primary bg-primary/10"
+                              : "border-border hover:border-primary/50 bg-muted/50"
+                          }`}
+                        >
+                          <img 
+                            src={topic.icon_url} 
+                            alt={topic.title}
+                            className="w-7 h-7 object-contain"
+                          />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{topic.title}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </TooltipProvider>
+              )}
+              
+              {/* Refresh button */}
+              <button
+                onClick={fetchTopicSuggestions}
+                disabled={isLoadingTopics}
+                className="w-10 h-10 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-all flex items-center justify-center"
+              >
+                <RefreshCw className={`w-4 h-4 text-muted-foreground ${isLoadingTopics ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
 
             {/* Title suggestions */}
             {subject.trim() && suggestedTitles.length > 0 && (
