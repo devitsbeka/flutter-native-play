@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, User } from "lucide-react";
+import { ChevronLeft, LogOut, User, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -112,6 +112,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     label: t(item.labelKey)
   }));
 
+  if (!isOpen) return null;
+
   return (
     <>
       <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
@@ -121,39 +123,37 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
+      
       <AnimatePresence>
         {isOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background flex flex-col"
+          >
+            {/* Fixed Header */}
+            <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Menu className="w-4 h-4 text-primary" />
+                </div>
+                <h2 className="text-lg font-bold text-foreground">{t("menu.title") || "მენიუ"}</h2>
+              </div>
+            </div>
 
-            {/* Central Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-4 m-auto w-[calc(100%-32px)] max-w-[360px] h-fit max-h-[85vh] bg-background rounded-3xl z-50 shadow-2xl overflow-hidden"
-            >
-              {/* Header with User Info */}
-              <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-5">
-                {/* Close Button */}
-                <button
-                  onClick={onClose}
-                  className="absolute right-4 top-4 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition-colors"
-                >
-                  <X className="h-4 w-4 text-muted-foreground" />
-                </button>
-
-                {/* User Profile */}
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* User Profile Section */}
+              <div className="p-4 border-b border-border/30">
                 {user ? (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
                     <div className="h-16 w-16 rounded-2xl bg-background/50 backdrop-blur flex items-center justify-center overflow-hidden ring-2 ring-primary/20">
                       <Avatar
                         imageUrl={profile?.avatar_url || undefined}
@@ -181,7 +181,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       navigate("/auth");
                       onClose();
                     }}
-                    className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 mt-8"
+                    className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2"
                   >
                     <User className="h-5 w-5" />
                     {t("menu.signIn")}
@@ -195,7 +195,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Grid Menu */}
-              <div className="p-4 pb-2">
+              <div className="p-4">
                 <div className="grid grid-cols-3 gap-2">
                   {menuItems.map((item, index) => (
                     <motion.button
@@ -229,21 +229,21 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={() => handleItemClick("settings")}
-                    className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-left py-3 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
                   >
                     {t("menu.settings")}
                   </button>
 
                   <button
                     onClick={() => handleItemClick("help")}
-                    className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-left py-3 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
                   >
                     {t("menu.help")}
                   </button>
 
                   <button
                     onClick={() => handleItemClick("privacy")}
-                    className="text-left py-2 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-left py-3 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
                   >
                     {t("menu.privacy")}
                   </button>
@@ -251,15 +251,16 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   {user && (
                     <button
                       onClick={handleSignOut}
-                      className="text-left py-2 px-1 text-sm text-destructive hover:text-destructive/80 transition-colors"
+                      className="text-left py-3 px-3 text-sm text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-xl transition-colors flex items-center gap-2"
                     >
+                      <LogOut className="w-4 h-4" />
                       {t("menu.signOut")}
                     </button>
                   )}
                 </div>
               </div>
-            </motion.div>
-          </>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
