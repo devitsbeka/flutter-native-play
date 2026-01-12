@@ -22,6 +22,7 @@ import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
 import { PersonalTriviaModal } from "@/components/team/PersonalTriviaModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import iconCollections from "@/assets/icon-collections.png";
 
@@ -274,12 +275,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
     question_text: string;
     correct_answer: string;
     incorrect_answers: string[];
+    icon_slug?: string | null;
   }>, triviaTitle: string) => {
     setCustomTriviaQuestions(questions as GeneratedQuestion[]);
     setCustomTriviaTitle(triviaTitle);
     setCustomTriviaSubject("personal");
     setSelectionMode("create");
     setRoomName(triviaTitle);
+    setIsPersonalTrivia(true);
   };
 
   const clearSelection = () => {
@@ -320,6 +323,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
   const [customTriviaQuestions, setCustomTriviaQuestions] = useState<GeneratedQuestion[] | null>(null);
   const [customTriviaTitle, setCustomTriviaTitle] = useState("");
   const [customTriviaSubject, setCustomTriviaSubject] = useState("");
+  const [isPersonalTrivia, setIsPersonalTrivia] = useState(false);
 
   // Handle blind trivia creation - questions are hidden from creator
   const handleBlindTriviaReady = async (questions: GeneratedQuestion[], title: string, subject: string) => {
@@ -1020,23 +1024,42 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
               exit={{ opacity: 0, y: -10, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+              <div 
+                className={cn(
+                  "p-3 rounded-xl border",
+                  isPersonalTrivia 
+                    ? "bg-gradient-to-r from-pink-500/10 to-rose-500/10 border-pink-500/20 cursor-pointer hover:border-pink-500/40 transition-colors"
+                    : "bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20"
+                )}
+                onClick={isPersonalTrivia ? () => setShowPersonalTriviaModal(true) : undefined}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-7 h-7 text-white" />
+                  <div className={cn(
+                    "w-14 h-14 rounded-xl flex items-center justify-center shrink-0",
+                    isPersonalTrivia 
+                      ? "bg-gradient-to-br from-pink-500 to-rose-600"
+                      : "bg-gradient-to-br from-emerald-500 to-teal-600"
+                  )}>
+                    {isPersonalTrivia ? (
+                      <Users className="w-7 h-7 text-white" />
+                    ) : (
+                      <Sparkles className="w-7 h-7 text-white" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{customTriviaTitle}</p>
                     <p className="text-xs text-muted-foreground">
-                      {customTriviaQuestions.length} კითხვა • 🔒 პასუხები დამალულია
+                      {customTriviaQuestions.length} კითხვა • {isPersonalTrivia ? "✏️ დააჭირე რედაქტირებისთვის" : "🔒 პასუხები დამალულია"}
                     </p>
                   </div>
                   <button 
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setCustomTriviaQuestions(null);
                       setCustomTriviaTitle("");
                       setCustomTriviaSubject("");
                       setSelectionMode(null);
+                      setIsPersonalTrivia(false);
                     }} 
                     className="p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0"
                   >
@@ -1139,6 +1162,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
         isOpen={showPersonalTriviaModal}
         onClose={() => setShowPersonalTriviaModal(false)}
         onSave={handlePersonalTriviaSave}
+        initialData={isPersonalTrivia && customTriviaQuestions ? {
+          title: customTriviaTitle,
+          questions: customTriviaQuestions.map(q => ({
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            incorrect_answers: q.incorrect_answers,
+            icon_slug: q.icon_slug
+          }))
+        } : null}
       />
     </motion.div>
   );
