@@ -126,7 +126,6 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
         {isDesktop && (
           <>
             {TROPHIES.map((trophy, index) => {
-              const isLocked = trophy.tier > userTier;
               const label = language === 'ka' ? trophy.labelKa : trophy.label;
               
               // Position adjustments per trophy
@@ -135,9 +134,8 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
               return (
                 <motion.button
                   key={trophy.tier}
-                  onClick={() => !isLocked && onTierSelect?.(trophy.tier)}
-                  disabled={isLocked}
-                  className={`absolute z-[6] ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={() => onTierSelect?.(trophy.tier)}
+                  className="absolute z-[6] cursor-pointer"
                   style={{
                     left: `calc(${trophy.position}% + ${offsetPx}px)`,
                     top: '32%',
@@ -157,8 +155,8 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                       delay: index * 0.3,
                     }
                   }}
-                  whileHover={!isLocked ? { scale: 1.05 } : {}}
-                  whileTap={!isLocked ? { scale: 0.95 } : {}}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50">
                     <span className="text-sm font-medium text-foreground/90 whitespace-nowrap">
