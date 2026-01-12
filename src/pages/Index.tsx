@@ -259,7 +259,13 @@ export default function Index() {
         return;
       }
       
-      // Check if user can play (daily limit)
+      // Check if user can play (daily limit) - show ad modal if exhausted
+      if (!canPlay && !isVip) {
+        setShowWatchAdModal(true);
+        return;
+      }
+      
+      // Record play and navigate to game
       const canPlayGame = await recordPlay();
       if (canPlayGame) {
         navigate("/game");

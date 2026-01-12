@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Bell, MessageCircle, Layers, ScanLine } from "lucide-react";
+import { Users, Plus, Bell, MessageCircle, Layers, ScanLine, KeyRound } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -522,7 +522,7 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Row 4: CTA Button - Show on rooms tab (BEFORE rooms list) */}
+          {/* Row 4: CTA Buttons - Show on rooms tab (BEFORE rooms list) */}
           {activeTab === "rooms" && (
             <div className="lg:hidden px-4 pb-3 flex gap-2">
               <ChunkyButton 
@@ -532,7 +532,16 @@ function TeamContentV2() {
                 size="lg"
               >
                 <Plus className="w-5 h-5" />
-                ოთახი
+                შექმნა
+              </ChunkyButton>
+              <ChunkyButton 
+                onClick={() => setShowJoinModal(true)}
+                className="flex-1 gap-1.5"
+                variant="secondary"
+                size="lg"
+              >
+                <KeyRound className="w-5 h-5" />
+                შესვლა
               </ChunkyButton>
             </div>
           )}
@@ -551,13 +560,14 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Row 5: My Rooms (შენი ოთახები) - Only show on rooms tab, vertical layout */}
+          {/* Row 5: My Rooms - Only show on rooms tab */}
           {activeTab === "rooms" && (
-            <div className="lg:hidden">
+            <div className="lg:hidden space-y-4">
+              {/* My Rooms Section */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: 0.15, delay: 0.05 }}
               >
                 <MyRoomsSection 
                   hideTV 

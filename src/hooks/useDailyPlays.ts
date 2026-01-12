@@ -108,9 +108,8 @@ export function useDailyPlays() {
     if (!user) return false;
 
     try {
-      // Simulate ad watching (in real app, this would trigger actual ad)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
+      // Ad is already shown by WatchAdModal via adService
+      // This function just updates the database after successful ad view
       const newPlaysFromAds = (dailyPlays?.plays_from_ads || 0) + PLAYS_PER_AD;
       
       const { error } = await supabase

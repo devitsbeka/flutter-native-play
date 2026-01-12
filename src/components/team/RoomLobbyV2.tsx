@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Share2, ArrowLeft, Check, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
+import { Share2, ArrowLeft, Check, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Wifi } from "lucide-react";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNearbyConnections, JoinRequest } from "@/hooks/useNearbyConnections";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { NearbyJoinRequestModal } from "./NearbyJoinRequestModal";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomChat } from "@/hooks/useRoomChat";
@@ -62,11 +64,83 @@ export function RoomLobbyV2() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [currentJoinRequest, setCurrentJoinRequest] = useState<JoinRequest | null>(null);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Handle incoming join requests from nearby devices
+  const handleJoinRequest = useCallback((request: JoinRequest) => {
+    // Only show if we're the host and don't have a pending request
+    if (isHost && !currentJoinRequest) {
+      setCurrentJoinRequest(request);
+      playSound("room-join");
+    }
+  }, [isHost, currentJoinRequest, playSound]);
+  
+  // Nearby Connections for local discovery
+  const { 
+    isSupported: isNearbySupported, 
+    isAdvertising, 
+    startAdvertising, 
+    stopAdvertising,
+    updateAdvertising,
+    respondToJoinRequest,
+  } = useNearbyConnections({ onJoinRequest: handleJoinRequest });
+  
+  // Handle accept/decline of join requests
+  const handleAcceptJoinRequest = useCallback(async () => {
+    if (currentJoinRequest) {
+      const accepted = await respondToJoinRequest(currentJoinRequest.peerId, true);
+      if (accepted) {
+        toast.success(`${currentJoinRequest.peerId} შემოგვიერთდა!`);
+      }
+      setCurrentJoinRequest(null);
+    }
+  }, [currentJoinRequest, respondToJoinRequest]);
+  
+  const handleDeclineJoinRequest = useCallback(async () => {
+    if (currentJoinRequest) {
+      await respondToJoinRequest(currentJoinRequest.peerId, false);
+      toast.info("მოთხოვნა უარყოფილია");
+      setCurrentJoinRequest(null);
+    }
+  }, [currentJoinRequest, respondToJoinRequest]);
+  
+  // Start advertising the room for nearby discovery
+  useEffect(() => {
+    if (!currentRoom || !isNearbySupported || !isHost) return;
+    
+    // Only advertise waiting rooms
+    if (currentRoom.status !== "waiting") {
+      stopAdvertising();
+      return;
+    }
+    
+    const roomInfo = {
+      roomCode: currentRoom.room_code,
+      roomName: currentRoom.room_name || "Game Room",
+      hostNickname: user?.email?.split("@")[0] || "Host",
+      hostAvatar: undefined,
+      category: currentRoom.category_name || undefined,
+      playerCount: participants.length,
+      maxPlayers: currentRoom.max_players || 10,
+    };
+    
+    if (!isAdvertising) {
+      startAdvertising(roomInfo);
+    } else {
+      // Update player count when participants change
+      updateAdvertising(roomInfo);
+    }
+    
+    // Stop advertising when component unmounts or room changes
+    return () => {
+      stopAdvertising();
+    };
+  }, [currentRoom?.id, currentRoom?.status, participants.length, isNearbySupported, isHost]);
   
   // Calculate unread count
   const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
@@ -286,6 +360,28 @@ export function RoomLobbyV2() {
             >
               <Share2 className="w-4 h-4 text-white" />
             </motion.button>
+
+            {/* Nearby indicator (iOS only) */}
+            {isNearbySupported && isAdvertising && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-green-500/20 backdrop-blur-sm border border-green-500/40"
+                title="ახლომდებარე მოთამაშეებს შეუძლიათ მოძებნონ ეს ოთახი"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <Wifi className="w-4 h-4 text-green-400" />
+                </motion.div>
+                <motion.div
+                  className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+              </motion.div>
+            )}
 
             {/* Three-dot menu */}
             <DropdownMenu>
@@ -711,6 +807,15 @@ export function RoomLobbyV2() {
         currentGradient={(currentRoom as any)?.background_gradient || 'lavender_mist'}
         onSelect={handleChangeGradient}
       />
+
+      {/* Nearby Join Request Modal (Host only) */}
+      {isHost && (
+        <NearbyJoinRequestModal
+          request={currentJoinRequest}
+          onAccept={handleAcceptJoinRequest}
+          onDecline={handleDeclineJoinRequest}
+        />
+      )}
     </div>
   );
 }
