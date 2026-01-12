@@ -17,11 +17,11 @@
 @layer base {
   :root {
     /* Legacy Shadcn Compatibility - HSL format */
-    --background: 41 88% 91%;
+    --background: 40 30% 98%;
     --foreground: 222 47% 11%;
-    --card: 41 88% 91%;
+    --card: 40 30% 98%;
     --card-foreground: 222 47% 11%;
-    --popover: 41 88% 91%;
+    --popover: 40 30% 98%;
     --popover-foreground: 222 47% 11%;
     --primary: 263 60% 59%;
     --primary-foreground: 0 0% 100%;
@@ -56,9 +56,9 @@
     --trivia-teal: 168 41% 20%;
     --trivia-teal-light: 168 35% 33%;
     --trivia-teal-foreground: 0 0% 100%;
-    --content-bg: 41 88% 91%;
+    --content-bg: 40 30% 98%;
 
-    --sidebar-background: 41 88% 91%;
+    --sidebar-background: 40 30% 98%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 263 60% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -73,7 +73,7 @@
     --chart-4: 142 71% 45%;
     --chart-5: 45 95% 53%;
 
-    --sidebar: 41 88% 91%;
+    --sidebar: 40 30% 98%;
 
     --font-sans: 'Nunito', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-display: 'TASolivare', 'Nunito', sans-serif;
