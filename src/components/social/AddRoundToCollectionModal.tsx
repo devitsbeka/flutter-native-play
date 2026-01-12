@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
-import { useIconLibrary } from "@/hooks/useIconLibrary";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -38,14 +37,40 @@ const COVER_GRADIENTS = [
   "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
 ];
 
-const POPULAR_TOPICS = [
-  { categoryId: "movies", label: "კინო", value: "კინო და ფილმები" },
-  { categoryId: "sports", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
-  { categoryId: "music", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
-  { categoryId: "geography", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
-  { categoryId: "world_history", label: "ისტორია", value: "ისტორია" },
-  { categoryId: "science", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
+// Creative topic pool - specific, fun topics that inspire users
+const TRIVIA_TOPIC_POOL = [
+  { label: "Friends", icon_slug: "television" },
+  { label: "Star Wars", icon_slug: "rocket" },
+  { label: "Marvel", icon_slug: "superhero" },
+  { label: "Harry Potter", icon_slug: "magic-wand" },
+  { label: "Game of Thrones", icon_slug: "crown" },
+  { label: "Breaking Bad", icon_slug: "chemistry" },
+  { label: "Netflix სერიალები", icon_slug: "film-reel" },
+  { label: "Disney ფილმები", icon_slug: "castle" },
+  { label: "NBA ლეგენდები", icon_slug: "basketball" },
+  { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
+  { label: "Formula 1", icon_slug: "racing-car" },
+  { label: "K-Pop", icon_slug: "music-note" },
+  { label: "Taylor Swift", icon_slug: "microphone" },
+  { label: "BTS", icon_slug: "star" },
+  { label: "მემები", icon_slug: "smiley" },
+  { label: "TikTok ტრენდები", icon_slug: "smartphone" },
+  { label: "Minecraft", icon_slug: "cube" },
+  { label: "ანიმე", icon_slug: "ninja" },
+  { label: "კოსმოსი", icon_slug: "planet" },
+  { label: "ფსიქოლოგია", icon_slug: "brain" },
+  { label: "საქართველოს ისტორია", icon_slug: "flag" },
+  { label: "ქართული კერძები", icon_slug: "food" },
+  { label: "ცხოველები", icon_slug: "paw" },
+  { label: "სუპერ მანქანები", icon_slug: "sports-car" },
 ];
+
+interface TopicSuggestion {
+  label: string;
+  value: string;
+  icon_url: string | null;
+  icon_slug: string;
+}
 
 export function AddRoundToCollectionModal({ 
   open, 
@@ -57,7 +82,6 @@ export function AddRoundToCollectionModal({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { getIconForCategory, isLoaded: iconsLoaded } = useIconLibrary();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -69,12 +93,46 @@ export function AddRoundToCollectionModal({
   const [title, setTitle] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [selectedGradient, setSelectedGradient] = useState(COVER_GRADIENTS[0]);
+  
+  // Topic suggestions state
+  const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+
+  const fetchTopicSuggestions = useCallback(async () => {
+    setIsLoadingTopics(true);
+    
+    // Shuffle and pick 6 random topics
+    const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 6);
+    
+    // Fetch icons from database
+    const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
+    
+    const { data: icons } = await supabase
+      .from("icon_library")
+      .select("slug, icon_url")
+      .in("slug", iconSlugs);
+    
+    const iconMap = new Map(icons?.map(i => [i.slug, i.icon_url]) || []);
+    
+    setTopicSuggestions(
+      selected.map(topic => ({
+        label: topic.label,
+        value: topic.label,
+        icon_slug: topic.icon_slug,
+        icon_url: iconMap.get(topic.icon_slug) || null
+      }))
+    );
+    
+    setIsLoadingTopics(false);
+  }, []);
 
   useEffect(() => {
     if (open) {
       resetForm();
+      fetchTopicSuggestions();
     }
-  }, [open]);
+  }, [open, fetchTopicSuggestions]);
 
   const resetForm = () => {
     setStep(1);
@@ -211,28 +269,51 @@ export function AddRoundToCollectionModal({
               <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {POPULAR_TOPICS.map((topic) => {
-                const iconUrl = getIconForCategory(topic.categoryId);
-                return (
-                  <button
-                    key={topic.value}
-                    onClick={() => setSubject(topic.value)}
-                    className={`p-3 rounded-xl border-2 transition-all text-center ${
-                      subject === topic.value
-                        ? "border-primary bg-primary/10 scale-105"
-                        : "border-border hover:border-primary/50 hover:bg-muted/50"
-                    }`}
-                  >
-                    {iconUrl ? (
-                      <img src={iconUrl} alt={topic.label} className="w-8 h-8 mx-auto mb-1 object-contain" />
-                    ) : (
+            {/* Topic suggestions with refresh */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">💡 იდეები:</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchTopicSuggestions}
+                  disabled={isLoadingTopics}
+                  className="h-6 px-2 text-xs hover:bg-muted"
+                >
+                  <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingTopics ? 'animate-spin' : ''}`} />
+                  სხვა
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {isLoadingTopics ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="p-3 rounded-xl border-2 border-border">
                       <div className="w-8 h-8 mx-auto mb-1 bg-muted/50 rounded-full animate-pulse" />
-                    )}
-                    <span className="text-xs font-medium text-foreground">{topic.label}</span>
-                  </button>
-                );
-              })}
+                      <div className="w-12 h-3 mx-auto bg-muted/50 rounded animate-pulse" />
+                    </div>
+                  ))
+                ) : (
+                  topicSuggestions.map((topic) => (
+                    <button
+                      key={topic.value}
+                      onClick={() => setSubject(topic.value)}
+                      className={`p-3 rounded-xl border-2 transition-all text-center ${
+                        subject === topic.value
+                          ? "border-primary bg-primary/10 scale-105"
+                          : "border-border hover:border-primary/50 hover:bg-muted/50"
+                      }`}
+                    >
+                      {topic.icon_url ? (
+                        <img src={topic.icon_url} alt={topic.label} className="w-8 h-8 mx-auto mb-1 object-contain" />
+                      ) : (
+                        <div className="w-8 h-8 mx-auto mb-1 bg-muted/50 rounded-full" />
+                      )}
+                      <span className="text-xs font-medium text-foreground">{topic.label}</span>
+                    </button>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="relative">

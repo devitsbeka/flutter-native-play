@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, Lock, Play } from "lucide-react";
+import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, Lock, Play, RefreshCw } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,6 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
-import { useIconLibrary } from "@/hooks/useIconLibrary";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -35,18 +34,76 @@ const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string
 
 const QUESTION_COUNTS = [5, 10, 15, 20];
 
-const POPULAR_TOPICS = [
-  { categoryId: "movies", label: "კინო", value: "კინო და ფილმები" },
-  { categoryId: "sports", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
-  { categoryId: "music", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
-  { categoryId: "geography", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
-  { categoryId: "world_history", label: "ისტორია", value: "ისტორია" },
-  { categoryId: "science", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
+// Creative topic pool - specific, fun topics that inspire users
+const TRIVIA_TOPIC_POOL = [
+  // Entertainment
+  { label: "Friends", icon_slug: "television" },
+  { label: "Star Wars", icon_slug: "rocket" },
+  { label: "Marvel", icon_slug: "superhero" },
+  { label: "Harry Potter", icon_slug: "magic-wand" },
+  { label: "Game of Thrones", icon_slug: "crown" },
+  { label: "Breaking Bad", icon_slug: "chemistry" },
+  { label: "Netflix სერიალები", icon_slug: "film-reel" },
+  { label: "Disney ფილმები", icon_slug: "castle" },
+  { label: "The Office", icon_slug: "briefcase" },
+  { label: "Stranger Things", icon_slug: "flashlight" },
+  { label: "ანიმე", icon_slug: "ninja" },
+  { label: "პიქსარი", icon_slug: "lamp" },
+  // Sports
+  { label: "NBA ლეგენდები", icon_slug: "basketball" },
+  { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
+  { label: "Formula 1", icon_slug: "racing-car" },
+  { label: "ოლიმპიური თამაშები", icon_slug: "medal" },
+  { label: "მსოფლიო ჩემპიონატი", icon_slug: "soccer-ball" },
+  { label: "UFC/MMA", icon_slug: "boxing-glove" },
+  { label: "ტენისის ვარსკვლავები", icon_slug: "tennis" },
+  // Music
+  { label: "K-Pop", icon_slug: "music-note" },
+  { label: "Taylor Swift", icon_slug: "microphone" },
+  { label: "BTS", icon_slug: "star" },
+  { label: "Queen", icon_slug: "crown" },
+  { label: "90s მუსიკა", icon_slug: "vinyl" },
+  { label: "Hip-Hop ლეგენდები", icon_slug: "headphones" },
+  { label: "რეპერები", icon_slug: "microphone-stand" },
+  { label: "როკ მუსიკა", icon_slug: "guitar" },
+  // Pop Culture & Gaming
+  { label: "მემები", icon_slug: "smiley" },
+  { label: "TikTok ტრენდები", icon_slug: "smartphone" },
+  { label: "Minecraft", icon_slug: "cube" },
+  { label: "GTA", icon_slug: "car" },
+  { label: "FIFA/EA Sports", icon_slug: "gamepad" },
+  { label: "PlayStation ექსკლუზივები", icon_slug: "controller" },
+  { label: "ნინტენდო", icon_slug: "joystick" },
+  // Knowledge & Science
+  { label: "კოსმოსი და ვარსკვლავები", icon_slug: "planet" },
+  { label: "ფსიქოლოგია", icon_slug: "brain" },
+  { label: "ბერძნული მითოლოგია", icon_slug: "greek-helmet" },
+  { label: "დინოზავრები", icon_slug: "dinosaur" },
+  { label: "ადამიანის სხეული", icon_slug: "heart" },
+  { label: "ქიმია", icon_slug: "flask" },
+  // Georgian specific
+  { label: "საქართველოს ისტორია", icon_slug: "flag" },
+  { label: "ქართული კერძები", icon_slug: "food" },
+  { label: "ქართული ღვინო", icon_slug: "wine" },
+  { label: "ქართველი სახეები", icon_slug: "person" },
+  // Fun categories
+  { label: "ცხოველთა სამყარო", icon_slug: "paw" },
+  { label: "სუპერ მანქანები", icon_slug: "sports-car" },
+  { label: "მზარეულის საიდუმლო", icon_slug: "chef-hat" },
+  { label: "მსოფლიო რეკორდები", icon_slug: "trophy" },
+  { label: "გამოცანები", icon_slug: "puzzle" },
+  { label: "სახალისო ფაქტები", icon_slug: "lightbulb" },
 ];
+
+interface TopicSuggestion {
+  label: string;
+  value: string;
+  icon_url: string | null;
+  icon_slug: string;
+}
 
 export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: CreateBlindTriviaModalProps) {
   const { toast } = useToast();
-  const { getIconForCategory, isLoaded: iconsLoaded } = useIconLibrary();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -57,13 +114,47 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
   const [generationProgress, setGenerationProgress] = useState(0);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [title, setTitle] = useState("");
+  
+  // Topic suggestions state
+  const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+
+  const fetchTopicSuggestions = useCallback(async () => {
+    setIsLoadingTopics(true);
+    
+    // Shuffle and pick 6 random topics
+    const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 6);
+    
+    // Fetch icons from database
+    const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
+    
+    const { data: icons } = await supabase
+      .from("icon_library")
+      .select("slug, icon_url")
+      .in("slug", iconSlugs);
+    
+    const iconMap = new Map(icons?.map(i => [i.slug, i.icon_url]) || []);
+    
+    setTopicSuggestions(
+      selected.map(topic => ({
+        label: topic.label,
+        value: topic.label,
+        icon_slug: topic.icon_slug,
+        icon_url: iconMap.get(topic.icon_slug) || null
+      }))
+    );
+    
+    setIsLoadingTopics(false);
+  }, []);
 
   // Reset on open
   useEffect(() => {
     if (open) {
       resetForm();
+      fetchTopicSuggestions();
     }
-  }, [open]);
+  }, [open, fetchTopicSuggestions]);
 
   const resetForm = () => {
     setStep(1);
@@ -171,32 +262,51 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 className="w-full text-base h-14 px-5 rounded-2xl border-2 border-border/60 bg-card focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
               />
               
-              {/* Suggestion chips - show below input */}
-              <div className="flex flex-wrap gap-2 justify-center">
-                {POPULAR_TOPICS.map((topic, idx) => {
-                  const iconUrl = getIconForCategory(topic.categoryId);
-                  return (
-                    <motion.button
-                      key={topic.value}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.03 }}
-                      onClick={() => setSubject(topic.value)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
-                        subject === topic.value
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                    >
-                      {iconUrl ? (
-                        <img src={iconUrl} alt={topic.label} className="w-4 h-4 object-contain" />
-                      ) : (
-                        <div className="w-4 h-4 bg-muted/50 rounded-full animate-pulse" />
-                      )}
-                      <span>{topic.label}</span>
-                    </motion.button>
-                  );
-                })}
+              {/* Suggestion chips with refresh */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">💡 იდეები:</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fetchTopicSuggestions}
+                    disabled={isLoadingTopics}
+                    className="h-6 px-2 text-xs hover:bg-muted"
+                  >
+                    <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingTopics ? 'animate-spin' : ''}`} />
+                    სხვა
+                  </Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {isLoadingTopics ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="h-8 w-24 bg-muted/50 rounded-full animate-pulse" />
+                    ))
+                  ) : (
+                    topicSuggestions.map((topic, idx) => (
+                      <motion.button
+                        key={topic.value}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.03 }}
+                        onClick={() => setSubject(topic.value)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                          subject === topic.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        {topic.icon_url ? (
+                          <img src={topic.icon_url} alt={topic.label} className="w-4 h-4 object-contain" />
+                        ) : (
+                          <div className="w-4 h-4 bg-muted/50 rounded-full" />
+                        )}
+                        <span>{topic.label}</span>
+                      </motion.button>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
 
