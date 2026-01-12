@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift } from "lucide-react";
+import { Gift, ChevronLeft } from "lucide-react";
 import { getLevelRewards } from "@/utils/levelCalculation";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -72,41 +72,66 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[60] flex flex-col"
-          style={{ background: "#8795EB" }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex flex-col"
+          style={{
+            background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+          }}
         >
+          {/* Fixed Header */}
+          <motion.div 
+            className="sticky top-0 z-10 flex items-center h-14 px-2 border-b border-gray-200/60"
+            style={{
+              background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%)",
+            }}
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {/* Back button */}
+            <motion.button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ChevronLeft className="w-6 h-6 text-gray-700" />
+            </motion.button>
+            
+            {/* Centered title */}
+            <div className="flex-1 text-center px-2">
+              <h1 className="font-display text-lg font-bold text-gray-900 truncate">
+                {t("modals.levelUp")}
+              </h1>
+            </div>
+            
+            {/* Right spacer */}
+            <div className="w-10" />
+          </motion.div>
+
           {/* Content */}
           <div className="flex-1 flex flex-col items-center justify-center px-6">
-            {/* Title */}
-            <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl font-bold text-white mb-8 text-center"
-              style={{ fontFamily: "'TASolivare', sans-serif" }}
-            >
-              {t("modals.levelUp")}
-            </motion.h1>
-
-            {/* Level Badge - White elegant design */}
+            {/* Level Badge */}
             <motion.div
               initial={{ scale: 0, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", delay: 0.3, stiffness: 200 }}
-              className="relative w-32 h-32 mx-auto flex flex-col items-center justify-center rounded-full mb-4 bg-white border-4 border-white/50"
+              className="relative w-32 h-32 mx-auto flex flex-col items-center justify-center rounded-full mb-4"
               style={{
-                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                background: "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)",
+                boxShadow: "0 5px 0 #C4B5FD",
+                border: "4px solid #A78BFA",
               }}
             >
               <motion.span
-                className="text-6xl font-display font-bold text-[#8795EB]"
+                className="text-6xl font-display font-bold text-purple-600"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", delay: 0.5, stiffness: 200 }}
               >
                 {newLevel}
               </motion.span>
-              <span className="text-sm font-bold text-[#8795EB]/70">{t("modals.levelLabel")}</span>
+              <span className="text-sm font-bold text-purple-500">{t("modals.levelLabel")}</span>
             </motion.div>
 
             {/* Previous level info */}
@@ -114,24 +139,25 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-center text-white/90 text-lg font-medium mb-6"
+              className="text-center text-gray-500 text-lg font-medium mb-6"
             >
               {t("modals.levelLabel")} {previousLevel} → {t("modals.levelLabel")} {newLevel}
             </motion.p>
 
-            {/* Rewards section - White elegant card */}
+            {/* Rewards section */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="rounded-2xl p-5 w-full max-w-xs bg-white/95 backdrop-blur-sm"
+              className="rounded-2xl p-5 w-full max-w-xs"
               style={{
-                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                background: "linear-gradient(180deg, #F9FAFB 0%, #F3F4F6 100%)",
+                boxShadow: "0 3px 0 #E5E7EB",
               }}
             >
               <div className="flex items-center justify-center gap-2 mb-4">
-                <Gift className="w-5 h-5 text-[#8795EB]" />
-                <span className="font-bold text-lg text-[#8795EB]">{t("modals.rewards")}</span>
+                <Gift className="w-5 h-5 text-purple-600" />
+                <span className="font-bold text-lg text-gray-900">{t("modals.rewards")}</span>
               </div>
               <div className="flex justify-center gap-6 flex-wrap">
                 <div className="text-center">
@@ -167,7 +193,10 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel }: Level
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1 }}
-            className="px-6 pb-8"
+            className="sticky bottom-0 px-5 py-4 border-t border-gray-200/60"
+            style={{
+              background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
+            }}
           >
             <ChunkyButton
               onClick={onClose}
