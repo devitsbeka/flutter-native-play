@@ -2,10 +2,11 @@ import React, { useState, Suspense, lazy, memo, useMemo, useCallback } from "rea
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Minus, Plus, RotateCcw, Loader2, AlertTriangle, 
   Search, ChevronDown, ChevronRight, Monitor, Tablet, Smartphone, X,
-  LayoutGrid, Layers
+  LayoutGrid, Layers, Play, Eye
 } from "lucide-react";
 import { 
   createMemoryRouter, 
@@ -84,7 +85,6 @@ const GemShopModal = lazy(() => import("@/components/home/GemShopModal").then(m 
 const AdFreeModal = lazy(() => import("@/components/home/AdFreeModal").then(m => ({ default: m.AdFreeModal })));
 const WatchAdModal = lazy(() => import("@/components/home/WatchAdModal").then(m => ({ default: m.WatchAdModal })));
 const HomeHelpModal = lazy(() => import("@/components/home/HelpModal").then(m => ({ default: m.HelpModal })));
-const PowerUpTutorialModalHome = lazy(() => import("@/components/home/PowerUpTutorialModal").then(m => ({ default: m.PowerUpTutorialModal })));
 
 // Shop Modals
 const BuyCurrencyModal = lazy(() => import("@/components/shop/BuyCurrencyModal").then(m => ({ default: m.BuyCurrencyModal })));
@@ -96,10 +96,7 @@ const ShopItemDetailModal = lazy(() => import("@/components/shop/ShopItemDetailM
 // Game Modals
 const GameLoseModal = lazy(() => import("@/components/game/GameLoseModal").then(m => ({ default: m.GameLoseModal })));
 const ComingSoonModal = lazy(() => import("@/components/game/ComingSoonModal").then(m => ({ default: m.ComingSoonModal })));
-const CategoryWheelModal = lazy(() => import("@/components/game/CategoryWheelModal").then(m => ({ default: m.CategoryWheelModal })));
 const LuckySpinModal = lazy(() => import("@/components/game/LuckySpinModal").then(m => ({ default: m.LuckySpinModal })));
-const PowerUpDetailModal = lazy(() => import("@/components/game/PowerUpDetailModal").then(m => ({ default: m.PowerUpDetailModal })));
-const GamePowerUpTutorialModal = lazy(() => import("@/components/game/PowerUpTutorialModal").then(m => ({ default: m.PowerUpTutorialModal })));
 const VSMatchHelpModal = lazy(() => import("@/components/game/VSMatchHelpModal").then(m => ({ default: m.VSMatchHelpModal })));
 
 // Map Modals  
@@ -109,43 +106,18 @@ const CompletedLevelModal = lazy(() => import("@/components/map/CompletedLevelMo
 const AdventureHelpModal = lazy(() => import("@/components/map/AdventureHelpModal").then(m => ({ default: m.AdventureHelpModal })));
 
 // Team Modals
-const CreateRoomModal = lazy(() => import("@/components/team/CreateRoomModal").then(m => ({ default: m.CreateRoomModal })));
-const JoinRoomModal = lazy(() => import("@/components/team/JoinRoomModal").then(m => ({ default: m.JoinRoomModal })));
-const QuickPlayModal = lazy(() => import("@/components/team/QuickPlayModal").then(m => ({ default: m.QuickPlayModal })));
 const CategorySelectorModal = lazy(() => import("@/components/team/CategorySelectorModal").then(m => ({ default: m.CategorySelectorModal })));
 const TeamHelpModal = lazy(() => import("@/components/team/HelpModal").then(m => ({ default: m.HelpModal })));
 const HowItWorksModal = lazy(() => import("@/components/team/HowItWorksModal").then(m => ({ default: m.HowItWorksModal })));
 const InviteFriendsModal = lazy(() => import("@/components/team/InviteFriendsModal").then(m => ({ default: m.InviteFriendsModal })));
-const GameInviteModal = lazy(() => import("@/components/team/GameInviteModal").then(m => ({ default: m.GameInviteModal })));
 const AddFriendModal = lazy(() => import("@/components/team/AddFriendModal").then(m => ({ default: m.AddFriendModal })));
-const AllFriendsModal = lazy(() => import("@/components/team/AllFriendsModal").then(m => ({ default: m.AllFriendsModal })));
-const AllRecentPlayersModal = lazy(() => import("@/components/team/AllRecentPlayersModal").then(m => ({ default: m.AllRecentPlayersModal })));
-const AllRecentRoomsModal = lazy(() => import("@/components/team/AllRecentRoomsModal").then(m => ({ default: m.AllRecentRoomsModal })));
 const RoomIconPickerModal = lazy(() => import("@/components/team/RoomIconPickerModal").then(m => ({ default: m.RoomIconPickerModal })));
 const GradientPicker = lazy(() => import("@/components/team/GradientPicker").then(m => ({ default: m.GradientPicker })));
-const ChatModal = lazy(() => import("@/components/team/ChatModal").then(m => ({ default: m.ChatModal })));
-// QRScannerModal removed - triggers camera access
-const CreateBlindTriviaModal = lazy(() => import("@/components/team/CreateBlindTriviaModal").then(m => ({ default: m.CreateBlindTriviaModal })));
-const MyTriviasPickerModal = lazy(() => import("@/components/team/MyTriviasPickerModal").then(m => ({ default: m.MyTriviasPickerModal })));
 
 // TV Modals
-const TVMirrorModal = lazy(() => import("@/components/tv/TVMirrorModal").then(m => ({ default: m.TVMirrorModal })));
-const TVConnectModal = lazy(() => import("@/components/team/TVConnectModal").then(m => ({ default: m.TVConnectModal })));
-const TVDiscoveryModal = lazy(() => import("@/components/team/TVDiscoveryModal").then(m => ({ default: m.TVDiscoveryModal })));
 const TVEnterCodeModal = lazy(() => import("@/components/team/TVEnterCodeModal").then(m => ({ default: m.TVEnterCodeModal })));
-const TVJoinModal = lazy(() => import("@/components/team/TVJoinModal").then(m => ({ default: m.TVJoinModal })));
-const TVPlayModal = lazy(() => import("@/components/team/TVPlayModal").then(m => ({ default: m.TVPlayModal })));
-const TVSetupModal = lazy(() => import("@/components/team/TVSetupModal").then(m => ({ default: m.TVSetupModal })));
 
 // Social Modals
-const CreateQuizModal = lazy(() => import("@/components/social/CreateQuizModal").then(m => ({ default: m.CreateQuizModal })));
-const EditQuizModal = lazy(() => import("@/components/social/EditQuizModal").then(m => ({ default: m.EditQuizModal })));
-const CreateCollectionModal = lazy(() => import("@/components/social/CreateCollectionModal").then(m => ({ default: m.CreateCollectionModal })));
-const AddRoundToCollectionModal = lazy(() => import("@/components/social/AddRoundToCollectionModal").then(m => ({ default: m.AddRoundToCollectionModal })));
-const EditRoundModal = lazy(() => import("@/components/social/EditRoundModal").then(m => ({ default: m.EditRoundModal })));
-const TriviaPreviewModal = lazy(() => import("@/components/social/TriviaPreviewModal").then(m => ({ default: m.TriviaPreviewModal })));
-const QuizPlayModal = lazy(() => import("@/components/social/QuizPlayModal").then(m => ({ default: m.QuizPlayModal })));
-const CollectionPreviewModal = lazy(() => import("@/components/social/CollectionPreviewModal").then(m => ({ default: m.CollectionPreviewModal })));
 const CreateTriviaTypeModal = lazy(() => import("@/components/social/CreateTriviaTypeModal").then(m => ({ default: m.CreateTriviaTypeModal })));
 
 // Profile Modals
@@ -164,62 +136,6 @@ const SignupOnboardingModal = lazy(() => import("@/components/onboarding/SignupO
 
 // Controller Modals
 const GuestJoinModal = lazy(() => import("@/components/controller/GuestJoinModal").then(m => ({ default: m.GuestJoinModal })));
-
-// ========== STATIC MODAL PREVIEW COMPONENT ==========
-// This renders a static preview placeholder for modals to prevent portal/overlay issues
-interface StaticModalPreviewProps {
-  page: {
-    id: string;
-    label: string;
-    labelGe: string;
-    modalProps?: Record<string, any>;
-  };
-}
-
-const StaticModalPreview = memo(function StaticModalPreview({ page }: StaticModalPreviewProps) {
-  return (
-    <div className="relative w-full h-full bg-gradient-to-br from-background via-muted to-background flex items-center justify-center overflow-hidden">
-      {/* Simulated backdrop */}
-      <div className="absolute inset-0 bg-black/40" />
-      
-      {/* Modal card preview */}
-      <div className="relative z-10 bg-card rounded-2xl shadow-2xl border border-border/50 p-6 max-w-[85%] max-h-[85%] overflow-hidden">
-        {/* Modal header simulation */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-foreground">{page.label}</h3>
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <X className="w-4 h-4 text-muted-foreground" />
-          </div>
-        </div>
-        
-        {/* Modal content placeholder */}
-        <div className="space-y-3">
-          <div className="h-3 bg-muted rounded w-3/4" />
-          <div className="h-3 bg-muted rounded w-1/2" />
-          <div className="h-3 bg-muted rounded w-2/3" />
-        </div>
-        
-        {/* Modal props preview if available */}
-        {page.modalProps && Object.keys(page.modalProps).length > 0 && (
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground font-mono">
-              Props: {Object.keys(page.modalProps).join(', ')}
-            </p>
-          </div>
-        )}
-        
-        {/* Georgian label */}
-        <p className="mt-4 text-sm text-muted-foreground text-center">{page.labelGe}</p>
-        
-        {/* Action buttons simulation */}
-        <div className="flex gap-2 mt-4 justify-end">
-          <div className="px-4 py-2 bg-muted rounded-lg text-sm text-muted-foreground">Cancel</div>
-          <div className="px-4 py-2 bg-primary rounded-lg text-sm text-primary-foreground">Confirm</div>
-        </div>
-      </div>
-    </div>
-  );
-});
 
 // ========== PAGE DEFINITIONS ==========
 interface PageDefinition {
@@ -241,8 +157,8 @@ interface CategoryDefinition {
   pages: PageDefinition[];
 }
 
+// ========== PAGE CATEGORIES (Non-Modal) ==========
 const pageCategories: CategoryDefinition[] = [
-  // ========== PAGE CATEGORIES ==========
   {
     id: "core",
     title: "Core Pages",
@@ -279,7 +195,6 @@ const pageCategories: CategoryDefinition[] = [
     pages: [
       { id: "tv-lobby", label: "TV Lobby", labelGe: "TV ლობი", Component: TVLobby, route: "/tv" },
       { id: "tv-join", label: "TV Join", labelGe: "შეერთება", Component: TVJoin, route: "/join" },
-      // TVDisplay and TVHostController removed - require TVGameProvider context
     ],
   },
   {
@@ -306,61 +221,45 @@ const pageCategories: CategoryDefinition[] = [
     ],
   },
   {
-    id: "styleguide",
-    title: "Style Guides",
-    titleGe: "სტილის გზამკვლევი",
-    icon: "🎨",
-    pages: [
-      { id: "styleguide", label: "Styleguide", labelGe: "სტილგაიდი", Component: Styleguide, route: "/styleguide" },
-      { id: "buttons", label: "All Buttons", labelGe: "ღილაკები", Component: AllButtons, route: "/all-buttons" },
-      { id: "modals", label: "Modals Showcase", labelGe: "მოდალები", Component: ModalsShowcase, route: "/modals" },
-    ],
-  },
-  {
-    id: "errors",
-    title: "Error States",
-    titleGe: "შეცდომები",
-    icon: "⚠️",
-    pages: [
-      { id: "404", label: "404 Not Found", labelGe: "გვერდი ვერ მოიძებნა", Component: NotFound, route: "/404" },
-      { id: "redirect", label: "Room Redirect", labelGe: "გადამისამართება", Component: RoomRedirect, route: "/room/test" },
-    ],
-  },
-  {
     id: "admin",
     title: "Admin Pages",
-    titleGe: "ადმინის გვერდები",
+    titleGe: "ადმინ გვერდები",
     icon: "⚙️",
     pages: [
-      { id: "admin-dashboard", label: "Dashboard", labelGe: "დეშბორდი", Component: AdminDashboard, route: "/admin" },
+      { id: "admin-dashboard", label: "Dashboard", labelGe: "დაშბორდი", Component: AdminDashboard, route: "/admin" },
       { id: "admin-flow", label: "Flow", labelGe: "ფლოუ", Component: AdminFlow, route: "/admin/flow" },
       { id: "admin-content", label: "Content Manager", labelGe: "კონტენტი", Component: ContentManager, route: "/admin/content" },
       { id: "admin-import", label: "Import", labelGe: "იმპორტი", Component: AdminImport, route: "/admin/import" },
-      { id: "admin-users", label: "Online Users", labelGe: "მომხმარებლები", Component: AdminOnlineUsers, route: "/admin/users" },
-      { id: "admin-duplicates", label: "Duplicate Scanner", labelGe: "დუბლიკატები", Component: DuplicateScanner, route: "/admin/duplicates" },
-      { id: "admin-icons", label: "Icon Library", labelGe: "აიქონები", Component: IconLibraryAdmin, route: "/admin/icons" },
-      { id: "admin-tools", label: "Question Tools", labelGe: "კითხვები", Component: QuestionTools, route: "/admin/tools" },
-      { id: "admin-icon-assign", label: "Icon Assignment", labelGe: "აიქონების მინიჭება", Component: IconAssignment, route: "/admin/icon-assign" },
-      { id: "admin-missing-icons", label: "Missing Icons", labelGe: "დაკარგული აიქონები", Component: MissingIcons, route: "/admin/missing-icons" },
-      { id: "admin-fix-icons", label: "Fix Icons", labelGe: "აიქონების შესწორება", Component: FixIcons, route: "/admin/fix-icons" },
-      { id: "admin-ai", label: "AI Generations", labelGe: "AI გენერაციები", Component: AIGenerations, route: "/admin/ai-generations" },
-      { id: "admin-push", label: "Push Notifications", labelGe: "შეტყობინებები", Component: PushNotifications, route: "/admin/push" },
-      { id: "admin-reports", label: "Reports", labelGe: "რეპორტები", Component: AdminReports, route: "/admin/reports" },
+      { id: "admin-users", label: "Online Users", labelGe: "ონლაინ იუზერები", Component: AdminOnlineUsers, route: "/admin/users" },
     ],
   },
+  {
+    id: "dev",
+    title: "Developer Tools",
+    titleGe: "დეველოპერის ხელსაწყოები",
+    icon: "🛠️",
+    pages: [
+      { id: "styleguide", label: "Styleguide", labelGe: "სტაილგაიდი", Component: Styleguide, route: "/styleguide" },
+      { id: "all-buttons", label: "All Buttons", labelGe: "ყველა ღილაკი", Component: AllButtons, route: "/all-buttons" },
+      { id: "modals-showcase", label: "Modals Showcase", labelGe: "მოდალების ვიტრინა", Component: ModalsShowcase, route: "/modals-showcase" },
+      { id: "not-found", label: "404 Page", labelGe: "404 გვერდი", Component: NotFound, route: "/404" },
+    ],
+  },
+];
 
-  // ========== MODAL CATEGORIES ==========
+// ========== MODAL CATEGORIES ==========
+const modalCategories: CategoryDefinition[] = [
   {
     id: "modals-home",
-    title: "Home Modals",
+    title: "Home & Core",
     titleGe: "მთავარი მოდალები",
     icon: "🏠",
     isModal: true,
     pages: [
-      { id: "avatar-modal", label: "Avatar Modal", labelGe: "ავატარი", Component: AvatarModal, isModal: true, modalProps: {} },
-      { id: "level-up-modal", label: "Level Up", labelGe: "ლეველი აპი", Component: LevelUpModal, isModal: true, modalProps: { newLevel: 5, previousLevel: 4, rewards: { coins: 100, gems: 5 } } },
-      { id: "daily-rewards-modal", label: "Daily Rewards", labelGe: "დღიური ჯილდოები", Component: DailyRewardsModal, isModal: true, modalProps: { currentStreak: 3 } },
-      { id: "chest-reward-modal", label: "Chest Reward", labelGe: "სკივრი", Component: ChestRewardModal, isModal: true, modalProps: { chestType: "gold", rewards: [] } },
+      { id: "avatar-modal", label: "Avatar", labelGe: "ავატარი", Component: AvatarModal, isModal: true, modalProps: {} },
+      { id: "level-up-modal", label: "Level Up", labelGe: "ლეველი", Component: LevelUpModal, isModal: true, modalProps: { newLevel: 5, coinsReward: 100, gemsReward: 5 } },
+      { id: "daily-rewards-modal", label: "Daily Rewards", labelGe: "დღიური ჯილდო", Component: DailyRewardsModal, isModal: true, modalProps: {} },
+      { id: "chest-reward-modal", label: "Chest Reward", labelGe: "სკივრის ჯილდო", Component: ChestRewardModal, isModal: true, modalProps: { chestType: "gold" } },
       { id: "streak-modal", label: "Streak", labelGe: "სტრიკი", Component: StreakModal, isModal: true, modalProps: { currentStreak: 7, bestStreak: 14 } },
       { id: "missions-modal", label: "Missions", labelGe: "მისიები", Component: MissionsModal, isModal: true, modalProps: {} },
       { id: "my-powers-modal", label: "My Powers", labelGe: "ჩემი პაუერაფები", Component: MyPowersModal, isModal: true, modalProps: {} },
@@ -376,7 +275,6 @@ const pageCategories: CategoryDefinition[] = [
       { id: "ad-free-modal", label: "Ad Free", labelGe: "რეკლამის გარეშე", Component: AdFreeModal, isModal: true, modalProps: {} },
       { id: "watch-ad-modal", label: "Watch Ad", labelGe: "რეკლამის ნახვა", Component: WatchAdModal, isModal: true, modalProps: { rewardType: "coins", rewardAmount: 50 } },
       { id: "home-help-modal", label: "Help", labelGe: "დახმარება", Component: HomeHelpModal, isModal: true, modalProps: {} },
-      // PowerUpTutorialModalHome removed - requires powerUp prop with name property
     ],
   },
   {
@@ -402,14 +300,13 @@ const pageCategories: CategoryDefinition[] = [
     pages: [
       { id: "game-lose-modal", label: "Game Lose", labelGe: "წაგება", Component: GameLoseModal, isModal: true, modalProps: { userScore: 1500, opponentScore: 2000, opponentName: "Player2", coinsEarned: 10 } },
       { id: "coming-soon-modal", label: "Coming Soon", labelGe: "მალე", Component: ComingSoonModal, isModal: true, modalProps: { categoryName: "Science", levelNumber: 5 } },
-      // CategoryWheelModal, PowerUpDetailModal, GamePowerUpTutorialModal removed - require callbacks/props that crash in isolation
       { id: "lucky-spin-modal", label: "Lucky Spin", labelGe: "იღბლიანი სპინი", Component: LuckySpinModal, isModal: true, modalProps: {} },
       { id: "vs-match-help-modal", label: "VS Match Help", labelGe: "VS დახმარება", Component: VSMatchHelpModal, isModal: true, modalProps: {} },
     ],
   },
   {
     id: "modals-map",
-    title: "Map & Adventure Modals",
+    title: "Map & Adventure",
     titleGe: "რუკის მოდალები",
     icon: "🗺️",
     isModal: true,
@@ -422,12 +319,11 @@ const pageCategories: CategoryDefinition[] = [
   },
   {
     id: "modals-team",
-    title: "Team & Multiplayer Modals",
+    title: "Team & Multiplayer",
     titleGe: "გუნდის მოდალები",
     icon: "👥",
     isModal: true,
     pages: [
-      // CreateRoomModal, JoinRoomModal, QuickPlayModal removed - require MultiplayerProvider context
       { id: "category-selector-modal", label: "Category Selector", labelGe: "კატეგორიის არჩევა", Component: CategorySelectorModal, isModal: true, modalProps: {} },
       { id: "team-help-modal", label: "Team Help", labelGe: "გუნდის დახმარება", Component: TeamHelpModal, isModal: true, modalProps: {} },
       { id: "how-it-works-modal", label: "How It Works", labelGe: "როგორ მუშაობს", Component: HowItWorksModal, isModal: true, modalProps: {} },
@@ -435,34 +331,12 @@ const pageCategories: CategoryDefinition[] = [
       { id: "add-friend-modal", label: "Add Friend", labelGe: "მეგობრის დამატება", Component: AddFriendModal, isModal: true, modalProps: {} },
       { id: "room-icon-picker-modal", label: "Room Icon Picker", labelGe: "აიქონის არჩევა", Component: RoomIconPickerModal, isModal: true, modalProps: {} },
       { id: "gradient-picker-modal", label: "Gradient Picker", labelGe: "გრადიენტის არჩევა", Component: GradientPicker, isModal: true, modalProps: {} },
-      // QR Scanner, Chat, BlindTrivia, TriviaPicker removed - require context providers or complex state
-    ],
-  },
-  {
-    id: "modals-tv",
-    title: "TV Modals",
-    titleGe: "TV მოდალები",
-    icon: "📺",
-    isModal: true,
-    pages: [
-      // TV modals removed - require TVGameProvider context
       { id: "tv-enter-code-modal", label: "TV Enter Code", labelGe: "კოდის შეყვანა", Component: TVEnterCodeModal, isModal: true, modalProps: {} },
     ],
   },
   {
-    id: "modals-social",
-    title: "Social & UGC Modals",
-    titleGe: "სოციალური მოდალები",
-    icon: "📱",
-    isModal: true,
-    pages: [
-      // Complex UGC modals removed - require auth context and database queries
-      { id: "create-trivia-type-modal", label: "Create Trivia Type", labelGe: "ტრივიას ტიპის შექმნა", Component: CreateTriviaTypeModal, isModal: true, modalProps: {} },
-    ],
-  },
-  {
     id: "modals-profile",
-    title: "Profile & Leaderboard Modals",
+    title: "Profile & Social",
     titleGe: "პროფილის მოდალები",
     icon: "👤",
     isModal: true,
@@ -471,6 +345,7 @@ const pageCategories: CategoryDefinition[] = [
       { id: "avatar-generator-modal", label: "Avatar Generator", labelGe: "ავატარის გენერატორი", Component: AvatarGeneratorModal, isModal: true, modalProps: {} },
       { id: "claim-rewards-modal", label: "Claim Rewards", labelGe: "ჯილდოების მიღება", Component: ClaimRewardsModal, isModal: true, modalProps: { rewards: { coins: 500, gems: 10 } } },
       { id: "play-category-modal", label: "Play Category", labelGe: "კატეგორიის თამაში", Component: PlayCategoryModal, isModal: true, modalProps: { categoryId: "science", categoryName: "Science" } },
+      { id: "create-trivia-type-modal", label: "Create Trivia Type", labelGe: "ტრივიას ტიპის შექმნა", Component: CreateTriviaTypeModal, isModal: true, modalProps: {} },
     ],
   },
   {
@@ -549,7 +424,7 @@ const IsolatedPageRenderer = memo(function IsolatedPageRenderer({
   );
 });
 
-// Device Mockup component for different breakpoints
+// Device Mockup component for different breakpoints (PAGES ONLY)
 const DeviceMockup = memo(function DeviceMockup({ 
   page,
   breakpoint,
@@ -562,9 +437,8 @@ const DeviceMockup = memo(function DeviceMockup({
   onClick?: () => void;
 }) {
   const config = breakpoints[breakpoint];
-  const { Component, route, label, labelGe, isModal, modalProps } = page;
+  const { Component, route, label, labelGe } = page;
   
-  // Calculate scaled dimensions
   const scaledWidth = config.width * scale;
   const scaledHeight = config.height * scale;
   
@@ -573,7 +447,6 @@ const DeviceMockup = memo(function DeviceMockup({
       className="flex flex-col items-center gap-3 shrink-0 cursor-pointer group"
       onClick={onClick}
     >
-      {/* Device Frame */}
       <div 
         className={cn(
           "relative overflow-hidden shadow-2xl transition-transform group-hover:scale-[1.02]",
@@ -586,7 +459,6 @@ const DeviceMockup = memo(function DeviceMockup({
           height: breakpoint === "desktop" ? scaledHeight + 36 : scaledHeight + 24,
         }}
       >
-        {/* Desktop browser bar */}
         {breakpoint === "desktop" && (
           <div className="h-8 bg-[#3a3a3a] flex items-center px-3 gap-2">
             <div className="flex gap-1.5">
@@ -596,13 +468,12 @@ const DeviceMockup = memo(function DeviceMockup({
             </div>
             <div className="flex-1 mx-4">
               <div className="bg-[#1a1a1a] rounded h-5 max-w-md mx-auto flex items-center justify-center">
-                <span className="text-[10px] text-white/40 truncate px-2">{route || "modal"}</span>
+                <span className="text-[10px] text-white/40 truncate px-2">{route}</span>
               </div>
             </div>
           </div>
         )}
         
-        {/* Mobile/Tablet inner bezel */}
         {breakpoint !== "desktop" && (
           <div className={cn(
             "absolute bg-[#0a0a0a]",
@@ -611,38 +482,24 @@ const DeviceMockup = memo(function DeviceMockup({
           )} />
         )}
         
-        {/* Screen container */}
         <div 
           className={cn(
             "relative overflow-hidden bg-background",
             breakpoint === "mobile" && "rounded-[34px]",
             breakpoint === "tablet" && "rounded-[12px]",
           )}
-          style={{ 
-            width: scaledWidth,
-            height: breakpoint === "desktop" ? scaledHeight : scaledHeight,
-          }}
+          style={{ width: scaledWidth, height: scaledHeight }}
         >
-          {/* Mobile Dynamic Island */}
           {breakpoint === "mobile" && (
             <div 
               className="absolute left-1/2 -translate-x-1/2 bg-black rounded-[20px] z-50"
-              style={{ 
-                top: 8 * scale, 
-                width: 126 * scale, 
-                height: 37 * scale 
-              }} 
+              style={{ top: 8 * scale, width: 126 * scale, height: 37 * scale }} 
             />
           )}
           
-          {/* Page content with inner scaling */}
           <div 
             className="overflow-hidden"
-            style={{ 
-              width: scaledWidth, 
-              height: scaledHeight,
-              pointerEvents: 'none' 
-            }}
+            style={{ width: scaledWidth, height: scaledHeight, pointerEvents: 'none' }}
           >
             <div style={{ 
               transform: `scale(${scale})`, 
@@ -650,40 +507,109 @@ const DeviceMockup = memo(function DeviceMockup({
               width: config.width,
               height: config.height,
             }}>
-              {isModal ? (
-                <StaticModalPreview page={page} />
-              ) : (
-                <IsolatedPageRenderer Component={Component} route={route || "/"} />
-              )}
+              <IsolatedPageRenderer Component={Component} route={route || "/"} />
             </div>
           </div>
           
-          {/* Mobile home indicator */}
           {breakpoint === "mobile" && (
             <div 
               className="absolute left-1/2 -translate-x-1/2 bg-foreground/30 rounded-full z-50"
-              style={{ 
-                bottom: 8 * scale, 
-                width: 134 * scale, 
-                height: 5 * scale 
-              }} 
+              style={{ bottom: 8 * scale, width: 134 * scale, height: 5 * scale }} 
             />
           )}
         </div>
       </div>
       
-      {/* Labels */}
       <div className="text-center">
-        <div className="flex items-center justify-center gap-1.5">
-          {isModal && (
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded">
-              Modal
-            </span>
-          )}
-          <p className="font-semibold text-sm text-foreground">{label}</p>
-        </div>
+        <p className="font-semibold text-sm text-foreground">{label}</p>
         <p className="text-xs text-muted-foreground">{labelGe}</p>
         {route && <p className="text-[10px] text-muted-foreground/60 font-mono mt-1">{route}</p>}
+      </div>
+    </div>
+  );
+});
+
+// Modal Card Component - Shows a clickable card to preview the modal
+const ModalCard = memo(function ModalCard({
+  page,
+  onPreview,
+}: {
+  page: PageDefinition;
+  onPreview: () => void;
+}) {
+  return (
+    <div 
+      className="group bg-card border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
+      onClick={onPreview}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+            {page.label}
+          </h3>
+          <p className="text-sm text-muted-foreground">{page.labelGe}</p>
+        </div>
+        <Button variant="ghost" size="icon" className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Eye className="w-4 h-4" />
+        </Button>
+      </div>
+      
+      {page.modalProps && Object.keys(page.modalProps).length > 0 && (
+        <div className="mt-2 p-2 bg-muted/50 rounded-lg">
+          <p className="text-[10px] text-muted-foreground font-mono truncate">
+            Props: {Object.keys(page.modalProps).slice(0, 3).join(', ')}
+            {Object.keys(page.modalProps).length > 3 && '...'}
+          </p>
+        </div>
+      )}
+      
+      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+        <Play className="w-3 h-3" />
+        <span>Click to preview</span>
+      </div>
+    </div>
+  );
+});
+
+// Active Modal Viewer - Renders ONE modal at a time in fullscreen overlay
+const ActiveModalViewer = memo(function ActiveModalViewer({
+  page,
+  onClose,
+}: {
+  page: PageDefinition | null;
+  onClose: () => void;
+}) {
+  if (!page) return null;
+  
+  const { Component, modalProps = {}, label, labelGe } = page;
+  
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 bg-background/80 border-b">
+        <div>
+          <h2 className="font-bold text-lg">{label}</h2>
+          <p className="text-sm text-muted-foreground">{labelGe}</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={onClose} className="gap-2">
+          <X className="w-4 h-4" />
+          Close Preview
+        </Button>
+      </div>
+      
+      {/* Modal Container */}
+      <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<LoadingPlaceholder />}>
+            <Component 
+              {...modalProps}
+              isOpen={true}
+              open={true}
+              onClose={onClose}
+              onOpenChange={(open: boolean) => !open && onClose()}
+            />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   );
@@ -739,95 +665,41 @@ const SidebarCategory = memo(function SidebarCategory({
   );
 });
 
-// Expanded Modal Component
-const ExpandedModal = memo(function ExpandedModal({
-  page,
-  breakpoint,
-  onClose,
-}: {
-  page: PageDefinition | null;
-  breakpoint: BreakpointKey;
-  onClose: () => void;
-}) {
-  if (!page) return null;
-  
-  const config = breakpoints[breakpoint];
-  const maxScale = Math.min(
-    (window.innerWidth - 120) / config.width,
-    (window.innerHeight - 200) / config.height,
-    1
-  );
-
-  return (
-    <div 
-      className="fixed inset-0 z-50 bg-background/90 backdrop-blur-md flex items-center justify-center p-8"
-      onClick={onClose}
-    >
-      <div onClick={(e) => e.stopPropagation()} className="relative">
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute -top-12 right-0 rounded-full"
-          onClick={onClose}
-        >
-          <X className="w-4 h-4" />
-        </Button>
-        <DeviceMockup
-          page={page}
-          breakpoint={breakpoint}
-          scale={maxScale}
-        />
-      </div>
-    </div>
-  );
-});
-
-// Filter type
-type FilterType = "all" | "pages" | "modals";
-
 // Main Design Component
 export default function Design() {
+  const [activeTab, setActiveTab] = useState<"pages" | "modals">("pages");
   const [breakpoint, setBreakpoint] = useState<BreakpointKey>("mobile");
   const [scale, setScale] = useState(0.4);
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(pageCategories.map(c => c.id));
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([
+    ...pageCategories.map(c => c.id),
+    ...modalCategories.map(c => c.id)
+  ]);
   const [activePageId, setActivePageId] = useState<string | null>(null);
-  const [expandedPage, setExpandedPage] = useState<PageDefinition | null>(null);
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [activeModal, setActiveModal] = useState<PageDefinition | null>(null);
   
-  // Filter pages based on search and filter type
+  // Get current categories based on tab
+  const currentCategories = activeTab === "pages" ? pageCategories : modalCategories;
+  
+  // Filter categories based on search
   const filteredCategories = useMemo(() => {
-    let categories = pageCategories;
+    if (!searchQuery.trim()) return currentCategories;
     
-    // Filter by type
-    if (filter === "pages") {
-      categories = categories.filter(c => !c.isModal);
-    } else if (filter === "modals") {
-      categories = categories.filter(c => c.isModal);
-    }
-    
-    // Filter by search
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      categories = categories.map(category => ({
-        ...category,
-        pages: category.pages.filter(page =>
-          page.label.toLowerCase().includes(query) ||
-          page.labelGe.toLowerCase().includes(query) ||
-          (page.route && page.route.toLowerCase().includes(query))
-        )
-      })).filter(category => category.pages.length > 0);
-    }
-    
-    return categories;
-  }, [searchQuery, filter]);
+    const query = searchQuery.toLowerCase();
+    return currentCategories.map(category => ({
+      ...category,
+      pages: category.pages.filter(page =>
+        page.label.toLowerCase().includes(query) ||
+        page.labelGe.toLowerCase().includes(query) ||
+        (page.route && page.route.toLowerCase().includes(query))
+      )
+    })).filter(category => category.pages.length > 0);
+  }, [searchQuery, currentCategories]);
 
   // Calculate totals
-  const totalPages = pageCategories.filter(c => !c.isModal).reduce((acc, cat) => acc + cat.pages.length, 0);
-  const totalModals = pageCategories.filter(c => c.isModal).reduce((acc, cat) => acc + cat.pages.length, 0);
-  const totalAll = totalPages + totalModals;
+  const totalPages = pageCategories.reduce((acc, cat) => acc + cat.pages.length, 0);
+  const totalModals = modalCategories.reduce((acc, cat) => acc + cat.pages.length, 0);
 
-  // Handle category toggle
   const toggleCategory = useCallback((categoryId: string) => {
     setExpandedCategories(prev =>
       prev.includes(categoryId)
@@ -836,21 +708,27 @@ export default function Design() {
     );
   }, []);
 
-  // Handle page click in sidebar
   const handlePageClick = useCallback((pageId: string) => {
     setActivePageId(pageId);
-    const element = document.getElementById(`page-${pageId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Find the page/modal
+    const allPages = [...pageCategories, ...modalCategories].flatMap(c => c.pages);
+    const page = allPages.find(p => p.id === pageId);
+    
+    if (page?.isModal) {
+      setActiveModal(page);
+    } else {
+      const element = document.getElementById(`page-${pageId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   }, []);
 
-  // Zoom controls
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.05, 0.8));
   const handleZoomOut = () => setScale(prev => Math.max(prev - 0.05, 0.2));
   const handleReset = () => setScale(0.4);
 
-  // Grid columns based on breakpoint and scale
   const gridCols = useMemo(() => {
     if (breakpoint === "desktop") return "grid-cols-1 xl:grid-cols-2";
     if (breakpoint === "tablet") return "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3";
@@ -868,34 +746,20 @@ export default function Design() {
           </p>
         </div>
         
-        {/* Filter Tabs */}
-        <div className="p-3 border-b flex gap-1">
-          <Button
-            variant={filter === "all" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setFilter("all")}
-            className="flex-1 gap-1"
-          >
-            <LayoutGrid className="w-3 h-3" />
-            All ({totalAll})
-          </Button>
-          <Button
-            variant={filter === "pages" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setFilter("pages")}
-            className="flex-1"
-          >
-            Pages
-          </Button>
-          <Button
-            variant={filter === "modals" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setFilter("modals")}
-            className="flex-1"
-          >
-            <Layers className="w-3 h-3" />
-            Modals
-          </Button>
+        {/* Main Tabs */}
+        <div className="p-3 border-b">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "pages" | "modals")}>
+            <TabsList className="w-full">
+              <TabsTrigger value="pages" className="flex-1 gap-1">
+                <LayoutGrid className="w-3 h-3" />
+                Pages ({totalPages})
+              </TabsTrigger>
+              <TabsTrigger value="modals" className="flex-1 gap-1">
+                <Layers className="w-3 h-3" />
+                Modals ({totalModals})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
         {/* Search */}
@@ -903,7 +767,7 @@ export default function Design() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search screens..."
+              placeholder={`Search ${activeTab}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9"
@@ -928,112 +792,105 @@ export default function Design() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="h-14 bg-background border-b flex items-center justify-between px-4 shrink-0">
-          {/* Breakpoint Selector */}
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-            {(Object.entries(breakpoints) as [BreakpointKey, typeof breakpoints.mobile][]).map(([key, config]) => {
-              const Icon = config.icon;
-              return (
-                <Button
-                  key={key}
-                  variant={breakpoint === key ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setBreakpoint(key)}
-                  className="gap-2"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{config.label}</span>
-                  <span className="text-xs opacity-60 hidden md:inline">{config.width}px</span>
-                </Button>
-              );
-            })}
-          </div>
+        {/* Header - Only show device controls for Pages tab */}
+        {activeTab === "pages" && (
+          <header className="h-14 bg-background border-b flex items-center justify-between px-4 shrink-0">
+            <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              {(Object.entries(breakpoints) as [BreakpointKey, typeof breakpoints.mobile][]).map(([key, config]) => {
+                const Icon = config.icon;
+                return (
+                  <Button
+                    key={key}
+                    variant={breakpoint === key ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setBreakpoint(key)}
+                    className="gap-2"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden sm:inline">{config.label}</span>
+                    <span className="text-xs opacity-60 hidden md:inline">{config.width}px</span>
+                  </Button>
+                );
+              })}
+            </div>
 
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={handleZoomOut}
-              disabled={scale <= 0.2}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium w-14 text-center">
-              {Math.round(scale * 100)}%
-            </span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={handleZoomIn}
-              disabled={scale >= 0.8}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={handleReset}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </div>
-        </header>
+            <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomOut} disabled={scale <= 0.2}>
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium w-14 text-center">{Math.round(scale * 100)}%</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleZoomIn} disabled={scale >= 0.8}>
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleReset}>
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+          </header>
+        )}
 
-        {/* Screens Grid */}
+        {/* Content Area */}
         <ScrollArea className="flex-1">
           <div className="p-6">
-            {filteredCategories.map((category) => (
-              <section key={category.id} className="mb-12">
-                {/* Category Header */}
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-2xl">{category.icon}</span>
-                  <div>
-                    <div className="flex items-center gap-2">
+            {activeTab === "pages" ? (
+              // Pages Grid - Renders actual page previews
+              filteredCategories.map((category) => (
+                <section key={category.id} className="mb-12">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-2xl">{category.icon}</span>
+                    <div>
                       <h2 className="text-lg font-bold">{category.title}</h2>
-                      {category.isModal && (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                          Modals
-                        </span>
-                      )}
+                      <p className="text-sm text-muted-foreground">{category.titleGe}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{category.titleGe}</p>
+                    <span className="text-sm text-muted-foreground ml-2">({category.pages.length})</span>
                   </div>
-                  <span className="text-sm text-muted-foreground ml-2">({category.pages.length})</span>
-                </div>
-                
-                {/* Pages Grid */}
-                <div className={cn("grid gap-8", gridCols)}>
-                  {category.pages.map((page) => (
-                    <div 
-                      key={page.id} 
-                      id={`page-${page.id}`}
-                      className="flex justify-center"
-                    >
-                      <DeviceMockup
-                        page={page}
-                        breakpoint={breakpoint}
-                        scale={scale}
-                        onClick={() => setExpandedPage(page)}
-                      />
+                  
+                  <div className={cn("grid gap-8", gridCols)}>
+                    {category.pages.map((page) => (
+                      <div key={page.id} id={`page-${page.id}`} className="flex justify-center">
+                        <DeviceMockup
+                          page={page}
+                          breakpoint={breakpoint}
+                          scale={scale}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))
+            ) : (
+              // Modals Grid - Shows clickable cards, NOT actual modals
+              filteredCategories.map((category) => (
+                <section key={category.id} className="mb-8">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">{category.icon}</span>
+                    <div>
+                      <h2 className="text-lg font-bold">{category.title}</h2>
+                      <p className="text-sm text-muted-foreground">{category.titleGe}</p>
                     </div>
-                  ))}
-                </div>
-              </section>
-            ))}
+                    <span className="text-sm text-muted-foreground ml-2">({category.pages.length})</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {category.pages.map((page) => (
+                      <ModalCard
+                        key={page.id}
+                        page={page}
+                        onPreview={() => setActiveModal(page)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))
+            )}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Expanded Modal */}
-      <ExpandedModal
-        page={expandedPage}
-        breakpoint={breakpoint}
-        onClose={() => setExpandedPage(null)}
+      {/* Active Modal Viewer - Only ONE modal rendered at a time */}
+      <ActiveModalViewer
+        page={activeModal}
+        onClose={() => setActiveModal(null)}
       />
     </div>
   );
