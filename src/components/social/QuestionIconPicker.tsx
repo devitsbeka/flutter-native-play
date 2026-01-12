@@ -21,9 +21,10 @@ interface QuestionIconPickerProps {
   questionText?: string;
   correctAnswer?: string;
   incorrectAnswers?: string[];
+  large?: boolean;
 }
 
-export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers }: QuestionIconPickerProps) {
+export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers, large = false }: QuestionIconPickerProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [icons, setIcons] = useState<IconItem[]>([]);
@@ -154,7 +155,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`w-12 h-12 rounded-xl border flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
+        className={`${large ? "w-20 h-20" : "w-12 h-12"} rounded-xl border flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
           selectedIconUnsafe 
             ? "border-destructive bg-destructive/10" 
             : "border-border bg-muted/50"
@@ -165,7 +166,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             <img
               src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
               alt=""
-              className="w-8 h-8 object-contain"
+              className={`${large ? "w-14 h-14" : "w-8 h-8"} object-contain`}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -177,7 +178,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             )}
           </>
         ) : (
-          <ImageIcon className="w-6 h-6 text-muted-foreground" />
+          <ImageIcon className={`${large ? "w-10 h-10" : "w-6 h-6"} text-muted-foreground`} />
         )}
       </button>
 

@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Loader2, Globe, Lock, Trash2, ChevronDown, ChevronRight, Check, AlertTriangle, ImageIcon } from "lucide-react";
+import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import { CoverImagePicker } from "./CoverImagePicker";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { hasAnswerInQuestion } from "@/utils/questionValidation";
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 interface Question {
   question: string;
@@ -27,6 +27,8 @@ interface EditRoundModalProps {
   onClose: () => void;
 }
 
+type ViewMode = "info" | "questions";
+
 export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -40,8 +42,10 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
   const [isDeleting, setIsDeleting] = useState(false);
   const [iconSlug, setIconSlug] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("info");
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (round) {
@@ -51,6 +55,9 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
       setIsPublic(round.is_public !== false);
       setIconSlug(round.icon_slug || null);
       setShowDeleteConfirm(false);
+      setViewMode("info");
+      setCurrentQuestionIndex(0);
+      setDeleteQuestionIndex(null);
       
       // Parse questions from JSON
       const parsedQuestions = Array.isArray(round.questions) 
@@ -59,10 +66,48 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
           ? JSON.parse(round.questions)
           : [];
       setQuestions(parsedQuestions);
-      setExpandedQuestion(null);
-      setEditingQuestionIndex(null);
     }
   }, [round]);
+
+  // Listen to carousel selection changes
+  useEffect(() => {
+    if (!carouselApi) return;
+    
+    const onSelect = () => {
+      setCurrentQuestionIndex(carouselApi.selectedScrollSnap());
+    };
+    
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
+
+  const updateQuestionIcon = useCallback((index: number, iconSlug: string | undefined) => {
+    setQuestions(prev => prev.map((q, i) => 
+      i === index ? { ...q, icon_slug: iconSlug } : q
+    ));
+  }, []);
+
+  const deleteQuestion = useCallback((index: number) => {
+    const newQuestions = questions.filter((_, i) => i !== index);
+    setQuestions(newQuestions);
+    setDeleteQuestionIndex(null);
+    
+    // Navigate to valid index after delete
+    if (newQuestions.length === 0) {
+      setViewMode("info");
+    } else if (index >= newQuestions.length) {
+      setTimeout(() => {
+        carouselApi?.scrollTo(newQuestions.length - 1);
+      }, 100);
+    }
+    
+    toast({
+      title: "კითხვა წაიშალა",
+      description: "კითხვა წარმატებით წაიშალა",
+    });
+  }, [questions, carouselApi, toast]);
 
   const handleSave = async () => {
     if (!round) return;
@@ -137,12 +182,6 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
     }
   };
 
-  const updateQuestion = (index: number, updates: Partial<Question>) => {
-    setQuestions(prev => prev.map((q, i) => 
-      i === index ? { ...q, ...updates } : q
-    ));
-  };
-
   if (!round || !isOpen) return null;
 
   return (
@@ -152,305 +191,327 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-background flex flex-col"
         >
           {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+          <div className="flex-shrink-0 fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
             <div className="flex items-center gap-3 px-4 py-3">
               <button 
-                onClick={onClose} 
+                onClick={() => viewMode === "questions" ? setViewMode("info") : onClose()} 
                 className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
               >
                 <ChevronLeft className="w-6 h-6 text-foreground" />
               </button>
-              <div className="flex-1">
-                <h1 className="text-lg font-bold text-foreground">რაუნდის რედაქტირება</h1>
+              <div className="flex-1 text-center">
+                <h1 className="text-lg font-bold text-foreground">
+                  {viewMode === "questions" 
+                    ? `კითხვა ${currentQuestionIndex + 1} / ${questions.length}`
+                    : "რაუნდის რედაქტირება"
+                  }
+                </h1>
               </div>
+              <div className="w-10" />
             </div>
+            
+            {/* Progress dots for questions view */}
+            {viewMode === "questions" && questions.length > 0 && (
+              <div className="flex justify-center gap-1.5 pb-3">
+                {questions.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => carouselApi?.scrollTo(idx)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      idx === currentQuestionIndex 
+                        ? "bg-primary w-4" 
+                        : "bg-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Scrollable Content */}
-          <div className="h-full overflow-y-auto pt-[60px] pb-32 safe-top">
-            <div className="p-4 space-y-5">
-              {/* Cover Image Picker */}
-              <CoverImagePicker
-                currentImage={coverImage}
-                currentGradient={selectedGradient}
-                onImageChange={setCoverImage}
-                onGradientChange={setSelectedGradient}
-                suggestPrompt={round.subject}
-                title={title}
-                roundId={round.id}
-              />
+          {/* Content based on view mode */}
+          <AnimatePresence mode="wait">
+            {viewMode === "info" ? (
+              <motion.div
+                key="info"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex-1 h-full overflow-y-auto pt-[60px] pb-32 safe-top"
+              >
+                <div className="p-4 space-y-5">
+                  {/* Cover Image Picker */}
+                  <CoverImagePicker
+                    currentImage={coverImage}
+                    currentGradient={selectedGradient}
+                    onImageChange={setCoverImage}
+                    onGradientChange={setSelectedGradient}
+                    suggestPrompt={round.subject}
+                    title={title}
+                    roundId={round.id}
+                  />
 
-              {/* Title */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">სათაური</label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="რაუნდის სათაური"
-                  className="h-12 rounded-xl"
-                />
-              </div>
+                  {/* Title */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">სათაური</label>
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="რაუნდის სათაური"
+                      className="h-12 rounded-xl"
+                    />
+                  </div>
 
-              {/* Questions Section */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  კითხვები ({questions.length})
-                </label>
-                <div className="space-y-2">
-                  {questions.map((q, index) => {
-                    // Validation checks for each question
-                    const answerInQuestion = hasAnswerInQuestion(q.question, q.correct_answer);
-                    const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
-                    const missingIcon = !q.icon_slug;
-                    const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
-                    
-                    return (
-                    <div 
-                      key={index}
-                      className={`border rounded-xl overflow-hidden ${
-                        hasCriticalIssue 
-                          ? "border-destructive bg-destructive/5" 
-                          : missingIcon 
-                            ? "border-yellow-500/50 bg-yellow-500/5"
-                            : "border-border bg-muted/30"
-                      }`}
-                    >
-                      {/* Question Header */}
+                  {/* Questions Button */}
+                  {questions.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">კითხვები</label>
                       <button
-                        onClick={() => setExpandedQuestion(expandedQuestion === index ? null : index)}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors"
+                        onClick={() => setViewMode("questions")}
+                        className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors"
                       >
-                        {/* Question Icon */}
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          iconRevealsAnswer 
-                            ? "bg-destructive/20" 
-                            : missingIcon 
-                              ? "bg-yellow-500/20" 
-                              : "bg-background"
-                        }`}>
-                          {q.icon_slug ? (
-                            <DynamicIcon slug={q.icon_slug} size={28} />
-                          ) : (
-                            <ImageIcon className="w-5 h-5 text-yellow-600" />
-                          )}
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <span className="text-lg font-bold text-primary">{questions.length}</span>
+                          </div>
+                          <span className="font-medium text-foreground">კითხვების ნახვა</span>
                         </div>
-                        
-                        <p className="flex-1 text-left text-sm font-medium text-foreground line-clamp-1">
-                          {q.question}
-                        </p>
-
-                        {/* Validation status badge */}
-                        {hasCriticalIssue ? (
-                          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
-                        ) : missingIcon ? (
-                          <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                        ) : (
-                          <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        )}
-                        
-                        {expandedQuestion === index ? (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                        )}
+                        <ChevronLeft className="w-5 h-5 text-muted-foreground rotate-180" />
                       </button>
-
-                      {/* Expanded Question Editor */}
-                      <AnimatePresence>
-                        {expandedQuestion === index && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-3 pt-0 space-y-3 border-t border-border">
-                              {/* Validation Warnings */}
-                              {answerInQuestion && (
-                                <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
-                                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                                  <span>კითხვა შეიცავს სწორ პასუხს!</span>
-                                </div>
-                              )}
-                              {iconRevealsAnswer && (
-                                <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
-                                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                                  <span>აიკონი მინიშნებაა პასუხზე!</span>
-                                </div>
-                              )}
-                              {missingIcon && !hasCriticalIssue && (
-                                <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-500/10 px-3 py-2 rounded-lg">
-                                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                                  <span>აიკონი არ არის არჩეული</span>
-                                </div>
-                              )}
-
-                              {/* Question Text */}
-                              <div className="space-y-1">
-                                <label className="text-xs text-muted-foreground">კითხვა</label>
-                                <Input
-                                  value={q.question}
-                                  onChange={(e) => updateQuestion(index, { question: e.target.value })}
-                                  className={`h-10 text-sm ${answerInQuestion ? "border-destructive" : ""}`}
-                                />
-                              </div>
-
-                              {/* Correct Answer */}
-                              <div className="space-y-1">
-                                <label className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Check className="w-3 h-3 text-green-500" />
-                                  სწორი პასუხი
-                                </label>
-                                <Input
-                                  value={q.correct_answer}
-                                  onChange={(e) => updateQuestion(index, { correct_answer: e.target.value })}
-                                  className="h-10 text-sm border-green-500/30 bg-green-500/5"
-                                />
-                              </div>
-
-                              {/* Wrong Answers */}
-                              <div className="space-y-1">
-                                <label className="text-xs text-muted-foreground">არასწორი პასუხები</label>
-                                <div className="space-y-2">
-                                  {q.incorrect_answers.map((ans, ansIndex) => (
-                                    <Input
-                                      key={ansIndex}
-                                      value={ans}
-                                      onChange={(e) => {
-                                        const newIncorrect = [...q.incorrect_answers];
-                                        newIncorrect[ansIndex] = e.target.value;
-                                        updateQuestion(index, { incorrect_answers: newIncorrect });
-                                      }}
-                                      className="h-10 text-sm"
-                                      placeholder={`პასუხი ${ansIndex + 2}`}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-
-                              {/* Question Icon */}
-                              <div className="flex items-center gap-3">
-                                <span className="text-xs text-muted-foreground">აიკონი:</span>
-                                <QuestionIconPicker
-                                  selectedSlug={q.icon_slug || null}
-                                  onSelect={(slug) => updateQuestion(index, { icon_slug: slug || undefined })}
-                                  questionText={q.question}
-                                  correctAnswer={q.correct_answer}
-                                  incorrectAnswers={q.incorrect_answers}
-                                />
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Visibility Toggle */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">ხილვადობა</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsPublic(true)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
-                      isPublic
-                        ? "border-green-500 bg-green-500/10 text-green-600"
-                        : "border-border text-muted-foreground hover:border-green-500/50"
-                    }`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span className="font-medium">საჯარო</span>
-                  </button>
-                  <button
-                    onClick={() => setIsPublic(false)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
-                      !isPublic
-                        ? "border-muted-foreground bg-muted text-foreground"
-                        : "border-border text-muted-foreground hover:border-muted-foreground/50"
-                    }`}
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span className="font-medium">პირადი</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Delete Section */}
-              <div className="pt-4 border-t border-border">
-                <AnimatePresence mode="wait">
-                  {showDeleteConfirm ? (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-3"
-                    >
-                      <p className="text-sm text-center text-destructive font-medium">
-                        დარწმუნებული ხარ? ეს ქმედება შეუქცევადია.
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowDeleteConfirm(false)}
-                          className="flex-1"
-                        >
-                          გაუქმება
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={handleDelete}
-                          disabled={isDeleting}
-                          className="flex-1"
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            "წაშლა"
-                          )}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="w-full flex items-center justify-center gap-2 py-2 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="text-sm font-medium">რაუნდის წაშლა</span>
-                    </motion.button>
                   )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
 
-          {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-background safe-bottom">
-            <ChunkyButton
-              onClick={handleSave}
-              disabled={isSaving || !title.trim()}
-              className="w-full"
-              variant="success"
-            >
-              {isSaving ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Check className="w-5 h-5 mr-2" />
-                  შენახვა
-                </>
-              )}
-            </ChunkyButton>
-          </div>
+                  {/* Visibility Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">ხილვადობა</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setIsPublic(true)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                          isPublic
+                            ? "border-green-500 bg-green-500/10 text-green-600"
+                            : "border-border text-muted-foreground hover:border-green-500/50"
+                        }`}
+                      >
+                        <Globe className="w-4 h-4" />
+                        <span className="font-medium">საჯარო</span>
+                      </button>
+                      <button
+                        onClick={() => setIsPublic(false)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                          !isPublic
+                            ? "border-muted-foreground bg-muted text-foreground"
+                            : "border-border text-muted-foreground hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <Lock className="w-4 h-4" />
+                        <span className="font-medium">პირადი</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete Section */}
+                  <div className="pt-4 border-t border-border">
+                    <AnimatePresence mode="wait">
+                      {showDeleteConfirm ? (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-3"
+                        >
+                          <p className="text-sm text-center text-destructive font-medium">
+                            დარწმუნებული ხარ რომ გსურს წაშლა?
+                          </p>
+                        <div className="flex gap-2">
+                          <ChunkyButton
+                            variant="outline"
+                            onClick={() => setShowDeleteConfirm(false)}
+                            className="flex-1"
+                          >
+                            გაუქმება
+                          </ChunkyButton>
+                          <ChunkyButton
+                            variant="danger"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="flex-1"
+                          >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              წაშლა
+                            </ChunkyButton>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="w-full flex items-center justify-center gap-2 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="font-medium">რაუნდის წაშლა</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="questions"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="flex-1 flex flex-col pt-[80px]"
+              >
+                {/* Swipe Carousel for Questions */}
+                <Carousel
+                  setApi={setCarouselApi}
+                  opts={{ 
+                    align: "center",
+                    loop: false,
+                  }}
+                  className="flex-1"
+                >
+                  <CarouselContent className="h-full">
+                    {questions.map((q, index) => {
+                      const answerInQuestion = hasAnswerInQuestion(q.question, q.correct_answer);
+                      const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
+                      const missingIcon = !q.icon_slug;
+                      const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
+                      
+                      return (
+                        <CarouselItem key={index} className="flex items-start justify-center pt-4 px-2">
+                          <div className="w-full max-w-sm bg-card rounded-2xl border border-border p-6 space-y-5">
+                            {/* Validation Warnings */}
+                            {hasCriticalIssue && (
+                              <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>
+                                  {answerInQuestion 
+                                    ? "კითხვა შეიცავს სწორ პასუხს!" 
+                                    : "აიკონი მინიშნებაა პასუხზე!"}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Large Tappable Icon */}
+                            <div className="flex flex-col items-center gap-3">
+                              <QuestionIconPicker
+                                selectedSlug={q.icon_slug || null}
+                                onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
+                                questionText={q.question}
+                                correctAnswer={q.correct_answer}
+                                incorrectAnswers={q.incorrect_answers}
+                                large
+                              />
+                              {missingIcon && !hasCriticalIssue && (
+                                <span className="text-xs text-yellow-600">აიკონის დამატება</span>
+                              )}
+                            </div>
+                            
+                            {/* Question Text (READ-ONLY) */}
+                            <div className="text-center">
+                              <p className="text-lg font-medium text-foreground leading-relaxed">
+                                {q.question}
+                              </p>
+                            </div>
+                            
+                            {/* Answers (READ-ONLY) */}
+                            <div className="space-y-2">
+                              <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+                                <div className="flex items-center gap-2">
+                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                  <span className="text-green-700 dark:text-green-400 font-medium">
+                                    {q.correct_answer}
+                                  </span>
+                                </div>
+                              </div>
+                              {q.incorrect_answers.map((ans, i) => (
+                                <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border">
+                                  <span className="text-muted-foreground">{ans}</span>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {/* Delete Question Button */}
+                            <AnimatePresence mode="wait">
+                              {deleteQuestionIndex === index ? (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="space-y-2"
+                                >
+                                  <p className="text-xs text-center text-destructive">
+                                    წაიშალოს ეს კითხვა?
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => setDeleteQuestionIndex(null)}
+                                      className="flex-1 py-2.5 rounded-xl border border-border text-foreground text-sm font-medium"
+                                    >
+                                      გაუქმება
+                                    </button>
+                                    <button
+                                      onClick={() => deleteQuestion(index)}
+                                      className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium flex items-center justify-center gap-1.5"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      წაშლა
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              ) : (
+                                <motion.button 
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  onClick={() => setDeleteQuestionIndex(index)}
+                                  className="w-full py-3 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span className="font-medium">კითხვის წაშლა</span>
+                                </motion.button>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </CarouselItem>
+                      );
+                    })}
+                  </CarouselContent>
+                </Carousel>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Fixed Footer - Save Button (only in info mode) */}
+          {viewMode === "info" && (
+            <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border safe-bottom">
+              <ChunkyButton
+                onClick={handleSave}
+                disabled={isSaving}
+                className="w-full"
+                size="lg"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ინახება...
+                  </>
+                ) : (
+                  "შენახვა"
+                )}
+              </ChunkyButton>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
