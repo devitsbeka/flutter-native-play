@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Sparkles } from "lucide-react";
+import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -61,19 +61,11 @@ export function CategorySelectorModal({
     onOpenChange(false);
   };
 
-  const headerIcon = (
-    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-      <Sparkles className="w-6 h-6 text-primary" />
-    </div>
-  );
-
   return (
     <GameModal
       isOpen={open}
       onClose={() => onOpenChange(false)}
-      icon={headerIcon}
       title="ბიბლიოთეკა"
-      subtitle="აირჩიე კატეგორია"
       hideFooter
     >
       {/* Search */}
