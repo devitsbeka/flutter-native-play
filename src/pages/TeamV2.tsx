@@ -532,7 +532,7 @@ function TeamContentV2() {
                 size="lg"
               >
                 <Plus className="w-5 h-5" />
-                ოთახი
+                სათამაშო ოთახი
               </ChunkyButton>
             </div>
           )}
@@ -582,7 +582,7 @@ function TeamContentV2() {
                 size="lg"
               >
                 <Plus className="w-5 h-5" />
-                ტრივია
+                შენი ტრივია
               </ChunkyButton>
             </div>
           )}
