@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical } from "lucide-react";
+import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSearchTerms } from "@/utils/transliteration";
@@ -54,11 +54,41 @@ interface PersonalTriviaModalProps {
 }
 
 const EXAMPLE_QUESTIONS = [
+  // Family & Personal
   "როდის მიდის ნინო პარიზში? 🗼",
   "რამდენი ძაღლი ჰყავს გიორგის? 🐕",
   "რა არის ბექას საყვარელი საჭმელი? 🍕",
   "სად დაიბადა დედა? 🏠",
   "რა ფერის მანქანა აქვს გიოს? 🚗",
+  "რამდენი წლის არის ბებია? 🎂",
+  "რომელ ქალაქში ცხოვრობს დათო? 🌆",
+  "რა არის მამის საყვარელი ფილმი? 🎬",
+  "რამდენი შვილიშვილი ჰყავს ბაბუას? 👨‍👧‍👦",
+  "რა ჰქვია დის კატას? 🐱",
+  "რომელ სკოლაში სწავლობდა დედა? 🎓",
+  "რა არის ძმის საყვარელი სპორტი? ⚽",
+  
+  // Friends & Social
+  "ვინ მოიგო პირველი თამაში? 🏆",
+  "რომელ წელს გავიცანით ერთმანეთი? 📅",
+  "სად შევხვდით პირველად? 📍",
+  "რა არის ჩვენი საერთო საყვარელი სიმღერა? 🎵",
+  "ვინ აგვიანებს ყოველთვის? ⏰",
+  "ვინ არის ყველაზე მხიარული? 😂",
+  "რომელ რესტორანში დავდივართ ხშირად? 🍽️",
+  "ვინ იცის ყველაზე კარგად მზარეულობა? 👨‍🍳",
+  
+  // Fun & Random
+  "რა არის ჩემი საყვარელი ფერი? 🎨",
+  "რომელი სეზონი მომწონს ყველაზე მეტად? 🌸",
+  "რა პროფესია მინდოდა ბავშვობაში? 👩‍🚀",
+  "რამდენი ქვეყანა მომინახულებია? ✈️",
+  "რა არის ჩემი ყველაზე უცნაური ჩვევა? 🤪",
+  "რომელ სუპერძალას ავირჩევდი? ⚡",
+  "რა არის ჩემი საყვარელი წიგნი? 📚",
+  "რომელ ცხოველს დავემსგავსები? 🦁",
+  "რა არის ჩემი საყვარელი დღესასწაული? 🎄",
+  "რომელი ფილმი მინახავს ყველაზე მეტჯერ? 🎥",
 ];
 
 // Inline Icon Picker Component
@@ -444,6 +474,19 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
   const [questions, setQuestions] = useState<PersonalQuestion[]>([
     { id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }
   ]);
+  const [displayedIdeas, setDisplayedIdeas] = useState<string[]>([]);
+
+  const shuffleIdeas = useCallback(() => {
+    const shuffled = [...EXAMPLE_QUESTIONS].sort(() => Math.random() - 0.5);
+    setDisplayedIdeas(shuffled.slice(0, 2));
+  }, []);
+
+  // Initialize ideas when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      shuffleIdeas();
+    }
+  }, [isOpen, shuffleIdeas]);
 
   // Load initial data when editing existing trivia
   useEffect(() => {
@@ -591,20 +634,35 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
 
               {/* Example Questions */}
               <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Lightbulb className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium text-foreground">იდეები:</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-amber-500" />
+                    <span className="text-sm font-medium text-foreground">იდეები:</span>
+                  </div>
+                  <button
+                    onClick={shuffleIdeas}
+                    className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition-colors px-2 py-1 rounded-lg hover:bg-amber-500/10"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>ახალი</span>
+                  </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {EXAMPLE_QUESTIONS.map((example, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => useExampleQuestion(example)}
-                      className="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-colors"
-                    >
-                      {example}
-                    </button>
-                  ))}
+                  <AnimatePresence mode="popLayout">
+                    {displayedIdeas.map((example, idx) => (
+                      <motion.button
+                        key={example}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.2, delay: idx * 0.05 }}
+                        onClick={() => useExampleQuestion(example)}
+                        className="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 transition-colors"
+                      >
+                        {example}
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
 
