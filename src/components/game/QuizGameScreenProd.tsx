@@ -304,42 +304,54 @@ export function QuizGameScreenProd() {
         </button>
       </div>
 
-      {/* Players Row - No VS */}
-      <div className="flex items-start justify-between px-4 pt-1 flex-shrink-0 z-10">
-        {/* Player (Left) - Use user's profile avatar */}
-        <QuizPlayerAvatar
-          avatarUrl={profile?.avatar_url}
-          animatedAvatarUrl={profile?.animated_avatar_url}
-          score={userScore}
-          position="left"
-          state={getPlayerState()}
-          size="large"
-        />
+      {/* Players Row with Icon - Only show players in vs/challenge mode */}
+      {opponent ? (
+        <div className="flex items-center justify-between px-6 pt-1 flex-shrink-0 z-10">
+          {/* Player (Left) */}
+          <QuizPlayerAvatar
+            avatarUrl={profile?.avatar_url}
+            animatedAvatarUrl={profile?.animated_avatar_url}
+            score={userScore}
+            position="left"
+            state={getPlayerState()}
+            size="default"
+          />
 
-        {/* Opponent (Right) */}
-        <QuizPlayerAvatar
-          avatarUrl={botAvatars[opponentAvatarIndex]}
-          score={opponentScore}
-          position="right"
-          state={getOpponentState()}
-          size="large"
-        />
-      </div>
+          {/* Center Icon */}
+          <div className="flex-shrink-0">
+            <DynamicIcon 
+              slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
+              categoryId={currentQuestion.categoryId}
+              size={80}
+              className="drop-shadow-lg"
+              hideIfEmpty={true}
+            />
+          </div>
 
-      {/* Question Card with 3D Icon Overlay */}
-      <div className="px-4 flex-shrink-0 mt-2 relative">
-        {/* 3D Icon - Absolute positioned on top of question card */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20 w-32 h-32">
+          {/* Opponent (Right) */}
+          <QuizPlayerAvatar
+            avatarUrl={botAvatars[opponentAvatarIndex]}
+            score={opponentScore}
+            position="right"
+            state={getOpponentState()}
+            size="default"
+          />
+        </div>
+      ) : (
+        /* Solo Mode - Just centered icon */
+        <div className="flex justify-center py-3 flex-shrink-0 z-10">
           <DynamicIcon 
-            // Priority: question icon_slug > category icon_slug > category fallback (no placeholder)
             slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
             categoryId={currentQuestion.categoryId}
-            size={128}
+            size={96}
             className="drop-shadow-lg"
             hideIfEmpty={true}
           />
         </div>
-        
+      )}
+
+      {/* Question Card */}
+      <div className="px-4 flex-shrink-0 mt-1">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
@@ -353,7 +365,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-3 flex-shrink-0">
+      <div className="flex justify-center py-2 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -361,8 +373,8 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Answer Buttons - No Scroll */}
-      <div className="flex-1 px-4 flex flex-col gap-1 overflow-hidden min-h-0">
+      {/* Answer Buttons */}
+      <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
