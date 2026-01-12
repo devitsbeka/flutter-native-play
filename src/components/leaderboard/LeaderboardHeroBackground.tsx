@@ -129,12 +129,17 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
               const isLocked = trophy.tier > userTier;
               const label = language === 'ka' ? trophy.labelKa : trophy.label;
               
+              // Position adjustments per trophy
+              const offsetPx = trophy.tier === 2 ? 30 : trophy.tier === 3 ? -30 : -100;
+              
               return (
-                <motion.div
+                <motion.button
                   key={trophy.tier}
-                  className={`absolute z-[6] pointer-events-none ${isLocked ? 'opacity-40' : ''}`}
+                  onClick={() => !isLocked && onTierSelect?.(trophy.tier)}
+                  disabled={isLocked}
+                  className={`absolute z-[6] ${isLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   style={{
-                    left: `${trophy.position}%`,
+                    left: `calc(${trophy.position}% + ${offsetPx}px)`,
                     top: '32%',
                     transform: 'translateX(-50%)',
                   }}
@@ -152,6 +157,8 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                       delay: index * 0.3,
                     }
                   }}
+                  whileHover={!isLocked ? { scale: 1.05 } : {}}
+                  whileTap={!isLocked ? { scale: 0.95 } : {}}
                 >
                   <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50">
                     <span className="text-sm font-medium text-foreground/90 whitespace-nowrap">
@@ -160,7 +167,7 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                   </div>
                   {/* Tooltip arrow */}
                   <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
-                </motion.div>
+                </motion.button>
               );
             })}
           </>
