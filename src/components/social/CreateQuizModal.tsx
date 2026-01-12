@@ -68,10 +68,76 @@ const COVER_GRADIENTS = [
 ];
 
 interface TopicSuggestion {
-  icon_url: string;
-  title: string;
+  label: string;
   value: string;
+  icon_url: string | null;
+  icon_slug: string;
 }
+
+// Curated trivia-worthy topics with icon slugs
+const TRIVIA_TOPIC_POOL = [
+  // Entertainment
+  { label: "Friends", icon_slug: "television" },
+  { label: "Star Wars", icon_slug: "rocket" },
+  { label: "Marvel", icon_slug: "superhero" },
+  { label: "სერიალები", icon_slug: "television" },
+  { label: "Netflix", icon_slug: "film-reel" },
+  { label: "Harry Potter", icon_slug: "magic-wand" },
+  { label: "Disney", icon_slug: "castle" },
+  { label: "ჰოლივუდი", icon_slug: "cinema" },
+  { label: "Game of Thrones", icon_slug: "crown" },
+  { label: "Breaking Bad", icon_slug: "chemistry" },
+  { label: "The Office", icon_slug: "office" },
+  
+  // Sports
+  { label: "NBA", icon_slug: "basketball" },
+  { label: "ფეხბურთი", icon_slug: "soccer-ball" },
+  { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
+  { label: "F1", icon_slug: "racing-car" },
+  { label: "ოლიმპიადა", icon_slug: "medal" },
+  { label: "ტენისი", icon_slug: "tennis" },
+  { label: "კრიკეტი", icon_slug: "cricket" },
+  
+  // Music
+  { label: "K-Pop", icon_slug: "music-note" },
+  { label: "Taylor Swift", icon_slug: "microphone" },
+  { label: "ქართული მუსიკა", icon_slug: "guitar" },
+  { label: "Hip-Hop", icon_slug: "headphones" },
+  { label: "90s მუსიკა", icon_slug: "vinyl" },
+  { label: "BTS", icon_slug: "star" },
+  { label: "Queen", icon_slug: "crown" },
+  
+  // Knowledge
+  { label: "გეოგრაფია", icon_slug: "globe" },
+  { label: "ისტორია", icon_slug: "hourglass" },
+  { label: "მეცნიერება", icon_slug: "microscope" },
+  { label: "ასტრონომია", icon_slug: "planet" },
+  { label: "ბიოლოგია", icon_slug: "dna" },
+  { label: "მათემატიკა", icon_slug: "calculator" },
+  { label: "ფიზიკა", icon_slug: "atom" },
+  
+  // Pop Culture & Gaming
+  { label: "მემები", icon_slug: "smiley" },
+  { label: "TikTok", icon_slug: "smartphone" },
+  { label: "ვიდეო თამაშები", icon_slug: "game-controller" },
+  { label: "Anime", icon_slug: "ninja" },
+  { label: "საქართველო", icon_slug: "flag" },
+  { label: "Minecraft", icon_slug: "cube" },
+  { label: "FIFA", icon_slug: "soccer-ball" },
+  
+  // Food & Lifestyle
+  { label: "კულინარია", icon_slug: "chef-hat" },
+  { label: "ღვინო", icon_slug: "wine" },
+  { label: "ქართული კერძები", icon_slug: "food" },
+  { label: "კოქტეილები", icon_slug: "cocktail" },
+  
+  // Other
+  { label: "ფსიქოლოგია", icon_slug: "brain" },
+  { label: "ბიზნესი", icon_slug: "briefcase" },
+  { label: "ცხოველები", icon_slug: "paw" },
+  { label: "ავტომობილები", icon_slug: "car" },
+  { label: "მოდა", icon_slug: "dress" },
+];
 
 export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection }: CreateQuizModalProps) {
   const { user } = useAuth();
@@ -99,31 +165,44 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
-  // Fetch random topic suggestions from icon library
+  // Fetch random topic suggestions with icons from library
   const fetchTopicSuggestions = useCallback(async () => {
     setIsLoadingTopics(true);
+    
+    // Shuffle and pick 6 random topics from the pool
+    const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 6);
+    
+    // Get unique icon slugs to fetch
+    const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
+    
     try {
-      const { data, error } = await supabase
+      const { data: icons } = await supabase
         .from("icon_library")
-        .select("slug, title, icon_url, category")
-        .not("icon_url", "is", null)
-        .limit(100);
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        // Shuffle and pick 6 random icons
-        const shuffled = [...data].sort(() => Math.random() - 0.5);
-        setTopicSuggestions(
-          shuffled.slice(0, 6).map(icon => ({
-            icon_url: icon.icon_url!,
-            title: icon.title,
-            value: icon.title
-          }))
-        );
-      }
+        .select("slug, icon_url")
+        .in("slug", iconSlugs);
+      
+      const iconMap = new Map(icons?.map(i => [i.slug, i.icon_url]) || []);
+      
+      setTopicSuggestions(
+        selected.map(topic => ({
+          label: topic.label,
+          value: topic.label,
+          icon_slug: topic.icon_slug,
+          icon_url: iconMap.get(topic.icon_slug) || null
+        }))
+      );
     } catch (e) {
-      console.error("Failed to fetch topic suggestions:", e);
+      console.error("Failed to fetch topic icons:", e);
+      // Still show topics without icons
+      setTopicSuggestions(
+        selected.map(topic => ({
+          label: topic.label,
+          value: topic.label,
+          icon_slug: topic.icon_slug,
+          icon_url: null
+        }))
+      );
     } finally {
       setIsLoadingTopics(false);
     }
@@ -360,53 +439,46 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               className="text-center text-lg h-14 rounded-xl"
             />
 
-            {/* Topic suggestion icons with tooltips */}
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">
-                იდეები:
-              </span>
-              
+            {/* Topic suggestions as text chips */}
+            <div className="flex items-center justify-center gap-1.5 flex-wrap">
               {isLoadingTopics ? (
                 // Loading skeletons
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-10 h-10 rounded-lg bg-muted animate-pulse" />
+                  <div key={i} className="h-8 w-20 rounded-full bg-muted animate-pulse" />
                 ))
               ) : (
-                <TooltipProvider delayDuration={200}>
+                <>
                   {topicSuggestions.map((topic) => (
-                    <Tooltip key={topic.icon_url}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => setSubject(topic.value)}
-                          className={`w-10 h-10 rounded-lg border-2 transition-all flex items-center justify-center ${
-                            subject === topic.value
-                              ? "border-primary bg-primary/10"
-                              : "border-border hover:border-primary/50 bg-muted/50"
-                          }`}
-                        >
-                          <img 
-                            src={topic.icon_url} 
-                            alt={topic.title}
-                            className="w-7 h-7 object-contain"
-                          />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{topic.title}</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <button
+                      key={topic.value}
+                      onClick={() => setSubject(topic.value)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                        subject === topic.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted hover:bg-muted/80 text-foreground"
+                      }`}
+                    >
+                      {topic.icon_url && (
+                        <img 
+                          src={topic.icon_url} 
+                          alt="" 
+                          className="w-4 h-4 object-contain"
+                        />
+                      )}
+                      <span>{topic.label}</span>
+                    </button>
                   ))}
-                </TooltipProvider>
+                  
+                  {/* Refresh button */}
+                  <button
+                    onClick={fetchTopicSuggestions}
+                    disabled={isLoadingTopics}
+                    className="w-8 h-8 rounded-full border border-dashed border-border hover:border-primary/50 transition-all flex items-center justify-center"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${isLoadingTopics ? 'animate-spin' : ''}`} />
+                  </button>
+                </>
               )}
-              
-              {/* Refresh button */}
-              <button
-                onClick={fetchTopicSuggestions}
-                disabled={isLoadingTopics}
-                className="w-10 h-10 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-all flex items-center justify-center"
-              >
-                <RefreshCw className={`w-4 h-4 text-muted-foreground ${isLoadingTopics ? 'animate-spin' : ''}`} />
-              </button>
             </div>
 
             {/* Title suggestions */}
