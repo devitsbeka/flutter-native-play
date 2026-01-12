@@ -165,45 +165,59 @@ const SignupOnboardingModal = lazy(() => import("@/components/onboarding/SignupO
 // Controller Modals
 const GuestJoinModal = lazy(() => import("@/components/controller/GuestJoinModal").then(m => ({ default: m.GuestJoinModal })));
 
-// ========== MODAL WRAPPER COMPONENT ==========
-interface ModalWrapperProps {
-  children: React.ReactNode;
-  modalProps: Record<string, any>;
+// ========== STATIC MODAL PREVIEW COMPONENT ==========
+// This renders a static preview placeholder for modals to prevent portal/overlay issues
+interface StaticModalPreviewProps {
+  page: {
+    id: string;
+    label: string;
+    labelGe: string;
+    modalProps?: Record<string, any>;
+  };
 }
 
-const ModalWrapper = memo(function ModalWrapper({ children, modalProps }: ModalWrapperProps) {
-  // Clone the modal component with the provided props, always keeping it open
+const StaticModalPreview = memo(function StaticModalPreview({ page }: StaticModalPreviewProps) {
   return (
-    <div className="relative w-full h-full bg-black/60 flex items-center justify-center overflow-hidden">
-      <div className="transform scale-90 origin-center">
-        <Suspense fallback={<LoadingPlaceholder />}>
-          {React.cloneElement(children as React.ReactElement, {
-            ...modalProps,
-            isOpen: true,
-            open: true,
-            onClose: () => {},
-            onOpenChange: () => {},
-          })}
-        </Suspense>
+    <div className="relative w-full h-full bg-gradient-to-br from-background via-muted to-background flex items-center justify-center overflow-hidden">
+      {/* Simulated backdrop */}
+      <div className="absolute inset-0 bg-black/40" />
+      
+      {/* Modal card preview */}
+      <div className="relative z-10 bg-card rounded-2xl shadow-2xl border border-border/50 p-6 max-w-[85%] max-h-[85%] overflow-hidden">
+        {/* Modal header simulation */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-foreground">{page.label}</h3>
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </div>
+        </div>
+        
+        {/* Modal content placeholder */}
+        <div className="space-y-3">
+          <div className="h-3 bg-muted rounded w-3/4" />
+          <div className="h-3 bg-muted rounded w-1/2" />
+          <div className="h-3 bg-muted rounded w-2/3" />
+        </div>
+        
+        {/* Modal props preview if available */}
+        {page.modalProps && Object.keys(page.modalProps).length > 0 && (
+          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+            <p className="text-xs text-muted-foreground font-mono">
+              Props: {Object.keys(page.modalProps).join(', ')}
+            </p>
+          </div>
+        )}
+        
+        {/* Georgian label */}
+        <p className="mt-4 text-sm text-muted-foreground text-center">{page.labelGe}</p>
+        
+        {/* Action buttons simulation */}
+        <div className="flex gap-2 mt-4 justify-end">
+          <div className="px-4 py-2 bg-muted rounded-lg text-sm text-muted-foreground">Cancel</div>
+          <div className="px-4 py-2 bg-primary rounded-lg text-sm text-primary-foreground">Confirm</div>
+        </div>
       </div>
     </div>
-  );
-});
-
-// Modal preview renderer
-const ModalPreviewRenderer = memo(function ModalPreviewRenderer({
-  Component,
-  modalProps,
-}: {
-  Component: React.LazyExoticComponent<React.ComponentType<any>>;
-  modalProps: Record<string, any>;
-}) {
-  return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <ModalWrapper modalProps={modalProps}>
-        <Component {...modalProps} />
-      </ModalWrapper>
-    </ErrorBoundary>
   );
 });
 
@@ -637,7 +651,7 @@ const DeviceMockup = memo(function DeviceMockup({
               height: config.height,
             }}>
               {isModal ? (
-                <ModalPreviewRenderer Component={Component} modalProps={modalProps || {}} />
+                <StaticModalPreview page={page} />
               ) : (
                 <IsolatedPageRenderer Component={Component} route={route || "/"} />
               )}
