@@ -15,31 +15,31 @@ interface LeaderboardHeroBackgroundProps {
   userTier?: number;
 }
 
-// Trophy configuration with precise positioning on the podiums
+// Trophy configuration with precise positioning on the podiums (shifted left for center alignment)
 const TROPHY_CONFIG = {
   1: { 
-    left: '77%', 
+    left: '74%', 
     top: '54%', 
     image: trophyBronze, 
     label: 'Bronze League', 
     labelKa: 'ბრინჯაოს ლიგა',
-    size: '11%',
+    size: '22%',
   },
   2: { 
-    left: '23%', 
+    left: '20%', 
     top: '54%', 
     image: trophySilver, 
     label: 'Silver League', 
     labelKa: 'ვერცხლის ლიგა',
-    size: '11%',
+    size: '22%',
   },
   3: { 
-    left: '50%', 
+    left: '47%', 
     top: '48%', 
     image: trophyGold, 
     label: 'Gold League', 
     labelKa: 'ოქროს ლიგა',
-    size: '13%', // Gold trophy slightly bigger (center podium)
+    size: '26%', // Gold trophy slightly bigger (center podium)
   },
 } as const;
 
@@ -88,6 +88,28 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       onTierSelect?.(clickedTier);
     }
   }, [userTier, onTierSelect]);
+
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (tier > 1) {
+          onTierSelect?.(tier - 1);
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (tier < 3 && tier < userTier) {
+          onTierSelect?.(tier + 1);
+        } else if (tier < 3 && tier + 1 <= userTier) {
+          onTierSelect?.(tier + 1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tier, userTier, onTierSelect]);
 
   return (
     <motion.div
