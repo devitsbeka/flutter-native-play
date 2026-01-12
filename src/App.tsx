@@ -43,6 +43,7 @@ import DuplicateScanner from "./pages/admin/DuplicateScanner";
 import IconLibraryAdmin from "./pages/admin/IconLibrary";
 import QuestionTools from "./pages/admin/QuestionTools";
 import IconAssignment from "./pages/admin/IconAssignment";
+import IconReview from "./pages/admin/IconReview";
 import MissingIcons from "./pages/admin/MissingIcons";
 import FixIcons from "./pages/admin/FixIcons";
 import AIGenerations from "./pages/admin/AIGenerations";
@@ -117,6 +118,7 @@ const App = () => (
                 <Route path="icons" element={<IconLibraryAdmin />} />
                 <Route path="tools" element={<QuestionTools />} />
                 <Route path="icon-assign" element={<IconAssignment />} />
+                <Route path="icon-review" element={<IconReview />} />
                 <Route path="missing-icons" element={<MissingIcons />} />
                 <Route path="fix-icons" element={<FixIcons />} />
                 <Route path="ai-generations" element={<AIGenerations />} />
