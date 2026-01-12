@@ -67,6 +67,7 @@ export function CategorySelectorModal({
       onClose={() => onOpenChange(false)}
       title="ბიბლიოთეკა"
       hideFooter
+      className="!pb-0"
     >
       {/* Search */}
       <div className="mb-4">
@@ -82,9 +83,9 @@ export function CategorySelectorModal({
         </div>
       </div>
 
-      {/* Categories Grid */}
-      <ScrollArea className="h-[60vh]">
-        <div className="grid grid-cols-2 gap-3 pb-6">
+      {/* Categories Grid - use flex-1 to fill remaining space */}
+      <div className="flex-1 overflow-y-auto -mx-5 px-5 pb-safe">
+        <div className="grid grid-cols-2 gap-3 pb-8">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div
@@ -160,7 +161,7 @@ export function CategorySelectorModal({
             })
           )}
         </div>
-      </ScrollArea>
+      </div>
     </GameModal>
   );
 }
