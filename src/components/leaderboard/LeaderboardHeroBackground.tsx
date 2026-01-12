@@ -1,5 +1,5 @@
-import { motion, useMotionValue, useSpring, PanInfo } from "framer-motion";
-import { ReactNode, useCallback, useEffect } from "react";
+import { motion, PanInfo } from "framer-motion";
+import { ReactNode, useCallback, useState } from "react";
 import gameMapBg from "@/assets/gamemap.jpg";
 
 interface LeaderboardHeroBackgroundProps {
@@ -9,29 +9,33 @@ interface LeaderboardHeroBackgroundProps {
   userTier?: number;
 }
 
-// Trophy positions on the original image (as % of full image width)
-// Silver=left(~22%), Gold=center(~50%), Bronze=right(~78%)
-// Offsets move the image: positive=shift right (show left side), negative=shift left (show right side)
+// Trophy X positions as percentage of image width (from left)
+// Silver ~22%, Gold ~50%, Bronze ~78%
 const TROPHIES = [
-  { tier: 2, imageX: 22, offset: 28, label: 'Silver' },   // Silver on LEFT, shift right to center it
-  { tier: 3, imageX: 50, offset: 0, label: 'Gold' },      // Gold in CENTER, no offset needed
-  { tier: 1, imageX: 78, offset: -28, label: 'Bronze' },  // Bronze on RIGHT, shift left to center it
+  { tier: 2, position: 22, label: 'Silver' },
+  { tier: 3, position: 50, label: 'Gold' },
+  { tier: 1, position: 78, label: 'Bronze' },
 ];
 
-// Get offset for a tier
-const getOffsetForTier = (tier: number): number => {
+// Calculate translateX to center a trophy position in viewport
+// When image is 200vw wide, we need to shift by (position - 50) * 2
+const getTranslateForTier = (tier: number): number => {
   const trophy = TROPHIES.find(t => t.tier === tier);
-  return trophy?.offset ?? 0;
+  if (!trophy) return 0;
+  // Shift so trophy.position becomes centered (at 50%)
+  // For 200vw width: translateX = -(position - 50) * 2vw
+  return -(trophy.position - 50) * 2;
 };
 
-// Find nearest tier based on current offset
-const findNearestTier = (currentOffset: number, userTier: number): number => {
+// Find nearest tier based on current translateX
+const findNearestTier = (currentTranslate: number, userTier: number): number => {
   const unlocked = TROPHIES.filter(t => t.tier <= userTier);
   let nearest = unlocked[0];
-  let minDist = Math.abs(currentOffset - nearest.offset);
+  let minDist = Math.abs(currentTranslate - getTranslateForTier(nearest.tier));
   
   for (const trophy of unlocked) {
-    const dist = Math.abs(currentOffset - trophy.offset);
+    const translate = getTranslateForTier(trophy.tier);
+    const dist = Math.abs(currentTranslate - translate);
     if (dist < minDist) {
       minDist = dist;
       nearest = trophy;
@@ -42,42 +46,29 @@ const findNearestTier = (currentOffset: number, userTier: number): number => {
 };
 
 export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTier = 1 }: LeaderboardHeroBackgroundProps) {
-  const targetOffset = getOffsetForTier(tier);
-  
-  // Motion value for drag - represents the offset as percentage
-  const x = useMotionValue(targetOffset);
-  
-  // Spring animation for smooth snapping
-  const springX = useSpring(x, {
-    stiffness: 300,
-    damping: 30,
-  });
+  const targetTranslate = getTranslateForTier(tier);
+  const [dragOffset, setDragOffset] = useState(0);
 
-  // Sync with tier changes from outside (carousel swipe, etc.)
-  useEffect(() => {
-    x.set(targetOffset);
-  }, [targetOffset, x]);
+  // Handle drag - accumulate offset during drag
+  const handleDrag = useCallback((_: any, info: PanInfo) => {
+    // Convert pixel drag to vw offset (screen width = 100vw)
+    const vwPerPixel = 100 / window.innerWidth;
+    setDragOffset(prev => prev + info.delta.x * vwPerPixel);
+  }, []);
 
   // Handle drag end - snap to nearest tier
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    // Get current position and convert velocity to offset change
-    const currentX = x.get();
-    const velocityOffset = info.velocity.x * 0.05; // Factor for velocity influence
-    const projectedOffset = currentX + velocityOffset;
+    const vwPerPixel = 100 / window.innerWidth;
+    const velocityOffset = info.velocity.x * vwPerPixel * 0.1;
+    const finalOffset = targetTranslate + dragOffset + velocityOffset;
     
-    // Find and select nearest tier
-    const nearestTier = findNearestTier(projectedOffset, userTier);
+    const nearestTier = findNearestTier(finalOffset, userTier);
+    setDragOffset(0);
     onTierSelect?.(nearestTier);
-  }, [x, userTier, onTierSelect]);
+  }, [targetTranslate, dragOffset, userTier, onTierSelect]);
 
-  // Handle drag - update motion value directly
-  const handleDrag = useCallback((_: any, info: PanInfo) => {
-    // Convert pixel drag to percentage offset
-    // Dragging right (positive delta) should increase offset (move left on map)
-    const dragFactor = 0.05; // Sensitivity
-    const currentX = x.get();
-    x.set(currentX + info.delta.x * dragFactor);
-  }, [x]);
+  // Reset drag offset when tier changes externally
+  const currentTranslate = targetTranslate + dragOffset;
 
   return (
     <motion.div
@@ -87,22 +78,30 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
       transition={{ duration: 0.5 }}
       style={{ minHeight: '62vh' }}
     >
-      {/* Map container - static wrapper */}
+      {/* Map container */}
       <div 
         className="absolute inset-0" 
         style={{ height: 'calc(100% + 100px)', top: '-100px' }}
       >
-        {/* Draggable image - wider container (250%) for proper panning */}
+        {/* 
+          Image sizing:
+          - Mobile: 200vw wide (can pan between all 3 trophies)
+          - Tablet: 150vw wide (moderate panning)
+          - Desktop: 110vw wide (slight panning, almost full view)
+        */}
         <motion.div
-          className="absolute inset-0 w-[250%] h-full touch-none cursor-grab active:cursor-grabbing"
-          style={{ marginLeft: '-75%' }}
+          className="absolute h-full touch-none cursor-grab active:cursor-grabbing"
+          style={{ 
+            width: '200vw',
+            left: '-50vw', // Center the 200vw image (offset by half the extra width)
+          }}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
+          dragElastic={0.1}
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}
           animate={{
-            x: `${targetOffset}%`,
+            x: `${currentTranslate}vw`,
           }}
           transition={{
             type: "spring",
@@ -113,24 +112,26 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           <img 
             src={gameMapBg} 
             alt="" 
-            className="w-full h-full object-cover object-bottom select-none pointer-events-none"
+            className="w-full h-full object-cover object-center select-none pointer-events-none"
             draggable={false}
           />
         </motion.div>
       </div>
 
-      {/* Clickable Trophy Hotspots - for tap/click selection */}
+      {/* Clickable Trophy Hotspots */}
       <div className="absolute inset-0 z-[4] pointer-events-none" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
         {TROPHIES.map((trophy) => {
           const isLocked = trophy.tier > userTier;
           
-          // Calculate viewport position based on current tier's offset
-          // With 250% width and -75% margin, viewport shows center 40% of image by default
-          const imageCenter = 75 + targetOffset; // Where viewport center is on image (in %)
-          const trophyRelativePos = trophy.imageX - imageCenter; // Position relative to viewport center
-          const viewportX = 50 + (trophyRelativePos * 2.5); // Scale to viewport (250% = 2.5x)
+          // Calculate where this trophy appears in viewport
+          // Trophy is at trophy.position% of image, image is translated by currentTranslate vw
+          // Viewport center is at 50vw, image center (50% of 200vw = 100vw) is at 50vw + currentTranslate
+          const trophyInVw = (trophy.position / 100) * 200; // Trophy position in vw (0-200)
+          const imageLeftEdge = -50 + currentTranslate; // Where left edge of image is in vw
+          const trophyViewportPos = imageLeftEdge + trophyInVw; // Trophy position in viewport vw
+          const trophyViewportPercent = trophyViewportPos; // Already in vw which is effectively %
           
-          if (viewportX < -20 || viewportX > 120) return null;
+          if (trophyViewportPercent < -10 || trophyViewportPercent > 110) return null;
           
           return (
             <motion.button
@@ -143,9 +144,9 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                   : 'cursor-pointer'
               }`}
               style={{
-                left: `${viewportX - 10}%`,
+                left: `${trophyViewportPercent - 10}vw`,
                 top: '30%',
-                width: '20%',
+                width: '20vw',
                 height: '45%',
               }}
               whileTap={!isLocked ? { scale: 0.95 } : {}}
@@ -158,7 +159,7 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
       {/* Fade to background gradient at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent z-[5] pointer-events-none" />
       
-      {/* Content - pointer-events only on specific interactive elements */}
+      {/* Content */}
       <div className="relative z-10 flex flex-col h-full pointer-events-none">
         <div className="pointer-events-auto">
           {children}
