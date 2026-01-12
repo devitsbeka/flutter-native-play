@@ -54,7 +54,7 @@ export function LeagueInfoCard({ league, rankChange, isLocked }: LeagueInfoCardP
         {/* Rank Change */}
         {!isLocked && (
           <motion.div
-            className="flex-1 max-w-[150px] bg-background/20 backdrop-blur-md rounded-2xl p-4 border border-border/30"
+            className="flex-1 max-w-[150px] bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/30"
             whileHover={{ scale: 1.02 }}
           >
             <div className="text-xs text-foreground/70 uppercase tracking-wide mb-2 text-center font-medium">

@@ -11,6 +11,7 @@ import { LeagueLockedOverlay } from "@/components/leaderboard/LeagueLockedOverla
 import { LeaderboardHeroBackground } from "@/components/leaderboard/LeaderboardHeroBackground";
 import { LeagueHeroHeader } from "@/components/leaderboard/LeagueHeroHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import leaderboardBg from "@/assets/img-leaderboard.png";
 import {
   Carousel,
   CarouselContent,
@@ -102,7 +103,17 @@ export default function Leaderboards() {
   const activeTier = viewingTier ?? userTier;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Full page background image */}
+      <div className="fixed inset-0 -z-10">
+        <img 
+          src={leaderboardBg} 
+          alt=""
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
+      </div>
+      
       {/* Hero Section with Animated Background */}
       <LeaderboardHeroBackground tier={activeTier}>
         {/* Gamified Header */}
@@ -126,7 +137,7 @@ export default function Leaderboards() {
       </LeaderboardHeroBackground>
 
       {/* Main Content - Swipeable Leagues */}
-      <div className="flex-1 overflow-hidden pb-28 relative bg-background">
+      <div className="flex-1 overflow-hidden pb-28 relative">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
