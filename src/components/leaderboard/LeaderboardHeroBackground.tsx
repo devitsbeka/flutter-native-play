@@ -127,9 +127,10 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           <>
             {TROPHIES.map((trophy, index) => {
               const label = language === 'ka' ? trophy.labelKa : trophy.label;
+              const isActive = trophy.tier === tier;
               
-              // Position adjustments per trophy
-              const offsetPx = trophy.tier === 2 ? 30 : trophy.tier === 3 ? -30 : -100;
+              // Position adjustments per trophy (in % to scale with viewport)
+              const offsetPercent = trophy.tier === 2 ? 2 : trophy.tier === 3 ? -2 : -6;
               
               return (
                 <motion.button
@@ -137,17 +138,17 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                   onClick={() => onTierSelect?.(trophy.tier)}
                   className="absolute z-[6] cursor-pointer"
                   style={{
-                    left: `calc(${trophy.position}% + ${offsetPx}px)`,
+                    left: `${trophy.position + offsetPercent}%`,
                     top: '32%',
                     transform: 'translateX(-50%)',
                   }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ 
-                    opacity: 1, 
+                    opacity: isActive ? 1 : 0.6, 
                     y: [0, -6, 0],
                   }}
                   transition={{
-                    opacity: { duration: 0.5, delay: index * 0.1 },
+                    opacity: { duration: 0.3 },
                     y: {
                       duration: 2,
                       repeat: Infinity,
@@ -155,7 +156,7 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                       delay: index * 0.3,
                     }
                   }}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.05, opacity: 1 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50">
