@@ -5,21 +5,28 @@ import gameMapBg from "@/assets/gamemap.jpg";
 interface LeaderboardHeroBackgroundProps {
   tier: number;
   children: ReactNode;
+  onTierSelect?: (tier: number) => void;
+  userTier?: number;
 }
 
-// Map pan positions for each tier - based on 10-column grid:
-// Silver: columns 2-4 (center at 30%), Gold: columns 4-6 (center at 50%), Bronze: columns 6-8 (center at 70%)
-// We need to translate the image so the center of each zone is visible
-// Image is 160% width, centered means -30% margin
-// To center on 30% of image: need more positive translateX
-// To center on 70% of image: need more negative translateX
+// Trophy hotspot positions (as % of the scaled 160% image)
+// Based on highlighted reference image analysis
+const TROPHY_HOTSPOTS = [
+  { tier: 2, x: 25, y: 55, width: 16, height: 35, label: 'Silver' },
+  { tier: 3, x: 50, y: 52, width: 18, height: 35, label: 'Gold' },
+  { tier: 1, x: 73, y: 55, width: 17, height: 35, label: 'Bronze' },
+];
+
+// Map pan positions to center each trophy in the viewport
+// Image is 160% width with -30% margin, viewport sees ~62.5% of image
+// Calculate offset to center each trophy X position
 const MAP_POSITIONS: Record<number, number> = {
-  1: -18,  // Bronze - center on columns 6-8 (70% of image)
-  2: 18,   // Silver - center on columns 2-4 (30% of image)
-  3: 0,    // Gold - center on columns 4-6 (50% of image, center)
+  1: -14.5,  // Bronze at 73% -> pan left
+  2: 15.5,   // Silver at 25% -> pan right
+  3: 0,      // Gold at 50% -> centered
 };
 
-export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBackgroundProps) {
+export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTier = 1 }: LeaderboardHeroBackgroundProps) {
   const mapOffset = MAP_POSITIONS[tier] || 0;
 
   return (
@@ -49,6 +56,38 @@ export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBac
             alt="" 
             className="w-full h-full object-cover object-bottom"
           />
+          
+          {/* Clickable Trophy Hotspots - positioned over the scaled map */}
+          {TROPHY_HOTSPOTS.map((hotspot) => {
+            const isLocked = hotspot.tier > userTier;
+            const isActive = hotspot.tier === tier;
+            
+            return (
+              <motion.button
+                key={hotspot.tier}
+                onClick={() => !isLocked && onTierSelect?.(hotspot.tier)}
+                disabled={isLocked}
+                className={`absolute rounded-xl transition-all duration-200 ${
+                  isLocked 
+                    ? 'cursor-not-allowed' 
+                    : 'cursor-pointer'
+                }`}
+                style={{
+                  left: `${hotspot.x - hotspot.width / 2}%`,
+                  top: `${hotspot.y - hotspot.height / 2}%`,
+                  width: `${hotspot.width}%`,
+                  height: `${hotspot.height}%`,
+                }}
+                whileTap={!isLocked ? { scale: 0.95 } : {}}
+                animate={{
+                  boxShadow: isActive && !isLocked
+                    ? '0 0 30px 10px rgba(255,255,255,0.15)'
+                    : 'none',
+                }}
+                aria-label={`Select ${hotspot.label} league`}
+              />
+            );
+          })}
         </motion.div>
       </div>
       

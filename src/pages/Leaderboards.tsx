@@ -120,14 +120,13 @@ export default function Leaderboards() {
     <div className="min-h-screen flex flex-col bg-background">
       
       {/* Hero Section with Animated Background */}
-      <LeaderboardHeroBackground tier={activeTier}>
-        {/* Gamified Header with arrows */}
-        <LeagueHeroHeader 
-          league={currentLeague}
-          onPrevTier={handlePrevTier}
-          onNextTier={handleNextTier}
-          userTier={userTier}
-        />
+      <LeaderboardHeroBackground 
+        tier={activeTier} 
+        onTierSelect={handleSelectTier}
+        userTier={userTier}
+      >
+        {/* Simplified Header */}
+        <LeagueHeroHeader league={currentLeague} />
 
         {/* Spacer to push info card down */}
         <div className="flex-1 min-h-[180px]" />
