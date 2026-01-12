@@ -131,6 +131,10 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           style={{ 
             width: isDesktop ? '100%' : '250vw',
             left: isDesktop ? 0 : 'calc(-75vw - 30px)',
+            backgroundImage: `url(${gameMapBg})`,
+            backgroundSize: isDesktop ? 'auto 100%' : 'cover',
+            backgroundPosition: isDesktop ? 'center top' : 'center',
+            backgroundRepeat: 'no-repeat',
           }}
           drag={isDesktop ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
@@ -144,15 +148,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             x: isDesktop ? 0 : `${targetTranslate}vw`,
           }}
           transition={TIER_SPRING}
-        >
-          <img 
-            src={gameMapBg} 
-            alt="" 
-            className="w-full h-full object-cover select-none pointer-events-none"
-            style={{ objectPosition: 'center top' }}
-            draggable={false}
-          />
-        </motion.div>
+        />
 
         {/* Floating Trophy Labels (desktop only) */}
         {isDesktop && (
