@@ -1,9 +1,9 @@
-import { memo, useId } from "react";
+import { memo } from "react";
 import { motion } from "framer-motion";
 
 /**
- * Realistic clouds using SVG feTurbulence filter
- * Based on: https://css-tricks.com/drawing-realistic-clouds-with-svg-and-css/
+ * Realistic fluffy clouds using CSS blur and blend modes
+ * Optimized for performance with proper React patterns
  */
 
 interface CloudProps {
@@ -12,79 +12,11 @@ interface CloudProps {
   duration: number;
   delay: number;
   opacity: number;
+  id: string;
 }
 
-const RealisticCloud = memo(({ size, startY, duration, delay, opacity }: CloudProps) => {
-  const filterId = useId();
-  
-  return (
-    <motion.div
-      className="absolute pointer-events-none will-change-transform"
-      style={{ 
-        top: `${startY}%`,
-        width: size,
-        height: size * 0.6,
-        mixBlendMode: 'screen',
-      }}
-      initial={{ x: -size - 50 }}
-      animate={{ x: 'calc(100vw + 100px)' }}
-      transition={{
-        duration,
-        delay,
-        repeat: Infinity,
-        ease: "linear",
-      }}
-    >
-      {/* SVG with feTurbulence filter for realistic cloud effect */}
-      <svg 
-        width="100%" 
-        height="100%" 
-        viewBox="0 0 500 300"
-        style={{ overflow: 'visible' }}
-      >
-        <defs>
-          <filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">
-            {/* Create fractal noise pattern */}
-            <feTurbulence 
-              type="fractalNoise" 
-              baseFrequency="0.012" 
-              numOctaves="4" 
-              seed={Math.floor(delay * 10)}
-              result="turbulence"
-            />
-            {/* Displacement for organic shape */}
-            <feDisplacementMap 
-              in="SourceGraphic" 
-              in2="turbulence" 
-              scale="50" 
-              xChannelSelector="R" 
-              yChannelSelector="G"
-              result="displaced"
-            />
-            {/* Gaussian blur for softness */}
-            <feGaussianBlur in="displaced" stdDeviation="8" result="blurred" />
-            {/* Composite to blend */}
-            <feComposite in="blurred" in2="SourceGraphic" operator="over" />
-          </filter>
-        </defs>
-        
-        {/* Cloud shape - multiple overlapping ellipses */}
-        <g filter={`url(#${filterId})`} opacity={opacity}>
-          <ellipse cx="150" cy="180" rx="120" ry="80" fill="white" />
-          <ellipse cx="250" cy="150" rx="140" ry="100" fill="white" />
-          <ellipse cx="380" cy="170" rx="100" ry="70" fill="white" />
-          <ellipse cx="200" cy="130" rx="90" ry="60" fill="white" />
-          <ellipse cx="320" cy="140" rx="110" ry="75" fill="white" />
-        </g>
-      </svg>
-    </motion.div>
-  );
-});
-
-RealisticCloud.displayName = 'RealisticCloud';
-
-// Simple fluffy cloud variant (CSS-based, more performant)
-const FluffyCloud = memo(({ size, startY, duration, delay, opacity }: CloudProps) => {
+// Simple fluffy cloud using CSS blur - performant and realistic
+function FluffyCloud({ size, startY, duration, delay, opacity }: CloudProps) {
   return (
     <motion.div
       className="absolute pointer-events-none will-change-transform"
@@ -104,90 +36,100 @@ const FluffyCloud = memo(({ size, startY, duration, delay, opacity }: CloudProps
         opacity: { duration, delay, repeat: Infinity, ease: "linear", times: [0, 0.1, 0.5, 0.9, 1] },
       }}
     >
-      {/* Pure CSS fluffy clouds using layered radial gradients */}
+      {/* Pure CSS fluffy clouds using layered blurred circles */}
       <div 
         className="w-full h-full relative"
-        style={{
-          filter: 'blur(15px)',
-        }}
+        style={{ filter: 'blur(18px)' }}
       >
         {/* Main cloud body */}
         <div 
-          className="absolute rounded-full bg-white/90"
+          className="absolute rounded-full bg-white"
           style={{
-            width: '60%',
-            height: '80%',
-            left: '20%',
-            top: '20%',
+            width: '55%',
+            height: '75%',
+            left: '22%',
+            top: '25%',
+            opacity: 0.9,
           }}
         />
         {/* Left puff */}
         <div 
-          className="absolute rounded-full bg-white/80"
+          className="absolute rounded-full bg-white"
           style={{
-            width: '45%',
-            height: '65%',
-            left: '0%',
-            top: '35%',
+            width: '40%',
+            height: '60%',
+            left: '5%',
+            top: '40%',
+            opacity: 0.8,
           }}
         />
         {/* Right puff */}
         <div 
-          className="absolute rounded-full bg-white/80"
+          className="absolute rounded-full bg-white"
           style={{
-            width: '50%',
-            height: '70%',
-            right: '0%',
-            top: '30%',
+            width: '45%',
+            height: '65%',
+            right: '5%',
+            top: '35%',
+            opacity: 0.8,
           }}
         />
-        {/* Top puffs */}
+        {/* Top left puff */}
         <div 
-          className="absolute rounded-full bg-white/85"
+          className="absolute rounded-full bg-white"
           style={{
-            width: '35%',
-            height: '55%',
-            left: '15%',
-            top: '0%',
-          }}
-        />
-        <div 
-          className="absolute rounded-full bg-white/85"
-          style={{
-            width: '40%',
-            height: '60%',
-            right: '20%',
+            width: '32%',
+            height: '50%',
+            left: '18%',
             top: '5%',
+            opacity: 0.85,
+          }}
+        />
+        {/* Top right puff */}
+        <div 
+          className="absolute rounded-full bg-white"
+          style={{
+            width: '38%',
+            height: '55%',
+            right: '18%',
+            top: '8%',
+            opacity: 0.85,
+          }}
+        />
+        {/* Center highlight */}
+        <div 
+          className="absolute rounded-full bg-white"
+          style={{
+            width: '30%',
+            height: '45%',
+            left: '35%',
+            top: '15%',
+            opacity: 0.95,
           }}
         />
       </div>
     </motion.div>
   );
-});
-
-FluffyCloud.displayName = 'FluffyCloud';
+}
 
 // Cloud configuration - varied sizes and timings for natural look
-const CLOUD_CONFIG: CloudProps[] = [
-  { size: 380, startY: 3, duration: 60, delay: 0, opacity: 0.75 },
-  { size: 280, startY: 18, duration: 50, delay: 8, opacity: 0.6 },
-  { size: 320, startY: 8, duration: 55, delay: 15, opacity: 0.65 },
-  { size: 420, startY: 22, duration: 70, delay: 25, opacity: 0.5 },
-  { size: 250, startY: 5, duration: 45, delay: 35, opacity: 0.7 },
-  { size: 350, startY: 15, duration: 58, delay: 42, opacity: 0.55 },
+const CLOUD_CONFIG: Omit<CloudProps, 'id'>[] = [
+  { size: 350, startY: 4, duration: 65, delay: 0, opacity: 0.7 },
+  { size: 280, startY: 16, duration: 52, delay: 10, opacity: 0.55 },
+  { size: 400, startY: 8, duration: 72, delay: 18, opacity: 0.6 },
+  { size: 320, startY: 20, duration: 58, delay: 30, opacity: 0.5 },
+  { size: 260, startY: 6, duration: 48, delay: 40, opacity: 0.65 },
+  { size: 380, startY: 14, duration: 62, delay: 50, opacity: 0.55 },
 ];
 
-export const LeaderboardClouds = memo(function LeaderboardClouds() {
+function LeaderboardCloudsComponent() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-[6]">
       {CLOUD_CONFIG.map((cloud, index) => (
-        // Alternate between realistic SVG and fluffy CSS clouds
-        index % 2 === 0 ? (
-          <FluffyCloud key={`fluffy-${index}`} {...cloud} />
-        ) : (
-          <RealisticCloud key={`realistic-${index}`} {...cloud} />
-        )
+        <FluffyCloud key={`cloud-${index}`} {...cloud} id={`cloud-${index}`} />
       ))}
     </div>
   );
-});
+}
+
+export const LeaderboardClouds = memo(LeaderboardCloudsComponent);
