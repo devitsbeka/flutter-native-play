@@ -322,6 +322,7 @@ export function QuizGameScreenProd() {
             <DynamicIcon 
               slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
               categoryId={currentQuestion.categoryId}
+              questionId={currentQuestion.id}
               size={80}
               className="drop-shadow-lg"
               hideIfEmpty={true}
@@ -343,6 +344,7 @@ export function QuizGameScreenProd() {
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
             categoryId={currentQuestion.categoryId}
+            questionId={currentQuestion.id}
             size={96}
             className="drop-shadow-lg"
             hideIfEmpty={true}
