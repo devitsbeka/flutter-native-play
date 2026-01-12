@@ -305,6 +305,7 @@ export function MultiplayerGameScreenV2() {
           <DynamicIcon 
             slug={currentQuestion?.iconSlug || undefined}
             categoryId={currentRoom?.category_id || undefined}
+            questionId={currentQuestion?.id}
             size={112}
             className="drop-shadow-lg"
             hideIfEmpty={true}

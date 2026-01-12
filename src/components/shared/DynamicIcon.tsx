@@ -7,6 +7,7 @@ import { useIconLibrary } from "@/hooks/useIconLibrary";
 interface DynamicIconProps {
   categoryId?: string; // ASCII category_id from database - fallback lookup
   slug?: string; // Direct icon slug (highest priority) - from icon_slug column
+  questionId?: string; // Question ID for unique fallback icons per question
   size?: number;
   className?: string;
   hideIfEmpty?: boolean; // Don't render anything if no icon found
@@ -40,6 +41,7 @@ function shouldRetryUrl(url: string): boolean {
 export function DynamicIcon({ 
   categoryId,
   slug,
+  questionId,
   size = 128,
   className,
   hideIfEmpty = false,
@@ -53,10 +55,12 @@ export function DynamicIcon({
   
   const { findIcon, getIconBySlug, fetchIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
 
-  // Use stable seed based on categoryId for consistent fallback icons
+  // Use stable seed based on questionId (unique per question), then slug, then categoryId
+  // This ensures each question gets a DIFFERENT fallback icon even when library isn't loaded
   const stableSeed = React.useMemo(() => {
-    return categoryId ? hashString(categoryId) : 0;
-  }, [categoryId]);
+    const seedSource = questionId || slug || categoryId || '';
+    return seedSource ? hashString(seedSource) : 0;
+  }, [questionId, slug, categoryId]);
 
   // Resolve icon URL using the icon library - but DON'T use random fallback if we have a slug
   const iconUrl = React.useMemo(() => {
