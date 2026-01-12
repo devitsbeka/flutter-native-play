@@ -7,7 +7,7 @@ interface LeagueHeroHeaderProps {
 }
 
 export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
-  const { language, currentLanguage } = useLanguage();
+  const { language } = useLanguage();
   
   // Use language-aware league name
   const leagueName = language === 'ka' ? league.nameKa : league.name;
@@ -18,39 +18,37 @@ export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
     : 'Georgian Championship';
   
   return (
-    <div className="pt-6 pb-4 px-4">
-      {/* Country flag and championship title */}
-      <motion.div
-        className="text-center mb-4"
-        initial={{ opacity: 0, y: -10 }}
+    <div className="pt-6 pb-4 px-4 text-center">
+      {/* League name - FIRST, large and light weight */}
+      <motion.h1 
+        key={league.tier}
+        className="text-foreground drop-shadow-lg"
+        style={{ 
+          fontFamily: 'Google Sans, sans-serif',
+          fontSize: '32px',
+          fontWeight: 300,
+        }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 200 }}
+      >
+        {leagueName}
+      </motion.h1>
+      
+      {/* Championship subtitle - BELOW, small and regular */}
+      <motion.p
+        className="text-foreground/80 mt-1"
+        style={{ 
+          fontFamily: 'Google Sans, sans-serif',
+          fontSize: '14px',
+          fontWeight: 400,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <span className="text-2xl">{currentLanguage.flag}</span>
-          <h1 className="text-lg font-bold text-foreground/90 uppercase tracking-wider">
-            {championshipTitle}
-          </h1>
-        </div>
-      </motion.div>
-      
-      {/* League name */}
-      <motion.div
-        className="flex items-center justify-center"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-      >
-        <motion.h2 
-          key={league.tier}
-          className="text-2xl font-extrabold text-foreground drop-shadow-lg text-center"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-        >
-          {leagueName}
-        </motion.h2>
-      </motion.div>
+        {championshipTitle}
+      </motion.p>
     </div>
   );
 }

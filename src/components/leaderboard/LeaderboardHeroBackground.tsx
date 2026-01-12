@@ -80,28 +80,27 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
 
   return (
     <motion.div
-      className="relative overflow-hidden touch-pan-y"
+      className="relative overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ minHeight: '62vh' }}
     >
-      {/* Pannable Map Background */}
-      <div 
-        className="absolute inset-0 cursor-grab active:cursor-grabbing" 
+      {/* Pannable Map Background - touch-none allows our drag to work */}
+      <motion.div 
+        className="absolute inset-0 touch-none cursor-grab active:cursor-grabbing" 
         style={{ height: 'calc(100% + 100px)', top: '-100px' }}
+        drag="x"
+        dragConstraints={{ left: -150, right: 150 }}
+        dragElastic={0.3}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
       >
         <motion.div
-          className="absolute inset-0 w-[160%] h-full"
+          className="absolute inset-0 w-[160%] h-full pointer-events-none"
           style={{ 
             marginLeft: '-30%',
-            x: springX.get() + '%',
           }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.1}
-          onDrag={handleDrag}
-          onDragEnd={handleDragEnd}
           animate={{
             x: `${targetOffset}%`,
           }}
@@ -114,11 +113,11 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           <img 
             src={gameMapBg} 
             alt="" 
-            className="w-full h-full object-cover object-bottom pointer-events-none select-none"
+            className="w-full h-full object-cover object-bottom select-none"
             draggable={false}
           />
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Clickable Trophy Hotspots - for tap/click selection */}
       <div className="absolute inset-0 z-[4] pointer-events-none" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
@@ -156,9 +155,9 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
       </div>
       
       {/* Fade to background gradient at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent z-[5]" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent z-[5] pointer-events-none" />
       
-      {/* Content */}
+      {/* Content - pointer-events only on specific interactive elements */}
       <div className="relative z-10 flex flex-col h-full pointer-events-none">
         <div className="pointer-events-auto">
           {children}
