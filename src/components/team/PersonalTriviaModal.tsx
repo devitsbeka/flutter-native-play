@@ -186,7 +186,7 @@ function QuestionIconPickerInline({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="end">
+      <PopoverContent className="w-80 p-0" align="end">
         <div className="p-3 space-y-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -198,7 +198,7 @@ function QuestionIconPickerInline({
             />
           </div>
 
-          <ScrollArea className="h-48">
+          <ScrollArea className="h-56">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -208,7 +208,7 @@ function QuestionIconPickerInline({
                 აიკონი ვერ მოიძებნა
               </div>
             ) : (
-              <div className="grid grid-cols-5 gap-1.5 p-1">
+              <div className="grid grid-cols-4 gap-2 p-1">
                 {icons.map((icon) => (
                   <button
                     key={icon.id}
@@ -221,11 +221,11 @@ function QuestionIconPickerInline({
                     )}
                     title={icon.title}
                   >
-                    <img
-                      src={getIconUrl(icon)}
-                      alt={icon.title}
-                      className="w-8 h-8 object-contain"
-                    />
+                          <img
+                            src={getIconUrl(icon)}
+                            alt={icon.title}
+                            className="w-10 h-10 object-contain"
+                          />
                   </button>
                 ))}
               </div>
