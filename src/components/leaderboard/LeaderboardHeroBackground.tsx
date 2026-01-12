@@ -7,11 +7,16 @@ interface LeaderboardHeroBackgroundProps {
   children: ReactNode;
 }
 
-// Map pan positions for each tier (percentage offset) - only 3 tiers
+// Map pan positions for each tier - based on 10-column grid:
+// Silver: columns 2-4 (center at 30%), Gold: columns 4-6 (center at 50%), Bronze: columns 6-8 (center at 70%)
+// We need to translate the image so the center of each zone is visible
+// Image is 160% width, centered means -30% margin
+// To center on 30% of image: need more positive translateX
+// To center on 70% of image: need more negative translateX
 const MAP_POSITIONS: Record<number, number> = {
-  1: 12,   // Bronze - pan right to show right area
-  2: -12,  // Silver - pan left to show left area
-  3: 0,    // Gold - center
+  1: -18,  // Bronze - center on columns 6-8 (70% of image)
+  2: 18,   // Silver - center on columns 2-4 (30% of image)
+  3: 0,    // Gold - center on columns 4-6 (50% of image, center)
 };
 
 export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBackgroundProps) {
@@ -23,10 +28,10 @@ export function LeaderboardHeroBackground({ tier, children }: LeaderboardHeroBac
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      style={{ minHeight: '65vh' }}
+      style={{ minHeight: '62vh' }}
     >
-      {/* Pannable Map Background */}
-      <div className="absolute inset-0" style={{ height: 'calc(100% + 50px)' }}>
+      {/* Pannable Map Background - moved up to show more trophies */}
+      <div className="absolute inset-0" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
         <motion.div
           className="absolute inset-0 w-[160%] h-full"
           style={{ marginLeft: '-30%' }}

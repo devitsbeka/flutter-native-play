@@ -1,22 +1,16 @@
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { LeagueInfo } from "@/hooks/useLeagueLeaderboard";
-import leagueTrophy from "@/assets/league-trophy.png";
-
-// CSS filter styles for each league tier color
-const LEAGUE_FILTERS: Record<number, string> = {
-  1: "none", // Original gold trophy - no filter
-  2: "saturate(0) brightness(1.1) contrast(0.95)", // Silver
-  3: "sepia(1) saturate(5) hue-rotate(15deg) brightness(1.05)", // Gold
-  4: "sepia(1) saturate(3) hue-rotate(170deg) brightness(1.1)", // Diamond
-  5: "sepia(1) saturate(4) hue-rotate(250deg) brightness(1)", // Champion
-};
+import { LeagueInfo, LEAGUES } from "@/hooks/useLeagueLeaderboard";
 
 interface LeagueHeroHeaderProps {
   league: LeagueInfo;
+  onPrevTier?: () => void;
+  onNextTier?: () => void;
+  userTier?: number;
 }
 
-export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
+export function LeagueHeroHeader({ league, onPrevTier, onNextTier, userTier = 1 }: LeagueHeroHeaderProps) {
   const { t, language, currentLanguage } = useLanguage();
   
   // Use language-aware league name
@@ -26,6 +20,9 @@ export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
   const championshipTitle = language === 'ka' 
     ? 'საქართველოს ჩემპიონატი' 
     : 'Georgian Championship';
+
+  const canGoPrev = league.tier > 1;
+  const canGoNext = league.tier < LEAGUES.length && league.tier < userTier;
   
   return (
     <div className="pt-6 pb-4 px-4">
@@ -44,49 +41,42 @@ export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
         </div>
       </motion.div>
       
-      {/* League name with trophy */}
+      {/* League name with arrows */}
       <motion.div
-        className="flex items-center justify-center gap-3"
+        className="flex items-center justify-center gap-4"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
       >
-        <motion.img
-          src={leagueTrophy}
-          alt={leagueName}
-          className="w-12 h-14 object-contain drop-shadow-lg"
-          style={{
-            filter: LEAGUE_FILTERS[league.tier],
-          }}
-          animate={{
-            y: [0, -3, 0],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <h2 className="text-2xl font-extrabold text-foreground drop-shadow-lg">
+        {/* Left arrow */}
+        <motion.button
+          onClick={onPrevTier}
+          disabled={!canGoPrev}
+          className={`p-1 rounded-full transition-opacity ${canGoPrev ? 'opacity-70 hover:opacity-100' : 'opacity-20 cursor-not-allowed'}`}
+          whileTap={canGoPrev ? { scale: 0.9 } : {}}
+        >
+          <ChevronLeft className="w-6 h-6 text-foreground" strokeWidth={1.5} />
+        </motion.button>
+
+        <motion.h2 
+          key={league.tier}
+          className="text-2xl font-extrabold text-foreground drop-shadow-lg min-w-[200px] text-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
           {leagueName}
-        </h2>
-        <motion.img
-          src={leagueTrophy}
-          alt={leagueName}
-          className="w-12 h-14 object-contain drop-shadow-lg scale-x-[-1]"
-          style={{
-            filter: LEAGUE_FILTERS[league.tier],
-          }}
-          animate={{
-            y: [0, -3, 0],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5,
-          }}
-        />
+        </motion.h2>
+
+        {/* Right arrow */}
+        <motion.button
+          onClick={onNextTier}
+          disabled={!canGoNext}
+          className={`p-1 rounded-full transition-opacity ${canGoNext ? 'opacity-70 hover:opacity-100' : 'opacity-20 cursor-not-allowed'}`}
+          whileTap={canGoNext ? { scale: 0.9 } : {}}
+        >
+          <ChevronRight className="w-6 h-6 text-foreground" strokeWidth={1.5} />
+        </motion.button>
       </motion.div>
     </div>
   );
