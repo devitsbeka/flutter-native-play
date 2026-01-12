@@ -2,7 +2,6 @@ import { motion, PanInfo } from "framer-motion";
 import { ReactNode, useCallback, useEffect, useState, memo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import gameMapBg from "@/assets/gamemap.jpg";
-import { VantaBackground } from "./VantaBackground";
 
 interface LeaderboardHeroBackgroundProps {
   tier: number;
@@ -204,9 +203,6 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           </>
         )}
       </div>
-
-      {/* Vanta Clouds & Birds */}
-      <VantaBackground />
 
       {/* Edge Tap Zones (mobile only) */}
       {!isDesktop && (
