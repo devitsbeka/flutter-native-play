@@ -246,8 +246,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                   <motion.div
                     className="absolute z-[10]"
                     style={{
-                      left: `${trophyViewportPos}vw`,
-                      top: '22%',
+                      left: `calc(${trophyViewportPos}vw - 100px)`,
+                      top: 'calc(22% + 250px)',
                       transform: 'translateX(-50%)',
                     }}
                     initial={{ opacity: 0, y: 10 }}
