@@ -45,10 +45,10 @@ export function LeagueHeroHeader({ league }: LeagueHeroHeaderProps) {
         </span>
       </motion.div>
       
-      {/* League name - large title below */}
+      {/* League name - large title below (hidden on mobile, shown in floating tooltip instead) */}
       <motion.h1 
         key={league.tier}
-        className="text-foreground drop-shadow-lg"
+        className="hidden md:block text-foreground drop-shadow-lg"
         style={{ 
           fontFamily: 'Google Sans, sans-serif',
           fontSize: '32px',

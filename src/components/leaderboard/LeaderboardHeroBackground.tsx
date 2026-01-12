@@ -12,9 +12,9 @@ interface LeaderboardHeroBackgroundProps {
 
 // Trophy X positions as percentage of image width (from left)
 const TROPHIES = [
-  { tier: 2, position: 22, label: 'Silver', labelKa: 'ვერცხლის' },
-  { tier: 3, position: 50, label: 'Gold', labelKa: 'ოქროს' },
-  { tier: 1, position: 78, label: 'Bronze', labelKa: 'ბრინჯაოს' },
+  { tier: 2, position: 22, label: 'Silver League', labelKa: 'ვერცხლის ლიგა' },
+  { tier: 3, position: 50, label: 'Gold League', labelKa: 'ოქროს ლიგა' },
+  { tier: 1, position: 78, label: 'Bronze League', labelKa: 'ბრინჯაოს ლიგა' },
 ];
 
 // Edge tap zone width in vw
@@ -229,6 +229,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         <div className="absolute inset-0 z-[4] pointer-events-none" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
           {TROPHIES.map((trophy) => {
             const isLocked = trophy.tier > userTier;
+            const isActive = trophy.tier === tier;
+            const label = language === 'ka' ? trophy.labelKa : trophy.label;
             
             // Calculate where this trophy appears in viewport
             const trophyInVw = (trophy.position / 100) * 250;
@@ -238,24 +240,59 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             if (trophyViewportPos < -10 || trophyViewportPos > 110) return null;
             
             return (
-              <motion.button
-                key={trophy.tier}
-                onClick={() => !isLocked && onTierSelect?.(trophy.tier)}
-                disabled={isLocked}
-                className={`absolute rounded-xl pointer-events-auto ${
-                  isLocked 
-                    ? 'cursor-not-allowed opacity-50' 
-                    : 'cursor-pointer'
-                }`}
-                style={{
-                  left: `${trophyViewportPos - 10}vw`,
-                  top: '30%',
-                  width: '20vw',
-                  height: '45%',
-                }}
-                whileTap={!isLocked ? { scale: 0.95 } : {}}
-                aria-label={`Select ${trophy.label} league`}
-              />
+              <div key={trophy.tier} className="pointer-events-auto">
+                {/* Floating tooltip above trophy (only for active tier) */}
+                {isActive && (
+                  <motion.div
+                    className="absolute z-[10]"
+                    style={{
+                      left: `${trophyViewportPos}vw`,
+                      top: '22%',
+                      transform: 'translateX(-50%)',
+                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: [0, -4, 0],
+                    }}
+                    transition={{
+                      opacity: { duration: 0.3 },
+                      y: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }
+                    }}
+                  >
+                    <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50">
+                      <span className="text-sm font-medium text-foreground/90 whitespace-nowrap">
+                        {label}
+                      </span>
+                    </div>
+                    {/* Tooltip arrow */}
+                    <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
+                  </motion.div>
+                )}
+                
+                {/* Hotspot button */}
+                <motion.button
+                  onClick={() => !isLocked && onTierSelect?.(trophy.tier)}
+                  disabled={isLocked}
+                  className={`absolute rounded-xl ${
+                    isLocked 
+                      ? 'cursor-not-allowed opacity-50' 
+                      : 'cursor-pointer'
+                  }`}
+                  style={{
+                    left: `${trophyViewportPos - 10}vw`,
+                    top: '30%',
+                    width: '20vw',
+                    height: '45%',
+                  }}
+                  whileTap={!isLocked ? { scale: 0.95 } : {}}
+                  aria-label={`Select ${trophy.label} league`}
+                />
+              </div>
             );
           })}
         </div>
