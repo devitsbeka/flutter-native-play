@@ -72,6 +72,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       navigate("/power-ups");
       return;
     }
+    if (action === "party") {
+      onClose();
+      navigate("/team", { state: { openPersonalTrivia: true } });
+      return;
+    }
     if (action === "other-games") {
       toast.info(t("menu.comingSoon"));
       return;
