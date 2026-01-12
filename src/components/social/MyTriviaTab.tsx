@@ -486,11 +486,40 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       filteredCollections = filteredCollections.sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
       break;
     default:
-      // "all", "trivias", "collections" - keep default order (by date, newest first)
+      // "all", "trivias", "collections" - sort by date, newest first
+      standalonePosts = standalonePosts.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      filteredCollections = filteredCollections.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
       break;
   }
   
-  const hasContent = (filteredCollections && filteredCollections.length > 0) || standalonePosts.length > 0;
+  // Merge collections and standalone posts into a unified sorted list
+  type FeedItem = { type: 'collection'; data: any } | { type: 'standalone'; data: any };
+  
+  let unifiedFeed: FeedItem[] = [
+    ...filteredCollections.map(c => ({ type: 'collection' as const, data: c })),
+    ...standalonePosts.map(p => ({ type: 'standalone' as const, data: p })),
+  ];
+  
+  // Apply unified sorting for default case (newest first)
+  if (sortFilter === "all" || sortFilter === "trivias" || sortFilter === "collections") {
+    unifiedFeed = unifiedFeed.sort((a, b) => 
+      new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime()
+    );
+  } else if (sortFilter === "most_liked") {
+    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.likes_count || 0) - (a.data.likes_count || 0));
+  } else if (sortFilter === "most_saved") {
+    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.saves_count || 0) - (a.data.saves_count || 0));
+  } else if (sortFilter === "most_played") {
+    unifiedFeed = unifiedFeed.sort((a, b) => (b.data.plays_count || 0) - (a.data.plays_count || 0));
+  } else if (sortFilter === "popular") {
+    unifiedFeed = unifiedFeed.sort((a, b) => getEngagementScore(b.data) - getEngagementScore(a.data));
+  }
+  
+  const hasContent = unifiedFeed.length > 0;
 
   if (isLoading) {
     return (
@@ -533,7 +562,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     );
   }
 
-  const totalCount = (filteredCollections?.length || 0) + standalonePosts.length;
+  const totalCount = unifiedFeed.length;
 
   return (
     <motion.div
@@ -598,31 +627,30 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       </div>
 
       <div className="space-y-4">
-        {/* Collections first */}
-        {filteredCollections?.map((collection) => (
-          <CollectionCard 
-            key={collection.id} 
-            collection={collection} 
-            profile={profile} 
-            onEditCollection={(item) => setEditingQuiz(item)}
-            onEditRound={(quiz) => setEditingRound(quiz)}
-            onAddRound={(collectionId, roundNumber) => 
-              setAddingToCollection({ collectionId, roundNumber })
-            }
-            onPlay={onPlay}
-          />
-        ))}
-
-        {/* Standalone quizzes */}
-        {standalonePosts.map((post, index) => (
-          <StandaloneQuizCard 
-            key={post.id} 
-            post={post} 
-            profile={profile} 
-            index={index} 
-            onEdit={(post) => setEditingRound(post)}
-            onPlay={onPlay}
-          />
+        {/* Unified feed - sorted by date, newest first */}
+        {unifiedFeed.map((item, index) => (
+          item.type === 'collection' ? (
+            <CollectionCard 
+              key={item.data.id} 
+              collection={item.data} 
+              profile={profile} 
+              onEditCollection={(data) => setEditingQuiz(data)}
+              onEditRound={(quiz) => setEditingRound(quiz)}
+              onAddRound={(collectionId, roundNumber) => 
+                setAddingToCollection({ collectionId, roundNumber })
+              }
+              onPlay={onPlay}
+            />
+          ) : (
+            <StandaloneQuizCard 
+              key={item.data.id} 
+              post={item.data} 
+              profile={profile} 
+              index={index} 
+              onEdit={(post) => setEditingRound(post)}
+              onPlay={onPlay}
+            />
+          )
         ))}
       </div>
 
