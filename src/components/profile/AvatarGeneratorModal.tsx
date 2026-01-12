@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Camera, Sparkles, Check, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, Upload, Camera, Sparkles, Check, RefreshCw, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -169,173 +169,171 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4"
-        onClick={handleClose}
+        className="fixed inset-0 z-[100] bg-background flex flex-col"
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-background rounded-3xl w-full max-w-sm overflow-hidden shadow-xl"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h2 className="font-display text-lg font-bold">{t("avatar.aiTitle")}</h2>
-            </div>
-            <button
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
+          <div className="flex items-center h-14 px-4">
+            <motion.button
               onClick={handleClose}
-              className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <X className="w-4 h-4" />
-            </button>
+              <ChevronLeft className="w-6 h-6 text-foreground" />
+            </motion.button>
+            
+            <h1 className="flex-1 text-center font-display text-lg font-bold text-foreground flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              {t("avatar.aiTitle")}
+            </h1>
+            
+            <div className="w-10" />
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-6">
-            {/* Show banner if generation is in progress */}
-            {isCurrentlyGenerating && (
-              <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{t("avatar.generating")}</p>
-                  <p className="text-xs text-muted-foreground">{t("avatar.generatingBackgroundDesc")}</p>
-                </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center">
+          {/* Show banner if generation is in progress */}
+          {isCurrentlyGenerating && (
+            <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3 w-full max-w-sm">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{t("avatar.generating")}</p>
+                <p className="text-xs text-muted-foreground">{t("avatar.generatingBackgroundDesc")}</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {step === "upload" && (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  {t("avatar.description")}
-                </p>
+          {step === "upload" && (
+            <div className="space-y-6 w-full max-w-sm">
+              <p className="text-sm text-muted-foreground text-center">
+                {t("avatar.description")}
+              </p>
 
-                {/* Preview uploaded image */}
-                {uploadedImage ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
-                      <img
-                        src={uploadedImage}
-                        alt="Uploaded"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setUploadedImage(null)}
-                        className="px-4 py-2 rounded-full bg-muted text-sm font-medium flex items-center gap-2"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                        {t("avatar.change")}
-                      </button>
-                      <button
-                        onClick={generateAvatar}
-                        disabled={isStarting}
-                        className="px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2"
-                      >
-                        {isStarting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-4 h-4" />
-                        )}
-                        {t("avatar.generate")}
-                      </button>
-                    </div>
-                    {/* Hint that modal can be closed */}
-                    <p className="text-xs text-muted-foreground text-center">
-                      {t("avatar.canCloseHint")}
-                    </p>
+              {/* Preview uploaded image */}
+              {uploadedImage ? (
+                <div className="flex flex-col items-center gap-6">
+                  <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary/20">
+                    <img
+                      src={uploadedImage}
+                      alt="Uploaded"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                ) : (
-                  <div className="flex gap-3 justify-center">
-                    {/* Camera button */}
+                  <div className="flex gap-3">
                     <button
-                      onClick={startCamera}
-                      className="flex-1 max-w-[140px] aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                      onClick={() => setUploadedImage(null)}
+                      className="px-5 py-3 rounded-full bg-muted text-sm font-medium flex items-center gap-2"
                     >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Camera className="w-6 h-6 text-primary" />
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {t("avatar.takeSelfie")}
-                      </span>
+                      <RefreshCw className="w-4 h-4" />
+                      {t("avatar.change")}
                     </button>
+                    <button
+                      onClick={generateAvatar}
+                      disabled={isStarting}
+                      className="px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2"
+                    >
+                      {isStarting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                      {t("avatar.generate")}
+                    </button>
+                  </div>
+                  {/* Hint that modal can be closed */}
+                  <p className="text-xs text-muted-foreground text-center">
+                    {t("avatar.canCloseHint")}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex gap-4 justify-center">
+                  {/* Camera button */}
+                  <button
+                    onClick={startCamera}
+                    className="flex-1 max-w-[160px] aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Camera className="w-7 h-7 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {t("avatar.takeSelfie")}
+                    </span>
+                  </button>
 
-                    {/* Upload button */}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 max-w-[140px] aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 hover:border-primary/50 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Upload className="w-6 h-6 text-primary" />
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {t("avatar.uploadPhoto")}
-                      </span>
-                    </button>
+                  {/* Upload button */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 max-w-[160px] aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Upload className="w-7 h-7 text-primary" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {t("avatar.uploadPhoto")}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          {step === "camera" && (
+            <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+              <p className="text-sm text-muted-foreground text-center">
+                {t("avatar.positionFace")}
+              </p>
+
+              {/* Camera viewfinder */}
+              <div className="relative w-56 h-56 rounded-full overflow-hidden border-4 border-primary/30">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover scale-x-[-1]"
+                />
+                {!isCameraReady && (
+                  <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
                 )}
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
               </div>
-            )}
 
-            {step === "camera" && (
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  {t("avatar.positionFace")}
-                </p>
+              {/* Hidden canvas for capture */}
+              <canvas ref={canvasRef} className="hidden" />
 
-                {/* Camera viewfinder */}
-                <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-primary/30">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover scale-x-[-1]"
-                  />
-                  {!isCameraReady && (
-                    <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Hidden canvas for capture */}
-                <canvas ref={canvasRef} className="hidden" />
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      stopCamera();
-                      setStep("upload");
-                    }}
-                    className="px-4 py-2 rounded-full bg-muted text-sm font-medium"
-                  >
-                    {t("common.cancel")}
-                  </button>
-                  <button
-                    onClick={capturePhoto}
-                    disabled={!isCameraReady}
-                    className="px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 disabled:opacity-50"
-                  >
-                    <Camera className="w-4 h-4" />
-                    {t("avatar.capture")}
-                  </button>
-                </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    stopCamera();
+                    setStep("upload");
+                  }}
+                  className="px-5 py-3 rounded-full bg-muted text-sm font-medium"
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={capturePhoto}
+                  disabled={!isCameraReady}
+                  className="px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Camera className="w-4 h-4" />
+                  {t("avatar.capture")}
+                </button>
               </div>
-            )}
-          </div>
-        </motion.div>
+            </div>
+          )}
+        </div>
       </motion.div>
     </AnimatePresence>
   );
