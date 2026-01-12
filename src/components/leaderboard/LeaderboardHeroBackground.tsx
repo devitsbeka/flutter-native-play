@@ -152,7 +152,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                     style={{
                       left: config.left,
                       top: config.top,
-                      transform: 'translate(-50%, -100%)',
+                      transform: 'translate(calc(-50% - 50px), -100%)',
                       width: config.size,
                     }}
                     initial={{ opacity: 0.4, scale: 0.75 }}
@@ -181,7 +181,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                 style={{
                   left: currentTrophyConfig.left,
                   top: currentTrophyConfig.top,
-                  transform: 'translate(-50%, -100%)',
+                  transform: 'translate(calc(-50% - 50px), -100%)',
                   width: currentTrophyConfig.size,
                   transformOrigin: 'center bottom',
                 }}
