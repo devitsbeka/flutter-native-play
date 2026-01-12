@@ -1,5 +1,6 @@
 import { motion, PanInfo } from "framer-motion";
 import { ReactNode, useCallback, useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import gameMapBg from "@/assets/gamemap.jpg";
 
 interface LeaderboardHeroBackgroundProps {
@@ -11,9 +12,9 @@ interface LeaderboardHeroBackgroundProps {
 
 // Trophy X positions as percentage of image width (from left)
 const TROPHIES = [
-  { tier: 2, position: 22, label: 'Silver' },
-  { tier: 3, position: 50, label: 'Gold' },
-  { tier: 1, position: 78, label: 'Bronze' },
+  { tier: 2, position: 22, label: 'Silver', labelKa: 'ვერცხლის' },
+  { tier: 3, position: 50, label: 'Gold', labelKa: 'ოქროს' },
+  { tier: 1, position: 78, label: 'Bronze', labelKa: 'ბრინჯაოს' },
 ];
 
 // Check if we're on desktop (wide screen where full image fits)
@@ -60,6 +61,7 @@ const findNearestTier = (currentTranslateVw: number, userTier: number): number =
 
 export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTier = 1 }: LeaderboardHeroBackgroundProps) {
   const isDesktop = useIsDesktop();
+  const { language } = useLanguage();
   const targetTranslate = getTranslateForTier(tier, isDesktop);
 
   // Handle drag end - snap to nearest tier (mobile only)
@@ -119,6 +121,50 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
             draggable={false}
           />
         </motion.div>
+
+        {/* Floating Trophy Labels (desktop only) */}
+        {isDesktop && (
+          <>
+            {TROPHIES.map((trophy, index) => {
+              const isLocked = trophy.tier > userTier;
+              const label = language === 'ka' ? trophy.labelKa : trophy.label;
+              
+              return (
+                <motion.div
+                  key={trophy.tier}
+                  className={`absolute z-[6] pointer-events-none ${isLocked ? 'opacity-40' : ''}`}
+                  style={{
+                    left: `${trophy.position}%`,
+                    top: '32%',
+                    transform: 'translateX(-50%)',
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: [0, -6, 0],
+                  }}
+                  transition={{
+                    opacity: { duration: 0.5, delay: index * 0.1 },
+                    y: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: index * 0.3,
+                    }
+                  }}
+                >
+                  <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50">
+                    <span className="text-sm font-medium text-foreground/90 whitespace-nowrap">
+                      {label}
+                    </span>
+                  </div>
+                  {/* Tooltip arrow */}
+                  <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
+                </motion.div>
+              );
+            })}
+          </>
+        )}
       </div>
 
       {/* Clickable Trophy Hotspots (mobile only - on desktop all are visible) */}
