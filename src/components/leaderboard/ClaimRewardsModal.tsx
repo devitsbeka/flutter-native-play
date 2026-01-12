@@ -1,14 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Coins, Gem, Gift, Sparkles, Check } from "lucide-react";
+import { Trophy, Coins, Gem, Gift, Sparkles, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useLeaderboardRewards, WeeklyReward } from "@/hooks/useLeaderboardRewards";
 import { EXCLUSIVE_FRAMES, LEADERBOARD_BADGES } from "@/config/leaderboardRewards";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
@@ -51,6 +45,8 @@ export function ClaimRewardsModal({
     }
   };
 
+  const handleClose = () => onOpenChange(false);
+
   const getFrame = (frameId: string | null) => {
     if (!frameId) return null;
     return EXCLUSIVE_FRAMES.find(f => f.id === frameId);
@@ -74,144 +70,163 @@ export function ClaimRewardsModal({
   const totalCoins = pendingRewards.reduce((sum, r) => sum + r.coins_rewarded, 0);
   const totalGems = pendingRewards.reduce((sum, r) => sum + r.gems_rewarded, 0);
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Gift className="h-5 w-5 text-primary" />
-            კვირის ჯილდოები
-          </DialogTitle>
-        </DialogHeader>
+  if (!open) return null;
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Sparkles className="h-8 w-8 text-primary animate-pulse" />
-          </div>
-        ) : pendingRewards.length === 0 ? (
-          <div className="text-center py-12">
-            <Trophy className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground">
-              {claimedIds.size > 0 
-                ? "ყველა ჯილდო მიღებულია! 🎉" 
-                : "ახალი ჯილდოები არ გაქვს"}
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20"
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+        >
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <button
+              onClick={handleClose}
+              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
             >
-              <p className="text-sm text-muted-foreground mb-2">მთლიანი ჯილდოები:</p>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Coins className="h-5 w-5 text-amber-500" />
-                  <span className="text-xl font-bold text-amber-600">
-                    {totalCoins.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Gem className="h-5 w-5 text-purple-500" />
-                  <span className="text-xl font-bold text-purple-600">{totalGems}</span>
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">კვირის ჯილდოები</h2>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-4 py-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+              </div>
+            ) : pendingRewards.length === 0 ? (
+              <div className="text-center py-12">
+                <Trophy className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">
+                  {claimedIds.size > 0 
+                    ? "ყველა ჯილდო მიღებულია! 🎉" 
+                    : "ახალი ჯილდოები არ გაქვს"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20"
+                >
+                  <p className="text-sm text-muted-foreground mb-2">მთლიანი ჯილდოები:</p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Coins className="h-5 w-5 text-amber-500" />
+                      <span className="text-xl font-bold text-amber-600">
+                        {totalCoins.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Gem className="h-5 w-5 text-purple-500" />
+                      <span className="text-xl font-bold text-purple-600">{totalGems}</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Claim All button */}
+                {pendingRewards.length > 1 && (
+                  <ChunkyButton
+                    onClick={handleClaimAll}
+                    disabled={claimingId !== null}
+                    variant="mint"
+                    className="w-full"
+                  >
+                    <Gift className="h-4 w-4 mr-2" />
+                    მიიღე ყველა
+                  </ChunkyButton>
+                )}
+
+                {/* Individual rewards */}
+                <div className="space-y-3">
+                  <AnimatePresence mode="popLayout">
+                    {pendingRewards.map((reward, index) => {
+                      const frame = getFrame(reward.frame_rewarded);
+                      const badge = getBadge(reward.badge_rewarded);
+                      const isClaiming = claimingId === reward.id;
+
+                      return (
+                        <motion.div
+                          key={reward.id}
+                          layout
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="p-4 rounded-xl border bg-card relative overflow-hidden"
+                        >
+                          {/* Rank badge */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="text-2xl">{getRankEmoji(reward.final_rank)}</span>
+                            <div>
+                              <p className="font-bold">
+                                #{reward.final_rank} ადგილი
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {categoryNames[reward.category_id] || "კატეგორია"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Rewards display */}
+                          <div className="flex items-center gap-4 mb-3">
+                            <div className="flex items-center gap-1">
+                              <Coins className="h-4 w-4 text-amber-500" />
+                              <span className="font-bold text-amber-600">
+                                {reward.coins_rewarded.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Gem className="h-4 w-4 text-purple-500" />
+                              <span className="font-bold text-purple-600">
+                                {reward.gems_rewarded}
+                              </span>
+                            </div>
+                            {badge && <span className="text-xl">{badge.icon}</span>}
+                          </div>
+
+                          {/* Frame reward */}
+                          {frame && (
+                            <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${frame.gradient} text-white mb-3`}>
+                              + {frame.name}
+                            </div>
+                          )}
+
+                          {/* Claim button */}
+                          <Button
+                            onClick={() => handleClaim(reward)}
+                            disabled={isClaiming}
+                            className="w-full"
+                            variant="outline"
+                          >
+                            {isClaiming ? (
+                              <Sparkles className="h-4 w-4 animate-pulse" />
+                            ) : (
+                              <>
+                                <Gift className="h-4 w-4 mr-2" />
+                                მიიღე
+                              </>
+                            )}
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
                 </div>
               </div>
-            </motion.div>
-
-            {/* Claim All button */}
-            {pendingRewards.length > 1 && (
-              <ChunkyButton
-                onClick={handleClaimAll}
-                disabled={claimingId !== null}
-                variant="mint"
-                className="w-full"
-              >
-                <Gift className="h-4 w-4 mr-2" />
-                მიიღე ყველა
-              </ChunkyButton>
             )}
-
-            {/* Individual rewards */}
-            <div className="space-y-3">
-              <AnimatePresence mode="popLayout">
-                {pendingRewards.map((reward, index) => {
-                  const frame = getFrame(reward.frame_rewarded);
-                  const badge = getBadge(reward.badge_rewarded);
-                  const isClaiming = claimingId === reward.id;
-
-                  return (
-                    <motion.div
-                      key={reward.id}
-                      layout
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20, scale: 0.9 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="p-4 rounded-xl border bg-card relative overflow-hidden"
-                    >
-                      {/* Rank badge */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-2xl">{getRankEmoji(reward.final_rank)}</span>
-                        <div>
-                          <p className="font-bold">
-                            #{reward.final_rank} ადგილი
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {categoryNames[reward.category_id] || "კატეგორია"}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Rewards display */}
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Coins className="h-4 w-4 text-amber-500" />
-                          <span className="font-bold text-amber-600">
-                            {reward.coins_rewarded.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Gem className="h-4 w-4 text-purple-500" />
-                          <span className="font-bold text-purple-600">
-                            {reward.gems_rewarded}
-                          </span>
-                        </div>
-                        {badge && <span className="text-xl">{badge.icon}</span>}
-                      </div>
-
-                      {/* Frame reward */}
-                      {frame && (
-                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${frame.gradient} text-white mb-3`}>
-                          + {frame.name}
-                        </div>
-                      )}
-
-                      {/* Claim button */}
-                      <Button
-                        onClick={() => handleClaim(reward)}
-                        disabled={isClaiming}
-                        className="w-full"
-                        variant="outline"
-                      >
-                        {isClaiming ? (
-                          <Sparkles className="h-4 w-4 animate-pulse" />
-                        ) : (
-                          <>
-                            <Gift className="h-4 w-4 mr-2" />
-                            მიიღე
-                          </>
-                        )}
-                      </Button>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
