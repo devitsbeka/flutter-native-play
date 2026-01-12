@@ -12,6 +12,7 @@ export interface TriviaQuestion {
   categoryIcon?: string;
   categoryIconSlug?: string; // Icon slug from category
   questionIconSlug?: string; // Icon slug for specific question
+  iconSlug?: string;     // Icon slug for custom questions (MyTrivia)
   difficulty: "easy" | "medium" | "hard";
   question: string;
   correctAnswer: string;

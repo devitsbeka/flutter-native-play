@@ -210,6 +210,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                     : [...q.incorrect_answers, q.correct_answer],
                   difficulty: q.difficulty || "medium",
                   category: updated.category_name || "General",
+                  iconSlug: q.icon_slug || undefined, // Include icon for custom questions
                 }));
                 
                 setState(prev => ({
@@ -357,7 +358,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         is_host: true,
       });
 
-      // If custom questions provided, store them immediately
+      // If custom questions provided, store them immediately with icon_slug
       if (customQuestions && customQuestions.length > 0) {
         await Promise.all(customQuestions.map((q, index) => {
           const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
@@ -371,6 +372,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             incorrect_answers: q.incorrect_answers,
             difficulty: q.difficulty || "medium",
             shuffled_answers: shuffledAnswers,
+            icon_slug: q.icon_slug || null, // Store custom icon for MyTrivia questions
           });
         }));
       }
@@ -455,6 +457,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 : [...q.incorrect_answers, q.correct_answer],
               difficulty: q.difficulty || "medium",
               category: room.category_name || "General",
+              iconSlug: q.icon_slug || undefined, // Include icon for custom questions
             }));
             
             // Get current progress from participant
@@ -527,9 +530,95 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const usedIds = state.currentRoom.used_question_ids || [];
     
     try {
-      // Use unified questionService - it handles category resolution, seen tracking, etc.
+      // CHECK: For custom MyTrivia rooms (no category_id), use existing custom questions
+      if (!state.currentRoom.category_id) {
+        const { data: existingQuestions } = await supabase
+          .from("room_questions")
+          .select("*")
+          .eq("room_id", roomId)
+          .order("question_index", { ascending: true });
+        
+        if (existingQuestions && existingQuestions.length > 0) {
+          // Use existing custom questions - reshuffle answers for new game
+          const questions: TriviaQuestion[] = existingQuestions.map((q: any) => {
+            const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
+            const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+            return {
+              id: `${roomId}-${q.question_index}`,
+              question: q.question_text,
+              correctAnswer: q.correct_answer,
+              incorrectAnswers: q.incorrect_answers,
+              allAnswers: shuffledAnswers,
+              difficulty: q.difficulty || "medium",
+              category: state.currentRoom!.category_name || "Custom",
+              iconSlug: q.icon_slug || undefined, // Preserve icon from custom questions
+            };
+          });
+          
+          // Update shuffled_answers in DB for sync across players
+          await Promise.all(questions.map((q, index) => 
+            supabase.from("room_questions")
+              .update({ shuffled_answers: q.allAnswers })
+              .eq("room_id", roomId)
+              .eq("question_index", index)
+          ));
+          
+          // Clear old answers only (keep questions)
+          await supabase.from("player_answers").delete().eq("room_id", roomId);
+          
+          // Reset all participants scores
+          await supabase
+            .from("room_participants")
+            .update({ score: 0, current_question: 0 })
+            .eq("room_id", roomId);
+          
+          // Create room_game record
+          const { data: game } = await supabase
+            .from("room_games")
+            .insert([{
+              room_id: roomId,
+              game_number: 1,
+              questions_data: JSON.parse(JSON.stringify(questions)),
+            }])
+            .select()
+            .single();
+          
+          // Update room status
+          await supabase
+            .from("game_rooms")
+            .update({
+              status: "playing",
+              started_at: new Date().toISOString(),
+              current_game_id: game?.id,
+            })
+            .eq("id", roomId);
+          
+          setState(prev => ({
+            ...prev,
+            questions,
+            currentQuestionIndex: 0,
+            myScore: 0,
+            lastQuestionResult: null,
+            opponentAnswers: {},
+            currentGame: game ? {
+              id: game.id,
+              room_id: game.room_id,
+              game_number: game.game_number,
+              started_at: game.started_at,
+              completed_at: game.completed_at,
+              winner_user_id: game.winner_user_id,
+              player_scores: game.player_scores,
+            } : null,
+            phase: "playing",
+          }));
+          
+          return; // Exit early - custom questions handled
+        }
+      }
+      
+      // Standard category-based room: fetch from database
       const result = await getQuestions({
-        mode: 'vs', // Multiplayer uses VS-style selection (random categories)
+        mode: 'vs',
         categorySlug: state.currentRoom.category_id || undefined,
         count: questionCount,
         excludeIds: usedIds,
@@ -729,17 +818,104 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     
-    // Get fresh room data to have latest used_question_ids
-    const { data: freshRoom } = await supabase
-      .from("game_rooms")
-      .select("used_question_ids")
-      .eq("id", roomId)
-      .single();
-    
-    const usedIds = (freshRoom?.used_question_ids as string[]) || [];
-    
     try {
-      // Use unified questionService
+      // CHECK: For custom MyTrivia rooms (no category_id), reuse existing custom questions
+      if (!state.currentRoom.category_id) {
+        const { data: existingQuestions } = await supabase
+          .from("room_questions")
+          .select("*")
+          .eq("room_id", roomId)
+          .order("question_index", { ascending: true });
+        
+        if (existingQuestions && existingQuestions.length > 0) {
+          // Reshuffle answers for new round
+          const questions: TriviaQuestion[] = existingQuestions.map((q: any) => {
+            const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
+            const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+            return {
+              id: `${roomId}-${q.question_index}`,
+              question: q.question_text,
+              correctAnswer: q.correct_answer,
+              incorrectAnswers: q.incorrect_answers,
+              allAnswers: shuffledAnswers,
+              difficulty: q.difficulty || "medium",
+              category: state.currentRoom!.category_name || "Custom",
+              iconSlug: q.icon_slug || undefined,
+            };
+          });
+          
+          // Update shuffled_answers in DB for sync
+          await Promise.all(questions.map((q, index) => 
+            supabase.from("room_questions")
+              .update({ shuffled_answers: q.allAnswers })
+              .eq("room_id", roomId)
+              .eq("question_index", index)
+          ));
+          
+          // Clear old answers only
+          await supabase.from("player_answers").delete().eq("room_id", roomId);
+          
+          // Reset only my score and current_question
+          await supabase
+            .from("room_participants")
+            .update({ score: 0, current_question: 0, status: "playing" })
+            .eq("room_id", roomId)
+            .eq("user_id", user.id);
+          
+          // Create room_game record
+          const { data: game } = await supabase
+            .from("room_games")
+            .insert([{
+              room_id: roomId,
+              game_number: 1,
+              questions_data: JSON.parse(JSON.stringify(questions)),
+            }])
+            .select()
+            .single();
+          
+          // Update room status
+          await supabase
+            .from("game_rooms")
+            .update({
+              status: "playing",
+              started_at: new Date().toISOString(),
+              current_game_id: game?.id,
+            })
+            .eq("id", roomId);
+          
+          setState(prev => ({
+            ...prev,
+            questions,
+            currentQuestionIndex: 0,
+            myScore: 0,
+            lastQuestionResult: null,
+            opponentAnswers: {},
+            currentGame: game ? {
+              id: game.id,
+              room_id: game.room_id,
+              game_number: game.game_number,
+              started_at: game.started_at,
+              completed_at: game.completed_at,
+              winner_user_id: game.winner_user_id,
+              player_scores: game.player_scores,
+            } : null,
+            phase: "playing",
+          }));
+          
+          return; // Exit early - custom questions handled
+        }
+      }
+      
+      // Standard category room: Get fresh room data
+      const { data: freshRoom } = await supabase
+        .from("game_rooms")
+        .select("used_question_ids")
+        .eq("id", roomId)
+        .single();
+      
+      const usedIds = (freshRoom?.used_question_ids as string[]) || [];
+      
+      // Fetch new questions from database
       const result = await getQuestions({
         mode: 'vs',
         categorySlug: state.currentRoom.category_id || undefined,
