@@ -14,7 +14,7 @@ import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 interface Question {
-  question: string;
+  question_text: string;
   correct_answer: string;
   incorrect_answers: string[];
   difficulty?: string;
@@ -382,7 +382,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                 >
                   <CarouselContent className="h-full">
                     {questions.map((q, index) => {
-                      const answerInQuestion = hasAnswerInQuestion(q.question, q.correct_answer);
+                      const answerInQuestion = hasAnswerInQuestion(q.question_text, q.correct_answer);
                       const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
                       const missingIcon = !q.icon_slug;
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
@@ -407,7 +407,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
-                                questionText={q.question}
+                                questionText={q.question_text}
                                 correctAnswer={q.correct_answer}
                                 incorrectAnswers={q.incorrect_answers}
                                 large
@@ -420,7 +420,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                             {/* Question Text (READ-ONLY) */}
                             <div className="text-center">
                               <p className="text-lg font-medium text-foreground leading-relaxed">
-                                {q.question}
+                                {q.question_text}
                               </p>
                             </div>
                             
@@ -494,7 +494,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
 
           {/* Fixed Footer - Save Button (only in info mode) */}
           {viewMode === "info" && (
-            <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border safe-bottom">
+            <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 bg-background border-t border-border">
               <ChunkyButton
                 onClick={handleSave}
                 disabled={isSaving}

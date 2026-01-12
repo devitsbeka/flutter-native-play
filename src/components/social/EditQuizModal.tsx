@@ -14,7 +14,7 @@ import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
 interface Question {
-  question: string;
+  question_text: string;
   correct_answer: string;
   incorrect_answers: string[];
   difficulty?: string;
@@ -419,7 +419,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 >
                   <CarouselContent className="h-full">
                     {questions.map((q, index) => {
-                      const answerInQuestion = hasAnswerInQuestion(q.question, q.correct_answer);
+                      const answerInQuestion = hasAnswerInQuestion(q.question_text, q.correct_answer);
                       const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
                       const missingIcon = !q.icon_slug;
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
@@ -444,7 +444,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
-                                questionText={q.question}
+                                questionText={q.question_text}
                                 correctAnswer={q.correct_answer}
                                 incorrectAnswers={q.incorrect_answers}
                                 large
@@ -457,7 +457,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             {/* Question Text (READ-ONLY) */}
                             <div className="text-center">
                               <p className="text-lg font-medium text-foreground leading-relaxed">
-                                {q.question}
+                                {q.question_text}
                               </p>
                             </div>
                             
