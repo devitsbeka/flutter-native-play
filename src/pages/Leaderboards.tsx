@@ -96,13 +96,13 @@ export default function Leaderboards() {
   const activeTier = viewingTier ?? userTier;
 
   const handleSelectTier = useCallback((tier: number) => {
-    if (tier >= 1 && tier <= LEAGUES.length && tier <= userTier) {
+    if (tier >= 1 && tier <= LEAGUES.length) {
       setViewingTier(tier);
       if (carouselApi) {
         carouselApi.scrollTo(tier - 1);
       }
     }
-  }, [carouselApi, userTier]);
+  }, [carouselApi]);
 
   const handlePrevTier = useCallback(() => {
     if (activeTier > 1) {
@@ -111,10 +111,10 @@ export default function Leaderboards() {
   }, [activeTier, handleSelectTier]);
 
   const handleNextTier = useCallback(() => {
-    if (activeTier < LEAGUES.length && activeTier < userTier) {
+    if (activeTier < LEAGUES.length) {
       handleSelectTier(activeTier + 1);
     }
-  }, [activeTier, userTier, handleSelectTier]);
+  }, [activeTier, handleSelectTier]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
