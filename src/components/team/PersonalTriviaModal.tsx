@@ -4,11 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw, ChevronLeft, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
+
+// Color palette for question headers - cycling through for visibility
+const QUESTION_HEADER_COLORS = [
+  'rgba(249, 115, 22, 0.15)',  // orange
+  'rgba(168, 85, 247, 0.15)',  // purple
+  'rgba(14, 165, 233, 0.15)',  // sky
+  'rgba(34, 197, 94, 0.15)',   // green
+  'rgba(236, 72, 153, 0.15)',  // pink
+  'rgba(234, 179, 8, 0.15)',   // yellow
+  'rgba(99, 102, 241, 0.15)',  // indigo
+  'rgba(239, 68, 68, 0.15)',   // red
+];
 
 interface IconItem {
   id: string;
@@ -196,7 +208,7 @@ function QuestionIconPickerInline({
         <button
           type="button"
           className={cn(
-            "h-7 rounded-lg border flex items-center gap-1.5 px-2 hover:bg-muted transition-colors text-xs",
+            "h-9 min-w-[44px] rounded-lg border flex items-center gap-1.5 px-2.5 hover:bg-muted transition-colors text-xs",
             selectedSlug 
               ? "border-primary/50 bg-primary/5" 
               : "border-border bg-muted/50"
@@ -207,17 +219,17 @@ function QuestionIconPickerInline({
               <img
                 src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
                 alt=""
-                className="w-4 h-4 object-contain"
+                className="w-5 h-5 object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <span className="text-muted-foreground">აიკონი</span>
+              <span className="text-muted-foreground hidden sm:inline">აიკონი</span>
             </>
           ) : (
             <>
-              <ImageIcon className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground">+ აიკონი</span>
+              <ImageIcon className="w-4.5 h-4.5 text-muted-foreground" />
+              <Plus className="w-3 h-3 text-muted-foreground" />
             </>
           )}
         </button>
@@ -350,6 +362,7 @@ function DraggableQuestionCard({
   onUpdateQuestion,
   onUpdateAnswers,
   onUpdateCorrectIndex,
+  onInsertIdea,
 }: {
   question: PersonalQuestion;
   questionIndex: number;
@@ -359,6 +372,7 @@ function DraggableQuestionCard({
   onUpdateQuestion: (field: "question" | "iconSlug", value: string | null) => void;
   onUpdateAnswers: (answers: string[], correctIndex: number) => void;
   onUpdateCorrectIndex: (index: number) => void;
+  onInsertIdea: () => void;
 }) {
   const dragControls = useDragControls();
   
@@ -415,12 +429,14 @@ function DraggableQuestionCard({
     onUpdateCorrectIndex(index);
   };
 
+  const headerColor = QUESTION_HEADER_COLORS[questionIndex % QUESTION_HEADER_COLORS.length];
+
   return (
     <Reorder.Item
       value={question}
       dragListener={false}
       dragControls={dragControls}
-      className="p-4 rounded-2xl bg-muted/30 border border-border/50 space-y-3"
+      className="rounded-2xl bg-muted/30 border border-border/50 overflow-hidden"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -431,8 +447,11 @@ function DraggableQuestionCard({
         zIndex: 50 
       }}
     >
-      {/* Question Header */}
-      <div className="flex items-center justify-between">
+      {/* Color-coded Question Header */}
+      <div 
+        className="flex items-center justify-between px-3 py-2.5"
+        style={{ backgroundColor: headerColor }}
+      >
         <div className="flex items-center gap-2">
           <div
             onPointerDown={(e) => dragControls.start(e)}
@@ -440,26 +459,43 @@ function DraggableQuestionCard({
           >
             <GripVertical className="w-4 h-4" />
           </div>
-          <span className="text-sm font-semibold text-foreground">
+          <span className="text-sm font-bold text-foreground">
             კითხვა {questionIndex + 1}
           </span>
+        </div>
+        
+        {/* Action buttons row */}
+        <div className="flex items-center gap-1.5">
+          {/* Magical Idea button */}
+          <button
+            onClick={onInsertIdea}
+            className="h-9 min-w-[44px] px-2.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center gap-1.5 hover:from-amber-500/30 hover:to-orange-500/30 transition-all active:scale-95"
+            title="ჩასვი იდეა"
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">იდეა</span>
+          </button>
+          
+          {/* Icon picker - larger for tap */}
           <QuestionIconPickerInline
             selectedSlug={question.iconSlug}
             onSelect={(slug) => onUpdateQuestion("iconSlug", slug)}
           />
-        </div>
-        <div className="flex items-center gap-1">
+          
+          {/* Copy button */}
           <button
             onClick={onDuplicate}
-            className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+            className="h-9 w-9 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center"
             title="დუბლირება"
           >
             <Copy className="w-4 h-4" />
           </button>
+          
+          {/* Delete button */}
           {questionsCount > 1 && (
             <button
               onClick={onRemove}
-              className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              className="h-9 w-9 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center"
               title="წაშლა"
             >
               <Trash2 className="w-4 h-4" />
@@ -467,6 +503,9 @@ function DraggableQuestionCard({
           )}
         </div>
       </div>
+      
+      {/* Question content */}
+      <div className="p-4 pt-3 space-y-3">
 
       {/* Question Input */}
       <Input
@@ -500,6 +539,7 @@ function DraggableQuestionCard({
             ))}
           </AnimatePresence>
         </Reorder.Group>
+      </div>
       </div>
     </Reorder.Item>
   );
@@ -636,6 +676,13 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     }
   };
 
+  const insertIdeaForQuestion = useCallback((questionId: string) => {
+    const randomIdea = EXAMPLE_QUESTIONS[Math.floor(Math.random() * EXAMPLE_QUESTIONS.length)];
+    // Remove emoji from the idea
+    const cleanIdea = randomIdea.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, '');
+    updateQuestion(questionId, "question", cleanIdea);
+  }, [updateQuestion]);
+
   if (!isOpen) return null;
 
   return (
@@ -714,10 +761,6 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
                 </div>
               </div>
 
-              {/* Hint for drag and drop */}
-              <p className="text-xs text-muted-foreground text-center">
-                💡 გადაათრიე კითხვები ან პასუხები გადასალაგებლად
-              </p>
 
               {/* Questions List with Drag Reorder */}
               <Reorder.Group
@@ -738,6 +781,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
                       onUpdateQuestion={(field, value) => updateQuestion(q.id, field, value)}
                       onUpdateAnswers={(answers, correctIndex) => updateAnswers(q.id, answers, correctIndex)}
                       onUpdateCorrectIndex={(index) => updateCorrectIndex(q.id, index)}
+                      onInsertIdea={() => insertIdeaForQuestion(q.id)}
                     />
                   ))}
                 </AnimatePresence>
