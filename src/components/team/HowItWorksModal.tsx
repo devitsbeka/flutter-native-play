@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Users, Shuffle, Library, Sparkles, Gamepad2 } from "lucide-react";
+import { ChevronLeft, Gamepad2 } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import storyDice from "@/assets/story-dice.png";
+import secretBookcase from "@/assets/secret-bookcase.png";
+import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 
 interface HowItWorksModalProps {
   isOpen: boolean;
@@ -9,25 +12,19 @@ interface HowItWorksModalProps {
 
 const steps = [
   { 
-    icon: Users, 
-    title: "შექმენი ოთახი", 
-    desc: "მოიწვიე მეგობრები და ითამაშეთ ერთად",
-    color: "from-blue-500 to-cyan-500"
-  },
-  { 
-    icon: Shuffle, 
+    icon: storyDice, 
     title: "შემთხვევითი", 
     desc: "რანდომულად შეირჩევა კატეგორია",
     color: "from-purple-500 to-pink-500"
   },
   { 
-    icon: Library, 
+    icon: secretBookcase, 
     title: "ბიბლიოთეკა", 
     desc: "აირჩიე კატეგორია კოლექციიდან",
     color: "from-orange-500 to-amber-500"
   },
   { 
-    icon: Sparkles, 
+    icon: triviaBuzzer, 
     title: "შექმენი შენი", 
     desc: "გააკეთე საკუთარი ტრივია",
     color: "from-emerald-500 to-teal-500"
@@ -74,7 +71,7 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
                   className="flex items-center gap-3 p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center flex-shrink-0`}>
-                    <step.icon className="w-6 h-6 text-white" />
+                    <img src={step.icon} alt="" className="w-7 h-7 object-contain" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground">{step.title}</h3>
