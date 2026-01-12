@@ -148,7 +148,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           <img 
             src={gameMapBg} 
             alt="" 
-            className="w-full h-full object-cover object-center select-none pointer-events-none"
+            className="w-full h-full object-cover object-top select-none pointer-events-none"
             draggable={false}
           />
         </motion.div>
