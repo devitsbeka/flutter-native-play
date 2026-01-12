@@ -1,7 +1,9 @@
 import { motion, PanInfo } from "framer-motion";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState, memo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import gameMapBg from "@/assets/gamemap.jpg";
+import { LeaderboardClouds } from "./LeaderboardClouds";
+import { FlyingBirds } from "./FlyingBirds";
 
 interface LeaderboardHeroBackgroundProps {
   tier: number;
@@ -16,6 +18,9 @@ const TROPHIES = [
   { tier: 3, position: 50, label: 'Gold', labelKa: 'ოქროს' },
   { tier: 1, position: 78, label: 'Bronze', labelKa: 'ბრინჯაოს' },
 ];
+
+// Edge tap zone width in vw
+const EDGE_TAP_ZONE_WIDTH = 18;
 
 // Check if we're on desktop (wide screen where full image fits)
 const useIsDesktop = () => {
@@ -61,23 +66,49 @@ const findNearestTier = (currentTranslateVw: number): number => {
   return nearest.tier;
 };
 
-export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTier = 1 }: LeaderboardHeroBackgroundProps) {
+// Smooth spring config for tier transitions
+const TIER_SPRING = {
+  type: "spring" as const,
+  stiffness: 120,
+  damping: 22,
+  mass: 0.8,
+};
+
+export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
+  tier, 
+  children, 
+  onTierSelect, 
+  userTier = 1 
+}: LeaderboardHeroBackgroundProps) {
   const isDesktop = useIsDesktop();
   const { language } = useLanguage();
   const targetTranslate = getTranslateForTier(tier, isDesktop);
 
   // Handle drag end - snap to nearest tier (mobile only)
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    if (isDesktop) return; // No drag on desktop
+    if (isDesktop) return;
     
     const vwPerPixel = 100 / window.innerWidth;
     const dragVw = info.offset.x * vwPerPixel;
-    const velocityVw = info.velocity.x * vwPerPixel * 0.1;
+    const velocityVw = info.velocity.x * vwPerPixel * 0.15; // Velocity factor for momentum
     const finalPosition = targetTranslate + dragVw + velocityVw;
     
     const nearestTier = findNearestTier(finalPosition);
     onTierSelect?.(nearestTier);
   }, [isDesktop, targetTranslate, onTierSelect]);
+
+  // Edge tap handlers for mobile
+  const handleLeftEdgeTap = useCallback(() => {
+    if (tier > 1) {
+      onTierSelect?.(tier - 1);
+    }
+  }, [tier, onTierSelect]);
+
+  const handleRightEdgeTap = useCallback(() => {
+    if (tier < TROPHIES.length) {
+      onTierSelect?.(tier + 1);
+    }
+  }, [tier, onTierSelect]);
 
   return (
     <motion.div
@@ -98,25 +129,23 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           - Mobile: 250vw width (extra wide to prevent gaps), panning enabled between trophies
         */}
         <motion.div
-          className={`absolute h-full ${isDesktop ? '' : 'touch-none cursor-grab active:cursor-grabbing'}`}
+          className={`absolute h-full will-change-transform ${isDesktop ? '' : 'touch-none cursor-grab active:cursor-grabbing'}`}
           style={{ 
             width: isDesktop ? '100%' : '250vw',
             left: isDesktop ? 0 : '-75vw',
           }}
           drag={isDesktop ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
-          dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+          dragElastic={0.12}
+          dragTransition={{ 
+            bounceStiffness: 350, 
+            bounceDamping: 30 
+          }}
           onDragEnd={handleDragEnd}
           animate={{
             x: isDesktop ? 0 : `${targetTranslate}vw`,
           }}
-          transition={{
-            type: "spring",
-            stiffness: 180,
-            damping: 28,
-            mass: 1.2,
-          }}
+          transition={TIER_SPRING}
         >
           <img 
             src={gameMapBg} 
@@ -140,7 +169,7 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
                 <motion.button
                   key={trophy.tier}
                   onClick={() => onTierSelect?.(trophy.tier)}
-                  className="absolute z-[6] cursor-pointer"
+                  className="absolute z-[8] cursor-pointer"
                   style={{
                     left: `${trophy.position + offsetPercent}%`,
                     top: '32%',
@@ -177,6 +206,32 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
         )}
       </div>
 
+      {/* Animated Clouds */}
+      <LeaderboardClouds />
+      
+      {/* Flying Birds */}
+      <FlyingBirds />
+
+      {/* Edge Tap Zones (mobile only) */}
+      {!isDesktop && (
+        <>
+          {/* Left edge - navigate to previous tier */}
+          <button
+            className="absolute left-0 top-0 bottom-0 z-[8] opacity-0 active:opacity-10 active:bg-foreground/10 transition-opacity"
+            style={{ width: `${EDGE_TAP_ZONE_WIDTH}vw` }}
+            onClick={handleLeftEdgeTap}
+            aria-label="Previous tier"
+          />
+          {/* Right edge - navigate to next tier */}
+          <button
+            className="absolute right-0 top-0 bottom-0 z-[8] opacity-0 active:opacity-10 active:bg-foreground/10 transition-opacity"
+            style={{ width: `${EDGE_TAP_ZONE_WIDTH}vw` }}
+            onClick={handleRightEdgeTap}
+            aria-label="Next tier"
+          />
+        </>
+      )}
+
       {/* Clickable Trophy Hotspots (mobile only - on desktop all are visible) */}
       {!isDesktop && (
         <div className="absolute inset-0 z-[4] pointer-events-none" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
@@ -184,9 +239,7 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
             const isLocked = trophy.tier > userTier;
             
             // Calculate where this trophy appears in viewport
-            // Image is 250vw wide, trophy at position% of that = position * 2.5vw from image left
             const trophyInVw = (trophy.position / 100) * 250;
-            // Image left edge is at -75vw + translation
             const imageLeftEdge = -75 + targetTranslate;
             const trophyViewportPos = imageLeftEdge + trophyInVw;
             
@@ -230,4 +283,4 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
       </div>
     </motion.div>
   );
-}
+});

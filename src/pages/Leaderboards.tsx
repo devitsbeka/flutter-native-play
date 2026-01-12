@@ -151,6 +151,8 @@ export default function Leaderboards() {
               align: "start",
               loop: false,
               startIndex: (activeTier || 1) - 1,
+              duration: 30,
+              skipSnaps: false,
             }}
             className="w-full h-full"
           >
