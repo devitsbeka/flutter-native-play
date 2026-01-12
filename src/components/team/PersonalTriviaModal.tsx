@@ -576,9 +576,9 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
 
           <ScrollArea className="flex-1 px-5">
             <div className="py-5 space-y-5 pb-24">
-              {/* Title Input */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
+          {/* Title Input */}
+          <div className="px-0.5">
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
                   ტრივიის სახელი
                 </label>
                 <Input
