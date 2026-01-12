@@ -178,7 +178,7 @@ export function SocialFeed({
       });
     }
 
-    // Apply sorting for popular only (most_liked, most_saved, most_played are now filters)
+    // Apply sorting
     if (sortFilter === "popular") {
       result.sort((a, b) => {
         const getScore = (item: FeedItem) => {
@@ -192,6 +192,19 @@ export function SocialFeed({
           }
         };
         return getScore(b) - getScore(a);
+      });
+    } else if (sortFilter === "newest") {
+      result.sort((a, b) => {
+        const getCreatedAt = (item: FeedItem) => {
+          if (item.type === 'standalone') {
+            return new Date(item.post.createdAt).getTime();
+          } else {
+            // For collections, use the most recent post's date
+            const dates = item.posts.map(p => new Date(p.createdAt).getTime());
+            return Math.max(...dates);
+          }
+        };
+        return getCreatedAt(b) - getCreatedAt(a);
       });
     }
 
