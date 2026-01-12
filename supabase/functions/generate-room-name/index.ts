@@ -109,8 +109,10 @@ function validateAndCleanName(name: string): string {
   // Remove quotes
   let cleaned = name.replace(/^["']|["']$/g, '').trim();
   
-  // Remove emojis
-  cleaned = cleaned.replace(/[\u{1F600}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/gu, '').trim();
+  // Remove emojis - comprehensive pattern using Unicode properties + keep only Georgian letters and spaces
+  cleaned = cleaned.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim();
+  // Additionally filter to keep only Georgian letters and spaces
+  cleaned = cleaned.replace(/[^\u10A0-\u10FF\s]/g, '').trim();
   
   // Check for banned words
   const containsBanned = BANNED_WORDS.some(word => 
@@ -248,17 +250,18 @@ serve(async (req) => {
 
 კონტექსტი: მეგობრები იკრიბებიან ერთად სახალისო ტრივიას სათამაშოდ.
 
-🎯 არჩეული თემატიკა: ${themeLabel}
-📌 მაგალითები ამ თემატიკიდან: ${themeExamples}
-🎨 არჩეული აიკონი: "${iconName}"
+არჩეული თემატიკა: ${themeLabel}
+მაგალითები ამ თემატიკიდან: ${themeExamples}
+არჩეული აიკონი: "${iconName}"
 
 სახელი უნდა იყოს:
 - ეპიკური და შთამაგონებელი
 - მაქსიმუმ 2 სიტყვა
 - ამ თემატიკის შესაბამისი
 - აიკონთან თანხვედრაში
+- მხოლოდ ქართული ასოები, არანაირი emoji ან სიმბოლო!
 
-დაბრუნე მხოლოდ 2 სიტყვიანი კრეატიული სახელი, არაფერი სხვა.`;
+დაბრუნე მხოლოდ 2 სიტყვიანი კრეატიული სახელი, არაფერი სხვა. არ გამოიყენო emoji!`;
 
     console.log(`Generating name for theme: ${themeLabel}, icon: ${iconName}`);
 
