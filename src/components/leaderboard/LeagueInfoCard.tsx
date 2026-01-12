@@ -1,40 +1,37 @@
 import { motion } from "framer-motion";
-import { Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { LeagueInfo } from "@/hooks/useLeagueLeaderboard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LeagueCountdown } from "./LeagueCountdown";
 
 interface LeagueInfoCardProps {
   league: LeagueInfo;
-  daysLeft: number;
   rankChange: number;
   isLocked?: boolean;
 }
 
-export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: LeagueInfoCardProps) {
-  const { t, language } = useLanguage();
-  
-  // Use language-aware league name
-  const leagueName = language === 'ka' ? league.nameKa : league.name;
+export function LeagueInfoCard({ league, rankChange, isLocked }: LeagueInfoCardProps) {
+  const { t } = useLanguage();
   
   const getRankChangeDisplay = () => {
     if (rankChange === 0) {
       return {
         text: t('leaderboard.same'),
         icon: <Minus className="w-4 h-4" />,
-        color: "text-muted-foreground",
+        color: "text-foreground/70",
       };
     }
     if (rankChange > 0) {
       return {
         text: `${rankChange} ${t('leaderboard.positions')}`,
         icon: <TrendingUp className="w-4 h-4" />,
-        color: "text-emerald-500",
+        color: "text-emerald-400",
       };
     }
     return {
       text: `${Math.abs(rankChange)} ${t('leaderboard.positions')}`,
       icon: <TrendingDown className="w-4 h-4" />,
-      color: "text-rose-500",
+      color: "text-rose-400",
     };
   };
 
@@ -47,34 +44,20 @@ export function LeagueInfoCard({ league, daysLeft, rankChange, isLocked }: Leagu
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      {/* League Name */}
-      <h1 className="text-2xl font-bold text-center text-foreground">
-        {leagueName}
-      </h1>
-
       {/* Stats Row */}
       <div className="flex gap-3 justify-center">
-        {/* Time Left */}
-        <motion.div
-          className="flex-1 max-w-[150px] bg-card rounded-2xl p-4 border border-border"
-          whileHover={{ scale: 1.02 }}
-        >
-          <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 text-center">
-            {t('leaderboard.timeRemaining')}
-          </div>
-          <div className="flex items-center justify-center gap-2 text-amber-500">
-            <Clock className="w-4 h-4" />
-            <span className="text-lg font-bold">{daysLeft} {t('leaderboard.days')}</span>
-          </div>
-        </motion.div>
+        {/* Time Left - Using new countdown component */}
+        <div className="flex-1 max-w-[180px]">
+          <LeagueCountdown />
+        </div>
 
         {/* Rank Change */}
         {!isLocked && (
           <motion.div
-            className="flex-1 max-w-[150px] bg-card rounded-2xl p-4 border border-border"
+            className="flex-1 max-w-[150px] bg-background/20 backdrop-blur-md rounded-2xl p-4 border border-border/30"
             whileHover={{ scale: 1.02 }}
           >
-            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 text-center">
+            <div className="text-xs text-foreground/70 uppercase tracking-wide mb-2 text-center font-medium">
               {t('leaderboard.today')}
             </div>
             <div className={`flex items-center justify-center gap-2 ${rankDisplay.color}`}>
