@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Plus, Trash2, Check, Users, Lightbulb, PartyPopper, ImageIcon, Search, X, Copy, GripVertical, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { buildSearchTerms } from "@/utils/transliteration";
+
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -91,6 +91,9 @@ const EXAMPLE_QUESTIONS = [
   "რომელი ფილმი მინახავს ყველაზე მეტჯერ? 🎥",
 ];
 
+// Check if text contains Georgian characters
+const isGeorgian = (text: string) => /[\u10A0-\u10FF]/.test(text);
+
 // Inline Icon Picker Component
 function QuestionIconPickerInline({ 
   selectedSlug, 
@@ -115,25 +118,60 @@ function QuestionIconPickerInline({
     const searchIcons = async () => {
       setIsLoading(true);
       try {
-        const searchTerms = buildSearchTerms(searchQuery);
-        
-        let query = supabase
+        if (searchQuery.trim() && isGeorgian(searchQuery)) {
+          // Use smart search for Georgian input
+          const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+            body: { query: searchQuery, limit: 50 }
+          });
+          
+          if (error) throw error;
+          
+          // If smart search returns results, use them; otherwise fetch random icons
+          if (data?.icons && data.icons.length > 0) {
+            setIcons(data.icons);
+          } else {
+            // Fallback: fetch random icons so user always sees something
+            const { data: randomData } = await supabase
+              .from("icon_library")
+              .select("id, slug, title, icon_url")
+              .limit(50);
+            setIcons(randomData || []);
+          }
+        } else {
+          // Standard English search or no search query
+          let query = supabase
+            .from("icon_library")
+            .select("id, slug, title, icon_url")
+            .limit(50);
+
+          if (searchQuery.trim()) {
+            query = query.or(
+              `title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%`
+            );
+          }
+
+          const { data, error } = await query;
+          if (error) throw error;
+          
+          // If no results found for English search, fetch random icons
+          if (!data || data.length === 0) {
+            const { data: randomData } = await supabase
+              .from("icon_library")
+              .select("id, slug, title, icon_url")
+              .limit(50);
+            setIcons(randomData || []);
+          } else {
+            setIcons(data);
+          }
+        }
+      } catch (error) {
+        console.error("Error searching icons:", error);
+        // On error, still try to show some icons
+        const { data } = await supabase
           .from("icon_library")
           .select("id, slug, title, icon_url")
           .limit(50);
-
-        if (searchQuery.trim() && searchTerms.length > 0) {
-          const orConditions = searchTerms.map(term => 
-            `title.ilike.%${term}%,slug.ilike.%${term}%`
-          ).join(',');
-          query = query.or(orConditions);
-        }
-
-        const { data, error } = await query;
-        if (error) throw error;
         setIcons(data || []);
-      } catch (error) {
-        console.error("Error searching icons:", error);
       } finally {
         setIsLoading(false);
       }
