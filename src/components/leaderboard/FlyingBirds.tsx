@@ -1,12 +1,12 @@
 import { memo, useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Single bird with flapping wings
-const Bird = memo(({ offsetX, offsetY, flapSpeed }: { offsetX: number; offsetY: number; flapSpeed: number }) => (
+// Single bird with flapping wings - BIGGER
+const Bird = memo(({ offsetX, offsetY, flapSpeed, scale = 1 }: { offsetX: number; offsetY: number; flapSpeed: number; scale?: number }) => (
   <motion.svg
     className="absolute will-change-transform"
-    width="12"
-    height="8"
+    width={24 * scale}
+    height={16 * scale}
     viewBox="0 0 24 12"
     style={{ 
       left: offsetX, 
@@ -15,14 +15,14 @@ const Bird = memo(({ offsetX, offsetY, flapSpeed }: { offsetX: number; offsetY: 
   >
     <motion.path
       d="M0 6 Q6 0, 12 6 Q18 0, 24 6"
-      stroke="hsl(var(--foreground) / 0.7)"
-      strokeWidth="1.5"
+      stroke="hsl(var(--foreground) / 0.85)"
+      strokeWidth="2"
       fill="none"
       strokeLinecap="round"
       animate={{ 
         d: [
           "M0 6 Q6 0, 12 6 Q18 0, 24 6",
-          "M0 6 Q6 10, 12 6 Q18 10, 24 6",
+          "M0 6 Q6 12, 12 6 Q18 12, 24 6",
           "M0 6 Q6 0, 12 6 Q18 0, 24 6",
         ]
       }}
@@ -43,18 +43,27 @@ interface FlockData {
   birdCount: number;
   speed: number;
   direction: 'left' | 'right';
+  scale: number;
 }
 
-// Flock of birds flying together
+// Flock of birds flying together - V formation
 const BirdFlock = memo(({ flock }: { flock: FlockData }) => {
-  const birds = Array.from({ length: flock.birdCount }, (_, i) => ({
-    offsetX: i * 18 + Math.random() * 8,
-    offsetY: (i % 2) * 10 + Math.random() * 6,
-    flapSpeed: 0.3 + Math.random() * 0.15,
-  }));
+  // Create V-formation pattern
+  const birds = Array.from({ length: flock.birdCount }, (_, i) => {
+    const isLeft = i % 2 === 0;
+    const rowIndex = Math.floor(i / 2);
+    return {
+      offsetX: i * 28 * flock.scale + Math.random() * 10,
+      offsetY: isLeft 
+        ? rowIndex * 18 * flock.scale 
+        : rowIndex * 18 * flock.scale + 8,
+      flapSpeed: 0.25 + Math.random() * 0.12,
+      scale: flock.scale * (0.9 + Math.random() * 0.2),
+    };
+  });
 
-  const fromX = flock.direction === 'left' ? 'calc(100vw + 50px)' : '-100px';
-  const toX = flock.direction === 'left' ? '-100px' : 'calc(100vw + 50px)';
+  const fromX = flock.direction === 'left' ? 'calc(100vw + 80px)' : '-150px';
+  const toX = flock.direction === 'left' ? '-150px' : 'calc(100vw + 80px)';
 
   return (
     <motion.div
@@ -85,10 +94,11 @@ export const FlyingBirds = memo(function FlyingBirds() {
   const spawnFlock = useCallback(() => {
     const newFlock: FlockData = {
       id: nextIdRef.current++,
-      startY: 8 + Math.random() * 25, // Top portion of screen
-      birdCount: 3 + Math.floor(Math.random() * 4), // 3-6 birds
-      speed: 14 + Math.random() * 8, // 14-22 seconds to cross
-      direction: Math.random() > 0.3 ? 'left' : 'right', // 70% left-to-right
+      startY: 5 + Math.random() * 30, // Top portion of screen
+      birdCount: 4 + Math.floor(Math.random() * 5), // 4-8 birds
+      speed: 12 + Math.random() * 6, // 12-18 seconds to cross
+      direction: Math.random() > 0.3 ? 'left' : 'right', // 70% right-to-left
+      scale: 1.2 + Math.random() * 0.6, // 1.2x to 1.8x scale
     };
     
     setFlocks(prev => [...prev, newFlock]);
@@ -102,13 +112,16 @@ export const FlyingBirds = memo(function FlyingBirds() {
   }, []);
 
   useEffect(() => {
-    // Initial flock after short delay
-    const initialTimeout = setTimeout(spawnFlock, 3000);
-    timeoutRefs.current.push(initialTimeout);
+    // Initial flock immediately
+    spawnFlock();
     
-    // Recurring spawns every 10-18 seconds
+    // Second flock after 4 seconds
+    const secondTimeout = setTimeout(spawnFlock, 4000);
+    timeoutRefs.current.push(secondTimeout);
+    
+    // Recurring spawns every 6-12 seconds
     const scheduleNext = () => {
-      const delay = 10000 + Math.random() * 8000;
+      const delay = 6000 + Math.random() * 6000;
       const timeout = setTimeout(() => {
         spawnFlock();
         scheduleNext();
