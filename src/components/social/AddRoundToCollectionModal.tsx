@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIconLibrary } from "@/hooks/useIconLibrary";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -38,12 +39,12 @@ const COVER_GRADIENTS = [
 ];
 
 const POPULAR_TOPICS = [
-  { emoji: "🎬", label: "კინო", value: "კინო და ფილმები" },
-  { emoji: "⚽", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
-  { emoji: "🎵", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
-  { emoji: "🌍", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
-  { emoji: "📚", label: "ისტორია", value: "ისტორია" },
-  { emoji: "🔬", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
+  { categoryId: "movies", label: "კინო", value: "კინო და ფილმები" },
+  { categoryId: "sports", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
+  { categoryId: "music", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
+  { categoryId: "geography", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
+  { categoryId: "world_history", label: "ისტორია", value: "ისტორია" },
+  { categoryId: "science", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
 ];
 
 export function AddRoundToCollectionModal({ 
@@ -56,6 +57,7 @@ export function AddRoundToCollectionModal({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { getIconForCategory, isLoaded: iconsLoaded } = useIconLibrary();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -210,20 +212,27 @@ export function AddRoundToCollectionModal({
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              {POPULAR_TOPICS.map((topic) => (
-                <button
-                  key={topic.value}
-                  onClick={() => setSubject(topic.value)}
-                  className={`p-3 rounded-xl border-2 transition-all text-center ${
-                    subject === topic.value
-                      ? "border-primary bg-primary/10 scale-105"
-                      : "border-border hover:border-primary/50 hover:bg-muted/50"
-                  }`}
-                >
-                  <span className="text-2xl block mb-1">{topic.emoji}</span>
-                  <span className="text-xs font-medium text-foreground">{topic.label}</span>
-                </button>
-              ))}
+              {POPULAR_TOPICS.map((topic) => {
+                const iconUrl = getIconForCategory(topic.categoryId);
+                return (
+                  <button
+                    key={topic.value}
+                    onClick={() => setSubject(topic.value)}
+                    className={`p-3 rounded-xl border-2 transition-all text-center ${
+                      subject === topic.value
+                        ? "border-primary bg-primary/10 scale-105"
+                        : "border-border hover:border-primary/50 hover:bg-muted/50"
+                    }`}
+                  >
+                    {iconUrl ? (
+                      <img src={iconUrl} alt={topic.label} className="w-8 h-8 mx-auto mb-1 object-contain" />
+                    ) : (
+                      <div className="w-8 h-8 mx-auto mb-1 bg-muted/50 rounded-full animate-pulse" />
+                    )}
+                    <span className="text-xs font-medium text-foreground">{topic.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="relative">

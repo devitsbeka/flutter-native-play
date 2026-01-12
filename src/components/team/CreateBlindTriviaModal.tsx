@@ -8,6 +8,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
+import { useIconLibrary } from "@/hooks/useIconLibrary";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -35,16 +36,17 @@ const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string
 const QUESTION_COUNTS = [5, 10, 15, 20];
 
 const POPULAR_TOPICS = [
-  { emoji: "🎬", label: "კინო", value: "კინო და ფილმები" },
-  { emoji: "⚽", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
-  { emoji: "🎵", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
-  { emoji: "🌍", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
-  { emoji: "📚", label: "ისტორია", value: "ისტორია" },
-  { emoji: "🔬", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
+  { categoryId: "movies", label: "კინო", value: "კინო და ფილმები" },
+  { categoryId: "sports", label: "სპორტი", value: "სპორტი და ფეხბურთი" },
+  { categoryId: "music", label: "მუსიკა", value: "მუსიკა და მომღერლები" },
+  { categoryId: "geography", label: "გეოგრაფია", value: "გეოგრაფია და ქვეყნები" },
+  { categoryId: "world_history", label: "ისტორია", value: "ისტორია" },
+  { categoryId: "science", label: "მეცნიერება", value: "მეცნიერება და ტექნოლოგია" },
 ];
 
 export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: CreateBlindTriviaModalProps) {
   const { toast } = useToast();
+  const { getIconForCategory, isLoaded: iconsLoaded } = useIconLibrary();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -171,23 +173,30 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               
               {/* Suggestion chips - show below input */}
               <div className="flex flex-wrap gap-2 justify-center">
-                {POPULAR_TOPICS.map((topic, idx) => (
-                  <motion.button
-                    key={topic.value}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.03 }}
-                    onClick={() => setSubject(topic.value)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
-                      subject === topic.value
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <span>{topic.emoji}</span>
-                    <span>{topic.label}</span>
-                  </motion.button>
-                ))}
+                {POPULAR_TOPICS.map((topic, idx) => {
+                  const iconUrl = getIconForCategory(topic.categoryId);
+                  return (
+                    <motion.button
+                      key={topic.value}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.03 }}
+                      onClick={() => setSubject(topic.value)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                        subject === topic.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      {iconUrl ? (
+                        <img src={iconUrl} alt={topic.label} className="w-4 h-4 object-contain" />
+                      ) : (
+                        <div className="w-4 h-4 bg-muted/50 rounded-full animate-pulse" />
+                      )}
+                      <span>{topic.label}</span>
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
 
