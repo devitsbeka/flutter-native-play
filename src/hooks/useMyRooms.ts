@@ -197,7 +197,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     };
   }, [user, fetchMyRooms]);
 
-  // Apply client-side filtering
+  // Apply client-side filtering and sorting
   const filteredRooms = useMemo(() => {
     let result = rooms;
 
@@ -231,6 +231,22 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           room.room_code.toLowerCase().includes(query)
       );
     }
+
+    // Sort: LIVE/playing rooms first, then waiting, then by activity
+    result = [...result].sort((a, b) => {
+      // Playing rooms first
+      if (a.status === "playing" && b.status !== "playing") return -1;
+      if (b.status === "playing" && a.status !== "playing") return 1;
+      
+      // Then waiting rooms
+      if (a.status === "waiting" && b.status === "completed") return -1;
+      if (b.status === "waiting" && a.status === "completed") return 1;
+      
+      // Then by last activity (most recent first)
+      const aTime = new Date(a.last_activity_at || a.created_at).getTime();
+      const bTime = new Date(b.last_activity_at || b.created_at).getTime();
+      return bTime - aTime;
+    });
 
     return result;
   }, [rooms, filter, friendIds, searchQuery]);

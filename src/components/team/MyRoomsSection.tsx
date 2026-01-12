@@ -10,6 +10,8 @@ import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 import { getGradientById } from "@/config/roomGradients";
+import { formatDistanceToNow } from "date-fns";
+import { ka } from "date-fns/locale";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -268,6 +270,14 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
               {room.category_name}
             </p>
           )}
+          
+          {/* Created date */}
+          <p className="text-xs text-white/60 mt-1">
+            {formatDistanceToNow(new Date(room.created_at), { 
+              addSuffix: true, 
+              locale: ka 
+            })}
+          </p>
         </div>
         
         {/* Bottom section - frosted glass style */}
