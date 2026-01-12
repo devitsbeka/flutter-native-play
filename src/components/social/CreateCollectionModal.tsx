@@ -659,77 +659,81 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           )}
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {rounds.map((round, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-3 bg-muted rounded-xl space-y-3"
+              className="bg-card border-2 border-border rounded-2xl shadow-sm overflow-hidden"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground">რაუნდი {index + 1}</span>
+              {/* Card Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+                <span className="text-sm font-bold text-foreground">რაუნდი {index + 1}</span>
                 {rounds.length > 1 && (
                   <button
                     onClick={() => removeRound(index)}
-                    className="p-1 text-destructive hover:bg-destructive/10 rounded-lg"
+                    className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
               
-              <Input
-                value={round.subject}
-                onChange={(e) => updateRound(index, "subject", e.target.value)}
-                placeholder="თემა (მაგ: ფიზიკა, ფეხბურთი...)"
-                className="rounded-lg text-sm"
-              />
-              
-              <div className="flex gap-2">
-                <select
-                  value={round.questionCount}
-                  onChange={(e) => updateRound(index, "questionCount", parseInt(e.target.value))}
-                  className="flex-1 bg-background rounded-lg px-3 py-2 text-sm border border-border"
-                >
-                  <option value={5}>5 კითხვა</option>
-                  <option value={7}>7 კითხვა</option>
-                  <option value={10}>10 კითხვა</option>
-                </select>
+              {/* Card Content */}
+              <div className="p-4 space-y-3">
+                <Input
+                  value={round.subject}
+                  onChange={(e) => updateRound(index, "subject", e.target.value)}
+                  placeholder="თემა (მაგ: ფიზიკა, ფეხბურთი...)"
+                  className="rounded-xl text-sm h-11"
+                />
                 
-                <select
-                  value={round.answerFormat}
-                  onChange={(e) => updateRound(index, "answerFormat", e.target.value)}
-                  className="flex-1 bg-background rounded-lg px-3 py-2 text-sm border border-border"
-                >
-                  <option value="4_answers">4 პასუხი</option>
-                  <option value="true_false">მართალი/მცდარი</option>
-                </select>
-              </div>
+                <div className="flex gap-2">
+                  <select
+                    value={round.questionCount}
+                    onChange={(e) => updateRound(index, "questionCount", parseInt(e.target.value))}
+                    className="flex-1 bg-background rounded-xl px-3 py-2.5 text-sm border border-border"
+                  >
+                    <option value={5}>5 კითხვა</option>
+                    <option value={7}>7 კითხვა</option>
+                    <option value={10}>10 კითხვა</option>
+                  </select>
+                  
+                  <select
+                    value={round.answerFormat}
+                    onChange={(e) => updateRound(index, "answerFormat", e.target.value)}
+                    className="flex-1 bg-background rounded-xl px-3 py-2.5 text-sm border border-border"
+                  >
+                    <option value="4_answers">4 პასუხი</option>
+                    <option value="true_false">მართალი/მცდარი</option>
+                  </select>
+                </div>
 
-              {/* Difficulty Selector */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block">სირთულე</label>
-                <div className="flex gap-1.5">
-                  {[
-                    { value: "mixed" as const, emoji: "🎲", label: "შერეული" },
-                    { value: "easy" as const, emoji: "🟢", label: "ადვილი" },
-                    { value: "medium" as const, emoji: "🟡", label: "საშუალო" },
-                    { value: "hard" as const, emoji: "🔴", label: "რთული" },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => updateRound(index, "difficulty", opt.value)}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                        round.difficulty === opt.value
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-background border border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="block">{opt.emoji}</span>
-                    </button>
-                  ))}
+                {/* Difficulty Selector */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-2 block">სირთულე</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "mixed" as const, emoji: "🎲", label: "შერეული" },
+                      { value: "easy" as const, emoji: "🟢", label: "ადვილი" },
+                      { value: "medium" as const, emoji: "🟡", label: "საშუალო" },
+                      { value: "hard" as const, emoji: "🔴", label: "რთული" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateRound(index, "difficulty", opt.value)}
+                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-medium transition-all ${
+                          round.difficulty === opt.value
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted border border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <span className="block text-base">{opt.emoji}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>
