@@ -404,6 +404,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       <ChallengeTypeModal
         isOpen={challengeModalOpen}
         onClose={() => setChallengeModalOpen(false)}
+        onChallengeStart={() => {
+          // Close both modals when challenge starts
+          setChallengeModalOpen(false);
+          onClose();
+        }}
         targetUserId={userId || ""}
         targetUserProfile={data?.profile ? {
           nickname: data.profile.nickname,
