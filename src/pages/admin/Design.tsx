@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Minus, Plus, RotateCcw, Loader2, AlertTriangle, 
   Search, ChevronDown, ChevronRight, Monitor, Tablet, Smartphone, X,
-  LayoutGrid, Layers, Play, Eye
+  LayoutGrid, Layers, Play, Eye, PanelLeftClose, PanelLeft
 } from "lucide-react";
 import { 
   createMemoryRouter, 
@@ -677,6 +677,7 @@ export default function Design() {
   ]);
   const [activePageId, setActivePageId] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<PageDefinition | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Get current categories based on tab
   const currentCategories = activeTab === "pages" ? pageCategories : modalCategories;
@@ -738,56 +739,76 @@ export default function Design() {
   return (
     <div className="h-screen flex overflow-hidden bg-muted/30">
       {/* Sidebar */}
-      <aside className="w-64 bg-background border-r flex flex-col shrink-0">
-        <div className="p-4 border-b">
-          <h1 className="font-bold text-lg">Design System</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            {totalPages} pages • {totalModals} modals
-          </p>
+      <aside className={cn(
+        "bg-background border-r flex flex-col shrink-0 transition-all duration-300",
+        sidebarCollapsed ? "w-12" : "w-64"
+      )}>
+        {/* Header with collapse toggle */}
+        <div className={cn("border-b flex items-center", sidebarCollapsed ? "p-2 justify-center" : "p-4 justify-between")}>
+          {!sidebarCollapsed && (
+            <div>
+              <h1 className="font-bold text-lg">Design System</h1>
+              <p className="text-xs text-muted-foreground mt-1">
+                {totalPages} pages • {totalModals} modals
+              </p>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          >
+            {sidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+          </Button>
         </div>
         
-        {/* Main Tabs */}
-        <div className="p-3 border-b">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "pages" | "modals")}>
-            <TabsList className="w-full">
-              <TabsTrigger value="pages" className="flex-1 gap-1">
-                <LayoutGrid className="w-3 h-3" />
-                Pages ({totalPages})
-              </TabsTrigger>
-              <TabsTrigger value="modals" className="flex-1 gap-1">
-                <Layers className="w-3 h-3" />
-                Modals ({totalModals})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        
-        {/* Search */}
-        <div className="p-3 border-b">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder={`Search ${activeTab}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9"
-            />
-          </div>
-        </div>
+        {!sidebarCollapsed && (
+          <>
+            {/* Main Tabs */}
+            <div className="p-3 border-b">
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "pages" | "modals")}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="pages" className="flex-1 gap-1">
+                    <LayoutGrid className="w-3 h-3" />
+                    Pages ({totalPages})
+                  </TabsTrigger>
+                  <TabsTrigger value="modals" className="flex-1 gap-1">
+                    <Layers className="w-3 h-3" />
+                    Modals ({totalModals})
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            {/* Search */}
+            <div className="p-3 border-b">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={`Search ${activeTab}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+            </div>
 
-        {/* Categories */}
-        <ScrollArea className="flex-1 p-2">
-          {filteredCategories.map((category) => (
-            <SidebarCategory
-              key={category.id}
-              category={category}
-              isExpanded={expandedCategories.includes(category.id)}
-              onToggle={() => toggleCategory(category.id)}
-              activePageId={activePageId}
-              onPageClick={handlePageClick}
-            />
-          ))}
-        </ScrollArea>
+            {/* Categories */}
+            <ScrollArea className="flex-1 p-2">
+              {filteredCategories.map((category) => (
+                <SidebarCategory
+                  key={category.id}
+                  category={category}
+                  isExpanded={expandedCategories.includes(category.id)}
+                  onToggle={() => toggleCategory(category.id)}
+                  activePageId={activePageId}
+                  onPageClick={handlePageClick}
+                />
+              ))}
+            </ScrollArea>
+          </>
+        )}
       </aside>
 
       {/* Main Content */}
