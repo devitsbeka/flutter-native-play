@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, HelpCircle, Library, Sparkles, UserPlus, X, Dices, Share2, RefreshCw, Play, Pencil, Gamepad2, Users } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -25,6 +25,10 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import iconCollections from "@/assets/icon-collections.png";
+import storyDice from "@/assets/story-dice.png";
+import secretBookcase from "@/assets/secret-bookcase.png";
+import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPICS = [
@@ -529,7 +533,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                   </div>
                 </>
               ) : (
-                <Sparkles className="w-5 h-5 text-primary" />
+                <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
               )}
             </button>
             
@@ -741,7 +745,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                          <Dices className="w-5 h-5 text-white" />
+                          <img src={storyDice} alt="" className="w-6 h-6 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
@@ -800,7 +804,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                         animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
                         transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
                       >
-                        <Dices className={`w-6 h-6 ${isSearchingRandom ? "text-white" : "text-purple-500"}`} />
+                        <img src={storyDice} alt="" className="w-7 h-7 object-contain" />
                       </motion.div>
                     </div>
                     <div className="flex-1 text-left relative z-10">
@@ -851,7 +855,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                          <Library className="w-5 h-5 text-white" />
+                          <img src={secretBookcase} alt="" className="w-6 h-6 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
@@ -890,7 +894,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                         ? "bg-white/20" 
                         : "bg-blue-500/10"
                     }`}>
-                      <Library className={`w-6 h-6 ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-blue-500"}`} />
+                      <img src={secretBookcase} alt="" className="w-7 h-7 object-contain" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-foreground"}`}>
@@ -939,10 +943,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-5 h-5 text-white" />
+                        <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white">🎯 ტრივია</p>
+                        <p className="font-medium text-white">ტრივია</p>
                         <p className="text-xs text-white/70">1 რაუნდი, სწრაფი შექმნა</p>
                       </div>
                     </motion.button>
@@ -955,10 +959,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={iconCollections} alt="" className="w-6 h-6 object-contain" />
+                        <img src={iconCollections} alt="" className="w-7 h-7 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white">📚 კოლექცია</p>
+                        <p className="font-medium text-white">კოლექცია</p>
                         <p className="text-xs text-white/70">რამდენიმე რაუნდი ერთად</p>
                       </div>
                     </motion.button>
@@ -971,10 +975,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <Users className="w-5 h-5 text-white" />
+                        <img src={iconGroupOfPeople} alt="" className="w-7 h-7 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white">🎉 MyTrivia Party</p>
+                        <p className="font-medium text-white">MyTrivia Party</p>
                         <p className="text-xs text-white/70">შენი კითხვები, შენი პასუხები</p>
                       </div>
                     </motion.button>
@@ -998,7 +1002,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                         ? "bg-white/20" 
                         : "bg-emerald-500/10"
                     }`}>
-                      <Sparkles className={`w-6 h-6 ${selectionMode === "create" && customTriviaQuestions ? "text-white" : "text-emerald-500"}`} />
+                      <img src={triviaBuzzer} alt="" className="w-7 h-7 object-contain" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "create" && customTriviaQuestions ? "text-white" : "text-foreground"}`}>
@@ -1041,9 +1045,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType 
                       : "bg-gradient-to-br from-emerald-500 to-teal-600"
                   )}>
                     {isPersonalTrivia ? (
-                      <Users className="w-7 h-7 text-white" />
+                      <img src={iconGroupOfPeople} alt="" className="w-8 h-8 object-contain" />
                     ) : (
-                      <Sparkles className="w-7 h-7 text-white" />
+                      <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
