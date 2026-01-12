@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import Lottie from "lottie-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LeagueEntry } from "@/hooks/useLeagueLeaderboard";
-import coinIcon from "@/assets/icons/icon-coin.png";
+import pirateCoinAnimation from "@/assets/lottie/pirate-coin.json";
 
 interface LeaguePlayerRowProps {
   entry: LeagueEntry;
@@ -143,7 +144,11 @@ export function LeaguePlayerRow({
         }
         transition={{ delay: 1.6, duration: 0.3 }}
       >
-        <img src={coinIcon} alt="" className="w-5 h-5" />
+        <Lottie 
+          animationData={pirateCoinAnimation} 
+          loop={true}
+          className="w-[26px] h-[26px]"
+        />
         <span className={`font-bold text-base ${isCurrentUser ? "text-primary" : "text-foreground"}`}>
           {(entry.coins || entry.weekly_xp).toLocaleString()}
         </span>
