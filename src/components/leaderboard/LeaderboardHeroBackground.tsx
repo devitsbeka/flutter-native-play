@@ -86,21 +86,20 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
       transition={{ duration: 0.5 }}
       style={{ minHeight: '62vh' }}
     >
-      {/* Pannable Map Background - touch-none allows our drag to work */}
-      <motion.div 
-        className="absolute inset-0 touch-none cursor-grab active:cursor-grabbing" 
+      {/* Map container - static wrapper */}
+      <div 
+        className="absolute inset-0" 
         style={{ height: 'calc(100% + 100px)', top: '-100px' }}
-        drag="x"
-        dragConstraints={{ left: -150, right: 150 }}
-        dragElastic={0.3}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
       >
+        {/* Draggable image - touch-none prevents browser scroll hijacking */}
         <motion.div
-          className="absolute inset-0 w-[160%] h-full pointer-events-none"
-          style={{ 
-            marginLeft: '-30%',
-          }}
+          className="absolute inset-0 w-[160%] h-full touch-none cursor-grab active:cursor-grabbing"
+          style={{ marginLeft: '-30%' }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.15}
+          onDrag={handleDrag}
+          onDragEnd={handleDragEnd}
           animate={{
             x: `${targetOffset}%`,
           }}
@@ -113,11 +112,11 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           <img 
             src={gameMapBg} 
             alt="" 
-            className="w-full h-full object-cover object-bottom select-none"
+            className="w-full h-full object-cover object-bottom select-none pointer-events-none"
             draggable={false}
           />
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Clickable Trophy Hotspots - for tap/click selection */}
       <div className="absolute inset-0 z-[4] pointer-events-none" style={{ height: 'calc(100% + 100px)', top: '-100px' }}>
