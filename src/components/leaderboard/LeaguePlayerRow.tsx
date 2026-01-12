@@ -56,18 +56,18 @@ export function LeaguePlayerRow({
   const rowHeight = 72;
   const initialOffset = rankDiff * rowHeight;
 
-  // Determine background styling based on zone - glassmorphism effect
+  // Determine background styling based on zone
   const getRowBackground = () => {
     if (isCurrentUser) {
-      return "bg-white/80 backdrop-blur-md shadow-sm";
+      return "bg-primary/10 shadow-sm";
     }
     if (isPromotionZone) {
-      return "bg-white/60 backdrop-blur-md";
+      return "bg-emerald-500/5";
     }
     if (isDemotionZone) {
-      return "bg-white/50 backdrop-blur-md";
+      return "bg-destructive/5";
     }
-    return "bg-white/60 backdrop-blur-md hover:bg-white/70";
+    return "bg-muted/30 hover:bg-muted/50";
   };
 
   // Get zone indicator color for the rank badge ring

@@ -11,7 +11,7 @@ import { LeagueLockedOverlay } from "@/components/leaderboard/LeagueLockedOverla
 import { LeaderboardHeroBackground } from "@/components/leaderboard/LeaderboardHeroBackground";
 import { LeagueHeroHeader } from "@/components/leaderboard/LeagueHeroHeader";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
-import leaderboardBg from "@/assets/img-leaderboard.png";
+
 import {
   Carousel,
   CarouselContent,
@@ -103,16 +103,7 @@ export default function Leaderboards() {
   const activeTier = viewingTier ?? userTier;
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Full page background image */}
-      <div className="fixed inset-0 -z-10">
-        <img 
-          src={leaderboardBg} 
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
-      </div>
+    <div className="min-h-screen flex flex-col bg-background">
       
       {/* Hero Section with Animated Background */}
       <LeaderboardHeroBackground tier={activeTier}>
