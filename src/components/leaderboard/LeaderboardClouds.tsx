@@ -2,7 +2,7 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 
 interface CloudProps {
-  size: 'small' | 'medium' | 'large';
+  size: 'small' | 'medium' | 'large' | 'xlarge';
   startY: number;
   duration: number;
   delay: number;
@@ -10,11 +10,12 @@ interface CloudProps {
   blur?: number;
 }
 
-const Cloud = memo(({ size, startY, duration, delay, opacity, blur = 8 }: CloudProps) => {
+const Cloud = memo(({ size, startY, duration, delay, opacity, blur = 12 }: CloudProps) => {
   const sizes = {
-    small: { width: 80, height: 40 },
-    medium: { width: 120, height: 60 },
-    large: { width: 180, height: 80 },
+    small: { width: 160, height: 80 },
+    medium: { width: 240, height: 120 },
+    large: { width: 320, height: 160 },
+    xlarge: { width: 420, height: 200 },
   };
   const { width, height } = sizes[size];
   
@@ -27,8 +28,8 @@ const Cloud = memo(({ size, startY, duration, delay, opacity, blur = 8 }: CloudP
         height,
         filter: `blur(${blur}px)`,
       }}
-      initial={{ x: -width - 50 }}
-      animate={{ x: 'calc(100vw + 50px)' }}
+      initial={{ x: -width - 100 }}
+      animate={{ x: 'calc(100vw + 100px)' }}
       transition={{
         duration,
         delay,
@@ -36,11 +37,15 @@ const Cloud = memo(({ size, startY, duration, delay, opacity, blur = 8 }: CloudP
         ease: "linear",
       }}
     >
-      <svg viewBox="0 0 180 80" className="w-full h-full">
-        <ellipse cx="45" cy="50" rx="40" ry="25" fill="white" opacity={opacity} />
-        <ellipse cx="90" cy="40" rx="50" ry="30" fill="white" opacity={opacity * 1.1} />
-        <ellipse cx="140" cy="45" rx="35" ry="25" fill="white" opacity={opacity * 0.9} />
-        <ellipse cx="70" cy="55" rx="30" ry="20" fill="white" opacity={opacity * 0.8} />
+      <svg viewBox="0 0 200 100" className="w-full h-full">
+        {/* Main cloud body */}
+        <ellipse cx="50" cy="60" rx="45" ry="30" fill="white" opacity={opacity} />
+        <ellipse cx="100" cy="50" rx="55" ry="38" fill="white" opacity={opacity * 1.15} />
+        <ellipse cx="155" cy="55" rx="42" ry="32" fill="white" opacity={opacity} />
+        {/* Extra puffs for realism */}
+        <ellipse cx="75" cy="45" rx="35" ry="28" fill="white" opacity={opacity * 0.9} />
+        <ellipse cx="130" cy="42" rx="40" ry="30" fill="white" opacity={opacity * 0.95} />
+        <ellipse cx="100" cy="65" rx="50" ry="25" fill="white" opacity={opacity * 0.85} />
       </svg>
     </motion.div>
   );
@@ -48,14 +53,15 @@ const Cloud = memo(({ size, startY, duration, delay, opacity, blur = 8 }: CloudP
 
 Cloud.displayName = 'Cloud';
 
-// Cloud configuration for consistent, realistic look
+// Cloud configuration - bigger, more visible clouds
 const CLOUD_CONFIG: CloudProps[] = [
-  { size: 'large', startY: 5, duration: 55, delay: 0, opacity: 0.65, blur: 10 },
-  { size: 'medium', startY: 18, duration: 42, delay: 8, opacity: 0.5, blur: 8 },
-  { size: 'small', startY: 8, duration: 48, delay: 15, opacity: 0.55, blur: 6 },
-  { size: 'medium', startY: 28, duration: 60, delay: 22, opacity: 0.4, blur: 12 },
-  { size: 'small', startY: 14, duration: 38, delay: 30, opacity: 0.5, blur: 7 },
-  { size: 'large', startY: 22, duration: 65, delay: 35, opacity: 0.35, blur: 14 },
+  { size: 'xlarge', startY: 2, duration: 50, delay: 0, opacity: 0.85, blur: 15 },
+  { size: 'large', startY: 15, duration: 40, delay: 5, opacity: 0.75, blur: 12 },
+  { size: 'medium', startY: 8, duration: 45, delay: 12, opacity: 0.7, blur: 10 },
+  { size: 'xlarge', startY: 25, duration: 55, delay: 18, opacity: 0.65, blur: 18 },
+  { size: 'large', startY: 5, duration: 42, delay: 25, opacity: 0.8, blur: 14 },
+  { size: 'medium', startY: 20, duration: 38, delay: 32, opacity: 0.7, blur: 11 },
+  { size: 'small', startY: 12, duration: 35, delay: 8, opacity: 0.75, blur: 8 },
 ];
 
 export const LeaderboardClouds = memo(function LeaderboardClouds() {
