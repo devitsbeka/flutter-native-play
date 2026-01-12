@@ -465,20 +465,20 @@ function DraggableQuestionCard({
           >
             <GripVertical className="w-4 h-4" />
           </div>
-          <span className="text-sm font-bold text-foreground">
+          <span className="font-bold text-foreground" style={{ fontSize: '13px' }}>
             კითხვა {questionIndex + 1}
           </span>
         </div>
         
         {/* Action buttons row */}
         <div className="flex items-center gap-1.5">
-          {/* Magical Idea button */}
+          {/* Magical Idea button - 5% smaller */}
           <button
             onClick={onInsertIdea}
-            className="h-9 min-w-[44px] px-2.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center gap-1.5 hover:from-amber-500/30 hover:to-orange-500/30 transition-all active:scale-95"
+            className="h-[34px] min-w-[42px] px-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center gap-1.5 hover:from-amber-500/30 hover:to-orange-500/30 transition-all active:scale-95"
             title="ჩასვი იდეა"
           >
-            <Sparkles className="w-4 h-4 text-amber-500" />
+            <Sparkles className="w-[15px] h-[15px] text-amber-500" />
             <span className="text-xs font-medium text-amber-600 dark:text-amber-400">იდეა</span>
           </button>
           
@@ -488,25 +488,28 @@ function DraggableQuestionCard({
             onSelect={(slug) => onUpdateQuestion("iconSlug", slug)}
           />
           
-          {/* Copy button */}
-          <button
-            onClick={onDuplicate}
-            className="h-9 w-9 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center"
-            title="დუბლირება"
-          >
-            <Copy className="w-4 h-4" />
-          </button>
-          
-          {/* Delete button */}
-          {questionsCount > 1 && (
+          {/* Copy and Delete buttons - no gap between them */}
+          <div className="flex items-center gap-0">
+            {/* Copy button */}
             <button
-              onClick={onRemove}
-              className="h-9 w-9 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center"
-              title="წაშლა"
+              onClick={onDuplicate}
+              className="h-9 w-9 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center"
+              title="დუბლირება"
             >
-              <Trash2 className="w-4 h-4" />
+              <Copy className="w-4 h-4" />
             </button>
-          )}
+            
+            {/* Delete button */}
+            {questionsCount > 1 && (
+              <button
+                onClick={onRemove}
+                className="h-9 w-9 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center"
+                title="წაშლა"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
       
