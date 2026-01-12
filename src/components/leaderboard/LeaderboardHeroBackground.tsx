@@ -10,11 +10,12 @@ interface LeaderboardHeroBackgroundProps {
 }
 
 // Trophy positions on the original image (as % of full image width)
-// and corresponding pan offsets to center them
+// Silver=left(~22%), Gold=center(~50%), Bronze=right(~78%)
+// Offsets move the image: positive=shift right (show left side), negative=shift left (show right side)
 const TROPHIES = [
-  { tier: 2, imageX: 25, offset: 15.5, label: 'Silver' },
-  { tier: 3, imageX: 50, offset: 0, label: 'Gold' },
-  { tier: 1, imageX: 73, offset: -14.5, label: 'Bronze' },
+  { tier: 2, imageX: 22, offset: 28, label: 'Silver' },   // Silver on LEFT, shift right to center it
+  { tier: 3, imageX: 50, offset: 0, label: 'Gold' },      // Gold in CENTER, no offset needed
+  { tier: 1, imageX: 78, offset: -28, label: 'Bronze' },  // Bronze on RIGHT, shift left to center it
 ];
 
 // Get offset for a tier
@@ -91,10 +92,10 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
         className="absolute inset-0" 
         style={{ height: 'calc(100% + 100px)', top: '-100px' }}
       >
-        {/* Draggable image - touch-none prevents browser scroll hijacking */}
+        {/* Draggable image - wider container (250%) for proper panning */}
         <motion.div
-          className="absolute inset-0 w-[160%] h-full touch-none cursor-grab active:cursor-grabbing"
-          style={{ marginLeft: '-30%' }}
+          className="absolute inset-0 w-[250%] h-full touch-none cursor-grab active:cursor-grabbing"
+          style={{ marginLeft: '-75%' }}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.15}
@@ -124,9 +125,10 @@ export function LeaderboardHeroBackground({ tier, children, onTierSelect, userTi
           const isLocked = trophy.tier > userTier;
           
           // Calculate viewport position based on current tier's offset
-          const viewportStart = 30 - targetOffset * 1.6;
-          const viewportWidth = 62.5;
-          const viewportX = ((trophy.imageX - viewportStart) / viewportWidth) * 100;
+          // With 250% width and -75% margin, viewport shows center 40% of image by default
+          const imageCenter = 75 + targetOffset; // Where viewport center is on image (in %)
+          const trophyRelativePos = trophy.imageX - imageCenter; // Position relative to viewport center
+          const viewportX = 50 + (trophyRelativePos * 2.5); // Scale to viewport (250% = 2.5x)
           
           if (viewportX < -20 || viewportX > 120) return null;
           
