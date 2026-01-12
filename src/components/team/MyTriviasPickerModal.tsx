@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Gamepad2, Heart, Play, FolderOpen, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { Gamepad2, Heart, Play, FolderOpen, ChevronLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,136 +74,155 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect }: MyTrivias
     onOpenChange(false);
   };
 
+  const handleClose = () => onOpenChange(false);
+
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh] p-0 gap-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b border-border">
-          <DialogTitle className="flex items-center gap-2">
-            <Gamepad2 className="w-5 h-5 text-primary" />
-            ჩემი ტრივიები
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="p-4 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+        >
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <button
+              onClick={handleClose}
+              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Gamepad2 className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">ჩემი ტრივიები</h2>
             </div>
-          ) : (
-            <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="trivias" className="flex items-center gap-2">
-                  <Gamepad2 className="w-4 h-4" />
-                  ტრივია ({trivias.length})
-                </TabsTrigger>
-                <TabsTrigger value="collections" className="flex items-center gap-2">
-                  <FolderOpen className="w-4 h-4" />
-                  კოლექციები ({collections.length})
-                </TabsTrigger>
-              </TabsList>
+          </div>
 
-              <TabsContent value="trivias" className="max-h-[45vh] overflow-y-auto">
-                {trivias.length === 0 ? (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <Gamepad2 className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p>ჯერ არ გაქვს ტრივიები</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {trivias.map((trivia, index) => (
-                      <motion.button
-                        key={trivia.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => handleSelect({ id: trivia.id, title: trivia.title, type: "trivia" })}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                          {trivia.cover_image ? (
-                            <img
-                              src={trivia.cover_image}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Gamepad2 className="w-6 h-6 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground truncate">
-                            {trivia.title}
-                          </p>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Play className="w-3 h-3" /> {trivia.plays_count || 0}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <Tabs value={tab} onValueChange={setTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="trivias" className="flex items-center gap-2">
+                    <Gamepad2 className="w-4 h-4" />
+                    ტრივია ({trivias.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="collections" className="flex items-center gap-2">
+                    <FolderOpen className="w-4 h-4" />
+                    კოლექციები ({collections.length})
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="collections" className="max-h-[45vh] overflow-y-auto">
-                {collections.length === 0 ? (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <FolderOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p>ჯერ არ გაქვს კოლექციები</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {collections.map((collection, index) => (
-                      <motion.button
-                        key={collection.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => handleSelect({
-                          id: collection.id,
-                          title: collection.title,
-                          type: "collection",
-                        })}
-                        className="rounded-xl overflow-hidden border border-border text-left"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div
-                          className="aspect-video relative"
-                          style={{
-                            background: collection.cover_gradient || "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)/0.5))",
-                          }}
+                <TabsContent value="trivias">
+                  {trivias.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                      <Gamepad2 className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                      <p>ჯერ არ გაქვს ტრივიები</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {trivias.map((trivia, index) => (
+                        <motion.button
+                          key={trivia.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          onClick={() => handleSelect({ id: trivia.id, title: trivia.title, type: "trivia" })}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {collection.cover_image && (
-                            <img
-                              src={collection.cover_image}
-                              alt=""
-                              className="absolute inset-0 w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-                        <div className="p-2 bg-card">
-                          <p className="font-medium text-sm text-foreground truncate">
-                            {collection.title}
-                          </p>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Play className="w-3 h-3" /> {collection.plays_count || 0}
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {trivia.cover_image ? (
+                              <img
+                                src={trivia.cover_image}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Gamepad2 className="w-6 h-6 text-primary" />
+                            )}
                           </div>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground truncate">
+                              {trivia.title}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Play className="w-3 h-3" /> {trivia.plays_count || 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="collections">
+                  {collections.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                      <FolderOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                      <p>ჯერ არ გაქვს კოლექციები</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {collections.map((collection, index) => (
+                        <motion.button
+                          key={collection.id}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.03 }}
+                          onClick={() => handleSelect({
+                            id: collection.id,
+                            title: collection.title,
+                            type: "collection",
+                          })}
+                          className="rounded-xl overflow-hidden border border-border text-left"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div
+                            className="aspect-video relative"
+                            style={{
+                              background: collection.cover_gradient || "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)/0.5))",
+                            }}
+                          >
+                            {collection.cover_image && (
+                              <img
+                                src={collection.cover_image}
+                                alt=""
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div className="p-2 bg-card">
+                            <p className="font-medium text-sm text-foreground truncate">
+                              {collection.title}
+                            </p>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Play className="w-3 h-3" /> {collection.plays_count || 0}
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
