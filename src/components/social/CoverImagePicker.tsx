@@ -178,26 +178,21 @@ export function CoverImagePicker({
     setValidationWarning(null);
     
     try {
-      // Start background generation
+      // Start background generation with skipNotification to auto-apply
       await startCoverGeneration(
         {
           title: title || suggestPrompt || "Quiz",
           subject: suggestPrompt || title || "trivia quiz",
-          roundId: roundId
+          roundId: roundId,
+          skipNotification: true  // Auto-apply without popup
         },
         (imageUrl) => {
-          // Called when user clicks "Use" in notification
+          // Called automatically when generation completes
           onImageChange(imageUrl);
           // Refresh generations list
           fetchPreviousGenerations();
         }
       );
-
-      // Show info about background generation
-      toast({
-        title: "გენერაცია დაიწყო ✨",
-        description: "შეგიძლიათ გააგრძელოთ რედაქტირება. შეტყობინება გამოჩნდება როცა მზად იქნება.",
-      });
 
     } catch (error: unknown) {
       console.error("Error starting generation:", error);
