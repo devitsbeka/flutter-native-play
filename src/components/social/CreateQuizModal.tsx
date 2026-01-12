@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock, X } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -768,30 +767,53 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     }
   };
 
+  if (!open) return null;
+
   return (
     <>
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md p-6 overflow-hidden">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background flex flex-col"
+          >
+            {/* Fixed Header */}
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+              <button
+                onClick={handleClose}
+                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+              
+              <h2 className="text-lg font-bold text-foreground">შექმენი Trivia</h2>
+              
+              {/* Progress dots */}
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <motion.div
+                    key={s}
+                    animate={{
+                      width: s === step ? 16 : 6,
+                      backgroundColor: s <= step ? "hsl(var(--primary))" : "hsl(var(--muted))",
+                    }}
+                    className="h-1.5 rounded-full"
+                  />
+                ))}
+              </div>
+            </div>
 
-          {/* Progress dots */}
-          <div className="flex justify-center gap-2 mb-4">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <motion.div
-                key={s}
-                animate={{
-                  width: s === step ? 24 : s < step ? 12 : 8,
-                  backgroundColor: s <= step ? "hsl(var(--primary))" : "hsl(var(--muted))",
-                }}
-                className="h-2 rounded-full"
-              />
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            {renderStep()}
-          </AnimatePresence>
-        </DialogContent>
-      </Dialog>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-4 py-6">
+              <AnimatePresence mode="wait">
+                {renderStep()}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Question Dialog */}
       {editingQuestion && (
