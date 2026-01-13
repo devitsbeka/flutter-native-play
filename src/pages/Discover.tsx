@@ -223,7 +223,7 @@ export default function Discover() {
                             onFocus={() => setIsSearchFocused(true)}
                             onBlur={() => setIsSearchFocused(false)}
                             placeholder={t("discover.searchPlaceholder")}
-                            className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm outline-none"
+                            className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-base outline-none"
                             autoFocus
                           />
                           {searchQuery && (
