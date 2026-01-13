@@ -12,7 +12,13 @@ const PlayerProfileContext = createContext<PlayerProfileContextType | null>(null
 export function usePlayerProfile() {
   const context = useContext(PlayerProfileContext);
   if (!context) {
-    throw new Error("usePlayerProfile must be used within PlayerProfileProvider");
+    // Return a no-op fallback for components that might render during initial load
+    // This prevents crashes during hot reload or when context isn't ready
+    return {
+      openProfile: () => {},
+      closeProfile: () => {},
+      currentProfileUserId: null,
+    };
   }
   return context;
 }
