@@ -168,10 +168,10 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-2xl border-2 flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0 relative ${
+        className={`rounded-2xl flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0 relative ${
           selectedIconUnsafe 
-            ? "border-destructive bg-destructive/10" 
-            : "border-border bg-muted/50"
+            ? "border-2 border-destructive bg-destructive/10" 
+            : ""
         }`}
         style={{ width: large ? 86 : 48, height: large ? 86 : 48 }}
       >
