@@ -651,10 +651,10 @@ export function GameStyleQuestionEditor({
         )}
 
         <button
-          onClick={handleAddQuestion}
-          className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
+          onClick={() => setShowDeleteConfirm(true)}
+          className="w-10 h-10 rounded-full bg-white/20 hover:bg-red-500/50 flex items-center justify-center transition-all"
         >
-          <Plus className="w-6 h-6 text-white" />
+          <Trash2 className="w-6 h-6 text-white" />
         </button>
       </div>
 
@@ -683,12 +683,6 @@ export function GameStyleQuestionEditor({
             <Copy className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-red-500/50 text-white transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
