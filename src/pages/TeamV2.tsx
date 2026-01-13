@@ -381,7 +381,7 @@ function TeamContentV2() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center"
             >
-              <span className="text-lg font-bold text-foreground tracking-tight">
+              <span className="text-lg font-slackey text-foreground tracking-tight">
                 MyTrivia
               </span>
               <LiveBadge />
@@ -530,21 +530,6 @@ function TeamContentV2() {
             </div>
           </div>
 
-          {/* Row 4: CTA Button - Show on rooms tab (BEFORE rooms list) */}
-          {activeTab === "rooms" && (
-            <div className="lg:hidden px-4 pb-3 flex gap-2">
-              <ChunkyButton 
-                onClick={() => setShowCreateModal(true)}
-                className="flex-1 gap-1.5"
-                variant="primary"
-                size="lg"
-              >
-                <Plus className="w-5 h-5" />
-                სათამაშო ოთახი
-              </ChunkyButton>
-            </div>
-          )}
-
           {/* Filter Bar for Rooms tab */}
           {activeTab === "rooms" && (
             <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
@@ -555,6 +540,7 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowCreateModal(true)}
               />
             </div>
           )}

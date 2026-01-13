@@ -5,15 +5,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
-// Shimmer skeleton component
-function ShimmerSkeleton({ className }: { className?: string }) {
+// Static placeholder component (no shimmer)
+function StaticPlaceholder({ className }: { className?: string }) {
   return (
     <div 
-      className={`relative overflow-hidden ${className}`}
-      style={{ backgroundColor: '#ECCCF2' }}
-    >
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-    </div>
+      className={`${className}`}
+      style={{ backgroundColor: 'rgba(236, 204, 242, 0.48)' }}
+    />
   );
 }
 
@@ -39,8 +37,8 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
-            <ShimmerSkeleton className="w-16 h-16 rounded-full" />
-            <ShimmerSkeleton className="w-12 h-3 rounded" />
+            <StaticPlaceholder className="w-16 h-16 rounded-full" />
+            <StaticPlaceholder className="w-12 h-3 rounded" />
           </div>
         ))}
       </div>
@@ -89,17 +87,17 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
           )}
         </AnimatePresence>
 
-        {/* Shimmer skeleton placeholders with fade-out */}
+        {/* Static placeholder slots with fade-out */}
         {sortedFriends.length > 0 && skeletonCount > 0 && (
           <>
             {Array.from({ length: skeletonCount }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
                 className="flex flex-col items-center gap-2 flex-shrink-0"
-                style={{ opacity: 0.6 - (index * 0.15) }}
+                style={{ opacity: 0.48 - (index * 0.12) }}
               >
-                <ShimmerSkeleton className="w-16 h-16 rounded-full" />
-                <ShimmerSkeleton className="w-12 h-3 rounded" />
+                <StaticPlaceholder className="w-16 h-16 rounded-full" />
+                <StaticPlaceholder className="w-12 h-3 rounded" />
               </div>
             ))}
           </>
