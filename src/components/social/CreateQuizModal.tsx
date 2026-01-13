@@ -752,6 +752,30 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
   if (!open) return null;
 
+  // Step 5 uses a fullscreen editor, render it separately
+  if (step === 5 && questions.length > 0) {
+    return (
+      <GameStyleQuestionEditor
+        questions={questions}
+        onQuestionsChange={setQuestions}
+        onClose={() => setStep(4)}
+        onPublish={handlePost}
+        subject={subject}
+        answerFormat={answerFormat}
+        title={title}
+        onTitleChange={setTitle}
+        coverImageUrl={coverImageUrl}
+        selectedGradient={selectedGradient}
+        isPublic={isPublic}
+        onPublicChange={setIsPublic}
+        isPosting={isPosting}
+        onRegenerateCover={handleGenerateCover}
+        isGeneratingCover={isGeneratingCoverLocal}
+        coverGenerationCount={coverGenerationCount}
+      />
+    );
+  }
+
   return (
     <>
       <AnimatePresence>
