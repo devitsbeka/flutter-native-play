@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, Lightbulb } from "lucide-react";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -800,6 +800,19 @@ export function GameStylePersonalTrivia({
                         {index + 1}/{questions.length}
                       </div>
 
+                      {/* AI Generate Button - top right, icon only */}
+                      <button
+                        onClick={() => handleGenerateAI(index)}
+                        disabled={isGeneratingAI}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all disabled:opacity-50"
+                      >
+                        {isGeneratingAI && generatingIndex === index ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" />
+                        )}
+                      </button>
+
                       {/* Icon - clickable to edit */}
                       <div className="flex justify-center mb-3 relative z-20">
                         <QuestionIconPicker
@@ -847,24 +860,6 @@ export function GameStylePersonalTrivia({
                         </button>
                       )}
 
-                      {/* AI Generate Button - inside question card at bottom */}
-                      <button
-                        onClick={() => handleGenerateAI(index)}
-                        disabled={isGeneratingAI}
-                        className="mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-50"
-                      >
-                        {isGeneratingAI && generatingIndex === index ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            გენერირება...
-                          </>
-                        ) : (
-                          <>
-                            <Lightbulb className="w-4 h-4" />
-                            {question.question.trim() ? "სცადე სხვა" : "იდეა"}
-                          </>
-                        )}
-                      </button>
                     </div>
                   </div>
 
