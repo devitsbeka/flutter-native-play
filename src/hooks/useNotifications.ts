@@ -22,7 +22,8 @@ export type NotificationType =
   | 'billing'
   | 'subscription'
   | 'system'
-  | 'welcome';
+  | 'welcome'
+  | 'ai_generation';
 
 export interface Notification {
   id: string;

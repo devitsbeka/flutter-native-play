@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, BellOff, Check, Trash2 } from 'lucide-react';
+import { X, Bell, BellOff, Check, Trash2, Loader2, Sparkles, User, ImageIcon, ExternalLink } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useGenerationNotifications, GenerationNotification } from '@/hooks/useGenerationNotifications';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +11,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
-import { getNotificationConfig, NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
@@ -21,7 +21,127 @@ interface NotificationsPanelProps {
   onClose: () => void;
 }
 
-type FilterType = 'all' | 'unread' | 'social' | 'games';
+// Generation notification card with special design
+function GenerationNotificationCard({
+  notification,
+}: {
+  notification: GenerationNotification;
+}) {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    if (notification.status !== 'generating') return;
+    
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - notification.startedAt.getTime()) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [notification.status, notification.startedAt]);
+
+  const getIcon = () => {
+    if (notification.generationType === 'avatar') return <User className="w-4 h-4" />;
+    return <ImageIcon className="w-4 h-4" />;
+  };
+
+  const getTimeDisplay = () => {
+    if (notification.status === 'generating') {
+      const remaining = Math.max(0, notification.estimatedTime - elapsedTime);
+      if (remaining > 0) {
+        return `~${remaining} წმ`;
+      }
+      return 'მზადდება...';
+    }
+    return formatDistanceToNow(notification.startedAt, { addSuffix: false, locale: ka });
+  };
+
+  const getStatusBadge = () => {
+    switch (notification.status) {
+      case 'generating':
+        return (
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            მზადდება
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-medium">
+            <Check className="w-3 h-3" />
+            მზადაა
+          </span>
+        );
+      case 'failed':
+        return (
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-medium">
+            <X className="w-3 h-3" />
+            შეცდომა
+          </span>
+        );
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className={cn(
+        "relative px-4 py-3 rounded-2xl transition-all border-l-4",
+        notification.status === 'generating'
+          ? "bg-primary/5 backdrop-blur-sm border-l-primary"
+          : notification.status === 'completed'
+          ? "bg-emerald-500/5 backdrop-blur-sm border-l-emerald-500"
+          : "bg-destructive/5 backdrop-blur-sm border-l-destructive"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        {/* Thumbnail or placeholder */}
+        <div className="relative w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
+          {notification.status === 'completed' && notification.imageUrl ? (
+            <img 
+              src={notification.imageUrl} 
+              alt={notification.title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-muted-foreground">{getIcon()}</span>
+          )}
+          {notification.status === 'generating' && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium text-foreground truncate">
+              {notification.title}
+            </span>
+            {getStatusBadge()}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {getTimeDisplay()}
+          </p>
+        </div>
+
+        {/* Status indicator */}
+        {notification.status === 'generating' && (
+          <div className="flex-shrink-0">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          </div>
+        )}
+        {notification.status === 'completed' && (
+          <div className="flex-shrink-0">
+            <Check className="w-4 h-4 text-emerald-500" />
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 function NotificationCard({
   notification,
@@ -49,7 +169,16 @@ function NotificationCard({
   
   const isFriendRequest = notification.type === 'friend_request';
   const isGameInvite = notification.type === 'challenge';
-  const hasActions = (isFriendRequest || isGameInvite) && isUnread;
+  const isRoomInvite = notification.type === 'room_invite';
+  const isGameStarted = notification.type === 'game_started';
+  const isGameResult = notification.type === 'game_result';
+  const isTriviaAction = ['trivia_liked', 'trivia_saved', 'trivia_played'].includes(notification.type);
+  
+  // Friend request and challenge have Accept/Decline buttons when unread
+  const hasDualActions = (isFriendRequest || isGameInvite) && isUnread;
+  // Room invite, game started, game result, trivia actions have a single action button
+  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaAction) && !hasDualActions;
+  
   const isLoading = actionLoading === notification.id;
 
   const handleAccept = (e: React.MouseEvent) => {
@@ -70,6 +199,19 @@ function NotificationCard({
     }
   };
 
+  const handleSingleAction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isUnread) onMarkRead(notification.id);
+    onNavigate(notification);
+  };
+
+  const getActionButtonLabel = () => {
+    if (isRoomInvite || isGameStarted) return 'შესვლა';
+    if (isGameResult) return 'ნახვა';
+    if (isTriviaAction) return 'ნახვა';
+    return 'გახსნა';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -80,10 +222,10 @@ function NotificationCard({
         isUnread
           ? "bg-card/90 backdrop-blur-sm border-l-primary"
           : "bg-card/70 backdrop-blur-sm border-l-transparent",
-        !hasActions && "cursor-pointer hover:bg-card"
+        !hasDualActions && !hasSingleAction && "cursor-pointer hover:bg-card"
       )}
       onClick={() => {
-        if (!hasActions) {
+        if (!hasDualActions && !hasSingleAction) {
           if (isUnread) onMarkRead(notification.id);
           onNavigate(notification);
         }
@@ -110,8 +252,8 @@ function NotificationCard({
             {timeAgo}
           </p>
 
-          {/* Action buttons for friend requests and game invites */}
-          {hasActions && (
+          {/* Dual action buttons for friend requests and game invites */}
+          {hasDualActions && (
             <div className="flex gap-2 mt-3">
               <motion.button
                 onClick={handleAccept}
@@ -135,22 +277,38 @@ function NotificationCard({
               </motion.button>
             </div>
           )}
+
+          {/* Single action button for other actionable notifications */}
+          {hasSingleAction && (
+            <div className="mt-3">
+              <motion.button
+                onClick={handleSingleAction}
+                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <ExternalLink className="w-4 h-4" />
+                {getActionButtonLabel()}
+              </motion.button>
+            </div>
+          )}
         </div>
 
-        {/* Delete action - only show for non-actionable items */}
-        {!hasActions && (
-          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(notification.id);
-              }}
-              className="p-2 rounded-xl hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        {/* Unread indicator and delete button */}
+        <div className="flex flex-col items-center gap-2">
+          {isUnread && (
+            <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(notification.id);
+            }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -158,11 +316,10 @@ function NotificationCard({
 
 export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
-  const [filter, setFilter] = useState<FilterType>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Mark all as read when panel opens
@@ -172,18 +329,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     }
   }, [isOpen]);
 
-  const filteredNotifications = notifications.filter((n) => {
-    switch (filter) {
-      case 'unread':
-        return !n.read_at;
-      case 'social':
-        return NOTIFICATION_FILTER_CATEGORIES.social.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.social[number]);
-      case 'games':
-        return NOTIFICATION_FILTER_CATEGORIES.games.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.games[number]);
-      default:
-        return true;
-    }
-  });
+  const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
 
   const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
     setActionLoading(notificationId);
@@ -248,61 +394,55 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
       markAsRead(notification.id);
     }
     
-    // Navigate based on notification type using data fields
+    // Close panel
+    onClose();
+    
     switch (notification.type) {
       case 'game_started':
       case 'room_invite':
         if (data?.room_code) {
-          onClose();
           navigate(`/team?join=${data.room_code}`);
         } else {
-          onClose();
           navigate('/team');
         }
         break;
       case 'friend_request':
       case 'friend_accepted':
-        onClose();
         navigate('/team');
         break;
       case 'challenge':
         if (data?.room_code) {
-          onClose();
           navigate(`/team?join=${data.room_code}`);
         } else {
-          onClose();
           navigate('/team');
         }
         break;
       case 'game_result':
         if (data?.room_code) {
-          onClose();
           navigate(`/team?join=${data.room_code}`);
         } else {
-          onClose();
           navigate('/profile');
         }
         break;
+      case 'trivia_liked':
+      case 'trivia_saved':
+      case 'trivia_played':
+        if (data?.trivia_id) {
+          navigate(`/explore?trivia=${data.trivia_id}`);
+        } else {
+          navigate('/explore');
+        }
+        break;
       case 'reward':
-        onClose();
         navigate('/');
         break;
       case 'achievement':
-        onClose();
         navigate('/profile');
         break;
       default:
-        onClose();
         break;
     }
   };
-
-  const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'ყველა' },
-    { key: 'unread', label: 'წაუკითხავი' },
-    { key: 'social', label: 'სოციალური' },
-    { key: 'games', label: 'თამაშები' },
-  ];
 
   return (
     <AnimatePresence>
@@ -333,7 +473,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
 
             {/* Header */}
             <div className="relative z-10 px-4 pt-4 pb-3">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                     <Bell className="w-6 h-6 text-primary" />
@@ -347,26 +487,6 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                   <X className="w-5 h-5 text-foreground" />
                 </button>
               </div>
-
-              {/* Filter tabs */}
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                {filters.map((f) => (
-                  <motion.button
-                    key={f.key}
-                    onClick={() => setFilter(f.key)}
-                    className={cn(
-                      "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border",
-                      filter === f.key
-                        ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/25"
-                        : "bg-card/80 backdrop-blur-sm text-foreground border-border/50 hover:bg-card"
-                    )}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {f.label}
-                  </motion.button>
-                ))}
-              </div>
             </div>
 
             {/* Content */}
@@ -376,26 +496,41 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   <p className="text-sm text-muted-foreground mt-3">იტვირთება...</p>
                 </div>
-              ) : filteredNotifications.length === 0 ? (
+              ) : !hasAnyContent ? (
                 <div className="flex flex-col items-center py-12">
                   <div className="w-20 h-20 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
                     <BellOff className="w-10 h-10 text-muted-foreground" />
                   </div>
                   <h3 className="font-bold text-lg text-foreground mb-2">შეტყობინებები არ არის</h3>
                   <p className="text-sm text-muted-foreground text-center max-w-[250px]">
-                    {filter === 'unread'
-                      ? "ყველა შეტყობინება წაკითხულია"
-                      : filter === 'social'
-                      ? "სოციალური აქტივობა არ არის"
-                      : filter === 'games'
-                      ? "თამაშის შეტყობინებები არ არის"
-                      : "როცა რამე მოხდება, აქ გამოჩნდება"}
+                    როცა რამე მოხდება, აქ გამოჩნდება
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2 px-2">
+                  {/* Generation Notifications Section - Always at top if any exist */}
+                  {generationNotifications.length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 px-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          AI გენერაციები
+                        </span>
+                      </div>
+                      <AnimatePresence mode="popLayout">
+                        {generationNotifications.map((genNotif) => (
+                          <GenerationNotificationCard
+                            key={genNotif.id}
+                            notification={genNotif}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  {/* Regular Notifications */}
                   <AnimatePresence mode="popLayout">
-                    {filteredNotifications.map((notification) => (
+                    {notifications.map((notification) => (
                       <NotificationCard
                         key={notification.id}
                         notification={notification}

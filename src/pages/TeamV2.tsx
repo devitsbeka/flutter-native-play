@@ -39,7 +39,6 @@ import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
-import { GenerationQueueDropdown } from "@/components/generation/GenerationQueueDropdown";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -400,10 +399,6 @@ function TeamContentV2() {
                   <Plus className="w-5 h-5" />
                 </motion.button>
               )}
-
-              {/* Generation Queue Dropdown */}
-              <GenerationQueueDropdown />
-
               {/* QR Scanner */}
               <motion.button
                 initial={{ opacity: 0, x: 10 }}

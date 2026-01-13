@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellOff, Check, X, ChevronDown, Trash2, ExternalLink } from 'lucide-react';
+import { Bell, BellOff, Check, X, ChevronDown, Trash2, ExternalLink, Loader2, Sparkles, User, ImageIcon } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useGenerationNotifications, GenerationNotification } from '@/hooks/useGenerationNotifications';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFriends } from '@/hooks/useFriends';
@@ -27,16 +28,132 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-// Notification types that have actionable navigation
-const ACTIONABLE_TYPES = [
-  'room_invite',
-  'game_started',
-  'game_result',
-  'challenge',
-  'trivia_liked',
-  'trivia_saved',
-  'trivia_played',
-];
+// Generation notification card with special design
+function GenerationNotificationCard({
+  notification,
+  dateLocale,
+}: {
+  notification: GenerationNotification;
+  dateLocale: typeof ka;
+}) {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    if (notification.status !== 'generating') return;
+    
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - notification.startedAt.getTime()) / 1000));
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [notification.status, notification.startedAt]);
+
+  const getIcon = () => {
+    if (notification.generationType === 'avatar') return <User className="w-4 h-4" />;
+    return <ImageIcon className="w-4 h-4" />;
+  };
+
+  const getTimeDisplay = () => {
+    if (notification.status === 'generating') {
+      const remaining = Math.max(0, notification.estimatedTime - elapsedTime);
+      if (remaining > 0) {
+        return `~${remaining} წმ`;
+      }
+      return 'მზადდება...';
+    }
+    return formatDistanceToNow(notification.startedAt, { addSuffix: false, locale: dateLocale });
+  };
+
+  const getStatusBadge = () => {
+    switch (notification.status) {
+      case 'generating':
+        return (
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            მზადდება
+          </span>
+        );
+      case 'completed':
+        return (
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-medium">
+            <Check className="w-3 h-3" />
+            მზადაა
+          </span>
+        );
+      case 'failed':
+        return (
+          <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-medium">
+            <X className="w-3 h-3" />
+            შეცდომა
+          </span>
+        );
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className={cn(
+        "relative px-4 py-4 rounded-2xl transition-all border-l-4",
+        notification.status === 'generating'
+          ? "bg-primary/5 backdrop-blur-sm border-l-primary"
+          : notification.status === 'completed'
+          ? "bg-emerald-500/5 backdrop-blur-sm border-l-emerald-500"
+          : "bg-destructive/5 backdrop-blur-sm border-l-destructive"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* Thumbnail or placeholder */}
+        <div className="relative w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
+          {notification.status === 'completed' && notification.imageUrl ? (
+            <img 
+              src={notification.imageUrl} 
+              alt={notification.title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-muted-foreground">{getIcon()}</span>
+          )}
+          {notification.status === 'generating' && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-foreground">
+                {notification.title}
+              </span>
+            </div>
+            {getStatusBadge()}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {getTimeDisplay()}
+          </p>
+        </div>
+
+        {/* Status indicator */}
+        {notification.status === 'generating' && (
+          <div className="flex-shrink-0 mt-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+          </div>
+        )}
+        {notification.status === 'completed' && (
+          <div className="flex-shrink-0 mt-2">
+            <Check className="w-5 h-5 text-emerald-500" />
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 function NotificationCard({
   notification,
@@ -207,6 +324,7 @@ export default function Notifications() {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, clearAllNotifications } = useNotifications();
+  const { generationNotifications, hasActiveGenerations } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -224,6 +342,7 @@ export default function Notifications() {
 
   const displayedNotifications = notifications.slice(0, displayLimit);
   const hasMore = notifications.length > displayLimit;
+  const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
 
   const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
     setActionLoading(notificationId);
@@ -382,7 +501,7 @@ export default function Notifications() {
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-muted-foreground mt-3">იტვირთება...</p>
           </div>
-        ) : notifications.length === 0 ? (
+        ) : !hasAnyContent ? (
           <div className="flex flex-col items-center py-12">
             <div className="w-20 h-20 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
               <BellOff className="w-10 h-10 text-muted-foreground" />
@@ -394,6 +513,28 @@ export default function Notifications() {
           </div>
         ) : (
           <div className="space-y-2 px-2">
+            {/* Generation Notifications Section - Always at top if any exist */}
+            {generationNotifications.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 px-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    AI გენერაციები
+                  </span>
+                </div>
+                <AnimatePresence mode="popLayout">
+                  {generationNotifications.map((genNotif) => (
+                    <GenerationNotificationCard
+                      key={genNotif.id}
+                      notification={genNotif}
+                      dateLocale={dateLocale}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {/* Regular Notifications */}
             <AnimatePresence mode="popLayout">
               {displayedNotifications.map((notification) => (
                 <NotificationCard
@@ -425,36 +566,38 @@ export default function Notifications() {
             )}
 
             {/* Clear All Button */}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <motion.button
-                  className="w-full flex items-center justify-center gap-2 py-3 mt-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors font-medium"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  disabled={clearingAll}
-                >
-                  <Trash2 className="w-5 h-5" />
-                  ყველას წაშლა
-                </motion.button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-card border-border">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-foreground">შეტყობინებების წაშლა</AlertDialogTitle>
-                  <AlertDialogDescription className="text-muted-foreground">
-                    დარწმუნებული ხართ, რომ გსურთ ყველა შეტყობინების წაშლა? ეს მოქმედება შეუქცევადია.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-card border-border text-foreground hover:bg-muted">გაუქმება</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleClearAll}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            {notifications.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <motion.button
+                    className="w-full flex items-center justify-center gap-2 py-3 mt-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors font-medium"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    disabled={clearingAll}
                   >
-                    წაშლა
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    <Trash2 className="w-5 h-5" />
+                    ყველას წაშლა
+                  </motion.button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-card border-border">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-foreground">შეტყობინებების წაშლა</AlertDialogTitle>
+                    <AlertDialogDescription className="text-muted-foreground">
+                      დარწმუნებული ხართ, რომ გსურთ ყველა შეტყობინების წაშლა? ეს მოქმედება შეუქცევადია.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-card border-border text-foreground hover:bg-muted">გაუქმება</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleClearAll}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      წაშლა
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )}
       </div>
