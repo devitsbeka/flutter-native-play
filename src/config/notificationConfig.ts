@@ -19,6 +19,7 @@ import {
   Info,
   PartyPopper,
   Bell,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -31,6 +32,14 @@ export interface NotificationTypeConfig {
 }
 
 export const NOTIFICATION_TYPE_CONFIG: Record<string, NotificationTypeConfig> = {
+  // AI Generation
+  ai_generation: {
+    icon: Sparkles,
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-500/20',
+    label: 'AI გენერაცია',
+    labelEn: 'AI Generation',
+  },
   // Messages
   new_message: {
     icon: MessageCircle,
