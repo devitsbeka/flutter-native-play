@@ -141,8 +141,8 @@ export function ChallengeTypeModal({
                   whileTap={{ scale: 0.98 }}
                 >
                   {/* Decorative circles */}
-                  <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10" />
-                  <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10" />
+                  <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10 pointer-events-none" />
+                  <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10 pointer-events-none" />
                   
                   {/* Icon top-left */}
                   <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-auto">
