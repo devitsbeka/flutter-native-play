@@ -120,25 +120,25 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       style={{ minHeight: '62vh' }}
     >
       {/* Layer 1: Background Map Image */}
-      <div 
-        className="absolute inset-0 w-full" 
-        style={{ height: 'calc(100% + 100px)', top: '-100px' }}
-      >
-        <div
-          className="absolute inset-0 w-full h-full"
-          style={{
-            backgroundImage: `url(${leaderboardMap})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center top',
-            backgroundRepeat: 'no-repeat',
-          }}
-        />
-        
-        {/* Layer 2: Trophies */}
-        {isDesktop ? (
-          /* DESKTOP/TABLET: Show all 3 trophies at their podium positions */
+      {isDesktop ? (
+        /* DESKTOP/TABLET: Static background with clickable trophies */
+        <div 
+          className="absolute inset-0 w-full" 
+          style={{ height: 'calc(100% + 100px)', top: '-100px' }}
+        >
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{
+              backgroundImage: `url(${leaderboardMap})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center top',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+          
+          {/* Trophies for desktop */}
           <div className="absolute inset-0 w-full h-full">
-          {Object.entries(DESKTOP_TROPHY_CONFIG).map(([tierKey, config]) => {
+            {Object.entries(DESKTOP_TROPHY_CONFIG).map(([tierKey, config]) => {
               const tierNum = parseInt(tierKey);
               const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
               const isActive = tierNum === tier;
@@ -186,81 +186,93 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
               );
             })}
           </div>
-        ) : (
-          /* MOBILE: Show only active trophy centered, with swipe support */
-          <motion.div 
-            className="absolute inset-0 w-full h-full touch-pan-y"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={handleDragEnd}
-            style={{ cursor: 'grab' }}
-            whileDrag={{ cursor: 'grabbing' }}
-          >
-            <AnimatePresence mode="wait">
-              {currentMeta && (
-                <motion.div
-                  key={tier}
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].left,
-                    top: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].top,
-                    transform: 'translate(calc(-50% - 50px), -100%)',
-                    width: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].size,
-                    transformOrigin: 'center bottom',
-                  }}
-                  initial={{ scale: 0.3, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.2, opacity: 0 }}
-                  transition={TROPHY_ENTER_SPRING}
-                >
-                  <img 
-                    src={currentMeta.image} 
-                    alt="" 
-                    className="w-full h-auto select-none pointer-events-none drop-shadow-2xl"
-                    draggable={false}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-        
-        {/* Floating Label - Mobile only (desktop has hover labels) */}
-        {!isDesktop && (
+        </div>
+      ) : (
+        /* MOBILE: Swipeable background + trophy together */
+        <motion.div 
+          className="absolute inset-0 w-full touch-pan-y"
+          style={{ height: 'calc(100% + 100px)', top: '-100px', cursor: 'grab' }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.15}
+          onDragEnd={handleDragEnd}
+          whileDrag={{ cursor: 'grabbing' }}
+        >
+          {/* Background image moves with drag */}
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{
+              backgroundImage: `url(${leaderboardMap})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center top',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
+          
+          {/* Trophy moves with background */}
           <AnimatePresence mode="wait">
-            <motion.div
-              key={`label-${tier}`}
-              className="absolute z-[10] left-0 right-0 flex justify-center px-4"
-              style={{ top: '100px' }}
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ 
-                opacity: 1, 
-                y: [0, -5, 0],
-                scale: 1,
-              }}
-              exit={{ opacity: 0, y: -10, scale: 0.9 }}
-              transition={{
-                opacity: { duration: 0.25 },
-                scale: { duration: 0.25 },
-                y: {
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }
-              }}
-            >
-              <div className="bg-background/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-border/50">
-                <span className="text-sm font-semibold text-foreground/90 whitespace-nowrap">
-                  {currentLabel}
-                </span>
-              </div>
-              {/* Tooltip arrow */}
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
-            </motion.div>
+            {currentMeta && (
+              <motion.div
+                key={tier}
+                className="absolute pointer-events-none"
+                style={{
+                  left: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].left,
+                  top: `calc(${MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].top} + 100px)`,
+                  transform: 'translate(calc(-50% - 50px), -100%)',
+                  width: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].size,
+                  transformOrigin: 'center bottom',
+                }}
+                initial={{ scale: 0.3, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.2, opacity: 0 }}
+                transition={TROPHY_ENTER_SPRING}
+              >
+                <img 
+                  src={currentMeta.image} 
+                  alt="" 
+                  className="w-full h-auto select-none pointer-events-none drop-shadow-2xl"
+                  draggable={false}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
-        )}
-      </div>
+        </motion.div>
+      )}
+        
+      {/* Floating Label - Mobile only (desktop has hover labels) */}
+      {!isDesktop && (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`label-${tier}`}
+            className="absolute z-[10] left-0 right-0 flex justify-center px-4"
+            style={{ top: '100px' }}
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ 
+              opacity: 1, 
+              y: [0, -5, 0],
+              scale: 1,
+            }}
+            exit={{ opacity: 0, y: -10, scale: 0.9 }}
+            transition={{
+              opacity: { duration: 0.25 },
+              scale: { duration: 0.25 },
+              y: {
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }
+            }}
+          >
+            <div className="bg-background/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-border/50">
+              <span className="text-sm font-semibold text-foreground/90 whitespace-nowrap">
+                {currentLabel}
+              </span>
+            </div>
+            {/* Tooltip arrow */}
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
+          </motion.div>
+        </AnimatePresence>
+      )}
       
       {/* Layer 3: Fade gradients */}
       <div className="absolute top-0 left-0 right-0 h-36 bg-gradient-to-b from-background via-background/80 to-transparent z-[5] pointer-events-none" />
