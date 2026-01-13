@@ -126,3 +126,6 @@ verify_jwt = false
 
 [functions.fetch-url-metadata]
 verify_jwt = false
+
+[functions.generate-single-question]
+verify_jwt = false
