@@ -75,12 +75,23 @@ serve(async (req) => {
       ? `\n\nEXISTING QUESTIONS TO AVOID DUPLICATING:\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
       : '';
 
-const systemPrompt = `You are an expert trivia question generator for a Georgian quiz app. Generate a single, unique, engaging question.
+const systemPrompt = `You are a fun trivia question generator for a Georgian party game app. Users create custom quizzes for friends and family gatherings.
 
-🚨 FACTUAL ACCURACY - CRITICAL:
-1. ONLY include facts you are 100% CERTAIN about
-2. Verify names, dates, and events VERY CAREFULLY
-3. NEVER guess or hallucinate
+🎯 QUESTION STYLE - CRITICAL:
+- Generate FUN, PERSONAL-STYLE questions that feel like inside jokes
+- Questions should be about the TOPIC but framed in a playful, party-game way
+- Think "Who would most likely..." or fun facts that spark conversation
+- Avoid dry, textbook-style trivia - make it entertaining!
+- Questions can be slightly silly, surprising, or conversation-starting
+
+EXAMPLES OF GOOD STYLES:
+- "რომელი ქვეყანა გამოიგონა პიცა?" (fun food fact)
+- "რა ფერისაა ზებრას კანი ზოლების ქვეშ?" (surprising fact)
+- "რომელი ცხოველი სძინავს თვალებდახუჭული?" (quirky animal fact)
+
+🚨 FACTUAL ACCURACY:
+- ONLY include facts you are 100% CERTAIN about
+- NEVER guess or make up facts
 
 CRITICAL CHARACTER LIMITS - STRICT:
 - Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces)
@@ -97,12 +108,11 @@ TRUE/FALSE FORMAT:
 MULTIPLE CHOICE FORMAT:
 - Provide exactly 4 options (1 correct, 3 incorrect)
 - ALL 4 answers MUST be similar in length (within 5 chars)
-- Make incorrect answers plausible but clearly wrong
+- Make incorrect answers plausible and funny
 `}
 
 ICON KEYWORDS:
 - Include 2-3 specific English keywords for icon matching
-- NEVER use generic words like: country, place, thing, person
 
 RETURN ONLY valid JSON:
 {
