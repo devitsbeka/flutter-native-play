@@ -123,8 +123,24 @@ ${focusCategory.examples.map(e => `- ${e}`).join('\n')}
 💡 ANSWERS should be person types:
 "დედა", "მამა", "ბებია", "საუკეთესო მეგობარი", "მე თვითონ", "ყველა ერთად", "უმცროსი და/ძმა", "უფროსი და/ძმა"
 
+⚠️ GRAMMAR RULES - CRITICAL:
+- All Georgian text MUST be grammatically correct
+- Double-check spelling of all Georgian words
+- Use proper Georgian verb conjugations (ვინ არის, ვინ იქნებოდა, ვინ გააკეთებდა)
+- Questions must be natural-sounding Georgian sentences
+- Common correct patterns:
+  • "ვინ არის ყველაზე..." + adjective
+  • "ვის უყვარს..." + noun
+  • "ვინ გააკეთებდა..." + action
+  • "ვინ დაივიწყებდა..." + noun
+- Before outputting, VERIFY:
+  1. All words are spelled correctly
+  2. Verb forms match the subject
+  3. Case endings are correct
+  4. The sentence sounds natural to a Georgian speaker
+
 LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
-LANGUAGE: Georgian only
+LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
 
 ${isTrueFalse ? `TRUE/FALSE format` : `4 MULTIPLE CHOICE answers`}
 
@@ -141,8 +157,11 @@ JSON FORMAT:
 Focus on theme: ${focusCategory.theme}
 ${existingContext}
 
-⚡ IMPORTANT: Generate something COMPLETELY NEW and DIFFERENT!
-Be creative - think of funny, nostalgic, or slightly embarrassing situations.
+⚡ IMPORTANT: 
+- Generate something COMPLETELY NEW and DIFFERENT!
+- Be creative - think of funny, nostalgic, or slightly embarrassing situations.
+- VERIFY Georgian grammar and spelling before responding
+- The question MUST be grammatically perfect in Georgian
 Return ONLY valid JSON.`;
 
     console.log(`Generating single ${answerFormat} question about: ${subject}`);
