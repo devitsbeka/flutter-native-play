@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, LogOut, User, Play } from "lucide-react";
+import { ChevronLeft, LogOut, User, Play, Compass, Store, Trophy, Headphones, ChevronDown, Settings, HelpCircle, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -16,28 +16,19 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { PlayCategoryModal } from "@/components/leaderboard/PlayCategoryModal";
-
-// Icon imports for menu items
-import iconRewards from "@/assets/icons/icon-coin-purse.png";
-import iconMissions from "@/assets/icons/icon-mission-crystal.png";
-import iconTreasure from "@/assets/icons/icon-chest-box.png";
-import iconShop from "@/assets/icons/icon-magical-shop.png";
-import iconParty from "@/assets/group-of-people.png";
-import iconOtherGames from "@/assets/icons/icon-other-games.png";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SideMenuDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Menu items now use translation keys
-const menuItemsConfig = [
-  { icon: iconRewards, labelKey: "menu.rewards", onClick: "rewards" },
-  { icon: iconMissions, labelKey: "menu.missions", onClick: "missions" },
-  { icon: iconTreasure, labelKey: "menu.treasure", onClick: "treasure" },
-  { icon: iconShop, labelKey: "menu.shop", onClick: "shop" },
-  { icon: iconParty, labelKey: "menu.party", onClick: "party" },
-  { icon: iconOtherGames, labelKey: "menu.otherGames", onClick: "other-games" },
+// Navigation items that replace bottom nav
+const navItemsConfig = [
+  { icon: Compass, labelKey: "menu.discover", route: "/discover" },
+  { icon: Store, labelKey: "menu.shop", route: "/power-ups" },
+  { icon: Trophy, labelKey: "menu.leaderboard", route: "/leaderboards" },
+  { icon: Headphones, labelKey: "menu.triviaLive", route: "/team" },
 ];
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
@@ -52,59 +43,14 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 
-  const handleItemClick = (action: string) => {
-    if (action === "rewards") {
-      setIsDailyRewardsOpen(true);
-      return;
-    }
-    if (action === "missions") {
-      setIsMissionsOpen(true);
-      return;
-    }
-    if (action === "treasure") {
-      setIsChestModalOpen(true);
-      return;
-    }
-    if (action === "shop") {
-      onClose();
-      navigate("/power-ups");
-      return;
-    }
-    if (action === "party") {
-      onClose();
-      navigate("/team", { state: { openPersonalTrivia: true } });
-      return;
-    }
-    if (action === "other-games") {
-      toast.info(t("menu.comingSoon"));
-      return;
-    }
-    if (action === "avatar") {
-      setIsAvatarModalOpen(true);
-      return;
-    }
-    if (action === "settings") {
-      setIsSettingsOpen(true);
-      return;
-    }
-    if (action === "help") {
-      setIsHelpOpen(true);
-      return;
-    }
-    if (action === "privacy") {
-      setIsPrivacyOpen(true);
-      return;
-    }
-    if (action === "logout") {
-      handleSignOut();
-      return;
-    }
-    console.log("Menu action:", action);
+  const handleNavItemClick = (route: string) => {
     onClose();
+    navigate(route);
   };
 
   const handleSignOut = async () => {
@@ -127,12 +73,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       navigate('/leaderboard');
     }
   };
-
-  // Build menu items with translations
-  const menuItems = menuItemsConfig.map(item => ({
-    ...item,
-    label: t(item.labelKey)
-  }));
 
   if (!isOpen) return null;
 
@@ -227,70 +167,95 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 </motion.button>
               </div>
 
-              {/* Grid Menu */}
-              <div className="p-4 pt-0">
-                <div className="grid grid-cols-3 gap-2">
-                  {menuItems.map((item, index) => (
-                    <motion.button
-                      key={item.labelKey}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => handleItemClick(item.onClick)}
-                      className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all hover:scale-105 active:scale-95 bg-muted/50 hover:bg-muted"
-                    >
-                      {/* Icon */}
-                      <div className="h-12 w-12 flex items-center justify-center">
-                        <img 
-                          src={item.icon} 
-                          alt={item.label}
-                          className="h-11 w-11 object-contain"
-                        />
-                      </div>
-                      
-                      {/* Label */}
-                      <span className="text-[11px] font-medium text-center leading-tight text-foreground">
-                        {item.label}
-                      </span>
-                    </motion.button>
-                  ))}
+              {/* Navigation Items (replacing bottom nav) */}
+              <div className="px-4 pb-2">
+                <div className="flex flex-col gap-1">
+                  {navItemsConfig.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                      <motion.button
+                        key={item.labelKey}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => handleNavItemClick(item.route)}
+                        className="flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-muted/50 active:scale-98"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <span className="text-base font-medium text-foreground">
+                          {t(item.labelKey)}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Bottom Text Links */}
-              <div className="px-4 pb-4 pt-2 border-t border-border mt-2">
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => handleItemClick("settings")}
-                    className="text-left py-3 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
-                  >
-                    {t("menu.settings")}
-                  </button>
-
-                  <button
-                    onClick={() => handleItemClick("help")}
-                    className="text-left py-3 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
-                  >
-                    {t("menu.help")}
-                  </button>
-
-                  <button
-                    onClick={() => handleItemClick("privacy")}
-                    className="text-left py-3 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-colors"
-                  >
-                    {t("menu.privacy")}
-                  </button>
-
-                  {user && (
-                    <button
-                      onClick={handleSignOut}
-                      className="text-left py-3 px-3 text-sm text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-xl transition-colors flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      {t("menu.signOut")}
+              {/* Settings Collapsible Section */}
+              <div className="px-4 pb-4 pt-2 border-t border-border/30 mt-2">
+                <Collapsible open={isSettingsExpanded} onOpenChange={setIsSettingsExpanded}>
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                          <Settings className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                        <span className="text-base font-medium text-foreground">
+                          {t("menu.settings")}
+                        </span>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: isSettingsExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                      </motion.div>
                     </button>
-                  )}
-                </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="pl-4 flex flex-col gap-1">
+                      <button
+                        onClick={() => setIsHelpOpen(true)}
+                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("menu.help")}
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => setIsPrivacyOpen(true)}
+                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <Shield className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("menu.privacy")}
+                        </span>
+                      </button>
+
+                      {user && (
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-destructive/10 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                            <LogOut className="w-4 h-4 text-destructive" />
+                          </div>
+                          <span className="text-sm text-destructive">
+                            {t("menu.signOut")}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </div>
           </motion.div>

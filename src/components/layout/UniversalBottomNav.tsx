@@ -17,6 +17,7 @@ interface UniversalBottomNavProps {
   vipLoading?: boolean;
   onWatchAdClick?: () => void;
   isGuest?: boolean;
+  hidden?: boolean;
 }
 
 export function UniversalBottomNav({ 
@@ -30,6 +31,7 @@ export function UniversalBottomNav({
   vipLoading = false,
   onWatchAdClick,
   isGuest = false,
+  hidden = false,
 }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +59,11 @@ export function UniversalBottomNav({
       description: "ითამაშე კიდევ რამდენიმე თამაში ან შექმენი ანგარიში",
     });
   };
+
+  // Hide nav when requested (e.g., when side menu is open)
+  if (hidden) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 overflow-visible">

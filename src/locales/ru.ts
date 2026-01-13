@@ -156,6 +156,11 @@ export const ru: KaTranslations = {
     comingSoon: "Скоро!",
     player: "Игрок",
     points: "очки",
+    menuTitle: "Меню",
+    play: "Играть",
+    discover: "Обзор",
+    leaderboard: "Рейтинг",
+    triviaLive: "Trivia Live",
   },
   sound: {
     title: "Настройки звука",
