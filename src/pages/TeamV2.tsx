@@ -566,21 +566,6 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Row 5b: CTA Buttons - Show on my-content tab */}
-          {activeTab === "my-content" && (
-            <div className="lg:hidden px-4 pb-3 flex gap-2">
-              <ChunkyButton 
-                onClick={() => setShowCreateTypeModal(true)}
-                className="flex-1 gap-1.5"
-                variant="primary"
-                size="lg"
-              >
-                <Plus className="w-5 h-5" />
-                შენი ტრივია
-              </ChunkyButton>
-            </div>
-          )}
-
           {/* Row 6: Sticky Filter Bar - Hide on rooms tab */}
           {activeTab !== "rooms" && (
             <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
@@ -591,6 +576,7 @@ function TeamContentV2() {
                 onSearchQueryChange={setSearchQuery}
                 selectedHashtag={selectedHashtag}
                 onClearHashtag={() => setSelectedHashtag(null)}
+                onAddClick={() => setShowCreateTypeModal(true)}
               />
             </div>
           )}
