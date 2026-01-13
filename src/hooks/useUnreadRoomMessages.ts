@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UnreadCounts {
   [roomId: string]: number;
@@ -10,6 +10,7 @@ export function useUnreadRoomMessages() {
   const { user } = useAuth();
   const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({});
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
 
   const fetchUnreadCounts = useCallback(async () => {
     if (!user) {
@@ -27,8 +28,10 @@ export function useUnreadRoomMessages() {
 
       if (partError) throw partError;
       if (!participations || participations.length === 0) {
-        setUnreadCounts({});
-        setLoading(false);
+        if (isMountedRef.current) {
+          setUnreadCounts({});
+          setLoading(false);
+        }
         return;
       }
 
@@ -50,13 +53,25 @@ export function useUnreadRoomMessages() {
         }
       }
 
-      setUnreadCounts(counts);
+      if (isMountedRef.current) {
+        setUnreadCounts(counts);
+      }
     } catch (error) {
       console.error("Error fetching unread counts:", error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [user]);
+
+  // Track mounted state
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     fetchUnreadCounts();
