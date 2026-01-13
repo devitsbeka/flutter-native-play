@@ -713,11 +713,6 @@ export function GameStylePersonalTrivia({
             </button>
           </div>
 
-          {/* Question Counter */}
-          <div className="text-center text-white/80 text-sm font-medium pb-2">
-            {currentIndex + 1}/{questions.length}
-          </div>
-
           {/* Action Toolbar - circular buttons */}
           <div className="px-4 pb-3">
             <div className="flex items-center justify-center gap-2">
@@ -796,6 +791,11 @@ export function GameStylePersonalTrivia({
                       "relative z-10 p-5",
                       !question.backgroundImageUrl && "bg-[#5A4A7A]"
                     )}>
+                      {/* Question Counter */}
+                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
+                        {index + 1}/{questions.length}
+                      </div>
+
                       {/* Icon - clickable to edit */}
                       <div className="flex justify-center mb-3">
                         <QuestionIconPicker
