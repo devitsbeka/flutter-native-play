@@ -660,12 +660,7 @@ export function GameStyleQuestionEditor({
       {/* Header Content (for round tabs) */}
       {headerContent}
 
-      {/* Question Counter */}
-      <div className="text-center text-white/80 text-sm font-medium pb-2">
-        {currentIndex + 1}/{questions.length}
-      </div>
-
-      {/* Action Toolbar */}
+          {/* Action Toolbar */}
       <div className="px-4 pb-3">
         <div className="flex items-center justify-center gap-2">
           <button
@@ -731,11 +726,16 @@ export function GameStyleQuestionEditor({
                   </>
                 )}
                 
-                <div className={cn(
-                  "relative z-10 p-5",
-                  !question.backgroundImageUrl && "bg-[#5A4A7A]"
-                )}>
-                  {/* Icon */}
+            <div className={cn(
+              "relative z-10 p-5",
+              !question.backgroundImageUrl && "bg-[#5A4A7A]"
+            )}>
+              {/* Question Counter */}
+              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
+                {index + 1}/{questions.length}
+              </div>
+
+              {/* Icon */}
                   <div className="flex justify-center mb-3">
                     <QuestionIconPicker
                       selectedSlug={question.iconSlug || null}
