@@ -260,16 +260,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 </div>
               </div>
             </div>
-
-            <ChunkyButton
-              variant="whitePurple"
-              onClick={() => setStep(2)}
-              disabled={!subject.trim()}
-              className="w-full"
-            >
-              შემდეგი
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </ChunkyButton>
           </motion.div>
         );
 
@@ -324,34 +314,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               ))}
             </div>
 
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setStep(1)} 
-                className="flex-1 h-12 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                უკან
-              </button>
-              <ChunkyButton 
-                variant="whitePurple"
-                onClick={generateQuestions} 
-                disabled={isGenerating} 
-                className="flex-1"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    {Math.round(generationProgress)}%
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    დაგენერირება
-                  </>
-                )}
-              </ChunkyButton>
-            </div>
-
             {isGenerating && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -377,6 +339,56 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
       default:
         return null;
     }
+  };
+
+  const renderBottomCTA = () => {
+    if (step === 1) {
+      return (
+        <ChunkyButton
+          variant="whitePurple"
+          onClick={() => setStep(2)}
+          disabled={!subject.trim()}
+          className="w-full"
+        >
+          შემდეგი
+          <ChevronRight className="w-5 h-5 ml-2" />
+        </ChunkyButton>
+      );
+    }
+
+    if (step === 2) {
+      return (
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setStep(1)} 
+            className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            უკან
+          </button>
+          <ChunkyButton 
+            variant="whitePurple"
+            onClick={generateQuestions} 
+            disabled={isGenerating} 
+            className="flex-[2]"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                {Math.round(generationProgress)}%
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 mr-2" />
+                დაგენერირება
+              </>
+            )}
+          </ChunkyButton>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   const totalSteps = 2;
@@ -444,12 +456,17 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             </div>
           </div>
 
-          <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+          <div className="h-full overflow-y-auto pt-[60px] pb-32 safe-top">
             <div className="p-5">
               <AnimatePresence mode="wait">
                 {renderStep()}
               </AnimatePresence>
             </div>
+          </div>
+
+          {/* Fixed bottom CTA */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-[#6B5B95] safe-bottom">
+            {renderBottomCTA()}
           </div>
         </motion.div>
       )}
