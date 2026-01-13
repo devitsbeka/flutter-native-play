@@ -652,9 +652,9 @@ export function GameStyleQuestionEditor({
 
         <button
           onClick={() => setShowDeleteConfirm(true)}
-          className="w-10 h-10 rounded-full bg-white/20 hover:bg-red-500/50 flex items-center justify-center transition-all"
+          className="w-8 h-8 rounded-full bg-white/20 hover:bg-red-500/50 flex items-center justify-center transition-all"
         >
-          <Trash2 className="w-6 h-6 text-white" />
+          <Trash2 className="w-5 h-5 text-white" />
         </button>
       </div>
 
