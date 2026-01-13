@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, Edit3, RefreshCw, Globe, Lock, X } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Edit3, Globe, Lock } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 import confetti from "canvas-confetti";
-import { QuestionIconPicker } from "./QuestionIconPicker";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
-import { EditQuestionDialog } from "./EditQuestionDialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { GameStyleQuestionEditor } from "./GameStyleQuestionEditor";
+import { QuestionIconPicker } from "./QuestionIconPicker";
 interface GeneratedQuestion {
   question_text: string;
   correct_answer: string;
@@ -161,7 +160,6 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [isPublic, setIsPublic] = useState(true);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<{ index: number; question: GeneratedQuestion } | null>(null);
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
@@ -727,162 +725,24 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
       case 5:
         return (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="space-y-3 flex flex-col max-h-[calc(100vh-120px)]"
-          >
-            <div className="text-center flex-shrink-0">
-              <h3 className="text-lg font-bold text-foreground">მზადაა! 🎉</h3>
-              <p className="text-xs text-muted-foreground">{questions.length} კითხვა შეიქმნა</p>
-            </div>
-
-            {/* AI Cover Preview with Title */}
-            <div 
-              className="p-4 rounded-2xl text-white flex-shrink-0 relative overflow-hidden min-h-[100px]"
-              style={{ 
-                background: coverImageUrl 
-                  ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${coverImageUrl}) center/cover`
-                  : selectedGradient 
-              }}
-            >
-              {/* Loading overlay */}
-              {isGeneratingCoverLocal && (
-                <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-10">
-                  <Loader2 className="w-8 h-8 animate-spin text-white mb-2" />
-                  <span className="text-xs text-white/80">სურათი იქმნება...</span>
-                </div>
-              )}
-              
-              {/* Title with edit */}
-              <div className="relative z-0 flex items-center gap-2">
-                {isEditingTitle ? (
-                  <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={() => setIsEditingTitle(false)}
-                    onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-                    autoFocus
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/70 text-base font-bold h-10 rounded-xl flex-1"
-                    placeholder="Trivia-ს სახელი"
-                  />
-                ) : (
-                  <button 
-                    onClick={() => setIsEditingTitle(true)}
-                    className="flex-1 text-left flex items-center gap-2 group"
-                  >
-                    <span className="text-lg font-bold text-white drop-shadow-lg truncate">
-                      {title || "Trivia-ს სახელი"}
-                    </span>
-                    <Edit3 className="w-4 h-4 text-white/70 group-hover:text-white transition-colors flex-shrink-0" />
-                  </button>
-                )}
-              </div>
-
-              {/* Regenerate button */}
-              <div className="flex items-center justify-between mt-3">
-                <button
-                  onClick={() => setIsPublic(!isPublic)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    isPublic 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-black/30 text-white/80'
-                  }`}
-                >
-                  {isPublic ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                  {isPublic ? 'საჯარო' : 'პირადი'}
-                </button>
-                
-                <button
-                  onClick={handleGenerateCover}
-                  disabled={isGeneratingCoverLocal || coverGenerationCount >= 3}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingCoverLocal ? 'animate-spin' : ''}`} />
-                  {coverGenerationCount >= 3 ? 'ლიმიტი ამოიწურა' : `ხელახლა (${3 - coverGenerationCount})`}
-                </button>
-              </div>
-            </div>
-
-            {/* Questions preview with icon picker and edit */}
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-xl">
-              {questions.map((q, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="p-2.5 bg-background rounded-xl border border-border flex gap-2 items-start"
-                >
-                  <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground line-clamp-2">
-                      {q.question_text}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-xs text-green-600">✓ {q.correct_answer}</span>
-                      {q.difficulty && (
-                        <span className={`text-xs ${getDifficultyColor(q.difficulty)}`}>
-                          • {getDifficultyLabel(q.difficulty)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 flex-shrink-0"
-                    onClick={() => setEditingQuestion({ index: i, question: q })}
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </Button>
-                          <QuestionIconPicker
-                            selectedSlug={q.icon_slug || null}
-                            onSelect={(slug) => {
-                              setQuestions(prev => prev.map((question, idx) => 
-                                idx === i ? { ...question, icon_slug: slug || undefined } : question
-                              ));
-                            }}
-                            questionText={q.question_text}
-                          />
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="flex gap-3 flex-shrink-0 pt-1">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setStep(4);
-                  setQuestions([]);
-                }} 
-                className="flex-1 h-11 rounded-xl"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                თავიდან
-              </Button>
-              <ChunkyButton 
-                onClick={handlePost} 
-                disabled={isPosting || !title.trim()}
-                className="flex-1"
-              >
-                {isPosting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    ქვეყნდება...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-5 h-5 mr-2" />
-                    გამოქვეყნება
-                  </>
-                )}
-              </ChunkyButton>
-            </div>
-          </motion.div>
+          <GameStyleQuestionEditor
+            questions={questions}
+            onQuestionsChange={setQuestions}
+            onClose={() => setStep(4)}
+            onPublish={handlePost}
+            subject={subject}
+            answerFormat={answerFormat}
+            title={title}
+            onTitleChange={setTitle}
+            coverImageUrl={coverImageUrl}
+            selectedGradient={selectedGradient}
+            isPublic={isPublic}
+            onPublicChange={setIsPublic}
+            isPosting={isPosting}
+            onRegenerateCover={handleGenerateCover}
+            isGeneratingCover={isGeneratingCoverLocal}
+            coverGenerationCount={coverGenerationCount}
+          />
         );
 
       default:
@@ -938,21 +798,6 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         )}
       </AnimatePresence>
 
-      {/* Edit Question Dialog */}
-      {editingQuestion && (
-        <EditQuestionDialog
-          open={!!editingQuestion}
-          onOpenChange={(open) => !open && setEditingQuestion(null)}
-          question={editingQuestion.question}
-          answerFormat={answerFormat}
-          onSave={(updated) => {
-            setQuestions(prev => prev.map((q, idx) => 
-              idx === editingQuestion.index ? { ...q, ...updated } : q
-            ));
-            setEditingQuestion(null);
-          }}
-        />
-      )}
     </>
   );
 }
