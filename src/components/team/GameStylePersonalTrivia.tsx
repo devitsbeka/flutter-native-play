@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X } from "lucide-react";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { QuestionIconPicker } from "@/components/social/QuestionIconPicker";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import useEmblaCarousel from "embla-carousel-react";
@@ -222,6 +222,8 @@ export function GameStylePersonalTrivia({
   const [title, setTitle] = useState(initialData?.title || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -521,6 +523,54 @@ export function GameStylePersonalTrivia({
     setQuestions(newQuestions);
   };
 
+  const handleGenerateAI = async (index: number) => {
+    setIsGeneratingAI(true);
+    setGeneratingIndex(index);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-trivia-question', {
+        body: { 
+          topic: title || 'general trivia',
+          language: 'ka'
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.question) {
+        const newQuestions = [...questions];
+        newQuestions[index] = {
+          ...newQuestions[index],
+          question: data.question.text || data.question.question_text || "",
+          answers: [
+            { id: `a-ai-${Date.now()}-0`, text: data.question.correct_answer || "", isCorrect: true },
+            ...(data.question.incorrect_answers || []).slice(0, 3).map((ans: string, i: number) => ({
+              id: `a-ai-${Date.now()}-${i+1}`,
+              text: ans,
+              isCorrect: false,
+            })),
+          ],
+        };
+        setQuestions(newQuestions);
+        
+        toast({
+          title: "✨ კითხვა შეივსო!",
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast({
+        title: "შეცდომა",
+        description: "AI გენერაცია ვერ მოხერხდა",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingAI(false);
+      setGeneratingIndex(null);
+    }
+  };
+
   const validateQuestions = (): ValidationError[] => {
     const errors: ValidationError[] = [];
     
@@ -657,17 +707,21 @@ export function GameStylePersonalTrivia({
             {currentIndex + 1}/{questions.length}
           </div>
 
-          {/* Action Toolbar - same height buttons */}
+          {/* Action Toolbar - circular buttons */}
           <div className="px-4 pb-3">
             <div className="flex items-center justify-center gap-2">
-              {/* Icon Picker */}
-              <QuestionIconPicker
-                selectedSlug={currentQuestion?.iconSlug || null}
-                onSelect={handleIconChange}
-                questionText={currentQuestion?.question}
-                correctAnswer={currentQuestion?.answers.find(a => a.isCorrect)?.text}
-                incorrectAnswers={currentQuestion?.answers.filter(a => !a.isCorrect).map(a => a.text)}
-              />
+              {/* Photo Upload Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all disabled:opacity-50"
+              >
+                {isUploading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Image className="w-4 h-4" />
+                )}
+              </button>
 
               {/* Duplicate Button */}
               <button
@@ -781,21 +835,21 @@ export function GameStylePersonalTrivia({
                         </button>
                       )}
 
-                      {/* Upload Button - inside question card at bottom */}
+                      {/* AI Generate Button - inside question card at bottom */}
                       <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading}
+                        onClick={() => handleGenerateAI(index)}
+                        disabled={isGeneratingAI}
                         className="mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-50"
                       >
-                        {isUploading ? (
+                        {isGeneratingAI && generatingIndex === index ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            იტვირთება...
+                            გენერირება...
                           </>
                         ) : (
                           <>
-                            <Upload className="w-4 h-4" />
-                            ფოტოს ატვირთვა
+                            <Sparkles className="w-4 h-4" />
+                            AI შევსება
                           </>
                         )}
                       </button>
